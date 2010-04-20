@@ -839,12 +839,20 @@ static void make1d( state * pState )
     /* If the command was interrupted or failed and the target is not
      * "precious", remove the targets.
      */
-    if ( ( status != EXEC_CMD_OK ) && !( cmd->rule->actions->flags & RULE_TOGETHER ) )
+    if (status != EXEC_CMD_OK) 
     {
         LIST * targets = lol_get( &cmd->args, 0 );
         for ( ; targets; targets = list_next( targets ) )
-            if ( !unlink( targets->string ) )
+        {
+            int need_unlink = 1;
+            TARGET* t = bindtarget ( targets->string );
+            if (t->flags & T_FLAG_PRECIOUS)
+            {                
+                need_unlink = 0;
+            }
+            if (need_unlink && !unlink( targets->string ) )
                 printf( "...removing %s\n", targets->string );
+        }
     }
 
     /* Free this command and call make1c() to move onto the next one scheduled

@@ -410,6 +410,7 @@
 #include <signal.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #ifndef OS_QNX
     #include <memory.h>
@@ -452,6 +453,7 @@
 
 #if defined( _i386_   ) || \
     defined( __i386__ ) || \
+    defined( __i386   ) || \
     defined( _M_IX86  )
     #define OSPLAT "OSPLAT=X86"
 #endif
@@ -469,7 +471,8 @@
 #endif
 
 
-#ifdef __sparc__
+#if defined( __sparc__ ) || \
+    defined( __sparc   )
     #define OSPLAT "OSPLAT=SPARC"
 #endif
 

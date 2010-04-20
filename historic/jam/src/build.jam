@@ -2,6 +2,20 @@
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
+# Clean env vars of any "extra" empty values.
+for local v in ARGV CC CFLAGS LIBS
+{
+	local values ;
+	for local x in $($(v))
+	{
+		if $(x) != ""
+		{
+			values += $(x) ;
+		}
+	}
+	$(v) = $(values) ;
+}
+
 # Platform related specifics.
 if $(NT) { rule .path { return "$(<:J=\\)" ; } ./ = "/" ; }
 else if $(OS2) { rule .path { return "$(<:J=\\)" ; } ./ = "/" ; }
@@ -13,7 +27,7 @@ else { . = "." ; }
 ./ ?= "" ;
 
 # Info about what we are building.
-_VERSION_ = 3 1 17 ;
+_VERSION_ = 3 1 18 ;
 NAME = boost-jam ;
 VERSION = $(_VERSION_:J=$(.)) ;
 RELEASE = 1 ;
@@ -57,7 +71,7 @@ if $(with-python)
     {
         --python-include = [ .path $(python-location) include ] ;
         --python-lib = ;
-        for local v in 25 24 23 22
+        for local v in 26 25 24 23 22
         {
             --python-lib ?=
                 [ GLOB [ .path $(python-location) libs ] : "python$(v).lib" ]
@@ -80,7 +94,7 @@ if $(with-python)
     {
         --python-include = ;
         --python-lib = ;
-        for local v in 2.5 2.4 2.3 2.2
+        for local v in 2.6 2.5 2.4 2.3 2.2
         {
             local inc = [ GLOB [ .path $(python-location) include ] : python$(v) ] ;
             local lib = [ GLOB [ .path $(python-location) lib ] : libpython$(v)* ] ;
@@ -472,7 +486,7 @@ jam.source =
     option.c output.c parse.c regexp.c rules.c
     scan.c search.c subst.c w32_getreg.c
     timestamp.c variable.c modules.c strings.c filesys.c
-    builtins.c pwd.c class.c native.c modules/set.c
+    builtins.c pwd.c class.c native.c md5.c modules/set.c
     modules/path.c modules/regex.c modules/property-set.c
     modules/sequence.c modules/order.c
     ;

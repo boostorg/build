@@ -226,12 +226,12 @@ void exec_cmd
         dup2( out[1], STDOUT_FILENO );
 
         if ( globs.pipe_action == 0 )
-        {
             dup2( out[1], STDERR_FILENO );
-            close( err[1] );
-        }
         else
             dup2( err[1], STDERR_FILENO );
+
+        close( out[1] );
+        close( err[1] );
 
         /* Make this process a process group leader so that when we kill it, all
          * child processes of this process are terminated as well. We use

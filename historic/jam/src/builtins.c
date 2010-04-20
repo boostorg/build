@@ -24,6 +24,7 @@
 #include "native.h"
 #include "variable.h"
 #include "timestamp.h"
+#include "md5.h"
 #include <ctype.h>
 
 
@@ -140,6 +141,12 @@ void load_builtins()
       bind_builtin( "MATCH",
                     builtin_match, 0, 0 ) );
 
+    {
+        char * args[] = { "string", ":", "delimiters" };
+        bind_builtin( "SPLIT_BY_CHARACTERS", 
+                      builtin_split_by_characters, 0, 0 );
+    }
+
     duplicate_rule( "NoCare",
       bind_builtin( "NOCARE",
                     builtin_flags, T_FLAG_NOCARE, 0 ) );
@@ -178,6 +185,14 @@ void load_builtins()
           char * args[] = { "targets", "*", 0 };
           bind_builtin( "UPDATE",
                         builtin_update, 0, args );
+      }
+
+      {
+          char * args[] = { "targets", "*", 
+                            ":", "log", "?",
+                            ":", "ignore-minus-n", "?", 0 };
+          bind_builtin( "UPDATE_NOW",
+                        builtin_update_now, 0, args );
       }
 
       {
@@ -340,6 +355,30 @@ void load_builtins()
           duplicate_rule( "SHELL",
             bind_builtin( "COMMAND",
                           builtin_shell, 0, args ) );
+      }
+
+      {
+          char * args[] = { "string", 0 };
+          bind_builtin( "MD5",
+                        builtin_md5, 0, args ) ;
+      }
+
+      {
+          char * args[] = { "name", ":", "mode", 0 };
+          bind_builtin( "FILE_OPEN",
+                        builtin_file_open, 0, args );
+      }
+
+      {
+          char * args[] = { "string", ":", "width", 0 };
+          bind_builtin( "PAD",
+                        builtin_pad, 0, args );
+      }
+
+      {
+          char * args[] = { "targets", "*", 0 };
+          bind_builtin( "PRECIOUS",
+                        builtin_precious, 0, args );
       }
 
       /* Initialize builtin modules. */
@@ -838,6 +877,28 @@ LIST * builtin_match( PARSE * parse, FRAME * frame )
     return result;
 }
 
+LIST * builtin_split_by_characters( PARSE * parse, FRAME * frame )
+{
+    LIST * l1 = lol_get( frame->args, 0 );
+    LIST * l2 = lol_get( frame->args, 1 );
+
+    LIST * result = 0;
+
+    char* s = strdup (l1->string);
+    char* delimiters = l2->string;
+    char* t;
+
+    t = strtok (s, delimiters);
+    while (t)
+    {
+        result = list_new(result, newstr(t));
+        t = strtok (NULL, delimiters);
+    }
+
+    free (s);
+
+    return result;
+}
 
 LIST * builtin_hdrmacro( PARSE * parse, FRAME * frame )
 {
@@ -1231,6 +1292,75 @@ LIST * builtin_update( PARSE * parse, FRAME * frame )
     return result;
 }
 
+extern int anyhow;
+
+/* Takes a list of target names as first argument, and immediately
+   updates them.
+   Second parameter, if specified, if the descriptor (converted to a string)
+   of a log file where all build output is redirected.
+   Third parameter, if non-empty, specifies that the -n option should have
+   no effect -- that is, all out-of-date targets should be rebuild.
+*/
+LIST * builtin_update_now( PARSE * parse, FRAME * frame )
+{
+    LIST * targets = lol_get( frame->args, 0 );
+    LIST * log = lol_get( frame->args, 1 );
+    LIST * force = lol_get (frame->args, 2);
+    int status = 0;
+    int original_stdout;
+    int original_stderr;
+    int n;
+    int targets_count;
+    const char** targets2;
+    int i;
+    int original_noexec;
+	
+
+    if (log)
+    {
+        int fd = atoi(log->string);
+        /* Redirect stdout and stderr, temporary, to the log file.  */
+        original_stdout = dup (0);
+        original_stderr = dup (1);
+        dup2 (fd, 0);
+        dup2 (fd, 1);
+    }
+
+    if (force)
+    {
+        original_noexec = globs.noexec;
+        globs.noexec = 0;
+    }
+
+    targets_count = list_length( targets );
+    targets2 = (const char * *)BJAM_MALLOC( targets_count * sizeof( char * ) );    
+    for (i = 0 ; targets; targets = list_next( targets ) )
+        targets2[ i++ ] = targets->string;
+    status |= make( targets_count, targets2, anyhow);
+    free( targets );
+
+    if (force)
+    {
+        globs.noexec = original_noexec;
+    }
+
+    if (log)
+    {
+        /* Flush whatever stdio might have buffered, while descriptions
+           0 and 1 still refer to the log file.  */
+        fflush (stdout);
+        fflush (stderr);
+        dup2 (original_stdout, 0);
+        dup2 (original_stderr, 1);
+        close (original_stdout);
+        close (original_stderr);
+    }
+	
+    if (status == 0)
+        return list_new (L0, newstr ("ok"));
+    else
+        return L0;
+}
 
 LIST * builtin_search_for_target( PARSE * parse, FRAME * frame )
 {
@@ -1485,6 +1615,93 @@ LIST * builtin_check_if_file( PARSE * parse, FRAME * frame )
     return file_is_file( name->string ) == 1
         ? list_new( 0, newstr( "true" ) )
         : L0 ;
+}
+
+
+LIST * builtin_md5( PARSE * parse, FRAME * frame )
+{
+    LIST * l = lol_get( frame->args, 0 );
+    char* s = l->string;
+
+    md5_state_t state;
+    md5_byte_t digest[16];
+    char hex_output[16*2 + 1];
+
+    int di;
+
+    md5_init(&state);
+    md5_append(&state, (const md5_byte_t *)s, strlen(s));
+    md5_finish(&state, digest);
+
+    for (di = 0; di < 16; ++di)
+        sprintf(hex_output + di * 2, "%02x", digest[di]);
+
+    return list_new (0, newstr(hex_output));
+}
+
+LIST *builtin_file_open( PARSE *parse, FRAME *frame )
+{
+    char* name = lol_get(frame->args, 0)->string;
+    char* mode = lol_get(frame->args, 1)->string;
+    int fd;
+    char buffer[sizeof("4294967295")];
+
+    if (strcmp(mode, "w") == 0)
+    {
+        fd = open(name, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+    }
+    else
+    {
+        fd = open(name, O_RDONLY);
+    }
+
+    if (fd != -1)
+    {
+        sprintf(buffer, "%d", fd);
+        return list_new(L0, newstr(buffer));
+    }
+    else
+    {
+        return L0;
+    }
+}
+
+LIST *builtin_pad( PARSE *parse, FRAME *frame )
+{
+    char *string = lol_get(frame->args, 0)->string;
+    char *width_s = lol_get(frame->args, 1)->string;
+
+    int current = strlen (string);
+    int desired = atoi(width_s);
+    if (current >= desired)
+        return list_new (L0, string);
+    else
+    {
+        char *buffer = malloc (desired + 1);
+        int i;
+        LIST *result;
+
+        strcpy (buffer, string);
+        for (i = current; i < desired; ++i)
+            buffer[i] = ' ';
+        buffer[desired] = '\0';
+        result = list_new (L0, newstr (buffer));
+        free (buffer);
+        return result;
+    }
+}
+
+LIST *builtin_precious( PARSE *parse, FRAME *frame )
+{
+    LIST* targets = lol_get(frame->args, 0);
+
+    for ( ; targets; targets = list_next( targets ) )    
+    {
+        TARGET* t = bindtarget (targets->string);
+        t->flags |= T_FLAG_PRECIOUS;
+    }
+
+    return L0;
 }
 
 
