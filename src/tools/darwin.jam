@@ -3,7 +3,7 @@
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
 # Copyright 2005-2007 Mat Marcus
 # Copyright 2005-2007 Adobe Systems Incorporated
-# Copyright 2007-2009 Rene Rivera
+# Copyright 2007-2010 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
@@ -29,6 +29,9 @@ feature macosx-version : : propagated link-incompatible symmetric optional ;
 
 ## The minimal MacOSX version to target.
 feature macosx-version-min : : propagated optional ;
+
+## A dependency, that is forced to be included in the link.
+feature force-load : : free dependency incidental ;
 
 #############################################################################
 
@@ -484,6 +487,9 @@ flags darwin.compile OPTIONS : -no-cpp-precomp -gdwarf-2 ;
 # Add the framework names to use.
 flags darwin.link FRAMEWORK <framework> ;
 
+#
+flags darwin.link FORCE_LOAD <force-load> ;
+
 # This is flag is useful for debugging the link step
 # uncomment to see what libtool is doing under the hood
 #~ flags darwin.link.dll OPTIONS : -Wl,-v ;
@@ -519,9 +525,9 @@ rule link ( targets * : sources * : properties * )
 # binaries, at least on OS X 10.5.5, see:
 #    http://svn.boost.org/trac/boost/ticket/2347
 # So we pass -S -x.
-actions link bind LIBRARIES
+actions link bind LIBRARIES FORCE_LOAD
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" -Wl,-force_load$(_)"$(FORCE_LOAD)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(FRAMEWORK_PATH) -framework$(_)$(FRAMEWORK:D=:S=) $(OPTIONS) $(USER_OPTIONS)
     $(NEED_STRIP)"$(.STRIP)" $(NEED_STRIP)-S $(NEED_STRIP)-x $(NEED_STRIP)"$(<)"
 }
 
