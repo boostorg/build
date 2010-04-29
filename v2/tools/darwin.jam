@@ -517,6 +517,7 @@ local rule prepare-framework-path ( target + )
 
 rule link ( targets * : sources * : properties * )
 {
+    DEPENDS $(targets) : [ on $(targets) return $(FORCE_LOAD) ] ;
     setup-address-model $(targets) : $(sources) : $(properties) ;
     prepare-framework-path $(<) ;
 }
