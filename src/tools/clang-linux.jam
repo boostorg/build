@@ -19,7 +19,7 @@ import numbers ;
 feature.extend-subfeature toolset clang : platform : linux ;
 
 toolset.inherit-generators clang-linux 
-     <toolset>clang <toolset-clang:platform>linux : gcc : gcc.mingw.link gcc.mingw.link.dll ;
+     <toolset>clang <toolset-clang:platform>linux : gcc : gcc.mingw.link gcc.mingw.link.dll gcc.cygwin.link gcc.cygwin.link.dll ;
 generators.override clang-linux.prebuilt : builtin.lib-generator ;
 generators.override clang-linux.prebuilt : builtin.prebuilt ;
 generators.override clang-linux.searched-lib-generator : searched-lib-generator ;
