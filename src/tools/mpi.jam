@@ -493,6 +493,9 @@ rule capture-output ( target : sources * : properties * )
     local num_processes = [ property.select <mpi:processes> : $(properties) ] ;
     num_processes = $(num_processes:G=) ;
 
+    # serialize the MPI tests to avoid overloading systems
+    JAM_SEMAPHORE on $(target) = <s>mpi-run-semaphore ;
+
     # We launch MPI processes using the "mpirun" equivalent specified by the user.
     LAUNCHER on $(target) =  
       [ on $(target) return $(.mpirun) $(.mpirun_flags) $(num_processes) ] ;
