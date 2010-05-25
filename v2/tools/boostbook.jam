@@ -173,7 +173,7 @@ rule find-tools ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
   {
     # Plausible locations.
 
-    local share = /usr/local/share /usr/share /opt/share ;
+    local share = /usr/local/share /usr/share /opt/share /opt/local/share ;
     local dtd-versions = 4.2 ;
 
     docbook-xsl-dir ?= [ path.glob $(share) : docbook-xsl* ] ;
