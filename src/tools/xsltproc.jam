@@ -87,7 +87,7 @@ local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : a
 
     for local catalog in [ feature.get-values <catalog> : $(properties) ]
     {
-        CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog) ] ;
+        CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog:T) ] ;
     }
 
     $(action) $(target) : $(source) ;
@@ -108,11 +108,11 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
 
 actions xslt-xsltproc bind STYLESHEET
 {
-    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET)" "$(>)"
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET:T)" "$(>:T)"
 }
 
 
 actions xslt-xsltproc-dir bind STYLESHEET
 {
-    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET)" "$(>)"
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET:T)" "$(>:T)"
 }
