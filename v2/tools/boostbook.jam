@@ -22,6 +22,7 @@ import regex ;
 import scanner ;
 import sequence ;
 import make ;
+import os ;
 import type ;
 import modules path project ;
 import build-system ;
@@ -56,71 +57,26 @@ type.register BOOSTBOOK_MAIN ;
 
 # Initialize BoostBook support. The parameters are:
 #   docbook-xsl-dir: The DocBook XSL stylesheet directory. If not provided,
-#     we use DOCBOOK_XSL_DIR from the environment (if available). Otherwise,
-#     we let the XML processor load the stylesheets remotely.
+#     we use DOCBOOK_XSL_DIR from the environment (if available) or look in
+#     standard locations. Otherwise, we let the XML processor load the
+#     stylesheets remotely.
 #
 #   docbook-dtd-dir: The DocBook DTD directory. If not provided, we use
-#     DOCBOOK_DTD_DIR From the environment (if available). Otherwise, we let
-#     the XML processor load the DTD remotely.
+#     DOCBOOK_DTD_DIR From the environment (if available) or look in
+#     standard locations.  Otherwise, we let the XML processor load the
+#     DTD remotely.
 #
 #   boost-book-dir: The BoostBook directory with the DTD and XSL subdirs.
 #
 rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
 {
 
-  docbook-xsl-dir ?= [ modules.peek : DOCBOOK_XSL_DIR ] ;
-
-  docbook-dtd-dir ?= [ modules.peek : DOCBOOK_DTD_DIR ] ;
-
   if ! $(.initialized) 
   {
     .initialized = true ;
-    if $(docbook-xsl-dir) 
-    {
-      .docbook-xsl-dir = [ path.make $(docbook-xsl-dir) ] ;
-    }
-    if $(docbook-dtd-dir) 
-    {
-      .docbook-dtd-dir = [ path.make $(docbook-dtd-dir) ] ;
-    }
     
-    local boost-root =  [ modules.peek : BOOST_ROOT ] ;
-    if $(boost-root)
-    {
-        boost-root = [ path.make $(boost-root) ] ;
-    }    
-    local boost-build-root = [ build-system.location ] ;
-    local search-dirs = $(boostbook-dir) [ path.join $(boost-root) tools boostbook ] 
-                        $(boost-build-root)/../../boostbook ;
-    
-    
-    if --debug-configuration in [ modules.peek : ARGV ] 
-    {
-        ECHO "notice: Boost.Book: searching XSLS/DTD in" ;
-        ECHO "notice:" [ sequence.transform path.native : $(search-dirs) ] ;
-    }    
-    local boostbook-xsl-dir ;
-    for local dir in $(search-dirs) {
-        boostbook-xsl-dir += [ path.glob $(dir) : xsl ] ;
-    }
-    local boostbook-dtd-dir ; 
-    for local dir in $(search-dirs) {
-        boostbook-dtd-dir += [ path.glob $(dir) : dtd ] ;
-    }
-    .boostbook-xsl-dir = $(boostbook-xsl-dir[1]) ;
-    .boostbook-dtd-dir = $(boostbook-dtd-dir[1]) ;
-    
-    
-    if ! $(.boostbook-xsl-dir) || ! $(.boostbook-dtd-dir)
-    {
-        errors.warning
-          "couldn't find BoostBook xsl or dtd directories;" 
-        : please set \"BOOST_ROOT\" variable to the root directory of
-        your boost installation.  Searched in:
-          : $(search-dirs:J="
-") ;
-    }    
-    
+    find-tools $(docbook-xsl-dir) : $(docbook-dtd-dir) : $(boostbook-dir) ;
+
     # Register generators only if we've were called via "using boostbook ; "
     generators.register-standard boostbook.dtdxml-to-boostbook : DTDXML : XML ;
     generators.register-standard boostbook.boostbook-to-docbook : XML : DOCBOOK ;
@@ -134,6 +90,160 @@ rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
     
     # The same about Jamfile main target rules.
     IMPORT $(__name__) : boostbook : : boostbook ;
+  }    
+}
+
+rule find-boost-in-registry ( keys * )
+{
+  local boost-root = ;
+  for local R in $(keys) 
+  {
+    local installed-boost = [ W32_GETREG
+      "HKEY_LOCAL_MACHINE\\SOFTWARE\\$(R)"
+      : "InstallRoot" ] ;
+    if $(installed-boost)
+    {
+      boost-root += [ path.make $(installed-boost) ] ;
+    }
+  }
+  return $(boost-root) ;
+}
+
+rule find-tools ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
+{
+  docbook-xsl-dir ?= [ modules.peek : DOCBOOK_XSL_DIR ] ;
+  docbook-dtd-dir ?= [ modules.peek : DOCBOOK_DTD_DIR ] ;
+  boostbook-dir ?= [ modules.peek : BOOSTBOOK_DIR ] ;
+
+  # Look for the boostbook stylesheets relative to BOOST_ROOT
+  # and Boost.Build.
+  local boost-build-root = [ path.make [ build-system.location ] ] ;
+  local boostbook-search-dirs = [ path.join $(boost-build-root) .. .. ] ;
+
+  local boost-root =  [ modules.peek : BOOST_ROOT ] ;
+  if $(boost-root)
+  {
+    boostbook-search-dirs += [ path.join [ path.make $(boost-root) ] tools ] ;
+  }
+  boostbook-dir ?= [ path.glob $(boostbook-search-dirs) : boostbook* ] ; 
+
+  # Try to find the tools in platform specific locations
+  if [ os.name ] = NT
+  {
+    # If installed by the Boost installer.
+    local boost-root = ;
+
+    local boost-installer-versions = snapshot cvs 1.33.0 ;
+    local boost-consulting-installer-versions = 1.33.1 1.34.0 1.34.1 ;
+    local boostpro-installer-versions =
+        1.35.0 1.36.0 1.37.0 1.38.0 1.39.0 1.40.0 1.41.0 1.42.0
+        1.43.0 1.44.0 1.45.0 1.46.0 1.47.0 1.48.0 1.49.0 1.50.0 ;
+
+    local old-installer-root = [ find-boost-in-registry Boost.org\\$(boost-installer-versions) ] ;
+
+    # Make sure that the most recent version is searched for first
+    boost-root += [ sequence.reverse
+      [ find-boost-in-registry
+        Boost-Consulting.com\\$(boost-consulting-installer-versions)
+        boostpro.com\\$(boostpro-installer-versions) ] ] ;
+
+    # Plausible locations.
+    local root = [ PWD ] ;
+    while $(root) != $(root:D) { root = $(root:D) ; }
+    root = [ path.make $(root) ] ;
+    local search-dirs = ;
+    local docbook-search-dirs = ;
+    for local p in $(boost-root) {
+      search-dirs += [ path.join $(p) tools ] ;
+    }
+    for local p in $(old-installer-root)
+    {
+      search-dirs += [ path.join $(p) share ] ;
+      docbook-search-dirs += [ path.join $(p) share ] ;
+    }
+    search-dirs += [ path.join $(root) Boost tools ] ;
+    search-dirs += [ path.join $(root) Boost share ] ;
+    docbook-search-dirs += [ path.join $(root) Boost share ] ;
+
+    docbook-xsl-dir ?= [ path.glob $(docbook-search-dirs) : docbook-xsl* ] ;
+    docbook-dtd-dir ?= [ path.glob $(docbook-search-dirs) : docbook-xml* ] ;
+    boostbook-dir ?= [ path.glob $(search-dirs) : boostbook* ] ;
+  }
+  else
+  {
+    # Plausible locations.
+
+    local share = /usr/local/share /usr/share /opt/share ;
+    local dtd-versions = 4.2 ;
+
+    docbook-xsl-dir ?= [ path.glob $(share) : docbook-xsl* ] ;
+    docbook-xsl-dir ?= [ path.glob $(share)/sgml/docbook : xsl-stylesheets ] ;
+    docbook-xsl-dir ?= [ path.glob $(share)/xsl : docbook* ] ;
+
+    docbook-dtd-dir ?= [ path.glob $(share) : docbook-xml* ] ;
+    docbook-dtd-dir ?= [ path.glob $(share)/sgml/docbook : xml-dtd-$(dtd-versions)* ] ;
+    docbook-dtd-dir ?= [ path.glob $(share)/xml/docbook : $(dtd-versions) ] ;
+
+    boostbook-dir ?= [ path.glob $(share) : boostbook* ] ;
+
+    # Ubuntu Linux
+    docbook-xsl-dir ?= [ path.glob /usr/share/xml/docbook/stylesheet : nwalsh ] ;
+    docbook-dtd-dir ?= [ path.glob /usr/share/xml/docbook/schema/dtd : $(dtd-versions) ] ;
+  }
+
+  if $(docbook-xsl-dir) 
+  {
+    .docbook-xsl-dir = [ path.make $(docbook-xsl-dir[1]) ] ;
+  }
+  if $(docbook-dtd-dir) 
+  {
+    .docbook-dtd-dir = [ path.make $(docbook-dtd-dir[1]) ] ;
+  }
+
+  if --debug-configuration in [ modules.peek : ARGV ] 
+  {
+    ECHO "notice: Boost.Book: searching XSL/DTD in" ;
+    ECHO "notice:" [ sequence.transform path.native : $(boostbook-dir) ] ;
+  }    
+  local boostbook-xsl-dir ;
+  for local dir in $(boostbook-dir) {
+    boostbook-xsl-dir += [ path.glob $(dir) : xsl ] ;
+  }
+  local boostbook-dtd-dir ; 
+  for local dir in $(boostbook-dir) {
+    boostbook-dtd-dir += [ path.glob $(dir) : dtd ] ;
+  }
+  .boostbook-xsl-dir = $(boostbook-xsl-dir[1]) ;
+  .boostbook-dtd-dir = $(boostbook-dtd-dir[1]) ;
+
+  if --debug-configuration in [ modules.peek : ARGV ]
+  {
+    if $(.docbook-xsl-dir)
+    {
+      ECHO "notice: Boost.Book: found docbook XSL stylesheets in:" [ path.native $(.docbook-xsl-dir) ] ;
+    }
+    if $(.docbook-dtd-dir)
+    {
+      ECHO "notice: Boost.Book: found docbook DTD in:" [ path.native $(.docbook-dtd-dir) ] ;
+    }
+    if $(.boostbook-xsl-dir)
+    {
+      ECHO "notice: Boost.Book: found boostbook XSL stylesheets in:" [ path.native $(.boostbook-xsl-dir) ] ;
+    }
+    if $(.boostbook-dtd-dir)
+    {
+      ECHO "notice: Boost.Book: found boostbook DTD in:" [ path.native $(.boostbook-dtd-dir) ] ;
+    }
+  }
+
+  if ! $(.boostbook-xsl-dir) || ! $(.boostbook-dtd-dir)
+  {
+    errors.warning
+      "couldn't find BoostBook xsl or dtd directories;" 
+      : please set \"BOOST_ROOT\" variable to the root directory of
+      your boost installation.  Searched in:
+      : $(boostbook-dir:J="
+") ;
   }    
 }
 
