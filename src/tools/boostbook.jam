@@ -315,6 +315,27 @@ rule docbook-to-fo ( target : source : properties * )
   xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
+rule format-catalog-path ( path )
+{
+    local result = $(path) ;
+    if [ xsltproc.is-cygwin ]
+    {
+        if [ os.name ] = NT
+        {
+            drive = [ MATCH ^/(.):(.*)$ : $(path) ] ;
+            result = /cygdrive/$(drive[1])$(drive[2]) ;
+        }
+    }
+    else
+    {
+        if [ os.name ] = CYGWIN
+        {
+            result = [ path.make $(path:W) ] ;
+        }
+    }
+    return [ regex.replace $(result) " " "%20" ] ;
+}
+
 rule generate-xml-catalog ( target : sources * : properties * )
 {
   print.output $(target) ;
@@ -323,7 +344,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
   local boostbook-dtd-dir = [ boostbook.dtd-dir ] ;
   if $(boostbook-dtd-dir)
   {      
-    boostbook-dtd-dir = [ regex.replace $(boostbook-dtd-dir) " " "%20" ] ;
+    boostbook-dtd-dir = [ format-catalog-path $(boostbook-dtd-dir) ] ;
   }
     
   print.text
@@ -348,7 +369,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
   }
   else 
   {
-    docbook-xsl-dir = [ regex.replace $(docbook-xsl-dir) " " "%20" ] ;      
+    docbook-xsl-dir = [ format-catalog-path $(docbook-xsl-dir) ] ;      
     print.text "  <rewriteURI uriStartString=\"http://docbook.sourceforge.net/release/xsl/current/\" rewritePrefix=\"file://$(docbook-xsl-dir)/\"/>" ;
   }
 
@@ -365,7 +386,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
   }
   else 
   {
-    docbook-dtd-dir = [ regex.replace $(docbook-dtd-dir) " " "%20" ] ;      
+    docbook-dtd-dir = [ format-catalog-path $(docbook-dtd-dir) ] ;      
     print.text "  <rewriteURI uriStartString=\"http://www.oasis-open.org/docbook/xml/4.2/\" rewritePrefix=\"file://$(docbook-dtd-dir)/\"/>" ;
   }
 

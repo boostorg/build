@@ -13,6 +13,9 @@ import feature ;
 import regex ;
 import sequence ;
 import common ;
+import os ;
+import modules ;
+import path ;
 
 feature.feature xsl:param : : free ;
 feature.feature xsl:path : : free ;
@@ -33,9 +36,36 @@ rule init ( xsltproc ? )
     {
         $(.initialized) = true ;
         .xsltproc = $(xsltproc) ;
+        .is-cygwin = [ .is-cygwin $(xsltproc) ] ;
     }
 }
 
+# Returns a non-empty string if a cygwin xsltproc binary was specified.
+rule is-cygwin ( )
+{
+    return $(.is-cygwin) ;
+}
+
+rule .is-cygwin ( xsltproc )
+{
+    if [ os.on-windows ]
+    {
+        local file = [ path.make [ modules.binding $(__name__) ] ] ;
+        local dir = [ path.native
+                      [ path.join [ path.parent $(file) ] xsltproc ] ] ;
+        if [ os.name ] = CYGWIN
+        {
+            cygdir = $(dir:W) ;
+        }
+        local command =
+            "\"$(xsltproc)\" \"$(dir)\\test.xsl\" \"$(dir)\\test.xml\" 2>&1" ;
+        local status = [ SHELL $(command) : no-output : exit-status ] ;
+        if $(status[2]) != "0"
+        {
+            return true ;
+        }
+    }
+}
 
 rule compute-xslt-flags ( target : properties * )
 {
