@@ -921,6 +921,15 @@ local rule should-clean-project ( project )
             __ACTION_RULE__ = build-system.out-xml.collect
                 [ modules.peek build-system : .out-xml ] ;
         }
+        
+        IMPORT
+            build-system :
+            out-xml.collect
+            out-xml.generate-action
+            : :
+            build-system.out-xml.collect
+            build-system.out-xml.generate-action
+            ;
     }
 
     local j = [ option.get jobs ] ;
@@ -998,4 +1007,3 @@ local rule should-clean-project ( project )
         }            
     }
 }
-
