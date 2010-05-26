@@ -37,6 +37,7 @@ import alias ;
 import common ;
 import modules ;
 import project ;
+import utility ;
 
 
 # Use to specify extra configuration paramters. These get translated
@@ -140,6 +141,11 @@ rule init ( name ? )
             ECHO "notice:" using doxygen ":" $(.doxygen) ;
         }
 
+        if [ .is-cygwin ]
+        {
+            .is-cygwin = true ;
+        }
+
         .doxproc = [ modules.binding $(__name__) ] ;
         .doxproc = $(.doxproc:D)/doxproc.py ;
 
@@ -170,6 +176,22 @@ rule name ( )
     return $(.doxygen) ;
 }
 
+rule .is-cygwin ( )
+{
+    if [ os.on-windows ]
+    {
+        local file = [ path.make [ modules.binding $(__name__) ] ] ;
+        local dir = [ path.native
+                      [ path.join [ path.parent $(file) ] doxygen ] ] ;
+        local command =
+         "cd \"$(dir)\" && \"$(.doxygen)\" windows-paths-check.doxyfile 2>&1" ;
+        result = [ SHELL $(command) ] ;
+        if [ MATCH "(Parsing file /)" : $(result) ]
+        {
+            return true ;
+        }
+    }
+}
 
 # Runs Doxygen on the given Doxygen configuration file (the source) to generate
 # the Doxygen files. The output is dumped according to the settings in the
@@ -192,6 +214,48 @@ actions doxproc
 }
 
 
+rule translate-path ( path )
+{
+    if [ os.on-windows ]
+    {
+        if [ os.name ] = CYGWIN
+        {
+            if $(.is-cygwin)
+            {
+                return $(path) ;
+            }
+            else
+            {
+                return $(path:W) ;
+            }
+        }
+        else
+        {
+            if $(.is-cygwin)
+            {
+                match = [ MATCH ^(.):(.*) : $(path) ] ;
+                if $(match)
+                {
+                    return /cygdrive/$(match[1])$(match[2]:T) ;
+                }
+                else
+                {
+                    return $(path:T) ;
+                }
+            }
+            else
+            {
+                return $(path) ;
+            }
+        }
+    }
+    else
+    {
+        return $(path) ;
+    }
+}
+
+
 # Generates a doxygen configuration file (doxyfile) given a set of C++ sources
 # and a property list that may contain <doxygen:param> features.
 #
@@ -205,20 +269,30 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     for local param in [ feature.get-values <doxygen:param> : $(properties) ]
     {
         local namevalue = [ regex.match ([^=]*)=(.*) : $(param) ] ;
-        text += "$(namevalue[1]) = $(namevalue[2])" ;
         if $(namevalue[1]) = OUTPUT_DIRECTORY
         {
-            output-dir = "$(namevalue[2])" ;
+            output-dir = [ translate-path
+                           [ utility.unquote $(namevalue[2]) ] ] ;
+            text += "OUTPUT_DIRECTORY = \"$(output-dir)\"" ;
+        }
+        else
+        {
+            text += "$(namevalue[1]) = $(namevalue[2])" ;
         }
     }
 
     if ! $(output-dir)
     {
-        output-dir = [ on $(target) return $(LOCATE) ] ;
+        output-dir = [ translate-path [ on $(target) return $(LOCATE) ] ] ;
         text += "OUTPUT_DIRECTORY = \"$(output-dir)\"" ;
     }
 
-    local headers = \"$(sources:G=)\" ;
+    local headers = ;
+    for local header in $(sources:G=)
+    {
+        header = [ translate-path $(header) ] ;
+        headers += \"$(header)\" ;
+    }
 
     # Doxygen generates LaTex by default. So disable it unconditionally, or at
     # least until someone needs, and hence writes support for, LaTex output.
