@@ -36,7 +36,7 @@ rule init ( xsltproc ? )
     {
         $(.initialized) = true ;
         .xsltproc = $(xsltproc) ;
-        .is-cygwin = [ .is-cygwin $(xsltproc) ] ;
+        .is-cygwin = [ .is-cygwin $(xsltproc:E=xsltproc) ] ;
     }
 }
 
