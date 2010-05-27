@@ -102,7 +102,7 @@ rule compute-xslt-flags ( target : properties * )
 
     for local dir in $(implicit-target-directories)
     {
-        flags += --path \"$(dir)\" ;
+        flags += --path \"$(dir:T)\" ;
     }
 
     return $(flags) ;
