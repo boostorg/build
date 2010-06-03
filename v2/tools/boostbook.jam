@@ -330,7 +330,8 @@ rule format-catalog-path ( path )
     {
         if [ os.name ] = CYGWIN
         {
-            result = [ path.make $(path:W) ] ;
+            local native-path = [ path.native $(path) ] ;
+            result = [ path.make $(native-path:W) ] ;
         }
     }
     return [ regex.replace $(result) " " "%20" ] ;

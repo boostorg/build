@@ -55,7 +55,7 @@ rule .is-cygwin ( xsltproc )
                       [ path.join [ path.parent $(file) ] xsltproc ] ] ;
         if [ os.name ] = CYGWIN
         {
-            cygdir = $(dir:W) ;
+            dir = $(dir:W) ;
         }
         local command =
             "\"$(xsltproc)\" \"$(dir)\\test.xsl\" \"$(dir)\\test.xml\" 2>&1" ;
@@ -120,6 +120,11 @@ local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : a
         CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog:T) ] ;
     }
 
+    if [ os.on-windows ] && ! [ is-cygwin ]
+    {
+        action = $(action).windows ;
+    }
+
     $(action) $(target) : $(source) ;
 }
 
@@ -135,10 +140,21 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
     return [ .xsltproc $(target) : $(source) $(stylesheet) : $(properties) : $(dirname) : xslt-xsltproc-dir ] ;
 }
 
+actions xslt-xsltproc.windows
+{
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET:W)" "$(>:W)"
+}
+
 
 actions xslt-xsltproc bind STYLESHEET
 {
     $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET:T)" "$(>:T)"
+}
+
+
+actions xslt-xsltproc-dir.windows bind STYLESHEET
+{
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET:W)" "$(>:W)"
 }
 
 
