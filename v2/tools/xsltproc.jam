@@ -34,7 +34,7 @@ rule init ( xsltproc ? )
 
     if ! $(.initialized)
     {
-        $(.initialized) = true ;
+        .initialized = true ;
         .xsltproc = $(xsltproc) ;
         .is-cygwin = [ .is-cygwin $(xsltproc:E=xsltproc) ] ;
     }
@@ -43,6 +43,10 @@ rule init ( xsltproc ? )
 # Returns a non-empty string if a cygwin xsltproc binary was specified.
 rule is-cygwin ( )
 {
+    if ! $(.initialized)
+    {
+        init ;
+    }
     return $(.is-cygwin) ;
 }
 
