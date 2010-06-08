@@ -265,9 +265,9 @@ local rule init-sdk ( condition * : root ? : version + : version-feature ? )
             case mac* :
             {
                 flags darwin.compile OPTIONS <macosx-version-min>$(version-feature)
-                    : -miphoneos-version-min=$(version[2-]:J=.) ;
+                    : -mmacosx-version-min=$(version[2-]:J=.) ;
                 flags darwin.link OPTIONS <macosx-version-min>$(version-feature)
-                    : -miphoneos-version-min=$(version[2-]:J=.) ;
+                    : -mmacosx-version-min=$(version[2-]:J=.) ;
             }
         }
         
