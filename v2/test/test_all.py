@@ -201,7 +201,8 @@ tests = [ "absolute_sources",
           "use_requirements",
           "using",
           "wrapper",
-          "wrong_project"
+          "wrong_project",
+          "exit_status",
           ]
 
 if os.name == 'posix':
