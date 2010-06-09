@@ -23,7 +23,7 @@ t.write("hello.cpp", """
 int main() { }
 """)
 
-t.run_build_system("runtime-link=static", status=1)
+t.run_build_system("runtime-link=static")
 t.fail_test(string.find(t.stdout(),
     "On gcc, DLL can't be build with '<runtime-link>static'") == -1)
 
