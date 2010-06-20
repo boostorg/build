@@ -38,14 +38,14 @@
 #
 #       Quickbook can be found in Boost's repository, under the tools/quickbook
 #       directory it was added there on Jan 2005, some time after the release of
-#       Boost v1.32.0 and will hopefully be an integral part of the Boost
-#       distribution starting from v1.33.
+#       Boost v1.32.0 and has been an integral part of the Boost distribution
+#       since v1.33.
 #
-#       Here's a link to the CVS repository:
-#           http://cvs.sourceforge.net/viewcvs.py/boost/boost/tools/quickbook/
+#       Here's a link to the SVN repository:
+#           https://svn.boost.org/svn/boost/trunk/tools/quickbook
 #
-#       And to CVS version of QuickBook's QuickBook-generated docs:
-#           http://cvs.sourceforge.net/viewcvs.py/*checkout*/boost/boost/tools/quickbook/doc/html/index.html
+#       And to QuickBook's QuickBook-generated docs:
+#           http://www.boost.org/doc/libs/release/tools/quickbook/index.html
 #
 #
 #   How do I use QuickBook and this toolset in my projects ?
