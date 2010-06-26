@@ -65,6 +65,9 @@ feature.feature doxygen.doxproc.title : : free ;
 # Location for images when generating XML
 feature.feature doxygen:xml-imagedir : : free ;
 
+# Indicates whether the entire directory should be deleted
+feature.feature doxygen.rmdir : off on : optional incidental ;
+
 # Doxygen configuration input file.
 type.register DOXYFILE : doxyfile ;
 
@@ -308,6 +311,24 @@ rule headers-to-doxyfile ( target : sources * : properties * )
 #
 rule run ( target : source : properties * )
 {
+    if <doxygen.rmdir>on in $(properties)
+    {
+        local output-dir =
+            [ path.make
+                [ MATCH <doxygen:param>OUTPUT_DIRECTORY=\"?([^\"]*) :
+                  $(properties) ] ] ;
+        local html-dir =
+            [ path.make
+                [ MATCH <doxygen:param>HTML_OUTPUT=(.*) :
+                  $(properties) ] ] ;
+        if $(output-dir) && $(html-dir) &&
+            [ path.glob $(output-dir) : $(html-dir) ]
+        {
+            HTMLDIR on $(target) =
+                [ path.native [ path.join $(output-dir) $(html-dir) ] ] ;
+            rm-htmldir $(target) ;
+        }
+    }
     doxygen-action $(target) : $(source) ;
     NAME on $(target) = $(.doxygen) ;
     RM on $(target) = [ modules.peek common : RM ] ;
@@ -319,6 +340,19 @@ rule run ( target : source : properties * )
                 *.xml ] ] ;
 }
 
+if [ os.name ] = NT
+{
+    RMDIR = rmdir /s /q ;
+}
+else
+{
+    RMDIR = rm -rf ;
+}
+
+actions quietly rm-htmldir
+{
+    $(RMDIR) $(HTMLDIR)
+}
 
 # The rules below require Boost.Book stylesheets, so we need some code to check
 # that the boostbook module has actualy been initialized.
@@ -429,10 +463,29 @@ rule copy-latex-pngs ( target : source : requirements * )
     local directory = [ path.native
                         [ feature.get-values <doxygen:xml-imagedir> :
                           $(requirements) ] ] ;
+
+    local location = [ on $(target) return $(LOCATE) ] ;
+
+    local pdf-location =
+        [ path.native
+            [ path.join
+                [ path.make $(location) ]
+                [ path.make $(directory) ] ] ] ;
+    local html-location =
+        [ path.native
+            [ path.join
+                .
+                html
+                [ path.make $(directory) ] ] ] ;
+
+    common.MkDir $(pdf-location) ;
+    common.MkDir $(html-location) ;
+
+    DEPENDS $(target) : $(pdf-location) $(html-location) ;
+
     if [ os.name ] = NT
     {
         CP on $(target) = copy /y ;
-        MKDIR on $(target) = mkdir ;
         FROM on $(target) = \\*.png ;
         TOHTML on $(target) = .\\html\\$(directory) ;
         TOPDF on $(target) = \\$(directory) ;
@@ -440,7 +493,6 @@ rule copy-latex-pngs ( target : source : requirements * )
     else
     {
         CP on $(target) = cp ;
-        MKDIR on $(target) = mkdir -p ;
         FROM on $(target) = /*.png ;
         TOHTML on $(target) = ./html/$(directory) ;
         TOPDF on $(target) = $(target:D)/$(directory) ;
@@ -449,8 +501,6 @@ rule copy-latex-pngs ( target : source : requirements * )
 
 actions copy-latex-pngs
 {
-    $(MKDIR) $(TOHTML)
-    $(MKDIR) $(<:D)$(TOPDF)
     $(CP) $(>:S=)$(FROM) $(TOHTML)
     $(CP) $(>:S=)$(FROM) $(<:D)$(TOPDF)
     echo "Stamped" > "$(<)"
@@ -594,6 +644,8 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
             [ new typed-target $(target:S=.dir) : $(project) : DOXYGEN_HTML_MULTIFILE
                 : $(target:S=.tag)
                 : [ targets.main-target-requirements $(requirements)
+                    <doxygen:param>"OUTPUT_DIRECTORY=\"$(output-dir-native)\""
+                    <doxygen:param>HTML_OUTPUT=$(target:B)
                     : $(project) ]
                 : [ targets.main-target-default-build $(default-build) : $(project) ]
                 ] ;
@@ -623,6 +675,7 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
         {
             doxygen $(target).doxygen-xml-images.html : $(sources)
                 : $(requirements)
+                  <doxygen.rmdir>on
                   <doxygen:param>QUIET=YES
                   <doxygen:param>WARNINGS=NO
                   <doxygen:param>WARN_IF_UNDOCUMENTED=NO
