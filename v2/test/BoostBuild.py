@@ -131,8 +131,6 @@ if os.name == 'posix':
     def _failed(self, status=0):
         if self.status is None:
             return None
-        if os.WIFSIGNALED(status):
-            return None
         return _status(self) != status
     def _status(self):
         if os.WIFEXITED(self.status):
@@ -458,8 +456,8 @@ class Tester(TestCmd.TestCmd):
 
             annotation("failure", '"%s" returned %d%s'
                 % (kw['program'], _status(self), expect))
-
-            annotation("reason", "error returned by bjam")
+            
+            annotation("reason", "unexpected status returned by bjam")
             self.fail_test(1)
 
         if not (stdout is None) and not match(self.stdout(), stdout):

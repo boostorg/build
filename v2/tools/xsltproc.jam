@@ -13,6 +13,9 @@ import feature ;
 import regex ;
 import sequence ;
 import common ;
+import os ;
+import modules ;
+import path ;
 
 feature.feature xsl:param : : free ;
 feature.feature xsl:path : : free ;
@@ -31,11 +34,42 @@ rule init ( xsltproc ? )
 
     if ! $(.initialized)
     {
-        $(.initialized) = true ;
+        .initialized = true ;
         .xsltproc = $(xsltproc) ;
+        .is-cygwin = [ .is-cygwin $(xsltproc:E=xsltproc) ] ;
     }
 }
 
+# Returns a non-empty string if a cygwin xsltproc binary was specified.
+rule is-cygwin ( )
+{
+    if ! $(.initialized)
+    {
+        init ;
+    }
+    return $(.is-cygwin) ;
+}
+
+rule .is-cygwin ( xsltproc )
+{
+    if [ os.on-windows ]
+    {
+        local file = [ path.make [ modules.binding $(__name__) ] ] ;
+        local dir = [ path.native
+                      [ path.join [ path.parent $(file) ] xsltproc ] ] ;
+        if [ os.name ] = CYGWIN
+        {
+            dir = $(dir:W) ;
+        }
+        local command =
+            "\"$(xsltproc)\" \"$(dir)\\test.xsl\" \"$(dir)\\test.xml\" 2>&1" ;
+        local status = [ SHELL $(command) : no-output : exit-status ] ;
+        if $(status[2]) != "0"
+        {
+            return true ;
+        }
+    }
+}
 
 rule compute-xslt-flags ( target : properties * )
 {
@@ -72,7 +106,7 @@ rule compute-xslt-flags ( target : properties * )
 
     for local dir in $(implicit-target-directories)
     {
-        flags += --path \"$(dir)\" ;
+        flags += --path \"$(dir:T)\" ;
     }
 
     return $(flags) ;
@@ -87,7 +121,12 @@ local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : a
 
     for local catalog in [ feature.get-values <catalog> : $(properties) ]
     {
-        CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog) ] ;
+        CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog:T) ] ;
+    }
+
+    if [ os.on-windows ] && ! [ is-cygwin ]
+    {
+        action = $(action).windows ;
     }
 
     $(action) $(target) : $(source) ;
@@ -105,14 +144,25 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
     return [ .xsltproc $(target) : $(source) $(stylesheet) : $(properties) : $(dirname) : xslt-xsltproc-dir ] ;
 }
 
+actions xslt-xsltproc.windows
+{
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET:W)" "$(>:W)"
+}
+
 
 actions xslt-xsltproc bind STYLESHEET
 {
-    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET)" "$(>)"
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET:T)" "$(>:T)"
+}
+
+
+actions xslt-xsltproc-dir.windows bind STYLESHEET
+{
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET:W)" "$(>:W)"
 }
 
 
 actions xslt-xsltproc-dir bind STYLESHEET
 {
-    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET)" "$(>)"
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET:T)" "$(>:T)"
 }
