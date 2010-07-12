@@ -77,7 +77,7 @@ import os.path
 import sys
 
 from b2.util.utility import *
-import property, project, virtual_target, property_set, feature, generators
+import property, project, virtual_target, property_set, feature, generators, toolset
 from virtual_target import Subvariant
 from b2.exceptions import *
 from b2.util.sequence import unique
@@ -142,8 +142,7 @@ class TargetRegistry:
           main target
          'project' is the project where the main taret is to be declared."""
 
-        # FIXME: revive after toolset.requirements are ported.
-        #specification.append(toolset.requirements)
+        specification.extend(toolset.requirements())
 
         requirements = property_set.refine_from_user_input(
             project.get("requirements"), specification,
@@ -1252,7 +1251,7 @@ class TypedTarget (BasicTarget):
 
             # Are there any top-level generators for this type/property set.
             if not generators.find_viable_generators (self.type_, prop_set):
-                print "error: no generators were found for type '$(self.type)'"
+                print "error: no generators were found for type '" + self.type_ + "'"
                 print "error: and the requested properties"
                 print "error: make sure you've configured the needed tools"
                 print "See http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html"
