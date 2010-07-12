@@ -246,10 +246,7 @@ class Tester(TestCmd.TestCmd):
             # lying around.
             dirs = [os.path.join('../../../jam/src', jam_build_dir + '.debug'),
                     os.path.join('../../../jam/src', jam_build_dir),
-                    os.path.join('../../jam_src', jam_build_dir + '.debug'),
-                    os.path.join('../../jam_src', jam_build_dir),
-                    os.path.join('../jam_src', jam_build_dir + '.debug'),
-                    os.path.join('../jam_src', jam_build_dir)]
+                    ]
             for d in dirs:
                 if os.path.exists(d):
                     jam_build_dir = d
