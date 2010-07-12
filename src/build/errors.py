@@ -58,9 +58,9 @@ class ExceptionWithUserContext(Exception):
         self.stack_ = stack
 
     def report(self):
-        print "error:", self.message
+        print "error:", self.args[0]
         if self.original_exception_:
-            print format(self.original_exception_.message, "    ")
+            print format(self.original_exception_.args[0], "    ")
         print
         print "    error context (most recent first):"
         for c in self.context_[::-1]:
