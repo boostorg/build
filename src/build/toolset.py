@@ -10,7 +10,7 @@
 """ Support for toolset definition.
 """
 
-import feature, property, generators
+import feature, property, generators, property_set
 from b2.util.utility import *
 from b2.util import set
 
@@ -369,6 +369,8 @@ def __add_flag (rule_or_module, variable_name, condition, values):
     __module_flags.setdefault(m, []).append(f)
     __flags.setdefault(rule_or_module, []).append(f)
 
+__requirements = []
+
 def requirements():
     """Return the list of global 'toolset requirements'.
     Those requirements will be automatically added to the requirements of any main target."""
@@ -380,9 +382,9 @@ def add_requirements(requirements):
     they were specified literally. For best results, all requirements added should
     be conditional or indirect conditional."""
     
-    # FIXME:
     #if ! $(.ignore-requirements)
     #{
+    print "XXXX", requirements
     __requirements.extend(requirements)
     #}
          
