@@ -63,6 +63,12 @@ rule log-check-result ( result )
     #.check-results += $(result) ;
 }
 
+rule log-library-search-result ( library : result )
+{
+    local x = [ PAD "    - $(library) : $(result)" : $(.width) ] ;
+    log-check-result "$(x)" ;
+}
+
 rule print-component-configuration ( )
 {
     local c = [ sequence.unique $(.components) ] ;
