@@ -585,29 +585,35 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         return result
 
     def load_module(self, name, extra_path=None):
-        """Classic Boost.Build 'modules' are in fact global variables.
-        Therefore, try to find an already loaded Python module called 'name' in sys.modules. 
-        If the module ist not loaded, find it Boost.Build search
-        path and load it.  The new module is not entered in sys.modules.
-        The motivation here is to have disjoint namespace of modules
-        loaded via 'import/using' in Jamfile, and ordinary Python
-        modules. We don't want 'using foo' in Jamfile to load ordinary
-        Python module 'foo' which is going to not work. And we
-        also don't want 'import foo' in regular Python module to
-        accidentally grab module named foo that is internal to
-        Boost.Build and intended to provide interface to Jamfiles."""
+        """Load a Python module that should be useable from Jamfiles.
 
+        There are generally two types of modules Jamfiles might want to
+        use:
+        - Core Boost.Build. Those are imported using plain names, e.g.
+        'toolset', so this function checks if we have module named
+        b2.package.module already.
+        - Python modules in the same directory as Jamfile. We don't
+        want to even temporary add Jamfile's directory to sys.path,
+        since then we might get naming conflicts between standard
+        Python modules and those.
+        """
+
+        # See if we loaded module of this name already
         existing = self.loaded_tool_modules_.get(name)
         if existing:
             return existing
 
+        # See if we have a module b2.whatever.<name>, where <name>
+        # is what is passed to this function
         modules = sys.modules
         for class_name in modules:
-            if name is class_name:
+            parts = class_name.split('.')
+            if name is class_name or parts[0] == "b2" and parts[-1] == name:
                 module = modules[class_name]
                 self.loaded_tool_modules_[name] = module
                 return module
-        
+
+        # Lookup a module in BOOST_BUILD_PATH
         path = extra_path
         if not path:
             path = []
@@ -907,14 +913,14 @@ attribute is allowed only for top-level 'project' invocations""")
         Project global constants are normal variables but should
         not be changed. They are applied to every child Jamfile."""
         m = "Jamfile</home/ghost/Work/Boost/boost-svn/tools/build/v2_python/python/tests/bjam/make>"
-        self.registry.current().add_constant(name[0], value)
+        self.registry.current().add_constant(name[0], value[0])
 
     def path_constant(self, name, value):
         """Declare and set a project global constant, whose value is a path. The
         path is adjusted to be relative to the invocation directory. The given
         value path is taken to be either absolute, or relative to this project
         root."""
-        self.registry.current().add_constant(name[0], value, path=1)
+        self.registry.current().add_constant(name[0], value[0], path=1)
 
     def use_project(self, id, where):
         # See comment in 'load' for explanation why we record the
