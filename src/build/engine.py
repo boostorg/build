@@ -144,7 +144,7 @@ class Engine:
     def do_set_update_action (self, action_name, targets, sources, property_set):
         action = self.actions.get(action_name)
         if not action:
-            raise "No action %s was registered" % action_name
+            raise Exception("No action %s was registered" % action_name)
         action(targets, sources, property_set)
 
     def do_set_target_variable (self, target, variable, value, append):
