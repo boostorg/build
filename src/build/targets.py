@@ -146,7 +146,7 @@ class TargetRegistry:
 
         requirements = property_set.refine_from_user_input(
             project.get("requirements"), specification,
-            project.project_module, project.get("location"))
+            project.project_module(), project.get("location"))
 
         return requirements
 
