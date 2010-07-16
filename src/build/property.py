@@ -1,5 +1,5 @@
 # Status: ported, except for tests and --abbreviate-paths.
-# Base revision: 40480
+# Base revision: 64070
 #
 # Copyright 2001, 2002, 2003 Dave Abrahams 
 # Copyright 2006 Rene Rivera 
@@ -11,6 +11,7 @@ import re
 from b2.util.utility import *
 from b2.build import feature
 from b2.util import sequence, set
+from b2.manager import get_manager
 
 __re_two_ampersands = re.compile ('&&')
 __re_comma = re.compile (',')
@@ -21,6 +22,7 @@ __re_split_conditional = re.compile (r'(.+):<(.+)')
 __re_colon = re.compile (':')
 __re_has_condition = re.compile (r':<')
 __re_separate_condition_and_property = re.compile (r'(.*):(<.*)')
+__re_indirect_rule = re.compile("^([^%]*)%([^%]+)$")
 
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
@@ -176,20 +178,32 @@ def translate_indirect(specification, context_module):
     either local to the module or global. Qualified local rules
     with the name of the module."""
     result = []
-    for p in specification:
+    for px in specification:
+        p = get_value(px)
         if p[0] == '@':
+            v = None
             m = p[1:]
-            if not '.' in p:
-                # This is unqualified rule name. The user might want
-                # to set flags on this rule name, and toolset.flag
-                # auto-qualifies the rule name. Need to do the same
-                # here so set flag setting work.
-                # We can arrange for toolset.flag to *not* auto-qualify
-                # the argument, but then two rules defined in two Jamfiles
-                # will conflict.
-                m = context_module + "." + m
+            if __re_indirect_rule.match(m):
+                # Rule is already in indirect format
+                # FIXME: it's not clear if this is necessary.
+                v = m
+            else:
 
-            result.append(get_grist(p) + "@" + m)
+                if not '.' in p:
+                    # This is unqualified rule name. The user might want
+                    # to set flags on this rule name, and toolset.flag
+                    # auto-qualifies the rule name. Need to do the same
+                    # here so set flag setting work.
+                    # We can arrange for toolset.flag to *not* auto-qualify
+                    # the argument, but then two rules defined in two Jamfiles
+                    # will conflict.
+                    m = context_module + "." + m
+
+                v = m
+                #v = indirect.make(m, context_module)
+                get_manager().engine().register_bjam_action(v)
+            
+            result.append(get_grist(px) + "@" + m)
         else:
             result.append(p)
 
@@ -241,8 +255,7 @@ def expand_subfeatures_in_conditions (properties):
                 result.append (p)
 
             else:
-                individual_subfeatures = Set.difference (e, condition)
-                result.append (','.join (individual_subfeatures) + ':' + value)
+                result.append (','.join(e) + ':' + value)
 
     return result
 
@@ -470,6 +483,36 @@ def take(attributes, properties):
             result.append(e)
     return result
 
+def translate_dependencies(specification, project_id, location):
+
+    result = []
+    for p in specification:
+        split = split_conditional(p)
+        condition = ""
+        if split:
+            condition = split[0]
+            p = split[1]
+
+        f = get_grist(p)
+        v = get_value(p)
+        if "dependency" in feature.attributes(f):
+            m = re.match("(.*)//(.*)", v)
+            if m:
+                rooted = m.group(1)
+                if rooted[0] == '/':
+                    # Either project id or absolute Linux path, do nothing.
+                    pass
+                else:
+                    rooted = os.path.join(os.getcwd(), location, rooted[0])
+                result.append(condition + f + rooted + "//" + m.group(2))
+            elif os.path.isabs(m.group(v)):                
+                result.append(condition + p)
+            else:
+                result.append(condition + f + project_id + "//" + v)
+        else:
+            result.append(condition + p)
+
+    return result
 
 class PropertyMap:
     """ Class which maintains a property set -> string mapping.
