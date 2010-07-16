@@ -1,4 +1,5 @@
-# Status: being ported by Vladimir Prus
+# Status: ported.
+# Base revision: 64068
 
 # Copyright 2003 Dave Abrahams 
 # Copyright 2003 Douglas Gregor 
@@ -20,9 +21,10 @@ class MakeTarget(BasicTarget):
     def construct(self, name, source_targets, property_set):
 
         action_name = property_set.get("<action>")[0]
+        assert action_name[0] == '@'
+        action_name = action_name[1:]
 
         action = Action(get_manager(), source_targets, action_name, property_set)
-        # FIXME: type.type uses global data.
         target = FileTarget(self.name(), 1, type.type(self.name()),
                             self.project(), action)    
         return [ b2.build.property_set.empty(),
