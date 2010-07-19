@@ -707,6 +707,7 @@ collect_arguments( RULE* rule, FRAME* frame )
                     LIST* value = 0;
                     char modifier;
                     LIST* arg_name = formal; /* hold the argument name for type checking */
+                    int multiple = 0;
 
                     /* Stop now if a variable number of arguments are specified */
                     if ( name[0] == '*' && name[1] == 0 )
@@ -722,6 +723,7 @@ collect_arguments( RULE* rule, FRAME* frame )
                     case '+':
                     case '*':
                         value = list_copy( 0, actual );
+                        multiple = 1;
                         actual = 0;
                         /* skip an extra element for the modifier */
                         formal = formal->next;
@@ -738,7 +740,8 @@ collect_arguments( RULE* rule, FRAME* frame )
                         }
                     }
 
-                    locals = addsettings( locals, VAR_SET, name, value );
+                    locals = addsettings(locals, VAR_SET, name, value);
+                    locals->multiple = multiple;
                     type_check( type_name, value, frame, rule, arg_name );
                     type_name = 0;
                 }
@@ -764,28 +767,58 @@ static LIST*
 call_python_function(RULE* r, FRAME* frame)
 {
     LIST * result = 0;
-    PyObject * arguments = PyTuple_New( frame->args->count );
+    PyObject * arguments = 0;
+    PyObject * kw = NULL;
     int i ;
     PyObject * py_result;
 
-    for ( i = 0; i < frame->args->count; ++i )
+    if (r->arguments)
     {
-        PyObject * arg = PyList_New(0);
-        LIST* l = lol_get( frame->args, i);
+        SETTINGS * args;
 
-        for ( ; l; l = l->next )
+        arguments = PyTuple_New(0);
+        kw = PyDict_New();
+
+        for (args = collect_arguments(r, frame); args; args = args->next)
         {
-            PyObject * v = PyString_FromString(l->string);
-            PyList_Append( arg, v );
-            Py_DECREF(v);
+            PyObject *key = PyString_FromString(args->symbol);
+            PyObject *value = 0;
+            if (args->multiple)
+                value = list_to_python(args->value);
+            else {
+                if (args->value)
+                    value = PyString_FromString(args->value->string);
+            }
+
+            if (value)
+                PyDict_SetItem(kw, key, value);
+            Py_DECREF(key);
+            Py_XDECREF(value);
         }
-        /* Steals reference to 'arg' */
-        PyTuple_SetItem( arguments, i, arg );
+    }
+    else
+    {
+        arguments = PyTuple_New( frame->args->count );
+        for ( i = 0; i < frame->args->count; ++i )
+        {
+            PyObject * arg = PyList_New(0);
+            LIST* l = lol_get( frame->args, i);
+            
+            for ( ; l; l = l->next )
+            {
+                PyObject * v = PyString_FromString(l->string);
+                PyList_Append( arg, v );
+                Py_DECREF(v);
+            }
+            /* Steals reference to 'arg' */
+            PyTuple_SetItem( arguments, i, arg );
+        }
     }
 
     frame_before_python_call = frame;
-    py_result = PyObject_CallObject( r->python_function, arguments );
-    Py_DECREF( arguments );
+    py_result = PyObject_Call( r->python_function, arguments, kw );
+    Py_DECREF(arguments);
+    Py_XDECREF(kw);
     if ( py_result != NULL )
     {
         if ( PyList_Check( py_result ) )

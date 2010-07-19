@@ -978,7 +978,6 @@ attribute is allowed only for top-level 'project' invocations""")
                 "Tool module '%s' does not define the 'init' method" % toolset[0])
         m.init(*args)
 
-
     def import_(self, name, names_to_import=None, local_names=None):
 
         name = name[0]
@@ -991,7 +990,10 @@ attribute is allowed only for top-level 'project' invocations""")
         for f in m.__dict__:
             v = m.__dict__[f]
             if callable(v):
-                bjam.import_rule(jamfile_module, name + "." + f, v)
+                if hasattr(v, "bjam_signature"):
+                    bjam.import_rule(jamfile_module, name + "." + f, v, v.bjam_signature)
+                else:
+                    bjam.import_rule(jamfile_module, name + "." + f, v)
 
         if names_to_import:
             if not local_names:

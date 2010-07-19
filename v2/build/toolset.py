@@ -12,7 +12,7 @@
 
 import feature, property, generators, property_set
 from b2.util.utility import *
-from b2.util import set
+from b2.util import set, bjam_signature
 
 __re_split_last_segment = re.compile (r'^(.+)\.([^\.])*')
 __re_two_ampersands = re.compile ('(&&)')
@@ -87,7 +87,9 @@ def normalize_condition (property_sets):
 # FIXME push-checking-for-flags-module ....
 # FIXME: investigate existing uses of 'hack-hack' parameter
 # in jam code.
-
+    
+@bjam_signature((["rule_or_module", "variable_name", "condition", "*"],
+                 ["values", "*"]))
 def flags (rule_or_module, variable_name, condition, values = []):
     """ Specifies the flags (variables) that must be set on targets under certain
         conditions, described by arguments.
