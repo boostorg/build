@@ -381,6 +381,11 @@ void load_builtins()
                         builtin_precious, 0, args );
       }
 
+      {
+          char * args [] = { 0 };
+          bind_builtin( "SELF_PATH", builtin_self_path, 0, args );
+      }
+
       /* Initialize builtin modules. */
       init_set();
       init_path();
@@ -1705,6 +1710,22 @@ LIST *builtin_precious( PARSE *parse, FRAME *frame )
     }
 
     return L0;
+}
+
+LIST *builtin_self_path( PARSE *parse, FRAME *frame )
+{
+    extern char *saved_argv0;
+    char *p = executable_path (saved_argv0);
+    if (p)
+    {
+        LIST* result = list_new (0, newstr (p));
+        free(p);
+        return result;
+    }
+    else
+    {
+        return L0;
+    }
 }
 
 
