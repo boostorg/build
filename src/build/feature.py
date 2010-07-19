@@ -14,7 +14,7 @@
 
 import re
 
-from b2.util import set, utility
+from b2.util import set, utility, bjam_signature
 from b2.util.utility import add_grist, get_grist, ungrist, replace_grist, to_seq
 from b2.exceptions import *
 
@@ -83,6 +83,7 @@ def enumerate ():
 
 # FIXME: prepare-test/finish-test?
 
+@bjam_signature((["name"], ["values", "*"], ["attributes", "*"]))
 def feature (name, values, attributes = []):
     """ Declares a new feature with the given name, values, and attributes.
         name: the feature name

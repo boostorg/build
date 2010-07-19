@@ -45,6 +45,10 @@
 #ifndef LISTS_DWA20011022_H
 # define LISTS_DWA20011022_H
 
+#ifdef HAVE_PYTHON
+#include <Python.h>
+#endif
+
 /*
  * LIST - list of strings
  */
@@ -92,6 +96,13 @@ void    lol_free( LOL *lol );
 LIST *  lol_get( LOL *lol, int i );
 void    lol_print( LOL *lol );
 void    lol_build( LOL* lol, char** elements );
+
+#ifdef HAVE_PYTHON
+
+PyObject *list_to_python(LIST *l);
+LIST *list_from_python(PyObject *l);
+
+#endif
 
 #endif
 

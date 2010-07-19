@@ -119,6 +119,7 @@ struct _settings
     SETTINGS * next;
     char     * symbol;        /* symbol name for var_set() */
     LIST     * value;         /* symbol value for var_set() */
+    int multiple;
 };
 
 /* TARGETS - a chain of TARGETs. */
