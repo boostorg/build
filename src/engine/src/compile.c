@@ -776,8 +776,8 @@ call_python_function(RULE* r, FRAME* frame)
         for ( ; l; l = l->next )
         {
             PyObject * v = PyString_FromString(l->string);
-            /* Steals reference to 'v' */
             PyList_Append( arg, v );
+            Py_DECREF(v);
         }
         /* Steals reference to 'arg' */
         PyTuple_SetItem( arguments, i, arg );
