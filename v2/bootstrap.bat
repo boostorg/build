@@ -6,13 +6,13 @@ REM Distributed under the Boost Software License, Version 1.0.
 REM (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 ECHO Bootstrapping the build engine
-if exist ".\engine\src\bin.ntx86\bjam.exe" del tools\build\v2\engine\src\bin.ntx86\bjam.exe
-if exist ".\engine\src\bin.ntx86_64\bjam.exe" del tools\build\v2\engine\src\bin.ntx86_64\bjam.exe
+if exist ".\engine\src\bin.ntx86\bjam.exe" del engine\src\bin.ntx86\bjam.exe
+if exist ".\engine\src\bin.ntx86_64\bjam.exe" del engine\src\bin.ntx86_64\bjam.exe
 cd engine\src
 
-call .\build.bat > ..\bootstrap.log
+call .\build.bat > ..\..\bootstrap.log
 @ECHO OFF
-cd ..\..\..
+cd ..\..
 
 if exist ".\engine\src\bin.ntx86\bjam.exe" (
    copy .\engine\src\bin.ntx86\bjam.exe . > nul
