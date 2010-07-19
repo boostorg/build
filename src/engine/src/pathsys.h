@@ -79,4 +79,13 @@ const char * path_tmpnam( void );
 const char * path_tmpfile( void );
 #endif
 
+/** Give the first argument to 'main', return a full path to
+    our executable.  Returns null in the unlikely case it
+    cannot be determined. Caller is responsible for freeing
+    the string.
+
+    Implemented in jam.c
+*/
+char * executable_path (char *argv0);
+
 #endif

@@ -60,6 +60,7 @@ LIST *builtin_md5( PARSE *parse, FRAME *frame );
 LIST *builtin_file_open( PARSE *parse, FRAME *frame );
 LIST *builtin_pad( PARSE *parse, FRAME *frame );
 LIST *builtin_precious( PARSE *parse, FRAME *frame );
+LIST *builtin_self_path( PARSE *parse, FRAME *frame );
 
 void backtrace( FRAME *frame );
 extern int last_update_now_status;
