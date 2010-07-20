@@ -588,7 +588,7 @@ char *executable_path(char *arvg0) {
 #include <stdlib.h>
 
 char *executable_path(char *arvg0) {
-    return stdrup(getexecname());
+    return strdup(getexecname());
 }
 #elif defined(__FreeBSD__)
 #include <sys/sysctl.h>
