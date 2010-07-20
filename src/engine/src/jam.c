@@ -575,7 +575,7 @@ char *executable_path(char *arvg0) {
     if (ret == 0 || ret == sizeof(buf)) return NULL;
     return strdup (buf);
 }
-#elif defined(__APPLE__)  // Not tested
+#elif defined(__APPLE__)  /* Not tested */
 #include <mach-o/dyld.h>
 char *executable_path(char *arvg0) {
     char buf[1024];
@@ -584,7 +584,7 @@ char *executable_path(char *arvg0) {
     if (ret != 0) return NULL;
     return strdup(buf);
 }
-#elif defined(sun) || defined(__sun) // Not tested
+#elif defined(sun) || defined(__sun) /* Not tested */
 #include <stdlib.h>
 
 char *executable_path(char *arvg0) {
@@ -614,8 +614,7 @@ char *executable_path(char *arvg0) {
 }
 #else
 char *executable_path(char *arvg0) {
-    // If argv0 is absolute path, assume it's the right
-    // absolute path.
+    /* If argv0 is absolute path, assume it's the right absolute path. */
     if (argv0[0] == "/")
         return strdup(argv0);
     return NULL;
