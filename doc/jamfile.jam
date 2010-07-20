@@ -17,7 +17,7 @@ boostbook userman : src/standalone.xml
      <xsl:param>boost.root=../../../../..
    ;
    
-xml jam_docs : ../../../jam/doc/bjam.qbk ;   
+xml jam_docs : bjam.qbk ;   
    
 if ! $(BOOST_ROOT)
 {   
