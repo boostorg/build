@@ -28,13 +28,20 @@ def create (raw_properties = []):
     """ Creates a new 'PropertySet' instance for the given raw properties,
         or returns an already existing one.
     """
-    raw_properties.sort ()
-    raw_properties = unique (raw_properties)
- 
-    key = '-'.join (raw_properties)
+    # FIXME: propagate to callers.
+    if len(raw_properties) > 0 and isinstance(raw_properties[0], property.Property):
+        x = raw_properties
+    else:        
+        x = [property.create_from_string(ps) for ps in raw_properties]
+    x.sort ()
+    x = unique (x)
+
+    # FIXME: can we do better, e.g. by directly computing
+    # has value of the list?
+    key = tuple(x)
 
     if not __cache.has_key (key):
-        __cache [key] = PropertySet (raw_properties)
+        __cache [key] = PropertySet(x)
 
     return __cache [key]
 
@@ -43,9 +50,10 @@ def create_with_validation (raw_properties):
         that all properties are valid and converting incidental
         properties into gristed form.
     """
-    property.validate (raw_properties)
+    properties = [property.create_from_string(s) for s in raw_properties]
+    property.validate(properties)
     
-    return create (property.make (raw_properties))
+    return create(properties)
 
 def empty ():
     """ Returns PropertySet with empty set of properties.
@@ -56,13 +64,12 @@ def create_from_user_input(raw_properties, jamfile_module, location):
     """Creates a property-set from the input given by the user, in the
     context of 'jamfile-module' at 'location'"""
 
-    property.validate(raw_properties)
-
     specification = property.translate_paths(raw_properties, location)
     specification = property.translate_indirect(specification, jamfile_module)
-    specification = property.expand_subfeatures_in_conditions(specification)
     specification = property.make(specification)
-    return create(specification)
+    properties = [property.create_from_string(s, True) for s in specification]
+    properties = property.expand_subfeatures_in_conditions(properties)
+    return create(properties)
 
 
 def refine_from_user_input(parent_requirements, specification, jamfile_module,
@@ -126,13 +133,20 @@ class PropertySet:
         - several operations, like and refine and as_path are provided. They all use
           caching whenever possible.
     """
-    def __init__ (self, raw_properties = []):
+    def __init__ (self, properties = []):
 
-        self.raw_ = raw_properties
+
+        raw_properties = []
+        for p in properties:
+            raw_properties.append(p.to_raw())
+
+        self.all_ = properties
+        self.all_raw_ = raw_properties
         
         self.incidental_ = []
         self.free_ = []
         self.base_ = []
+        self.base_raw_ = []
         self.dependency_ = []
         self.non_dependency_ = []
         self.conditional_ = []
@@ -154,6 +168,9 @@ class PropertySet:
 
         # Cache for the expanded composite properties
         self.composites_ = None
+
+        # Cache for property set with expanded subfeatures
+        self.subfeatures_ = None
 
         # Cache for the property set containing propagated properties.
         self.propagated_ps_ = None
@@ -178,40 +195,55 @@ class PropertySet:
             # A feature can be both incidental and free,
             # in which case we add it to incidental.
             if 'incidental' in att:
-                self.incidental_.append (p)
+                pass
+#                self.incidental_.append (p)
             elif 'free' in att:
-                self.free_.append (p)
+ #               self.free_.append (p)
+                pass
             else:
-                self.base_.append (p)
+                self.base_raw_.append (p)
         
             if 'dependency' in att:
                 self.dependency_.append (p)
             else:
                 self.non_dependency_.append (p)
             
-            if property.is_conditional (p):
-                self.conditional_.append (p)
-            else:
-                self.non_conditional_.append (p)
-                                    
+                                   
             if 'propagated' in att:
                 self.propagated_.append (p)
 
             if 'link_incompatible' in att:
                 self.link_incompatible.append (p)
+
+        for p in properties:
+
+            if p.feature().incidental():
+                self.incidental_.append(p)
+            elif p.feature().free():
+                self.free_.append(p)
+            else:
+                self.base_.append(p)
+
+            if p.condition():
+                self.conditional_.append(p)
+            else:
+                self.non_conditional_.append(p)
+
+    def all(self):
+        return self.all_
     
     def raw (self):
         """ Returns the list of stored properties.
         """
-        return self.raw_
+        return self.all_raw_
 
     def __str__(self):
-        return string.join(self.raw_)
+        return string.join(self.all_raw_)
     
     def base (self):
         """ Returns properties that are neither incidental nor free.
         """
-        return self.base_
+        return self.base_raw_
     
     def free (self):
         """ Returns free properties which are not dependency properties.
@@ -246,24 +278,29 @@ class PropertySet:
     def refine (self, requirements):
         """ Refines this set's properties using the requirements passed as an argument.
         """
-        str_req = str (requirements)
-        if not self.refined_.has_key (str_req):
-            r = property.refine (self.raw (), requirements.raw ())
+        assert isinstance(requirements, PropertySet)
+        if not self.refined_.has_key (requirements):
+            r = property.refine(self.all_, requirements.all_)
 
-            self.refined_ [str_req] = create (r)
+            self.refined_[requirements] = create(r)
 
-        return self.refined_ [str_req]
+        return self.refined_[requirements]
 
     def expand (self):
         if not self.expanded_:
-            expanded = feature.expand (self.raw_)
-            self.expanded_ = create (expanded)
+            expanded = feature.expand(self.all_)
+            self.expanded_ = create(expanded)
         return self.expanded_
 
     def expand_componsite(self):
         if not self.componsites_:
-            self.composites_ = create(feature.expand_composires(self.raw_))
+            self.composites_ = create(feature.expand_composires(self.all_raw_))
         return self.composites_
+
+    def expand_subfeature(self):
+        if not self.subfeatures_:
+            self.subfeatures_ = create(feature.expand_subfeatures(self.all_))
+        return self.subfeatures_
 
     def evaluate_conditionals(self, context=None):
         if not context:
@@ -271,7 +308,7 @@ class PropertySet:
 
         if not self.evaluated_.has_key(context):
             self.evaluated_[context] = create(
-                property.evaluate_conditionals_in_context(self.raw_,
+                property.evaluate_conditionals_in_context(self.all_raw_,
                                                           context.raw()))
 
         return self.evaluated_[context]
@@ -283,13 +320,37 @@ class PropertySet:
 
     def add_defaults (self):
         if not self.defaults_:
-            expanded = feature.add_defaults(self.raw_)
+            expanded = feature.add_defaults(self.all_)
             self.defaults_ = create(expanded)
         return self.defaults_
 
     def as_path (self):
         if not self.as_path_:
-            self.as_path_ = property.as_path(self.base_)
+
+            def path_order (p1, p2):
+
+                i1 = p1.feature().implicit()
+                i2 = p2.feature().implicit()
+
+                if i1 != i2:
+                    return i2 - i1
+                else:
+                    return cmp(p1.feature().name(), p2.feature().name())
+
+            # trim redundancy
+            properties = feature.minimize(self.base_)
+                
+            # sort according to path_order
+            properties.sort (path_order)
+                
+            components = []
+            for p in properties:
+                if p.feature().implicit():
+                    components.append(p.value())
+                else:
+                    components.append(p.feature().name() + "-" + p.value())
+
+            self.as_path_ = '/'.join (components)
 
         return self.as_path_
 
@@ -341,9 +402,9 @@ class PropertySet:
         """ Creates a new property set containing the properties in this one,
             plus the ones of the property set passed as argument.
         """
-        if not self.added_.has_key (str (ps)):
-            self.added_ [str (ps)] = create (self.raw_ + ps.raw ())
-        return self.added_ [str (ps)]
+        if not self.added_.has_key(ps):
+            self.added_[ps] = create(self.all_ + ps.all())
+        return self.added_[ps]
     
     def add_raw (self, properties):
         """ Creates a new property set containing the properties in this one,
@@ -353,16 +414,15 @@ class PropertySet:
 
     
     def get (self, feature):
-        """ Returns all values of 'feature'.
+        """ Returns all properties for 'feature'.
         """
         if not self.feature_map_:
             self.feature_map_ = {}
 
-            for v in self.raw_:
-                key = get_grist (v)
-                if not self.feature_map_.has_key (key):
-                    self.feature_map_ [key] = []
-                self.feature_map_ [get_grist (v)].append (replace_grist (v, ''))
+            for v in self.all_:
+                if not self.feature_map_.has_key(v.feature()):
+                    self.feature_map_[v.feature()] = []
+                self.feature_map_[v.feature()].append(v)
         
-        return self.feature_map_.get (feature, [])
+        return self.feature_map_.get(feature, [])
     

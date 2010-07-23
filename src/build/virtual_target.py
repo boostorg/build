@@ -755,14 +755,12 @@ class Action:
 
         self.engine_.add_dependency (actual_targets, self.actual_sources_ + self.dependency_only_sources_)
 
-        raw_properties = properties.raw ()
-
         # FIXME: check the comment below. Was self.action_name_ [1]
         # Action name can include additional argument to rule, which should not
         # be passed to 'set-target-variables'
         # FIXME: breaking circular dependency
         import toolset
-        toolset.set_target_variables (self.manager_, self.action_name_, actual_targets, raw_properties)
+        toolset.set_target_variables (self.manager_, self.action_name_, actual_targets, properties)
              
         engine = self.manager_.engine ()
         
