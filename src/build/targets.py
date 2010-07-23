@@ -81,7 +81,7 @@ import property, project, virtual_target, property_set, feature, generators, too
 from virtual_target import Subvariant
 from b2.exceptions import *
 from b2.util.sequence import unique
-from b2.util import set, path
+from b2.util import set, path, bjam_signature
 from b2.build.errors import user_error_checkpoint
 
 _re_separate_target_from_properties = re.compile (r'^([^<]*)(/(<.*))?$')
@@ -1261,3 +1261,22 @@ class TypedTarget (BasicTarget):
         
         return r
 
+def metatarget_function_for_class(class_):
+
+    @bjam_signature((["name"], ["sources", "*"], ["requirements", "*"],
+                     ["default_build", "*"], ["usage_requirements", "*"]))
+    def create_metatarget(name, sources, requirements = [], default_build = None, usage_requirements = []):
+
+        from b2.manager import get_manager
+        t = get_manager().targets()
+
+        project = get_manager().projects().current()
+        
+        return t.main_target_alternative(
+            class_(name, project,
+                   t.main_target_sources(sources, name),
+                   t.main_target_requirements(requirements, project),
+                   t.main_target_default_build(default_build, project),
+                   t.main_target_usage_requirements(usage_requirements, project)))
+
+    return create_metatarget
