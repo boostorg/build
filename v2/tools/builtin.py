@@ -316,7 +316,7 @@ register_globals ()
 
 class SearchedLibTarget (virtual_target.AbstractFileTarget):
     def __init__ (self, name, project, shared, real_name, search, action):
-        virtual_target.AbstractFileTarget.__init__ (self, name, False, 'SEARCHED_LIB', project, action)
+        virtual_target.AbstractFileTarget.__init__ (self, name, 'SEARCHED_LIB', project, action)
         
         self.shared_ = shared
         self.real_name_ = real_name

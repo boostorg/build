@@ -412,7 +412,7 @@ class Generator:
             pre = pre[1:]
             post = post[1:]
             
-            targets.append(virtual_target.FileTarget(generated_name, False, t, project, a))
+            targets.append(virtual_target.FileTarget(generated_name, t, project, a))
         
         return [ project.manager().virtual_targets().register(t) for t in targets ]
 

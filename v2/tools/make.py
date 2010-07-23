@@ -16,17 +16,24 @@ from b2.build import type
 from b2.manager import get_manager
 import b2.build.property_set
 
+# FIXME: copy-paste from generate.py
+import re
+_extract_jamfile_and_rule = re.compile("@(Jamfile<.*>)%(.*)")
+
 class MakeTarget(BasicTarget):
   
     def construct(self, name, source_targets, property_set):
 
         action_name = property_set.get("<action>")[0]
         assert action_name[0] == '@'
-        action_name = action_name[1:]
+        (jamfile, rule) = _extract_jamfile_and_rule.match(action_name).groups()
+        # This is very bad. We need to call rule inside the proper module,
+        # not at global scope, where it might not be available at all.
+        action_name = rule
 
         action = Action(get_manager(), source_targets, action_name, property_set)
-        target = FileTarget(self.name(), 1, type.type(self.name()),
-                            self.project(), action)    
+        target = FileTarget(self.name(), type.type(self.name()),
+                            self.project(), action, exact=True)    
         return [ b2.build.property_set.empty(),
                  [self.project().manager().virtual_targets().register(target)]]
 
