@@ -8,8 +8,8 @@
 #  warranty, and with no claim as to its suitability for any purpose.
 
 import feature
-from b2.util import set
 from b2.util.utility import *
+import b2.build.property_set as property_set
 
 def expand_no_defaults (property_sets):
     """ Expand the given build request by combining all property_sets which don't
@@ -21,7 +21,7 @@ def expand_no_defaults (property_sets):
     # Now combine all of the expanded property_sets
     product = __x_product (expanded_property_sets)
     
-    return product
+    return [property_set.create(p) for p in product]
 
 
 def __x_product (property_sets):
@@ -29,8 +29,7 @@ def __x_product (property_sets):
         that would contain conflicting values for single-valued features.
     """
     x_product_seen = set()
-    x_product_used = set()
-    return __x_product_aux (property_sets, x_product_seen, x_product_used)
+    return __x_product_aux (property_sets, x_product_seen)[0]
 
 def __x_product_aux (property_sets, seen_features):
     """Returns non-conflicting combinations of property sets.
@@ -64,14 +63,17 @@ def __x_product_aux (property_sets, seen_features):
     if these_features & seen_features:
 
         (inner_result, inner_seen) = __x_product_aux(property_sets[1:], seen_features)
-        return (inner_result, inner_seen + these_features)
+        return (inner_result, inner_seen | these_features)
 
     else:
 
         result = []
         (inner_result, inner_seen) = __x_product_aux(property_sets[1:], seen_features | these_features)
-        for inner in inner_result:
-            result.append(properties + inner)
+        if inner_result:
+            for inner in inner_result:
+                result.append(properties + inner)
+        else:
+            result.append(properties)
         
         if inner_seen & these_features:
             # Some of elements in property_sets[1:] conflict with elements of property_sets[0],
@@ -79,7 +81,7 @@ def __x_product_aux (property_sets, seen_features):
             (inner_result2, inner_seen2) = __x_product_aux(property_sets[1:], seen_features)
             result.extend(inner_result2)
 
-        return (result, inner_seen + these_features)
+        return (result, inner_seen | these_features)
 
     
 
