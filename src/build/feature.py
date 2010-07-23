@@ -357,7 +357,7 @@ def __expand_subfeatures_aux (property, dont_validate = False):
     
     return result
 
-def expand_subfeatures (properties, dont_validate = False):
+def expand_subfeatures(properties, dont_validate = False):
     """
     Make all elements of properties corresponding to implicit features
     explicit, and express all subfeature values as separate properties

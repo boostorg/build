@@ -96,7 +96,7 @@ class TargetRegistry:
         # Current indent for debugging messages
         self.indent_ = ""
 
-        self.debug_building_ = "--debug-building" in bjam.variable("ARGV")
+        self.debug_building_ = "--debug-building" in bjam.variable("ARV")
 
     def main_target_alternative (self, target):
         """ Registers the specified target as a main target alternatives.
@@ -869,17 +869,24 @@ class BasicTarget (AbstractTarget):
             common to dependency build request and target build
             properties.
         """
-        # For optimization, we add free requirements directly,
+        # For optimization, we add free unconditional requirements directly,
         # without using complex algorithsm.
-        # This gives the complex algorithm better chance of caching results.
-        free = requirements.free ()        
-        non_free = property_set.create(requirements.base() + requirements.incidental())
-        
-        key = (build_request, non_free)
+        # This gives the complex algorithm better chance of caching results.        
+        # The exact effect of this "optimization" is no longer clear
+        free_unconditional = []
+        other = []
+        for p in requirements.all():
+            if p.feature().free() and not p.condition():
+                free_unconditional.append(p)
+            else:
+                other.append(p)
+        other = property_set.create(other)
+                
+        key = (build_request, other)
         if not self.request_cache.has_key(key):
-            self.request_cache[key] = self.__common_properties2 (build_request, non_free)       
+            self.request_cache[key] = self.__common_properties2 (build_request, other)
 
-        return self.request_cache[key].add_raw(free)
+        return self.request_cache[key].add_raw(free_unconditional)
 
     # Given 'context' -- a set of already present properties, and 'requirements',
     # decide which extra properties should be applied to 'context'. 
@@ -906,7 +913,7 @@ class BasicTarget (AbstractTarget):
         #    <threading>single 
         #
         # might come from project's requirements.
-    
+
         unconditional = feature.expand(requirements.non_conditional())
     
         raw = context.all()
@@ -974,14 +981,14 @@ class BasicTarget (AbstractTarget):
         # TODO: There is possibility that we've added <foo>bar, which is composite
         # and expands to <foo2>bar2, but default value of <foo2> is not bar2,
         # in which case it's not clear what to do.
-        # 
+        #
         build_request = build_request.add_defaults()
         # Featured added by 'add-default' can be composite and expand
         # to features without default values -- so they are not added yet.
         # It could be clearer/faster to expand only newly added properties
         # but that's not critical.
         build_request = build_request.expand()
-        
+      
         return self.evaluate_requirements(requirements, build_request,
                                           "refined")
     
@@ -1077,7 +1084,7 @@ class BasicTarget (AbstractTarget):
                 result = GenerateResult ()
 
                 properties = rproperties.non_dependency ()
-                
+
                 (p, u) = self.generate_dependencies (rproperties.dependency (), rproperties)
                 properties += p
                 usage_requirements = u

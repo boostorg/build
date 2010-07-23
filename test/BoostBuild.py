@@ -438,6 +438,8 @@ class Tester(TestCmd.TestCmd):
                         % os.path.join(self.original_workdir, "test-config.jam"))
                 if ignore_toolset_requirements:
                     kw['program'].append("--ignore-toolset-requirements")
+                if "--python" in sys.argv:
+                    kw['program'].append("--python")
                 kw['chdir'] = subdir
                 apply(TestCmd.TestCmd.run, [self], kw)
             except:
