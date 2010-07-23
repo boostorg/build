@@ -250,6 +250,9 @@ class PropertySet:
         """
         return self.free_
 
+    def non_free(self):
+        return self.base_ + self.incidental_
+
     def dependency (self):
         """ Returns dependency properties.
         """
@@ -297,7 +300,7 @@ class PropertySet:
             self.composites_ = create(feature.expand_composires(self.all_raw_))
         return self.composites_
 
-    def expand_subfeature(self):
+    def expand_subfeatures(self):
         if not self.subfeatures_:
             self.subfeatures_ = create(feature.expand_subfeatures(self.all_))
         return self.subfeatures_

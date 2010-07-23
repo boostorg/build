@@ -416,7 +416,7 @@ def extend (name, values):
             if __implicit_features.has_key(v):
                 raise BaseException ("'%s' is already associated with the feature '%s'" % (v, __implicit_features [v]))
 
-            __implicit_features[v] = name
+            __implicit_features[v] = feature
 
     if len (feature.values()) == 0 and len (values) > 0:
         # This is the first value specified for this feature,
