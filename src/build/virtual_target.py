@@ -746,6 +746,7 @@ class Action:
 
         ps = self.properties ()
         properties = self.adjust_properties (ps)
+
         actual_targets = []
         
         for i in self.targets ():

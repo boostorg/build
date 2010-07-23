@@ -310,7 +310,7 @@ def __handle_flag_value (manager, value, ps):
     
     if get_grist (value):
         f = feature.get(value)
-        properties = ps.get(feature)
+        properties = ps.get(f)
         
         for p in properties:
 
@@ -329,8 +329,8 @@ def __handle_flag_value (manager, value, ps):
                 # specially -- each &&-separated element is considered
                 # separate value. This is needed to handle searched
                 # libraries, which must be in specific order.
-                if not __re_two_ampersands.search (ungristed):
-                    values.append (ungristed)
+                if not __re_two_ampersands.search(value):
+                    values.append(value)
 
                 else:
                     values.extend(value.split ('&&'))
