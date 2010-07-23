@@ -44,8 +44,10 @@ class Property(object):
         return self._condition
 
     def to_raw(self):
-        # FIXME: include condition!
-        return "<" + self._feature.name() + ">" + self._value
+        result = "<" + self._feature.name() + ">" + self._value       
+        if self._condition:
+            result = ",".join(str(p) for p in self._condition) + ':' + result
+        return result
 
     def __str__(self):
         return self.to_raw()
@@ -253,17 +255,20 @@ def expand_subfeatures_in_conditions (properties):
 
         if not p.condition():
             result.append(p)
+        else:
+            expanded = []
+            for c in p.condition():
 
-        for c in p.condition():
+                if c.feature().name().startswith("toolset") or c.feature().name() == "os":
+                    # It common that condition includes a toolset which
+                    # was never defined, or mentiones subfeatures which
+                    # were never defined. In that case, validation will
+                    # only produce an spirious error, so don't validate.
+                    expanded.extend(feature.expand_subfeatures ([c], True))
+                else:
+                    expanded.extend(feature.expand_subfeatures([c]))
 
-            if c.feature().name().startswith("toolset") or c.feature().name() == "os":
-                # It common that condition includes a toolset which
-                # was never defined, or mentiones subfeatures which
-                # were never defined. In that case, validation will
-                # only produce an spirious error, so don't validate.
-                result.extend(feature.expand_subfeatures ([c], True))
-            else:
-                result.extend(feature.expand_subfeatures([c]))
+            result.append(Property(p.feature(), p.value(), expanded))
 
     return result
 
@@ -311,26 +316,21 @@ def evaluate_conditionals_in_context (properties, context):
         in conditions are looked up in 'context'
     """
     base = []
-    conditionals = []
+    conditional = []
 
     for p in properties:
-        if __re_has_condition.search (p):
-            conditionals.append (p)
+        if p.condition():
+            conditional.append (p)
         else:
             base.append (p)
 
     result = base
-    for p in conditionals:
+    for p in conditional:
 
-        # Separate condition and property
-        s = __re_separate_condition_and_property.match (p)
-
-        # Split condition into individual properties
-        conditions = s.group (1).split (',')
-
-        # Evaluate condition        
-        if b2.util.set.contains (conditions, context):
-            result.append (s.group (2))
+        # Evaluate condition
+        # FIXME: probably inefficient
+        if all(x in context for x in p.condition()):
+            result.append(Property(p.feature(), p.value()))
 
     return result
 
