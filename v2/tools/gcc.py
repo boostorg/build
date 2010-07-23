@@ -287,7 +287,6 @@ flags('gcc.compile', 'OPTIONS', ['<rtti>off'], ['-fno-rtti'])
 # In that case we'll just add another parameter to 'init' and move this login
 # inside 'init'.
 if not os_name () in ['CYGWIN', 'NT']:
-    print "osname:", os_name()
     # This logic will add -fPIC for all compilations:
     #
     # lib a : a.cpp b ;
