@@ -534,8 +534,15 @@ LIST * compile_rule( PARSE * parse, FRAME * frame )
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
     inner->procedure = parse;
-    for ( p = parse->left; p; p = p->left )
-        lol_add( inner->args, parse_evaluate( p->right, frame ) );
+    /* Special-case LOL of length 1 where the first list is totally empty.
+       This is created when calling functions with no parameters, due to
+       the way jam grammar is written. This is OK when one jam function
+       calls another, but really not good when Jam function calls Python.  */
+    if ( parse->left->left == NULL && parse->left->right->func == compile_null)
+        ;
+    else
+        for ( p = parse->left; p; p = p->left )
+            lol_add( inner->args, parse_evaluate( p->right, frame ) );
 
     /* And invoke the rule. */
     result = evaluate_rule( parse->string, inner );
