@@ -94,6 +94,10 @@ def create_from_string(s, allow_condition = False):
                    
     return Property(f, value, condition)
 
+def create_from_strings(string_list, validate=False):
+
+    return [create_from_string(s, validate) for s in string_list]
+
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
     """
@@ -180,45 +184,39 @@ def translate_paths (properties, path):
     result = []
 
     for p in properties:
-        split = split_conditional (p)
 
-        condition = ''
+        if p.feature().path():
+            values = __re_two_ampersands.split(p.value())
+            
+            new_value = "&&".join(os.path.join(path, v) for v in values)
 
-        if split:
-            condition = split [0]
-            p = split [1]
-        
-        if get_grist (p) and 'path' in feature.attributes (get_grist (p)):
-            values = __re_two_ampersands.split (forward_slashes (replace_grist (p, "")))
-
-            t = [os.path.join(path, v) for v in values]
-            t = '&&'.join (t)
-            tp = replace_grist (t, get_grist (p)).replace("\\", "/")
-            result.append (condition + tp)
+            if new_value != p.value():
+                result.append(Property(p.feature(), new_value, p.condition()))
+            else:
+                result.append(p)
             
         else:
-            result.append (condition + ":" + p)
+            result.append (p)
 
     return result
 
-def translate_indirect(specification, context_module):
+def translate_indirect(properties, context_module):
     """Assumes that all feature values that start with '@' are
     names of rules, used in 'context-module'. Such rules can be
     either local to the module or global. Qualified local rules
     with the name of the module."""
     result = []
-    for px in specification:
-        p = get_value(px)
-        if p[0] == '@':
+    for p in properties:
+        if p.value()[0] == '@':
             v = None
-            m = p[1:]
+            m = p.value()[1:]
             if __re_indirect_rule.match(m):
                 # Rule is already in indirect format
                 # FIXME: it's not clear if this is necessary.
                 v = m
             else:
 
-                if not '.' in p:
+                if not '.' in m:
                     # This is unqualified rule name. The user might want
                     # to set flags on this rule name, and toolset.flag
                     # auto-qualifies the rule name. Need to do the same
@@ -232,9 +230,9 @@ def translate_indirect(specification, context_module):
                 #v = indirect.make(m, context_module)
                 get_manager().engine().register_bjam_action(v)
             
-            result.append(get_grist(px) + "@" + m)
+            result.append(Property(p.feature(), "@" + m, p.condition()))
         else:
-            result.append(px)
+            result.append(p)
 
     return result
 
@@ -269,24 +267,6 @@ def expand_subfeatures_in_conditions (properties):
                 result.extend(feature.expand_subfeatures([c]))
 
     return result
-
-def make (specification):
-    """ Converts implicit values into full properties.
-    """
-    result = []
-    for e in specification:
-        if get_grist (e):
-            result.append (e)
-
-        elif feature.is_implicit_value (e):
-            f = feature.implied_feature (e)
-            result.append (f + e)
-
-        else:
-            raise InvalidProperty ("'%s' is not a valid for property specification" % e)
-
-    return result
-
 
 # FIXME: this should go
 def split_conditional (property):
