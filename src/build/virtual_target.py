@@ -156,7 +156,7 @@ class VirtualTargetRegistry:
 
         file_type = type.type (file)
 
-        result = FileTarget (file, False, file_type, project,
+        result = FileTarget (file, file_type, project,
                              None, file_location)       
         self.files_ [path] = result
         
@@ -366,7 +366,7 @@ class AbstractFileTarget (VirtualTarget):
                   
         type:   optional type of this target.
     """
-    def __init__ (self, name, exact, type, project, action = None):
+    def __init__ (self, name, type, project, action = None, exact=False):
         VirtualTarget.__init__ (self, name, project)
             
         self.type_ = type
@@ -607,14 +607,14 @@ class FileTarget (AbstractFileTarget):
             - the value passed to the 'suffix' method, if any, or
             - the suffix which correspond to the target's type.
     """
-    def __init__ (self, name, exact, type, project, action = None, path=None):
-        AbstractFileTarget.__init__ (self, name, exact, type, project, action)
+    def __init__ (self, name, type, project, action = None, path=None, exact=False):
+        AbstractFileTarget.__init__ (self, name, type, project, action, exact)
 
         self.path_ = path
 
     def clone_with_different_type(self, new_type):
-        return FileTarget(self.name_, 1, new_type, self.project_,
-                          self.action_, self.path_)
+        return FileTarget(self.name_, new_type, self.project_,
+                          self.action_, self.path_, exact=True)
         
     def actualize_location (self, target):
         engine = self.project_.manager_.engine ()
@@ -791,7 +791,8 @@ class Action:
             if i.type ():
                 scanner = type.get_scanner (i.type (), prop_set)
 
-            result.append (i.actualize (scanner))
+            r = i.actualize (scanner)
+            result.append (r)
         
         return result
     
@@ -857,11 +858,14 @@ class NonScanningAction(Action):
     def __init__(self, sources, action_name, property_set):
         #FIXME: should the manager parameter of Action.__init__
         #be removed? -- Steven Watanabe
-        Action.__init__(b2.manager.get_manager(), sources, action_name, property_set)
+        Action.__init__(self, b2.manager.get_manager(), sources, action_name, property_set)
 
     def actualize_source_type(self, sources, property_set):
-        
-        return [x for source in sources for x in i.actualize()]
+
+        result = []
+        for s in sources:
+            result.append(s.actualize())
+        return result
 
 def traverse (target, include_roots = False, include_sources = False):
     """ Traverses the dependency graph of 'target' and return all targets that will
@@ -915,8 +919,8 @@ def clone_action (action, new_project, new_action_name, new_properties):
 
         n = target.name()
         # Don't modify the name of the produced targets. Strip the directory f
-        cloned_target = FileTarget(n, 1, target.type(), new_project,
-                                   cloned_action)
+        cloned_target = FileTarget(n, target.type(), new_project,
+                                   cloned_action, exact=True)
 
         d = target.dependencies()
         if d:

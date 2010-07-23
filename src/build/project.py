@@ -794,8 +794,9 @@ class ProjectRules:
         self.rules = {}
         self.local_names = [x for x in self.__class__.__dict__
                             if x not in ["__init__", "init_project", "add_rule",
-                                         "error_reporting_wrapper", "add_rule_for_type"]]
+                                         "error_reporting_wrapper", "add_rule_for_type", "reverse"]]
         self.all_names_ = [x for x in self.local_names]
+        self.reverse = {}
 
     def _import_rule(self, bjam_module, name, callable):
         if hasattr(callable, "bjam_signature"):
@@ -1002,6 +1003,7 @@ attribute is allowed only for top-level 'project' invocations""")
             v = m.__dict__[f]
             if callable(v):
                 self._import_rule(jamfile_module, name + "." + f, v)
+                self.reverse.setdefault(jamfile_module, {})[name + "." + f] = v
 
         if names_to_import:
             if not local_names:
@@ -1028,3 +1030,11 @@ attribute is allowed only for top-level 'project' invocations""")
             return [c + r for r in requirements]
         else:
             return [c + ":" + r for r in requirements]
+
+    def reverse_lookup(self, jamfile_module, name_in_jamfile_modue):
+        """Return callable that we've previously imported to jam."""
+
+        if self.reverse.has_key(jamfile_module):
+            return self.reverse[jamfile_module].get(name_in_jamfile_modue, None)
+
+        return None

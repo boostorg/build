@@ -226,11 +226,10 @@ def translate_indirect(properties, context_module):
                     # will conflict.
                     m = context_module + "." + m
 
-                v = m
-                #v = indirect.make(m, context_module)
-                get_manager().engine().register_bjam_action(v)
+                v = context_module + '%' + m
+                get_manager().engine().register_bjam_action(m)
             
-            result.append(Property(p.feature(), "@" + m, p.condition()))
+            result.append(Property(p.feature(), "@" + v, p.condition()))
         else:
             result.append(p)
 
