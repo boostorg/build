@@ -8,6 +8,7 @@
 
 from b2.util.utility import *
 import property, feature, string
+import b2.build.feature
 from b2.exceptions import *
 from b2.util.sequence import unique
 from b2.util.set import difference
@@ -64,10 +65,9 @@ def create_from_user_input(raw_properties, jamfile_module, location):
     """Creates a property-set from the input given by the user, in the
     context of 'jamfile-module' at 'location'"""
 
-    specification = property.translate_paths(raw_properties, location)
-    specification = property.translate_indirect(specification, jamfile_module)
-    specification = property.make(specification)
-    properties = [property.create_from_string(s, True) for s in specification]
+    properties = property.create_from_strings(raw_properties, True)
+    properties = property.translate_paths(properties, location)
+    properties = property.translate_indirect(properties, jamfile_module)
     properties = property.expand_subfeatures_in_conditions(properties)
     return create(properties)
 
@@ -414,15 +414,18 @@ class PropertySet:
 
     
     def get (self, feature):
-        """ Returns all properties for 'feature'.
+        """ Returns all values of 'feature'.
         """
+        if not isinstance(feature, b2.build.feature.Feature):
+            feature = b2.build.feature.get(feature)
+        
         if not self.feature_map_:
             self.feature_map_ = {}
 
             for v in self.all_:
                 if not self.feature_map_.has_key(v.feature()):
                     self.feature_map_[v.feature()] = []
-                self.feature_map_[v.feature()].append(v)
+                self.feature_map_[v.feature()].append(v.value())
         
         return self.feature_map_.get(feature, [])
     

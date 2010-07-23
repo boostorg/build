@@ -163,7 +163,7 @@ def find_satisfied_condition(conditions, ps):
 
             found = False
             if i.value():
-                found = i in ps.get(i.feature())
+                found = i.value() in ps.get(i.feature())
             else:            
                 # Handle value-less properties like '<architecture>' (compare with 
                 # '<architecture>x86').
@@ -310,32 +310,27 @@ def __handle_flag_value (manager, value, ps):
     
     if get_grist (value):
         f = feature.get(value)
-        properties = ps.get(f)
+        values = ps.get(f)
         
-        for p in properties:
-
-            value = p.value()
+        for value in values:
 
             if f.dependency():
                 # the value of a dependency feature is a target
                 # and must be actualized
                 # FIXME: verify that 'find' actually works, ick!
-                result.append (manager.targets ().find (p.value()).actualize ())
+                result.append (manager.targets ().find(value).actualize ())
 
             elif f.path() or f.free():
-                values = []
                 
                 # Treat features with && in the value
                 # specially -- each &&-separated element is considered
                 # separate value. This is needed to handle searched
                 # libraries, which must be in specific order.
                 if not __re_two_ampersands.search(value):
-                    values.append(value)
+                    result.append(value)
 
                 else:
-                    values.extend(value.split ('&&'))
-
-                result.extend(values)
+                    result.extend(value.split ('&&'))
             else:
                 result.append (ungristed)
     else:

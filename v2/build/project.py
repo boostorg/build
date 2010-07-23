@@ -727,7 +727,7 @@ class ProjectAttributes:
                 # FIXME:
                 #errors.error "usage-requirements" $(specification) "have non-free properties" $(non-free) ;
 
-            t = property.translate_paths(specification, self.location)
+            t = property.translate_paths(property.create_from_strings(specification), self.location)
 
             existing = self.__dict__.get("usage-requirements")
             if existing:

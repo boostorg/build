@@ -290,6 +290,11 @@ def register_globals ():
         'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312'],
 
         ['propagated', 'optional'])
+
+    feature.feature('conditional', [], ['incidental', 'free'])
+
+    # The value of 'no' prevents building of a target.
+    feature.feature('build', ['yes', 'no'], ['optional'])
     
     # Windows-specific features
     feature.feature ('user-interface', ['console', 'gui', 'wince', 'native', 'auto'], [])
