@@ -685,7 +685,7 @@ class MainTarget (AbstractTarget):
             # be an indication that
             # build_request.expand-no-defaults is the wrong rule
             # to use here.
-            compressed = feature.compress-subproperties (raw)
+            compressed = feature.compress_subproperties (raw)
 
             properties = build_request.expand_no_defaults (compressed, defaults_to_apply)
               
@@ -873,13 +873,13 @@ class BasicTarget (AbstractTarget):
         # without using complex algorithsm.
         # This gives the complex algorithm better chance of caching results.
         free = requirements.free ()        
-        non_free = property_set.create (requirements.base () + requirements.incidental ())
+        non_free = property_set.create(requirements.base() + requirements.incidental())
         
-        key = str (build_request) + '-' + str (non_free)
-        if not self.request_cache.has_key (key):
-            self.request_cache [key] = self.__common_properties2 (build_request, non_free)       
+        key = (build_request, non_free)
+        if not self.request_cache.has_key(key):
+            self.request_cache[key] = self.__common_properties2 (build_request, non_free)       
 
-        return self.request_cache [key].add_raw (free)
+        return self.request_cache[key].add_raw(free)
 
     # Given 'context' -- a set of already present properties, and 'requirements',
     # decide which extra properties should be applied to 'context'. 
@@ -909,7 +909,7 @@ class BasicTarget (AbstractTarget):
     
         unconditional = feature.expand(requirements.non_conditional())
     
-        raw = context.raw()
+        raw = context.all()
         raw = property.refine(raw, unconditional)
       
         # We've collected properties that surely must be present in common

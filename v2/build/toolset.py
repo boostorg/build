@@ -11,8 +11,9 @@
 """
 
 import feature, property, generators, property_set
+import b2.util.set
 from b2.util.utility import *
-from b2.util import set, bjam_signature
+from b2.util import bjam_signature
 
 __re_split_last_segment = re.compile (r'^(.+)\.([^\.])*')
 __re_two_ampersands = re.compile ('(&&)')
@@ -67,30 +68,13 @@ reset ()
 # FIXME: --ignore-toolset-requirements
 # FIXME: using
     
-def normalize_condition (property_sets):
-    """ Expands subfeatures in each property set.
-        e.g
-            <toolset>gcc-3.2
-        will be converted to
-        <toolset>gcc/<toolset-version>3.2
-
-        TODO: does this one belong here or in feature?
-    """
-    result = []
-    for p in property_sets:
-        split = feature.split (p)
-        expanded = feature.expand_subfeatures (split)
-        result.append ('/'.join (expanded))
-
-    return result
-
 # FIXME push-checking-for-flags-module ....
 # FIXME: investigate existing uses of 'hack-hack' parameter
 # in jam code.
     
 @bjam_signature((["rule_or_module", "variable_name", "condition", "*"],
                  ["values", "*"]))
-def flags (rule_or_module, variable_name, condition, values = []):
+def flags(rule_or_module, variable_name, condition, values = []):
     """ Specifies the flags (variables) that must be set on targets under certain
         conditions, described by arguments.
         rule_or_module:   If contains dot, should be a rule name.
@@ -140,63 +124,64 @@ def flags (rule_or_module, variable_name, condition, values = []):
         condition = None
     
     if condition:
-        property.validate_property_sets (condition)
-        condition = normalize_condition ([condition])
+        transformed = []
+        for c in condition:
+            # FIXME: 'split' might be a too raw tool here.
+            pl = [property.create_from_string(s) for s in c.split('/')]
+            pl = feature.expand_subfeatures(pl);
+            transformed.append(property_set.create(pl))
+        condition = transformed
+
+        property.validate_property_sets(condition)
     
     __add_flag (rule_or_module, variable_name, condition, values)
 
-def set_target_variables (manager, rule_or_module, targets, properties):
+def set_target_variables (manager, rule_or_module, targets, ps):
     """
     """
-    key = rule_or_module + '.' + str (properties)
-    settings = __stv.get (key, None)
+    settings = __stv.get(ps, None)
     if not settings:
-        settings = __set_target_variables_aux  (manager, rule_or_module, properties)
+        settings = __set_target_variables_aux(manager, rule_or_module, ps)
 
-        __stv [key] = settings
+        __stv[ps] = settings
         
     if settings:
         for s in settings:
             for target in targets:
                 manager.engine ().set_target_variable (target, s [0], s[1], True)
 
-def find_property_subset (property_sets, properties):
+def find_satisfied_condition(conditions, ps):
     """Returns the first element of 'property-sets' which is a subset of
     'properties', or an empty list if no such element exists."""
-    
-    prop_keys = get_grist(properties)
 
-    for s in property_sets:
-        # Handle value-less properties like '<architecture>' (compare with 
-        # '<architecture>x86').
+    features = set(p.feature() for p in ps.all())
 
-        set = feature.split(s)
+    for condition in conditions:
 
-        # Find the set of features that
-        # - have no property specified in required property set 
-        # - are omitted in build property set
-        default_props = []
-        for i in set:       
-            # If $(i) is a value-less property it should match default 
-            # value of an optional property. See the first line in the 
-            # example below:
-            #
-            #  property set     properties     result
-            # <a> <b>foo      <b>foo           match
-            # <a> <b>foo      <a>foo <b>foo    no match
-            # <a>foo <b>foo   <b>foo           no match
-            # <a>foo <b>foo   <a>foo <b>foo    match
-            if not (get_value(i) or get_grist(i) in prop_keys):
-                default_props.append(i)
+        found_all = True
+        for i in condition.all():
 
-        # FIXME: can this be expressed in a more pythonic way?
-        has_all = 1
-        for i in set:
-            if i not in (properties + default_props):
-                has_all = 0
-                break
-        if has_all:
-            return s
+            found = False
+            if i.value():
+                found = i in ps.get(i.feature())
+            else:            
+                # Handle value-less properties like '<architecture>' (compare with 
+                # '<architecture>x86').
+                # If $(i) is a value-less property it should match default 
+                # value of an optional property. See the first line in the 
+                # example below:
+                #
+                #  property set     properties     result
+                # <a> <b>foo      <b>foo           match
+                # <a> <b>foo      <a>foo <b>foo    no match
+                # <a>foo <b>foo   <b>foo           no match
+                # <a>foo <b>foo   <a>foo <b>foo    match
+                found = not i.feature() in features
+
+            found_all = found_all and found
+
+        if found_all:
+            return condition
 
     return None
     
@@ -241,7 +226,7 @@ def inherit_flags(toolset, base, prohibited_properties = []):
     call it as needed."""
     for f in __module_flags.get(base, []):
         
-        if not f.condition or set.difference(f.condition, prohibited_properties):
+        if not f.condition or b2.util.set.difference(f.condition, prohibited_properties):
             match = __re_first_group.match(f.rule)
             rule_ = None
             if match:
@@ -292,7 +277,7 @@ def inherit_rules (toolset, base):
 ######################################################################################
 # Private functions
 
-def __set_target_variables_aux (manager, rule_or_module, properties):
+def __set_target_variables_aux (manager, rule_or_module, ps):
     """ Given a rule name and a property set, returns a list of tuples of
         variables names and values, which must be set on targets for that
         rule/properties combination. 
@@ -301,12 +286,12 @@ def __set_target_variables_aux (manager, rule_or_module, properties):
 
     for f in __flags.get(rule_or_module, []):
            
-        if not f.condition or find_property_subset (f.condition, properties):
+        if not f.condition or find_satisfied_condition (f.condition, ps):
             processed = []
             for v in f.values:
                 # The value might be <feature-name> so needs special
                 # treatment.
-                processed += __handle_flag_value (manager, v, properties)
+                processed += __handle_flag_value (manager, v, ps)
 
             for r in processed:
                 result.append ((f.variable_name, r))
@@ -316,27 +301,28 @@ def __set_target_variables_aux (manager, rule_or_module, properties):
     
     if next:
         result.extend(__set_target_variables_aux(
-            manager, next.group(1), properties))
+            manager, next.group(1), ps))
 
     return result
 
-def __handle_flag_value (manager, value, properties):
+def __handle_flag_value (manager, value, ps):
     result = []
     
     if get_grist (value):
-        matches = property.select (value, properties)
-        for p in matches:
-            att = feature.attributes (get_grist (p))
-            
-            ungristed = replace_grist (p, '')
+        f = feature.get(value)
+        properties = ps.get(feature)
+        
+        for p in properties:
 
-            if 'dependency' in att:
+            value = p.value()
+
+            if f.dependency():
                 # the value of a dependency feature is a target
                 # and must be actualized
                 # FIXME: verify that 'find' actually works, ick!
-                result.append (manager.targets ().find (ungristed).actualize ())
+                result.append (manager.targets ().find (p.value()).actualize ())
 
-            elif 'path' in att or 'free' in att:
+            elif f.path() or f.free():
                 values = []
                 
                 # Treat features with && in the value

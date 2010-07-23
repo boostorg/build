@@ -275,12 +275,10 @@ def main_real():
     (target_ids, properties) = b2.build.build_request.from_command_line(
         argv[1:] + extra_build_request)
 
+    properties = [property_set.create(feature.split(ps)) for ps in properties]
+
     if properties:
         expanded = b2.build.build_request.expand_no_defaults(properties)
-        xexpanded = []
-        for e in expanded:
-            xexpanded.append(property_set.create(feature.split(e)))
-        expanded = xexpanded
     else:
         expanded = [property_set.empty()]
 

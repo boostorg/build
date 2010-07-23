@@ -20,7 +20,7 @@ import traceback
 import sys
 
 def format(message, prefix=""):
-    parts = message.split("\n")
+    parts = str(message).split("\n")
     return "\n".join(prefix+p for p in parts)
     
 
@@ -60,7 +60,10 @@ class ExceptionWithUserContext(Exception):
     def report(self):
         print "error:", self.args[0]
         if self.original_exception_:
-            print format(self.original_exception_.args[0], "    ")
+            try:
+                print format(self.original_exception_.args[0], "    ")
+            except:
+                print format(str(self.original_exception_), "    ")
         print
         print "    error context (most recent first):"
         for c in self.context_[::-1]:
