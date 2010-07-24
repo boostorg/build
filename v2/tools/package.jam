@@ -33,10 +33,13 @@
 import "class" : new ;
 import option ;
 import project ;
+import feature ;
 import property ;
 import stage ;
 import targets ;
 import modules ;
+
+feature.feature install-default-prefix : : free ;
 
 rule install ( name : requirements * : binaries * : libraries * : headers * )
 {
