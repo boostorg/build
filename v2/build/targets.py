@@ -98,7 +98,7 @@ class TargetRegistry:
         # Current indent for debugging messages
         self.indent_ = ""
 
-        self.debug_building_ = "--debug-building" in bjam.variable("ARV")
+        self.debug_building_ = "--debug-building" in bjam.variable("ARGV")
 
     def main_target_alternative (self, target):
         """ Registers the specified target as a main target alternatives.
@@ -919,7 +919,7 @@ class BasicTarget (AbstractTarget):
     
         raw = context.all()
         raw = property.refine(raw, unconditional)
-      
+
         # We've collected properties that surely must be present in common
         # properties. We now try to figure out what other properties
         # should be added in order to satisfy rules (4)-(6) from the docs.
