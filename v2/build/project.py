@@ -56,7 +56,7 @@ class ProjectRegistry:
 
     def __init__(self, manager, global_build_dir):
         self.manager = manager
-        self.global_build_dir = None
+        self.global_build_dir = global_build_dir
         self.project_rules_ = ProjectRules(self)
 
         # The target corresponding to the project being loaded now
@@ -339,7 +339,7 @@ expected value %s
 actual value %s""" % (jamfile_module, saved_project, self.current_project))
           
         if self.global_build_dir:
-            id = self.attribute(jamfile_module, "id")
+            id = self.attributeDefault(jamfile_module, "id", None)
             project_root = self.attribute(jamfile_module, "project-root")
             location = self.attribute(jamfile_module, "location")
 
@@ -393,8 +393,6 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         # source paths are correct.
         if not location:
             location = ""
-        else:
-            location = b2.util.path.relpath(os.getcwd(), location)
 
         attributes = ProjectAttributes(self.manager, location, module_name)
         self.module2attributes[module_name] = attributes
@@ -523,8 +521,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         try:    
             return self.module2attributes[project].get(attribute)
         except:
-            print "Sucks", project, attribute
-            raise "Sucks"
+            raise BaseException("No attribute '%s' for project" % (attribute, project))
 
     def attributeDefault(self, project, attribute, default):
         """Returns the value of the specified attribute in the
@@ -708,7 +705,7 @@ class ProjectAttributes:
         self.attributes = {}
         self.usage_requirements = None
         
-    def set(self, attribute, specification, exact):
+    def set(self, attribute, specification, exact=False):
         """Set the named attribute from the specification given by the user.
         The value actually set may be different."""
 
@@ -893,6 +890,8 @@ class ProjectRules:
                 id = '/' + id
             self.registry.register_id (id, jamfile_module)
 
+        attributes.set('id', id)
+
         explicit_build_dir = None
         for a in args:
             if a:
@@ -912,16 +911,17 @@ class ProjectRules:
                 # This is Jamroot.
                 if id:
                     if explicit_build_dir and os.path.isabs(explicit_build_dir):
-                        self.register.manager.errors()(
+                        self.registry.manager.errors()(
 """Absolute directory specified via 'build-dir' project attribute
 Don't know how to combine that with the --build-dir option.""")
 
                     rid = id
                     if rid[0] == '/':
                         rid = rid[1:]
-
-                    p = os.path.join(self.registry.global_build_dir,
-                                     rid, explicit_build_dir)
+                    
+                    p = os.path.join(self.registry.global_build_dir, rid)
+                    if explicit_build_dir:
+                        p = os.path.join(p, explicit_build_dir)
                     attributes.set("build-dir", p, exact=1)
             elif explicit_build_dir:
                 self.registry.manager.errors()(
