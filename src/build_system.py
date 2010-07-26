@@ -453,7 +453,6 @@ def main_real():
     engine = Engine()
 
     global_build_dir = option.get("build-dir")
-    
     manager = Manager(engine, global_build_dir)
 
     if "--version" in sys.argv:

@@ -99,7 +99,7 @@ exe a : a.cpp ;
 build-project sub ;
 """ % string.replace(os.getcwd(), '\\', '\\\\'))
 
-t.run_build_system("--build-dir=build", status=1)
+t.run_build_system("--build-dir=build")
 t.fail_test(string.find(t.stdout(),
     "Absolute directory specified via 'build-dir' project attribute") == -1)
 

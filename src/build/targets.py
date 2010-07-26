@@ -380,8 +380,7 @@ class ProjectTarget (AbstractTarget):
         if not self.build_dir_:
             self.build_dir_ = self.get ('build-dir')
             if not self.build_dir_:
-                self.build_dir_ = os.path.join (os.path.dirname(
-                    self.project_.get ('location')), 'bin')
+                self.build_dir_ = os.path.join(self.project_.get ('location'), 'bin')
 
         return self.build_dir_
 
