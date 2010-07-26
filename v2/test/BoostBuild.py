@@ -525,7 +525,10 @@ class Tester(TestCmd.TestCmd):
             return ''
 
     def read_and_strip(self, name):
-        lines = open(self.glob_file(name), "rb").readlines()
+        if not self.glob_file(name):
+            return ''
+        f = open(self.glob_file(name), "rb")
+        lines = f.readlines()
         result = string.join(map(string.rstrip, lines), "\n")
         if lines and lines[-1][-1] == '\n':
             return result + '\n'
