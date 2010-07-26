@@ -160,7 +160,7 @@ def refine (properties, requirements):
     # Record them so that we can handle 'properties'.
     for r in requirements:
         # Don't consider conditional requirements.
-        if r.condition():
+        if not r.condition():
             required[r.feature()] = r
 
     for p in properties:
