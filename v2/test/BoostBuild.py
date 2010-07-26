@@ -441,6 +441,7 @@ class Tester(TestCmd.TestCmd):
                 if "--python" in sys.argv:
                     kw['program'].append("--python")
                 kw['chdir'] = subdir
+                self.last_program_invocation = kw['program']
                 apply(TestCmd.TestCmd.run, [self], kw)
             except:
                 self.dump_stdio()
@@ -553,6 +554,8 @@ class Tester(TestCmd.TestCmd):
             elif os.path.exists(path):
                 raise "Path " + path + " already exists and is not a directory";
             shutil.copytree(self.workdir, path)
+            print "The failed command was:"
+            print ' '.join(self.last_program_invocation)
 
         at = TestCmd.caller(traceback.extract_stack(), 0)
         annotation("stacktrace", at)
