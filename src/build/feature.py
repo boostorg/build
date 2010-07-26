@@ -487,6 +487,8 @@ def extend_subfeature (feature_name, value_string, subfeature_name, subvalues):
     for subvalue in subvalues:
         __subfeature_from_value [feature][value_string][subvalue] = subfeature
 
+@bjam_signature((["feature_name", "value_string", "?"], ["subfeature"],
+                 ["subvalues", "*"], ["attributes", "*"]))
 def subfeature (feature_name, value_string, subfeature, subvalues, attributes = []):
     """ Declares a subfeature.
         feature_name:   Root feature that is not a subfeature.
@@ -517,6 +519,7 @@ def subfeature (feature_name, value_string, subfeature, subvalues, attributes = 
     extend_subfeature (feature_name, value_string, subfeature, subvalues)
 
 
+@bjam_signature((["composite_property_s"], ["component_properties_s", "*"]))
 def compose (composite_property_s, component_properties_s):
     """ Sets the components of the given composite property.
 
