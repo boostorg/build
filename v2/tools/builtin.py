@@ -11,9 +11,10 @@
 import sys
 from b2.build import feature, property, virtual_target, generators, type, property_set, scanner
 from b2.util.utility import *
-from b2.util import path, regex
+from b2.util import path, regex, bjam_signature
 import b2.tools.types
 from b2.manager import get_manager
+
 
 # Records explicit properties for a variant.
 # The key is the variant name.
@@ -26,6 +27,7 @@ def reset ():
 
     __variant_explicit_properties = {}
 
+@bjam_signature((["name"], ["parents_or_properties", "*"], ["explicit_properties", "*"]))
 def variant (name, parents_or_properties, explicit_properties = []):
     """ Declares a new variant.
         First determines explicit properties for this variant, by
@@ -721,3 +723,5 @@ class ArchiveGenerator (generators.Generator):
 ### 
 ### 
 ### 
+
+get_manager().projects().add_rule("variant", variant)
