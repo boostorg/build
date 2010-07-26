@@ -29,10 +29,10 @@ int main() {}
 """)
 
 t.write("jamroot.jam", """
-using dll-paths ;
+using dll_paths ;
 """)
 
-t.write("dll-paths.jam", """
+t.write("dll_paths.jam", """
 import type ;
 import generators ;
 import feature ;
