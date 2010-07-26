@@ -246,6 +246,10 @@ def is_implicit_value (value_string):
     """ Returns true iff 'value_string' is a value_string
     of an implicit feature.
     """
+
+    if __implicit_features.has_key(value_string):
+        return __implicit_features[value_string]
+    
     v = value_string.split('-')
 
     if not __implicit_features.has_key(v[0]):
