@@ -12,6 +12,7 @@
 
 import feature, property, generators, property_set
 import b2.util.set
+from b2.util import cached
 from b2.util.utility import *
 from b2.util import bjam_signature
 
@@ -139,11 +140,7 @@ def flags(rule_or_module, variable_name, condition, values = []):
 def set_target_variables (manager, rule_or_module, targets, ps):
     """
     """
-    settings = __stv.get(ps, None)
-    if not settings:
-        settings = __set_target_variables_aux(manager, rule_or_module, ps)
-
-        __stv[ps] = settings
+    settings = __set_target_variables_aux(manager, rule_or_module, ps)
         
     if settings:
         for s in settings:
@@ -277,6 +274,7 @@ def inherit_rules (toolset, base):
 ######################################################################################
 # Private functions
 
+@cached
 def __set_target_variables_aux (manager, rule_or_module, ps):
     """ Given a rule name and a property set, returns a list of tuples of
         variables names and values, which must be set on targets for that
