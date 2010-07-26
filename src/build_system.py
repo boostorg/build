@@ -1,4 +1,6 @@
-# Status: being ported by Vladimir Prus.
+# Status: mostly ported. Missing is --out-xml support, 'configure' integration
+# and some FIXME.
+# Base revision: 64351
 
 # Copyright 2003, 2005 Dave Abrahams 
 # Copyright 2006 Rene Rivera 
@@ -270,7 +272,7 @@ def load_configuration_files():
                 print "notice: Regular site and user configuration files will"
                 print "notice: be ignored due to the test configuration being loaded."
 
-    user_path = [os.path.expanduser("~")] + os.getenv("BOOST_BUILD_PATH").split(os.pathsep)
+    user_path = [os.path.expanduser("~")] + bjam.variable("BOOST_BUILD_PATH")
     site_path = ["/etc"] + user_path
     if os.name in ["nt"]:
         site_path = [os.getenv("SystemRoot")] + user_path
