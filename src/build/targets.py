@@ -1068,7 +1068,7 @@ class BasicTarget (AbstractTarget):
             self.manager().targets().log(
                 "Target requirements: %s'" % str (self.requirements().raw ()))
 
-        if not self.generated_.has_key (str (ps)):
+        if not self.generated_.has_key(ps):
 
             # Apply free features form the command line.  If user
             # said 
@@ -1079,8 +1079,8 @@ class BasicTarget (AbstractTarget):
 
             self.manager().targets().log(
                 "Common properties are '%s'" % str (rproperties.raw ()))
-            
-            if rproperties.get("<build>") != "no":
+          
+            if rproperties.get("<build>") != ["no"]:
                 
                 result = GenerateResult ()
 
@@ -1131,9 +1131,9 @@ class BasicTarget (AbstractTarget):
                         "Usage requirements from '%s' are '%s'" %
                         (self.name, str(rproperties.raw())))
                     
-                    self.generated_ [str (ps)] = GenerateResult (ur, result)
+                    self.generated_[ps] = GenerateResult (ur, result)
                 else:
-                    self.generated_ [str (ps)] = GenerateResult (property_set.empty(), [])
+                    self.generated_[ps] = GenerateResult (property_set.empty(), [])
             else:
                 self.manager().targets().log(
                     "Skipping build: <build>no in common properties")
@@ -1142,13 +1142,13 @@ class BasicTarget (AbstractTarget):
                 # properties, or there's <build>no in properties.
                 # In the latter case we don't want any diagnostic.
                 # In the former case, we need diagnostics. TODOo
-                self.generated_ [str (ps)] = GenerateResult (rproperties, [])
+                self.generated_[ps] = GenerateResult (rproperties, [])
         else:
             self.manager().targets().log ("Already built")
 
         self.manager().targets().decrease_indent()
 
-        return self.generated_ [str (ps)]
+        return self.generated_[ps]
 
     def generate_from_reference (self, target_reference, project, property_set):
         """ Attempts to generate the target given by target reference, which
