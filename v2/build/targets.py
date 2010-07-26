@@ -81,8 +81,10 @@ import property, project, virtual_target, property_set, feature, generators, too
 from virtual_target import Subvariant
 from b2.exceptions import *
 from b2.util.sequence import unique
-from b2.util import set, path, bjam_signature
+from b2.util import path, bjam_signature
 from b2.build.errors import user_error_checkpoint
+
+import b2.util.set
 
 _re_separate_target_from_properties = re.compile (r'^([^<]*)(/(<.*))?$')
 
@@ -357,7 +359,7 @@ class ProjectTarget (AbstractTarget):
         self.main_target_ = {}
         
         # Targets marked as explicit.
-        self.explicit_targets_ = []
+        self.explicit_targets_ = set()
 
         # The constants defined for this project.
         self.constants_ = {}
@@ -426,7 +428,7 @@ class ProjectTarget (AbstractTarget):
         
         # Record the name of the target, not instance, since this
         # rule is called before main target instaces are created.
-        self.explicit_.append(target_name)
+        self.explicit_targets_.add(target_name)
     
     def add_alternative (self, target_instance):
         """ Add new target alternative.
@@ -575,7 +577,7 @@ class ProjectTarget (AbstractTarget):
         if not rules:
             rules = []
         user_rules = [x for x in rules
-                      if x not in self.manager().projects().project_rules()]
+                      if x not in self.manager().projects().project_rules().all_names()]
         if user_rules:
             bjam.call("import-rules-from-parent", parent_module, this_module, user_rules)
         
@@ -636,14 +638,14 @@ class MainTarget (AbstractTarget):
                     best_properties = properties
 
                 else:
-                    if set.equal (properties, best_properties):
+                    if b2.util.set.equal (properties, best_properties):
                         return None
 
-                    elif set.contains (properties, best_properties):
+                    elif b2.util.set.contains (properties, best_properties):
                         # Do nothing, this alternative is worse
                         pass
 
-                    elif set.contains (best_properties, properties):
+                    elif b2.util.set.contains (best_properties, properties):
                         best = v
                         best_properties = properties
 
@@ -1006,12 +1008,12 @@ class BasicTarget (AbstractTarget):
         # build request just to select this variant.
         bcondition = self.requirements_.base ()
         ccondition = self.requirements_.conditional ()
-        condition = set.difference (bcondition, ccondition)
+        condition = b2.util.set.difference (bcondition, ccondition)
 
         if debug:
             print "    next alternative: required properties:", str(condition)
         
-        if set.contains (condition, property_set.raw ()):
+        if b2.util.set.contains (condition, property_set.raw ()):
 
             if debug:
                 print "        matched"

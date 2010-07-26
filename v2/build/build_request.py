@@ -7,7 +7,9 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-import feature
+import b2.build.feature
+feature = b2.build.feature
+
 from b2.util.utility import *
 import b2.build.property_set as property_set
 
@@ -145,7 +147,7 @@ def convert_command_line_element(e):
         else:
             result = [e1 + "/" + e2 for e1 in result for e2 in lresult]
 
-    return result
+    return [property_set.create(b2.build.feature.split(r)) for r in result]
 
 ### 
 ### rule __test__ ( )
