@@ -105,8 +105,8 @@ def refine_from_user_input(parent_requirements, specification, jamfile_module,
             ps = create_from_user_input(remove_requirements,
                                         jamfile_module, location)
             
-            parent_requirements = create(difference(parent_requirements.raw(),
-                                                    ps.raw()))
+            parent_requirements = create(difference(parent_requirements.all(),
+                                                    ps.all()))
             specification = add_requirements
 
         requirements = create_from_user_input(specification,
