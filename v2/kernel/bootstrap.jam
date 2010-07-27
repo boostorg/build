@@ -225,7 +225,11 @@ if ! $(dont-build)
         
         module PyBB
         {
-            bootstrap $(root) ;
+            local ok = [ bootstrap $(root) ] ;
+            if ! $(ok)
+            {
+                EXIT ;
+            }            
         }
         
         

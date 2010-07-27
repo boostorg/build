@@ -97,6 +97,10 @@ class Errors:
 
     def __init__(self):
         self.contexts_ = []
+        self._count = 0
+
+    def count(self):
+        return self._count
 
     def push_user_context(self, message, nested=None):
         self.contexts_.append(Context(message, nested))
@@ -117,6 +121,7 @@ class Errors:
         raise ExceptionWithUserContext("unexpected exception", self.contexts_[:],
                                        e, sys.exc_info()[2])    
     def __call__(self, message):
+        self._count = self._count + 1
         raise ExceptionWithUserContext(message, self.contexts_[:], 
                                        stack=traceback.extract_stack())
 

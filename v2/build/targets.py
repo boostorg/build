@@ -76,6 +76,8 @@ import re
 import os.path
 import sys
 
+from b2.manager import get_manager
+
 from b2.util.utility import *
 import property, project, virtual_target, property_set, feature, generators, toolset
 from virtual_target import Subvariant
@@ -83,6 +85,8 @@ from b2.exceptions import *
 from b2.util.sequence import unique
 from b2.util import path, bjam_signature
 from b2.build.errors import user_error_checkpoint
+
+import b2.build.build_request as build_request
 
 import b2.util.set
 
@@ -594,10 +598,10 @@ class MainTarget (AbstractTarget):
         d = target.default_build ()
         
         if self.alternatives_ and self.default_build_ != d:
-            raise BaseException ("Default build must be identical in all alternatives\n"
+            get_manager().errors()("default build must be identical in all alternatives\n"
               "main target is '%s'\n"
               "with '%s'\n"
-              "differing from previous default build: '%s'" % (full_name (), d.raw (), self.default_build_.raw ()))
+              "differing from previous default build: '%s'" % (self.full_name (), d.raw (), self.default_build_.raw ()))
 
         else:
             self.default_build_ = d
@@ -687,7 +691,8 @@ class MainTarget (AbstractTarget):
             # to use here.
             compressed = feature.compress_subproperties(property_set.all())
 
-            result = build_request.expand_no_defaults (compressed, defaults_to_apply)
+            result = build_request.expand_no_defaults(
+                b2.build.property_set.create([p]) for p in (compressed + defaults_to_apply))
             
         else:
             result.append (property_set)
