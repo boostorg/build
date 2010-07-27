@@ -378,7 +378,7 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
         property while creating or using shared library, since it's not supported by
         gcc/libc.
     """
-    def run(self, project, name, prop_set, sources):
+    def run(self, project, name, ps, sources):
         # TODO: Replace this with the use of a target-os property.
 
         no_static_link = False
@@ -392,10 +392,9 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
 ##            }
 ##        }
 
-        properties = prop_set.raw()
         reason = None
-        if no_static_link and '<runtime-link>static' in properties:
-            if '<link>shared' in properties:
+        if no_static_link and ps.get('runtime-link') == 'static':
+            if ps.get('link') == 'shared':
                 reason = "On gcc, DLL can't be build with '<runtime-link>static'."
             elif type.is_derived(self.target_types[0], 'EXE'):
                 for s in sources:
@@ -411,7 +410,7 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
             return
         else:
             generated_targets = unix.UnixLinkingGenerator.run(self, project,
-                name, prop_set, sources)
+                name, ps, sources)
             return generated_targets
 
 if on_windows():

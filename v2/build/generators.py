@@ -238,7 +238,7 @@ class Generator:
         """
         return self.requirements_
 
-    def match_rank (self, property_set_to_match):
+    def match_rank (self, ps):
         """ Returns true if the generator can be run with the specified 
             properties.
         """
@@ -250,17 +250,18 @@ class Generator:
         
         property_requirements = []
         feature_requirements = []
+        # This uses strings because genenator requirements allow
+        # the '<feature>' syntax without value and regular validation
+        # is not happy about that.
         for r in all_requirements:
             if get_value (r):
                 property_requirements.append (r)
 
             else:
                 feature_requirements.append (r)
-
-        properties_to_match = property_set_to_match.raw ()
-        
-        return set.contains (property_requirements, properties_to_match) \
-            and set.contains (feature_requirements, get_grist (properties_to_match))
+                
+        return all(ps.get(get_grist(s)) == [get_value(s)] for s in property_requirements) \
+               and all(ps.get(get_grist(s)) for s in feature_requirements)
         
     def run (self, project, name, prop_set, sources):
         """ Tries to invoke this generator on the given sources. Returns a

@@ -128,7 +128,6 @@ def actual_clean_targets(targets):
         if isinstance(t, b2.build.targets.ProjectTarget):
             project_targets.append(t.project_module())
 
-
     # Construct a list of targets explicitly detected on this build system run
     # as a result of building main targets.
     targets_to_clean = set()
@@ -594,16 +593,8 @@ def main_real():
 
     virtual_targets = []
 
-    # Virtual targets obtained when building main targets references on
-    # the command line. When running
-    #
-    #   bjam --clean main_target
-    #
-    # we want to clean the files that belong only to that main target,
-    # so we need to record which targets are produced.
-    results_of_main_targets = []
+    global results_of_main_targets
 
-    
     # Now that we have a set of targets to build and a set of property sets to
     # build the targets with, we can start the main build process by using each
     # property set to generate virtual targets from all of our listed targets
@@ -849,7 +840,7 @@ def main_real():
         bjam.call("UPDATE", "clean")
     else:
         # FIXME:
-        #configure.print-configure-checks-summary ;        
+        #configure.print-configure-checks-summary ;
 
         if pre_build_hook:
             pre_build_hook()

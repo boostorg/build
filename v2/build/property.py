@@ -64,6 +64,9 @@ class Property(object):
 def create_from_string(s, allow_condition = False):
 
     condition = []
+    import types
+    if not isinstance(s, types.StringType):
+        print type(s)
     if __re_has_condition.search(s):
 
         if not allow_condition:

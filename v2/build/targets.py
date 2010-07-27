@@ -388,7 +388,7 @@ class ProjectTarget (AbstractTarget):
         """ Generates all possible targets contained in this project.
         """
         self.manager_.targets().log(
-            "Building project '%s' with '%s'" % (self.name (), ps.raw ()))
+            "Building project '%s' with '%s'" % (self.name (), str(ps)))
         self.manager_.targets().increase_indent ()
         
         result = GenerateResult ()
@@ -656,14 +656,13 @@ class MainTarget (AbstractTarget):
     def apply_default_build (self, property_set):
         # 1. First, see what properties from default_build
         # are already present in property_set. 
-        
-        raw = property_set.raw ()
-        specified_features = get_grist (raw)
+
+        specified_features = set(p.feature() for p in property_set.all())
         
         defaults_to_apply = []
-        for d in self.default_build_.raw ():
-            if not get_grist (d) in specified_features:
-                defaults_to_apply.append (d)
+        for d in self.default_build_.all():
+            if not d.feature() in specified_features:
+                defaults_to_apply.append(d)
         
         # 2. If there's any defaults to be applied, form the new
         # build request. Pass it throw 'expand-no-defaults', since
@@ -686,16 +685,9 @@ class MainTarget (AbstractTarget):
             # be an indication that
             # build_request.expand-no-defaults is the wrong rule
             # to use here.
-            compressed = feature.compress_subproperties (raw)
+            compressed = feature.compress_subproperties(property_set.all())
 
-            properties = build_request.expand_no_defaults (compressed, defaults_to_apply)
-              
-            if properties:
-                for p in properties:
-                    result.append (property_set.create (feature.expand (feature.split (p))))
-
-            else:
-                result .append (property_set.empty ())
+            result = build_request.expand_no_defaults (compressed, defaults_to_apply)
             
         else:
             result.append (property_set)
@@ -1042,8 +1034,8 @@ class BasicTarget (AbstractTarget):
             #       is the object itself. This won't work in python.
             targets = [ self.manager_.register_object (x) for x in result.targets () ]
             
-            result_var += replace_grist (targets, grist)
-            usage_requirements += result.usage_requirements ().raw ()
+            result_var += replace_grist(targets, grist)
+            usage_requirements += result.usage_requirements().all()
 
         return (result_var, usage_requirements)
 
@@ -1078,7 +1070,7 @@ class BasicTarget (AbstractTarget):
             rproperties = self.common_properties (ps, self.requirements_)
 
             self.manager().targets().log(
-                "Common properties are '%s'" % str (rproperties.raw ()))
+                "Common properties are '%s'" % str (rproperties))
           
             if rproperties.get("<build>") != ["no"]:
                 
@@ -1096,11 +1088,13 @@ class BasicTarget (AbstractTarget):
                 self.manager_.targets().log(
                     "Usage requirements for '%s' are '%s'" % (self.name_, usage_requirements))
 
-                rproperties = property_set.create (properties + usage_requirements)
+                # FIXME:
+                
+                rproperties = property_set.create(properties + [p.to_raw() for p in usage_requirements])
                 usage_requirements = property_set.create (usage_requirements)
 
                 self.manager_.targets().log(
-                    "Build properties: '%s'" % str(rproperties.raw()))
+                    "Build properties: '%s'" % str(rproperties))
                 
                 extra = rproperties.get ('<source>')
                 source_targets += replace_grist (extra, '')               
@@ -1251,7 +1245,7 @@ class TypedTarget (BasicTarget):
             
     def construct (self, name, source_targets, prop_set):
         r = generators.construct (self.project_, name, self.type_, 
-            property_set.create (prop_set.raw () + ['<main-target-type>' + self.type_]),
+                                  prop_set.add_raw(['<main-target-type>' + self.type_]),
             source_targets)
 
         if not r:
