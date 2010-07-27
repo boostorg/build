@@ -42,7 +42,8 @@ with
 differing from previous default build <variant>debug
 
 """
-t.run_build_system("-n --no-error-backtrace", status=1, stdout=expected)
+t.run_build_system("-n --no-error-backtrace", status=1)
+t.fail_test(t.stdout().find("default build must be identical in all alternatives") == -1)
 
 # Test that default-build must be identical in all alternatives. No Error case,
 # empty default build.

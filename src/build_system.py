@@ -8,6 +8,8 @@
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
+
+
 from b2.build.engine import Engine
 from b2.manager import Manager
 from b2.util.path import glob
@@ -432,14 +434,14 @@ def main():
     if "--profiling" in sys.argv:
         import cProfile
         import pstats
-        cProfile.runctx('main_real()', globals(), locals(), "stones.prof")
+        return cProfile.runctx('main_real()', globals(), locals(), "stones.prof")
         
         stats = pstats.Stats("stones.prof")
         stats.strip_dirs()
         stats.sort_stats('time', 'calls')
         stats.print_callers(20)
     else:
-        main_real()
+        return main_real()
 
 def main_real():
 
@@ -852,3 +854,8 @@ def main_real():
         # Prevent automatic update of the 'all' target, now that
         # we have explicitly updated what we wanted.            
         bjam.call("UPDATE")
+
+    if manager.errors().count() == 0:
+        return ["ok"]
+    else:
+        return []
