@@ -612,6 +612,9 @@ class FileTarget (AbstractFileTarget):
 
         self.path_ = path
 
+    def __str__(self):
+        return self.name_ + "." + self.type_
+
     def clone_with_different_type(self, new_type):
         return FileTarget(self.name_, new_type, self.project_,
                           self.action_, self.path_, exact=True)
@@ -764,7 +767,7 @@ class Action:
         toolset.set_target_variables (self.manager_, self.action_name_, actual_targets, properties)
              
         engine = self.manager_.engine ()
-        
+
         self.manager_.engine ().set_update_action (self.action_name_, actual_targets, self.actual_sources_,
                                                    properties)
         

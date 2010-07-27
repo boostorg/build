@@ -142,6 +142,7 @@ class PropertySet:
 
         self.all_ = properties
         self.all_raw_ = raw_properties
+        self.all_set_ = set(properties)
         
         self.incidental_ = []
         self.free_ = []
@@ -238,7 +239,7 @@ class PropertySet:
         return self.all_raw_
 
     def __str__(self):
-        return string.join(self.all_raw_)
+        return ' '.join(str(p) for p in self.all_)
     
     def base (self):
         """ Returns properties that are neither incidental nor free.
@@ -294,11 +295,6 @@ class PropertySet:
             expanded = feature.expand(self.all_)
             self.expanded_ = create(expanded)
         return self.expanded_
-
-    def expand_componsite(self):
-        if not self.componsites_:
-            self.composites_ = create(feature.expand_composires(self.all_raw_))
-        return self.composites_
 
     def expand_subfeatures(self):
         if not self.subfeatures_:
@@ -431,4 +427,11 @@ class PropertySet:
                 self.feature_map_[v.feature()].append(v.value())
         
         return self.feature_map_.get(feature, [])
+
+    def __contains__(self, item):
+        for p in self.all_set_:
+            if p.feature().name() == "toolset":
+                print "EXISTING", hash(p), hash(p._feature), hash(p._value), "--", hash(item._feature), has(item._value)
+        print self.all_set_
+        return item in self.all_set_
     

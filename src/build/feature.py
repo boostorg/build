@@ -835,27 +835,28 @@ def compress_subproperties (properties):
         purposes and it needs help
     """
     result = []
-    matched_subs = []
+    matched_subs = set()
+    all_subs = set()
     for p in properties:
-        pg = get_grist (p)
-        if not pg:
-            raise BaseException ("Gristed variable exppected. Got '%s'." % p)
+        f = p.feature()
         
-        if not __all_features [pg].subfeature():
+        if not f.subfeature():
             subs = __select_subproperties (p, properties)
+            if subs:
             
-            matched_subs.extend (subs)
+                matched_subs.update(subs)
 
-            subvalues = '-'.join (get_value (subs))
-            if subvalues: subvalues = '-' + subvalues
-
-            result.append (p + subvalues)
+                subvalues = '-'.join (sub.value() for sub in subs)
+                result.append(Property(p.feature(), p.value + '-' + subvalues,
+                                       p.condition()))
+            else:
+                result.append(p)
 
         else:
-            all_subs.append (p)
+            all_subs.add(p)
 
     # TODO: this variables are used just for debugging. What's the overhead?
-    assert (b2.util.set.equal (all_subs, matched_subs))
+    assert all_subs == matched_subs
 
     return result
 
