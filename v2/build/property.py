@@ -44,7 +44,7 @@ class Property(object):
         return self._condition
 
     def to_raw(self):
-        result = "<" + self._feature.name() + ">" + self._value       
+        result = "<" + self._feature.name() + ">" + str(self._value)
         if self._condition:
             result = ",".join(str(p) for p in self._condition) + ':' + result
         return result

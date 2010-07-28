@@ -129,9 +129,9 @@ def set_library_order_aux (from_libs, to_libs):
 def set_library_order (manager, sources, prop_set, result):
     used_libraries = []
     deps = prop_set.dependency ()
-    
-    [ sources.append (manager.get_object (get_value (x))) for x in deps ]
-    sources = sequence.unique (sources)
+
+    sources.extend(d.value() for d in deps)
+    sources = sequence.unique(sources)
 
     for l in sources:
         if l.type () and type.is_derived (l.type (), 'LIB'):

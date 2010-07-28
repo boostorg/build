@@ -401,8 +401,8 @@ class Generator:
             name = self.determine_output_name(sources)
         
         # Assign an action for each target
-        action = self.action_class()        
-        a = action (project.manager(), sources, self.id_, prop_set)
+        action = self.action_class()
+        a = action(project.manager(), sources, self.id_, prop_set)
                 
         # Create generated target for each target type.
         targets = []

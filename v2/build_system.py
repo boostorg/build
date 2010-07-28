@@ -838,7 +838,7 @@ def main_real():
         bjam.call("UPDATE", "clean-all")
     elif clean:
         manager.engine().set_update_action("common.Clean", "clean",
-                                           actual_clean_targets(targets), None)
+                                           actual_clean_targets(targets))
         bjam.call("UPDATE", "clean")
     else:
         # FIXME:

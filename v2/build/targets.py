@@ -240,6 +240,7 @@ class GenerateResult:
         
         self.__usage_requirements = ur
         self.__targets = targets
+        assert all(isinstance(t, virtual_target.VirtualTarget) for t in targets)
 
         if not self.__usage_requirements:
             self.__usage_requirements = property_set.empty ()
@@ -1018,31 +1019,41 @@ class BasicTarget (AbstractTarget):
 
         else:
             return None
+
+
+    def generate_dependency_targets (self, target_ids, property_set):
+        targets = []
+        usage_requirements = []
+        for id in target_ids:
+                    
+            result = self.generate_from_reference(id, self.project_, property_set)
+            targets += result.targets()
+            usage_requirements += result.usage_requirements().all()
+
+        return (targets, usage_requirements)        
     
-    def generate_dependencies (self, dependencies, property_set):
+    def generate_dependency_properties(self, properties, ps):
         """ Takes a target reference, which might be either target id
             or a dependency property, and generates that target using
             'property_set' as build request.
 
             Returns a tuple (result, usage_requirements).
         """
-        result_var = []
+        result_properties = []
         usage_requirements = []
-        for dependency in dependencies:
-            grist = get_grist (dependency)
-            id = replace_grist (dependency, '')
-        
-            result = self.generate_from_reference (id, self.project_, property_set)
+        for p in properties:
+                   
+            result = self.generate_from_reference(p.value(), self.project_, ps)
 
-            # FIXME:
-            # TODO: this is a problem: the grist must be kept and the value
-            #       is the object itself. This won't work in python.
-            targets = [ self.manager_.register_object (x) for x in result.targets () ]
+            for t in result.targets():
+                result_properties.append(property.Property(p.feature(), t))
             
-            result_var += replace_grist(targets, grist)
             usage_requirements += result.usage_requirements().all()
 
-        return (result_var, usage_requirements)
+        return (result_properties, usage_requirements)        
+
+        
+
 
     @user_error_checkpoint
     def generate (self, ps):
@@ -1083,19 +1094,20 @@ class BasicTarget (AbstractTarget):
 
                 properties = rproperties.non_dependency ()
 
-                (p, u) = self.generate_dependencies (rproperties.dependency (), rproperties)
+                (p, u) = self.generate_dependency_properties (rproperties.dependency (), rproperties)
                 properties += p
+                assert all(isinstance(p, property.Property) for p in properties)
                 usage_requirements = u
 
-                (source_targets, u) = self.generate_dependencies (self.sources_, rproperties)
+                (source_targets, u) = self.generate_dependency_targets (self.sources_, rproperties)
                 usage_requirements += u
 
                 self.manager_.targets().log(
                     "Usage requirements for '%s' are '%s'" % (self.name_, usage_requirements))
 
                 # FIXME:
-                
-                rproperties = property_set.create(properties + [p.to_raw() for p in usage_requirements])
+
+                rproperties = property_set.create(properties + usage_requirements)
                 usage_requirements = property_set.create (usage_requirements)
 
                 self.manager_.targets().log(
@@ -1128,7 +1140,7 @@ class BasicTarget (AbstractTarget):
 
                     self.manager_.targets().log (
                         "Usage requirements from '%s' are '%s'" %
-                        (self.name, str(rproperties.raw())))
+                        (self.name(), str(rproperties)))
                     
                     self.generated_[ps] = GenerateResult (ur, result)
                 else:
@@ -1159,14 +1171,14 @@ class BasicTarget (AbstractTarget):
             project:           Project where the reference is made
             property_set:      Properties of the main target that makes the reference
         """
-        target, sproperties = self.resolve_reference (target_reference, project)
+        target, sproperties = self.resolve_reference(target_reference, project)
         
         # Take properties which should be propagated and refine them
         # with source-specific requirements.
-        propagated = property_set.propagated ()
-        rproperties = propagated.refine (sproperties)
+        propagated = property_set.propagated()
+        rproperties = propagated.refine(sproperties)
             
-        return target.generate (rproperties)
+        return target.generate(rproperties)
     
     def compute_usage_requirements (self, subvariant):
         """ Given the set of generated targets, and refined build 
@@ -1179,7 +1191,7 @@ class BasicTarget (AbstractTarget):
         
         # We generate all dependency properties and add them,
         # as well as their usage requirements, to result.
-        (r1, r2) = self.generate_dependencies (xusage_requirements.dependency (), rproperties)
+        (r1, r2) = self.generate_dependency_properties(xusage_requirements.dependency (), rproperties)
         extra = r1 + r2
                 
         result = property_set.create (xusage_requirements.non_dependency () + extra)
@@ -1249,6 +1261,7 @@ class TypedTarget (BasicTarget):
         return self.type_
             
     def construct (self, name, source_targets, prop_set):
+
         r = generators.construct (self.project_, name, self.type_, 
                                   prop_set.add_raw(['<main-target-type>' + self.type_]),
             source_targets)
