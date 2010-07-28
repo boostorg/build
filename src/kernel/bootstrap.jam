@@ -216,7 +216,9 @@ if ! $(dont-build)
             }
 
             rule mark-included ( targets * : includes * ) {
-                INCLUDES $(targets) : $(INCLUDES) ;
+                NOCARE $(includes) ;
+                INCLUDES $(targets) : $(includes) ;
+                ISFILE $(includes) ;
             }
         }
 

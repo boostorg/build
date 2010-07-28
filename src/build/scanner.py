@@ -116,7 +116,7 @@ class CommonScanner(Scanner):
         bjam.call("mark-included", target, matches)
 
         get_manager().engine().set_target_variable(matches, "SEARCH",
-                                   [target_path] + self.includes)
+                                                   [target_path] + self.includes)
         get_manager().scanners().propagate(self, matches)
 
 class ScannerRegistry:

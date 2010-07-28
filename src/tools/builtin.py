@@ -379,8 +379,8 @@ class CScanner (scanner.Scanner):
         bjam.call("mark-included", target, all)
 
         engine = get_manager().engine()
-        engine.set_target_variable(angle, "SEARCH", self.includes_)
-        engine.set_target_variable(quoted, "SEARCH", self.includes_)
+        engine.set_target_variable(angle, "SEARCH", get_value(self.includes_))
+        engine.set_target_variable(quoted, "SEARCH", get_value(self.includes_))
         
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners. 
