@@ -21,6 +21,6 @@ def prepare_foo(targets, sources, properties):
     pass
 
 get_manager().engine().register_action("foo.foo",\
-"""echo $(DECL:E="//")\n > $(<[1])
-echo "#include <z.h>"\n > $(<[2])
+"""echo -e $(DECL:E="//")\\n > $(<[1])
+echo -e "#include <z.h>\\n" > $(<[2])
 """, function=prepare_foo)

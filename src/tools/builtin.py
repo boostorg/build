@@ -380,7 +380,7 @@ class CScanner (scanner.Scanner):
 
         engine = get_manager().engine()
         engine.set_target_variable(angle, "SEARCH", get_value(self.includes_))
-        engine.set_target_variable(quoted, "SEARCH", get_value(self.includes_))
+        engine.set_target_variable(quoted, "SEARCH", [b] + get_value(self.includes_))
         
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners. 
@@ -388,6 +388,7 @@ class CScanner (scanner.Scanner):
         
 scanner.register (CScanner, 'include')
 type.set_scanner ('CPP', CScanner)
+type.set_scanner ('C', CScanner)
 
 # Ported to trunk@47077
 class LibGenerator (generators.Generator):
