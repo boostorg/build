@@ -71,6 +71,7 @@ from b2.util.sequence import unique
 from b2.tools import common
 from b2.exceptions import *
 import b2.build.type
+import b2.build.property_set as property_set
 import type
 
 __re_starts_with_at = re.compile ('^@(.*)')
@@ -133,9 +134,6 @@ class VirtualTargetRegistry:
         # TODO: Don't append if we found pre-existing target?
         self.recent_targets_.append(result)
         self.all_targets_.append(result)
-
-        result.set_id(self.next_id_)
-        self.next_id_ = self.next_id_+1
     
         return result
 
@@ -159,10 +157,7 @@ class VirtualTargetRegistry:
         result = FileTarget (file, file_type, project,
                              None, file_location)       
         self.files_ [path] = result
-        
-        result.set_id(self.next_id_)
-        self.next_id_ = self.next_id_+1
-        
+                
         return result
 
     def recent_targets(self):
@@ -268,15 +263,6 @@ class VirtualTarget:
         """ Project of this target.
         """
         return self.project_
-
-    def set_id(self, id):
-        self.id_ = id
-
-    def __hash__(self):
-        return self.id_
-
-    def __cmp__(self, other):
-        return self.id_ - other.id_
 
     def depends (self, d):
         """ Adds additional instances of 'VirtualTarget' that this
@@ -707,11 +693,15 @@ class Action:
         not establish dependency relationship, but should do everything else.
     """
     def __init__ (self, manager, sources, action_name, prop_set):
+        assert(isinstance(prop_set, property_set.PropertySet))
         self.sources_ = sources
         self.action_name_ = action_name
         if not prop_set:
             prop_set = property_set.empty()
         self.properties_ = prop_set
+        if not all(isinstance(v, VirtualTarget) for v in prop_set.get('implicit-dependency')):
+            import pdb
+            pdb.set_trace()
 
         self.manager_ = manager
         self.engine_ = self.manager_.engine ()
@@ -750,6 +740,7 @@ class Action:
         ps = self.properties ()
         properties = self.adjust_properties (ps)
 
+
         actual_targets = []
         
         for i in self.targets ():
@@ -767,14 +758,14 @@ class Action:
         toolset.set_target_variables (self.manager_, self.action_name_, actual_targets, properties)
              
         engine = self.manager_.engine ()
-
+        
         self.manager_.engine ().set_update_action (self.action_name_, actual_targets, self.actual_sources_,
                                                    properties)
         
         # Since we set up creating action here, we also set up
         # action for cleaning up
         self.manager_.engine ().set_update_action ('common.Clean', 'clean-all',
-                                                   actual_targets, None)
+                                                   actual_targets)
 
         return actual_targets
 
@@ -826,6 +817,7 @@ class Action:
         # if we're building just hello ("bjam hello"), 'a.h' won't be
         # actualized unless we do it here.
         implicit = self.properties_.get("<implicit-dependency>")
+
         for i in implicit:
             i.actualize()
 
@@ -957,13 +949,11 @@ class Subvariant:
         
         # Pre-compose the list of other dependency graphs, on which this one
         # depends
-        deps = build_properties.get ('<implicit-dependency>')
+        deps = build_properties.get('<implicit-dependency>')
         
         self.other_dg_ = []
         for d in deps:
-            # FIXME: the property must have the actual object here, not a string.
-            value = replace_grist (d, '')
-            self.other_dg_.append (value.creating_subvariant ())
+            self.other_dg_.append(d.creating_subvariant ())
 
         self.other_dg_ = unique (self.other_dg_)
 

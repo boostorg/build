@@ -8,6 +8,8 @@ bjam_interface = __import__('bjam')
 
 import operator
 
+import b2.build.property_set as property_set
+
 class BjamAction:
     """Class representing bjam action defined from Python."""
     
@@ -83,7 +85,7 @@ class Engine:
         for target in targets:
             self.do_set_target_variable (target, variable, value, append)
 
-    def set_update_action (self, action_name, targets, sources, properties):
+    def set_update_action (self, action_name, targets, sources, properties=property_set.empty()):
         """ Binds a target to the corresponding update action.
             If target needs to be updated, the action registered
             with action_name will be used.
@@ -91,6 +93,7 @@ class Engine:
             either 'register_action' or 'register_bjam_action'
             method.
         """
+        assert(isinstance(properties, property_set.PropertySet))
         if isinstance (targets, str): 
             targets = [targets]
         self.do_set_update_action (action_name, targets, sources, properties)

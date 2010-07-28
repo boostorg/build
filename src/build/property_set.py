@@ -34,7 +34,7 @@ def create (raw_properties = []):
         x = raw_properties
     else:        
         x = [property.create_from_string(ps) for ps in raw_properties]
-    x.sort ()
+    x.sort()
     x = unique (x)
 
     # FIXME: can we do better, e.g. by directly computing
@@ -203,13 +203,7 @@ class PropertySet:
                 pass
             else:
                 self.base_raw_.append (p)
-        
-            if 'dependency' in att:
-                self.dependency_.append (p)
-            else:
-                self.non_dependency_.append (p)
-            
-                                   
+                                                       
             if 'propagated' in att:
                 self.propagated_.append (p)
 
@@ -229,6 +223,12 @@ class PropertySet:
                 self.conditional_.append(p)
             else:
                 self.non_conditional_.append(p)
+
+            if p.feature().dependency():
+                self.dependency_.append (p)
+            else:
+                self.non_dependency_.append (p)
+                
 
     def all(self):
         return self.all_

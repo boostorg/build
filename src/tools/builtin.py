@@ -659,15 +659,12 @@ class LinkingGenerator (generators.Generator):
 
         # sources to pass to inherited rule
         sources2 = []
-        # properties to pass to inherited rule
-        properties2  = []
         # sources which are libraries
         libraries  = []
         
         # Searched libraries are not passed as argument to linker
         # but via some option. So, we pass them to the action
         # via property. 
-        properties2 = prop_set.raw()
         fsa = []
         fst = []
         for s in sources:
@@ -682,12 +679,13 @@ class LinkingGenerator (generators.Generator):
             else:
                 sources2.append(s)
 
+        add = []
         if fsa:
-            properties2 += [replace_grist('&&'.join(fsa), '<find-shared-library>')]
+            add.append("<find-shared-library>" + '&&'.join(fsa))
         if fst:
-            properties2 += [replace_grist('&&'.join(fst), '<find-static-library>')]
+            add.append("<find-static-library>" + '&&'.join(fst))
                 
-        spawn = generators.Generator.generated_targets(self, sources2, property_set.create(properties2), project, name)
+        spawn = generators.Generator.generated_targets(self, sources2,prop_set.add_raw(add), project, name)
         
         return spawn
 

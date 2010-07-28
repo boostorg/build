@@ -535,9 +535,9 @@ def mkdir(engine, target):
 
         # Schedule the mkdir build action.
         if os_name() == 'NT':
-            engine.set_update_action("common.MkDir1-quick-fix-for-windows", target, [], None)
+            engine.set_update_action("common.MkDir1-quick-fix-for-windows", target, [])
         else:
-            engine.set_update_action("common.MkDir1-quick-fix-for-unix", target, [], None)
+            engine.set_update_action("common.MkDir1-quick-fix-for-unix", target, [])
 
         # Prepare a Jam 'dirs' target that can be used to make the build only
         # construct all the target directories.
