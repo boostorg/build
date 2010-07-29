@@ -738,7 +738,7 @@ class MainTarget (AbstractTarget):
                 "Failed to build '%s'\n"
                 "with properties '%s'\n"
                 "because no best-matching alternative could be found."
-                  % (full_name, prop_set.raw ()))
+                  % (self.full_name(), prop_set))
 
         result = best_alternative.generate (prop_set)
                     
