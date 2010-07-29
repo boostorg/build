@@ -105,7 +105,10 @@ class VirtualTargetRegistry:
             and equal action. If such target is found it is retured and 'target' is not registered.
             Otherwise, 'target' is registered and returned.
         """
-        signature = target.path() + "-" + target.name()
+        if target.path():
+            signature = target.path() + "-" + target.name()
+        else:
+            signature = "-" + target.name()
 
         result = None
         if not self.cache_.has_key (signature):
@@ -566,7 +569,9 @@ def add_prefix_and_suffix(specified_name, type, property_set):
     """Appends the suffix appropriate to 'type/property-set' combination
     to the specified name and returns the result."""
 
-    suffix = b2.build.type.generated_target_suffix(type, property_set)
+    suffix = ""
+    if type:
+        suffix = b2.build.type.generated_target_suffix(type, property_set)
     
     # Handle suffixes for which no leading dot is desired.  Those are
     # specified by enclosing them in <...>.  Needed by python so it
@@ -576,7 +581,9 @@ def add_prefix_and_suffix(specified_name, type, property_set):
     elif suffix:
         suffix = "." + suffix
 
-    prefix = b2.build.type.generated_target_prefix(type, property_set)
+    prefix = ""
+    if type:
+        prefix = b2.build.type.generated_target_prefix(type, property_set)
 
     if specified_name.startswith(prefix):
         prefix = ""
@@ -687,8 +694,8 @@ class FileTarget (AbstractFileTarget):
 
 class NotFileTarget(AbstractFileTarget):
 
-    def __init__(self, name, project):
-        AbstractFileTarget.__init__(name, project)
+    def __init__(self, name, project, action):
+        AbstractFileTarget.__init__(self, name, None, project, action)
 
     def path(self):
         """Returns nothing, to indicate that target path is not known."""
@@ -696,7 +703,7 @@ class NotFileTarget(AbstractFileTarget):
 
     def actualize_location(self, target):
         bjam.call("NOTFILE", target)
-        bjam.call("ALWAYS", taget)
+        bjam.call("ALWAYS", target)
         bjam.call("NOUPDATE", target)
 
 

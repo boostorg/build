@@ -637,7 +637,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
 
         mname = "__build_build_temporary__"
         file = open(location)
-        try:
+        try:            
             # TODO: this means we'll never make use of .pyc module,
             # which might be a problem, or not.
             module = imp.load_module(mname, file, os.path.basename(location),

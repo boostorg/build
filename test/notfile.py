@@ -38,7 +38,7 @@ t.fail_test(string.find(t.stdout(), "echo hi") == -1)
 
 name = t.adjust_names(["bin/$toolset/debug/hello.exe"])[0]
 name = apply(os.path.join, string.split(name, "/"));
-c = "valgrind " + name
+c = "valgrind *" + name
 t.expect_output_line(c)
 
 t.cleanup()

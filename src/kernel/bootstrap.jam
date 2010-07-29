@@ -192,6 +192,14 @@ if ! $(dont-build)
                 $(action) $(targets) : $(sources) : $(properties) ;
             }
             
+            rule set-update-action-in-module ( m : action : targets * : sources * : properties * )
+            {
+                module $(m)
+                {
+                    $(2) $(3) : $(4) : $(5) ;
+                }                
+            }
+                        
             rule set-target-variable ( targets + : variable : value * : append ? )
             {
                 if $(append)

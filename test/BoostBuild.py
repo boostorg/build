@@ -261,7 +261,7 @@ class Tester(TestCmd.TestCmd):
             verbosity = ['-d+2']
 
         if boost_build_path is None:
-            boost_build_path = self.original_workdir
+            boost_build_path = self.original_workdir + "/.."
 
         program_list = []
 

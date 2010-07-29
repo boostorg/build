@@ -231,10 +231,16 @@ def translate_indirect(properties, context_module):
                     # will conflict.
                     m = context_module + "." + m
 
-                v = context_module + '%' + m
+                # FIXME: now sure if we should register name with '@'
+                # or without.
+                #v = '@' + context_module + '%' + m
+                #print "REGISTER", 
                 get_manager().engine().register_bjam_action(m)
+                ## FIXME: whatsup?
+                #get_manager().engine().register_bjam_action(v)
+                v = '@' + m
             
-            result.append(Property(p.feature(), "@" + v, p.condition()))
+            result.append(Property(p.feature(), v, p.condition()))
         else:
             result.append(p)
 
