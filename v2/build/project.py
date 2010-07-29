@@ -211,11 +211,11 @@ class ProjectRegistry:
             # must be placed in the directory referred by id.
         
             project_module = self.module_name(location)
-            if not project_module in self.jamfile_modules and \
-               b2.util.path.glob([location], self.JAMROOT + self.JAMFILE):
-                project_module = self.load(location)
-            else:
-                project_module = None
+            if not project_module in self.jamfile_modules:
+                if b2.util.path.glob([location], self.JAMROOT + self.JAMFILE):
+                    project_module = self.load(location)
+                else:
+                    project_module = None
 
         return project_module
 
