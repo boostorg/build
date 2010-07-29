@@ -1003,11 +1003,14 @@ attribute is allowed only for top-level 'project' invocations""")
     def import_(self, name, names_to_import=None, local_names=None):
 
         name = name[0]
+        py_name = name
+        if py_name == "os":
+            py_name = "os_j"
         jamfile_module = self.registry.current().project_module()
         attributes = self.registry.attributes(jamfile_module)
         location = attributes.get("location")
 
-        m = self.registry.load_module(name, [location])
+        m = self.registry.load_module(py_name, [location])
 
         for f in m.__dict__:
             v = m.__dict__[f]
