@@ -1281,6 +1281,22 @@ class TypedTarget (BasicTarget):
         
         return r
 
+
+def create_typed_metatarget(name, type, sources, requirements, default_build, usage_requirements):
+    
+    from b2.manager import get_manager
+    t = get_manager().targets()
+    
+    project = get_manager().projects().current()
+        
+    return t.main_target_alternative(
+        TypedTarget(name, project, type,
+                    t.main_target_sources(sources, name),
+                    t.main_target_requirements(requirements, project),
+                    t.main_target_default_build(default_build, project),
+                    t.main_target_usage_requirements(usage_requirements, project)))
+    
+
 def metatarget_function_for_class(class_):
 
     @bjam_signature((["name"], ["sources", "*"], ["requirements", "*"],
