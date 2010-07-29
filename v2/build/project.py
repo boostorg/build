@@ -811,14 +811,14 @@ class ProjectRules:
         
 
     def add_rule_for_type(self, type):
-        rule_name = type.lower();
+        rule_name = type.lower().replace("_", "-")
 
         def xpto (name, sources, requirements = [], default_build = None, usage_requirements = []):
             return self.manager_.targets().create_typed_target(
                 type, self.registry.current(), name[0], sources,
                 requirements, default_build, usage_requirements) 
 
-        self.add_rule(type.lower(), xpto)
+        self.add_rule(rule_name, xpto)
     
     def add_rule(self, name, callable):
         self.rules[name] = callable

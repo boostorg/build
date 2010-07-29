@@ -2078,6 +2078,13 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
     return result;
 }
 
+PyObject * bjam_caller( PyObject * self, PyObject * args )
+{
+    PyObject *result = PyString_FromString(
+        frame_before_python_call->prev->module->name);
+    return result;
+}
+
 #endif  /* #ifdef HAVE_PYTHON */
 
 

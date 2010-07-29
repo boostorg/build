@@ -855,13 +855,13 @@ class BasicTarget (AbstractTarget):
         sproperties = []
         
         if split.group (3):
-            sproperties = property.make (feature.split (split.group (3)))
-            sproperties = self.manager.features ().expand_composites (sproperties)
+            sproperties = property.create_from_strings(feature.split(split.group(3)))
+            sproperties = feature.expand_composites(sproperties)
     
         # Find the target
         target = project.find (id)
         
-        return (target, property_set.create (sproperties))
+        return (target, property_set.create(sproperties))
 
     def common_properties (self, build_request, requirements):
         """ Given build request and requirements, return properties
