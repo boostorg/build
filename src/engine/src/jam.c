@@ -208,6 +208,7 @@ int anyhow = 0;
     extern PyObject * bjam_define_action( PyObject * self, PyObject * args );
     extern PyObject * bjam_variable     ( PyObject * self, PyObject * args );
     extern PyObject * bjam_backtrace    ( PyObject * self, PyObject * args );
+    extern PyObject * bjam_caller       ( PyObject * self, PyObject * args );
 #endif
 
 char *saved_argv0;
@@ -349,6 +350,8 @@ int main( int argc, char * * argv, char * * arg_environ )
                      "Obtains a variable from bjam's global module."},
                     {"backtrace", bjam_backtrace, METH_VARARGS,
                      "Returns bjam backtrace from the last call into Python."},
+                    {"caller", bjam_caller, METH_VARARGS,
+                     "Returns the module from which the last call into Python is made."},
                     {NULL, NULL, 0, NULL}
                 };
 

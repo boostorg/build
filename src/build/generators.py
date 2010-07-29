@@ -138,7 +138,7 @@ class Generator:
             
             NOTE: all subclasses must have a similar signature for clone to work!
     """
-    def __init__ (self, id, composing, source_types, target_types_and_names, requirements):
+    def __init__ (self, id, composing, source_types, target_types_and_names, requirements = []):
         assert(not isinstance(source_types, str))
         assert(not isinstance(target_types_and_names, str))
         self.id_ = id
@@ -215,7 +215,7 @@ class Generator:
                               self.requirements_)
                               
 
-    def id (self):
+    def id(self):
         return self.id_
 
     def source_types (self):
@@ -547,7 +547,7 @@ def find (id):
 def register (g):
     """ Registers new generator instance 'g'.
     """
-    id = g.id ()
+    id = g.id()
 
     __generators [id] = g
 

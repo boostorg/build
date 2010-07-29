@@ -81,6 +81,46 @@ rule list ( target : sources * : properties * )
 }
 """)
 
+t.write("dll_paths.py", """
+import bjam
+
+import b2.build.type as type
+import b2.build.generators as generators
+
+from b2.manager import get_manager
+
+def init():
+    type.register("PATH_LIST", ["pathlist"])
+
+    class DllPathsListGenerator(generators.Generator):
+
+        def __init__(self):
+            generators.Generator.__init__(self, "dll_paths.list", False, ["EXE"], ["PATH_LIST"])
+
+        def generated_targets(self, sources, ps, project, name):
+
+            dll_paths = []
+            for s in sources:
+                a = s.action()
+                if a:
+                    p = a.properties()
+                    dll_paths += p.get('dll-path')
+            dll_paths.sort()
+            return generators.Generator.generated_targets(self,
+                sources, ps.add_raw(["<dll-path>" + p for p in dll_paths]),
+                project, name)
+
+    generators.register(DllPathsListGenerator())
+
+command = \"\"\"
+echo $(PATHS) > $(<[1])
+\"\"\"
+def function(target, sources, ps):
+    bjam.call('set-target-variable', target, "PATHS", ps.get('dll-path'))
+    
+get_manager().engine().register_action("dll_paths.list", command, function=function)
+""")
+
 t.write("a/a.cpp", """
 void
 #if defined(_WIN32)
