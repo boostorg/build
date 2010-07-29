@@ -849,7 +849,7 @@ class ProjectRules:
                 e.report()
         finally:                
             self.manager_.errors().pop_jamfile_context()
-                                        
+
         return result
 
     def make_wrapper(self, callable):
@@ -857,7 +857,7 @@ class ProjectRules:
         callable that will call 'callable' and report all exceptins,
         using 'call_and_report_errors'."""
         def wrapper(*args, **kw):
-            self.call_and_report_errors(callable, *args, **kw)
+            return self.call_and_report_errors(callable, *args, **kw)
         return wrapper
 
     def init_project(self, project_module):
@@ -1011,6 +1011,7 @@ attribute is allowed only for top-level 'project' invocations""")
 
         for f in m.__dict__:
             v = m.__dict__[f]
+            f = f.replace("_", "-")
             if callable(v):
                 self._import_rule(jamfile_module, name + "." + f, v)
                 self.reverse.setdefault(jamfile_module, {})[name + "." + f] = v

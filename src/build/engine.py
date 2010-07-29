@@ -11,7 +11,8 @@ import re
 
 import b2.build.property_set as property_set
 
-_extract_jamfile_and_rule = re.compile("@(Jamfile<.*>)%(.*)")
+_indirect_rule = re.compile("^([^%]*)%([^%]+)$")
+_extract_jamfile_and_rule = re.compile("(Jamfile<.*>)%(.*)")
 
 class BjamAction:
     """Class representing bjam action defined from Python."""
@@ -41,8 +42,7 @@ class BjamNativeAction:
         if property_set:
             p = property_set.raw()
 
-        # FIXME: whazzup?
-        m = None #_extract_jamfile_and_rule.match(self.action_name)
+        m = _extract_jamfile_and_rule.match(self.action_name)
         if m:
             bjam_interface.call("set-update-action-in-module",
                                 m.group(1), m.group(2),
@@ -136,6 +136,14 @@ class Engine:
         bjam_interface.define_action(action_name, command, bound_list, bjam_flags)
 
         self.actions[action_name] = BjamAction(action_name, function)
+
+    def qualify_bjam_action(self, action_name, context_module):
+
+        if _indirect_rule.match(action_name):
+            # Rule is already in indirect format
+            return action_name
+        else:
+            return context_module + '%' + action_name        
 
     def register_bjam_action (self, action_name):
         """Informs self that 'action_name' is declared in bjam.

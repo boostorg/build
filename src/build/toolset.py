@@ -115,14 +115,14 @@ def flags(rule_or_module, variable_name, condition, values = []):
                           is specified, then the value of 'feature' 
                           will be added.
     """
-    caller = bjam.caller()
+    caller = bjam.caller()[:-1]
     if not '.' in rule_or_module and caller.startswith("Jamfile"):
         # Unqualified rule name, used inside Jamfile. Most likely used with
         # 'make' or 'notfile' rules. This prevents setting flags on the entire
         # Jamfile module (this will be considered as rule), but who cares?
         # Probably, 'flags' rule should be split into 'flags' and
         # 'flags-on-module'.
-        rule_or_module = caller + rule_or_module
+        rule_or_module = get_manager().engine().qualify_bjam_action(rule_or_module, caller)
     else:
         # FIXME: revive checking that we don't set flags for a different
         # module unintentionally
