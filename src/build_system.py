@@ -551,6 +551,8 @@ def main_real():
     virtual_targets = []
     actual_targets = []
 
+    explicitly_requested_files = []
+
     # Process each target specified on the command-line and convert it into
     # internal Boost Build target objects. Detect special clean target. If no
     # main Boost Build targets were explictly requested use the current project
@@ -568,7 +570,7 @@ def main_real():
             if not t:
                 print "notice: could not find main target '%s'" % id
                 print "notice: assuming it's a name of file to create " ;
-                bjam_targets.append(id)
+                explicitly_requested_files.append(id)
             else:
                 targets.append(t)
 
