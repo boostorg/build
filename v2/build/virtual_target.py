@@ -1,6 +1,5 @@
-# Status: being ported by Vladimir Prus
-# Essentially ported, minor fixme remain.
-# Base revision: 40480
+# Status: ported.
+# Base revision: 64427.
 # 
 #  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
 #  distribute this software is granted provided this copyright notice appears in
@@ -60,6 +59,8 @@
 # The 'CompileAction' and 'LinkAction' classes are defined not here,
 # but in builtin.jam modules. They are shown in the diagram to give
 # the big picture.
+
+import bjam
 
 import re
 import os.path
@@ -122,8 +123,10 @@ class VirtualTargetRegistry:
                     if a1 and a2 and a1.action_name () == a2.action_name () and a1.sources () == a2.sources ():
                         ps1 = a1.properties ()
                         ps2 = a2.properties ()
-                        p1 = ps1.base () + ps1.free () + ps1.dependency ()
-                        p2 = ps2.base () + ps2.free () + ps2.dependency ()
+                        p1 = ps1.base () + ps1.free () +\
+                            b2.util.set.difference(ps1.dependency(), ps1.incidental())
+                        p2 = ps2.base () + ps2.free () +\
+                            b2.util.set.difference(ps2.dependency(), ps2.incidental())
                         if p1 == p2:
                             result = t
         
@@ -244,6 +247,7 @@ class VirtualTarget:
         self.name_ = name
         self.project_ = project
         self.dependencies_ = []
+        self.always_ = False
         
         # Caches if dapendencies for scanners have already been set.
         self.made_ = {}
@@ -273,6 +277,9 @@ class VirtualTarget:
     def dependencies (self):
         return self.dependencies_
 
+    def always(self):
+        self.always_ = True
+
     def actualize (self, scanner = None):
         """ Generates all the actual targets and sets up build actions for
             this target.
@@ -286,6 +293,9 @@ class VirtualTarget:
             If scanner is not specified, then actual target is returned.
         """
         actual_name = self.actualize_no_scanner ()
+
+        if self.always_:
+            bjam.call("ALWAYS", actual_name)
 
         if not scanner:
             return actual_name
@@ -644,6 +654,11 @@ class FileTarget (AbstractFileTarget):
             # for test.o will be <ptest/bin/gcc/debug>test.o and the target
             # we create below will be <e>test.o
             engine.add_dependency("<e>%s" % get_value(target), target)
+
+            # Allow bjam <path-to-file>/<file> to work.  This won't catch all
+            # possible ways to refer to the path (relative/absolute, extra ".",
+            # various "..", but should help in obvious cases.
+            engine.add_dependency("<e>%s" % (os.path.join(path, get_value(target))), target)
             
         else:
             # This is a source file.
@@ -682,6 +697,7 @@ class NotFileTarget(AbstractFileTarget):
     def actualize_location(self, target):
         bjam.call("NOTFILE", target)
         bjam.call("ALWAYS", taget)
+        bjam.call("NOUPDATE", target)
 
 
 class Action:
@@ -716,6 +732,10 @@ class Action:
         
     def add_targets (self, targets):
         self.targets_ += targets
+
+
+    def replace_targets (old_targets, new_targets):
+        self.targets_ = [t for t in targets if not t in old_targets] + new_targets
 
     def targets (self):
         return self.targets_
@@ -758,6 +778,11 @@ class Action:
         toolset.set_target_variables (self.manager_, self.action_name_, actual_targets, properties)
              
         engine = self.manager_.engine ()
+
+        # FIXME: this is supposed to help --out-xml option, but we don't
+        # implement that now, and anyway, we should handle it in Python,
+        # not but putting variables on bjam-level targets.
+        bjam.call("set-target-variable", actual_targets, ".action", repr(self))
         
         self.manager_.engine ().set_update_action (self.action_name_, actual_targets, self.actual_sources_,
                                                    properties)
@@ -981,7 +1006,7 @@ class Subvariant:
     def usage_requirements (self):
         return self.usage_requirements_
 
-    def all_referenced_targets(self):
+    def all_referenced_targets(self, result):
         """Returns all targets referenced by this subvariant,
         either directly or indirectly, and either as sources,
         or as dependency properties. Targets referred with
@@ -994,14 +1019,14 @@ class Subvariant:
         # Find other subvariants.
         r = []
         for t in all_targets:
-            r.append(t.creating_subvariant)
+            if not t in result:
+                result.add(t)
+                r.append(t.creating_subvariant)
         r = unique(r)
-
         for s in r:
             if s != self:
-                all_targets.extend(s.all_referenced_targets())
+                s.all_referenced_targets(result)
 
-        return all_targets
 
     def implicit_includes (self, feature, target_type):
         """ Returns the properties which specify implicit include paths to
