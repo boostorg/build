@@ -846,35 +846,9 @@ call_python_function(RULE* r, FRAME* frame)
                 }
             }
         }
-        else if ( PyInstance_Check( py_result ) )
+        else if (PyString_Check(py_result))
         {
-            static char instance_name[1000];
-            static char imported_method_name[1000];
-            module_t * m;
-            PyObject * method;
-            PyObject * method_name = PyString_FromString("foo");
-            RULE * r;
-
-            fprintf(stderr, "Got instance!\n");
-
-            snprintf(instance_name, 1000,
-                     "pyinstance%d", python_instance_number);
-            snprintf(imported_method_name, 1000,
-                     "pyinstance%d.foo", python_instance_number);
-            ++python_instance_number;
-
-            m = bindmodule(instance_name);
-
-            /* This is expected to get bound method. */
-            method = PyObject_GetAttr(py_result, method_name);
-
-            r = bindrule( imported_method_name, root_module() );
-
-            r->python_function = method;
-
-            result = list_new(0, newstr(instance_name));
-
-            Py_DECREF( method_name );
+            result = list_new (0, newstr (PyString_AsString(py_result)));
         }
         else if ( py_result == Py_None )
         {
@@ -882,7 +856,9 @@ call_python_function(RULE* r, FRAME* frame)
         }
         else
         {
-            fprintf(stderr, "Non-list object returned by Python call\n");
+            /* Do nothing.  There are cases, e.g. feature.feature function that
+               should return value for the benefit of Python code and which
+               also can be called by Jam code.  */
         }
 
         Py_DECREF( py_result );

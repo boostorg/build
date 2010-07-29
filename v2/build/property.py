@@ -21,7 +21,6 @@ __re_split_conditional = re.compile (r'(.+):<(.+)')
 __re_colon = re.compile (':')
 __re_has_condition = re.compile (r':<')
 __re_separate_condition_and_property = re.compile (r'(.*):(<.*)')
-__re_indirect_rule = re.compile("^([^%]*)%([^%]+)$")
 
 class Property(object):
 
@@ -213,34 +212,9 @@ def translate_indirect(properties, context_module):
     result = []
     for p in properties:
         if p.value()[0] == '@':
-            v = None
-            m = p.value()[1:]
-            if __re_indirect_rule.match(m):
-                # Rule is already in indirect format
-                # FIXME: it's not clear if this is necessary.
-                v = m
-            else:
-
-                if not '.' in m:
-                    # This is unqualified rule name. The user might want
-                    # to set flags on this rule name, and toolset.flag
-                    # auto-qualifies the rule name. Need to do the same
-                    # here so set flag setting work.
-                    # We can arrange for toolset.flag to *not* auto-qualify
-                    # the argument, but then two rules defined in two Jamfiles
-                    # will conflict.
-                    m = context_module + "." + m
-
-                # FIXME: now sure if we should register name with '@'
-                # or without.
-                #v = '@' + context_module + '%' + m
-                #print "REGISTER", 
-                get_manager().engine().register_bjam_action(m)
-                ## FIXME: whatsup?
-                #get_manager().engine().register_bjam_action(v)
-                v = '@' + m
-            
-            result.append(Property(p.feature(), v, p.condition()))
+            q = get_manager().engine().qualify_bjam_action(p.value()[1:], context_module)
+            get_manager().engine().register_bjam_action(q)
+            result.append(Property(p.feature(), '@' + q, p.condition()))
         else:
             result.append(p)
 
