@@ -624,7 +624,7 @@ def gcc_archive(targets, sources, properties):
     engine.set_target_variable('LOCATE', clean, bjam.call('get-target-variable', targets, 'LOCATE'))
     engine.add_dependency(clean, sources)
     engine.add_dependency(targets, clean)
-    engine.set_update_action('common.RmTemps', clean, targets, None)
+    engine.set_update_action('common.RmTemps', clean, targets)
 
 # Declare action for creating static libraries.
 # The letter 'r' means to add files to the archive with replacement. Since we
