@@ -848,7 +848,7 @@ def glob_tree(roots, patterns, exclude_patterns=None):
         exclude_patterns = []
 
     result = glob(roots, patterns, exclude_patterns)
-    subdirs = [s for s in result if s != "." and s != ".." and os.path.isdir(s)]
+    subdirs = [s for s in glob(roots, ["*"]) if s != "." and s != ".." and os.path.isdir(s)]
     if subdirs:
         result.extend(glob_tree(subdirs, patterns, exclude_patterns))
         
