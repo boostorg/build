@@ -441,7 +441,10 @@ def main():
         stats.sort_stats('time', 'calls')
         stats.print_callers(20)
     else:
-        return main_real()
+        try:
+            return main_real()
+        except ExceptionWithUserContext, e:
+            e.report()
 
 def main_real():
 
