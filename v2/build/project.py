@@ -750,7 +750,7 @@ class ProjectAttributes:
         elif attribute == "source-location":
             source_location = []
             for path in specification:
-                source_location += os.path.join(self.location, path)
+                source_location.append(os.path.join(self.location, path))
             self.__dict__["source-location"] = source_location
                 
         elif attribute == "build-dir":

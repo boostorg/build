@@ -776,7 +776,7 @@ class FileReference (AbstractTarget):
     def location (self):
         # Returns the location of target. Needed by 'testing.jam'
         if not self.file_location_:
-            source_location = self.project_.get ('source-location')
+            source_location = self.project_.get('source-location')
             
             for src_dir in source_location:
                 location = os.path.join(src_dir, self.name())
@@ -1114,9 +1114,7 @@ class BasicTarget (AbstractTarget):
                 self.manager_.targets().log(
                     "Build properties: '%s'" % str(rproperties))
                 
-                extra = rproperties.get ('<source>')
-                source_targets += replace_grist (extra, '')               
-                source_targets = replace_references_by_objects (self.manager (), source_targets)
+                source_targets += rproperties.get('<source>')
                 
                 # We might get duplicate sources, for example if
                 # we link to two library which have the same <library> in

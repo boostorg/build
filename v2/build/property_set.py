@@ -13,6 +13,8 @@ from b2.exceptions import *
 from b2.util.sequence import unique
 from b2.util.set import difference
 
+from b2.manager import get_manager
+
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
     """
@@ -68,6 +70,11 @@ def create_from_user_input(raw_properties, jamfile_module, location):
     properties = property.create_from_strings(raw_properties, True)
     properties = property.translate_paths(properties, location)
     properties = property.translate_indirect(properties, jamfile_module)
+
+    project_id = get_manager().projects().attributeDefault(jamfile_module, 'id', None)
+    if not project_id:
+        project_id = os.path.abspath(location)    
+    properties = property.translate_dependencies(properties, project_id, location)
     properties = property.expand_subfeatures_in_conditions(properties)
     return create(properties)
 
