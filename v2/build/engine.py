@@ -10,9 +10,9 @@ import operator
 import re
 
 import b2.build.property_set as property_set
+import b2.util
 
 _indirect_rule = re.compile("^([^%]*)%([^%]+)$")
-_extract_jamfile_and_rule = re.compile("(Jamfile<.*>)%(.*)")
 
 class BjamAction:
     """Class representing bjam action defined from Python."""
@@ -42,14 +42,7 @@ class BjamNativeAction:
         if property_set:
             p = property_set.raw()
 
-        m = _extract_jamfile_and_rule.match(self.action_name)
-        if m:
-            bjam_interface.call("set-update-action-in-module",
-                                m.group(1), m.group(2),
-                                targets, sources, p)
-        else:
-            bjam_interface.call("set-update-action", self.action_name,
-                                targets, sources, p)
+        b2.util.call_jam_function(self.action_name, targets, sources, p)
         
 action_modifiers = {"updated": 0x01,
                     "together": 0x02,
