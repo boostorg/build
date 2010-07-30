@@ -346,9 +346,6 @@ class ProjectTarget (AbstractTarget):
         self.default_build_ = default_build
        
         self.build_dir_ = None
-
-        if parent_project:
-            self.inherit (parent_project)
         
         # A cache of IDs
         self.ids_cache_ = {}
@@ -371,6 +368,10 @@ class ProjectTarget (AbstractTarget):
 
         # Whether targets for all main target are already created.
         self.built_main_targets_ = 0
+
+        if parent_project:
+            self.inherit (parent_project)
+
 
     # TODO: This is needed only by the 'make' rule. Need to find the
     # way to make 'make' work without this method.
@@ -563,7 +564,7 @@ class ProjectTarget (AbstractTarget):
             value = os.path.join(self.location_, value)
             # Now make the value absolute path
             value = os.path.join(os.getcwd(), value)
-            
+
         self.constants_[name] = value
         bjam.call("set-variable", self.project_module(), name, value)
 
@@ -571,7 +572,7 @@ class ProjectTarget (AbstractTarget):
         for c in parent_project.constants_:
             # No need to pass the type. Path constants were converted to
             # absolute paths already by parent.
-            self.add-constant(parent_project.constants_[c])
+            self.add_constant(c, parent_project.constants_[c])
         
         # Import rules from parent 
         this_module = self.project_module()
@@ -1122,7 +1123,9 @@ class BasicTarget (AbstractTarget):
                 # usage requirements.
                 source_targets = unique (source_targets)
 
-                result = self.construct (self.name_, source_targets, rproperties)
+                # FIXME: figure why this call messes up source_targets in-place
+                result = self.construct (self.name_, source_targets[:], rproperties)
+
                 if result:
                     assert len(result) == 2
                     gur = result [0]

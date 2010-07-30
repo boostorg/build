@@ -65,6 +65,7 @@ import bjam
 import re
 import os.path
 import string
+import types
 
 from b2.util import path, utility, set
 from b2.util.utility import add_grist, get_grist, ungrist, replace_grist, get_value
@@ -73,7 +74,8 @@ from b2.tools import common
 from b2.exceptions import *
 import b2.build.type
 import b2.build.property_set as property_set
-import type
+
+import b2.build.property as property
 
 __re_starts_with_at = re.compile ('^@(.*)')
 
@@ -158,7 +160,7 @@ class VirtualTargetRegistry:
         if self.files_.has_key (path):
             return self.files_ [path]
 
-        file_type = type.type (file)
+        file_type = b2.build.type.type (file)
 
         result = FileTarget (file, file_type, project,
                              None, file_location)       
@@ -184,7 +186,7 @@ class VirtualTargetRegistry:
     # Returns all targets from 'targets' with types
     # equal to 'type' or derived from it.
     def select_by_type(self, type, targets):
-        return [t for t in targets if type.is_sybtype(t.type(), type)]
+        return [t for t in targets if b2.build.type.is_sybtype(t.type(), type)]
 
     def register_actual_name (self, actual_name, virtual_target):
         if self.actual_.has_key (actual_name):
@@ -231,7 +233,7 @@ class VirtualTargetRegistry:
         """ Appends the suffix appropriate to 'type/property_set' combination
             to the specified name and returns the result.
         """
-        suffix = type.generated_target_suffix (file_type, prop_set)
+        suffix = b2.build.type.generated_target_suffix (file_type, prop_set)
 
         if suffix:
             return specified_name + '.' + suffix
@@ -616,7 +618,10 @@ class FileTarget (AbstractFileTarget):
         self.path_ = path
 
     def __str__(self):
-        return self.name_ + "." + self.type_
+        if self.type_:
+            return self.name_ + "." + self.type_
+        else:
+            return self.name_
 
     def clone_with_different_type(self, new_type):
         return FileTarget(self.name_, new_type, self.project_,
@@ -677,13 +682,13 @@ class FileTarget (AbstractFileTarget):
         """
         if not self.path_:
             if self.action_:
-                p = self.action_.properties ()
-                target_path = p.target_path ()
+                p = self.action_.properties ()            
+                (target_path, relative_to_build_dir) = p.target_path ()
                 
-                if target_path [1] == True:
+                if relative_to_build_dir:
                     # Indicates that the path is relative to
                     # build dir.
-                    target_path = os.path.join (self.project_.build_dir (), target_path [0])
+                    target_path = os.path.join (self.project_.build_dir (), target_path)
                                 
                 # Store the computed path, so that it's not recomputed
                 # any more
@@ -717,6 +722,7 @@ class Action:
     """
     def __init__ (self, manager, sources, action_name, prop_set):
         assert(isinstance(prop_set, property_set.PropertySet))
+        assert type(sources) == types.ListType
         self.sources_ = sources
         self.action_name_ = action_name
         if not prop_set:
@@ -815,7 +821,7 @@ class Action:
 #                i = self.manager_.get_object (i)
                 
             if i.type ():
-                scanner = type.get_scanner (i.type (), prop_set)
+                scanner = b2.build.type.get_scanner (i.type (), prop_set)
 
             r = i.actualize (scanner)
             result.append (r)
@@ -938,7 +944,7 @@ def clone_action (action, new_project, new_action_name, new_properties):
     if not new_properties:
         new_properties = action.properties()
 
-    closed_action = action.__class__(action.sources(), new_action_name,
+    cloned_action = action.__class__(action.manager_, action.sources(), new_action_name,
                                      new_properties)
                           
     cloned_targets = []
@@ -1018,17 +1024,25 @@ class Subvariant:
         either directly or indirectly, and either as sources,
         or as dependency properties. Targets referred with
         dependency property are returned a properties, not targets."""
-        
+
         # Find directly referenced targets.
         deps = self.build_properties().dependency()
         all_targets = self.sources_ + deps
         
         # Find other subvariants.
         r = []
-        for t in all_targets:
-            if not t in result:
-                result.add(t)
-                r.append(t.creating_subvariant)
+        for e in all_targets:
+            if not e in result:
+                result.add(e)
+                if isinstance(e, property.Property):
+                    t = e.value()
+                else:
+                    t = e
+                                    
+                # FIXME: how can this be?
+                cs = t.creating_subvariant()
+                if cs:
+                    r.append(cs)
         r = unique(r)
         for s in r:
             if s != self:
@@ -1069,7 +1083,7 @@ class Subvariant:
     def compute_target_directories(self, target_type=None):
         result = []
         for t in self.created_targets():
-            if not target_type or type.is_derived(t.type(), target_type):
+            if not target_type or b2.build.type.is_derived(t.type(), target_type):
                 result.append(t.path())
 
         for d in self.other_dg_:

@@ -14,6 +14,7 @@ import os.path
 from b2.util.utility import replace_grist, os_name
 from b2.exceptions import *
 from b2.build import feature, property, scanner
+from b2.util import bjam_signature
 
 __re_hyphen = re.compile ('-')
 
@@ -53,7 +54,7 @@ def reset ():
     
 reset ()
 
-
+@bjam_signature((["type"], ["suffixes", "*"], ["base_type"]))
 def register (type, suffixes = [], base_type = None):
     """ Registers a target type, possibly derived from a 'base-type'. 
         If 'suffixes' are provided, they list all the suffixes that mean a file is of 'type'.
@@ -175,6 +176,7 @@ def is_subtype (type, base):
     # TODO: remove this method
     return is_derived (type, base)
 
+@bjam_signature((["type"], ["properties", "*"], ["suffix"]))
 def set_generated_target_suffix (type, properties, suffix):
     """ Sets a target suffix that should be used when generating target 
         of 'type' with the specified properties. Can be called with
@@ -209,6 +211,7 @@ def generated_target_suffix(type, properties):
 # should be used.
 #
 # Usage example: library names use the "lib" prefix on unix.
+@bjam_signature((["type"], ["properties", "*"], ["suffix"]))
 def set_generated_target_prefix(type, properties, prefix):
     set_generated_target_ps(0, type, properties, prefix)
 
