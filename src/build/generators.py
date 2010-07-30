@@ -349,6 +349,21 @@ class Generator:
 
         return result
 
+    def determine_target_name(self, fullname):
+        # Determine target name from fullname (maybe including path components)
+        # Place optional prefix and postfix around basename
+
+        dir = os.path.dirname(fullname)
+        name = os.path.basename(fullname)
+
+        if dir and not ".." in dir and not os.path.isabs(dir):
+            # Relative path is always relative to the source
+            # directory. Retain it, so that users can have files
+            # with the same in two different subdirectories.
+            name = dir + "/" + name
+
+        return name
+
     def determine_output_name(self, sources):
         """Determine the name of the produced target from the
         names of the sources."""
@@ -371,8 +386,8 @@ class Generator:
                     "%s: source targets have different names: cannot determine target name"
                     % (self.id_))
                         
-        # Names of sources might include directory. We should strip it.        
-        return os.path.basename(name)
+        # Names of sources might include directory. We should strip it.
+        return self.determine_target_name(sources[0].name())
         
         
     def generated_targets (self, sources, prop_set, project, name):
@@ -409,7 +424,12 @@ class Generator:
         pre = self.name_prefix_
         post = self.name_postfix_
         for t in self.target_types_:
-            generated_name = pre[0] + name + post[0]
+            basename = os.path.basename(name)
+            idx = basename.find(".")
+            if idx != -1:
+                basename = basename[:idx]
+            generated_name = pre[0] + basename + post[0]
+            generated_name = os.path.join(os.path.dirname(name), generated_name)
             pre = pre[1:]
             post = post[1:]
             
