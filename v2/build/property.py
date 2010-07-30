@@ -414,7 +414,6 @@ def translate_dependencies(properties, project_id, location):
             result.append(p)
         else:
             v = p.value()
-            print "value", v, "id", project_id
             m = re.match("(.*)//(.*)", v)
             if m:
                 rooted = m.group(1)
@@ -422,7 +421,7 @@ def translate_dependencies(properties, project_id, location):
                     # Either project id or absolute Linux path, do nothing.
                     pass
                 else:
-                    rooted = os.path.join(os.getcwd(), location, rooted[0])
+                    rooted = os.path.join(os.getcwd(), location, rooted)
                     
                 result.append(Property(p.feature(), rooted + "//" + m.group(2), p.condition()))
                 
