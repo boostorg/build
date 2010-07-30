@@ -105,14 +105,6 @@ def dout(message):
     if debug():
         print __indent + message
 
-def normalize_target_list (targets):
-    """ Takes a vector of 'virtual-target' instances and makes a normalized
-        representation, which is the same for given set of targets,
-        regardless of their order.
-    """
-    return (targets[0], targets[1].sort ())
-
-
 class Generator:
     """ Creates a generator.
             manager:                 the build manager.
