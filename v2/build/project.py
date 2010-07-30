@@ -565,12 +565,12 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         return self.project_rules_
 
     def glob_internal(self, project, wildcards, excludes, rule_name):
-        location = project.get("source-location")
+        location = project.get("source-location")[0]
 
         result = []
         callable = b2.util.path.__dict__[rule_name]
         
-        paths = callable(location, wildcards, excludes)
+        paths = callable([location], wildcards, excludes)
         has_dir = 0
         for w in wildcards:
             if os.path.dirname(w):
@@ -578,11 +578,21 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
                 break
 
         if has_dir or rule_name != "glob":
+            result = []
             # The paths we've found are relative to current directory,
             # but the names specified in sources list are assumed to
             # be relative to source directory of the corresponding
-            # prject. So, just make the name absolute.
-            result = [os.path.join(os.getcwd(), p) for p in paths]
+            # prject. Either translate them or make absolute.
+
+            for p in paths:
+                rel = os.path.relpath(p, location)
+                # If the path is below source location, use relative path.
+                if not ".." in rel:
+                    result.append(rel)
+                else:
+                    # Otherwise, use full path just to avoid any ambiguities.
+                    result.append(os.path.abspath(p))
+                    
         else:
             # There were not directory in wildcard, so the files are all
             # in the source directory of the project. Just drop the
