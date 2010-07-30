@@ -876,7 +876,7 @@ class BasicTarget (AbstractTarget):
         free_unconditional = []
         other = []
         for p in requirements.all():
-            if p.feature().free() and not p.condition():
+            if p.feature().free() and not p.condition() and p.feature().name() != 'conditional':
                 free_unconditional.append(p)
             else:
                 other.append(p)
@@ -913,7 +913,6 @@ class BasicTarget (AbstractTarget):
         #    <threading>single 
         #
         # might come from project's requirements.
-
         unconditional = feature.expand(requirements.non_conditional())
     
         raw = context.all()
@@ -949,7 +948,16 @@ class BasicTarget (AbstractTarget):
         
             # Evaluate indirect conditionals.
             for i in indirect:
-                e.extend(bjam.call(i, current))
+                if callable(i):
+                    # This is Python callable, yeah.
+                    e.extend(bjam.call(i, current))
+                else:
+                    # Name of bjam function. Because bjam is unable to handle
+                    # list of Property, pass list of strings.
+                    br = b2.util.call_jam_function(i, [str(p) for p in current])
+                    if br:
+                        e.extend(property.create_from_strings(br))
+                        
 
             if e == added_requirements:
                 # If we got the same result, we've found final properties.
