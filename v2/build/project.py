@@ -978,7 +978,7 @@ attribute is allowed only for top-level 'project' invocations""")
                     bad = 1
 
         if bad:
-            self.registry.manager().errors()(
+            self.registry.manager.errors()(
 "The patterns to 'glob-tree' may not include directory")
         return self.registry.glob_internal(self.registry.current(),
                                            wildcards, excludes, "glob_tree")
