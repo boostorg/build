@@ -19,8 +19,8 @@ t = BoostBuild.Tester()
 t.write("jamroot.jam", "import gcc ;")
 
 t.write("jamfile.jam", r'''
-import modules ;
-if [ modules.peek : NT ]
+import os ;
+if [ os.name ] = NT
 {
     actions create 
     {

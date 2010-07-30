@@ -405,19 +405,16 @@ def take(attributes, properties):
             result.append(e)
     return result
 
-def translate_dependencies(specification, project_id, location):
+def translate_dependencies(properties, project_id, location):
 
     result = []
-    for p in specification:
-        split = split_conditional(p)
-        condition = ""
-        if split:
-            condition = split[0]
-            p = split[1]
+    for p in properties:
 
-        f = get_grist(p)
-        v = get_value(p)
-        if "dependency" in feature.attributes(f):
+        if not p.feature().dependency():
+            result.append(p)
+        else:
+            v = p.value()
+            print "value", v, "id", project_id
             m = re.match("(.*)//(.*)", v)
             if m:
                 rooted = m.group(1)
@@ -426,13 +423,13 @@ def translate_dependencies(specification, project_id, location):
                     pass
                 else:
                     rooted = os.path.join(os.getcwd(), location, rooted[0])
-                result.append(condition + f + rooted + "//" + m.group(2))
-            elif os.path.isabs(m.group(v)):                
-                result.append(condition + p)
+                    
+                result.append(Property(p.feature(), rooted + "//" + m.group(2), p.condition()))
+                
+            elif os.path.isabs(v):                
+                result.append(p)
             else:
-                result.append(condition + f + project_id + "//" + v)
-        else:
-            result.append(condition + p)
+                result.append(Property(p.feature(), project_id + "//" + v, p.condition()))
 
     return result
 
