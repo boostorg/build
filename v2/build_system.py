@@ -433,13 +433,14 @@ def main():
     # FIXME: document this option.
     if "--profiling" in sys.argv:
         import cProfile
+        r = cProfile.runctx('main_real()', globals(), locals(), "stones.prof")
+
         import pstats
-        return cProfile.runctx('main_real()', globals(), locals(), "stones.prof")
-        
         stats = pstats.Stats("stones.prof")
         stats.strip_dirs()
         stats.sort_stats('time', 'calls')
         stats.print_callers(20)
+        return r
     else:
         try:
             return main_real()
