@@ -366,7 +366,7 @@ class PropertySet:
             # change the location of generated targets
             l = self.get ('<location>')
             if l:
-                computed = l
+                computed = l[0]
                 is_relative = False
 
             else:
@@ -394,7 +394,7 @@ class PropertySet:
                 is_relative = True
 
             self.target_path_ = (computed, is_relative)
-            
+
         return self.target_path_
                     
     def add (self, ps):
@@ -428,6 +428,19 @@ class PropertySet:
         
         return self.feature_map_.get(feature, [])
 
+    # FIXME: make this cached
+    def get_properties(self, feature):
+        """Returns all contained properties associated with 'feature'"""
+
+        if not isinstance(feature, b2.build.feature.Feature):
+            feature = b2.build.feature.get(feature)
+
+        result = []        
+        for p in self.all_:
+            if p.feature() == feature:
+                result.append(p)
+        return result
+    
     def __contains__(self, item):
         for p in self.all_set_:
             if p.feature().name() == "toolset":
