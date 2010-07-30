@@ -77,6 +77,8 @@ import b2.build.property_set as property_set
 
 import b2.build.property as property
 
+from b2.manager import get_manager
+
 __re_starts_with_at = re.compile ('^@(.*)')
 
 class VirtualTargetRegistry:
@@ -213,17 +215,19 @@ class VirtualTargetRegistry:
                 if not properties_added: properties_added = "none"
 
             # FIXME: Revive printing of real location.
-            raise BaseException ("Duplicate name of actual target: '%s'\n" 
-              "previous virtual target '%s'\n"
-              "created from '%s'\n"
-              "another virtual target '%s'\n"
-              "created from '%s'\n"
-              "added properties: '%s'\n"
-              "removed properties: '%s'\n" % (actual_name,
-                  self.actual_ [actual_name], "loc", #cmt1.location (),
-                                              virtual_target, 
-                                              "loc", #cmt2.location (),
-                                              properties_added, properties_removed))
+            get_manager().errors()(
+                "Duplicate name of actual target: '%s'\n" 
+                "previous virtual target '%s'\n"
+                "created from '%s'\n"
+                "another virtual target '%s'\n"
+                "created from '%s'\n"
+                "added properties: '%s'\n"
+                "removed properties: '%s'\n"
+                % (actual_name,
+                   self.actual_ [actual_name], "loc", #cmt1.location (),
+                   virtual_target, 
+                   "loc", #cmt2.location (),
+                   properties_added, properties_removed))
 
         else:
             self.actual_ [actual_name] = virtual_target
