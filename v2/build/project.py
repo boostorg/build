@@ -1,5 +1,5 @@
-# Status: being ported by Vladimir Prus
-# Base revision: 42507
+# Status: ported.
+# Base revision: 64488
 
 # Copyright 2002, 2003 Dave Abrahams 
 # Copyright 2002, 2005, 2006 Rene Rivera 
@@ -51,6 +51,7 @@ import os
 import string
 import imp
 import traceback
+import b2.util.option as option
 
 class ProjectRegistry:
 
@@ -133,7 +134,7 @@ class ProjectRegistry:
         # If Jamfile is already loaded, don't try again.
         if not mname in self.jamfile_modules:
         
-            self.load_jamfile(jamfile_location)
+            self.load_jamfile(jamfile_location, mname)
                 
             # We want to make sure that child project are loaded only
             # after parent projects. In particular, because parent projects
@@ -285,7 +286,7 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         if jamfile_glob:
             return jamfile_glob[0]
     
-    def load_jamfile(self, dir):
+    def load_jamfile(self, dir, jamfile_module):
         """Load a Jamfile at the given directory. Returns nothing.
         Will attempt to load the file as indicated by the JAMFILE patterns.
         Effect of calling this rule twice with the same 'dir' is underfined."""
@@ -296,13 +297,16 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         if not jamfile_to_load:
             jamfile_to_load = self.find_jamfile(dir)
         else:
+            if len(jamfile_to_load) > 1:
+                get_manager().errors()("Multiple Jamfiles found at '%s'\n" +\
+                                       "Filenames are: %s"
+                                       % (dir, [os.path.basename(j) for j in jamfile_to_load]))
+
             is_jamroot = True
             jamfile_to_load = jamfile_to_load[0]
             
         # The module of the jamfile.
-        dir = os.path.realpath(os.path.dirname(jamfile_to_load))
-        
-        jamfile_module = self.module_name (dir)
+        dir = os.path.realpath(os.path.dirname(jamfile_to_load))       
 
         # Initialize the jamfile module before loading.
         #    
@@ -401,8 +405,13 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
 
         if location:
             attributes.set("source-location", [location], exact=1)
-        else:
-            attributes.set("source-location", "", exact=1)
+        elif not module_name in ["test-config", "site-config", "user-config", "project-config"]:
+            # This is a standalone project with known location. Set source location
+            # so that it can declare targets. This is intended so that you can put
+            # a .jam file in your sources and use it via 'using'. Standard modules
+            # (in 'tools' subdir) may not assume source dir is set.
+            module = sys.modules[module_name]
+            attributes.set("source-location", module.__path__, exact=1)
 
         attributes.set("requirements", property_set.empty(), exact=True)
         attributes.set("usage-requirements", property_set.empty(), exact=True)
@@ -416,11 +425,15 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         jamroot = False
 
         parent_module = None;
-        if module_name == "site-config":
+        if module_name == "test-config":
             # No parent
             pass
+        elif module_name == "site-config":
+            parent_module = "test-config"
         elif module_name == "user-config":
             parent_module = "site-config"
+        elif module_name == "project-config":
+            parent_module = "user-config"
         elif location and not self.is_jamroot(basename):
             # We search for parent/project-root only if jamfile was specified 
             # --- i.e
@@ -430,7 +443,12 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             # It's either jamroot, or standalone project.
             # If it's jamroot, inherit from user-config.
             if location:
-                parent_module = "user-config" ;                
+                # If project-config module exist, inherit from it.
+                if self.module2attributes.has_key("project-config"):
+                    parent_module = "project-config"
+                else:
+                    parent_module = "user-config" ;
+                
                 jamroot = True ;
                 
         if parent_module:
@@ -550,7 +568,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             # that id is not equal to the 'id' parameter.
             if self.id2module.has_key(id) and self.id2module[id] != project_module:
                 self.manager.errors()(
-"""Attempt to redeclare already existing project id '%s'""" % id)
+"""Attempt to redeclare already existing project id '%s' at location '%s'""" % (id, location))
             self.id2module[id] = project_module
 
         self.current_module = saved_project
@@ -765,8 +783,15 @@ class ProjectAttributes:
                 
         elif attribute == "build-dir":
             self.__dict__["build-dir"] = os.path.join(self.location, specification[0])
-                 
-        elif not attribute in ["id", "default-build", "location",
+
+        elif attribute == "id":
+            id = specification[0]
+            if id[0] != '/':
+                id = "/" + id
+            self.manager.projects().register_id(id, self.project_module)
+            self.__dict__["id"] = id
+                
+        elif not attribute in ["default-build", "location",
                                "source-location", "parent",
                                "projects-to-build", "project-root"]:
             self.manager.errors()(
@@ -898,11 +923,7 @@ class ProjectRules:
             args = args[1:]
 
         if id:
-            if id[0] != '/':
-                id = '/' + id
-            self.registry.register_id (id, jamfile_module)
-
-        attributes.set('id', id)
+            attributes.set('id', [id])
 
         explicit_build_dir = None
         for a in args:
@@ -920,6 +941,10 @@ class ProjectRules:
             # If we try to set build dir for user-config, we'll then
             # try to inherit it, with either weird, or wrong consequences.
             if location and location == attributes.get("project-root"):
+                # Re-read the project id, since it might have been changed in
+                # the project's attributes.
+                id = attributes.get('id')
+
                 # This is Jamroot.
                 if id:
                     if explicit_build_dir and os.path.isabs(explicit_build_dir):
@@ -971,6 +996,11 @@ attribute is allowed only for top-level 'project' invocations""")
         t = self.registry.current()
         for n in target_names:
             t.mark_target_as_explicit(n)
+
+    def always(self, target_names):
+        p = self.registry.current()
+        for n in target_names:
+            p.mark_target_as_always(n)
 
     def glob(self, wildcards, excludes=None):
         return self.registry.glob_internal(self.registry.current(),
@@ -1062,3 +1092,10 @@ attribute is allowed only for top-level 'project' invocations""")
             return self.reverse[jamfile_module].get(name_in_jamfile_modue, None)
 
         return None
+
+    def option(self, name, value):
+        name = name[0]
+        if not name in ["site-config", "user-config", "project-config"]:
+            get_manager().errors()("The 'option' rule may be used only in site-config or user-config")
+
+        option.set(name, value[0])
