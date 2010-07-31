@@ -60,7 +60,7 @@ class Property(object):
                    (other._feature, other._value, other._condition))
                            
 
-def create_from_string(s, allow_condition = False):
+def create_from_string(s, allow_condition=False):
 
     condition = []
     import types
@@ -98,9 +98,9 @@ def create_from_string(s, allow_condition = False):
                    
     return Property(f, value, condition)
 
-def create_from_strings(string_list, validate=False):
+def create_from_strings(string_list, allow_condition=False):
 
-    return [create_from_string(s, validate) for s in string_list]
+    return [create_from_string(s, allow_condition) for s in string_list]
 
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
