@@ -1019,7 +1019,7 @@ class BasicTarget (AbstractTarget):
         if debug:
             print "    next alternative: required properties:", str(condition)
         
-        if b2.util.set.contains (condition, property_set.raw ()):
+        if b2.util.set.contains (condition, property_set.all()):
 
             if debug:
                 print "        matched"

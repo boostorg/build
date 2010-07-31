@@ -154,7 +154,6 @@ class PropertySet:
         self.incidental_ = []
         self.free_ = []
         self.base_ = []
-        self.base_raw_ = []
         self.dependency_ = []
         self.non_dependency_ = []
         self.conditional_ = []
@@ -199,18 +198,7 @@ class PropertySet:
                 raise BaseException ("Invalid property: '%s'" % p)
             
             att = feature.attributes (get_grist (p))
-            
-            # A feature can be both incidental and free,
-            # in which case we add it to incidental.
-            if 'incidental' in att:
-                pass
-#                self.incidental_.append (p)
-            elif 'free' in att:
- #               self.free_.append (p)
-                pass
-            else:
-                self.base_raw_.append (p)
-                                                       
+                                                                   
             if 'propagated' in att:
                 self.propagated_.append (p)
 
@@ -219,6 +207,8 @@ class PropertySet:
 
         for p in properties:
 
+            # A feature can be both incidental and free,
+            # in which case we add it to incidental.
             if p.feature().incidental():
                 self.incidental_.append(p)
             elif p.feature().free():
@@ -251,7 +241,7 @@ class PropertySet:
     def base (self):
         """ Returns properties that are neither incidental nor free.
         """
-        return self.base_raw_
+        return self.base_
     
     def free (self):
         """ Returns free properties which are not dependency properties.

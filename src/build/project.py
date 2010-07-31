@@ -758,15 +758,16 @@ class ProjectAttributes:
 
             non_free = property.remove("free", unconditional)
             if non_free:                
-                pass
-                # FIXME:
-                #errors.error "usage-requirements" $(specification) "have non-free properties" $(non-free) ;
+                get_manager().errors()("usage-requirements %s have non-free properties %s" \
+                                       % (specification, non_free))
 
-            t = property.translate_paths(property.create_from_strings(specification), self.location)
+            t = property.translate_paths(
+                    property.create_from_strings(specification, allow_condition=True),
+                    self.location)
 
             existing = self.__dict__.get("usage-requirements")
             if existing:
-                new = property_set.create(existing.raw() +  t)
+                new = property_set.create(existing.all() +  t)
             else:
                 new = property_set.create(t)
             self.__dict__["usage-requirements"] = new
