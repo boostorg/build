@@ -967,7 +967,7 @@ def find_viable_generators (target_type, prop_set):
         if not g in __active_generators:
             viable_generators.append (g)
         else:
-            dout("      generator %s is active, discarning" % g.id())
+            dout("      generator %s is active, discarding" % g.id())
 
     # Generators which override 'all'.
     all_overrides = []
@@ -1051,7 +1051,7 @@ def construct (project, name, target_type, prop_set, sources, top_level=False):
         
         If 'top-level' is set, does not suppress generators that are already
         used in the stack. This may be useful in cases where a generator
-        has to build a metatargets -- for example a target corresponding to
+        has to build a metatarget -- for example a target corresponding to
         built tool.        
     """
 
