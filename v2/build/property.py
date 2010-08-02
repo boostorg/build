@@ -26,12 +26,15 @@ class Property(object):
 
     __slots__ = ('_feature', '_value', '_condition')
 
-    def __init__(self, feature, value, condition = []):
-        assert(feature.free() or value.find(':') == -1)
-        self._feature = feature
+    def __init__(self, f, value, condition = []):
+        if type(f) == type(""):
+            f = feature.get(f)
+        # At present, single property has a single value.
+        assert type(value) != type([])
+        assert(f.free() or value.find(':') == -1)
+        self._feature = f
         self._value = value
         self._condition = condition
-
         
     def feature(self):
         return self._feature
