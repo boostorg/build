@@ -513,9 +513,9 @@ def file_creation_command():
         already exists is unspecified.
     """
     if os_name() == 'NT':
-        return ["echo. > "]
+        return "echo. > "
     else:
-        return ["touch "]
+        return "touch "
 
 #FIXME: global variable
 __mkdir_set = set()
