@@ -11,6 +11,12 @@ def bjam_signature(s):
 
     return wrap
 
+def metatarget(f):
+
+    f.bjam_signature = (["name"], ["sources", "*"], ["requirements", "*"],
+                        ["default_build", "*"], ["usage_requirements", "*"])
+    return f
+
 class cached(object):
 
     def __init__(self, function):

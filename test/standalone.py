@@ -32,6 +32,23 @@ alias x : $(pwd)/../a.cpp ;
 alias runtime : x ;
 """)
 
+t.write("standalone.py", """
+from b2.manager import get_manager
+
+# FIXME: this is ugly as death
+get_manager().projects().initialize(__name__)
+
+import os ;
+
+# This use of list as parameter is also ugly.
+project(['standalone'])
+
+pwd = os.getcwd()
+alias('x', [os.path.join(pwd, '../a.cpp')])
+alias('runtime', ['x'])
+""")
+
+
 t.write("sub/jamfile.jam", """
 stage bin : /standalone//runtime ;
 """)
