@@ -55,7 +55,7 @@ def reset ():
     
 reset ()
 
-@bjam_signature((["type"], ["suffixes", "*"], ["base_type"]))
+@bjam_signature((["type"], ["suffixes", "*"], ["base_type", "?"]))
 def register (type, suffixes = [], base_type = None):
     """ Registers a target type, possibly derived from a 'base-type'. 
         If 'suffixes' are provided, they list all the suffixes that mean a file is of 'type'.
