@@ -853,7 +853,7 @@ def find_viable_generators_aux (target_type, prop_set):
         m = g.match_rank(prop_set)
         if m:
             dout("  is viable")
-            viable_generators.append(g)
+            viable_generators.append(g)            
                             
     return viable_generators
 
@@ -873,6 +873,8 @@ def find_viable_generators (target_type, prop_set):
         # TODO: is this really used?
         if not g in __active_generators:
             viable_generators.append (g)
+        else:
+            dout("      generator %s is active, discarning" % g.id())
 
     # Generators which override 'all'.
     all_overrides = []
@@ -941,7 +943,7 @@ def __construct_really (project, name, target_type, prop_set, sources):
     return result;
 
 
-def construct (project, name, target_type, prop_set, sources):
+def construct (project, name, target_type, prop_set, sources, top_level=False):
     """ Attempts to create target of 'target-type' with 'properties'
         from 'sources'. The 'sources' are treated as a collection of
         *possible* ingridients -- i.e. it is not required to consume
@@ -951,9 +953,19 @@ def construct (project, name, target_type, prop_set, sources):
         Returns a list of target. When this invocation is first instance of
         'construct' in stack, returns only targets of requested 'target-type',
         otherwise, returns also unused sources and additionally generated
-        targets.            
+        targets.
+        
+        If 'top-level' is set, does not suppress generators that are already
+        used in the stack. This may be useful in cases where a generator
+        has to build a metatargets -- for example a target corresponding to
+        built tool.        
     """
-    # TODO: Why is global needed here?
+
+    global __active_generators
+    if top_level:
+        saved_active = __active_generators
+        __active_generators = []
+
     global __construct_stack
     if __construct_stack:
         __ensure_type (sources)
@@ -975,6 +987,9 @@ def construct (project, name, target_type, prop_set, sources):
     project.manager().logger().decrease_indent()
         
     __construct_stack = __construct_stack [1:]
+
+    if top_level:
+        __active_generators = saved_active
 
     return result
     
