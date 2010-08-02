@@ -1,7 +1,5 @@
-# Status: being ported by Vladimir Prus
-# Still to do: call toolset.requirements when those are ported.
-# Remember the location of target.
-# Base revision: 40480
+# Status: ported.
+# Base revision: 64488
 
 # Copyright Vladimir Prus 2002-2007.
 # Copyright Rene Rivera 2006.
@@ -103,6 +101,8 @@ class TargetRegistry:
         self.indent_ = ""
 
         self.debug_building_ = "--debug-building" in bjam.variable("ARGV")
+
+        self.targets_ = []
 
     def main_target_alternative (self, target):
         """ Registers the specified target as a main target alternatives.
@@ -231,6 +231,16 @@ class TargetRegistry:
     def log(self, message):
         if self.debug_building_:
             print self.indent_ + message
+
+    def push_target(self, target):
+        self.targets_.append(target)
+
+    def pop_target(self):
+        self.targets_ = self.targets_[:-1]
+
+    def current(self):
+        return self.targets_[0]
+
 
 class GenerateResult:
     
@@ -363,6 +373,9 @@ class ProjectTarget (AbstractTarget):
         # Targets marked as explicit.
         self.explicit_targets_ = set()
 
+        # Targets marked as always
+        self.always_targets_ = set()
+
         # The constants defined for this project.
         self.constants_ = {}
 
@@ -423,7 +436,7 @@ class ProjectTarget (AbstractTarget):
         # Collect all projects referenced via "projects-to-build" attribute.
         self_location = self.get ('location')
         for pn in self.get ('projects-to-build'):
-            result.append (self.find(pn))
+            result.append (self.find(pn + "/"))
                         
         return result
 
@@ -434,6 +447,9 @@ class ProjectTarget (AbstractTarget):
         # Record the name of the target, not instance, since this
         # rule is called before main target instaces are created.
         self.explicit_targets_.add(target_name)
+
+    def mark_target_as_always(self, target_name):
+        self.always_targets_.add(target_name)
     
     def add_alternative (self, target_instance):
         """ Add new target alternative.
@@ -548,6 +564,9 @@ class ProjectTarget (AbstractTarget):
             if not self.main_target_.has_key (name):
                 t = MainTarget (name, self.project_)
                 self.main_target_ [name] = t
+
+            if name in self.always_targets_:
+                a.always()
             
             self.main_target_ [name].add_alternative (a)
 
@@ -561,7 +580,16 @@ class ProjectTarget (AbstractTarget):
         """
 
         if path:
-            value = os.path.join(self.location_, value)
+            l = self.location_
+            if not l:
+                # Project corresponding to config files do not have 
+                # 'location' attribute, but do have source location.
+                # It might be more reasonable to make every project have
+                # a location and use some other approach to prevent buildable
+                # targets in config files, but that's for later.
+                l = get('source-location')
+                
+            value = os.path.join(l, value)
             # Now make the value absolute path
             value = os.path.join(os.getcwd(), value)
 
@@ -660,46 +688,7 @@ class MainTarget (AbstractTarget):
         return best
 
     def apply_default_build (self, property_set):
-        # 1. First, see what properties from default_build
-        # are already present in property_set. 
-
-        specified_features = set(p.feature() for p in property_set.all())
-        
-        defaults_to_apply = []
-        for d in self.default_build_.all():
-            if not d.feature() in specified_features:
-                defaults_to_apply.append(d)
-        
-        # 2. If there's any defaults to be applied, form the new
-        # build request. Pass it throw 'expand-no-defaults', since
-        # default_build might contain "release debug", which will
-        # result in two property_sets.
-        result = []
-        if defaults_to_apply:
-
-            # We have to compress subproperties here to prevent
-            # property lists like:
-            #
-            #    <toolset>msvc <toolset-msvc:version>7.1 <threading>multi
-            #
-            # from being expanded into:
-            #
-            #    <toolset-msvc:version>7.1/<threading>multi
-            #    <toolset>msvc/<toolset-msvc:version>7.1/<threading>multi
-            #
-            # due to cross-product property combination.  That may
-            # be an indication that
-            # build_request.expand-no-defaults is the wrong rule
-            # to use here.
-            compressed = feature.compress_subproperties(property_set.all())
-
-            result = build_request.expand_no_defaults(
-                b2.build.property_set.create([p]) for p in (compressed + defaults_to_apply))
-            
-        else:
-            result.append (property_set)
-
-        return result
+        return apply_default_build(property_set, self.default_build_)
 
     def generate (self, ps):
         """ Select an alternative for this main target, by finding all alternatives
@@ -821,11 +810,16 @@ class BasicTarget (AbstractTarget):
         self.request_cache = {}
 
         self.user_context_ = self.manager_.errors().capture_user_context()
+
+        self.always_ = False
+
+    def always(self):
+        self.always_ = True
         
     def sources (self):
         """ Returns the list of AbstractTargets which are used as sources.
             The extra properties specified for sources are not represented.
-            The only used of this rule at the moment is the '--dump-test'
+            The only used of this rule at the moment is the '--dump-tests'
             feature of the test system.            
         """
         if self.source_targets_ == None:
@@ -1084,6 +1078,8 @@ class BasicTarget (AbstractTarget):
                 "Command line free features: '%s'" % str (cf.raw ()))            
             self.manager().targets().log(
                 "Target requirements: %s'" % str (self.requirements().raw ()))
+            
+        self.manager().targets().push_target(self)
 
         if not self.generated_.has_key(ps):
 
@@ -1127,7 +1123,10 @@ class BasicTarget (AbstractTarget):
                 # We might get duplicate sources, for example if
                 # we link to two library which have the same <library> in
                 # usage requirements.
-                source_targets = unique (source_targets)
+                # Use stable sort, since for some targets the order is
+                # important. E.g. RUN_PY target need python source to come
+                # first.
+                source_targets = unique(source_targets, stable=True)
 
                 # FIXME: figure why this call messes up source_targets in-place
                 result = self.construct (self.name_, source_targets[:], rproperties)
@@ -1136,6 +1135,10 @@ class BasicTarget (AbstractTarget):
                     assert len(result) == 2
                     gur = result [0]
                     result = result [1]
+
+                    if self.always_:
+                        for t in result:
+                            t.always()
 
                     s = self.create_subvariant (
                         result,
@@ -1155,17 +1158,25 @@ class BasicTarget (AbstractTarget):
                 else:
                     self.generated_[ps] = GenerateResult (property_set.empty(), [])
             else:
-                self.manager().targets().log(
-                    "Skipping build: <build>no in common properties")
+                # If we just see <build>no, we cannot produce any reasonable
+                # diagnostics. The code that adds this property is expected
+                # to explain why a target is not built, for example using
+                # the configure.log-component-configuration function.
 
-                # We're here either because there's error computing
-                # properties, or there's <build>no in properties.
-                # In the latter case we don't want any diagnostic.
-                # In the former case, we need diagnostics. TODOo
-                self.generated_[ps] = GenerateResult (rproperties, [])
+                # If this target fails to build, add <build>no to properties
+                # to cause any parent target to fail to build.  Except that it
+                # - does not work now, since we check for <build>no only in
+                #   common properties, but not in properties that came from
+                #   dependencies
+                # - it's not clear if that's a good idea anyway.  The alias
+                #   target, for example, should not fail to build if a dependency
+                #   fails.                
+                self.generated_[ps] = GenerateResult(
+                    property_set.create(["<build>no"]), [])
         else:
             self.manager().targets().log ("Already built")
 
+        self.manager().targets().pop_target()
         self.manager().targets().decrease_indent()
 
         return self.generated_[ps]
@@ -1273,7 +1284,7 @@ class TypedTarget (BasicTarget):
 
         r = generators.construct (self.project_, name, self.type_, 
                                   prop_set.add_raw(['<main-target-type>' + self.type_]),
-            source_targets)
+                                  source_targets, True)
 
         if not r:
             print "warning: Unable to construct '%s'" % self.full_name ()
@@ -1289,6 +1300,48 @@ class TypedTarget (BasicTarget):
                 sys.exit(1)
         
         return r
+
+def apply_default_build(property_set, default_build):
+    # 1. First, see what properties from default_build
+    # are already present in property_set. 
+
+    specified_features = set(p.feature() for p in property_set.all())
+
+    defaults_to_apply = []
+    for d in default_build.all():
+        if not d.feature() in specified_features:
+            defaults_to_apply.append(d)
+
+    # 2. If there's any defaults to be applied, form the new
+    # build request. Pass it throw 'expand-no-defaults', since
+    # default_build might contain "release debug", which will
+    # result in two property_sets.
+    result = []
+    if defaults_to_apply:
+
+        # We have to compress subproperties here to prevent
+        # property lists like:
+        #
+        #    <toolset>msvc <toolset-msvc:version>7.1 <threading>multi
+        #
+        # from being expanded into:
+        #
+        #    <toolset-msvc:version>7.1/<threading>multi
+        #    <toolset>msvc/<toolset-msvc:version>7.1/<threading>multi
+        #
+        # due to cross-product property combination.  That may
+        # be an indication that
+        # build_request.expand-no-defaults is the wrong rule
+        # to use here.
+        compressed = feature.compress_subproperties(property_set.all())
+
+        result = build_request.expand_no_defaults(
+            b2.build.property_set.create([p]) for p in (compressed + defaults_to_apply))
+
+    else:
+        result.append (property_set)
+
+    return result
 
 
 def create_typed_metatarget(name, type, sources, requirements, default_build, usage_requirements):
