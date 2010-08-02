@@ -1,5 +1,5 @@
 # Status: ported.
-# Base revision: 64427.
+# Base revision: 64488.
 # 
 #  Copyright (C) Vladimir Prus 2002. Permission to copy, use, modify, sell and
 #  distribute this software is granted provided this copyright notice appears in
