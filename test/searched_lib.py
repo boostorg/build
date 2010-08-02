@@ -46,7 +46,7 @@ t.write("jamfile.jam", """
 import path ;
 import project ;
 
-local here = [ project.attribute $(__name__) location ] ;
+path-constant here : . ;
 here = [ path.root $(here) [ path.pwd ] ] ;
 
 exe main : main.cpp helper ;

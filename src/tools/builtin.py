@@ -336,7 +336,7 @@ class SearchedLibTarget (virtual_target.AbstractFileTarget):
         return self.search_
         
     def actualize_location (self, target):
-        project.manager ().engine ().add_not_file_target (target)
+        bjam.call("NOTFILE", target)
     
     def path (self):
         #FIXME: several functions rely on this not being None
@@ -578,19 +578,21 @@ class LinkingGenerator (generators.Generator):
         generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
         
     def run (self, project, name, prop_set, sources):
+       
         lib_sources = prop_set.get('<library>')
-        [ sources.append (project.manager().get_object(x)) for x in lib_sources ]
+        sources.extend(lib_sources)
         
         # Add <library-path> properties for all searched libraries
         extra = []
         for s in sources:
             if s.type () == 'SEARCHED_LIB':
                 search = s.search()
-                extra.append(replace_grist(search, '<library-path>'))
+                extra.extend(property.Property('<library-path>', sp) for sp in search)
 
         orig_xdll_path = []
                    
-        if prop_set.get('<hardcode-dll-paths>') == ['true'] and type.is_derived(self.target_types_ [0], 'EXE'):
+        if prop_set.get('<hardcode-dll-paths>') == ['true'] \
+               and type.is_derived(self.target_types_ [0], 'EXE'):
             xdll_path = prop_set.get('<xdll-path>')
             orig_xdll_path = [ replace_grist(x, '<dll-path>') for x in xdll_path ]
             # It's possible that we have libraries in sources which did not came
@@ -670,12 +672,12 @@ class LinkingGenerator (generators.Generator):
         fst = []
         for s in sources:
             if type.is_derived(s.type(), 'SEARCHED_LIB'):
-                name = s.real_name()
+                n = s.real_name()
                 if s.shared():
-                    fsa.append(name)
+                    fsa.append(n)
 
                 else:
-                    fst.append(name)
+                    fst.append(n)
 
             else:
                 sources2.append(s)
@@ -685,9 +687,8 @@ class LinkingGenerator (generators.Generator):
             add.append("<find-shared-library>" + '&&'.join(fsa))
         if fst:
             add.append("<find-static-library>" + '&&'.join(fst))
-                
-        spawn = generators.Generator.generated_targets(self, sources2,prop_set.add_raw(add), project, name)
-        
+
+        spawn = generators.Generator.generated_targets(self, sources2, prop_set.add_raw(add), project, name)       
         return spawn
 
 

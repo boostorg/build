@@ -879,7 +879,7 @@ class NullAction (Action):
         actions which create them.
     """
     def __init__ (self, manager, prop_set):
-        Action.__init__ (self, manager, None, None, prop_set)
+        Action.__init__ (self, manager, [], None, prop_set)
         
     def actualize (self):
         if not self.actualized_:
