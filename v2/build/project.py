@@ -90,6 +90,8 @@ class ProjectRegistry:
         # via 'using' and 'import' rules in Jamfiles.
         self.loaded_tool_modules_ = {}
 
+        self.loaded_tool_module_path_ = {}
+
         # Map from project target to the list of
         # (id,location) pairs corresponding to all 'use-project'
         # invocations.
@@ -403,6 +405,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         attributes = ProjectAttributes(self.manager, location, module_name)
         self.module2attributes[module_name] = attributes
 
+        python_standalone = False
         if location:
             attributes.set("source-location", [location], exact=1)
         elif not module_name in ["test-config", "site-config", "user-config", "project-config"]:
@@ -410,8 +413,9 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             # so that it can declare targets. This is intended so that you can put
             # a .jam file in your sources and use it via 'using'. Standard modules
             # (in 'tools' subdir) may not assume source dir is set.
-            module = sys.modules[module_name]
-            attributes.set("source-location", module.__path__, exact=1)
+            module = sys.modules[module_name]          
+            attributes.set("source-location", self.loaded_tool_module_path_[module_name], exact=1)
+            python_standalone = True
 
         attributes.set("requirements", property_set.empty(), exact=True)
         attributes.set("usage-requirements", property_set.empty(), exact=True)
@@ -420,7 +424,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         attributes.set("project-root", None, exact=True)
         attributes.set("build-dir", None, exact=True)
         
-        self.project_rules_.init_project(module_name)
+        self.project_rules_.init_project(module_name, python_standalone)
 
         jamroot = False
 
@@ -518,6 +522,9 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
     def current(self):
         """Returns the project which is currently being loaded."""
         return self.current_project
+
+    def set_current(self, c):
+        self.current_project = c
 
     def push_current(self, project):
         """Temporary changes the current project to 'project'. Should
@@ -663,14 +670,14 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         if not location:
             self.manager.errors()("Cannot find module '%s'" % name)
 
-        mname = "__build_build_temporary__"
+        mname = name + "__for_jamfile"
         file = open(location)
         try:            
             # TODO: this means we'll never make use of .pyc module,
             # which might be a problem, or not.
+            self.loaded_tool_module_path_[mname] = location
             module = imp.load_module(mname, file, os.path.basename(location),
                                      (".py", "r", imp.PY_SOURCE))
-            del sys.modules[mname]
             self.loaded_tool_modules_[name] = module
             return module
         finally:
@@ -896,8 +903,20 @@ class ProjectRules:
             return self.call_and_report_errors(callable, *args, **kw)
         return wrapper
 
-    def init_project(self, project_module):
+    def init_project(self, project_module, python_standalone=False):
 
+        if python_standalone:
+            m = sys.modules[project_module]
+
+            for n in self.local_names:
+                if n != "import_":
+                    setattr(m, n, getattr(self, n))
+                            
+            for n in self.rules:
+                setattr(m, n, self.rules[n])
+
+            return
+                        
         for n in self.local_names:            
             # Using 'getattr' here gives us a bound method,
             # while using self.__dict__[r] would give unbound one.
@@ -1051,6 +1070,8 @@ attribute is allowed only for top-level 'project' invocations""")
         attributes = self.registry.attributes(jamfile_module)
         location = attributes.get("location")
 
+        saved = self.registry.current()
+
         m = self.registry.load_module(py_name, [location])
 
         for f in m.__dict__:
@@ -1070,6 +1091,8 @@ attribute is allowed only for top-level 'project' invocations""")
 
             for n, l in zip(names_to_import, local_names):
                 self._import_rule(jamfile_module, l, m.__dict__[n])
+                
+        self.registry.set_current(saved)
         
     def conditional(self, condition, requirements):
         """Calculates conditional requirements for multiple requirements
