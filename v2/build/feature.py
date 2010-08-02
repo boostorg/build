@@ -1,16 +1,11 @@
-# Status: mostly ported.
-# TODO: carry over tests.
-# Base revision: 56043
+# Status: ported, except for unit tests.
+# Base revision: 64488
 #
 # Copyright 2001, 2002, 2003 Dave Abrahams 
 # Copyright 2002, 2006 Rene Rivera 
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus 
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
-
-# TODO: stop using grists to identify the name of features?
-#       create a class for Features and Properties?
-#       represent conditions using object trees, composite pattern?
 
 import re
 
@@ -438,7 +433,8 @@ def validate_value_string (f, value_string):
     values = [value_string]
 
     if f.subfeatures():
-        if not value_string in f.subfeatures():
+        if not value_string in f.values() and \
+               not value_string in f.subfeatures():
             values = value_string.split('-')
 
     # An empty value is allowed for optional features
