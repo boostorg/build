@@ -51,6 +51,28 @@ else
 }
 """)
 
+    t.write("Other/mygen.py", """
+import b2.build.generators as generators
+import b2.build.type as type
+
+from b2.manager import get_manager
+
+import os
+
+
+type.register('MY_TYPE', ['extension'])
+generators.register_standard('mygen.generate-a-cpp-file', ['MY_TYPE'], ['CPP'])
+if os.name == 'nt':
+    action = 'echo void g() {} > "$(<)"'
+else:
+    action = 'echo "void g() {}" > "$(<)"'
+def f(*args):
+    print "Generating a CPP file..."
+
+get_manager().engine().register_action("mygen.generate-a-cpp-file",
+                                       action, function=f)    
+""")
+
     t.write("Other/jamfile.jam", """
 import mygen ;
 obj other-obj : source.extension ;

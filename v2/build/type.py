@@ -16,6 +16,7 @@ from b2.exceptions import *
 from b2.build import feature, property, scanner
 from b2.util import bjam_signature
 
+
 __re_hyphen = re.compile ('-')
 
 def __register_features ():
@@ -98,6 +99,12 @@ def register (type, suffixes = [], base_type = None):
         feature.compose ('<target-type>' + type, replace_grist (base_type, '<base-target-type>'))
         feature.compose ('<base-target-type>' + type, '<base-target-type>' + base_type)
 
+    import b2.build.generators as generators
+    # Adding a new derived type affects generator selection so we need to
+    # make the generator selection module update any of its cached
+    # information related to a new derived type being defined.
+    generators.update_cached_information_with_a_new_type(type)
+
     # FIXME: resolving recursive dependency.
     from b2.manager import get_manager
     get_manager().projects().project_rules().add_rule_for_type(type)
@@ -141,6 +148,12 @@ def get_scanner (type, prop_set):
             pass
             
     return None
+
+def base(type):
+    """Returns a base type for the given type or nothing in case the given type is
+    not derived."""
+
+    return __types[type]['base']
 
 def all_bases (type):
     """ Returns type and all of its bases, in the order of their distance from type.
