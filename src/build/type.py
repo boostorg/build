@@ -85,7 +85,7 @@ def register (type, suffixes = [], base_type = None):
 
     if len (suffixes) > 0:
         # Generated targets of 'type' will use the first of 'suffixes'
-        # (this may be overriden)            
+        # (this may be overriden)
         set_generated_target_suffix (type, [], suffixes [0])
         
         # Specify mapping from suffixes to type
@@ -259,7 +259,7 @@ def generated_target_ps_real(is_suffix, type, properties):
 
         # Note that if the string is empty (""), but not null, we consider
         # suffix found.  Setting prefix or suffix to empty string is fine.
-        if result:
+        if result is not None:
             found = True
 
         type = __types [type]['base']
@@ -273,8 +273,8 @@ def generated_target_ps(is_suffix, type, prop_set):
         with the specified properties. If not suffix were specified for
         'type', returns suffix for base type, if any.
     """
-    key = str(is_suffix) + type + str(prop_set)
-    v = __target_suffixes_cache.get (key, None)
+    key = (is_suffix, type, prop_set)
+    v = __target_suffixes_cache.get(key, None)
 
     if not v:
         v = generated_target_ps_real(is_suffix, type, prop_set.raw())
