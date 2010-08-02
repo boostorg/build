@@ -888,7 +888,7 @@ def __ensure_type (targets):
     """
     for t in targets:
         if not t.type ():
-            raise BaseException ("target '%s' has no type" % str (t))
+            get_manager().errors()("target '%s' has no type" % str (t))
 
 def find_viable_generators_aux (target_type, prop_set):
     """ Returns generators which can be used to construct target of specified type
@@ -1061,7 +1061,7 @@ def construct (project, name, target_type, prop_set, sources, top_level=False):
         __active_generators = []
 
     global __construct_stack
-    if __construct_stack:
+    if not __construct_stack:
         __ensure_type (sources)
         
     __construct_stack.append (1)
