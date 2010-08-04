@@ -109,6 +109,11 @@ def register (type, suffixes = [], base_type = None):
     from b2.manager import get_manager
     get_manager().projects().project_rules().add_rule_for_type(type)
 
+# FIXME: quick hack.
+def type_from_rule_name(rule_name):
+    return rule_name.upper().replace("-", "_")
+
+
 def register_suffixes (suffixes, type):
     """ Specifies that targets with suffix from 'suffixes' have the type 'type'. 
         If a different type is already specified for any of syffixes, issues an error.

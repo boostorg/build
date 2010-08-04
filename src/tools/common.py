@@ -14,6 +14,7 @@ import re
 import bjam
 import os
 import os.path
+import sys
 
 from b2.build import feature
 from b2.util.utility import *
@@ -46,8 +47,30 @@ def reset ():
 
     __debug_configuration = '--debug-configuration' in bjam.variable('ARGV')
     __show_configuration = '--show-configuration' in bjam.variable('ARGV')
-    
+
+    global __executable_path_variable
+    OS = bjam.call("peek", [], "OS")[0]
+    if OS == "NT":
+        # On Windows the case and capitalization of PATH is not always predictable, so
+        # let's find out what variable name was really set.
+        for n in sys.environ:
+            if n.lower() == "path":
+                __executable_path_variable = n
+                break
+    else:
+        __executable_path_variable = "PATH"
+
+    m = {"NT": __executable_path_variable,
+         "CYGWIN": "PATH",
+         "MACOSX": "DYLD_LIBRARY_PATH",
+         "AIX": "LIBPATH"}
+    global __shared_library_path_variable
+    __shared_library_path_variable = m.get(OS, "LD_LIBRARY_PATH")
+                            
 reset()
+
+def shared_library_path_variable():
+    return __shared_library_path_variable
 
 # ported from trunk@47174
 class Configurations(object):
@@ -502,9 +525,9 @@ def prepend_path_variable_command(variable, paths):
     """
         Returns a command that prepends the given paths to the named path variable on
         the current platform.
-    """
+    """    
     return path_variable_setting_command(variable,
-        paths + os.environ(variable).split(os.pathsep))
+        paths + os.environ.get(variable, "").split(os.pathsep))
 
 def file_creation_command():
     """

@@ -212,9 +212,9 @@ if ! $(dont-build)
                 }        
             }        
 
-            rule get-target-variable ( target : variable )
+            rule get-target-variable ( targets + : variable )
             {
-                return [ on $(target) return $($(variable)) ] ;
+                return [ on $(targets) return $($(variable)) ] ;
             }
 
             rule import-rules-from-parent ( parent-module : this-module : user-rules )

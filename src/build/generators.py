@@ -581,20 +581,20 @@ class Generator:
         real_source_type = source.type ()
 
         # If there are no source types, we can consume anything
-        source_types = self.source_types
+        source_types = self.source_types()
         if not source_types:
-            source_types = [real_source_type]
+            source_types = [real_source_type]            
 
         consumed = []
         missing_types = []
-        for st in self.source_types_:
+        for st in source_types:
             # The 'source' if of right type already)
             if real_source_type == st or type.is_derived (real_source_type, st):
                 consumed.append (source)
 
             else:
                missing_types.append (st)
-       
+
         return (consumed, missing_types)
     
     def action_class (self):

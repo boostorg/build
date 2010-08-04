@@ -104,10 +104,10 @@ def set_default_toolset(toolset, version=None):
     default_toolset_version = version
 
     
-pre_build_hook = None
+pre_build_hook = []
 
-def set_pre_build_hook(callable):
-    pre_build_hook = callable
+def add_pre_build_hook(callable):
+    pre_build_hook.append(callable)
 
 post_build_hook = None
 
@@ -851,7 +851,8 @@ def main_real():
         #configure.print-configure-checks-summary ;
 
         if pre_build_hook:
-            pre_build_hook()
+            for h in pre_build_hook:
+                h()
 
         bjam.call("DEPENDS", "all", actual_targets)
         ok = bjam.call("UPDATE_NOW", "all") # FIXME: add out-xml

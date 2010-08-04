@@ -48,3 +48,10 @@ def call_jam_function(name, *args):
         args = ("set-update-action", name) + args
 
     return bjam.call(*args)
+
+def stem(filename):
+    i = filename.find('.')
+    if i != -1:
+        return filename[0:i]
+    else:
+        return filename
