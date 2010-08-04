@@ -48,7 +48,7 @@ rule init ( )
     {
         rule __init__ ( )
         {
-            generator.__init__ dll-paths.list : EXE : PATH_LIST ;
+            generator.__init__ dll_paths.list : EXE : PATH_LIST ;
         }
 
         rule generated-targets ( sources + : property-set : project name ? )
