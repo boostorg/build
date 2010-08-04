@@ -26,7 +26,7 @@ def get(name, default_value=None, implied_value=None):
     if matches:
         return matches[-1]
     else:
-        m = b2.util.regex.transform(sys.argv, "--" + re.escape(name))
+        m = b2.util.regex.transform(sys.argv, "--(" + re.escape(name) + ")")
         if m and implied_value:
             return implied_value
         elif options.has_key(name):

@@ -825,7 +825,7 @@ class BasicTarget (AbstractTarget):
         if self.source_targets_ == None:
             self.source_targets_ = []
             for s in self.sources_:
-                self.source_targets_.append (self.resolve_reference (s, self.project_))
+                self.source_targets_.append(self.resolve_reference(s, self.project_)[0])
 
         return self.source_targets_
 

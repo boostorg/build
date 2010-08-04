@@ -32,12 +32,20 @@ class BjamAction:
                             targets, sources, [])
 
 class BjamNativeAction:
-    """Class representing bjam action fully defined by Jam code."""
+    """Class representing bjam action defined by Jam code.
+
+    We still allow to associate a Python callable that will
+    be called when this action is installed on any target.
+    """
     
-    def __init__(self, action_name):
+    def __init__(self, action_name, function):
         self.action_name = action_name
+        self.function = function
         
     def __call__(self, targets, sources, property_set):
+        if self.function:
+            self.function(targets, sources, property_set)
+        
         p = []
         if property_set:
             p = property_set.raw()
@@ -138,7 +146,7 @@ class Engine:
         else:
             return context_module + '%' + action_name        
 
-    def register_bjam_action (self, action_name):
+    def register_bjam_action (self, action_name, function=None):
         """Informs self that 'action_name' is declared in bjam.
 
         From this point, 'action_name' is a valid argument to the
@@ -151,7 +159,7 @@ class Engine:
         # can just register them without specially checking if
         # action is already registered.
         if not self.actions.has_key(action_name):
-            self.actions[action_name] = BjamNativeAction(action_name)
+            self.actions[action_name] = BjamNativeAction(action_name, function)
     
     # Overridables
 

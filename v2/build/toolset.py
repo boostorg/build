@@ -329,8 +329,7 @@ def __handle_flag_value (manager, value, ps):
             if f.dependency():
                 # the value of a dependency feature is a target
                 # and must be actualized
-                # FIXME: verify that 'find' actually works, ick!
-                result.append (manager.targets ().find(value).actualize ())
+                result.append(value.actualize())
 
             elif f.path() or f.free():
                 
