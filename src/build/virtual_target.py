@@ -78,6 +78,7 @@ import b2.build.property_set as property_set
 import b2.build.property as property
 
 from b2.manager import get_manager
+from b2.util import bjam_signature
 
 __re_starts_with_at = re.compile ('^@(.*)')
 
@@ -533,16 +534,22 @@ class AbstractFileTarget (VirtualTarget):
         
         if tag:
 
-            rule_names = [t[:1] for t in tag if t[0] == '@']
-            if rule_names:
-                if len(tag) > 1:
-                    self.manager_.errors()(
-"""<tag>@rulename is present but is not the only <tag> feature""")
-
-                self.name_ = bjam.call(rule_names[0], specified_name, self.type_, ps)
-            else:
+            if len(tag) > 1:
                 self.manager_.errors()(
-"""The value of the <tag> feature must be '@rule-nane'""")
+                    """<tag>@rulename is present but is not the only <tag> feature""")
+
+            tag = tag[0]
+            if callable(tag):
+                self.name_ = tag(specified_name, self.type_, ps)
+            else:
+                if not tag[0] == '@':
+                    self.manager_.errors()("""The value of the <tag> feature must be '@rule-nane'""")
+
+                exported_ps = b2.util.value_to_jam(ps, methods=True)
+                self.name_ = b2.util.call_jam_function(
+                    tag[1:], specified_name, self.type_, exported_ps)
+                if self.name_:
+                    self.name_ = self.name_[0]
         
         # If there's no tag or the tag rule returned nothing.
         if not tag or not self.name_:
@@ -571,9 +578,12 @@ class AbstractFileTarget (VirtualTarget):
             
         return name
 
+@bjam_signature((["specified_name"], ["type"], ["property_set"]))
 def add_prefix_and_suffix(specified_name, type, property_set):
     """Appends the suffix appropriate to 'type/property-set' combination
     to the specified name and returns the result."""
+
+    property_set = b2.util.jam_to_value_maybe(property_set)
 
     suffix = ""
     if type:

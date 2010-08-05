@@ -46,6 +46,9 @@ def flush_annotations(xml=0):
         print_annotation(ann[0], ann[1], xml)
     annotations = []
 
+def clear_annotations():
+    global annotations
+    annotations = []
 
 defer_annotations = 0
 

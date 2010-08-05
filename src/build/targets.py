@@ -87,7 +87,6 @@ from b2.build.errors import user_error_checkpoint
 import b2.build.build_request as build_request
 
 import b2.util.set
-
 _re_separate_target_from_properties = re.compile (r'^([^<]*)(/(<.*))?$')
 
 class TargetRegistry:
@@ -111,7 +110,7 @@ class TargetRegistry:
         target.project ().add_alternative (target)
         return target
 
-    def main_target_sources (self, sources, main_target_name, no_remaning=0):
+    def main_target_sources (self, sources, main_target_name, no_renaming=0):
         """Return the list of sources to use, if main target rule is invoked
         with 'sources'. If there are any objects in 'sources', they are treated
         as main target instances, and the name of such targets are adjusted to
@@ -120,17 +119,20 @@ class TargetRegistry:
         result = []
 
         for t in sources:
+
+            t = b2.util.jam_to_value_maybe(t)
+            
             if isinstance (t, AbstractTarget):
                 name = t.name ()
 
                 if not no_renaming:
-                    new_name = main_target_name + '__' + name
-                    t.rename (new_name)
+                    name = main_target_name + '__' + name
+                    t.rename (name)
 
                 # Inline targets are not built by default.
                 p = t.project()
                 p.mark_target_as_explicit(name)                    
-                result.append (new_name)
+                result.append(name)
 
             else:
                 result.append (t)
@@ -776,6 +778,50 @@ class FileReference (AbstractTarget):
 
         return self.file_location_
 
+def resolve_reference(target_reference, project):
+    """ Given a target_reference, made in context of 'project',
+    returns the AbstractTarget instance that is referred to, as well
+    as properties explicitly specified for this reference.
+    """
+    # Separate target name from properties override
+    split = _re_separate_target_from_properties.match (target_reference)
+    if not split:
+        raise BaseException ("Invalid reference: '%s'" % target_reference)
+    
+    id = split.group (1)
+    
+    sproperties = []
+    
+    if split.group (3):
+        sproperties = property.create_from_strings(feature.split(split.group(3)))
+        sproperties = feature.expand_composites(sproperties)
+        
+    # Find the target
+    target = project.find (id)
+    
+    return (target, property_set.create(sproperties))
+
+def generate_from_reference(target_reference, project, property_set):
+    """ Attempts to generate the target given by target reference, which
+    can refer both to a main target or to a file.
+    Returns a list consisting of
+    - usage requirements
+    - generated virtual targets, if any
+    target_reference:  Target reference
+    project:           Project where the reference is made
+    property_set:      Properties of the main target that makes the reference
+    """
+    target, sproperties = resolve_reference(target_reference, project)
+    
+    # Take properties which should be propagated and refine them
+    # with source-specific requirements.
+    propagated = property_set.propagated()
+    rproperties = propagated.refine(sproperties)
+    
+    return target.generate(rproperties)
+
+
+
 class BasicTarget (AbstractTarget):
     """ Implements the most standard way of constructing main target
         alternative from sources. Allows sources to be either file or
@@ -835,29 +881,6 @@ class BasicTarget (AbstractTarget):
     def default_build (self):
         return self.default_build_
 
-    def resolve_reference (self, target_reference, project):
-        """ Given a target_reference, made in context of 'project',
-            returns the AbstractTarget instance that is referred to, as well
-            as properties explicitly specified for this reference.
-        """
-        # Separate target name from properties override
-        split = _re_separate_target_from_properties.match (target_reference)
-        if not split:
-            raise BaseException ("Invalid reference: '%s'" % target_reference)
-        
-        id = split.group (1)
-        
-        sproperties = []
-        
-        if split.group (3):
-            sproperties = property.create_from_strings(feature.split(split.group(3)))
-            sproperties = feature.expand_composites(sproperties)
-    
-        # Find the target
-        target = project.find (id)
-        
-        return (target, property_set.create(sproperties))
-
     def common_properties (self, build_request, requirements):
         """ Given build request and requirements, return properties
             common to dependency build request and target build
@@ -908,24 +931,23 @@ class BasicTarget (AbstractTarget):
         #
         # might come from project's requirements.
         unconditional = feature.expand(requirements.non_conditional())
-    
-        raw = context.all()
-        raw = property.refine(raw, unconditional)
+
+        context = context.refine(property_set.create(unconditional))
 
         # We've collected properties that surely must be present in common
         # properties. We now try to figure out what other properties
         # should be added in order to satisfy rules (4)-(6) from the docs.
     
-        conditionals = requirements.conditional()
+        conditionals = property_set.create(requirements.conditional())
 
         # It's supposed that #conditionals iterations
         # should be enough for properties to propagate along conditions in any
         # direction.
-        max_iterations = len(conditionals) +\
+        max_iterations = len(conditionals.all()) +\
                          len(requirements.get("<conditional>")) + 1
     
         added_requirements = []
-        current = raw
+        current = context
     
         # It's assumed that ordinary conditional requirements can't add
         # <indirect-conditional> properties, and that rules referred
@@ -933,25 +955,24 @@ class BasicTarget (AbstractTarget):
         # <indirect-conditional> properties. So the list of indirect conditionals
         # does not change.
         indirect = requirements.get("<conditional>")
-        indirect = [s[1:] for s in indirect]
     
         ok = 0
         for i in range(0, max_iterations):
 
-            e = property.evaluate_conditionals_in_context(conditionals, current)
+            e = conditionals.evaluate_conditionals(current).all()[:]
         
             # Evaluate indirect conditionals.
             for i in indirect:
+                i = b2.util.jam_to_value_maybe(i)
                 if callable(i):
                     # This is Python callable, yeah.
-                    e.extend(bjam.call(i, current))
+                    e.extend(i(current))
                 else:
                     # Name of bjam function. Because bjam is unable to handle
                     # list of Property, pass list of strings.
-                    br = b2.util.call_jam_function(i, [str(p) for p in current])
+                    br = b2.util.call_jam_function(i[1:], [str(p) for p in current.all()])
                     if br:
                         e.extend(property.create_from_strings(br))
-                        
 
             if e == added_requirements:
                 # If we got the same result, we've found final properties.
@@ -963,7 +984,7 @@ class BasicTarget (AbstractTarget):
                 # Recompute 'current' using initial properties and conditional
                 # requirements.
                 added_requirements = e
-                current = property.refine(raw, feature.expand(e))
+                current = context.refine(property_set.create(feature.expand(e)))
 
         if not ok:
             self.manager().errors()("Can't evaluate conditional properties "
@@ -973,7 +994,7 @@ class BasicTarget (AbstractTarget):
         if what == "added":
             return property_set.create(unconditional + added_requirements)
         elif what == "refined":
-            return property_set.create(current)
+            return current
         else:
             self.manager().errors("Invalid value of the 'what' parameter")
 
@@ -1029,7 +1050,7 @@ class BasicTarget (AbstractTarget):
         usage_requirements = []
         for id in target_ids:
                     
-            result = self.generate_from_reference(id, self.project_, property_set)
+            result = generate_from_reference(id, self.project_, property_set)
             targets += result.targets()
             usage_requirements += result.usage_requirements().all()
 
@@ -1046,7 +1067,7 @@ class BasicTarget (AbstractTarget):
         usage_requirements = []
         for p in properties:
                    
-            result = self.generate_from_reference(p.value(), self.project_, ps)
+            result = generate_from_reference(p.value(), self.project_, ps)
 
             for t in result.targets():
                 result_properties.append(property.Property(p.feature(), t))
@@ -1180,25 +1201,6 @@ class BasicTarget (AbstractTarget):
         self.manager().targets().decrease_indent()
 
         return self.generated_[ps]
-
-    def generate_from_reference (self, target_reference, project, property_set):
-        """ Attempts to generate the target given by target reference, which
-            can refer both to a main target or to a file.
-            Returns a list consisting of
-            - usage requirements
-            - generated virtual targets, if any
-            target_reference:  Target reference
-            project:           Project where the reference is made
-            property_set:      Properties of the main target that makes the reference
-        """
-        target, sproperties = self.resolve_reference(target_reference, project)
-        
-        # Take properties which should be propagated and refine them
-        # with source-specific requirements.
-        propagated = property_set.propagated()
-        rproperties = propagated.refine(sproperties)
-            
-        return target.generate(rproperties)
     
     def compute_usage_requirements (self, subvariant):
         """ Given the set of generated targets, and refined build 
@@ -1276,6 +1278,9 @@ class TypedTarget (BasicTarget):
     def __init__ (self, name, project, type, sources, requirements, default_build, usage_requirements):
         BasicTarget.__init__ (self, name, project, sources, requirements, default_build, usage_requirements)
         self.type_ = type
+
+    def __jam_repr__(self):
+        return b2.util.value_to_jam(self)
     
     def type (self):
         return self.type_

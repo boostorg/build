@@ -50,7 +50,7 @@ class BjamNativeAction:
         if property_set:
             p = property_set.raw()
 
-        b2.util.call_jam_function(self.action_name, targets, sources, p)
+        b2.util.set_jam_action(self.action_name, targets, sources, p)
         
 action_modifiers = {"updated": 0x01,
                     "together": 0x02,
@@ -144,6 +144,10 @@ class Engine:
             # Rule is already in indirect format
             return action_name
         else:
+            ix = action_name.find('.')
+            if ix != -1 and action_name[:ix] == context_module:
+                return context_module + '%' + action_name[ix+1:]
+            
             return context_module + '%' + action_name        
 
     def register_bjam_action (self, action_name, function=None):

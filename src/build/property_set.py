@@ -303,9 +303,9 @@ class PropertySet:
             context = self
 
         if not self.evaluated_.has_key(context):
+            # FIXME: figure why the call messes up first parameter
             self.evaluated_[context] = create(
-                property.evaluate_conditionals_in_context(self.all_raw_,
-                                                          context.raw()))
+                property.evaluate_conditionals_in_context(self.all(), context))
 
         return self.evaluated_[context]
 
@@ -412,6 +412,8 @@ class PropertySet:
     def get (self, feature):
         """ Returns all values of 'feature'.
         """
+        if type(feature) == type([]):
+            feature = feature[0]
         if not isinstance(feature, b2.build.feature.Feature):
             feature = b2.build.feature.get(feature)
         
@@ -439,9 +441,5 @@ class PropertySet:
         return result
     
     def __contains__(self, item):
-        for p in self.all_set_:
-            if p.feature().name() == "toolset":
-                print "EXISTING", hash(p), hash(p._feature), hash(p._value), "--", hash(item._feature), has(item._value)
-        print self.all_set_
         return item in self.all_set_
     

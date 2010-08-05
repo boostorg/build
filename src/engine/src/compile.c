@@ -856,9 +856,31 @@ call_python_function(RULE* r, FRAME* frame)
         }
         else
         {
-            /* Do nothing.  There are cases, e.g. feature.feature function that
-               should return value for the benefit of Python code and which
-               also can be called by Jam code.  */
+            /* See if this is an instance that defines special __jam_repr__
+               method. */
+            if (PyInstance_Check(py_result)
+                && PyObject_HasAttrString(py_result, "__jam_repr__"))
+            {
+                PyObject* repr = PyObject_GetAttrString(py_result, "__jam_repr__");
+                if (repr)
+                {
+                    PyObject* arguments2 = PyTuple_New(0);
+                    PyObject* py_result2 = PyObject_Call(repr, arguments2, 0);
+                    Py_DECREF(repr);
+                    Py_DECREF(arguments2);
+                    if (PyString_Check(py_result2))
+                    {
+                        result = list_new(0, newstr(PyString_AsString(py_result2)));
+                    }
+                    Py_DECREF(py_result2);
+                }
+            }
+            
+            /* If 'result' is still empty, do nothing.  There are cases, e.g. 
+               feature.feature function that should return value for the benefit
+               of Python code and which also can be called by Jam code, where
+               no sensible value can be returned. We cannot even emit a warning,
+               since there will be a pile of them.  */
         }
 
         Py_DECREF( py_result );
