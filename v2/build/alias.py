@@ -55,7 +55,7 @@ def alias(name, sources, requirements=None, default_build=None, usage_requiremen
 
     targets.main_target_alternative(AliasTarget(
         name, project,
-        targets.main_target_sources(sources, name),
+        targets.main_target_sources(sources, name, no_renaming=True),
         targets.main_target_requirements(requirements or [], project),
         targets.main_target_default_build(default_build, project),
         targets.main_target_usage_requirements(usage_requirements or [], project)))

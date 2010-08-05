@@ -460,6 +460,8 @@ def main_real():
     global_build_dir = option.get("build-dir")
     manager = Manager(engine, global_build_dir)
 
+    import b2.build.configure as configure
+
     if "--version" in sys.argv:
 
         version.report()
@@ -587,17 +589,18 @@ def main_real():
     ## {
     ##     generators.dump ;
     ## }
+
     
-    ## # We wish to put config.log in the build directory corresponding
-    ## # to Jamroot, so that the location does not differ depending on
-    ## # directory where we do build.  The amount of indirection necessary
-    ## # here is scary.
-    ## local first-project = [ $(targets[0]).project ] ;
-    ## local first-project-root-location = [ $(first-project).get project-root ] ;
-    ## local first-project-root-module = [ project.load $(first-project-root-location) ] ;
-    ## local first-project-root = [ project.target  $(first-project-root-module) ] ;
-    ## local first-build-build-dir = [ $(first-project-root).build-dir ] ;
-    ## configure.set-log-file $(first-build-build-dir)/config.log ;
+    # We wish to put config.log in the build directory corresponding
+    # to Jamroot, so that the location does not differ depending on
+    # directory where we do build.  The amount of indirection necessary
+    # here is scary.
+    first_project = targets[0].project()
+    first_project_root_location = first_project.get('project-root')
+    first_project_root_module = manager.projects().load(first_project_root_location)
+    first_project_root = manager.projects().target(first_project_root_module)
+    first_build_build_dir = first_project_root.build_dir()
+    configure.set_log_file(os.path.join(first_build_build_dir, "config.log"))
 
     virtual_targets = []
 

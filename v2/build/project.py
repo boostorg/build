@@ -650,7 +650,8 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         modules = sys.modules
         for class_name in modules:
             parts = class_name.split('.')
-            if name is class_name or parts[0] == "b2" and parts[-1] == name:
+            if name is class_name or parts[0] == "b2" \
+            and parts[-1] == name.replace("-", "_"):
                 module = modules[class_name]
                 self.loaded_tool_modules_[name] = module
                 return module

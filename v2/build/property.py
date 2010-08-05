@@ -273,14 +273,6 @@ def split_conditional (property):
 
     return None
 
-# FIXME: this should go
-def is_conditional (property):
-    """ Returns True if a property is conditional.
-    """
-    if __re_colon.search (replace_grist (property, '')):
-        return True
-    else:
-        return False
 
 def select (features, properties):
     """ Selects properties which correspond to any of the given features.
@@ -310,7 +302,7 @@ def evaluate_conditionals_in_context (properties, context):
         else:
             base.append (p)
 
-    result = base
+    result = base[:]
     for p in conditional:
 
         # Evaluate condition

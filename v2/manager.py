@@ -38,12 +38,6 @@ class Manager:
         self.errors_ = Errors()
         self.command_line_free_features_ = property_set.empty()
         
-        # Object Map.
-        # TODO: This is a kludge: maps object names to the actual instances.
-        # Sometimes, objects are stored in properties, along with some grist.
-        # This map is used to store the value and return an id, which can be later on used to retriev it back.
-        self.object_map_ = {}
-
         global the_manager
         the_manager = self
         
@@ -85,22 +79,6 @@ class Manager:
 
     def set_command_line_free_features(self, v):
         self.command_line_free_features_ = v
-
-    def register_object (self, value):
-        """ Stores an object in a map and returns a key that can be used to retrieve it.
-        """
-        key = 'object_registry_' + str (value)
-        self.object_map_ [key] = value
-        return key
-    
-    def get_object (self, key):
-        """ Returns a previously registered object.
-        """
-        if not isinstance (key, str):
-            # Probably it's the object itself.
-            return key
-            
-        return self.object_map_ [key]
 
     def construct (self, properties = [], targets = []):
         """ Constructs the dependency graph.

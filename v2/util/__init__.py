@@ -1,6 +1,7 @@
 
 import bjam
 import re
+import types
 
 # Decorator the specifies bjam-side prototype for a Python function
 def bjam_signature(s):
@@ -39,7 +40,7 @@ def unquote(s):
 
 _extract_jamfile_and_rule = re.compile("(Jamfile<.*>)%(.*)")
 
-def call_jam_function(name, *args):
+def set_jam_action(name, *args):
 
     m = _extract_jamfile_and_rule.match(name)
     if m:
@@ -48,6 +49,62 @@ def call_jam_function(name, *args):
         args = ("set-update-action", name) + args
 
     return bjam.call(*args)
+
+
+def call_jam_function(name, *args):
+
+    m = _extract_jamfile_and_rule.match(name)
+    if m:
+        args = ("call-in-module", m.group(1), m.group(2)) + args
+        return bjam.call(*args)
+    else:
+        return bjam.call(*((name,) + args))
+
+__value_id = 0
+__python_to_jam = {}
+__jam_to_python = {}
+
+def value_to_jam(value, methods=False):
+    """Makes a token to refer to a Python value inside Jam language code.
+
+    The token is merely a string that can be passed around in Jam code and
+    eventually passed back. For example, we might want to pass PropertySet
+    instance to a tag function and it might eventually call back
+    to virtual_target.add_suffix_and_prefix, passing the same instance.
+
+    For values that are classes, we'll also make class methods callable
+    from Jam.
+
+    Note that this is necessary to make a bit more of existing Jamfiles work.
+    This trick should not be used to much, or else the performance benefits of
+    Python port will be eaten.
+    """
+
+    global __value_id
+
+    r = __python_to_jam.get(value, None)
+    if r:
+        return r
+
+    exported_name = '###_' + str(__value_id)
+    __value_id = __value_id + 1
+    __python_to_jam[value] = exported_name
+    __jam_to_python[exported_name] = value
+
+    if methods and type(value) == types.InstanceType:
+        for field_name in dir(value):
+            field = getattr(value, field_name)
+            if callable(field) and not field_name.startswith("__"):
+                bjam.import_rule("", exported_name + "." + field_name, field)
+
+    return exported_name
+
+def jam_to_value_maybe(jam_value):
+
+    if type(jam_value) == type("") and jam_value.startswith("###"):
+        return __jam_to_python[jam_value]
+    else:
+        return jam_value
 
 def stem(filename):
     i = filename.find('.')

@@ -64,6 +64,10 @@ def run_tests(critical_tests, other_tests):
                 print "PASSED"
             else:
                 print "FAILED"
+
+            if i == "regression":
+                BoostBuild.flush_annotations()
+            BoostBuild.clear_annotations()
         else:
             rs = "succeed"
             if not passed:
