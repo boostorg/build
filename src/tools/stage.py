@@ -322,8 +322,9 @@ generators.register(InstalledSharedLibGenerator())
 #
 @bjam_signature((["name"], ["sources", "*"], ["requirements", "*"],
                  ["default_build", "*"], ["usage_requirements", "*"]))
-def install(name, sources, requirements, default_build, usage_requirements):
+def install(name, sources, requirements=[], default_build=[], usage_requirements=[]):
 
+    requirements = requirements[:]
     # Unless the user has explicitly asked us to hardcode dll paths, add
     # <hardcode-dll-paths>false in requirements, to override default value.
     if not '<hardcode-dll-paths>true' in requirements:

@@ -27,6 +27,7 @@ class Feature(object):
     def __init__(self, name, values, attributes):
         self._name = name
         self._values = values
+        self._default = None
         self._attributes = 0
         for a in attributes:
             self._attributes = self._attributes | Feature._attribute_name_to_integer[a]
@@ -68,6 +69,7 @@ class Feature(object):
         Value may be None if this subfeature is not specific to any
         value of the parent feature.
         """
+        return self._parent
 
     def set_parent(self, feature, value):
         self._parent = (feature, value)
@@ -512,9 +514,9 @@ def subfeature (feature_name, value_string, subfeature, subvalues, attributes = 
     # First declare the subfeature as a feature in its own right
     f = feature (feature_name + '-' + subfeature_name, subvalues, attributes + ['subfeature'])
     f.set_parent(parent_feature, value_string)
-
-    parent_feature.add_subfeature(f)
     
+    parent_feature.add_subfeature(f)
+
     # Now make sure the subfeature values are known.
     extend_subfeature (feature_name, value_string, subfeature, subvalues)
 
@@ -761,7 +763,7 @@ def minimize (properties):
         if subproperties:
             # reconstitute the joined property name
             subproperties.sort ()
-            joined = Property(p.feature(), p.value() + '-' + '-'.join ([sp.value() for sp in subproperties]))
+            joined = b2.build.property.Property(p.feature(), p.value() + '-' + '-'.join ([sp.value() for sp in subproperties]))
             result.append(joined)
 
             properties = b2.util.set.difference(properties[1:], subproperties)
@@ -843,8 +845,9 @@ def compress_subproperties (properties):
                 matched_subs.update(subs)
 
                 subvalues = '-'.join (sub.value() for sub in subs)
-                result.append(Property(p.feature(), p.value + '-' + subvalues,
-                                       p.condition()))
+                result.append(b2.build.property.Property(
+                    p.feature(), p.value() + '-' + subvalues,
+                    p.condition()))
             else:
                 result.append(p)
 
