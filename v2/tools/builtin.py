@@ -718,3 +718,4 @@ class ArchiveGenerator (generators.Generator):
 get_manager().projects().add_rule("variant", variant)
 
 import stage
+import symlink
