@@ -641,6 +641,8 @@ def gcc_link_dll(targets, sources, properties):
     engine = get_manager().engine()
     engine.set_target_variable(targets, 'SPACE', ' ')
     engine.set_target_variable(targets, 'JAM_SEMAPHORE', '<s>gcc-link-semaphore')
+    engine.set_target_variable(targets, "HAVE_SONAME", HAVE_SONAME)
+    engine.set_target_variable(targets, "SONAME_OPTION", SONAME_OPTION)
 
 engine.register_action(
     'gcc.link.dll',

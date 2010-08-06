@@ -172,12 +172,6 @@ actions quietly updated ignore piecemeal together RmTemps
 
 .MAKE_FILE = [ common.file-creation-command ] ;
 
-rule unit-test ( target : source : properties * )
-{
-    run-path-setup $(target) : $(source) : $(properties) ;
-}
-
-
 actions unit-test
 {
     $(PATH_SETUP)

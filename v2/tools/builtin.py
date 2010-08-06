@@ -8,6 +8,8 @@
 """ Defines standard features and rules.
 """
 
+import b2.build.targets as targets
+
 import sys
 from b2.build import feature, property, virtual_target, generators, type, property_set, scanner
 from b2.util.utility import *
@@ -401,6 +403,7 @@ class LibGenerator (generators.Generator):
         generators.Generator.__init__(self, id, composing, source_types, target_types_and_names, requirements)
     
     def run(self, project, name, prop_set, sources):
+
         # The lib generator is composing, and can be only invoked with
         # explicit name. This check is present in generator.run (and so in
         # builtin.LinkingGenerator), but duplicate it here to avoid doing
@@ -431,55 +434,42 @@ class LibGenerator (generators.Generator):
 
 generators.register(LibGenerator())
 
-### # The implementation of the 'lib' rule. Beyond standard syntax that rule allows
-### # simplified:
-### #    lib a b c ;
-### # so we need to write code to handle that syntax. 
-### rule lib ( names + : sources * : requirements * : default-build * 
-###     : usage-requirements * )
-### {
-###     local project = [ project.current ] ;
-###     
-###     # This is a circular module dependency, so it must be imported here
-###     import targets ;
-### 
-###     local result ;
-###     if ! $(sources) && ! $(requirements) 
-###       && ! $(default-build) && ! $(usage-requirements)
-###     {
-###         for local name in $(names)
-###         {    
-###             result += [ 
-###             targets.main-target-alternative
-###               [ new typed-target $(name) : $(project) : LIB 
-###                 : 
-###                 : [ targets.main-target-requirements $(requirements) <name>$(name)  :
-###                     $(project) ] 
-###                 : [ targets.main-target-default-build $(default-build) : $(project) ]
-###                 : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-###              ] ] ;        
-###         }        
-###     }
-###     else
-###     {
-###         if $(names[2])
-###         {
-###             errors.user-error "When several names are given to the 'lib' rule" :
-###               "it's not allowed to specify sources or requirements. " ;
-###         }
-###                 
-###         local name = $(names[1]) ;
-###         result = [ targets.main-target-alternative
-###           [ new typed-target $(name) : $(project) : LIB
-###             : [ targets.main-target-sources $(sources) : $(name) ] 
-###             : [ targets.main-target-requirements $(requirements) : $(project) ] 
-###             : [ targets.main-target-default-build $(default-build) : $(project) ]
-###             : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-###          ] ] ;
-###     }    
-###     return $(result) ;
-### }
-### IMPORT $(__name__) : lib : : lib ;
+def lib(names, sources=[], requirements=[], default_build=[], usage_requirements=[]):
+    """The implementation of the 'lib' rule. Beyond standard syntax that rule allows
+    simplified: 'lib a b c ;'."""
+
+    if len(names) > 1:
+        if any(r.startswith('<name>') for r in requirements):
+            get_manager().errors()("When several names are given to the 'lib' rule\n" +
+                                   "it is not allowed to specify the <name> feature.")
+
+        if sources:
+            get_manager().errors()("When several names are given to the 'lib' rule\n" +
+                                   "it is not allowed to specify sources.")
+
+    project = get_manager().projects().current()
+    result = []
+
+    for name in names:
+        r = requirements[:]
+
+        # Support " lib a ; " and " lib a b c ; " syntax.
+        if not sources and not any(r.startswith("<name>") for r in requirements) \
+           and not any(r.startswith("<file") for r in requirements):
+            r.append("<name>" + name)
+
+        result.append(targets.create_typed_metatarget(name, "LIB", sources,
+                                                      r,
+                                                      default_build,
+                                                      usage_requirements))
+    # Ideally, we're return the list of targets, but at present,
+    # bjam, when give a list of non-strings, emits a warning. It
+    # should be modified to try calling __jam_repr__ on each
+    # element of the string, but that's for future.
+    #return [result]
+
+get_manager().projects().add_rule("lib", lib)
+
 
 # Updated to trunk@47077
 class SearchedLibGenerator (generators.Generator):
@@ -492,6 +482,7 @@ class SearchedLibGenerator (generators.Generator):
         generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
     
     def run(self, project, name, prop_set, sources):
+
         if not name:
             return None
 
@@ -607,7 +598,7 @@ class LinkingGenerator (generators.Generator):
                     location = path.root(s.name(), p.get('source-location'))
                     xdll_path.append(path.parent(location))
                           
-            extra += [ replace_grist(x, '<dll-path>') for x in xdll_path ]
+            extra.extend(property.Property('<dll-path>', sp) for sp in xdll_path)
         
         if extra:
             prop_set = prop_set.add_raw (extra)

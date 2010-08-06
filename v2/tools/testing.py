@@ -305,8 +305,9 @@ def run_path_setup(target, sources, ps):
     dll_paths.extend(bjam.call("get-target-variable", sources, "RUN_PATH"))
     dll_paths = unique(dll_paths)
     if dll_paths:
-        bjam.call("set-target-variable", target, common.prepend_path_variable_command(
-            common.shared_library_path_variable(), dll_paths))
+        bjam.call("set-target-variable", target, "PATH_SETUP",
+                  common.prepend_path_variable_command(
+                     common.shared_library_path_variable(), dll_paths))
 
 def capture_output_setup(target, sources, ps):
     run_path_setup(target, sources, ps)
@@ -331,9 +332,11 @@ get_manager().projects().project_rules()._import_rule("testing", "common.file-cr
 bjam.call("load", "testing", os.path.join(path, "testing-aux.jam"))
 
 
-for name in ["expect-success", "expect-failure", "unit-test", "time"]:
+for name in ["expect-success", "expect-failure", "time"]:
     get_manager().engine().register_bjam_action("testing." + name)
 
+get_manager().engine().register_bjam_action("testing.unit-test",
+                                            run_path_setup)
 
 if option.get("dump-tests", False, True):
     build_system.add_pre_build_hook(dump_tests)

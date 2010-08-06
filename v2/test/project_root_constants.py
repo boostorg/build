@@ -56,10 +56,11 @@ ECHO "d2: $(BAR)" ;
 hello ;
 """)
 
-t.run_build_system(subdir="d/d2", stdout="""d: foo
+t.run_build_system(subdir="d/d2")
+t.fail_test(t.stdout().find("""d: foo
 d2: foo
 d2: bar
 Hello 10
-""")
+""") == -1)
 
 t.cleanup()
