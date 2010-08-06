@@ -12,8 +12,10 @@ import b2.build.feature
 from b2.exceptions import *
 from b2.util.sequence import unique
 from b2.util.set import difference
+from b2.util import cached
 
 from b2.manager import get_manager
+
 
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
@@ -427,7 +429,7 @@ class PropertySet:
         
         return self.feature_map_.get(feature, [])
 
-    # FIXME: make this cached
+    @cached
     def get_properties(self, feature):
         """Returns all contained properties associated with 'feature'"""
 

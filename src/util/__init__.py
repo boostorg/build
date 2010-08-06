@@ -30,7 +30,10 @@ class cached(object):
         except KeyError:
             v = self.function(*args)
             self.cache[args] = v
-            return v    
+            return v
+
+    def __get__(self, instance, type):
+        return types.MethodType(self, instance, type)
 
 def unquote(s):
     if s and s[0] == '"' and s[-1] == '"':
