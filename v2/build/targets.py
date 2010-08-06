@@ -831,7 +831,7 @@ class BasicTarget (AbstractTarget):
     
         for s in sources:
             if get_grist (s):
-                raise InvalidSource ("property '%s' found in the 'sources' parameter for '%s'" (s, name))
+                raise InvalidSource ("property '%s' found in the 'sources' parameter for '%s'" % (s, name))
     
         self.sources_ = sources
         
