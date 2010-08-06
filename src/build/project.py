@@ -1053,15 +1053,18 @@ attribute is allowed only for top-level 'project' invocations""")
         # will expect the module to be found even though
         # the directory is not in BOOST_BUILD_PATH.
         # So temporary change the search path.
-        jamfile_module = self.registry.current().project_module()
-        attributes = self.registry.attributes(jamfile_module)
-        location = attributes.get("location")
+        current = self.registry.current()
+        location = current.get('location')
 
         m = self.registry.load_module(toolset[0], [location])
         if not m.__dict__.has_key("init"):
             self.registry.manager.errors()(
                 "Tool module '%s' does not define the 'init' method" % toolset[0])
         m.init(*args)
+
+        # The above might have clobbered .current-project. Restore the correct
+        # value.
+        self.registry.set_current(current)
 
     def import_(self, name, names_to_import=None, local_names=None):
 
