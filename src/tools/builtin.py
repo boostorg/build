@@ -462,11 +462,7 @@ def lib(names, sources=[], requirements=[], default_build=[], usage_requirements
                                                       r,
                                                       default_build,
                                                       usage_requirements))
-    # Ideally, we're return the list of targets, but at present,
-    # bjam, when give a list of non-strings, emits a warning. It
-    # should be modified to try calling __jam_repr__ on each
-    # element of the string, but that's for future.
-    #return [result]
+    return result
 
 get_manager().projects().add_rule("lib", lib)
 
