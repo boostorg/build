@@ -200,7 +200,8 @@ class TargetRegistry:
             for t in self.targets_being_built_.values():
                 names.append (t.full_name())
             
-            raise Recursion ("Recursion in main target references" 
+            get_manager().errors()(
+                "Recursion in main target references\n" 
                 "the following target are being built currently: '%s'" % names)
         
         self.targets_being_built_[id(main_target_instance)] = main_target_instance
@@ -667,7 +668,7 @@ class MainTarget (AbstractTarget):
         for v in self.alternatives_:
             properties = v.match (property_set, debug)
                        
-            if properties:
+            if properties is not None:
                 if not best:
                     best = v
                     best_properties = properties
@@ -725,12 +726,11 @@ class MainTarget (AbstractTarget):
         best_alternative = self.__select_alternatives (prop_set, debug=0)
 
         if not best_alternative:
-            self.__select_alternatives(prop_set, debug=1)
-            raise NoBestMatchingAlternative (
-                "Failed to build '%s'\n"
-                "with properties '%s'\n"
-                "because no best-matching alternative could be found."
-                  % (self.full_name(), prop_set))
+            # FIXME: revive.
+            # self.__select_alternatives(prop_set, debug=1)
+            self.manager_.errors()(
+                "No best alternative for '%s'.\n"
+                  % (self.full_name(),))
 
         result = best_alternative.generate (prop_set)
                     

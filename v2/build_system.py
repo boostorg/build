@@ -155,16 +155,17 @@ _target_id_split = re.compile("(.*)//(.*)")
 # code in project-target.find but we can not reuse that code without a
 # project-targets instance.
 #
-def _find_target(target_id):
+def find_target(target_id):
 
-    m = _target_id_split(target_id)
+    projects = get_manager().projects()
+    m = _target_id_split.match(target_id)
     if m:
-        pm = project.find(m.group(1), ".")
+        pm = projects.find(m.group(1), ".")
     else:
-        pm = project.find(target_id, ".")
+        pm = projects.find(target_id, ".")
 
     if pm:
-        result = project.target(pm)
+        result = projects.target(pm)
 
     if m:
         result = result.find(m.group(2))
