@@ -215,6 +215,13 @@ toolset gcc-nocygwin gcc : "-o " : -D
     [ opt --debug : -s -O3 -fno-inline -pg ]
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+## Intel C/C++ for Darwin
+toolset intel-darwin icc : "-o " : -D
+    :
+    [ opt --release : -O3 ]
+    [ opt --debug : -g -O0 -p ]
+    -I$(--python-include) -I$(--extra-include)
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## Intel C/C++ for Linux
 toolset intel-linux icc : "-o " : -D
     :
