@@ -23,6 +23,15 @@ project.initialize $(__name__) ;
 rule init ( ) { }
 """)
 
+t.write("some_tool.py", """
+from b2.manager import get_manager
+
+get_manager().projects().initialize(__name__)
+
+def init():
+    pass
+""")
+
 t.write("sub/jamfile.jam", """
 exe a : a.cpp ;
 """)
