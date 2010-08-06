@@ -770,6 +770,45 @@ enter_rule( char *rulename, module_t *target_module );
 
 static int python_instance_number = 0;
 
+
+/* Given a Python object, return a string to use in Jam
+   code instead of said object.
+   If the object is string, use the string value
+   If the object implemenets __jam_repr__ method, use that.
+   Otherwise return 0.
+
+   The result value is newstr-ed.  */
+char *python_to_string(PyObject* value)
+{
+    if (PyString_Check(value))
+    {
+        return newstr(PyString_AsString(value));
+    }
+    else
+    {
+        /* See if this is an instance that defines special __jam_repr__
+           method. */
+        if (PyInstance_Check(value)
+            && PyObject_HasAttrString(value, "__jam_repr__"))
+        {
+            PyObject* repr = PyObject_GetAttrString(value, "__jam_repr__");
+            if (repr)
+            {
+                PyObject* arguments2 = PyTuple_New(0);
+                PyObject* value2 = PyObject_Call(repr, arguments2, 0);
+                Py_DECREF(repr);
+                Py_DECREF(arguments2);
+                if (PyString_Check(value2))
+                {
+                    return newstr(PyString_AsString(value2));
+                }
+                Py_DECREF(value2);
+            }
+        }
+        return 0;
+    }
+}
+
 static LIST*
 call_python_function(RULE* r, FRAME* frame)
 {
@@ -835,52 +874,31 @@ call_python_function(RULE* r, FRAME* frame)
             for ( i = 0; i < size; ++i )
             {
                 PyObject * item = PyList_GetItem( py_result, i );
-                if ( PyString_Check( item ) )
-                {
-                    result = list_new( result,
-                                      newstr( PyString_AsString( item ) ) );
-                }
-                else
-                {
+                char *s = python_to_string (item);
+                if (!s) {
                     fprintf( stderr, "Non-string object returned by Python call.\n" );
+                } else {
+                    result = list_new (result, s);
                 }
             }
-        }
-        else if (PyString_Check(py_result))
-        {
-            result = list_new (0, newstr (PyString_AsString(py_result)));
         }
         else if ( py_result == Py_None )
         {
             result = L0;
         }
-        else
+        else 
         {
-            /* See if this is an instance that defines special __jam_repr__
-               method. */
-            if (PyInstance_Check(py_result)
-                && PyObject_HasAttrString(py_result, "__jam_repr__"))
-            {
-                PyObject* repr = PyObject_GetAttrString(py_result, "__jam_repr__");
-                if (repr)
-                {
-                    PyObject* arguments2 = PyTuple_New(0);
-                    PyObject* py_result2 = PyObject_Call(repr, arguments2, 0);
-                    Py_DECREF(repr);
-                    Py_DECREF(arguments2);
-                    if (PyString_Check(py_result2))
-                    {
-                        result = list_new(0, newstr(PyString_AsString(py_result2)));
-                    }
-                    Py_DECREF(py_result2);
-                }
-            }
-            
-            /* If 'result' is still empty, do nothing.  There are cases, e.g. 
-               feature.feature function that should return value for the benefit
-               of Python code and which also can be called by Jam code, where
-               no sensible value can be returned. We cannot even emit a warning,
-               since there will be a pile of them.  */
+            char *s = python_to_string(py_result);
+            if (s)
+                result = list_new(0, s);
+            else 
+                /* We have tried all we could.  Return empty list. There are
+                   cases, e.g.  feature.feature function that should return
+                   value for the benefit of Python code and which also can be
+                   called by Jam code, where no sensible value can be
+                   returned. We cannot even emit a warning, since there will
+                   be a pile of them.  */                
+                result = L0;                    
         }
 
         Py_DECREF( py_result );
