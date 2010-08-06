@@ -306,10 +306,10 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
 
             is_jamroot = True
             jamfile_to_load = jamfile_to_load[0]
-            
-        # The module of the jamfile.
-        dir = os.path.realpath(os.path.dirname(jamfile_to_load))       
 
+        dir = os.path.dirname(jamfile_to_load)
+        if not dir:
+            dir = "."
         # Initialize the jamfile module before loading.
         #    
         self.initialize(jamfile_module, dir, os.path.basename(jamfile_to_load))

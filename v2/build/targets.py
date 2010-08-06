@@ -197,12 +197,10 @@ class TargetRegistry:
         """
         if self.targets_being_built_.has_key(id(main_target_instance)):
             names = []
-            for t in self.targets_being_built_.values():
+            for t in self.targets_being_built_.values() + [main_target_instance]:
                 names.append (t.full_name())
             
-            get_manager().errors()(
-                "Recursion in main target references\n" 
-                "the following target are being built currently: '%s'" % names)
+            get_manager().errors()("Recursion in main target references\n")
         
         self.targets_being_built_[id(main_target_instance)] = main_target_instance
 
