@@ -21,6 +21,5 @@ t.write("l.cpp", "")
 t.run_build_system("--no-error-backtrace", status=1)
 t.fail_test(string.find(t.stdout(),
     "error: Recursion in main target references") == -1)
-t.fail_test(string.find(t.stdout(), "./main ./l ./main") == -1)
 
 t.cleanup()
