@@ -859,7 +859,7 @@ class ProjectRules:
     def add_rule_for_type(self, type):
         rule_name = type.lower().replace("_", "-")
 
-        def xpto (name, sources, requirements = [], default_build = None, usage_requirements = []):
+        def xpto (name, sources = [], requirements = [], default_build = None, usage_requirements = []):
             return self.manager_.targets().create_typed_target(
                 type, self.registry.current(), name[0], sources,
                 requirements, default_build, usage_requirements) 
@@ -991,13 +991,15 @@ attribute is allowed only for top-level 'project' invocations""")
         Project global constants are normal variables but should
         not be changed. They are applied to every child Jamfile."""
         m = "Jamfile</home/ghost/Work/Boost/boost-svn/tools/build/v2_python/python/tests/bjam/make>"
-        self.registry.current().add_constant(name[0], value[0])
+        self.registry.current().add_constant(name[0], value)
 
     def path_constant(self, name, value):
         """Declare and set a project global constant, whose value is a path. The
         path is adjusted to be relative to the invocation directory. The given
         value path is taken to be either absolute, or relative to this project
         root."""
+        if len(value) > 1:
+            self.registry.manager.error()("path constant should have one element")
         self.registry.current().add_constant(name[0], value[0], path=1)
 
     def use_project(self, id, where):
