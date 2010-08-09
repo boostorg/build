@@ -715,3 +715,4 @@ get_manager().projects().add_rule("variant", variant)
 
 import stage
 import symlink
+import message
