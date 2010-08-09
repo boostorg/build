@@ -6,4 +6,4 @@ import generate ;
 
 import gen ;
 
-generate a2 : a.cpp : <generating-rule>@gen.generate_example ;
+generate a2 : a.cpp : <generating-rule>@gen.generate-example ;

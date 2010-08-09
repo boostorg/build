@@ -12,8 +12,6 @@ import re
 import b2.build.property_set as property_set
 import b2.util
 
-_indirect_rule = re.compile("^([^%]*)%([^%]+)$")
-
 class BjamAction:
     """Class representing bjam action defined from Python."""
     
@@ -137,18 +135,6 @@ class Engine:
         bjam_interface.define_action(action_name, command, bound_list, bjam_flags)
 
         self.actions[action_name] = BjamAction(action_name, function)
-
-    def qualify_bjam_action(self, action_name, context_module):
-
-        if _indirect_rule.match(action_name):
-            # Rule is already in indirect format
-            return action_name
-        else:
-            ix = action_name.find('.')
-            if ix != -1 and action_name[:ix] == context_module:
-                return context_module + '%' + action_name[ix+1:]
-            
-            return context_module + '%' + action_name        
 
     def register_bjam_action (self, action_name, function=None):
         """Informs self that 'action_name' is declared in bjam.

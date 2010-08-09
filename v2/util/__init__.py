@@ -43,6 +43,19 @@ def unquote(s):
 
 _extract_jamfile_and_rule = re.compile("(Jamfile<.*>)%(.*)")
 
+def qualify_jam_action(action_name, context_module):
+    
+    if _extract_jamfile_and_rule.match(action_name):
+        # Rule is already in indirect format
+        return action_name
+    else:
+        ix = action_name.find('.')
+        if ix != -1 and action_name[:ix] == context_module:
+            return context_module + '%' + action_name[ix+1:]
+        
+        return context_module + '%' + action_name        
+    
+
 def set_jam_action(name, *args):
 
     m = _extract_jamfile_and_rule.match(name)
@@ -102,10 +115,13 @@ def value_to_jam(value, methods=False):
 
     return exported_name
 
+def record_jam_to_value_mapping(jam_value, python_value):
+    __jam_to_python[jam_value] = python_value
+
 def jam_to_value_maybe(jam_value):
 
-    if type(jam_value) == type("") and jam_value.startswith("###"):
-        return __jam_to_python[jam_value]
+    if type(jam_value) == type(""):
+        return __jam_to_python.get(jam_value, jam_value)
     else:
         return jam_value
 
