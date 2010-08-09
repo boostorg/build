@@ -130,7 +130,7 @@ def install(name, package_name=None, requirements=[], binaries=[], libraries=[],
     pt = get_manager().projects().current()
 
     for subname in ["bin", "lib", "headers", "lib-shared", "lib-static", "lib-shared-universe", "lib-shared-cygwin"]:
-        pt.mark_target_as_explicit(name + "-" + subname)
+        pt.mark_targets_as_explicit([name + "-" + subname])
 
 @bjam_signature((["target_name"], ["package_name"], ["data", "*"], ["requirements", "*"]))
 def install_data(target_name, package_name, data, requirements):
@@ -148,7 +148,7 @@ def install_data(target_name, package_name, data, requirements):
     stage.install(target_name, data,
                   requirements + ["<location>" + os.path.join(datadir, package_name)])
 
-    get_manager().projects().current().mark_target_as_explicit(target_name)
+    get_manager().projects().current().mark_targets_as_explicit([target_name])
 
 def get_prefix(package_name, requirements):
 

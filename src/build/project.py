@@ -1016,14 +1016,10 @@ attribute is allowed only for top-level 'project' invocations""")
         attributes.set("projects-to-build", now + dir, exact=True)
 
     def explicit(self, target_names):
-        t = self.registry.current()
-        for n in target_names:
-            t.mark_target_as_explicit(n)
+        self.registry.current().mark_targets_as_explicit(target_names)
 
     def always(self, target_names):
-        p = self.registry.current()
-        for n in target_names:
-            p.mark_target_as_always(n)
+        self.registry.current().mark_targets_as_alays(target_names)
 
     def glob(self, wildcards, excludes=None):
         return self.registry.glob_internal(self.registry.current(),
