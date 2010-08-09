@@ -44,8 +44,11 @@ def unquote(s):
 _extract_jamfile_and_rule = re.compile("(Jamfile<.*>)%(.*)")
 
 def qualify_jam_action(action_name, context_module):
-    
-    if _extract_jamfile_and_rule.match(action_name):
+
+    if action_name.startswith("###"):
+        # Callable exported from Python. Don't touch
+        return action_name
+    elif _extract_jamfile_and_rule.match(action_name):
         # Rule is already in indirect format
         return action_name
     else:
