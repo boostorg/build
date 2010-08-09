@@ -297,14 +297,14 @@ class project-target : abstract-target
     # Add 'target' to the list of targets in this project that should be build
     # only by explicit request
     #
-    rule mark-target-as-explicit ( target-name )
+    rule mark-target-as-explicit ( target-name * )
     {
         # Record the name of the target, not instance, since this rule is called
         # before main target instances are created.
         self.explicit-targets += $(target-name) ;
     }
     
-    rule mark-target-as-always ( target-name )
+    rule mark-target-as-always ( target-name * )
     {
         # Record the name of the target, not instance, since this rule is called
         # before main target instances are created.

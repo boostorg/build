@@ -131,7 +131,7 @@ class TargetRegistry:
 
                 # Inline targets are not built by default.
                 p = t.project()
-                p.mark_target_as_explicit(name)                    
+                p.mark_targets_as_explicit([name])                    
                 result.append(name)
 
             else:
@@ -441,7 +441,7 @@ class ProjectTarget (AbstractTarget):
                         
         return result
 
-    def mark_target_as_explicit (self, target_name):
+    def mark_targets_as_explicit (self, target_names):
         """Add 'target' to the list of targets in this project
         that should be build only by explicit request."""
         
@@ -449,7 +449,7 @@ class ProjectTarget (AbstractTarget):
         # rule is called before main target instaces are created.
         self.explicit_targets_.add(target_name)
 
-    def mark_target_as_always(self, target_name):
+    def mark_targets_as_always(self, target_names):
         self.always_targets_.add(target_name)
     
     def add_alternative (self, target_instance):
