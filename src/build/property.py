@@ -10,7 +10,7 @@
 import re
 from b2.util.utility import *
 from b2.build import feature
-from b2.util import sequence
+from b2.util import sequence, qualify_jam_action
 import b2.util.set
 from b2.manager import get_manager
 
@@ -215,7 +215,7 @@ def translate_indirect(properties, context_module):
     result = []
     for p in properties:
         if p.value()[0] == '@':
-            q = get_manager().engine().qualify_bjam_action(p.value()[1:], context_module)
+            q = qualify_jam_action(p.value()[1:], context_module)
             get_manager().engine().register_bjam_action(q)
             result.append(Property(p.feature(), '@' + q, p.condition()))
         else:

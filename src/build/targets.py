@@ -447,10 +447,10 @@ class ProjectTarget (AbstractTarget):
         
         # Record the name of the target, not instance, since this
         # rule is called before main target instaces are created.
-        self.explicit_targets_.add(target_name)
+        self.explicit_targets_.update(target_names)
 
     def mark_targets_as_always(self, target_names):
-        self.always_targets_.add(target_name)
+        self.always_targets_.update(target_names)
     
     def add_alternative (self, target_instance):
         """ Add new target alternative.

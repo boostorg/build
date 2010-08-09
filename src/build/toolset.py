@@ -12,7 +12,7 @@
 
 import feature, property, generators, property_set
 import b2.util.set
-from b2.util import cached
+from b2.util import cached, qualify_jam_action
 from b2.util.utility import *
 from b2.util import bjam_signature
 from b2.manager import get_manager
@@ -122,7 +122,7 @@ def flags(rule_or_module, variable_name, condition, values = []):
         # Jamfile module (this will be considered as rule), but who cares?
         # Probably, 'flags' rule should be split into 'flags' and
         # 'flags-on-module'.
-        rule_or_module = get_manager().engine().qualify_bjam_action(rule_or_module, caller)
+        rule_or_module = qualify_jam_action(rule_or_module, caller)
     else:
         # FIXME: revive checking that we don't set flags for a different
         # module unintentionally
