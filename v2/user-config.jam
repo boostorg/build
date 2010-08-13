@@ -8,7 +8,7 @@
 # this file in place, or you can place it in a permanent location so that it
 # does not get overwritten should you get a new version of Boost.Build. See:
 #
-#   http://boost.org/boost-build2/doc/html/bbv2/reference.html#bbv2.reference.init
+#   http://www.boost.org/boost-build2/doc/html/bbv2/overview/configuration.html
 #
 # for documentation about possible permanent locations.
 
