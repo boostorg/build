@@ -1320,6 +1320,7 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     const char** targets2;
     int i;
     int original_noexec;
+    int original_quitquick;
 	
 
     if (log)
@@ -1336,6 +1337,8 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     {
         original_noexec = globs.noexec;
         globs.noexec = 0;
+        original_quitquick = globs.quitquick;
+        globs.quitquick = 0;
     }
 
     targets_count = list_length( targets );
@@ -1348,6 +1351,7 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     if (force)
     {
         globs.noexec = original_noexec;
+        globs.quitquick = original_quitquick;
     }
 
     if (log)
