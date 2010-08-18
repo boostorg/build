@@ -107,21 +107,21 @@ def refine_from_user_input(parent_requirements, specification, jamfile_module,
         else:
             add_requirements.append(r)
         
-        if remove_requirements:
-            # Need to create property set, so that path features
-            # and indirect features are translated just like they
-            # are in project requirements.
-            ps = create_from_user_input(remove_requirements,
-                                        jamfile_module, location)
-            
-            parent_requirements = create(difference(parent_requirements.all(),
-                                                    ps.all()))
-            specification = add_requirements
-
-        requirements = create_from_user_input(specification,
-                                              jamfile_module, location)
+    if remove_requirements:
+        # Need to create property set, so that path features
+        # and indirect features are translated just like they
+        # are in project requirements.
+        ps = create_from_user_input(remove_requirements,
+                                    jamfile_module, location)
         
-        return parent_requirements.refine(requirements)
+        parent_requirements = create(difference(parent_requirements.all(),
+                                                ps.all()))
+        specification = add_requirements
+
+    requirements = create_from_user_input(specification,
+                                          jamfile_module, location)
+        
+    return parent_requirements.refine(requirements)
     
 class PropertySet:
     """ Class for storing a set of properties.
@@ -317,6 +317,8 @@ class PropertySet:
         return self.propagated_ps_
 
     def add_defaults (self):
+        # FIXME: this caching is invalidated when new features
+        # are declare inside non-root Jamfiles.
         if not self.defaults_:
             expanded = feature.add_defaults(self.all_)
             self.defaults_ = create(expanded)
