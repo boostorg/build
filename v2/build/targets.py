@@ -185,12 +185,9 @@ class TargetRegistry:
             project:        Project where the main target is to be declared
         """
         if specification:
-            result = specification
-
+            return property_set.create_with_validation(specification)
         else:
-            result = project.get ('default-build')
-
-        return property_set.create_with_validation (result)
+            return project.get ('default-build')
 
     def start_building (self, main_target_instance):
         """ Helper rules to detect cycles in main target references.
@@ -663,6 +660,9 @@ class MainTarget (AbstractTarget):
         if len (self.alternatives_) == 1:
             return self.alternatives_ [0]
 
+        if debug:
+            print "Property set for selection:", property_set
+
         for v in self.alternatives_:
             properties = v.match (property_set, debug)
                        
@@ -853,7 +853,12 @@ class BasicTarget (AbstractTarget):
         # A cache for build requests
         self.request_cache = {}
 
-        self.user_context_ = self.manager_.errors().capture_user_context()
+        # Result of 'capture_user_context' has everything. For example, if this
+        # target is declare as result of loading Jamfile which was loaded when
+        # building target B which was requested from A, then we'll have A, B and
+        # Jamroot location in context. We only care about Jamroot location, most
+        # of the times.
+        self.user_context_ = self.manager_.errors().capture_user_context()[-1:]
 
         self.always_ = False
 
@@ -1030,7 +1035,7 @@ class BasicTarget (AbstractTarget):
         condition = b2.util.set.difference (bcondition, ccondition)
 
         if debug:
-            print "    next alternative: required properties:", str(condition)
+            print "    next alternative: required properties:", [str(p) for p in condition]
         
         if b2.util.set.contains (condition, property_set.all()):
 
@@ -1360,7 +1365,20 @@ def create_typed_metatarget(name, type, sources, requirements, default_build, us
                     t.main_target_requirements(requirements, project),
                     t.main_target_default_build(default_build, project),
                     t.main_target_usage_requirements(usage_requirements, project)))
+
+
+def create_metatarget(klass, name, sources, requirements=[], default_build=[], usage_requirements=[]):
+    from b2.manager import get_manager
+    t = get_manager().targets()
     
+    project = get_manager().projects().current()
+        
+    return t.main_target_alternative(
+        klass(name, project,
+              t.main_target_sources(sources, name),
+              t.main_target_requirements(requirements, project),
+              t.main_target_default_build(default_build, project),
+              t.main_target_usage_requirements(usage_requirements, project)))    
 
 def metatarget_function_for_class(class_):
 

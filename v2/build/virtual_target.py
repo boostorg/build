@@ -535,7 +535,7 @@ class AbstractFileTarget (VirtualTarget):
         if tag:
 
             if len(tag) > 1:
-                self.manager_.errors()(
+                get_manager().errors()(
                     """<tag>@rulename is present but is not the only <tag> feature""")
 
             tag = tag[0]

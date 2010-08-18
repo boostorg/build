@@ -46,12 +46,10 @@ class AliasTarget(targets.BasicTarget):
         return base.add(subvariant.sources_usage_requirements())
 
 @metatarget
-def alias(name, sources, requirements=None, default_build=None, usage_requirements=None):
+def alias(name, sources=[], requirements=[], default_build=[], usage_requirements=[]):
+
     project = get_manager().projects().current()
     targets = get_manager().targets()
-
-    if default_build:
-        default_build = default_build[0]
 
     targets.main_target_alternative(AliasTarget(
         name, project,

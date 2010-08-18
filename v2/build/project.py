@@ -421,7 +421,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
 
         attributes.set("requirements", property_set.empty(), exact=True)
         attributes.set("usage-requirements", property_set.empty(), exact=True)
-        attributes.set("default-build", [], exact=True)
+        attributes.set("default-build", property_set.empty(), exact=True)
         attributes.set("projects-to-build", [], exact=True)
         attributes.set("project-root", None, exact=True)
         attributes.set("build-dir", None, exact=True)
@@ -860,7 +860,7 @@ class ProjectRules:
     def add_rule_for_type(self, type):
         rule_name = type.lower().replace("_", "-")
 
-        def xpto (name, sources = [], requirements = [], default_build = None, usage_requirements = []):
+        def xpto (name, sources = [], requirements = [], default_build = [], usage_requirements = []):
             return self.manager_.targets().create_typed_target(
                 type, self.registry.current(), name[0], sources,
                 requirements, default_build, usage_requirements) 
