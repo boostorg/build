@@ -226,7 +226,7 @@ if ! $(dont-build)
                 return [ on $(targets) return $($(variable)) ] ;
             }
 
-            rule import-rules-from-parent ( parent-module : this-module : user-rules )
+            rule import-rules-from-parent ( parent-module : this-module : user-rules * )
             {
                 IMPORT $(parent-module) : $(user-rules) : $(this-module) : $(user-rules) ;
                 EXPORT $(this-module) : $(user-rules) ;
