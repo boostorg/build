@@ -110,10 +110,10 @@ def install(name, package_name=None, requirements=[], binaries=[], libraries=[],
     
     # For shared libraries, we install both explicitly specified one and the
     # shared libraries that the installed executables depend on.
-    stage.install(name + "-lib-shared-universe", binaries, libraries,
+    stage.install(name + "-lib-shared-universe", binaries + libraries,
                   requirements + ["<location>" + lib_locate, "<install-dependencies>on",
                                   "<install-type>SHARED_LIB"])
-    stage.install(name + "-lib-shared-cygwin", binaries, libraries,
+    stage.install(name + "-lib-shared-cygwin", binaries + libraries,
                   requirements + ["<location>" + bin_locate, "<install-dependencies>on",
                                   "<install-type>SHARED_LIB"])
 
