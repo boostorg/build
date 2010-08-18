@@ -760,7 +760,20 @@ class action
 
             DEPENDS $(actual-targets) : $(self.actual-sources)
                 $(self.dependency-only-sources) ;
-
+            
+            # This works around a bug with -j and actions that
+            # produce multiple target, where:
+            # - dependency on the first output is found, and
+            #   the action is started
+            # - dependency on the second output is found, and
+            #   bjam noticed that command is already running
+            # - instead of waiting for the command, dependents
+            #   of the second targets are immediately updated.
+            if $(actual-targets[2])
+            {                
+                INCLUDES $(actual-targets) : $(actual-targets) ;
+            }
+            
             # Action name can include additional argument to rule, which should
             # not be passed to 'set-target-variables'
             toolset.set-target-variables
