@@ -191,18 +191,21 @@ class check-target-builds-worker
     {
         # FIXME: this should not be hardcoded. Other checks might
         # want to consider different set of features as relevant.
-        local toolset = [ property.select <toolset> : $(properties) ] ;
-        local ps = [ property-set.create $(toolset) ] ;        
+        local relevant = [ property.select <target-os> <toolset> <address-model> <architecture>
+            : $(properties) ] ;
+        local ps = [ property-set.create $(relevant) ] ;        
         local t = [ targets.current ] ;
         local p = [ $(t).project ] ;
+        local choosen ;
         if [ configure.builds $(self.target) : $(p) : $(ps) : "$(self.target) builds" ]
         {
-            return $(self.true-properties) ;
+            choosen = $(self.true-properties) ;
         }        
         else
         {
-            return $(self.false-properties) ;
+            choosen = $(self.false-properties) ;
         }        
+        return [ property.evaluate-conditionals-in-context $(choosen) : $(properties) ] ;
     }    
 }
 
