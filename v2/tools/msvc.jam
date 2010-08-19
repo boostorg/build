@@ -905,8 +905,9 @@ local rule configure-really ( version ? : options * )
         mc-compiler = [ feature.get-values <mc-compiler> : $(options) ] ;
         mc-compiler ?= mc ;
 
-        manifest-tool = mt ;
-
+        manifest-tool = [ feature.get-values <manifest-tool> : $(options) ] ;
+        manifest-tool ?= mt ;
+        
         local cc-filter = [ feature.get-values <compiler-filter> : $(options) ] ;
 
         for local c in $(cpu)
