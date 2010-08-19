@@ -130,21 +130,25 @@ class CheckTargetBuildsWorker:
 
     def __init__(self, target, true_properties, false_properties):
         self.target = target
-        self.true_properties = property.create_from_strings(true_properties)
-        self.false_properties = property.create_from_strings(false_properties)
+        self.true_properties = property.create_from_strings(true_properties, True)
+        self.false_properties = property.create_from_strings(false_properties, True)
 
     def check(self, ps):
         
         # FIXME: this should not be hardcoded. Other checks might
         # want to consider different set of features as relevant.
-        toolset = ps.get_properties('toolset')[0]
-        ps = property_set.create([toolset])
+        relevant = ps.get_properties('target-os') + \
+                   ps.get_properties("toolset") + \
+                   ps.get_properties("address-model") + \
+                   ps.get_properties("architecture")
+        rps = property_set.create(relevant)
         t = get_manager().targets().current()
-        p = t.project()
-        if builds(self.target, p, ps, "%s builds" % self.target):
-            return self.true_properties
+        p = t.project()        
+        if builds(self.target, p, rps, "%s builds" % self.target):
+            choosen = self.true_properties
         else:
-            return self.false_properties
+            choosen = self.false_properties
+        return property.evaluate_conditionals_in_context(choosen, ps)
 
 @bjam_signature((["target"], ["true_properties", "*"], ["false_properties", "*"]))
 def check_target_builds(target, true_properties, false_properties):
