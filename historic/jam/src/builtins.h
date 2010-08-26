@@ -62,6 +62,5 @@ LIST *builtin_pad( PARSE *parse, FRAME *frame );
 LIST *builtin_precious( PARSE *parse, FRAME *frame );
 
 void backtrace( FRAME *frame );
-extern int last_update_now_status;
 
 #endif

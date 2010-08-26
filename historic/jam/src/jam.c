@@ -529,10 +529,6 @@ int main( int argc, char * * argv, char * * arg_environ )
                 status |= make( targets_count, targets2, anyhow );
                 free( targets );
             }
-            else
-            {
-                status = last_update_now_status;
-            }
 
             PROFILE_EXIT( MAIN_MAKE );
         }
