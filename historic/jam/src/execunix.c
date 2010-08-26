@@ -190,13 +190,9 @@ void exec_cmd
     {
         if ( pipe( out ) < 0 )
             exit( EXITBAD );
-        fcntl( out[0], F_SETFL, O_NONBLOCK );
-        fcntl( out[1], F_SETFL, O_NONBLOCK );
 
         if ( pipe( err ) < 0 )
             exit( EXITBAD );
-        fcntl( err[0], F_SETFL, O_NONBLOCK );
-        fcntl( err[1], F_SETFL, O_NONBLOCK );
     }
 
     /* Start the command */

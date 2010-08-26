@@ -1293,6 +1293,7 @@ LIST * builtin_update( PARSE * parse, FRAME * frame )
 }
 
 extern int anyhow;
+int last_update_now_status;
 
 /* Takes a list of target names as first argument, and immediately
    updates them.
@@ -1355,6 +1356,8 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
         close (original_stdout);
         close (original_stderr);
     }
+
+    last_update_now_status = status;
 	
     if (status == 0)
         return list_new (L0, newstr ("ok"));

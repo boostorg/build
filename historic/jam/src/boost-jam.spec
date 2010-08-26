@@ -1,5 +1,5 @@
 Name: boost-jam
-Version: 3.1.18
+Version: 3.1.19
 Summary: Build tool
 Release: 1
 Source: %{name}-%{version}.tgz
