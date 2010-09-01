@@ -172,9 +172,9 @@ def find_target(target_id):
 
     return result
 
-def initialize_config_module(module_name):
+def initialize_config_module(module_name, location=None):
 
-    get_manager().projects().initialize(module_name)
+    get_manager().projects().initialize(module_name, location)
 
 # Helper rule used to load configuration files. Loads the first configuration
 # file with the given 'filename' at 'path' into module with name 'module-name'.
@@ -335,7 +335,7 @@ def load_configuration_files():
         file = b2.util.path.glob_in_parents(".", ["project-config.jam"])
 
     if file:
-        initialize_config_module('project-config')
+        initialize_config_module('project-config', os.path.dirname(file[0]))
         load_config('project-config', "project-config.jam", [os.path.dirname(file[0])], True)
 
 

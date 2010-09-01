@@ -215,9 +215,9 @@ local rule find-target ( target-id )
 
 # Initializes a new configuration module.
 #
-local rule initialize-config-module ( module-name )
+local rule initialize-config-module ( module-name : location ? )
 {
-    project.initialize $(module-name) ;
+    project.initialize $(module-name) : $(location) ;
     if USER_MODULE in [ RULENAMES ]
     {
         USER_MODULE $(module-name) ;
@@ -419,7 +419,7 @@ local rule load-configuration-files
     }
     if $(file)
     {
-        initialize-config-module project-config ;
+        initialize-config-module project-config : $(file:D) ;
         load-config project-config : project-config.jam : $(file:D) ;        
     }   
 }
