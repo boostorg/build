@@ -294,18 +294,22 @@ local rule load-jamfile (
           :  "Filenames are: " $(jamfile-to-load:D=) ;
     }
     
-    # Initialize the Jamfile module before loading.
-    #
-    initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ]
-        : $(jamfile-to-load:BS) ;
-
-    local saved-project = $(.current-project) ;
-    # Now load the Jamfile in it's own context. Initialization might have loaded
-    # parent Jamfiles, which might have loaded the current Jamfile with
-    # use-project. Do a final check to make sure it's not loaded already.
+    # Now load the Jamfile in it's own context. 
+    # The call to 'initialize' may load parent Jamfile, which might have
+    # 'use-project' statement that causes a second attempt to load the
+    # same project we're loading now.  Checking inside .jamfile-modules
+    # prevents that second attempt from messing up.
     if ! $(jamfile-module) in $(.jamfile-modules)
     {
         .jamfile-modules += $(jamfile-module) ;
+
+        # Initialize the Jamfile module before loading.
+        #
+        initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ]
+            : $(jamfile-to-load:BS) ;
+
+        local saved-project = $(.current-project) ;
+
         mark-as-user $(jamfile-module) ;
         modules.load $(jamfile-module) : [ path.native $(jamfile-to-load) ] : . ;
         if [ MATCH ($(JAMROOT)) : $(jamfile-to-load:BS) ]
@@ -316,7 +320,7 @@ local rule load-jamfile (
                 load-aux $(jamfile-module) : [ path.native $(jamfile) ] ;
             }
         }
-    }
+
     # Now do some checks.
     if $(.current-project) != $(saved-project)
     {
@@ -345,6 +349,7 @@ local rule load-jamfile (
                 ECHO "warning: the --build-dir option will be ignored" ;
             }
         }
+    }
     }
 }
 
