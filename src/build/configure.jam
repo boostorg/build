@@ -191,7 +191,10 @@ class check-target-builds-worker
     {
         # FIXME: this should not be hardcoded. Other checks might
         # want to consider different set of features as relevant.
-        local relevant = [ property.select <target-os> <toolset> <address-model> <architecture>
+        local toolset = [ property.select <toolset> : $(properties) ] ;
+        local toolset-version-property = "<toolset-$(toolset:G=):version>" ;
+        local relevant = [ property.select <target-os> <toolset> $(toolset-version-property)
+            <address-model> <architecture>
             : $(properties) ] ;
         local ps = [ property-set.create $(relevant) ] ;        
         local t = [ targets.current ] ;
