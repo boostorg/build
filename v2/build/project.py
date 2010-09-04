@@ -313,21 +313,21 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         if not dir:
             dir = "."
 
-        saved_project = self.current_project
-
         self.used_projects[jamfile_module] = []
         
         # Now load the Jamfile in it's own context. 
         # The call to 'initialize' may load parent Jamfile, which might have
         # 'use-project' statement that causes a second attempt to load the
         # same project we're loading now.  Checking inside .jamfile-modules
-        # prevents that second attempt from messing up.        
+        # prevents that second attempt from messing up.
         if not jamfile_module in self.jamfile_modules:
             self.jamfile_modules[jamfile_module] = True
 
             # Initialize the jamfile module before loading.
             #    
             self.initialize(jamfile_module, dir, os.path.basename(jamfile_to_load))
+
+            saved_project = self.current_project
 
             bjam.call("load", jamfile_module, jamfile_to_load)
             basename = os.path.basename(jamfile_to_load)
