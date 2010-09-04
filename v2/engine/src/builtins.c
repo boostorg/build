@@ -26,6 +26,8 @@
 #include "timestamp.h"
 #include "md5.h"
 #include <ctype.h>
+# include <sys/types.h>
+# include <sys/wait.h>
 
 
 /*
@@ -2170,6 +2172,14 @@ PyObject * bjam_caller( PyObject * self, PyObject * args )
 #endif
 
 
+static char * rtrim(char *s)
+{
+    char *p = s;
+    while(*p) ++p;
+    for(--p; p >= s && isspace(*p); *p-- = 0);
+    return s;
+}
+
 LIST * builtin_shell( PARSE * parse, FRAME * frame )
 {
     LIST   * command = lol_get( frame->args, 0 );
@@ -2181,6 +2191,7 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
     int      exit_status = -1;
     int      exit_status_opt = 0;
     int      no_output_opt = 0;
+    int      strip_eol_opt = 0;
 
     /* Process the variable args options. */
     {
@@ -2195,6 +2206,10 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
             else if ( strcmp( "no-output", arg->string ) == 0 )
             {
                 no_output_opt = 1;
+            }
+            else if ( strcmp("strip-eol", arg->string) == 0 )
+            {
+                strip_eol_opt = 1;
             }
             arg = lol_get( frame->args, ++a );
         }
@@ -2217,6 +2232,8 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
         buffer[ret] = 0;
         if ( !no_output_opt )
         {
+            if ( strip_eol_opt )
+                rtrim(buffer);
             string_append( &s, buffer );
         }
     }
@@ -2230,6 +2247,10 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
     /* The command exit result next. */
     if ( exit_status_opt )
     {
+        if ( WIFEXITED(exit_status) )
+            exit_status = WEXITSTATUS(exit_status);
+        else
+            exit_status = -1;
         sprintf( buffer, "%d", exit_status );
         result = list_new( result, newstr( buffer ) );
     }
