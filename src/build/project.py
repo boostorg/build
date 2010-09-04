@@ -374,7 +374,6 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         the same file.
         """
 
-        self.initialize(jamfile_module)
         self.used_projects[jamfile_module] = []
         bjam.call("load", jamfile_module, file)
         self.load_used_projects(jamfile_module)
