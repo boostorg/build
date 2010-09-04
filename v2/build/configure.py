@@ -137,8 +137,11 @@ class CheckTargetBuildsWorker:
         
         # FIXME: this should not be hardcoded. Other checks might
         # want to consider different set of features as relevant.
+        toolset = ps.get('toolset')[0]
+        toolset_version_property = "<toolset-" + toolset + ":version>" ;
         relevant = ps.get_properties('target-os') + \
                    ps.get_properties("toolset") + \
+                   ps.get_properties(toolset_version_property) + \
                    ps.get_properties("address-model") + \
                    ps.get_properties("architecture")
         rps = property_set.create(relevant)
