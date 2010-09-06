@@ -26,9 +26,19 @@
 #include "timestamp.h"
 #include "md5.h"
 #include <ctype.h>
+
+#if defined(USE_EXECUNIX)
 # include <sys/types.h>
 # include <sys/wait.h>
-
+#else
+/*
+  NT does not have wait() and associated macros, it uses the return value
+  of system() instead. Status code group are documented at
+  http://msdn.microsoft.com/en-gb/library/ff565436.aspx
+*/
+# define WIFEXITED(w)  (((w) & 0XFFFFFF00) == 0)
+# define WEXITSTATUS(w)(w)
+#endif
 
 /*
  * builtins.c - builtin jam rules
