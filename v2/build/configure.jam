@@ -14,6 +14,8 @@ import targets ;
 import errors ;
 import targets ;
 import sequence ;
+import property ;
+import property-set ;
 import "class" : new ;
 
 rule log-summary ( )
@@ -115,11 +117,11 @@ rule print-configure-checks-summary ( )
 # Attempt to build a metatarget named by 'metatarget-reference'
 # in context of 'project' with properties 'ps'.
 # Returns non-empty value if build is OK.
-rule builds ( metatarget-reference : project : ps : what )
+rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
 {   
     local result ;
            
-    if ! $(.$(what)-tested.$(ps))
+    if ! $(retry) && ! $(.$(what)-tested.$(ps))
     {        
         .$(what)-tested.$(ps) = true ;
         
@@ -158,6 +160,25 @@ rule builds ( metatarget-reference : project : ps : what )
     }
 }
 
+rule builds ( metatarget-reference : properties * : what ? : retry ? )
+{
+    what ?= "$(metatarget-reference) builds" ;
+    
+    # FIXME: this should not be hardcoded. Other checks might
+    # want to consider different set of features as relevant.
+    local toolset = [ property.select <toolset> : $(properties) ] ;
+    local toolset-version-property = "<toolset-$(toolset:G=):version>" ;
+    local relevant = [ property.select <target-os> <toolset> $(toolset-version-property)
+      <address-model> <architecture>
+      : $(properties) ] ;
+    local ps = [ property-set.create $(relevant) ] ;        
+    local t = [ targets.current ] ;
+    local p = [ $(t).project ] ;
+
+    return [ builds-raw $(metatarget-reference) : $(p) : $(ps) : $(what) : $(retry) ] ;
+}
+
+
 # Called by Boost.Build startup code to specify name of a file
 # that will receive results of configure checks.  This
 # should never be called by users.
@@ -180,27 +201,18 @@ class check-target-builds-worker
     import targets ;
     import property ; 
     
-    rule __init__ ( target : true-properties * : false-properties * )    
+    rule __init__ ( target message ? : true-properties * : false-properties * )    
     {
         self.target = $(target) ;
+        self.message = $(message) ;     
         self.true-properties = $(true-properties) ;
         self.false-properties = $(false-properties) ;
     }
         
     rule check ( properties * )
     {
-        # FIXME: this should not be hardcoded. Other checks might
-        # want to consider different set of features as relevant.
-        local toolset = [ property.select <toolset> : $(properties) ] ;
-        local toolset-version-property = "<toolset-$(toolset:G=):version>" ;
-        local relevant = [ property.select <target-os> <toolset> $(toolset-version-property)
-            <address-model> <architecture>
-            : $(properties) ] ;
-        local ps = [ property-set.create $(relevant) ] ;        
-        local t = [ targets.current ] ;
-        local p = [ $(t).project ] ;
         local choosen ;
-        if [ configure.builds $(self.target) : $(p) : $(ps) : "$(self.target) builds" ]
+        if [ configure.builds $(self.target) : $(properties) : $(self.message) ]
         {
             choosen = $(self.true-properties) ;
         }        
@@ -213,9 +225,9 @@ class check-target-builds-worker
 }
 
 
-rule check-target-builds ( target : true-properties * : false-properties * )
+rule check-target-builds ( target message ? : true-properties * : false-properties * )
 {
-    local instance = [ new check-target-builds-worker $(target) : $(true-properties)
+    local instance = [ new check-target-builds-worker $(target) $(message) : $(true-properties)
       : $(false-properties) ] ;
     return <conditional>@$(instance).check ;
 }
