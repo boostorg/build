@@ -91,13 +91,24 @@ rule init ( version ? : command * : options * )
             {
                 local tool-command-string = $(tool-command:J=" ") ;
                 local tool-version = [ MATCH "^([0-9.]+)" : [ SHELL "$(tool-command-string) -dumpversion" ] ] ;
-                ECHO "XXX" $(tool-version) ;
                 if $(tool-version) != $(version)
                 {
-                    errors.error "toolset gcc initialization:" :
-                                 "version '$(version)' requested but 'g++-$(version)' not found and version '$(tool-version)' of default '$(tool-command)' does not match" :
-                                 "initialized from" [ errors.nearest-user-location ] ;
-                    tool-command = ;
+                    # Permit a match betwen two-digit version specified by the user
+                    # (e.g. 4.4) and 3-digit version reported by gcc.
+                    # Since only two digits are present in binary name anyway,
+                    # insisting that user specify 3-digit version when
+                    # configuring Boost.Build while it's not required on 
+                    # command like would be strange.
+                    local stripped = [ MATCH "^([0-9]+\.[0-9]+).*" : $(tool-version) ] ;
+                    if $(stripped) != $(version)
+                    {                                            
+                        errors.error "toolset gcc initialization:" :
+                          "version '$(version)' requested but 'g++-$(version)' not found and version '$(tool-version)' of default '$(tool-command)' does not match" :
+                            "initialized from" [ errors.nearest-user-location ] ;
+                        tool-command = ;
+                    }
+                    # Use full 3-digit version to be compatible with the 'using gcc ;' case
+                    version = $(tool-version) ;
                 }
             }
             else
