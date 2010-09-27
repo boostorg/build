@@ -58,11 +58,72 @@ type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
 # Example:
 #   using gcc : 3.4 : : <cxxflags>foo <linkflags>bar <linker-type>sun ;
 #
+# The compiler command to use is detected in a three step manner:
+# 1) If an explicit command is specified by the user, it will be used and must available.
+# 2) If only a certain version is specified, it is enforced:
+#    - either a command 'g++-VERSION' must be available
+#    - or the default command 'g++' must be available and match the exact version.
+# 3) Without user-provided restrictions use default 'g++'
 rule init ( version ? : command * : options * )
 {
+    #1): use user-provided command
+    local tool-command = ;
+    if $(command)
+    {
+       tool-command  =  [ common.get-invocation-command-nodefault gcc : g++ : $(command) ] ;
+       if ! $(tool-command)
+       {
+           errors.error "toolset gcc initialization:" :
+                        "provided command '$(command)' not found" :
+                        "initialized from" [ errors.nearest-user-location ] ;
+       }
+    }
+    #2): enforce user-provided version
+    else if $(version)
+    {
+        tool-command  =  [ common.get-invocation-command-nodefault gcc : "g++-$(version[1])" ] ;
+        
+        #2.1) fallback: check whether "g++" reports the requested version
+        if ! $(tool-command)
+        {
+            tool-command = [ common.get-invocation-command-nodefault gcc : g++ ] ;
+            if $(tool-command)
+            {
+                local tool-command-string = $(tool-command:J=" ") ;
+                local tool-version = [ MATCH "^([0-9.]+)" : [ SHELL "$(tool-command-string) -dumpversion" ] ] ;
+                ECHO "XXX" $(tool-version) ;
+                if $(tool-version) != $(version)
+                {
+                    errors.error "toolset gcc initialization:" :
+                                 "version '$(version)' requested but 'g++-$(version)' not found and version '$(tool-version)' of default '$(tool-command)' does not match" :
+                                 "initialized from" [ errors.nearest-user-location ] ;
+                    tool-command = ;
+                }
+            }
+            else
+            {
+                errors.error "toolset gcc initialization:" :
+                             "version '$(version)' requested but neither 'g++-$(version)' nor default 'g++' found" :
+                             "initialized from" [ errors.nearest-user-location ] ;
+            }
+        }
+    }
+    #3) default: no command and no version specified, try using default command "g++"
+    else
+    {
+        tool-command = [ common.get-invocation-command-nodefault gcc : g++ ] ;
+        if ! $(tool-command)
+        {
+            errors.error "toolset gcc initialization:" :
+                         "no command provided, default command 'g++' not found" :
+                         "initialized from" [ errors.nearest-user-location ] ;
+        }
+    }
+    
+    
     # Information about the gcc command...
     #   The command.
-    local command = [ common.get-invocation-command gcc : g++ : $(command) ] ;
+    local command = $(tool-command) ;
     #   The root directory of the tool install.
     local root = [ feature.get-values <root> : $(options) ] ;
     #   The bin directory where to find the command to execute.
