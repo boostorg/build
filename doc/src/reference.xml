@@ -95,7 +95,7 @@ boost-build build-system ;
         <term><literal>unit-test</literal></term>
 
         <listitem><para>Creates an executable that will be automatically run. See
-        <xref linkend="bbv2.tutorial.testing"/>.</para></listitem>
+        <xref linkend="bbv2.builtins.testing"/>.</para></listitem>
       </varlistentry>
 
       <varlistentry>
@@ -107,7 +107,7 @@ boost-build build-system ;
         <term><literal>run-fail</literal></term>
 
         <listitem><para>Specialized rules for testing. See
-        <xref linkend="bbv2.tutorial.testing"/>.</para></listitem>
+        <xref linkend="bbv2.builtins.testing"/>.</para></listitem>
       </varlistentry>
 
 
