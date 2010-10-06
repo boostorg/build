@@ -41,8 +41,6 @@
     <xi:include href="jam_docs.xml" parse="xml" 
 	xpointer="xpointer(id('jam.intro')|id('jam.intro')/following-sibling::*)"/>
   </appendix>    
-
-  <xi:include href="v1_vs_v2.xml"/>
   
   <index/>
 
