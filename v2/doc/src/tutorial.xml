@@ -431,10 +431,6 @@ project
     </tip>
   </section>
 
-  <section id="bbv2.tutorial.testing">
-    <title>Testing</title>
-  </section>
-
   <section id="bbv2.tutorial.linkage">
     <title>Static and shared libaries</title>
 
