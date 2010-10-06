@@ -711,20 +711,6 @@ bjam toolset=gcc variant=debug optimization=space
           </varlistentry>
 
           <varlistentry>
-            <term><option>-d+2</option></term>
-            <listitem>
-              <para>Show commands as they are executed.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
-            <term><option>-d0</option></term>
-            <listitem>
-              <para>Supress all informational messages.</para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
             <term><option>-q</option></term>
             <listitem>
               <para>Stop at first error, as opposed to continuing to build targets
@@ -771,7 +757,63 @@ bjam toolset=gcc variant=debug optimization=space
               <literal>user-config.jam</literal> configuration files.
               </para>
             </listitem>
-          </varlistentry>          
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-d0</option></term>
+            <listitem>
+              <para>Supress all informational messages.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-d <replaceable>N</replaceable></option></term>
+            <listitem>
+              <para>Enable cummulative debugging levels from 1 to n. Values are: 
+              <orderedlist>
+                <listitem>Show the actions taken for building targets, as they are executed (the default).</listitem>
+                <listitem>Show "quiet" actions and display all action text, as they are executed.</listitem>
+                <listitem>Show dependency analysis, and target/source timestamps/paths.</listitem>
+                <listitem>Show arguments and timming of shell invocations.</listitem>
+                <listitem>Show rule invocations and variable expansions.</listitem>
+                <listitem>Show directory/header file/archive scans, and attempts at binding to targets.</listitem>
+                <listitem>Show variable settings.</listitem>
+                <listitem>Show variable fetches, variable expansions, and evaluation of '"if"' expressions.</listitem>
+                <listitem>Show variable manipulation, scanner tokens, and memory usage.</listitem>
+                <listitem>Show profile information for rules, both timing and memory.</listitem>
+                <listitem>Show parsing progress of Jamfiles.</listitem>
+                <listitem>Show graph of target dependencies.</listitem>
+                <listitem>Show change target status (fate).</listitem>
+              </orderedlist>
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-d +<replaceable>N</replaceable></option></term>
+            <listitem>
+              <para>Enable debugging level <replaceable>N</replaceable>.</para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-o <replaceable>file</replaceable></option></term>
+            <listitem>
+              <para>Write the updating actions to the specified file instead of running them.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>-s <replaceable>var</replaceable>=<replaceable>value</replaceable></option></term>
+            <listitem>
+              <para>Set the variable <replaceable>var</replaceable> to
+              <replaceable>value</replaceable> in the global scope of the jam
+              language interpreter, overriding variables imported from the
+              environment.
+              </para>
+            </listitem>
+          </varlistentry>
         </variablelist>
       </section>
 
