@@ -825,8 +825,14 @@ local rule toolset-tag ( name : type ? : property-set )
     switch [ $(property-set).get <toolset> ]
     {
         case borland* : tag += bcb ;
-        case clang-unix* : tag += gcc ;
-        case clang-darwin* : tag += xgcc ;
+        case clang* :
+        {
+            switch [ $(property-set).get <toolset-clang:platform> ]
+            {
+               case darwin : tag += clang-darwin ;
+               case linux  : tag += clang ;
+            }
+        }
         case como* : tag += como ;
         case cw : tag += cw ;
         case darwin* : tag += xgcc ;
