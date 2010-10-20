@@ -70,10 +70,6 @@ rule init ( version ? :  command * : options * )
 
 SPACE = " " ;
 
-flags clang-linux.compile OPTIONS <cflags> ;
-flags clang-linux.compile OPTIONS <cxxflags> ;
-# flags clang-linux.compile INCLUDES <include> ;
-
 # Declare flags and action for compilation.
 toolset.flags clang-linux.compile OPTIONS <optimization>off   : -O0 ;
 toolset.flags clang-linux.compile OPTIONS <optimization>speed : -O3 ;
