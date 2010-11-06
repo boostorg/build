@@ -318,6 +318,8 @@ int yylex()
                     c = '\n';
                 else if (c == 'r')
                     c = '\r';
+                else if (c == 't')
+                    c = '\t';
                 *b++ = c;
                 notkeyword = 1;
             }
