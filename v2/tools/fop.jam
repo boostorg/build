@@ -9,7 +9,8 @@
 import os ;
 import generators ;
 import common ;
-import errors ; 
+import errors ;
+import boostbook ;
 
 generators.register-standard fop.render.pdf : FO : PDF ;
 generators.register-standard fop.render.ps : FO : PS ;
@@ -19,21 +20,23 @@ rule init ( fop-command ? : java-home ? : java ? )
     fop-command = [ common.get-invocation-command fop : fop : $(fop-command) 
       : [ modules.peek : FOP_DIR ] ] ;
         
-    if $(.initialized)
+    .FOP_COMMAND = $(fop-command) ;
+    .FOP_SETUP = ;
+    
+    # JAVA_HOME is the location that java was installed to.
+    
+    if $(java-home)
     {
-        if $(.FOP_COMMAND) != $(fop-command) || $(JAVA_HOME) != $(java-home)
-           || $(JAVACMD) != $(java)
-        {
-            errors.user-error "fop: reinitialization with different options" ;
-        }        
+        .FOP_SETUP += [ common.variable-setting-command JAVA_HOME : $(java-home) ] ;
     }
-    else
+
+    # JAVACMD is the location that of the java executable, useful for a
+    # non-standard java installation, where the executable isn't at
+    # $JAVA_HOME/bin/java.
+    
+    if $(java)
     {
-        .initialized = true ;
-        .FOP_COMMAND = $(fop-command) ;
-        # What is the meaning of this logic?  Needs more comments!!  --DWA
-        java-home ?= $(java) ;
-        .FOP_SETUP = [ common.variable-setting-command JAVA_HOME : $(java-home) ] ;
+        .FOP_SETUP += [ common.variable-setting-command JAVACMD : $(java) ] ;
     }
     
     # Make sure the fop command is executed from within the directory where it's located.
