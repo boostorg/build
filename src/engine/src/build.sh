@@ -208,6 +208,11 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_CC=cc
     ;;
 
+    clang*)
+    BOOST_JAM_CC="clang -Wno-unused -Wno-format"
+    BOOST_JAM_TOOLSET=clang
+    ;;
+
     tru64cxx)
     BOOST_JAM_CC=cc
     ;;

@@ -50,8 +50,8 @@ void do_ts(int** graph, int current_vertex, int* colors, int** result_ptr)
 
         if (colors[adjacent_vertex] == white)
             do_ts(graph, adjacent_vertex, colors, result_ptr);
-        else if (colors[adjacent_vertex] == gray)
-            ; /* This is loop. Not sure what to do... */
+        //else if (colors[adjacent_vertex] == gray)
+            //; /* This is loop. Not sure what to do... */
     }
     colors[current_vertex] = black;
     **result_ptr = current_vertex;    

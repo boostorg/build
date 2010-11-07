@@ -71,7 +71,7 @@ rule init ( version ? :  command * : options * )
 SPACE = " " ;
 
 # Declare flags and action for compilation.
-toolset.flags clang-linux.compile OPTIONS <optimization>off   : -O0 ;
+toolset.flags clang-linux.compile OPTIONS <optimization>off   : ;
 toolset.flags clang-linux.compile OPTIONS <optimization>speed : -O3 ;
 toolset.flags clang-linux.compile OPTIONS <optimization>space : -Os ;
 
@@ -85,7 +85,7 @@ toolset.flags clang-linux.compile OPTIONS <warnings>all : -Wall -pedantic ;
 toolset.flags clang-linux.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
 toolset.flags clang-linux.compile OPTIONS <debug-symbols>on : -g ;
-toolset.flags clang-linux.compile OPTIONS <profiling>on : -pg ;
+toolset.flags clang-linux.compile OPTIONS <profiling>on : ;
 toolset.flags clang-linux.compile OPTIONS <rtti>off : -fno-rtti ;
 
 rule compile.c++ ( targets * : sources * : properties * )

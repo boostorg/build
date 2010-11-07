@@ -1,6 +1,7 @@
 #!/bin/sh
 # Copyright (C) 2005, 2006 Douglas Gregor.
 # Copyright (C) 2006 The Trustees of Indiana University
+# Copyright (C) 2010 Bryce Lelbach 
 #
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
@@ -68,6 +69,10 @@ if test "x$TOOLSET" = x; then
     TOOLSET=gcc
     ;;
     
+    clang* )
+    TOOLSET=clang
+    ;;
+
     sun* )
     TOOLSET=sun
     ;;
@@ -77,6 +82,13 @@ if test "x$TOOLSET" = x; then
     ;;
   esac
 fi
+
+case $TOOLSET in 
+  clang*)
+  TOOLSET=clang
+  ;;
+esac
+
 
 rm -f config.log
 
