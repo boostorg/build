@@ -431,6 +431,17 @@ rule setup-address-model ( targets * : sources * : properties * )
                 option = -maix64 ;
             }
         }
+        else if $(os) = hpux
+        {
+            if $(model) = 32
+            {
+                option = -milp32 ;
+            }
+            else
+            {
+                option = -mlp64 ;
+            }
+        }
         else
         {
             if $(model) = 32
