@@ -202,7 +202,8 @@ void load_builtins()
       {
           char * args[] = { "targets", "*", 
                             ":", "log", "?",
-                            ":", "ignore-minus-n", "?", 0 };
+                            ":", "ignore-minus-n", "?", 
+                            ":", "ignore-minus-q", "?", 0 };
           bind_builtin( "UPDATE_NOW",
                         builtin_update_now, 0, args );
       }
@@ -1319,6 +1320,7 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     LIST * targets = lol_get( frame->args, 0 );
     LIST * log = lol_get( frame->args, 1 );
     LIST * force = lol_get (frame->args, 2);
+    LIST * continue_ = lol_get(frame->args, 3);
     int status = 0;
     int original_stdout;
     int original_stderr;
@@ -1327,6 +1329,7 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     const char** targets2;
     int i;
     int original_noexec;
+    int original_quitquick;
 	
 
     if (log)
@@ -1345,6 +1348,12 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
         globs.noexec = 0;
     }
 
+    if (continue_)
+    {
+        original_quitquick = globs.quitquick;
+        globs.quitquick = 0;
+    }
+
     targets_count = list_length( targets );
     targets2 = (const char * *)BJAM_MALLOC( targets_count * sizeof( char * ) );    
     for (i = 0 ; targets; targets = list_next( targets ) )
@@ -1355,6 +1364,11 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     if (force)
     {
         globs.noexec = original_noexec;
+    }
+
+    if (continue_)
+    {
+        globs.quitquick = original_quitquick;
     }
 
     if (log)
