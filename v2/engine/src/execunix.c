@@ -258,6 +258,10 @@ void exec_cmd
     close( out[1] );
     close( err[1] );
 
+    /* set both file descriptors to non-blocking */
+    fcntl(out[0], F_SETFL, O_NONBLOCK);
+    fcntl(err[0], F_SETFL, O_NONBLOCK);
+
     /* child writes stdout to out[1], parent reads from out[0] */
     cmdtab[ slot ].fd[ OUT ] = out[0];
     cmdtab[ slot ].stream[ OUT ] = fdopen( cmdtab[ slot ].fd[ OUT ], "rb" );
