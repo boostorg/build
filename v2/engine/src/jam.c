@@ -302,8 +302,11 @@ int main( int argc, char * * argv, char * * arg_environ )
     if ( ( s = getoptval( optv, 'g', 0 ) ) )
         globs.newestfirst = 1;
 
-    if ( ( s = getoptval( optv, 'l', 0 ) ) )
-        globs.timeout = atoi( s );
+    /* check for and use maximum value of timeout parameter */
+    for ( n = 0; ( s = getoptval( optv, 'l', n ) ); ++n ) {
+      int t = atoi( s );
+      globs.timeout = globs.timeout < t ? t : globs.timeout;
+    }
 
     /* Turn on/off debugging */
     for ( n = 0; ( s = getoptval( optv, 'd', n ) ); ++n )
