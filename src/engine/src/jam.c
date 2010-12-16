@@ -297,7 +297,14 @@ int main( int argc, char * * argv, char * * arg_environ )
         anyhow++;
 
     if ( ( s = getoptval( optv, 'j', 0 ) ) )
+    {
         globs.jobs = atoi( s );
+        if (globs.jobs == 0)
+        {
+            printf("Invalid value for the '-j' option.\n");
+            exit(EXITBAD);
+        }
+    }
 
     if ( ( s = getoptval( optv, 'g', 0 ) ) )
         globs.newestfirst = 1;
