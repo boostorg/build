@@ -34,7 +34,6 @@
 #   http://boost.org/boost-build2/doc/html/bbv2/advanced.html#bbv2.advanced.jam_language
 #
 
-
 # ------------------
 # GCC configuration.
 # ------------------
@@ -84,3 +83,10 @@
 
 # Configure with an explicit installation prefix.
 # using qt : /usr/opt/qt ;
+
+# ---------------------
+# Python configuration.
+# ---------------------
+
+# Configure specific Python version.
+# using python : 3.1 : /usr/bin/python3 : /usr/include/python3.1 : /usr/lib ;
