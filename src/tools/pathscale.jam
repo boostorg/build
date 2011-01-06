@@ -72,8 +72,8 @@ flags pathscale.compile OPTIONS <address-model>32 : -m32 ;
 flags pathscale.compile OPTIONS <address-model>64 : -m64 ;
 
 flags pathscale.compile OPTIONS <warnings>off : -woffall -Wno-uninitialized ;
-flags pathscale.compile OPTIONS <warnings>on : -Wall ;
-flags pathscale.compile OPTIONS <warnings>all : -Wall ;
+flags pathscale.compile OPTIONS <warnings>on : -Wall -Wno-uninitialized ;
+flags pathscale.compile OPTIONS <warnings>all : -Wall -Wno-uninitialized ;
 
 flags pathscale.compile.c++ OPTIONS <inlining>off : -noinline ;
 
