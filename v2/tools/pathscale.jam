@@ -21,9 +21,19 @@ generators.override pathscale.searched-lib-generator : searched-lib-generator ;
 
 rule init ( version ? : command * : options * ) 
 {
-  local condition = [ common.check-init-parameters pathscale : version $(version) ] ;
-
-  command = [ common.get-invocation-command pathscale : pathCC : $(command) ] ;
+  command = [ common.get-invocation-command pathscale : pathCC : $(command) 
+    : /opt/ekopath/bin ] ;
+  
+  # Determine the version
+  local command-string = $(command:J=" ") ;
+  if $(command)
+  {    
+      version ?= [ MATCH "^([0-9.]+)"
+          : [ SHELL "$(command-string) -dumpversion" ] ] ;
+  }
+  
+  local condition = [ common.check-init-parameters pathscale
+    : version $(version) ] ;
 
   common.handle-options pathscale : $(condition) : $(command) : $(options) ;
     
@@ -56,12 +66,12 @@ generators.register-fortran90-compiler pathscale.compile.fortran90 : FORTRAN90 :
 flags pathscale.compile OPTIONS <debug-symbols>on : -g ;
 flags pathscale.compile OPTIONS <profiling>on : -pg ;
 flags pathscale.compile OPTIONS <link>shared : -fPIC ;
-flags pathscale.compile OPTIONS <optimization>speed : -O2 ;
+flags pathscale.compile OPTIONS <optimization>speed : -O3 ;
 flags pathscale.compile OPTIONS <optimization>space : -Os ;
 flags pathscale.compile OPTIONS <address-model>32 : -m32 ;
 flags pathscale.compile OPTIONS <address-model>64 : -m64 ;
 
-flags pathscale.compile OPTIONS <warnings>off : -woffall ;
+flags pathscale.compile OPTIONS <warnings>off : -woffall -Wno-uninitialized ;
 flags pathscale.compile OPTIONS <warnings>on : -Wall ;
 flags pathscale.compile OPTIONS <warnings>all : -Wall ;
 
