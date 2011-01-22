@@ -57,7 +57,7 @@ generators.register-fortran-compiler pgi.compile.fortran : FORTRAN : OBJ : <tool
 
 # Declare flags and actions for compilation
 flags pgi.compile OPTIONS : -Kieee ;
-flags pgi.compile OPTIONS <link>shared : -fpic ;
+flags pgi.compile OPTIONS <link>shared : -fpic -fPIC ;
 flags pgi.compile OPTIONS <debug-symbols>on : -gopt ;
 flags pgi.compile OPTIONS <profiling>on : -xprofile=tcov ;
 flags pgi.compile OPTIONS <optimization>speed : -fast -Mx,8,0x10000000 ;
