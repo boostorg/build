@@ -97,7 +97,7 @@ flags pgi.link OPTIONS <debug-symbols>on : -gopt ;
 flags pgi.link OPTIONS <debug-symbols>off : -s ;
 flags pgi.link OPTIONS <profiling>on : -xprofile=tcov ;
 flags pgi.link OPTIONS <linkflags> ;
-flags pgi.link OPTIONS <link>shared : -fpic ;
+flags pgi.link OPTIONS <link>shared : -fpic -fPIC ;
 flags pgi.link LINKPATH <library-path> ;
 flags pgi.link FINDLIBS-ST <find-static-library> ;
 flags pgi.link FINDLIBS-SA <find-shared-library> ;
