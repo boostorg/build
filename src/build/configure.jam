@@ -141,7 +141,8 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
         else 
         {           
             local x = [ PAD "    - $(what)" : $(.width) ] ;            
-            if [ UPDATE_NOW $(jam-targets) : $(.log-fd) : ignore-minus-n ] 
+            if [ UPDATE_NOW $(jam-targets) :
+                 $(.log-fd) : ignore-minus-n : ignore-minus-q ] 
             {
                 .$(what)-supported.$(ps) = yes ;
                 result = true ;
