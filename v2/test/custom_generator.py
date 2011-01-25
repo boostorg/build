@@ -36,6 +36,23 @@ rule resource-compile ( targets * : sources * : properties * )
 generators.register-standard rcc.resource-compile : RCC : OBJ ;
 """)
 
+t.write("rcc.py", """
+import b2.build.type as type
+import b2.build.generators as generators
+
+from b2.manager import get_manager
+
+# Use 'RCC' to avoid conflicts with definitions in the standard rc.jam and
+# msvc.jam
+type.register('RCC', ['rcc'])
+
+generators.register_standard("rcc.resource-compile", ["RCC"], ["OBJ"])
+
+get_manager().engine().register_action(
+    "rcc.resource-compile",
+    '@($(STDOUT):E=rc-object) > "$(<)"')
+""")
+
 t.write("jamfile.jam", """ 
 obj r : r.rcc ; 
 """)

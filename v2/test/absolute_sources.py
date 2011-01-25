@@ -52,6 +52,21 @@ local pwd = [ PWD ] ;
 alias a : $(pwd)/a.cpp ;
 """)
 
+t.write("standalone.py", """
+from b2.manager import get_manager
+
+# FIXME: this is ugly as death
+get_manager().projects().initialize(__name__)
+
+import os ;
+
+# This use of list as parameter is also ugly.
+project(['standalone'])
+
+pwd = os.getcwd()
+alias('a', [os.path.join(pwd, 'a.cpp')])
+""")
+
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
 

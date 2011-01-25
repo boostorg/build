@@ -8,9 +8,7 @@ import BoostBuild
 
 t = BoostBuild.Tester()
 
-t.write("jamroot.jam", "")
-
-t.write("jamfile.jam", """
+t.write("jamroot.jam", """
 exe hello : hello.cpp ;
 exe hello2 : hello.cpp ;
 explicit hello2 ;

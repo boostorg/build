@@ -303,3 +303,37 @@ void lol_print( LOL * lol )
         list_print( lol->list[ i ] );
     }
 }
+
+#ifdef HAVE_PYTHON
+
+PyObject *list_to_python(LIST *l)
+{
+    PyObject *result = PyList_New(0);
+
+    for (; l; l = l->next)
+    {
+        PyObject* s = PyString_FromString(l->string);
+        PyList_Append(result, s);
+        Py_DECREF(s);
+    }
+
+    return result;
+}
+
+LIST *list_from_python(PyObject *l)
+{
+    LIST * result = 0;
+
+    Py_ssize_t i, n;
+    n = PySequence_Size(l);
+    for (i = 0; i < n; ++i)
+    {
+        PyObject *v = PySequence_GetItem(l, i);        
+        result = list_new (result, newstr (PyString_AsString(v)));
+        Py_DECREF(v);
+    }
+
+    return result;
+}
+
+#endif

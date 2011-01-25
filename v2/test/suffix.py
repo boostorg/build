@@ -47,6 +47,23 @@ actions second
 }
 """)
 
+t.write("suffixes.py", """
+import b2.build.type as type
+import b2.build.generators as generators
+import b2.tools.common as common
+
+from b2.manager import get_manager
+
+type.register("First", ["first"])
+type.register("Second", [""], "First")
+
+generators.register_standard("suffixes.second", ["CPP"], ["Second"])
+
+get_manager().engine().register_action("suffixes.second",
+                                       "%s $(<)" % common.file_creation_command())
+
+""")
+
 t.write("jamroot.jam", """
 import suffixes ;
 """)

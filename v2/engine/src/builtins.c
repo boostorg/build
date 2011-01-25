@@ -26,6 +26,8 @@
 #include "timestamp.h"
 #include "md5.h"
 #include <ctype.h>
+# include <sys/types.h>
+# include <sys/wait.h>
 
 #if defined(USE_EXECUNIX)
 # include <sys/types.h>
@@ -392,6 +394,11 @@ void load_builtins()
           char * args[] = { "targets", "*", 0 };
           bind_builtin( "PRECIOUS",
                         builtin_precious, 0, args );
+      }
+
+      {
+          char * args [] = { 0 };
+          bind_builtin( "SELF_PATH", builtin_self_path, 0, args );
       }
 
       /* Initialize builtin modules. */
@@ -1346,6 +1353,8 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     {
         original_noexec = globs.noexec;
         globs.noexec = 0;
+        original_quitquick = globs.quitquick;
+        globs.quitquick = 0;
     }
 
     if (continue_)
@@ -1364,6 +1373,7 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     if (force)
     {
         globs.noexec = original_noexec;
+        globs.quitquick = original_quitquick;
     }
 
     if (continue_)
@@ -1733,6 +1743,22 @@ LIST *builtin_precious( PARSE *parse, FRAME *frame )
     return L0;
 }
 
+LIST *builtin_self_path( PARSE *parse, FRAME *frame )
+{
+    extern char *saved_argv0;
+    char *p = executable_path (saved_argv0);
+    if (p)
+    {
+        LIST* result = list_new (0, newstr (p));
+        free(p);
+        return result;
+    }
+    else
+    {
+        return L0;
+    }
+}
+
 
 #ifdef HAVE_PYTHON
 
@@ -1928,8 +1954,12 @@ PyObject* bjam_call( PyObject * self, PyObject * args )
 
 
 /*
- * Accepts three arguments: module name, rule name and Python callable. Creates
- * a bjam rule with the specified name in the specified module, which will
+ * Accepts four arguments: 
+ * - module name
+ * - rule name,
+ * - Python callable. 
+ * - (optional) bjam language function signature.
+ * Creates a bjam rule with the specified name in the specified module, which will
  * invoke the Python callable.
  */
 
@@ -1938,10 +1968,12 @@ PyObject * bjam_import_rule( PyObject * self, PyObject * args )
     char     * module;
     char     * rule;
     PyObject * func;
+    PyObject * bjam_signature = NULL;
     module_t * m;
     RULE     * r;
 
-    if ( !PyArg_ParseTuple( args, "ssO:import_rule", &module, &rule, &func ) )
+    if ( !PyArg_ParseTuple( args, "ssO|O:import_rule", 
+                            &module, &rule, &func, &bjam_signature ) )
         return NULL;
 
     if ( !PyCallable_Check( func ) )
@@ -1958,6 +1990,22 @@ PyObject * bjam_import_rule( PyObject * self, PyObject * args )
     Py_INCREF( func );
 
     r->python_function = func;
+    r->arguments = 0;
+
+    if (bjam_signature)
+    {
+        argument_list * arg_list = args_new();
+        Py_ssize_t i;
+
+        Py_ssize_t s = PySequence_Size (bjam_signature);
+        for (i = 0; i < s; ++i)
+        {
+            PyObject* v = PySequence_GetItem (bjam_signature, i);
+            lol_add(arg_list->data, list_from_python (v));
+            Py_DECREF(v);
+        }
+        r->arguments = arg_list;
+    }
 
     Py_INCREF( Py_None );
     return Py_None;
@@ -2061,6 +2109,13 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
     return result;
 }
 
+PyObject * bjam_caller( PyObject * self, PyObject * args )
+{
+    PyObject *result = PyString_FromString(
+        frame_before_python_call->prev->module->name);
+    return result;
+}
+
 #endif  /* #ifdef HAVE_PYTHON */
 
 
@@ -2142,6 +2197,14 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
 #endif
 
 
+static char * rtrim(char *s)
+{
+    char *p = s;
+    while(*p) ++p;
+    for(--p; p >= s && isspace(*p); *p-- = 0);
+    return s;
+}
+
 LIST * builtin_shell( PARSE * parse, FRAME * frame )
 {
     LIST   * command = lol_get( frame->args, 0 );
@@ -2153,6 +2216,7 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
     int      exit_status = -1;
     int      exit_status_opt = 0;
     int      no_output_opt = 0;
+    int      strip_eol_opt = 0;
 
     /* Process the variable args options. */
     {
@@ -2167,6 +2231,10 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
             else if ( strcmp( "no-output", arg->string ) == 0 )
             {
                 no_output_opt = 1;
+            }
+            else if ( strcmp("strip-eol", arg->string) == 0 )
+            {
+                strip_eol_opt = 1;
             }
             arg = lol_get( frame->args, ++a );
         }
@@ -2189,6 +2257,8 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
         buffer[ret] = 0;
         if ( !no_output_opt )
         {
+            if ( strip_eol_opt )
+                rtrim(buffer);
             string_append( &s, buffer );
         }
     }
@@ -2202,6 +2272,10 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
     /* The command exit result next. */
     if ( exit_status_opt )
     {
+        if ( WIFEXITED(exit_status) )
+            exit_status = WEXITSTATUS(exit_status);
+        else
+            exit_status = -1;
         sprintf( buffer, "%d", exit_status );
         result = list_new( result, newstr( buffer ) );
     }

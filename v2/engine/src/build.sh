@@ -29,8 +29,8 @@ error_exit ()
     echo "###     ./build.sh gcc"
     echo "###"
     echo "### Toolsets supported by this script are:"
-    echo "###     acc, como, darwin, gcc, intel-linux, kcc, kylix, mipspro,"
-    echo "###     mingw(msys), pathscale, pgi, qcc, sun, sunpro, tru64cxx, vacpp"
+    echo "###     acc, como, darwin, gcc, intel-darwin, intel-linux, kcc, kylix,"
+    echo "###     mipspro, mingw(msys), pathscale, pgi, qcc, sun, sunpro, tru64cxx, vacpp"
     echo "###"
     echo "### A special toolset; cc, is available which is used as a fallback"
     echo "### when a more specific toolset is not found and the cc command is"
@@ -136,6 +136,10 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_CC=cc
     ;;
 
+    intel-darwin)
+    BOOST_JAM_CC=icc
+    ;;
+
     intel-linux)
     if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/cc/9.0/
@@ -202,6 +206,11 @@ case $BOOST_JAM_TOOLSET in
         export PATH
     fi
     BOOST_JAM_CC=cc
+    ;;
+
+    clang*)
+    BOOST_JAM_CC="clang -Wno-unused -Wno-format"
+    BOOST_JAM_TOOLSET=clang
     ;;
 
     tru64cxx)

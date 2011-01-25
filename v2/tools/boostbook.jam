@@ -408,7 +408,8 @@ rule xml-catalog ( )
         root-project = [ $(root-project).project-module ] ;
         while
             [ project.attribute $(root-project) parent-module ] &&
-            [ project.attribute $(root-project) parent-module ] != user-config
+            [ project.attribute $(root-project) parent-module ] != user-config &&
+            [ project.attribute $(root-project) parent-module ] != project-config
         {
             root-project = [ project.attribute $(root-project) parent-module ] ;
         }

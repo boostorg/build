@@ -36,6 +36,5 @@
 
   <!-- Appendicies -->
 <!--  <xi:include href="architecture.xml"/> -->
-  <xi:include href="v1_vs_v2.xml"/>
 
 </part>

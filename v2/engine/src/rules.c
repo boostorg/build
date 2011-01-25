@@ -421,6 +421,7 @@ SETTINGS * addsettings( SETTINGS * head, int flag, char * symbol, LIST * value )
         v->symbol = newstr( symbol );
         v->value = value;
         v->next = head;
+        v->multiple = 0;
         head = v;
     }
     else if ( flag == VAR_APPEND )

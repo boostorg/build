@@ -287,7 +287,6 @@ flags('gcc.compile', 'OPTIONS', ['<rtti>off'], ['-fno-rtti'])
 # In that case we'll just add another parameter to 'init' and move this login
 # inside 'init'.
 if not os_name () in ['CYGWIN', 'NT']:
-    print "osname:", os_name()
     # This logic will add -fPIC for all compilations:
     #
     # lib a : a.cpp b ;
@@ -379,7 +378,7 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
         property while creating or using shared library, since it's not supported by
         gcc/libc.
     """
-    def run(self, project, name, prop_set, sources):
+    def run(self, project, name, ps, sources):
         # TODO: Replace this with the use of a target-os property.
 
         no_static_link = False
@@ -393,10 +392,9 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
 ##            }
 ##        }
 
-        properties = prop_set.raw()
         reason = None
-        if no_static_link and '<runtime-link>static' in properties:
-            if '<link>shared' in properties:
+        if no_static_link and ps.get('runtime-link') == 'static':
+            if ps.get('link') == 'shared':
                 reason = "On gcc, DLL can't be build with '<runtime-link>static'."
             elif type.is_derived(self.target_types[0], 'EXE'):
                 for s in sources:
@@ -412,7 +410,7 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
             return
         else:
             generated_targets = unix.UnixLinkingGenerator.run(self, project,
-                name, prop_set, sources)
+                name, ps, sources)
             return generated_targets
 
 if on_windows():
@@ -626,7 +624,7 @@ def gcc_archive(targets, sources, properties):
     engine.set_target_variable('LOCATE', clean, bjam.call('get-target-variable', targets, 'LOCATE'))
     engine.add_dependency(clean, sources)
     engine.add_dependency(targets, clean)
-    engine.set_update_action('common.RmTemps', clean, targets, None)
+    engine.set_update_action('common.RmTemps', clean, targets)
 
 # Declare action for creating static libraries.
 # The letter 'r' means to add files to the archive with replacement. Since we
@@ -643,6 +641,8 @@ def gcc_link_dll(targets, sources, properties):
     engine = get_manager().engine()
     engine.set_target_variable(targets, 'SPACE', ' ')
     engine.set_target_variable(targets, 'JAM_SEMAPHORE', '<s>gcc-link-semaphore')
+    engine.set_target_variable(targets, "HAVE_SONAME", HAVE_SONAME)
+    engine.set_target_variable(targets, "SONAME_OPTION", SONAME_OPTION)
 
 engine.register_action(
     'gcc.link.dll',

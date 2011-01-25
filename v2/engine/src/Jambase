@@ -128,9 +128,13 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
     # Boost.Build files.
 
     local search-path = $(BOOST_BUILD_PATH) $(BOOST_ROOT) ;
+    local self = [ SELF_PATH ] ;
+    local boost-build-relative = ../../share/boost-build ;
+    local self-based-path = [ NORMALIZE_PATH $(boost-build-relative:R=$(self)) ] ;
 
     local boost-build-files =
         [ find-to-root [ PWD ] : boost-build.jam ]
+        [ GLOB $(self-based-path) : boost-build.jam ]
         # Another temporary measure so Jam works with Boost.Build v1.
         [ GLOB $(search-path) : boost-build.jam ] ;
 
@@ -152,6 +156,7 @@ if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
         }
 
         ECHO "Attempted search from" [ PWD ] "up to the root" ;
+        ECHO "at" $(self-based-path) ;
         ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;
         EXIT "Please consult the documentation at 'http://www.boost.org'." ;
     }

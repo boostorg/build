@@ -46,9 +46,6 @@ t.write("jamfile.jam", """
 import path ;
 import project ;
 
-local here = [ project.attribute $(__name__) location ] ;
-here = [ path.root $(here) [ path.pwd ] ] ;
-
 exe main : main.cpp helper ;
 lib helper : helper.cpp test_lib ;
 lib test_lib : : <name>test_lib <search>lib ;
@@ -81,9 +78,6 @@ import project ;
 import testing ;
 
 project : requirements <hardcode-dll-paths>false ;
-
-local here = [ project.attribute $(__name__) location ] ;
-here = [ path.root $(here) [ path.pwd ] ] ;
 
 unit-test main : main.cpp helper ;
 lib helper : helper.cpp test_lib ;

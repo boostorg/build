@@ -39,10 +39,8 @@
   <appendix id="bbv2.jam">
     <title>Boost.Jam Documentation</title>
     <xi:include href="jam_docs.xml" parse="xml" 
-	xpointer="xpointer(id('jam.intro')|id('jam.intro')/following-sibling::*)"/>
+	xpointer="xpointer(id('jam.building')|id('jam.building')/following-sibling::*)"/>
   </appendix>    
-
-  <xi:include href="v1_vs_v2.xml"/>
   
   <index/>
 

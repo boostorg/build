@@ -534,8 +534,15 @@ LIST * compile_rule( PARSE * parse, FRAME * frame )
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
     inner->procedure = parse;
-    for ( p = parse->left; p; p = p->left )
-        lol_add( inner->args, parse_evaluate( p->right, frame ) );
+    /* Special-case LOL of length 1 where the first list is totally empty.
+       This is created when calling functions with no parameters, due to
+       the way jam grammar is written. This is OK when one jam function
+       calls another, but really not good when Jam function calls Python.  */
+    if ( parse->left->left == NULL && parse->left->right->func == compile_null)
+        ;
+    else
+        for ( p = parse->left; p; p = p->left )
+            lol_add( inner->args, parse_evaluate( p->right, frame ) );
 
     /* And invoke the rule. */
     result = evaluate_rule( parse->string, inner );
@@ -707,6 +714,7 @@ collect_arguments( RULE* rule, FRAME* frame )
                     LIST* value = 0;
                     char modifier;
                     LIST* arg_name = formal; /* hold the argument name for type checking */
+                    int multiple = 0;
 
                     /* Stop now if a variable number of arguments are specified */
                     if ( name[0] == '*' && name[1] == 0 )
@@ -722,6 +730,7 @@ collect_arguments( RULE* rule, FRAME* frame )
                     case '+':
                     case '*':
                         value = list_copy( 0, actual );
+                        multiple = 1;
                         actual = 0;
                         /* skip an extra element for the modifier */
                         formal = formal->next;
@@ -738,7 +747,8 @@ collect_arguments( RULE* rule, FRAME* frame )
                         }
                     }
 
-                    locals = addsettings( locals, VAR_SET, name, value );
+                    locals = addsettings(locals, VAR_SET, name, value);
+                    locals->multiple = multiple;
                     type_check( type_name, value, frame, rule, arg_name );
                     type_name = 0;
                 }
@@ -760,32 +770,101 @@ enter_rule( char *rulename, module_t *target_module );
 
 static int python_instance_number = 0;
 
+
+/* Given a Python object, return a string to use in Jam
+   code instead of said object.
+   If the object is string, use the string value
+   If the object implemenets __jam_repr__ method, use that.
+   Otherwise return 0.
+
+   The result value is newstr-ed.  */
+char *python_to_string(PyObject* value)
+{
+    if (PyString_Check(value))
+    {
+        return newstr(PyString_AsString(value));
+    }
+    else
+    {
+        /* See if this is an instance that defines special __jam_repr__
+           method. */
+        if (PyInstance_Check(value)
+            && PyObject_HasAttrString(value, "__jam_repr__"))
+        {
+            PyObject* repr = PyObject_GetAttrString(value, "__jam_repr__");
+            if (repr)
+            {
+                PyObject* arguments2 = PyTuple_New(0);
+                PyObject* value2 = PyObject_Call(repr, arguments2, 0);
+                Py_DECREF(repr);
+                Py_DECREF(arguments2);
+                if (PyString_Check(value2))
+                {
+                    return newstr(PyString_AsString(value2));
+                }
+                Py_DECREF(value2);
+            }
+        }
+        return 0;
+    }
+}
+
 static LIST*
 call_python_function(RULE* r, FRAME* frame)
 {
     LIST * result = 0;
-    PyObject * arguments = PyTuple_New( frame->args->count );
+    PyObject * arguments = 0;
+    PyObject * kw = NULL;
     int i ;
     PyObject * py_result;
 
-    for ( i = 0; i < frame->args->count; ++i )
+    if (r->arguments)
     {
-        PyObject * arg = PyList_New(0);
-        LIST* l = lol_get( frame->args, i);
+        SETTINGS * args;
 
-        for ( ; l; l = l->next )
+        arguments = PyTuple_New(0);
+        kw = PyDict_New();
+
+        for (args = collect_arguments(r, frame); args; args = args->next)
         {
-            PyObject * v = PyString_FromString(l->string);
-            /* Steals reference to 'v' */
-            PyList_Append( arg, v );
+            PyObject *key = PyString_FromString(args->symbol);
+            PyObject *value = 0;
+            if (args->multiple)
+                value = list_to_python(args->value);
+            else {
+                if (args->value)
+                    value = PyString_FromString(args->value->string);
+            }
+
+            if (value)
+                PyDict_SetItem(kw, key, value);
+            Py_DECREF(key);
+            Py_XDECREF(value);
         }
-        /* Steals reference to 'arg' */
-        PyTuple_SetItem( arguments, i, arg );
+    }
+    else
+    {
+        arguments = PyTuple_New( frame->args->count );
+        for ( i = 0; i < frame->args->count; ++i )
+        {
+            PyObject * arg = PyList_New(0);
+            LIST* l = lol_get( frame->args, i);
+            
+            for ( ; l; l = l->next )
+            {
+                PyObject * v = PyString_FromString(l->string);
+                PyList_Append( arg, v );
+                Py_DECREF(v);
+            }
+            /* Steals reference to 'arg' */
+            PyTuple_SetItem( arguments, i, arg );
+        }
     }
 
     frame_before_python_call = frame;
-    py_result = PyObject_CallObject( r->python_function, arguments );
-    Py_DECREF( arguments );
+    py_result = PyObject_Call( r->python_function, arguments, kw );
+    Py_DECREF(arguments);
+    Py_XDECREF(kw);
     if ( py_result != NULL )
     {
         if ( PyList_Check( py_result ) )
@@ -795,54 +874,31 @@ call_python_function(RULE* r, FRAME* frame)
             for ( i = 0; i < size; ++i )
             {
                 PyObject * item = PyList_GetItem( py_result, i );
-                if ( PyString_Check( item ) )
-                {
-                    result = list_new( result,
-                                      newstr( PyString_AsString( item ) ) );
-                }
-                else
-                {
+                char *s = python_to_string (item);
+                if (!s) {
                     fprintf( stderr, "Non-string object returned by Python call.\n" );
+                } else {
+                    result = list_new (result, s);
                 }
             }
-        }
-        else if ( PyInstance_Check( py_result ) )
-        {
-            static char instance_name[1000];
-            static char imported_method_name[1000];
-            module_t * m;
-            PyObject * method;
-            PyObject * method_name = PyString_FromString("foo");
-            RULE * r;
-
-            fprintf(stderr, "Got instance!\n");
-
-            snprintf(instance_name, 1000,
-                     "pyinstance%d", python_instance_number);
-            snprintf(imported_method_name, 1000,
-                     "pyinstance%d.foo", python_instance_number);
-            ++python_instance_number;
-
-            m = bindmodule(instance_name);
-
-            /* This is expected to get bound method. */
-            method = PyObject_GetAttr(py_result, method_name);
-
-            r = bindrule( imported_method_name, root_module() );
-
-            r->python_function = method;
-
-            result = list_new(0, newstr(instance_name));
-
-            Py_DECREF( method_name );
         }
         else if ( py_result == Py_None )
         {
             result = L0;
         }
-        else
+        else 
         {
-            fprintf(stderr, "Non-list object returned by Python call\n");
+            char *s = python_to_string(py_result);
+            if (s)
+                result = list_new(0, s);
+            else 
+                /* We have tried all we could.  Return empty list. There are
+                   cases, e.g.  feature.feature function that should return
+                   value for the benefit of Python code and which also can be
+                   called by Jam code, where no sensible value can be
+                   returned. We cannot even emit a warning, since there will
+                   be a pile of them.  */                
+                result = L0;                    
         }
 
         Py_DECREF( py_result );
