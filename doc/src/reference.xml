@@ -864,6 +864,7 @@ using gcc : &toolset_ops; ;</programlisting>
           C++</ulink> command-line tools on Microsoft Windows. The supported
           products and versions of command line tools are listed below:</para>
           <itemizedlist>
+            <listitem><para>Visual Studio 2010&#x2014;10.0</para></listitem>
             <listitem><para>Visual Studio 2008&#x2014;9.0</para></listitem>
             <listitem><para>Visual Studio 2005&#x2014;8.0</para></listitem>
             <listitem><para>Visual Studio .NET 2003&#x2014;7.1</para></listitem>
