@@ -26,8 +26,6 @@
 #include "timestamp.h"
 #include "md5.h"
 #include <ctype.h>
-# include <sys/types.h>
-# include <sys/wait.h>
 
 #if defined(USE_EXECUNIX)
 # include <sys/types.h>
