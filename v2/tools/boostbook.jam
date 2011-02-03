@@ -7,6 +7,23 @@
 
 #  This module defines rules to handle generation of documentation
 #  from BoostBook sources.
+#
+#  The type of output is controlled by the <format> feature which can
+#  have the following values::
+#
+#   * html: Generates html documention.  This is the default.
+#   * xhtml: Generates xhtml documentation
+#   * htmlhelp: Generates html help output.
+#   * onehtml: Generates a single html page.
+#   * man: Generates man pages.
+#   * pdf: Generates pdf documentation.
+#   * ps: Generates postscript output.
+#   * docbook: Generates docbook XML.
+#   * fo: Generates XSL formating objects.
+#   * tests: Extracts test cases from the boostbook XML.
+#
+#  format is an implicit feature, so typing pdf on the command
+#  line (for example) is a short-cut for format=pdf.
 
 import "class" : new ;
 import common ;
@@ -55,20 +72,21 @@ type.register TESTS : tests ;
 type.register BOOSTBOOK_MAIN ;
 
 
-# Initialize BoostBook support. The parameters are:
-#   docbook-xsl-dir: The DocBook XSL stylesheet directory. If not provided,
-#     we use DOCBOOK_XSL_DIR from the environment (if available) or look in
-#     standard locations. Otherwise, we let the XML processor load the
-#     stylesheets remotely.
-#
-#   docbook-dtd-dir: The DocBook DTD directory. If not provided, we use
-#     DOCBOOK_DTD_DIR From the environment (if available) or look in
-#     standard locations.  Otherwise, we let the XML processor load the
-#     DTD remotely.
-#
-#   boost-book-dir: The BoostBook directory with the DTD and XSL subdirs.
-#
-rule init ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
+# Initialize BoostBook support.
+rule init (
+      docbook-xsl-dir ? # The DocBook XSL stylesheet directory. If not
+                        # provided, we use DOCBOOK_XSL_DIR from the environment
+                        # (if available) or look in standard locations.
+                        # Otherwise, we let the XML processor load the
+                        # stylesheets remotely.
+            
+    : docbook-dtd-dir ? # The DocBook DTD directory. If not provided, we use
+                        # DOCBOOK_DTD_DIR From the environment (if available) or
+                        # look in standard locations.  Otherwise, we let the XML
+                        # processor load the DTD remotely.
+
+    : boostbook-dir ?   # The BoostBook directory with the DTD and XSL subdirs.
+)
 {
 
   if ! $(.initialized) 
@@ -527,6 +545,7 @@ class boostbook-generator : generator
 
 generators.register [ new boostbook-generator boostbook.main : : BOOSTBOOK_MAIN ] ;
 
+# Creates a boostbook target.
 rule boostbook ( target-name : sources * : requirements * : default-build * )
 { 
   local project = [ project.current ] ;
@@ -577,9 +596,6 @@ class xinclude-scanner : scanner
 scanner.register xinclude-scanner : xsl:path ;
 type.set-scanner XML : xinclude-scanner ;
 
-#############################################################################
-# Testsuite handling
-#############################################################################
 rule boostbook-to-tests ( target : source : properties * )
 {
   local boost_root = [ modules.peek : BOOST_ROOT ] ;
