@@ -1414,6 +1414,311 @@ using stlport : <optional><replaceable>version</replaceable></optional> : <repla
 
       </section>
 
+      <section>
+        <title>Documentation tools</title>
+
+        <para>Boost.Build support for the Boost documentation tools is
+        documented below.
+        </para>
+
+        <section id="bbv2.reference.tools.doc.xsltproc">
+          <title>xsltproc</title>
+          <indexterm><primary>xsltproc</primary></indexterm>
+
+          <para>To use xsltproc, you first need to configure it using the following syntax:</para>
+          <programlisting>
+using xsltproc : <optional><replaceable>xsltproc</replaceable></optional> ;
+</programlisting>
+          <para>
+          Where <replaceable>xsltproc</replaceable> is the xsltproc executable.
+          If <replaceable>xsltproc</replaceable> is not specified, and the
+          variable XSLTPROC is set, the value of XSLTPROC will be used.
+          Otherwise, xsltproc will be searched for in PATH.
+          </para>
+
+          
+          &option_list_intro;
+          <variablelist>
+
+            <varlistentry>
+              <indexterm><primary>xsl:param</primary></indexterm>
+              <term><literal>xsl:param</literal></term>
+              <listitem>
+                <para>Values should have the form
+                <replaceable>name</replaceable>=<replaceable>value</replaceable></para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <indexterm><primary>xsl:path</primary></indexterm>
+              <term><literal>xsl:path</literal></term>
+              <listitem>
+                <para>Sets an additional search path for xi:include elements.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <indexterm><primary>catalog</primary></indexterm>
+              <term><literal>catalog</literal></term>
+              <listitem>
+                <para>A catalog file used to rewrite remote URL's to a local copy.</para>
+              </listitem>
+            </varlistentry>
+
+          </variablelist>
+
+          <para>The xsltproc module provides the following rules.  Note that
+          these operate on jam targets and are intended to be used by another
+          toolset, such as boostbook, rather than directly by users.
+          </para>
+          <variablelist>
+
+            <varlistentry>
+              <indexterm><primary>xslt</primary></indexterm>
+              <term><literal>xslt</literal></term>
+              <listitem>
+                <programlisting>
+rule xslt ( target : source stylesheet : properties * )
+</programlisting>
+                <para>Runs xsltproc to create a single output file.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <indexterm><primary>xslt-dir</primary></indexterm>
+              <term><literal>xslt-dir</literal></term>
+              <listitem>
+                <programlisting>
+rule xslt-dir ( target : source stylesheet : properties * : dirname )
+</programlisting>
+                <para>Runs xsltproc to create multiple outputs in a directory.
+                <literal>dirname</literal> is unused, but exists for
+                historical reasons.  The output directory is determined from the
+                target.
+                </para>
+              </listitem>
+            </varlistentry>
+
+          </variablelist>
+
+        </section>
+
+        <section id="bbv2.reference.tools.doc.boostbook">
+          <title>boostbook</title>
+          <indexterm><primary>boostbook</primary><secondary>module</secondary></indexterm>
+
+          <para>To use boostbook, you first need to configure it using the following syntax:</para>
+          <programlisting>
+using boostbook : <optional><replaceable>docbook-xsl-dir</replaceable></optional> : <optional><replaceable>docbook-dtd-dir</replaceable></optional> : <optional><replaceable>boostbook-dir</replaceable></optional> ;
+</programlisting>
+          <para>
+          <replaceable>docbook-xsl-dir</replaceable> is the DocBook XSL stylesheet
+          directory. If not provided, we use DOCBOOK_XSL_DIR from the environment
+          (if available) or look in standard locations.  Otherwise, we let the
+          XML processor load the stylesheets remotely.
+          </para>
+
+          <para>
+          <replaceable>docbook-dtd-dir</replaceable> is the DocBook DTD directory.
+          If not provided, we use DOCBOOK_DTD_DIR From the environment (if
+          available) or look in standard locations.  Otherwise, we let the XML
+          processor load the DTD remotely.
+          </para>
+
+          <para>
+          <replaceable>boostbook-dir</replaceable> is the BoostBook directory
+          with the DTD and XSL subdirs.
+          </para>
+
+          <para>The boostbook module depends on xsltproc.  For pdf or ps output,
+          it also depends on fop.
+          </para>
+          
+          &option_list_intro;
+          <variablelist>
+
+            <varlistentry>
+              <indexterm><primary>format</primary></indexterm>
+              <indexterm><primary>html</primary></indexterm>
+              <indexterm><primary>xhtml</primary></indexterm>
+              <indexterm><primary>htmlhelp</primary></indexterm>
+              <indexterm><primary>onehtml</primary></indexterm>
+              <indexterm><primary>man</primary></indexterm>
+              <indexterm><primary>pdf</primary></indexterm>
+              <indexterm><primary>ps</primary></indexterm>
+              <indexterm><primary>docbook</primary></indexterm>
+              <indexterm><primary>fo</primary></indexterm>
+              <indexterm><primary>tests</primary></indexterm>
+              <term><literal>format</literal></term>
+              <listitem>
+                <para>
+                  <emphasis role="bold">Allowed values:</emphasis>
+                  <literal>html</literal>, <literal>xhtml</literal>,
+                  <literal>htmlhelp</literal>, <literal>onehtml</literal>,
+                  <literal>man</literal>, <literal>pdf</literal>,
+                  <literal>ps</literal>, <literal>docbook</literal>,
+                  <literal>fo</literal>, <literal>tests</literal>.
+                </para>
+
+
+                <para>The <literal>format</literal> feature determines the type
+                of output produced by the boostbook rule.</para>
+              </listitem>
+            </varlistentry>
+
+          </variablelist>
+
+          The boostbook module defines a rule for creating a target
+          following the common syntax.
+          <variablelist>
+
+            <varlistentry>
+              <indexterm><primary>boostbook</primary><secondary>rule</secondary></indexterm>
+              <term><literal>boostbook</literal></term>
+              <listitem>
+                <programlisting>
+rule boostbook ( target-name : sources * : requirements * : default-build * )
+</programlisting>
+                <para>Creates a boostbook target.</para>
+              </listitem>
+            </varlistentry>
+
+          </variablelist>
+
+        </section>
+
+        <section id="bbv2.reference.tools.doc.doxygen">
+          <title>doxygen</title>
+          <indexterm><primary>doxygen</primary></indexterm>
+
+          <para>To use doxygen, you first need to configure it using the following syntax:</para>
+          <programlisting>
+using doxygen : <optional><replaceable>name</replaceable></optional> ;
+</programlisting>
+          <para>
+          <replaceable>name</replaceable> is the doxygen command.
+          If it is not specified, it will be found in the PATH.
+          </para>
+
+          <para>The doxygen module depends on the boostbook module when
+          generating BoostBook XML.
+          </para>
+
+          &option_list_intro;
+          <variablelist>
+
+            <varlistentry>
+              <indexterm><primary>doxygen:param</primary></indexterm>
+              <term><literal>doxygen:param</literal></term>
+              <listitem>
+                <para>All the values of <literal>doxygen:param</literal>
+                 are added to the doxyfile.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <indexterm><primary>prefix</primary></indexterm>
+              <term><literal>prefix</literal></term>
+              <listitem>
+                <para>Specifies the common prefix of all headers
+                when generating BoostBook XML.  Everything before
+                this will be stripped off.
+                </para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <indexterm><primary>reftitle</primary></indexterm>
+              <term><literal>reftitle</literal></term>
+              <listitem>
+                <para>Specifies the title of the library-reference section,
+                when generating BoostBook XML.</para>
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <indexterm><primary>doxygen:xml-imagedir</primary></indexterm>
+              <term><literal>doxygen:xml-imagedir</literal></term>
+              <listitem>
+                <para>When generating BoostBook XML, specifies the
+                directory in which to place the images generated
+                from LaTex formulae.</para>
+                <warning><para>The path is interpreted relative to the
+                current working directory, not relative to the Jamfile.
+                This is necessary to match the behavior of BoostBook.
+                </para></warning>
+              </listitem>
+            </varlistentry>
+
+          </variablelist>
+
+          The doxygen module defines a rule for creating a target
+          following the common syntax.
+          <variablelist>
+
+            <varlistentry>
+              <indexterm><primary>doxygen</primary><secondary>rule</secondary></indexterm>
+              <term><literal>doxygen</literal></term>
+              <listitem>
+                <programlisting>
+rule doxygen ( target : sources * : requirements * : default-build * : usage-requirements * )
+</programlisting>
+                <para>Creates a doxygen target.  If the target name
+                ends with .html, then this will generate an html
+                directory.  Otherwise it will generate BoostBook XML.
+                </para>
+              </listitem>
+            </varlistentry>
+
+          </variablelist>
+
+        </section>
+
+        <section id="bbv2.reference.tools.doc.quickbook">
+          <title>quickbook</title>
+          <indexterm><primary>quickbook</primary></indexterm>
+
+          <para>The quickbook module provides a generator to convert from
+          Quickbook to BoostBook XML.</para>
+
+          <para>To use quickbook, you first need to configure it using the following syntax:</para>
+          <programlisting>
+using quickbook : <optional><replaceable>command</replaceable></optional> ;
+</programlisting>
+          <para>
+          <replaceable>command</replaceable> is the quickbook executable.
+          If it is not specified, Boost.Build will compile it from source
+          or search for it in PATH.
+          </para>
+
+        </section>
+
+        <section id="bbv2.reference.tools.doc.fop">
+          <title>fop</title>
+          <indexterm><primary>fop</primary></indexterm>
+
+          <para>The fop module provides generators to convert from
+          XSL formatting objects to Postscript and PDF.</para>
+
+          <para>To use fop, you first need to configure it using the following syntax:</para>
+          <programlisting>
+using fop : <optional><replaceable>fop-command</replaceable></optional> : <optional><replaceable>java-home</replaceable></optional> : <optional><replaceable>java</replaceable></optional> ;
+</programlisting>
+          <para>
+          <replaceable>fop-command</replaceable> is the command to run fop.
+          If it is not specified, Boost.Build will search for it in PATH and
+          FOP_HOME.
+          </para>
+          <para>
+          Either <replaceable>java-home</replaceable> or
+          <replaceable>java</replaceable>
+          can be used to specify where to find java.
+          </para>
+
+        </section>
+
+      </section>
+
     </section>
 
   <section id="bbv2.reference.buildprocess">
