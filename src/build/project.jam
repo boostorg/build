@@ -433,7 +433,8 @@ rule initialize (
 
     # Import rules common to all project modules from project-rules module,
     # defined at the end of this file.
-    modules.clone-rules project-rules $(module-name) ;
+    local rules = [ RULENAMES project-rules ] ;
+    IMPORT project-rules : $(rules) : $(module-name) : $(rules) ;
 
     local jamroot ;
 
@@ -881,15 +882,16 @@ module project-rules
         # expect the module to be found even though the directory is not in
         # BOOST_BUILD_PATH.
         local x = [ modules.peek : BOOST_BUILD_PATH ] ;
-        local caller = [ modules.binding $(__name__) ] ;
-        modules.poke : BOOST_BUILD_PATH : $(caller:D) $(x) ;
+        local caller = [ CALLER_MODULE ] ;
+        local caller-location = [ modules.binding $(caller) ] ;
+        modules.poke : BOOST_BUILD_PATH : $(caller-location:D) $(x) ;
         toolset.using $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
         modules.poke : BOOST_BUILD_PATH : $(x) ;
 
         # The above might have clobbered .current-project. Restore the correct
         # value.
         modules.poke project : .current-project
-            : [ project.target $(__name__) ] ;
+            : [ project.target $(caller) ] ;
     }
 
     import modules ;
@@ -913,7 +915,8 @@ module project-rules
         import path ;
         import project ;
 
-        local attributes = [ project.attributes $(__name__) ] ;
+        local caller = [ CALLER_MODULE ] ;
+        local attributes = [ project.attributes $(caller) ] ;
         if $(id)
         {
            $(attributes).set id : $(id) ;
@@ -991,7 +994,8 @@ module project-rules
     )
     {
         import project ;
-        local p = [ project.target $(__name__) ] ;
+        local caller = [ CALLER_MODULE ] ;
+        local p = [ project.target $(caller) ] ;
         $(p).add-constant $(name) : $(value) ;
     }
 
@@ -1005,20 +1009,26 @@ module project-rules
         )
     {
         import project ;
-        local p = [ project.target $(__name__) ] ;
+        local caller = [ CALLER_MODULE ] ;
+        local p = [ project.target $(caller) ] ;
         $(p).add-constant $(name) : $(value) : path ;
     }
 
     rule use-project ( id : where )
     {
+        import modules ;
         # See comment in 'load' for explanation.
-        .used-projects += $(id) $(where) ;
+        local caller = [ CALLER_MODULE ] ;
+        modules.poke $(caller) : .used-projects :
+            [ modules.peek $(caller) : .used-projects ]
+            $(id) $(where) ;
     }
 
     rule build-project ( dir )
     {
         import project ;
-        local attributes = [ project.attributes $(__name__) ] ;
+        local caller = [ CALLER_MODULE ] ;
+        local attributes = [ project.attributes $(caller) ] ;
 
         local now = [ $(attributes).get projects-to-build ] ;
         $(attributes).set projects-to-build : $(now) $(dir) ;
