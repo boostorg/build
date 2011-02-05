@@ -52,7 +52,7 @@
       <filename><replaceable>PREFIX</replaceable>/share/boost-build/examples/hello</filename>
       to a different directory, then change to that directory and run:
 <screen><filename><replaceable>PREFIX</replaceable>/bin/bjam</filename></screen>
-      A simple executable should be build.
+      A simple executable should be built.
     </para>
 
       <!--
