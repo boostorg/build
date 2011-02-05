@@ -15,6 +15,7 @@ boostbook userman : src/standalone.xml
      <implicit-dependency>jam_docs
      <dependency>jam_docs
      <xsl:param>boost.root=../../../../..
+     <xsl:param>boost.defaults=Boost
    ;
    
 xml jam_docs : bjam.qbk ;   
