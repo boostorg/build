@@ -1689,8 +1689,9 @@ using quickbook : <optional><replaceable>command</replaceable></optional> ;
 </programlisting>
           <para>
           <replaceable>command</replaceable> is the quickbook executable.
-          If it is not specified, Boost.Build will compile it from source
-          or search for it in PATH.
+          If it is not specified, Boost.Build will compile it from source.
+          If it is unable to find the source it will search for a quickbook
+          executable in PATH.
           </para>
 
         </section>
