@@ -93,6 +93,7 @@ rule init (
   {
     .initialized = true ;
     
+    check-boostbook-dir $(boostbook-dir) ;
     find-tools $(docbook-xsl-dir) : $(docbook-dtd-dir) : $(boostbook-dir) ;
 
     # Register generators only if we've were called via "using boostbook ; "
@@ -362,7 +363,6 @@ rule find-tools ( docbook-xsl-dir ? : docbook-dtd-dir ? : boostbook-dir ? )
   .boostbook-xsl-dir = $(boostbook-xsl-dir[1]) ;
   .boostbook-dtd-dir = $(boostbook-dtd-dir[1]) ;
 
-  check-boostbook-dir $(boostbook-dir) ;
   check-docbook-xsl-dir ;
   check-docbook-dtd-dir ;
   check-boostbook-xsl-dir ;
