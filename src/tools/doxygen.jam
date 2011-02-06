@@ -38,6 +38,7 @@ import common ;
 import modules ;
 import project ;
 import utility ;
+import errors ;
 
 
 # Use to specify extra configuration paramters. These get translated
@@ -95,60 +96,6 @@ rule init ( name ? )
     {
         .initialized = true ;
 
-        if ! $(name)
-        {
-            local doxygen-path ;
-
-            if [ os.name ] = NT
-            {
-                local ProgramFiles = [ modules.peek : ProgramFiles ] ;
-                if $(ProgramFiles)
-                {
-                    ProgramFiles = "$(ProgramFiles:J= )" ;
-                }
-                else
-                {
-                    ProgramFiles = "C:\\Program Files" ;
-                }
-
-                doxygen-path =
-                    [ GLOB
-                        [ modules.peek : PATH ]
-                        "$(ProgramFiles)\\doxygen\\bin"
-                        : doxygen\.exe ] ;
-            }
-            else
-            {
-                doxygen-path =
-                    [ GLOB
-                        [ modules.peek : PATH ]
-                        : doxygen ] ;
-            }
-
-            doxygen-path = $(doxygen-path[1]) ;
-
-            if $(doxygen-path)
-            {
-                .doxygen = $(doxygen-path) ;
-            }
-
-            .doxygen ?= doxygen ;
-        }
-        else
-        {
-            .doxygen = $(name) ;
-        }
-
-        if --debug-configuration in [ modules.peek : ARGV ]
-        {
-            ECHO "notice:" using doxygen ":" $(.doxygen) ;
-        }
-
-        if [ .is-cygwin ]
-        {
-            .is-cygwin = true ;
-        }
-
         .doxproc = [ modules.binding $(__name__) ] ;
         .doxproc = $(.doxproc:D)/doxproc.py ;
 
@@ -171,11 +118,71 @@ rule init ( name ? )
 
         IMPORT $(__name__) : doxygen : : doxygen ;
     }
+
+    if $(name)
+    {
+        modify-config ;
+        .doxygen = $(name) ;
+        check-doxygen ;
+    }
+
+    if ! $(.doxygen)
+    {
+        check-doxygen ;
+    }
 }
 
+rule freeze-config ( )
+{
+    if ! $(.initialized)
+    {
+        errors.user-error "doxygen must be initialized before it can be used." ;
+    }
+    if ! $(.config-frozen)
+    {
+        .config-frozen = true ;
+
+        if [ .is-cygwin ]
+        {
+            .is-cygwin = true ;
+        }
+    }
+}
+
+rule modify-config ( )
+{
+    if $(.config-frozen)
+    {
+        errors.user-error "Cannot change doxygen after it has been used." ;
+    }
+}
+
+rule check-doxygen ( )
+{
+    if --debug-configuration in [ modules.peek : ARGV ]
+    {
+        ECHO "notice:" using doxygen ":" $(.doxygen) ;
+    }
+    local extra-paths ;
+    if [ os.name ] = NT
+    {
+        local ProgramFiles = [ modules.peek : ProgramFiles ] ;
+        if $(ProgramFiles)
+        {
+            extra-paths = "$(ProgramFiles:J= )" ;
+        }
+        else
+        {
+            extra-paths = "C:\\Program Files" ;
+        }
+    }
+    .doxygen = [ common.get-invocation-command doxygen :
+                 doxygen : $(.doxygen) : $(extra-paths) ] ;
+}
 
 rule name ( )
 {
+    freeze-config ;
     return $(.doxygen) ;
 }
 
@@ -219,6 +226,7 @@ actions doxproc
 
 rule translate-path ( path )
 {
+    freeze-config ;
     if [ os.on-windows ]
     {
         if [ os.name ] = CYGWIN
@@ -311,6 +319,7 @@ rule headers-to-doxyfile ( target : sources * : properties * )
 #
 rule run ( target : source : properties * )
 {
+    freeze-config ;
     if <doxygen.rmdir>on in $(properties)
     {
         local output-dir =
@@ -602,6 +611,7 @@ targets.main-target-alternative
 #
 rule doxygen ( target : sources * : requirements * : default-build * : usage-requirements * )
 {
+    freeze-config ;
     local project = [ project.current ] ;
 
     if $(target:S) = .html
