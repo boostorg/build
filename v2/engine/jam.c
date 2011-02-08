@@ -217,7 +217,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 {
     int                     n;
     char                  * s;
-    struct option           optv[N_OPTS];
+    struct bjam_option      optv[N_OPTS];
     char            const * all = "all";
     int                     status;
     int                     arg_c = argc;
