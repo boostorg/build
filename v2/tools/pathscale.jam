@@ -161,7 +161,7 @@ actions link.dll bind LIBRARIES
 }
 
 # Declare action for creating static libraries
-actions piecemeal archive
-{
-    "$(CONFIG_COMMAND)" -ar -o "$(<)" "$(>)"
-}
+# actions piecemeal archive
+# {
+#     "$(CONFIG_COMMAND)" -ar -o "$(<)" "$(>)"
+# }
