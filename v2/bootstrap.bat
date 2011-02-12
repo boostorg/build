@@ -12,7 +12,7 @@ cd engine
 
 call .\build.bat %* > ..\..\bootstrap.log
 @ECHO OFF
-cd ..\..
+cd ..
 
 if exist ".\engine\bin.ntx86\bjam.exe" (
    copy .\engine\bin.ntx86\bjam.exe . > nul
