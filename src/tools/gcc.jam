@@ -575,8 +575,9 @@ actions compile.fortran
   "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
-rule compile.asm
+rule compile.asm ( targets * : sources * : properties * )
 {
+    setup-address-model $(targets) : $(sources) : $(properties) ;
     LANG on $(<) = "-x assembler-with-cpp" ;
 }
 
