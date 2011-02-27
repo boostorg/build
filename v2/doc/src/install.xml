@@ -22,7 +22,7 @@
       <listitem>
         <simpara>
           Run either <command>.\bootstrap.bat</command> (on Windows), or
-          <command>./bootstrap.sh</command> (on other operating systmes).
+          <command>./bootstrap.sh</command> (on other operating systems).
         </simpara>
       </listitem>
 
