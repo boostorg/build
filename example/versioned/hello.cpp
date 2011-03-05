@@ -7,6 +7,6 @@
 
 int main()
 {
-    std::cout << "Hello!\n";
+    std::cout << "Hello there!\n";
     return 1;
 }
