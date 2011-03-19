@@ -157,6 +157,11 @@ int file_is_file( char * filename )
     return S_ISREG( statbuf.st_mode ) ? 1 : 0;
 }
 
+int file_mkdir(char *pathname)
+{
+    return mkdir(pathname, 0766);
+}
+
 
 /*
  * file_archscan() - scan an archive for files.
