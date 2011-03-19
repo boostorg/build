@@ -30,6 +30,7 @@ int file_time( char *filename, time_t *time );
 
 void file_build1(PATHNAME *f, string* file) ;
 int file_is_file(char* filename);
+int file_mkdir(char *pathname);
 
 typedef struct file_info_t file_info_t ;
 struct file_info_t

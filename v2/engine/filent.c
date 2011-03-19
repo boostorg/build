@@ -32,6 +32,7 @@
 # include <io.h>
 # include <sys/stat.h>
 # include <ctype.h>
+# include <direct.h>
 
 /*
  * filent.c - scan directories and archives on NT
@@ -243,6 +244,10 @@ int file_is_file(char* filename)
     return ff->is_file;
 }
 
+int file_mkdir(char *pathname)
+{
+    return _mkdir(pathname);
+}
 
 /*
  * file_archscan() - scan an archive for files

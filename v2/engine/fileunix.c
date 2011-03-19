@@ -17,6 +17,7 @@
 # include "pathsys.h"
 # include "newstr.h"
 # include <stdio.h>
+# include <sys/stat.h>
 
 #if defined(sun) || defined(__sun) || defined(linux)
 # include <unistd.h> /* needed for read and close prototype */
@@ -253,6 +254,10 @@ int file_is_file(char* filename)
     return ff->is_file;
 }
 
+int file_mkdir(char* pathname)
+{
+    return mkdir(pathname, 0766);
+}
 
 /*
  * file_archscan() - scan an archive for files

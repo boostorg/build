@@ -399,6 +399,11 @@ void load_builtins()
           bind_builtin( "SELF_PATH", builtin_self_path, 0, args );
       }
 
+      {
+          char * args [] = { "path", 0 };
+          bind_builtin( "MAKEDIR", builtin_makedir, 0, args );
+      }
+
       /* Initialize builtin modules. */
       init_set();
       init_path();
@@ -1757,6 +1762,20 @@ LIST *builtin_self_path( PARSE *parse, FRAME *frame )
     }
 }
 
+LIST *builtin_makedir( PARSE *parse, FRAME *frame )
+{
+    LIST *path = lol_get(frame->args, 0);
+
+    if (file_mkdir(path->string) == 0)
+    {
+        LIST *result = list_new (0, newstr(path->string));
+        return result;
+    }
+    else
+    {
+        return L0;
+    }    
+}
 
 #ifdef HAVE_PYTHON
 
