@@ -254,6 +254,22 @@ local rule init-sdk ( condition * : root ? : version + : version-feature ? )
         # Then device variation options.
         switch $(version[1])
         {
+            case iphonesim* :
+            {
+                local N = $(version[2]) ;
+                if ! $(version[3]) { N += 00 ; }
+                else if [ regex.match (..) : $(version[3]) ] { N += $(version[3]) ; }
+                else { N += 0$(version[3]) ; }
+                if ! $(version[4]) { N += 00 ; }
+                else if [ regex.match (..) : $(version[4]) ] { N += $(version[4]) ; }
+                else { N += 0$(version[4]) ; }
+                N = $(N:J=) ;
+                flags darwin.compile OPTIONS <macosx-version-min>$(version-feature)
+                    : -D__IPHONE_OS_VERSION_MIN_REQUIRED=$(N) ;
+                flags darwin.link OPTIONS <macosx-version-min>$(version-feature)
+                    : -D__IPHONE_OS_VERSION_MIN_REQUIRED=$(N) ;
+            }
+            
             case iphone* :
             {
                 flags darwin.compile OPTIONS <macosx-version-min>$(version-feature)
@@ -482,7 +498,8 @@ flags darwin.link OPTIONS <optimization>space : -Wl,-dead_strip -no_dead_strip_i
 flags darwin.compile OPTIONS <link>shared : -dynamic ;
 
 # Misc options.
-flags darwin.compile OPTIONS : -no-cpp-precomp -gdwarf-2 ;
+flags darwin.compile OPTIONS : -no-cpp-precomp -gdwarf-2 -fexceptions ;
+#~ flags darwin.link OPTIONS : -fexceptions ;
 
 # Add the framework names to use.
 flags darwin.link FRAMEWORK <framework> ;
