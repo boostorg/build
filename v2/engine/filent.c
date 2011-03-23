@@ -199,7 +199,7 @@ void file_dirscan( char * dir, scanback func, void * closure )
                There will be no trailing slash in $(p), but there will be one
                in $(p2). But, that seems rather fragile.                
             */
-            d->name[2] = '0';
+            d->name[2] = 0;
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
         }
     }
