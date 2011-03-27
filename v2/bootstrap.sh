@@ -105,15 +105,16 @@ if test "x$BJAM" = x; then
   fi
   cd "$pwd"
   arch=`cd $my_dir/engine && ./bootstrap/jam0 -d0 -f build.jam --toolset=$TOOLSET --toolset-root= --show-locate-target && cd ..`
-  BJAM="$my_dir/engine/$arch/bjam"
+  BJAM="$my_dir/engine/$arch/b2"
   echo "engine/$arch/bjam"
   cp "$BJAM" .
+  cp "$my_dir/engine/$arch/bjam" .
 fi
 
 cat << EOF
 
 Bootstrapping is done. To build and install, run:
 
-    ./bjam install --prefix=<DIR>
+    ./b2 install --prefix=<DIR>
 
 EOF
