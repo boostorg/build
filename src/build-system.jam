@@ -543,14 +543,15 @@ local rule should-clean-project ( project )
 #
 ################################################################################
 
-{
+{    
     if --version in $(.argv)
     {
         version.print ;
         EXIT ;
     }
-
-
+    
+    version.verify-engine-version ;    
+    
     load-configuration-files ;
 
     local extra-properties ;
