@@ -694,6 +694,20 @@ if $(VMS) { actions [LINK] {
     COPY/REPLACE $(>) $(<)
 } }
 
+rule .copy
+{
+    DEPENDS all : $(<) ;
+    DEPENDS $(<) : $(>) ;
+    [COPY] $(<) : $(>) ;
+    .clean $(<) ;
+}
+
+# Will be redefined later.
+actions [COPY]
+{
+}
+
+
 rule .move
 {
     DEPENDS $(<) : $(>) ;
@@ -821,16 +835,15 @@ rule .jam
 {
     $(>).exe = [ .exe $(>) : $(jam.source) ] ;
     DEPENDS all : $($(>).exe) ;
-
-    if $(debug)
-    {
-        $(<).exe = $(<:S=$($(>).exe:S)) ;
-        LOCATE on $($(<).exe) = $(locate-target) ;
-        .link $($(<).exe) : $($(>).exe) ;
-        DEPENDS all : $($(<).exe) ;
-    }
+    
+    # Make a copy under the old name.
+    $(<).exe = $(<:S=$($(>).exe:S)) ;
+    LOCATE on $($(<).exe) = $(locate-target) ;
+    .copy $($(<).exe) : $($(>).exe) ;
+    DEPENDS all : $($(<).exe) ;
 }
-.jam jam : bjam ;
+.jam bjam : b2 ;
+
 
 # Scan sources for header dependencies.
 #	WARNING: Yes those are *REAL TABS* below. DO NOT CHANGE,
