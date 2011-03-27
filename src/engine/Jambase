@@ -118,7 +118,8 @@ rule boost-build ( dir ? )
 }
 
 
-if [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
+if [ MATCH .*(b2).* : $(ARGV[1]:BL) ] 
+  || [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
   || $(BOOST_ROOT)    # A temporary measure so Jam works with Boost.Build v1.
 {
     # We attempt to load "boost-build.jam" by searching from the current
