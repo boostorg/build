@@ -772,7 +772,6 @@ local rule should-clean-project ( project )
             # Prepare valid XML header and footer with some basic info.
             local nl = "
 " ;
-            local jam       = [ version.jam ] ;
             local os        = [ modules.peek : OS OSPLAT JAMUNAME ] "" ;
             local timestamp = [ modules.peek : JAMDATE ] ;
             local cwd       = [ PWD ] ;
@@ -781,7 +780,6 @@ local rule should-clean-project ( project )
             .header on $(xml-file) =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
                 "$(nl)<build format=\"1.0\" version=\"$(bb-version)\">"
-                "$(nl)  <jam version=\"$(jam:J=.)\" />"
                 "$(nl)  <os name=\"$(os[1])\" platform=\"$(os[2])\"><![CDATA[$(os[3-]:J= )]]></os>"
                 "$(nl)  <timestamp><![CDATA[$(timestamp)]]></timestamp>"
                 "$(nl)  <directory><![CDATA[$(cwd)]]></directory>"
