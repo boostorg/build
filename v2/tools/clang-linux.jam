@@ -91,13 +91,13 @@ toolset.flags clang-linux.compile OPTIONS <debug-symbols>on : -g ;
 toolset.flags clang-linux.compile OPTIONS <profiling>on : ;
 toolset.flags clang-linux.compile OPTIONS <rtti>off : -fno-rtti ;
 
-#rule compile.c++ ( targets * : sources * : properties * )
-#{
-#    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
-#    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
-#    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
+rule compile.c++ ( targets * : sources * : properties * )
+{
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;
 #    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
-#}
+}
 
 #actions compile.c++ bind PCH_FILE
 actions compile.c++ 
@@ -106,13 +106,13 @@ actions compile.c++
     "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
-#rule compile.c ( targets * : sources * : properties * )
-#{
-#    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
-#    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
-#    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
+rule compile.c ( targets * : sources * : properties * )
+{
+    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
+    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
 #    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
-#}
+}
 
 #actions compile.c bind PCH_FILE
 actions compile.c 
