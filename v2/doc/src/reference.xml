@@ -119,6 +119,14 @@ boost-build build-system ;
       </varlistentry>
 
       <varlistentry>
+        <term><literal>preprocessed</literal></term>
+        <indexterm><primary>preprocessed</primary></indexterm>
+
+        <listitem><para>Creates an preprocessed source file. The arguments follow the
+        <link linkend="bbv2.main-target-rule-syntax">common syntax</link>.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term><literal>glob</literal></term>
 
         <listitem><para>The <code>glob</code> rule takes a list shell pattern

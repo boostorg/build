@@ -284,6 +284,8 @@ if [ os.name ] = NT
     JAMSHELL = % ;
 }
 
+generators.register-c-compiler gcc.compile.c++.preprocess : CPP : PREPROCESSED_CPP : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.c.preprocess   : C   : PREPROCESSED_C   : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
@@ -507,6 +509,37 @@ actions compile.c.pch
     "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
+rule compile.c++.preprocess ( targets * : sources * : properties * )
+{
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-fpic $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
+    
+    # Some extensions are compiled as C++ by default. For others, we need to
+    # pass -x c++. We could always pass -x c++ but distcc does not work with it.
+    if ! $(>:S) in .cc .cp .cxx .cpp .c++ .C
+    {
+        LANG on $(<) = "-x c++" ;
+    }
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
+}
+
+rule compile.c.preprocess ( targets * : sources * : properties * )
+{
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-fpic $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
+    
+    # If we use the name g++ then default file suffix -> language mapping does
+    # not work. So have to pass -x option. Maybe, we can work around this by
+    # allowing the user to specify both C and C++ compiler names.
+    #if $(>:S) != .c
+    #{
+        LANG on $(<) = "-x c" ;
+    #}
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
+}
+
 rule compile.c++ ( targets * : sources * : properties * )
 {
     setup-threading $(targets) : $(sources) : $(properties) ;
@@ -568,6 +601,16 @@ actions compile.c++ bind PCH_FILE
 actions compile.c bind PCH_FILE
 {
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+actions compile.c++.preprocess bind PCH_FILE
+{
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" "$(>:W)" -E >"$(<:W)"
+}
+
+actions compile.c.preprocess bind PCH_FILE
+{
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" "$(>)" -E >$(<)
 }
 
 actions compile.fortran
