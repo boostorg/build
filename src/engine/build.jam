@@ -17,12 +17,12 @@ for local v in ARGV CC CFLAGS LIBS
 }
 
 # Platform related specifics.
-if $(NT) { rule .path { return "$(<:J=\\)" ; } ./ = "/" ; }
-else if $(OS2) { rule .path { return "$(<:J=\\)" ; } ./ = "/" ; }
-else if $(VMS) { rule .path { return "[.$(<:J=/)]" ; } }
-else if $(MAC) { rule .path { return ":$(<:J=\:)" ; } }
+if $(OS) = NT { rule .path { return "$(<:J=\\)" ; } ./ = "/" ; }
+else if $(OS) = OS2 { rule .path { return "$(<:J=\\)" ; } ./ = "/" ; }
+else if $(OS) = VMS { rule .path { return "[.$(<:J=/)]" ; } }
+else if $(OS) = MAC { rule .path { return ":$(<:J=\:)" ; } }
 else { rule .path { return "$(<:J=/)" ; } }
-if $(VMS) { . = "_" ; }
+if $(OS) = VMS { . = "_" ; }
 else { . = "." ; }
 ./ ?= "" ;
 
@@ -67,7 +67,7 @@ if $(python-location)
 }
 if $(with-python)
 {
-    if $(NT)
+    if $(OS) = NT
     {
         --python-include = [ .path $(python-location) include ] ;
         --python-lib = ;
@@ -261,7 +261,7 @@ toolset kylix bc++ : -o : -D
 ## Metrowerks CodeWarrior 8.x
 {
     # Even though CW can compile all files at once, it crashes if it tries in the bjam case.
-    local mwcc = ; if $(NT) { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
+    local mwcc = ; if $(OS) = NT { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
     mwcc ?= mwcc ;
     toolset metrowerks $(mwcc) : "-o " : -D
         : -c -lang c -subsystem console -cwd include
@@ -454,12 +454,12 @@ if $(tool.$(toolset).link.cc)
 
 # Put executables in platform-specific subdirectory.
 locate-target = $(LOCATE_TARGET) ;
-if $(VMS)
+if $(OS) = VMS
 {
     locate-target ?= bin$(.)vms ;
     platform = vms ;
 }
-else if $(MAC)
+else if $(OS) = MAC
 {
     locate-target ?= bin$(.)$(OS:L)$(OSPLAT:L) ;
     platform = $(OS:L)$(OSPLAT:L) ;
@@ -505,19 +505,19 @@ jam.source =
     modules/path.c modules/regex.c modules/property-set.c
     modules/sequence.c modules/order.c
     ;
-if $(NT)
+if $(OS) = NT
 {
     jam.source += execnt.c filent.c pathunix.c ;
 }
-else if $(OS2)
+else if $(OS) = OS2
 {
     jam.source += execunix.c fileos2.c pathunix.c ;
 }
-else if $(VMS)
+else if $(OS) = VMS
 {
     jam.source += execvms.c filevms.c pathvms.c ;
 }
-else if $(MAC)
+else if $(OS) = MAC
 {
     jam.source += execmac.c filemac.c pathmac.c ;
 }
@@ -561,11 +561,11 @@ if $(--duma)
     --defs += OPT_DUMA ;
 }
 
-if ( $(OS) = NT || $(NT) ) && ! NT in $(--defs)
+if ( $(OS) = NT ) && ! NT in $(--defs)
 {
     --defs += NT ;
 }
-if $(VMS)
+if $(OS) = VMS
 {
     --defs += VMS ;
 }
@@ -591,22 +591,22 @@ rule .clean
 {
     [DELETE] clean : $(<) ;
 }
-if $(NT) { actions piecemeal together existing [DELETE] {
+if $(OS) = NT { actions piecemeal together existing [DELETE] {
     del /F /Q "$(>)"
 } }
-if $(UNIX) { actions piecemeal together existing [DELETE] {
+if $(UNIX) = true { actions piecemeal together existing [DELETE] {
     rm -f "$(>)"
 } }
-if $(VMS) { actions piecemeal together existing [DELETE] {
+if $(OS) = VMS { actions piecemeal together existing [DELETE] {
     DELETE $(>[--2]:J=";*, ") $(>[-1]);*
 } }
-if $(NT) {
+if $(OS) = NT {
     --chmod+w = "attrib -r " ;
 }
-if $(UNIX) {
+if $(UNIX) = true {
     --chmod+w = "chmod +w " ;
 }
-if $(VMS) {
+if $(OS) = VMS {
     --chmod+w = "SET FILE/PROT=(S:RWED) " ;
 }
 
@@ -616,20 +616,20 @@ rule .mkdir
     if $(<:P) { DEPENDS $(<) : $(<:P) ; .mkdir $(<:P) ; }
     if ! $(md<$(<)>) { [MKDIR] $(<) ; md<$(<)> = - ; }
 }
-if $(NT) { actions [MKDIR] {
+if $(OS) = NT { actions [MKDIR] {
     md "$(<)"
 } }
-if $(UNIX) { actions [MKDIR] {
+if $(UNIX) = true { actions [MKDIR] {
     mkdir "$(<)"
 } }
-if $(VMS) { actions [MKDIR] {
+if $(OS) = VMS { actions [MKDIR] {
     CREATE/DIR $(<J=", ")
 } }
 
 rule .exe
 {
     local exe = $(<) ;
-    if $(NT) || ( $(UNIX) && $(OS) = CYGWIN ) || $(VMS) { exe = $(exe:S=.exe) ; }
+    if $(OS) = NT || ( $(UNIX) = true && $(OS) = CYGWIN ) || $(OS) = VMS { exe = $(exe:S=.exe) ; }
     LOCATE on $(exe) = $(locate-target) ;
     DEPENDS all : $(exe) ;
     .mkdir $(locate-target) ;
@@ -670,7 +670,7 @@ if ! $(--def[2]) { actions [COMPILE] {
 else { actions [COMPILE] {
     "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)" "$(--libs)" "$(>)"
 } }
-if $(VMS) { actions [COMPILE.LINK] {
+if $(OS) = VMS { actions [COMPILE.LINK] {
     "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D)$(./) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
 } }
 else { actions [COMPILE.LINK] {
@@ -684,13 +684,13 @@ rule .link
     [LINK] $(<) : $(>) ;
     .clean $(<) ;
 }
-if $(NT) { actions [LINK] {
+if $(OS) = NT { actions [LINK] {
     copy "$(>)" "$(<)"
 } }
-if $(UNIX) { actions [LINK] {
+if $(UNIX) = true { actions [LINK] {
     ln -fs "$(>)" "$(<)"
 } }
-if $(VMS) { actions [LINK] {
+if $(OS) = VMS { actions [LINK] {
     COPY/REPLACE $(>) $(<)
 } }
 
@@ -713,14 +713,14 @@ rule .move
     DEPENDS $(<) : $(>) ;
     [MOVE] $(<) : $(>) ;
 }
-if $(NT) { actions [MOVE] {
+if $(OS) = NT { actions [MOVE] {
     del /f "$(<)"
     rename "$(>)" "$(<)"
 } }
-if $(UNIX) { actions [MOVE] {
+if $(UNIX) = true { actions [MOVE] {
     mv -f "$(>)" "$(<)"
 } }
-if $(VMS) { actions [MOVE] {
+if $(OS) = VMS { actions [MOVE] {
     RENAME "$(>)" "$(<)"
 } }
 
@@ -749,7 +749,7 @@ else if $(debug)
 }
 
 # How to build the grammar.
-if $(NT)
+if $(OS) = NT
 {
     SUFEXE = .exe ;
     # try some other likely spellings...
@@ -779,7 +779,7 @@ rule .yacc
     LEAVES $(<) ;
     [YACC] $(<) : $(>) ;
 }
-if $(NT) { actions [YACC] {
+if $(OS) = NT { actions [YACC] {
     "$(yacc)" "$(>)"
     if not errorlevel 1 (
         del /f "$(<[1])"
@@ -788,7 +788,7 @@ if $(NT) { actions [YACC] {
         rename y.tab$(<[2]:S) "$(<[2])"
     ) else set _error_ =
 } }
-if $(UNIX) { actions [YACC] {
+if $(UNIX) = true { actions [YACC] {
     if ` "$(yacc)" "$(>)" ` ; then
         mv -f y.tab$(<[1]:S) "$(<[1])"
         mv -f y.tab$(<[2]:S) "$(<[2])"
@@ -796,7 +796,7 @@ if $(UNIX) { actions [YACC] {
         exit 1
     fi
 } }
-if $(VMS) { actions [YACC] {
+if $(OS) = VMS { actions [YACC] {
     IF "$(yacc)" $(>)
     THEN
         RENAME y_tab$(<[1]:S) $(<[1])
@@ -913,7 +913,7 @@ dist.bin =
     $(dist.bin:S=$(bjam.exe:S))
     ;
 
-if $(NT)
+if $(OS) = NT
 {
     zip ?= [ GLOB "$(ProgramFiles:J= )\\7-ZIP" "C:\\Program Files\\7-ZIP" : "7z.exe" ] ;
     zip ?= [ GLOB "$(ProgramFiles:J= )\\7-ZIP" "C:\\Program Files\\7-ZIP" : "7zn.exe" ] ;
@@ -935,7 +935,7 @@ if $(NT)
     copy /Y "$(>)" "$(<)" >NUL:
     }
 }
-if $(UNIX)
+if $(UNIX) = true
 {
     tar ?= [ GLOB $(PATH) : star bsdtar tar ] ;
     tar = $(tar[1]) ;
@@ -962,14 +962,14 @@ if $(UNIX)
 rule .binary
 {
     local zip = ;
-    if $(NT) { zip = $($(<).exe:S=.zip) ; }
-    if $(UNIX) { zip = $($(<).exe:S=.tgz) ; }
+    if $(OS) = NT { zip = $($(<).exe:S=.zip) ; }
+    if $(UNIX) = true { zip = $($(<).exe:S=.tgz) ; }
     zip = $(zip:S=)-$(VERSION)-$(RELEASE)-$(platform)$(zip:S) ;
     DEPENDS $(zip) : $($(<).exe) ;
     DEPENDS dist : $(zip) ;
     #~ LOCATE on $(zip) = $(locate-target) ;
-    if $(NT) { [ZIP] $(zip) : $($(<).exe) ; }
-    if $(UNIX) { [PACK] $(zip) : $($(<).exe) ; }
+    if $(OS) = NT { [ZIP] $(zip) : $($(<).exe) ; }
+    if $(UNIX) = true { [PACK] $(zip) : $($(<).exe) ; }
     .clean $(zip) ;
 }
 
@@ -995,8 +995,8 @@ rule .package ( dst-dir : src-files + )
     }
 
     local pack = ;
-    if $(NT) { pack = $(dst-dir).zip ; }
-    if $(UNIX) { pack = $(dst-dir).tgz ; }
+    if $(OS) = NT { pack = $(dst-dir).zip ; }
+    if $(UNIX) = true { pack = $(dst-dir).tgz ; }
 
     DEPENDS dist : $(pack) ;
     DEPENDS $(pack) : $(dst-files) ;
