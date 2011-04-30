@@ -620,6 +620,7 @@ actions compile.fortran
 
 rule compile.asm ( targets * : sources * : properties * )
 {
+    setup-fpic $(targets) : $(sources) : $(properties) ;    
     setup-address-model $(targets) : $(sources) : $(properties) ;
     LANG on $(<) = "-x assembler-with-cpp" ;
 }
