@@ -224,7 +224,7 @@ rule link ( targets * : sources * : properties * )
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+    JAM_SEMAPHORE on $(targets) = <s>intel-linux-link-semaphore ;
 }
 
 actions link bind LIBRARIES
@@ -237,7 +237,7 @@ rule link.dll ( targets * : sources * : properties * )
     gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     gcc.setup-address-model $(targets) : $(sources) : $(properties) ;    
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+    JAM_SEMAPHORE on $(targets) = <s>intel-linux-link-semaphore ;
 }
 
 # Differ from 'link' above only by -shared.
