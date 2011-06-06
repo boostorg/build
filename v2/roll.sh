@@ -22,14 +22,16 @@ find . -maxdepth 1 -type f | egrep -v "boost-build.jam|timestamp.txt|roll.sh|boo
 # Build the documentation
 touch doc/jamroot.jam
 export BOOST_BUILD_PATH=`pwd`
+./bootstrap.sh
 cd doc
-/home/ghost/Work/Boost/boost-svn/tools/jam/src/bin.linuxx86/bjam --v2
-/home/ghost/Work/Boost/boost-svn/tools/jam/src/bin.linuxx86/bjam --v2 pdf
+../bjam --v2
+../bjam --v2 pdf
 cp `find bin -name "*.pdf"` ../..
 mv ../../standalone.pdf ../../userman.pdf
 cp ../../userman.pdf .
 rm -rf bin
 cd ..
+rm bjam
 
 # Get the boost logo.
 wget http://boost.sf.net/boost-build2/boost.png
@@ -42,7 +44,7 @@ perl -pi -e 's%../../../doc/html/bbv2.installation.html%doc/html/bbv2.installati
 # Make packages
 find . -name ".svn" | xargs rm -rf
 rm roll.sh
-chmod a+x engine/src/build.bat
+chmod a+x engine/build.bat
 cd .. && zip -r boost-build.zip boost-build && tar --bzip2 -cf boost-build.tar.bz2 boost-build
 # Copy packages to a location where they are grabbed for beta.boost.org
 cp userman.pdf boost-build.zip boost-build.tar.bz2 ~/public_html/boost_build_nightly

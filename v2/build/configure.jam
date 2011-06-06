@@ -17,6 +17,8 @@ import sequence ;
 import property ;
 import property-set ;
 import "class" : new ;
+import common ;
+import path ;
 
 rule log-summary ( )
 {
@@ -185,12 +187,9 @@ rule builds ( metatarget-reference : properties * : what ? : retry ? )
 # should never be called by users.
 rule set-log-file ( log-file )
 {
-    # FIXME: remove this check as soon as Boost regression tests
-    # start using trunk bjam
-    if FILE_OPEN in [ RULENAMES ]
-    {        
-        .log-fd = [ FILE_OPEN $(log-file) : "w" ] ;
-    }    
+    path.makedirs [ path.parent $(log-file) ] ;
+    
+    .log-fd = [ FILE_OPEN $(log-file) : "w" ] ;
 }
 
 # Frontend rules

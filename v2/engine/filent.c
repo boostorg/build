@@ -32,6 +32,7 @@
 # include <io.h>
 # include <sys/stat.h>
 # include <ctype.h>
+# include <direct.h>
 
 /*
  * filent.c - scan directories and archives on NT
@@ -184,8 +185,23 @@ void file_dirscan( char * dir, scanback func, void * closure )
         unsigned long len = strlen(d->name);
         if ( len == 1 && d->name[0] == '\\' )
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
-        else if ( len == 3 && d->name[1] == ':' )
+        else if ( len == 3 && d->name[1] == ':' ) {
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
+            /* We've just entered 3-letter drive name spelling (with trailing
+               slash), into the hash table. Now enter two-letter variant,
+               without trailing slash, so that if we try to check whether
+               "c:" exists, we hit it.
+
+               Jam core has workarounds for that. Given:
+                  x = c:\whatever\foo ;
+                  p = $(x:D) ;
+                  p2 = $(p:D) ;
+               There will be no trailing slash in $(p), but there will be one
+               in $(p2). But, that seems rather fragile.                
+            */
+            d->name[2] = 0;
+            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
+        }
     }
 
     /* Now enter contents of directory */
@@ -243,6 +259,10 @@ int file_is_file(char* filename)
     return ff->is_file;
 }
 
+int file_mkdir(char *pathname)
+{
+    return _mkdir(pathname);
+}
 
 /*
  * file_archscan() - scan an archive for files

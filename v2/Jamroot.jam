@@ -15,13 +15,14 @@ if [ os.on-windows ]
 package.install boost-build-engine boost-build
   : # properties
   : # binaries
-    bjam$(ext)
+    b2$(ext) bjam$(ext)
   ;
 
 local e1 = [ path.glob-tree $(SELF)/example : * : . .svn ] ;
 local e2 ;
 for e in $(e1)
 {
+    e = [ path.native $(e) ] ;
     if [ CHECK_IF_FILE $(e) ]
     {
         e2 += $(e) ;
