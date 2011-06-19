@@ -64,6 +64,7 @@ import property ;
 import testing ;
 import toolset ;
 import type ;
+import path ;
 
 # Make this module a project
 project.initialize $(__name__) ;
