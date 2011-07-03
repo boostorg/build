@@ -8,6 +8,6 @@ import BoostBuild
 
 t = BoostBuild.Tester(pass_toolset=0)
 
-t.run_build_system(extra_args="--debug --build-system=test")
+t.run_build_system(extra_args="--debug --build-system=test/test")
 
 t.cleanup()
