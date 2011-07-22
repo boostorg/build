@@ -18,7 +18,7 @@ BOOST_AUTO_TEST_CASE( defines)
 
 BOOST_AUTO_TEST_CASE( audiodevices)
 {
-    QList<QAudioDeviceId> devices = QAudioDeviceInfo::deviceList(QAudio::AudioOutput);
+    QList<QAudioDeviceInfo> devices = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
     for(int i = 0; i < devices.size(); ++i) {
         BOOST_TEST_MESSAGE(QAudioDeviceInfo(devices.at(i)).deviceName().constData());
     }
