@@ -7,6 +7,8 @@
 
 #include <QScriptEngine>
 
+#include <QCoreApplication>
+
 #include <boost/test/unit_test.hpp>
 
 #include <iostream>
@@ -25,9 +27,11 @@ BOOST_AUTO_TEST_CASE( defines)
 
 BOOST_AUTO_TEST_CASE( script )
 {
-   QScriptEngine myEngine;
-   QScriptValue three = myEngine.evaluate("1 + 2");
+    QCoreApplication app(boost::unit_test::framework::master_test_suite().argc,
+                         boost::unit_test::framework::master_test_suite().argv);
+    QScriptEngine myEngine;
+    QScriptValue three = myEngine.evaluate("1 + 2");
 
-   BOOST_CHECK_EQUAL(three.toNumber(), 3);
-   BOOST_CHECK_EQUAL(three.toString(), QLatin1String("3"));
+    BOOST_CHECK_EQUAL(three.toNumber(), 3);
+    BOOST_CHECK_EQUAL(three.toString(), QLatin1String("3"));
 }

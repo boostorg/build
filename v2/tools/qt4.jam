@@ -415,6 +415,7 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
 
     # Qt designer library
     add-shared-library QtDesigner : QtGui QtXml : : $(target-requirements) ;
+    add-shared-library QtDesignerComponents : QtGui QtXml : : $(target-requirements) ;
 
     # Support for dynamic Widgets (Qt 4.1)
     add-static-library  QtUiTools : QtGui QtXml : $(target-requirements) ;
@@ -441,13 +442,19 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
     add-shared-library QtXmlPatterns : QtNetwork : QT_XMLPATTERNS_LIB : $(target-requirements) ;
 
     # Help-Engine (Qt 4.4) 
-    add-shared-library QtHelp : QtGui QtSql QtXml : : $(target-requirements) ;
+    add-shared-library QtHelp    : QtGui QtSql QtXml : : $(target-requirements) ;
+    add-shared-library QtCLucene : QCore QtSql QtXml : : $(target-requirements) ;
+
+    # QML-Engine (Qt 4.7) 
+    add-shared-library QtDeclarative : QtGui QtXml : : $(target-requirements) ;
 
     # AssistantClient Support
-    # Compat library
+    # Compat library removed in 4.7.0
     # Pre-4.4 help system, use QtHelp for new programs
-    add-shared-library QtAssistantClient : QtGui : : $(target-requirements) : QtAssistant ;
-
+    if $(version) < "4.7"
+    {
+       add-shared-library QtAssistantClient : QtGui : : $(target-requirements) : QtAssistant ;
+    }
     debug-message "==== Configured Qt-$(version) ====" ;
 
     project.pop-current ;
