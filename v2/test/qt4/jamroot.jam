@@ -1,35 +1,35 @@
 #  (c) Copyright Juergen Hunold 2008
-#  Use, modification, and distribution are subject to the 
-#  Boost Software License, Version 1.0. (See accompanying file 
+#  Use, modification, and distribution are subject to the
+#  Boost Software License, Version 1.0. (See accompanying file
 #  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 import qt4 ;
-import testing ; 
+import testing ;
 import cast ;
 
-    
+
 
 if [ qt4.initialized ]
 {
     use-project /boost : ../../../../.. ;
 
-    project qttest 
-      : requirements 
+    project qttest
+      : requirements
           <library>/boost/test//boost_unit_test_framework
       ;
-    
+
     alias qt-tests :
       # Check for explicit libraries, <use>/qt should not link any lib
       [ link-fail qtcorefail.cpp : <use>/qt ]
-           
+
       [ run qtcore.cpp /qt//QtCore ]
       [ run qtsql.cpp  /qt//QtSql  ]
-      [ run qtxml.cpp  /qt//QtXml  ]   
+      [ run qtxml.cpp  /qt//QtXml  ]
       [ run qtnetwork.cpp /qt//QtNetwork ]
       [ run qtscript.cpp  /qt//QtScript  ]
       [ run qtscripttools.cpp  /qt//QtScriptTools  ]
       [ run qtxmlpatterns.cpp  /qt//QtXmlPatterns  ]
-    
+
       # ToDo: runable example code
       [ link qtsvg.cpp /qt//QtSvg ]
       [ link qtgui.cpp /qt//QtGui ]
@@ -39,7 +39,7 @@ if [ qt4.initialized ]
       [ link phonon.cpp   /qt//phonon  ]
       [ link qtmultimedia.cpp /qt//QtMultimedia ]
 
-      # QML 
+      # QML
       [ link qtdeclarative.cpp /qt//QtDeclarative ]
 
       # Help systems.
@@ -52,12 +52,15 @@ if [ qt4.initialized ]
 
       # Testing using QtTest. Simple sample
       # ToDo: better support for "automoc" aka '#include "qttest.moc"'
-      [ run qttest.cpp [ cast _ moccable-cpp : qttest.cpp ] /qt//QtTest ]
+      [ run qttest.cpp [ cast _ moccable-cpp : qttest.cpp ] /qt//QtTest : : : <define>TEST_MOCK ]
+
+      # Test moc rule
+      [ run mock.cpp mock.h /qt//QtCore : : : <define>TEST_MOCK ]
 
    : # requirements
    : # default-build
    : # usage-requirements
-   ; 
+   ;
 }
 
 # QtAssistant is removed from Qt >= 4.6
