@@ -399,7 +399,7 @@ class LibGenerator (generators.Generator):
         SHARED_LIB.
     """
 
-    def __init__(self, id = 'LibGenerator', composing = True, source_types = [], target_types_and_names = ['LIB'], requirements = []):
+    def __init__(self, id, composing = True, source_types = [], target_types_and_names = ['LIB'], requirements = []):
         generators.Generator.__init__(self, id, composing, source_types, target_types_and_names, requirements)
     
     def run(self, project, name, prop_set, sources):
@@ -432,7 +432,9 @@ class LibGenerator (generators.Generator):
     def viable_source_types(self):
         return ['*']
 
-generators.register(LibGenerator())
+generators.register(LibGenerator("builtin.lib-generator"))
+
+generators.override("builtin.prebuilt", "builtin.lib-generator")
 
 def lib(names, sources=[], requirements=[], default_build=[], usage_requirements=[]):
     """The implementation of the 'lib' rule. Beyond standard syntax that rule allows
@@ -508,22 +510,19 @@ class SearchedLibGenerator (generators.Generator):
 
 generators.register (SearchedLibGenerator ())
 
-### class prebuilt-lib-generator : generator
-### {
-###     rule __init__ ( * : * )
-###     {
-###         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-###     }
-### 
-###     rule run ( project name ? : prop_set : sources * : multiple ? )
-###     {
-###         local f = [ $(prop_set).get <file> ] ;
-###         return $(f) $(sources) ;
-###     }    
-### }
-### 
-### generators.register 
-###   [ new prebuilt-lib-generator builtin.prebuilt : : LIB : <file> ] ;
+class PrebuiltLibGenerator(generators.Generator):
+
+    def __init__(self, id, composing, source_types, target_types_and_names, requirements):
+        generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)        
+
+    def run(self, project, name, properties, sources):
+        f = properties.get("file")
+        return f + sources
+
+generators.register(PrebuiltLibGenerator("builtin.prebuilt", False, [],
+                                         ["LIB"], ["<file>"]))
+
+generators.override("builtin.prebuilt", "builtin.lib-generator")
 
 
 class CompileAction (virtual_target.Action):
