@@ -692,7 +692,7 @@ def override (overrider_id, overridee_id):
     after computing the list of viable generators, before
     running any of them."""
     
-    __overrides.get(overrider_id, []).append(overridee_id)
+    __overrides.setdefault(overrider_id, []).append(overridee_id)
 
 def __viable_source_types_real (target_type):
     """ Returns a list of source type which can possibly be converted
@@ -974,7 +974,7 @@ def find_viable_generators (target_type, prop_set):
     
     # Generators which are overriden
     overriden_ids = [] 
-       
+
     for g in viable_generators:
         id = g.id ()
         
@@ -988,13 +988,7 @@ def find_viable_generators (target_type, prop_set):
     if all_overrides:
         viable_generators = all_overrides
 
-    result = []
-    for g in viable_generators:
-        if not g.id () in overriden_ids:
-            result.append (g)
-
-        
-    return result
+    return [g for g in viable_generators if not g.id() in overriden_ids]
     
 def __construct_really (project, name, target_type, prop_set, sources):
     """ Attempts to construct target by finding viable generators, running them
@@ -1004,7 +998,7 @@ def __construct_really (project, name, target_type, prop_set, sources):
                     
     result = []
 
-    project.manager ().logger ().log (__name__, "*** %d viable generators" % len (viable_generators))
+    dout("      *** %d viable generators" % len (viable_generators))
 
     generators_that_succeeded = []
     
