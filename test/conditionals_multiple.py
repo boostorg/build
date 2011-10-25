@@ -21,7 +21,7 @@ def test_multiple_conditions():
     """Basic tests for properties conditioned on multiple other properties.
     """
 
-    t = BoostBuild.Tester("--ignore-regular-config toolset=testToolset",
+    t = BoostBuild.Tester("--user-config= --ignore-site-config toolset=testToolset",
         pass_toolset=False, use_test_config=False)
 
     t.write("testToolset.jam", """
@@ -133,7 +133,7 @@ def test_multiple_conditions_with_toolset_version():
 
     toolset = "testToolset" ;
 
-    t = BoostBuild.Tester("--ignore-regular-config", pass_toolset=False, use_test_config=False)
+    t = BoostBuild.Tester("--user-config= --ignore-site-config", pass_toolset=False, use_test_config=False)
 
     t.write( toolset + ".jam", """
 import feature ;
