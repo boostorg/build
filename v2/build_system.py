@@ -291,6 +291,9 @@ def load_configuration_files():
     initialize_config_module('user-config')
     if not test_config and not legacy_ignore_config:
 
+        # Here, user_config has value of None if nothing is explicitly
+        # specified, and value of '' if user explicitly does not want
+        # to load any user config.
         user_config = None
         for a in sys.argv:
             m = re.match("--user-config=(.*)$", a)
@@ -298,30 +301,32 @@ def load_configuration_files():
                 user_config = m.group(1)
                 break
 
-        if not user_config:
+        if user_config is None:
             user_config = os.getenv("BOOST_BUILD_USER_CONFIG")
             
         # Special handling for the case when the OS does not strip the quotes
         # around the file name, as is the case when using Cygwin bash.
         user_config = b2.util.unquote(user_config)
         explicitly_requested = user_config
-        if not user_config:
+        
+        if user_config is None:
             user_config = "user-config.jam"
 
-        if explicitly_requested:
+        if user_config:
+            if explicitly_requested:
 
-            user_config = os.path.abspath(user_config)
+                user_config = os.path.abspath(user_config)
             
-            if debug_config:
-                print "notice: Loading explicitly specified user configuration file:"
-                print "    " + user_config
+                if debug_config:
+                    print "notice: Loading explicitly specified user configuration file:"
+                    print "    " + user_config
             
-            load_config('user-config', os.path.basename(user_config), [os.path.dirname(user_config)], True)
+                    load_config('user-config', os.path.basename(user_config), [os.path.dirname(user_config)], True)
+            else:
+                load_config('user-config', os.path.basename(user_config), user_path)
         else:
-            load_config('user-config', os.path.basename(user_config), user_path)
-
-    elif debug_config:
-        print "notice: User configuration file loading explicitly disabled." ;
+            if debug_config:
+                print "notice: User configuration file loading explicitly disabled."
         
     # We look for project-config.jam from "." upward.
     # I am not sure this is 100% right decision, we might as well check for
