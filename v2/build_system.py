@@ -20,6 +20,7 @@ from b2.util.sequence import unique
 import b2.build.build_request
 from b2.build.errors import ExceptionWithUserContext
 import b2.tools.common
+from b2.build.toolset import using
 
 import b2.build.project as project
 import b2.build.virtual_target as virtual_target
@@ -381,7 +382,10 @@ def process_explicit_toolset_requests():
 
             if debug_config:
                 print "notice: [cmdline-cfg] toolset '%s' not previously configured; attempting to auto-configure now" % toolset_version
-            toolset.using(toolset, version)
+            if version is not None:
+               using(toolset, version)
+            else:
+               using(toolset)
 
         else:
 
