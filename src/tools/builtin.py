@@ -348,8 +348,11 @@ class SearchedLibTarget (virtual_target.AbstractFileTarget):
 class CScanner (scanner.Scanner):
     def __init__ (self, includes):
         scanner.Scanner.__init__ (self)
-    
-        self.includes_ = includes
+
+        self.includes_ = []
+
+        for i in includes:
+            self.includes_.extend(i.split("&&"))              
 
     def pattern (self):
         return r'#[ \t]*include[ ]*(<(.*)>|"(.*)")'
