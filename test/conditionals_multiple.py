@@ -30,6 +30,13 @@ feature.extend toolset : testToolset ;
 rule init ( ) { }
 """)
 
+    t.write("testToolset.py", """
+from b2.build import feature
+feature.extend('toolset', ["testToolset"])
+def init ( ):
+     pass
+""")
+
     t.write("jamroot.jam", """
 import feature ;
 import notfile ;
@@ -134,6 +141,14 @@ feature.extend toolset : %(toolset)s ;
 feature.subfeature toolset %(toolset)s : version : 0 1 ;
 rule init ( version ? ) { }
 """ % {"toolset": toolset})
+
+    t.write( "testToolset.py", """
+from b2.build import feature
+feature.extend('toolset', ["testToolset"])
+feature.subfeature('toolset',"testToolset","version",['0','1'])
+def init ( version ):
+     pass
+     """)
 
     t.write("jamroot.jam", """
 import feature ;
