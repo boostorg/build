@@ -715,6 +715,14 @@ class ArchiveGenerator (generators.Generator):
 ### 
 ### 
 
+class DummyGenerator(generators.Generator):
+     """Generator that accepts everything and produces nothing. Useful as a general
+     fallback for toolset-specific actions like PCH generation.
+     """
+     def run (self, project, name, prop_set, sources):
+       return (property_set.empty(), [])
+
+
 get_manager().projects().add_rule("variant", variant)
 
 import stage

@@ -400,6 +400,9 @@ class Generator:
 
         dir = os.path.dirname(fullname)
         name = os.path.basename(fullname)
+        idx = name.find(".")
+        if idx != -1:
+            name = name[:idx]
 
         if dir and not ".." in dir and not os.path.isabs(dir):
             # Relative path is always relative to the source
@@ -470,9 +473,6 @@ class Generator:
         post = self.name_postfix_
         for t in self.target_types_:
             basename = os.path.basename(name)
-            idx = basename.find(".")
-            if idx != -1:
-                basename = basename[:idx]
             generated_name = pre[0] + basename + post[0]
             generated_name = os.path.join(os.path.dirname(name), generated_name)
             pre = pre[1:]
@@ -1080,4 +1080,18 @@ def construct (project, name, target_type, prop_set, sources, top_level=False):
         __active_generators = saved_active
 
     return result
-    
+
+def add_usage_requirements (result, raw_properties):
+    if result:
+        if isinstance (result[0], property_set.PropertySet):
+          return (result[0].add_raw(raw_properties), result[1])
+        else:
+          return (propery_set.create(raw-properties), result) 
+        #if [ class.is-a $(result[1]) : property-set ]
+        #{
+        #    return [ $(result[1]).add-raw $(raw-properties) ] $(result[2-]) ;
+        #}
+        #else
+        #{
+        #    return [ property-set.create $(raw-properties) ] $(result) ;
+        #}
