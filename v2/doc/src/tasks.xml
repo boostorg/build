@@ -476,8 +476,8 @@ boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable>
     </para>
 
     <para>
-      It is possible to process the list of tests, the output of bjam during
-      command run, and the presense/absense of the <filename>*.test</filename>
+      It is possible to process the list of tests, Boost.Build output
+      and the presense/absense of the <filename>*.test</filename>
       files created when test passes into human-readable status table of tests.
       Such processing utilities are not included in Boost.Build.
     </para>
@@ -534,7 +534,7 @@ actions in2out
     in2out $(&lt;) $(&gt;)
 }
 </programlisting>
-      If you run <command>bjam</command> and <filename>file.out</filename> does
+      If you run <command>b2</command> and <filename>file.out</filename> does
       not exist, Boost.Build will run the <command>in2out</command> command to
       create that file. For more details on specifying actions, see <xref
       linkend="bbv2.overview.jam_language.actions"/>.
@@ -735,7 +735,7 @@ using gcc : arm : arm-none-linux-gnueabi-g++ ;
       just request that this compiler version to be used:
     </para>
 <screen>
-bjam toolset=gcc-arm
+b2 toolset=gcc-arm
 </screen>
 
     <para>
@@ -745,9 +745,9 @@ bjam toolset=gcc-arm
     </para>
 <screen>
 # On windows box
-bjam toolset=gcc-arm <emphasis role="bold">target-os=linux</emphasis>
+b2 toolset=gcc-arm <emphasis role="bold">target-os=linux</emphasis>
 # On Linux box
-bjam toolset=gcc-mingw <emphasis role="bold">target-os=windows</emphasis>
+b2 toolset=gcc-mingw <emphasis role="bold">target-os=windows</emphasis>
 </screen>
     <para>
       For the complete list of allowed opeating system names, please see the documentation for 

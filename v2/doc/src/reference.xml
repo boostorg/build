@@ -45,7 +45,7 @@ rule boost-build ( location ? )
 boost-build build-system ;
 </programlisting>
 
-        In this case, running bjam anywhere in the project tree will
+        In this case, running <command>b2</command> anywhere in the project tree will
         automatically find the build system.</para>
 
       <para>The default <filename>bootstrap.jam</filename>, after loading some standard
@@ -227,13 +227,13 @@ constant VERSION : 1.34.0 ;
 
         <listitem><para>Same as <literal>constant</literal> except that
         the value is treated as path relative to Jamfile location. For example,
-        if <command>bjam</command> is invoked in the current directory,
+        if <command>b2</command> is invoked in the current directory,
         and Jamfile in <filename>helper</filename> subdirectory has:
         <programlisting>
 path-constant DATA : data/a.txt ;
         </programlisting>
         then the variable <varname>DATA</varname> will be set to
-        <literal>helper/data/a.txt</literal>, and if <command>bjam</command>
+        <literal>helper/data/a.txt</literal>, and if <command>b2</command>
         is invoked from the <filename>helper</filename> directory, then
         the variable <varname>DATA</varname> will be set to
         <literal>data/a.txt</literal>.

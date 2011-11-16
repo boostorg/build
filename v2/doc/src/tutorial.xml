@@ -35,13 +35,13 @@ exe hello : hello.cpp ;
 </programlisting>
 
       Even with this simple setup, you can do some interesting things. First of
-      all, just invoking <command>bjam</command> will build the <filename>hello
+      all, just invoking <command>b2</command> will build the <filename>hello
       </filename> executable by compiling and linking <filename>hello.cpp
       </filename>. By default, debug variant is built. Now, to build the release
       variant of <filename>hello</filename>, invoke
 
 <screen>
-bjam release
+b2 release
 </screen>
 
       Note that debug and release variants are created in different directories,
@@ -56,7 +56,7 @@ exe hello2 : hello.cpp ;
       Now let us build both the debug and release variants of our project again:
 
 <screen>
-bjam debug release
+b2 debug release
 </screen>
 
       Note that two variants of <filename>hello2</filename> are linked. Since we
@@ -66,7 +66,7 @@ bjam debug release
       let us remove all the built products:
 
 <screen>
-bjam --clean debug release
+b2 --clean debug release
 </screen>
 
       It is also possible to build or clean specific targets. The following two
@@ -74,8 +74,8 @@ bjam --clean debug release
       <filename>hello2</filename>.
 
 <screen>
-bjam hello2
-bjam --clean hello2
+b2 hello2
+b2 --clean hello2
 </screen>
     </para>
   </section>
@@ -102,7 +102,7 @@ bjam --clean hello2
       builds the project's <code>release</code> variant with inlining
       disabled and debug symbols enabled:
 <screen>
-bjam release inlining=off debug-symbols=on
+b2 release inlining=off debug-symbols=on
 </screen>
     </para>
 
@@ -116,12 +116,12 @@ bjam release inlining=off debug-symbols=on
 
     <para>
       The <option>release</option> and <option>debug</option> that we have seen
-      in <command>bjam</command> invocations are just a shorthand way to specify
+      in <command>b2</command> invocations are just a shorthand way to specify
       values of the <varname>variant</varname> feature.  For example, the
       command above could also have been written this way:
 
       <screen>
-bjam variant=release inlining=off debug-symbols=on
+b2 variant=release inlining=off debug-symbols=on
       </screen>
     </para>
 
@@ -170,7 +170,7 @@ exe hello
       <para>
         When <filename>hello</filename> is built, the two requirements specified
         above will always be present. If the build request given on the
-        <command>bjam</command> command-line explictly contradicts a target's
+        <command>b2</command> command-line explictly contradicts a target's
         requirements, the target requirements usually override (or, in the case
         of &#x201C;free&rdquo;&#x201D; features like
         <varname>&lt;include&gt;</varname>,
@@ -289,7 +289,7 @@ top/
     </para>
 
     <para>
-      Invoking <command>bjam</command> without explicitly specifying
+      Invoking <command>b2</command> without explicitly specifying
       any targets on the command line builds the project rooted in the
       current directory.  Building a project does not automatically
       cause its subprojects to be built unless the parent project's
@@ -352,7 +352,7 @@ exe app : app.cpp ../util/foo//bar ;
 
     <para>Suppose we build <filename>app</filename> with:
     <screen>
-bjam app optimization=full define=USE_ASM
+b2 app optimization=full define=USE_ASM
     </screen>
     Which properties will be used to build <code>foo</code>? The answer is
     that some features are
@@ -448,7 +448,7 @@ project
       <literal>shared</literal>, and to build a static library, the value should
       be <literal>static</literal>. You can request a static build either on the
       command line:
-      <programlisting>bjam link=static</programlisting>
+      <programlisting>b2 link=static</programlisting>
       or in the library's requirements:
       <programlisting>lib l : l.cpp : &lt;link&gt;static ;</programlisting>
     </para>
@@ -472,7 +472,7 @@ project
       <programlisting>
 exe important : main.cpp helpers/&lt;link&gt;static ;</programlisting>
 
-      No matter what arguments are specified on the <command>bjam</command>
+      No matter what arguments are specified on the <command>b2</command>
       command line, <filename>important</filename> will only be linked with the
       static version of <filename>helpers</filename>.
     </para>
