@@ -665,16 +665,16 @@ rule .exe
     return $(exe) ;
 }
 if ! $(--def[2]) { actions [COMPILE] {
-    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def)$(--defs)" "$(--flags)" "$(--libs)" "$(>)"
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def)$(--defs)" "$(--flags)" "$(>)" "$(--libs)"
 } }
 else { actions [COMPILE] {
-    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)" "$(--libs)" "$(>)"
+    "$(--cc)" "$(--bin)$(<:D=)" "$(--dir)$(<:D)$(./)" $(--out)$(<) "$(--def[1])$(--defs:J=$(--def[2]))$(--def[3])" "$(--flags)"  "$(>)" "$(--libs)"
 } }
 if $(OS) = VMS { actions [COMPILE.LINK] {
-    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D)$(./) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) "$(--link-libs)" $(>J=", ")
+    "$(--link)" $(--link-bin)$(<:D=) $(--link-dir)$(<:D)$(./) $(--link-out)$(<) $(--link-def)$(--link-defs) $(--link-flags) $(>J=", ") "$(--link-libs)"
 } }
 else { actions [COMPILE.LINK] {
-    "$(--link)" "$(--link-bin)$(<:D=)" "$(--link-dir)$(<:D)$(./)" "$(--link-out)$(<)" "$(--link-def)$(--link-defs)" "$(--link-flags)" "$(--link-libs)" "$(>)"
+    "$(--link)" "$(--link-bin)$(<:D=)" "$(--link-dir)$(<:D)$(./)" "$(--link-out)$(<)" "$(--link-def)$(--link-defs)" "$(--link-flags)"  "$(>)" "$(--link-libs)"
 } }
 
 rule .link
