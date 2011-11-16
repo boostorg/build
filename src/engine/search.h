@@ -9,3 +9,4 @@
  */
 
 char *search( char *target, time_t *time, char **another_target, int file );
+void search_done( void );

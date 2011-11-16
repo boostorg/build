@@ -81,6 +81,8 @@ void print_source_line( PARSE * );
 
 RULE * bind_builtin( char * name, LIST * (* f)( PARSE *, FRAME * ), int flags, char * * args )
 {
+    PARSE * p;
+    RULE * result;
     argument_list* arg_list = 0;
 
     if ( args )
@@ -89,8 +91,13 @@ RULE * bind_builtin( char * name, LIST * (* f)( PARSE *, FRAME * ), int flags, c
         lol_build( arg_list->data, args );
     }
 
-    return new_rule_body( root_module(), name, arg_list,
-                          parse_make( f, P0, P0, P0, C0, C0, flags ), 1 );
+    p = parse_make( f, P0, P0, P0, C0, C0, flags );
+
+    result = new_rule_body( root_module(), name, arg_list, p, 1 );
+
+    parse_free( p );
+
+    return result;
 }
 
 
@@ -736,7 +743,7 @@ static LIST * append_if_exists( LIST * list, char * file )
 
 LIST * glob1( char * dirname, char * pattern )
 {
-    LIST * plist = list_new( L0, pattern );
+    LIST * plist = list_new( L0, newstr(pattern) );
     struct globbing globbing;
 
     globbing.results = L0;
@@ -798,24 +805,26 @@ LIST * glob_recursive( char * pattern )
 
             dirs =  has_wildcards( dirname->value )
                 ? glob_recursive( dirname->value )
-                : list_new( dirs, dirname->value );
+                : list_new( dirs, newstr( dirname->value ) );
 
             if ( has_wildcards( basename->value ) )
             {
-                for ( ; dirs; dirs = dirs->next )
-                    result = list_append( result, glob1( dirs->string,
+                LIST * d;
+                for ( d = dirs ; d; d = d->next )
+                    result = list_append( result, glob1( d->string,
                         basename->value ) );
             }
             else
             {
+                LIST * d;
                 string file_string[ 1 ];
                 string_new( file_string );
 
                 /* No wildcard in basename. */
-                for ( ; dirs; dirs = dirs->next )
+                for ( d = dirs ; d; d = d->next )
                 {
-                    path->f_dir.ptr = dirs->string;
-                    path->f_dir.len = strlen( dirs->string );
+                    path->f_dir.ptr = d->string;
+                    path->f_dir.len = strlen( d->string );
                     path_build( path, file_string, 0 );
 
                     result = append_if_exists( result, file_string->value );
@@ -828,6 +837,8 @@ LIST * glob_recursive( char * pattern )
 
             string_free( dirname );
             string_free( basename );
+
+            list_free( dirs );
         }
         else
         {
@@ -1311,7 +1322,7 @@ LIST * builtin_update( PARSE * parse, FRAME * frame )
     LIST * arg1 = lol_get( frame->args, 0 );
     clear_targets_to_update();
     for ( ; arg1; arg1 = list_next( arg1 ) )
-        mark_target_for_updating( newstr( arg1->string ) );
+        mark_target_for_updating( copystr( arg1->string ) );
     return result;
 }
 
@@ -1371,7 +1382,7 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
     for (i = 0 ; targets; targets = list_next( targets ) )
         targets2[ i++ ] = targets->string;
     status |= make( targets_count, targets2, anyhow);
-    free( targets );
+    BJAM_FREE( (void *)targets2 );
 
     if (force)
     {
@@ -1409,7 +1420,7 @@ LIST * builtin_search_for_target( PARSE * parse, FRAME * frame )
     LIST * arg1 = lol_get( frame->args, 0 );
     LIST * arg2 = lol_get( frame->args, 1 );
     TARGET * t = search_for_target( arg1->string, arg2 );
-    return list_new( L0, t->name );
+    return list_new( L0, copystr( t->name ) );
 }
 
 
@@ -1582,6 +1593,7 @@ LIST * builtin_native_rule( PARSE * parse, FRAME * frame )
     n.name = rule_name->string;
     if ( module->native_rules && hashcheck( module->native_rules, (HASHDATA * *)&np ) )
     {
+        args_refer( np->arguments );
         new_rule_body( module, np->name, np->arguments, np->procedure, 1 );
     }
     else
@@ -1716,7 +1728,7 @@ LIST *builtin_pad( PARSE *parse, FRAME *frame )
     int current = strlen (string);
     int desired = atoi(width_s);
     if (current >= desired)
-        return list_new (L0, string);
+        return list_new (L0, copystr( string ) );
     else
     {
         char *buffer = malloc (desired + 1);
@@ -2063,7 +2075,7 @@ PyObject * bjam_define_action( PyObject * self, PyObject * args )
                             "bind list has non-string type" );
             return NULL;
         }
-        bindlist = list_new( bindlist, PyString_AsString( next ) );
+        bindlist = list_new( bindlist, newstr( PyString_AsString( next ) ) );
     }
 
     new_rule_actions( root_module(), name, newstr( body ), bindlist, flags );

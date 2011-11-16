@@ -281,9 +281,9 @@ arg	: ARG
  * This needs to be split cleanly out of 'rule'
  */
 
-func	: arg lol
+func	: ARG lol
 		{ $$.parse = prule( $1.string, $2.parse ); }
-	| `on` arg arg lol
+	| `on` arg ARG lol
 		{ $$.parse = pon( $2.parse, prule( $3.string, $4.parse ) ); }
 	| `on` arg `return` list
 		{ $$.parse = pon( $2.parse, $4.parse ); }

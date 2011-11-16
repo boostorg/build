@@ -3,6 +3,7 @@
 /* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
 
 #include "../native.h"
+#include "../newstr.h"
 
 /*
     local result = ;
@@ -26,7 +27,7 @@ LIST *set_difference( PARSE *parse, FRAME *frame )
     for(; b; b = b->next)
     {
         if (!list_in(a, b->string))
-            result = list_new(result, b->string);
+            result = list_new(result, copystr(b->string));
     }
     return result;
 }

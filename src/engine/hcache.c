@@ -86,6 +86,7 @@ static char * cache_name( void )
              * third argument to search. Expect the location to be specified via
              * LOCATE, so pass 0 as the fourth arugment.
              */
+            freestr( t->boundname );
             t->boundname = search( t->name, &t->time, 0, 0 );
             popsettings( t->settings );
 
@@ -178,6 +179,9 @@ void hcache_init()
     char       * version;
     int          header_count = 0;
     char       * hcachename;
+
+    if ( hcachehash )
+        return;
 
     hcachehash = hashinit( sizeof( HCACHEDATA ), "hcache" );
 
@@ -303,10 +307,10 @@ void hcache_done()
         return;
 
     if ( !( hcachename = cache_name() ) )
-        return;
+        goto cleanup;
 
     if ( !( f = fopen( hcachename, "wb" ) ) )
-        return;
+        goto cleanup;
 
     maxage = cache_maxage();
 
@@ -352,6 +356,17 @@ void hcache_done()
             hcachename, header_count, queries ? 100.0 * hits / queries : 0 );
 
     fclose ( f );
+    
+cleanup:
+    for ( c = hcachelist; c; c = c->next )
+    {
+        list_free( c->includes );
+        list_free( c->hdrscan );
+        freestr( c->boundname );
+    }
+
+    hcachelist = 0;
+    hashdone( hcachehash );
 }
 
 

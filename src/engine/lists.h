@@ -85,6 +85,7 @@ LIST *  list_pop_front( LIST *l );
 LIST *  list_sort( LIST *l);
 LIST *  list_unique( LIST *sorted_list);
 int     list_in(LIST* l, char* value);
+void    list_done();
 
 # define list_next( l ) ((l)->next)
 

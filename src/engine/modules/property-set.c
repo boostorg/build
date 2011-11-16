@@ -59,9 +59,9 @@ LIST *property_set_create( PARSE *parse, FRAME *frame )
         LIST* g = get_grist(tmp->string);
         LIST* att = call_rule("feature.attributes", frame, g, 0);
         if (list_in(att, "order-sensitive")) {
-            order_sensitive = list_new( order_sensitive, tmp->string);
+            order_sensitive = list_new( order_sensitive, copystr(tmp->string));
         } else {
-            sorted = list_new( sorted, tmp->string);
+            sorted = list_new( sorted, copystr(tmp->string));
         }
         list_free(att);
     }
@@ -84,12 +84,13 @@ LIST *property_set_create( PARSE *parse, FRAME *frame )
     if (val == 0)
     {
         val = call_rule("new", frame,
-                        list_append(list_new(0, "property-set"), unique), 0);
+                        list_append(list_new(0, newstr("property-set")), unique), 0);
 
-        var_set(newstr(var->value), list_copy(0, val), VAR_SET);
+        var_set(var->value, list_copy(0, val), VAR_SET);
     }
     else
     {
+        list_free(unique);
         val = list_copy(0, val);
     }
 

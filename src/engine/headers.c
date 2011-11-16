@@ -85,7 +85,7 @@ headers( TARGET *t )
     {
         FRAME   frame[1];
         frame_init( frame );
-        lol_add( frame->args, list_new( L0, t->name ) );
+        lol_add( frame->args, list_new( L0, copystr( t->name ) ) );
 #ifdef OPT_HEADER_CACHE_EXT
         lol_add( frame->args, hcache( t, rec, re, hdrscan ) );
 #else
@@ -96,7 +96,7 @@ headers( TARGET *t )
         {
             /* The third argument to HDRRULE is the bound name of
              * $(<) */
-            lol_add( frame->args, list_new( L0, t->boundname ) );
+            lol_add( frame->args, list_new( L0, copystr( t->boundname ) ) );
 
             list_free( evaluate_rule( hdrrule->string, frame ) );
         }

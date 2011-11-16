@@ -112,7 +112,7 @@ LIST *order( PARSE *parse, FRAME *frame )
             int i;
             tmp = arg;
             for (i = 0; i < order[index]; ++i, tmp = tmp->next);
-            result = list_new(result, tmp->string);
+            result = list_new(result, copystr(tmp->string));
         }
     }
 

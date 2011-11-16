@@ -89,16 +89,21 @@ static void import_base_rule( void * r_, void * d_ )
 
 static void import_base_rules( module_t * class, char * base )
 {
-    module_t * base_module = bindmodule( class_module_name( base ) );
+    char * module_name = class_module_name( base );
+    module_t * base_module = bindmodule( module_name );
+    LIST * imported;
     struct import_base_data d;
     d.base_name = base;
     d.base_module = base_module;
     d.class_module = class;
+    freestr( module_name );
 
     if ( base_module->rules )
         hashenumerate( base_module->rules, import_base_rule, &d );
 
-    import_module( imported_modules( base_module ), class );
+    imported = imported_modules( base_module );
+    import_module( imported, class );
+    list_free( imported );
 }
 
 
@@ -112,14 +117,14 @@ char * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     if ( !classes )
         classes = hashinit( sizeof( char * ), "classes" );
 
-    if ( hashcheck( classes, (HASHDATA * *)&pp ) )
+    if ( hashenter( classes, (HASHDATA * *)&pp ) )
     {
-        printf( "Class %s already defined\n", xname->string );
-        abort();
+        *pp = copystr( xname->string );
     }
     else
     {
-        hashenter( classes, (HASHDATA * *)&pp );
+        printf( "Class %s already defined\n", xname->string );
+        abort();
     }
     check_defined( bases );
 
@@ -138,4 +143,19 @@ char * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
         import_base_rules( class_module, bases->string );
 
     return name;
+}
+
+static void free_class( void * xclass, void * data )
+{
+    freestr( *(char **)xclass );
+}
+
+void class_done( void )
+{
+    if( classes )
+    {
+        hashenumerate( classes, free_class, (void *)0 );
+        hashdone( classes );
+        classes = 0;
+    }
 }

@@ -107,6 +107,14 @@ static char * allocate( size_t const n )
 
 char * newstr( char * string )
 {
+#ifdef BJAM_NO_MEM_CACHE
+    int l = strlen( string );
+    char * m = (char *)BJAM_MALLOC( l + 1 );
+
+    strtotal += l + 1;
+    memcpy( m, string, l + 1 );
+    return m;
+#else
     STRING str;
     STRING * s = &str;
 
@@ -127,6 +135,7 @@ char * newstr( char * string )
 
     strcount_in += 1;
     return *s;
+#endif
 }
 
 
@@ -136,8 +145,12 @@ char * newstr( char * string )
 
 char * copystr( char * s )
 {
+#ifdef BJAM_NO_MEM_CACHE
+    return newstr( s );
+#else
     strcount_in += 1;
     return s;
+#endif
 }
 
 
@@ -147,9 +160,22 @@ char * copystr( char * s )
 
 void freestr( char * s )
 {
-    strcount_out += 1;
+#ifdef BJAM_NO_MEM_CACHE
+    BJAM_FREE( s );
+#endif
+    if( s )
+        strcount_out += 1;
 }
 
+
+#ifdef BJAM_NEWSTR_NO_ALLOCATE
+
+static void freestring( void * xstring, void * data )
+{
+    BJAM_FREE( *(STRING *)xstring );
+}
+
+#endif
 
 /*
  * str_done() - free string tables.
@@ -157,6 +183,13 @@ void freestr( char * s )
 
 void str_done()
 {
+
+#ifdef BJAM_NEWSTR_NO_ALLOCATE
+
+    hashenumerate( strhash, freestring, (void *)0 );
+
+#else
+
     /* Reclaim string blocks. */
     while ( strblock_chain != 0 )
     {
@@ -164,6 +197,8 @@ void str_done()
         BJAM_FREE(strblock_chain);
         strblock_chain = n;
     }
+
+#endif
 
     hashdone( strhash );
 

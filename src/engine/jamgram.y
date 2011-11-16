@@ -325,9 +325,9 @@ arg	: ARG
  * This needs to be split cleanly out of 'rule'
  */
 
-func	: arg lol
+func	: ARG lol
 		{ $$.parse = prule( $1.string, $2.parse ); }
-	| ON_t arg arg lol
+	| ON_t arg ARG lol
 		{ $$.parse = pon( $2.parse, prule( $3.string, $4.parse ) ); }
 	| ON_t arg RETURN_t list
 		{ $$.parse = pon( $2.parse, $4.parse ); }
@@ -369,3 +369,5 @@ bindlist : /* empty */
 	| BIND_t list
 		{ $$.parse = $2.parse; }
 	;
+
+

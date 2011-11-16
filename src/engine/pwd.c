@@ -62,5 +62,5 @@ pwd(void)
             return L0;
         }
     }
-    return list_new(L0, pwd_result);
+    return list_new(L0, copystr( pwd_result ) );
 }

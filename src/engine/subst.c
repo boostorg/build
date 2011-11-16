@@ -27,7 +27,10 @@ regexp* regex_compile( const char* pattern )
         regex_hash = hashinit(sizeof(regex_entry), "regex");
 
     if ( hashenter( regex_hash, (HASHDATA **)&e ) )
+    {
+        e->pattern = newstr( (char*)pattern );
         e->regex = regcomp( (char*)pattern );
+    }
 
     return e->regex;
 }
@@ -92,3 +95,17 @@ builtin_subst(
   return result;
 }
 
+
+static void free_regex( void * xregex, void * data )
+{
+    regex_entry * regex = (regex_entry *)xregex;
+    freestr( (char *)regex->pattern );
+    BJAM_FREE( regex->regex );
+}
+
+
+void regex_done()
+{
+    hashenumerate( regex_hash, free_regex, (void *)0 );
+    hashdone( regex_hash );
+}

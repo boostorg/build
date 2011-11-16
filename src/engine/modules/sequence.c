@@ -3,6 +3,7 @@
 /* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
 
 #include "../native.h"
+#include "../newstr.h"
 
 # ifndef max
 # define max( a,b ) ((a)>(b)?(a):(b))
@@ -26,7 +27,7 @@ LIST *sequence_select_highest_ranked( PARSE *parse, FRAME *frame )
 
     for (; rank; rank = rank->next, elements = elements->next)
         if (atoi(rank->string) == highest_rank)
-            result = list_new(result, elements->string);
+            result = list_new(result, copystr(elements->string));
 
     return result;
 }

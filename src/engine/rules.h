@@ -111,6 +111,7 @@ struct _action
     TARGETS * sources;        /* aka $(>) */
     char      running;        /* has been started */
     char      status;         /* see TARGET status */
+    int       refs;
 };
 
 /* SETTINGS - variables to set when executing a TARGET's ACTIONS. */
@@ -240,6 +241,7 @@ struct _target
 
 
 /* Action related functions. */
+void       action_free  ( ACTION * );
 ACTIONS  * actionlist   ( ACTIONS *, ACTION * );
 void       freeactions  ( ACTIONS * );
 SETTINGS * addsettings  ( SETTINGS *, int flag, char * symbol, LIST * value );
@@ -273,6 +275,7 @@ TARGETS * targetentry                    ( TARGETS * chain, TARGET * );
 void      target_include                 ( TARGET * including, TARGET * included );
 TARGETS * targetlist                     ( TARGETS * chain, LIST * target_names );
 void      touch_target                   ( char * t );
+void      clear_includes                 ( TARGET * );
 
 /* Final module cleanup. */
 void rules_done();

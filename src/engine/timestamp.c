@@ -215,6 +215,10 @@ static void time_enter( void * closure, char * target, int found, time_t time )
         printf( "time ( %s ) : %s\n", target, time_progress[ b->progress ] );
 }
 
+static void free_timestamps ( void * xbinding, void * data )
+{
+    freestr( ((BINDING *)xbinding)->name );
+}
 
 /*
  * stamps_done() - free timestamp tables.
@@ -222,5 +226,6 @@ static void time_enter( void * closure, char * target, int found, time_t time )
 
 void stamps_done()
 {
+    hashenumerate( bindhash, free_timestamps, (void *)0 );
     hashdone( bindhash );
 }

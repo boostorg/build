@@ -9,5 +9,6 @@
 #include "frames.h"
 
 char* make_class_module(LIST* xname, LIST* bases, FRAME* frame);
+void class_done( void );
 
 #endif

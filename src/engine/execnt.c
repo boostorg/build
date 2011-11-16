@@ -1293,4 +1293,10 @@ static void close_alert( HANDLE process )
     }
 }
 
+
+void exec_done( void )
+{
+}
+
+
 #endif /* USE_EXECNT */

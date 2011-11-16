@@ -150,7 +150,7 @@ LIST * list_sort( LIST * l )
     qsort( strings, len, sizeof( char * ), str_ptr_compare );
 
     for ( ii = 0; ii < len; ++ii )
-        result = list_append( result, list_new( 0, strings[ ii ] ) );
+        result = list_append( result, list_new( 0, copystr( strings[ ii ] ) ) );
 
     BJAM_FREE( strings );
 
@@ -164,12 +164,24 @@ LIST * list_sort( LIST * l )
 
 void list_free( LIST * head )
 {
+#ifdef BJAM_NO_MEM_CACHE
+    LIST *l, *tmp;
+    for( l = head; l;  )
+    {
+        freestr( l->string );
+        l->string = 0;
+        tmp = l;
+        l = l->next;
+        BJAM_FREE( tmp );
+    }
+#else
     /* Just tack onto freelist. */
     if ( head )
     {
         head->tail->next = freelist;
         freelist = head;
     }
+#endif
 }
 
 
@@ -236,11 +248,24 @@ LIST * list_unique( LIST * sorted_list )
     {
         if ( !last_added || strcmp( sorted_list->string, last_added->string ) != 0 )
         {
-            result = list_new( result, sorted_list->string );
+            result = list_new( result, copystr( sorted_list->string ) );
             last_added = sorted_list;
         }
     }
     return result;
+}
+
+void list_done()
+{
+    LIST *l, *tmp;
+    for( l = freelist; l;  )
+    {
+        freestr( l->string );
+        l->string = 0;
+        tmp = l;
+        l = l->next;
+        BJAM_FREE( tmp );
+    }
 }
 
 

@@ -32,6 +32,7 @@ LIST* imported_modules(module_t* module);
 
 struct hash* demand_rules( module_t* );
 
+void modules_done();
 
 #endif
 

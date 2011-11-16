@@ -393,6 +393,12 @@ hashdone( struct hash *hp )
     hash_mem_free( hp->items.datalen, (char *)hp );
 }
 
+char *
+hashname ( struct hash * hp )
+{
+    return hp->name;
+}
+
 static void * hash_mem_alloc(size_t datalen, size_t size)
 {
     if (sizeof(HASHDATA) == datalen)

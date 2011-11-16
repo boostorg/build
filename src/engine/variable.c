@@ -323,6 +323,7 @@ int var_string( char * in, char * out, int outsize, LOL * lol )
         if ( dollar )
         {
             LIST * l = var_expand( L0, lastword, out, lol, 0 );
+            LIST * saved = l;
 
             out = lastword;
 
@@ -339,7 +340,7 @@ int var_string( char * in, char * out, int outsize, LOL * lol )
                 if ( l ) *out++ = ' ';
             }
 
-            list_free( l );
+            list_free( saved );
         }
     }
 
@@ -424,6 +425,7 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
         if ( dollar )
         {
             LIST * l = var_expand( L0, (char *)output_0, (char *)output_1, lol, 0 );
+            LIST * saved = l;
 
             while ( l )
             {
@@ -437,7 +439,7 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
                 }
             }
 
-            list_free( l );
+            list_free( saved );
         }
         else if ( output_0 < output_1 )
         {
@@ -472,6 +474,9 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
 }
 
 
+
+static LIST * saved_var = 0;
+
 /*
  * var_get() - get value of a user defined symbol.
  *
@@ -485,23 +490,28 @@ LIST * var_get( char * symbol )
     /* Some "fixed" variables... */
     if ( strcmp( "TMPDIR", symbol ) == 0 )
     {
-        result = list_new( L0, newstr( (char *)path_tmpdir() ) );
+        list_free( saved_var );
+        result = saved_var = list_new( L0, newstr( (char *)path_tmpdir() ) );
     }
     else if ( strcmp( "TMPNAME", symbol ) == 0 )
     {
-        result = list_new( L0, newstr( (char *)path_tmpnam() ) );
+        list_free( saved_var );
+        result = saved_var = list_new( L0, (char *)path_tmpnam() );
     }
     else if ( strcmp( "TMPFILE", symbol ) == 0 )
     {
-        result = list_new( L0, newstr( (char *)path_tmpfile() ) );
+        list_free( saved_var );
+        result = saved_var = list_new( L0, (char *)path_tmpfile() );
     }
     else if ( strcmp( "STDOUT", symbol ) == 0 )
     {
-        result = list_new( L0, newstr( "STDOUT" ) );
+        list_free( saved_var );
+        result = saved_var = list_new( L0, newstr( "STDOUT" ) );
     }
     else if ( strcmp( "STDERR", symbol ) == 0 )
     {
-        result = list_new( L0, newstr( "STDERR" ) );
+        list_free( saved_var );
+        result = saved_var = list_new( L0, newstr( "STDERR" ) );
     }
     else
 #endif
@@ -626,6 +636,8 @@ static void delete_var_( void * xvar, void * data )
 
 void var_done()
 {
+    list_free( saved_var );
+    saved_var = 0;
     hashenumerate( varhash, delete_var_, (void *)0 );
     hashdone( varhash );
 }

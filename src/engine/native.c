@@ -4,6 +4,7 @@
 
 #include "native.h"
 #include "hash.h"
+#include "newstr.h"
 
 # define P0 (PARSE *)0
 # define C0 (char *)0
@@ -19,7 +20,7 @@ void declare_native_rule(char* module, char* rule, char** args,
 
     {
         native_rule_t n, *np = &n;
-        n.name = rule;
+        n.name = newstr( rule );
         if (args)
         {
             n.arguments = args_new();
