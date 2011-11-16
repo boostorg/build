@@ -106,6 +106,9 @@ static void free_regex( void * xregex, void * data )
 
 void regex_done()
 {
-    hashenumerate( regex_hash, free_regex, (void *)0 );
-    hashdone( regex_hash );
+    if ( regex_hash )
+    {
+        hashenumerate( regex_hash, free_regex, (void *)0 );
+        hashdone( regex_hash );
+    }
 }
