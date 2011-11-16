@@ -214,6 +214,7 @@ toolset gcc gcc : "-o " : -D
     : -pedantic -fno-strict-aliasing
     [ opt --release : [ opt --symbols : -g : -s ] -O3 ]
     [ opt --debug : -g -O0 -fno-inline ]
+    [ opt --profile : -O3 -g -pg ]
     -I$(--python-include) -I$(--extra-include) -Wno-long-long
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
