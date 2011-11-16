@@ -158,4 +158,9 @@ int exec_wait()
     return 0;
 }
 
+
+void exec_done( void )
+{
+}
+
 # endif /* VMS */

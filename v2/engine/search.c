@@ -62,7 +62,7 @@ void call_bind_rule
 
             lol_add( frame->args, list_new( L0, boundname ) );
             if ( lol_get( frame->args, 1 ) )
-                evaluate_rule( bind_rule->string, frame );
+                list_free( evaluate_rule( bind_rule->string, frame ) );
 
             /* Clean up */
             frame_free( frame );
@@ -213,11 +213,27 @@ search(
         /* CONSIDER: we probably should issue a warning is another file
            is explicitly bound to the same location. This might break
            compatibility, though. */
-        hashenter( explicit_bindings, (HASHDATA * *)&ba );
+        if ( hashenter( explicit_bindings, (HASHDATA * *)&ba ) )
+        {
+            ba->binding = copystr( boundname );
+        }
     }
 
     /* prepare a call to BINDRULE if the variable is set */
     call_bind_rule( target, boundname );
 
     return boundname;
+}
+
+
+static void free_binding( void * xbinding, void * data )
+{
+    BINDING * binding = (BINDING *)xbinding;
+    freestr( binding->binding );
+}
+
+void search_done( void )
+{
+    hashenumerate( explicit_bindings, free_binding, (void *)0 );
+    hashdone( explicit_bindings );
 }

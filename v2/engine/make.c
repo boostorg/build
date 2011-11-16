@@ -155,10 +155,6 @@ int make( int n_targets, char const * * targets, int anyhow )
                 counts->cantmake > 1 ? "s" : "" );
     }
 
-#ifdef OPT_HEADER_CACHE_EXT
-    hcache_done();
-#endif
-
     status = counts->cantfind || counts->cantmake;
 
     {
@@ -290,6 +286,7 @@ void make0
     if ( ( t->binding == T_BIND_UNBOUND ) && !( t->flags & T_FLAG_NOTFILE ) )
     {
         char * another_target;
+        freestr( t->boundname );
         t->boundname = search( t->name, &t->time, &another_target,
                                t->flags & T_FLAG_ISFILE );
         /* If it was detected that this target refers to an already existing and
@@ -797,7 +794,7 @@ static LIST * targets_to_update_ = 0;
 
 void mark_target_for_updating( char * target )
 {
-    targets_to_update_ = list_new( targets_to_update_, target );
+    targets_to_update_ = list_new( targets_to_update_, newstr( target ) );
 }
 
 

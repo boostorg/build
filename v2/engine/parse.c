@@ -50,7 +50,7 @@ void parse_file( char * f, FRAME * frame )
             break;
 
         /* Run the parse tree. */
-        parse_evaluate( p, frame );
+        list_free( parse_evaluate( p, frame ) );
         parse_free( p );
     }
 }
@@ -85,12 +85,13 @@ PARSE * parse_make(
 
     if ( left )
     {
-        p->file = left->file;
+        p->file = copystr( left->file );
         p->line = left->line;
     }
     else
     {
         yyinput_stream( &p->file, &p->line );
+        p->file = copystr( p->file );
     }
 
     return p;
@@ -120,6 +121,8 @@ void parse_free( PARSE * p )
         parse_free( p->third );
     if ( p->rulename )
         freestr( p->rulename );
+    if ( p->file )
+        freestr( p->file );
 
     BJAM_FREE( (char *)p );
 }

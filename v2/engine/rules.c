@@ -135,7 +135,8 @@ void rule_free( RULE * r )
 {
     freestr( r->name );
     r->name = "";
-    parse_free( r->procedure );
+    if ( r->procedure )
+        parse_free( r->procedure );
     r->procedure = 0;
     if ( r->arguments )
         args_free( r->arguments );
@@ -168,8 +169,11 @@ TARGET * bindtarget( char const * target_name )
     {
         memset( (char *)t, '\0', sizeof( *t ) );
         t->name = newstr( (char *)target_name );  /* never freed */
-        t->boundname = t->name;  /* default for T_FLAG_NOTFILE */
+        t->boundname = copystr( t->name );  /* default for T_FLAG_NOTFILE */
     }
+#ifdef NT
+    freestr( (char *)target_name );
+#endif
 
     return t;
 }
@@ -190,6 +194,7 @@ static void bind_explicitly_located_target( void * xtarget, void * data )
                 /* We are binding a target with explicit LOCATE. So third
                  * argument is of no use: nothing will be returned through it.
                  */
+                freestr( t->boundname );
                 t->boundname = search( t->name, &t->time, 0, 0 );
                 popsettings( t->settings );
                 break;
@@ -292,7 +297,7 @@ TARGET * copytarget( const TARGET * ot )
     TARGET * t = (TARGET *)BJAM_MALLOC( sizeof( *t ) );
     memset( (char *)t, '\0', sizeof( *t ) );
     t->name = copystr( ot->name );
-    t->boundname = t->name;
+    t->boundname = copystr( t->name );
 
     t->flags |= T_FLAG_NOTFILE | T_FLAG_INTERNAL;
 
@@ -368,6 +373,21 @@ TARGETS * targetchain( TARGETS * chain, TARGETS * targets )
 }
 
 /*
+ * action_free - decrement the ACTIONs refrence count
+ * and (maybe) free it.
+ */
+
+void action_free ( ACTION * action )
+{
+    if ( --action->refs == 0 )
+    {
+        freetargets( action->targets );
+        freetargets( action->sources );
+        BJAM_FREE( action );
+    }
+}
+
+/*
  * actionlist() - append to an ACTION chain.
  */
 
@@ -377,6 +397,7 @@ ACTIONS * actionlist( ACTIONS * chain, ACTION * action )
 
     actions->action = action;
 
+    ++action->refs;
     if ( !chain ) chain = actions;
     else chain->tail->next = actions;
     chain->tail = actions;
@@ -500,6 +521,7 @@ void freeactions( ACTIONS * chain )
     while ( chain )
     {
         ACTIONS * n = chain->next;
+        action_free( chain->action );
         BJAM_FREE( chain );
         chain = n;
     }
@@ -527,10 +549,19 @@ void freesettings( SETTINGS * v )
 static void freetarget( void * xt, void * data )
 {
     TARGET * t = (TARGET *)xt;
-    if ( t->settings ) freesettings( t->settings            );
-    if ( t->depends  ) freetargets ( t->depends             );
-    if ( t->includes ) freetarget  ( t->includes, (void *)0 );
-    if ( t->actions  ) freeactions ( t->actions             );
+    if ( t->name       ) freestr     ( t->name                );
+    if ( t->boundname  ) freestr     ( t->boundname           );
+    if ( t->settings   ) freesettings( t->settings            );
+    if ( t->depends    ) freetargets ( t->depends             );
+    if ( t->dependants ) freetargets ( t->dependants          );
+    if ( t->parents    ) freetargets ( t->parents             );
+    if ( t->actions    ) freeactions ( t->actions             );
+
+    if ( t->includes   )
+    {
+        freetarget( t->includes, (void *)0 );
+        BJAM_FREE( t->includes );
+    }
 }
 
 
@@ -641,7 +672,7 @@ static void set_rule_body( RULE * rule, argument_list * args, PARSE * procedure 
 static char * global_rule_name( RULE * r )
 {
     if ( r->module == root_module() )
-        return r->name;
+        return copystr( r->name );
 
     {
         char name[4096] = "";

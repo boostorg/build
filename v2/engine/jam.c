@@ -211,6 +211,8 @@ int anyhow = 0;
     extern PyObject * bjam_caller       ( PyObject * self, PyObject * args );
 #endif
 
+void regex_done();
+
 char *saved_argv0;
 
 int main( int argc, char * * argv, char * * arg_environ )
@@ -541,7 +543,7 @@ int main( int argc, char * * argv, char * * arg_environ )
                 for ( ; targets; targets = list_next( targets ) )
                     targets2[ n++ ] = targets->string;
                 status |= make( targets_count, targets2, anyhow );
-                free( targets );
+                BJAM_FREE( (void *)targets2 );
             }
             else
             {
@@ -557,11 +559,24 @@ int main( int argc, char * * argv, char * * arg_environ )
     if ( DEBUG_PROFILE )
         profile_dump();
 
+    
+#ifdef OPT_HEADER_CACHE_EXT
+    hcache_done();
+#endif
+
+    clear_targets_to_update();
+
     /* Widely scattered cleanup. */
     var_done();
     file_done();
     rules_done();
     stamps_done();
+    search_done();
+    class_done();
+    modules_done();
+    regex_done();
+    exec_done();
+    list_done();
     str_done();
 
     /* Close cmdout. */

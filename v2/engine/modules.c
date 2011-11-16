@@ -14,6 +14,7 @@
 #include "rules.h"
 #include "variable.h"
 #include "strings.h"
+#include "native.h"
 #include <assert.h>
 
 static struct hash * module_hash = 0;
@@ -89,14 +90,42 @@ static void delete_rule_( void * xrule, void * data )
 }
 
 
+static void delete_native_rule( void * xrule, void * data )
+{
+    native_rule_t * rule = (native_rule_t *)xrule;
+    if ( rule->arguments )
+        args_free( rule->arguments );
+    freestr( rule->name );
+    if ( rule->procedure )
+        parse_free( rule->procedure );
+}
+
+
+static void delete_imported_modules( void * xmodule_name, void * data )
+{
+    freestr( *(char * *)xmodule_name );
+}
+
+
 void delete_module( module_t * m )
 {
     /* Clear out all the rules. */
     if ( m->rules )
     {
+        char * name;
         hashenumerate( m->rules, delete_rule_, (void *)0 );
+        name = hashname( m->rules );
         hashdone( m->rules );
+        freestr( name );
         m->rules = 0;
+    }
+
+    if ( m->native_rules )
+    {
+        char * name;
+        hashenumerate( m->native_rules, delete_native_rule, (void *)0 );
+        hashdone( m->native_rules );
+        m->native_rules = 0;
     }
 
     if ( m->variables )
@@ -106,8 +135,34 @@ void delete_module( module_t * m )
         var_hash_swap( &m->variables );
         m->variables = 0;
     }
+
+    if ( m->imported_modules )
+    {
+        hashenumerate( m->imported_modules, delete_imported_modules, (void *)0 );
+        hashdone( m->imported_modules );
+        m->imported_modules = 0;
+    }
 }
 
+
+static void delete_module_( void * xmodule, void * data )
+{
+    module_t *m = (module_t *)xmodule;
+
+    delete_module( m );
+
+    if ( m->name )
+    {
+        freestr( m->name );
+    }
+}
+
+void modules_done()
+{
+    hashenumerate( module_hash, delete_module_, (void *)0 ); 
+    hashdone( module_hash );
+    module_hash = 0;
+}
 
 module_t * root_module()
 {
@@ -143,7 +198,10 @@ void import_module( LIST * module_names, module_t * target_module )
     {
         char * s = module_names->string;
         char * * ss = &s;
-        hashenter( h, (HASHDATA * *)&ss );
+        if( hashenter( h, (HASHDATA * *)&ss ) )
+        {
+            *ss = copystr( s );
+        }
     }
 
     PROFILE_EXIT( IMPORT_MODULE );

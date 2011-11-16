@@ -71,9 +71,17 @@ static void remove_files_atexit(void)
     }
 }
 
+static void free_file_info ( void * xfile, void * data )
+{
+    file_info_t * file = (file_info_t *)xfile;
+    freestr( file->name );
+    list_free( file->files );
+}
+
 void file_done()
 {
     remove_files_atexit();
+    hashenumerate( filecache_hash, free_file_info, (void *)0 );
     hashdone( filecache_hash );
 }
 

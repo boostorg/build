@@ -567,6 +567,7 @@ static void make1c( state * pState )
                 ( t->status == EXEC_CMD_OK ) &&
                 !t->rescanned )
             {
+                TARGET * saved_includes;
                 TARGET * target_to_rescan = t;
                 SETTINGS * s;
 
@@ -576,6 +577,7 @@ static void make1c( state * pState )
                     target_to_rescan = t->original_target;
 
                 /* Clean current includes. */
+                saved_includes = target_to_rescan->includes;
                 target_to_rescan->includes = 0;
 
                 s = copysettings( target_to_rescan->settings );
@@ -586,6 +588,10 @@ static void make1c( state * pState )
 
                 if ( target_to_rescan->includes )
                 {
+                    /* Link the old includes on to make sure that it gets
+                     * cleaned up correctly.
+                     */
+                    target_to_rescan->includes->includes = saved_includes;
                     target_to_rescan->includes->rescanned = 1;
                     /* Tricky. The parents have already been processed, but they
                      * have not seen the internal node, because it was just
@@ -603,6 +609,10 @@ static void make1c( state * pState )
                                                           target_to_rescan->includes );
                     /* Will be processed below. */
                     additional_includes = target_to_rescan->includes;
+                }
+                else
+                {
+                    target_to_rescan->includes = saved_includes;
                 }
             }
 
@@ -678,7 +688,7 @@ static void call_timing_rule( TARGET * target, timing_info * time )
         lol_add( frame->args, list_copy( L0, timing_rule->next ) );
 
         /* target :: the name of the target */
-        lol_add( frame->args, list_new( L0, target->name ) );
+        lol_add( frame->args, list_new( L0, copystr( target->name ) ) );
 
         /* start end user system :: info about the action command */
         lol_add( frame->args, list_new( list_new( list_new( list_new( L0,
@@ -733,7 +743,7 @@ static void call_action_rule
         lol_add( frame->args, list_copy( L0, action_rule->next ) );
 
         /* target :: the name of the target */
-        lol_add( frame->args, list_new( L0, target->name ) );
+        lol_add( frame->args, list_new( L0, copystr( target->name ) ) );
 
         /* command status start end user system :: info about the action command */
         lol_add( frame->args,
@@ -1139,6 +1149,7 @@ static void make1bind( TARGET * t )
         return;
 
     pushsettings( t->settings );
+    freestr( t->boundname );
     t->boundname = search( t->name, &t->time, 0, ( t->flags & T_FLAG_ISFILE ) );
     t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
     popsettings( t->settings );
