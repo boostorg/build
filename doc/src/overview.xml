@@ -17,12 +17,12 @@
       Boost.Build actually consists of two parts - Boost.Jam, a build engine
       with its own interpreted language, and Boost.Build itself, implemented in
       Boost.Jam's language. The chain of events when you type
-      <command>bjam</command> on the command line is as follows:
+      <command>b2</command> on the command line is as follows:
       <orderedlist>
         <listitem>
           <para>
-            Boost.Jam tries to find Boost.Build and loads the top-level module.
-            The exact process is described in <xref linkend=
+            Boost.Build executable tries to find Boost.Build modules and 
+            loads the top-level module. The exact process is described in <xref linkend=
             "bbv2.reference.init"/>
           </para>
         </listitem>
@@ -134,7 +134,7 @@ exe a : a.cpp ;
         all build files are parsed, Boost.Build considers properties requested on the
         command line. Supposed you have invoked Boost.Build with:
 <screen>
-bjam toolset=gcc toolset=msvc
+b2 toolset=gcc toolset=msvc
 </screen>
         In that case, the metatarget will be called twice, once with <code>toolset=gcc</code>
         and once with <code>toolset=msvc</code>. Both invocations will produce concrete
@@ -325,7 +325,7 @@ rule test ( )
 import <replaceable>module</replaceable> ;
 import <replaceable>module</replaceable> : <replaceable>rule</replaceable> ;
 </programlisting>
-        The first form imports the specified bjam module. All rules from that
+        The first form imports the specified module. All rules from that
         module are made available using the qualified name: <code><replaceable>
         module</replaceable>.<replaceable>rule</replaceable></code>. The second
         form imports the specified rules only, and they can be called using
@@ -581,7 +581,7 @@ using gcc : 3.4 : g++-3.4 ;
     <section id="bbv2.overview.invocation">
       <title>Invocation</title>
 
-      <para>To invoke Boost.Build, type <command>bjam</command> on the command line. Three kinds
+      <para>To invoke Boost.Build, type <command>b2</command> on the command line. Three kinds
       of command-line tokens are accepted, in any order:</para>
       <variablelist>
         <varlistentry>
@@ -615,20 +615,20 @@ using gcc : 3.4 : g++-3.4 ;
        
         <para>To build all targets defined in Jamfile in the current directory with default properties, run:
 <screen>
-bjam
+b2
 </screen>
         </para>
 
         <para>To build specific targets, specify them on the command line:
 <screen>
-bjam lib1 subproject//lib2
+b2 lib1 subproject//lib2
 </screen>
         </para>
 
         <para>To request a certain value for some property, add <literal>
         <replaceable>property</replaceable>=<replaceable>value</replaceable></literal> to the command line:
 <screen>
-bjam toolset=gcc variant=debug optimization=space
+b2 toolset=gcc variant=debug optimization=space
 </screen>
         </para>
       </section>
@@ -951,7 +951,7 @@ bjam toolset=gcc variant=debug optimization=space
           once for each specified value of a feature.  For example, if you use
         </para>
 <screen>
-bjam link=static link=shared threading=single threading=multi
+b2 link=static link=shared threading=single threading=multi
 </screen>
         <para>
           Then a total of 4 builds will be performed.  For convenience, 
@@ -959,13 +959,13 @@ bjam link=static link=shared threading=single threading=multi
           you can separate the values with commands, for example:
         </para>
 <screen>
-bjam link=static,shared threading=single,multi
+b2 link=static,shared threading=single,multi
 </screen>
         <para>
           The comma has special meaning only if the feature has a fixed set of values, so
         </para>
 <screen>
-bjam include=static,shared
+b2 include=static,shared
 </screen>
         <para>is not treated specially.</para>
                 
@@ -1299,7 +1299,7 @@ exe hello : hello.cpp
            optimization. When referring to an inline main target, its declared
            name must be prefixed by its parent target's name and two dots. In
            the example above, to build only helpers, one should run
-           <code>bjam hello..helpers</code>.
+           <code>b2 hello..helpers</code>.
          </para>
 
          <para>When no target is requested on the command line, all targets in the
@@ -1541,7 +1541,7 @@ project tennis
         The command line specifies which targets to build and with which
         properties. For example:
 <programlisting>
-bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
+b2 app1 lib1//lib1 toolset=gcc variant=debug optimization=full
 </programlisting>
         would build two targets, "app1" and "lib1//lib1" with the specified
         properties. You can refer to any targets, using
@@ -1549,7 +1549,7 @@ bjam app1 lib1//lib1 toolset=gcc variant=debug optimization=full
         properties. Some of the properties are very common, and for them the name
         of the property can be omitted. For example, the above can be written as:
 <programlisting>
-bjam app1 lib1//lib1 gcc debug optimization=full
+b2 app1 lib1//lib1 gcc debug optimization=full
 </programlisting>
         The complete syntax, which has some additional shortcuts, is
         described in <xref linkend="bbv2.overview.invocation"/>.
@@ -1640,7 +1640,7 @@ bjam app1 lib1//lib1 gcc debug optimization=full
     <section><title>Building a Project</title>
 
       <para>Often, a user builds a complete project, not just one main
-      target. In fact, invoking <command>bjam</command> without
+      target. In fact, invoking <command>b2</command> without
       arguments
       <!-- do you know the difference between parameters and
            arguments?  I only learned this year -->

@@ -13,7 +13,7 @@
     <para>
       This is not possible, since Jamfile does not have "current" value of any
       feature, be it toolset, build variant or anything else. For a single
-      invocation of <filename>bjam</filename>, any given main target can be
+      run of Boost.Build, any given main target can be
       built with several property sets. For example, user can request two build
       variants on the command line. Or one library is built as shared when used
       from one application, and as static when used from another. Each Jamfile
