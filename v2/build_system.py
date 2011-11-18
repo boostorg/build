@@ -524,7 +524,7 @@ def main_real():
         print "warning: For more configuration options, please consult"
         print "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html"
 
-        toolset.using(dt, dtv)
+        using(dt, dtv)
 
     # Parse command line for targets and properties. Note that this requires
     # that all project files already be loaded.
