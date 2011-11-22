@@ -7,6 +7,7 @@
 #define FRAMES_DWA20011021_H
 
 #include "lists.h"
+#include "object.h"
 #include "modules.h"
 
 typedef struct _PARSE PARSE;
@@ -14,13 +15,13 @@ typedef struct frame FRAME;
 
 struct frame
 {
-    FRAME    * prev;
+    FRAME      * prev;
     /* The nearest enclosing frame for which module->user_module is true. */
-    FRAME    * prev_user;
-    LOL        args[ 1 ];
-    module_t * module;
-    PARSE    * procedure;
-    char     * rulename;
+    FRAME      * prev_user;
+    LOL          args[ 1 ];
+    module_t   * module;
+    PARSE      * procedure;
+    const char * rulename;
 };
 
 

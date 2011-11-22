@@ -57,7 +57,7 @@
 #include "headers.h"
 
 #include "search.h"
-#include "newstr.h"
+#include "object.h"
 #include "make.h"
 #include "command.h"
 #include "execcmd.h"
@@ -107,7 +107,7 @@ static void make1atail  ( state * );
 static void make1b      ( state * );
 static void make1c      ( state * );
 static void make1d      ( state * );
-static void make_closure( void * closure, int status, timing_info *, char *, char * );
+static void make_closure( void * closure, int status, timing_info *, const char *, const char * );
 
 typedef struct _stack
 {
@@ -350,10 +350,10 @@ static void make1atail( state * pState )
 
 static void make1b( state * pState )
 {
-    TARGET  * t = pState->t;
-    TARGETS * c;
-    TARGET  * failed = 0;
-    char    * failed_name = "dependencies";
+    TARGET     * t = pState->t;
+    TARGETS    * c;
+    TARGET     * failed = 0;
+    const char * failed_name = "dependencies";
 
     /* If any dependencies are still outstanding, wait until they call make1b()
      * to signal their completion.
@@ -376,7 +376,7 @@ static void make1b( state * pState )
 
         if ( DEBUG_EXECCMD )
             printf( "SEM: %s is busy, delaying launch of %s\n",
-                t->semaphore->name, t->name );
+                object_str( t->semaphore->name ), object_str( t->name ) );
         pop_state( &state_stack );
         return;
     }
@@ -398,7 +398,7 @@ static void make1b( state * pState )
     {
         failed_name = failed->flags & T_FLAG_INTERNAL
             ? failed->failed
-            : failed->name;
+            : object_str( failed->name );
     }
     t->failed = failed_name;
 
@@ -410,11 +410,11 @@ static void make1b( state * pState )
         ++counts->skipped;
         if ( ( pState->t->flags & ( T_FLAG_RMOLD | T_FLAG_NOTFILE ) ) == T_FLAG_RMOLD )
         {
-            if ( !unlink( pState->t->boundname ) )
-                printf( "...removing outdated %s\n", pState->t->boundname );
+            if ( !unlink( object_str( pState->t->boundname ) ) )
+                printf( "...removing outdated %s\n", object_str( pState->t->boundname ) );
         }
         else
-            printf( "...skipped %s for lack of %s...\n", pState->t->name, failed_name );
+            printf( "...skipped %s for lack of %s...\n", object_str( pState->t->name ), failed_name );
     }
 
     if ( pState->t->status == EXEC_CMD_OK )
@@ -436,7 +436,7 @@ static void make1b( state * pState )
 
         case T_FATE_ISTMP:
             if ( DEBUG_MAKE )
-                printf( "...using %s...\n", pState->t->name );
+                printf( "...using %s...\n", object_str( pState->t->name ) );
             break;
 
         case T_FATE_TOUCHED:
@@ -467,7 +467,7 @@ static void make1b( state * pState )
 
             /* All possible fates should have been accounted for by now. */
         default:
-            printf( "ERROR: %s has bad fate %d", pState->t->name,
+            printf( "ERROR: %s has bad fate %d", object_str( pState->t->name ),
                 pState->t->fate );
             abort();
         }
@@ -484,8 +484,8 @@ static void make1b( state * pState )
     {
         ++pState->t->semaphore->asynccnt;
         if ( DEBUG_EXECCMD )
-            printf( "SEM: %s now used by %s\n", pState->t->semaphore->name,
-                pState->t->name );
+            printf( "SEM: %s now used by %s\n", object_str( pState->t->semaphore->name ),
+                object_str( pState->t->name ) );
     }
 #endif
 
@@ -508,14 +508,14 @@ static void make1c( state * pState )
 
     if ( cmd && ( pState->t->status == EXEC_CMD_OK ) )
     {
-        char * rule_name = 0;
-        char * target = 0;
+        const char * rule_name = 0;
+        const char * target = 0;
 
         if ( DEBUG_MAKEQ ||
             ( !( cmd->rule->actions->flags & RULE_QUIETLY ) && DEBUG_MAKE ) )
         {
-            rule_name = cmd->rule->name;
-            target = lol_get( &cmd->args, 0 )->string;
+            rule_name = object_str( cmd->rule->name );
+            target = object_str( lol_get( &cmd->args, 0 )->value );
             if ( globs.noexec )
                 out_action( rule_name, target, cmd->buf, "", "", EXIT_OK );
         }
@@ -631,7 +631,7 @@ static void make1c( state * pState )
                 --t->semaphore->asynccnt;
 
                 if ( DEBUG_EXECCMD )
-                    printf( "SEM: %s is now free\n", t->semaphore->name );
+                    printf( "SEM: %s is now free\n", object_str( t->semaphore->name ) );
 
                 /* If anything is waiting, notify the next target. There is no
                  * point in notifying waiting targets, since they will be
@@ -645,7 +645,7 @@ static void make1c( state * pState )
                     t->semaphore->parents = first->next;
 
                     if ( DEBUG_EXECCMD )
-                        printf( "SEM: placing %s on stack\n", first->target->name );
+                        printf( "SEM: placing %s on stack\n", object_str( first->target->name ) );
                     push_state( &temp_stack, first->target, NULL, T_STATE_MAKE1B );
                     BJAM_FREE( first );
                 }
@@ -671,10 +671,13 @@ static void make1c( state * pState )
 static void call_timing_rule( TARGET * target, timing_info * time )
 {
     LIST * timing_rule;
+    OBJECT * varname;
 
+    varname = object_new( "__TIMING_RULE__" );
     pushsettings( target->settings );
-    timing_rule = var_get( "__TIMING_RULE__" );
+    timing_rule = var_get( varname );
     popsettings( target->settings );
+    object_free( varname );
 
     if ( timing_rule )
     {
@@ -688,7 +691,7 @@ static void call_timing_rule( TARGET * target, timing_info * time )
         lol_add( frame->args, list_copy( L0, timing_rule->next ) );
 
         /* target :: the name of the target */
-        lol_add( frame->args, list_new( L0, copystr( target->name ) ) );
+        lol_add( frame->args, list_new( L0, object_copy( target->name ) ) );
 
         /* start end user system :: info about the action command */
         lol_add( frame->args, list_new( list_new( list_new( list_new( L0,
@@ -698,7 +701,7 @@ static void call_timing_rule( TARGET * target, timing_info * time )
             outf_double( time->system ) ) );
 
         /* Call the rule. */
-        evaluate_rule( timing_rule->string, frame );
+        evaluate_rule( timing_rule->value, frame );
 
         /* Clean up. */
         frame_free( frame );
@@ -717,15 +720,18 @@ static void call_action_rule
     TARGET      * target,
     int           status,
     timing_info * time,
-    char        * executed_command,
-    char        * command_output
+    const char  * executed_command,
+    const char  * command_output
 )
 {
-    LIST * action_rule;
+    LIST   * action_rule;
+    OBJECT * varname;
 
+    varname = object_new( "__ACTION_RULE__" );
     pushsettings( target->settings );
-    action_rule = var_get( "__ACTION_RULE__" );
+    action_rule = var_get( varname );
     popsettings( target->settings );
+    object_free( varname );
 
     if ( action_rule )
     {
@@ -743,12 +749,12 @@ static void call_action_rule
         lol_add( frame->args, list_copy( L0, action_rule->next ) );
 
         /* target :: the name of the target */
-        lol_add( frame->args, list_new( L0, copystr( target->name ) ) );
+        lol_add( frame->args, list_new( L0, object_copy( target->name ) ) );
 
         /* command status start end user system :: info about the action command */
         lol_add( frame->args,
             list_new( list_new( list_new( list_new( list_new( list_new( L0,
-                newstr( executed_command ) ),
+                object_new( executed_command ) ),
                 outf_int( status ) ),
                 outf_time( time->start ) ),
                 outf_time( time->end ) ),
@@ -757,12 +763,12 @@ static void call_action_rule
 
         /* output ? :: the output of the action command */
         if ( command_output )
-            lol_add( frame->args, list_new( L0, newstr( command_output ) ) );
+            lol_add( frame->args, list_new( L0, object_new( command_output ) ) );
         else
             lol_add( frame->args, L0 );
 
         /* Call the rule. */
-        evaluate_rule( action_rule->string, frame );
+        evaluate_rule( action_rule->value, frame );
 
         /* Clean up. */
         frame_free( frame );
@@ -780,8 +786,8 @@ static void make_closure
     void        * closure,
     int           status,
     timing_info * time,
-    char        * executed_command,
-    char        * command_output
+    const char  * executed_command,
+    const char  * command_output
 )
 {
     TARGET * built = (TARGET *)closure;
@@ -835,7 +841,7 @@ static void make1d( state * pState )
         if ( !DEBUG_EXEC )
             printf( "%s\n", cmd->buf );
 
-        printf( "...failed %s ", cmd->rule->name );
+        printf( "...failed %s ", object_str( cmd->rule->name ) );
         list_print( lol_get( &cmd->args, 0 ) );
         printf( "...\n" );
     }
@@ -855,13 +861,13 @@ static void make1d( state * pState )
         for ( ; targets; targets = list_next( targets ) )
         {
             int need_unlink = 1;
-            TARGET* t = bindtarget ( targets->string );
+            TARGET* t = bindtarget ( targets->value );
             if (t->flags & T_FLAG_PRECIOUS)
             {                
                 need_unlink = 0;
             }
-            if (need_unlink && !unlink( targets->string ) )
-                printf( "...removing %s\n", targets->string );
+            if (need_unlink && !unlink( object_str( targets->value ) ) )
+                printf( "...removing %s\n", object_str( targets->value ) );
         }
     }
 
@@ -979,7 +985,11 @@ static CMD * make1cmds( TARGET * t )
 
         swap_settings( &settings_module, &settings_target, rule->module, t );
         if ( !shell )
-            shell = var_get( "JAMSHELL" );  /* shell is per-target */
+        {
+            OBJECT * varname = object_new( "JAMSHELL" );
+            shell = var_get( varname );  /* shell is per-target */
+            object_free( varname );
+        }
 
         /* If we had 'actions xxx bind vars' we bind the vars now. */
         boundvars = make1settings( actions->bindlist );
@@ -1028,13 +1038,13 @@ static CMD * make1cmds( TARGET * t )
             else
             {
                 /* Too long and not splittable. */
-                printf( "%s actions too long (max %d):\n", rule->name, MAXLINE
+                printf( "%s actions too long (max %d):\n", object_str( rule->name ), MAXLINE
                     );
 
                 /* Tell the user what didn't fit. */
                 cmd = cmd_new( rule, list_copy( L0, nt ),
                     list_sublist( ns, start, chunk ),
-                    list_new( L0, newstr( "%" ) ) );
+                    list_new( L0, object_new( "%" ) ) );
                 fputs( cmd->buf, stdout );
                 exit( EXITBAD );
             }
@@ -1089,14 +1099,14 @@ static LIST * make1list( LIST * l, TARGETS * targets, int flags )
         {
             LIST * m;
             for ( m = l; m; m = m->next )
-                if ( !strcmp( m->string, t->boundname ) )
+                if ( object_equal( m->value, t->boundname ) )
                     break;
             if ( m )
                 continue;
         }
 
         /* Build new list. */
-        l = list_new( l, copystr( t->boundname ) );
+        l = list_new( l, object_copy( t->boundname ) );
     }
 
     return l;
@@ -1113,23 +1123,23 @@ static SETTINGS * make1settings( LIST * vars )
 
     for ( ; vars; vars = list_next( vars ) )
     {
-        LIST * l = var_get( vars->string );
+        LIST * l = var_get( vars->value );
         LIST * nl = 0;
 
         for ( ; l; l = list_next( l ) )
         {
-            TARGET * t = bindtarget( l->string );
+            TARGET * t = bindtarget( l->value );
 
             /* Make sure the target is bound. */
             if ( t->binding == T_BIND_UNBOUND )
                 make1bind( t );
 
             /* Build a new list. */
-            nl = list_new( nl, copystr( t->boundname ) );
+            nl = list_new( nl, object_copy( t->boundname ) );
         }
 
         /* Add to settings chain. */
-        settings = addsettings( settings, VAR_SET, vars->string, nl );
+        settings = addsettings( settings, VAR_SET, vars->value, nl );
     }
 
     return settings;
@@ -1149,7 +1159,7 @@ static void make1bind( TARGET * t )
         return;
 
     pushsettings( t->settings );
-    freestr( t->boundname );
+    object_free( t->boundname );
     t->boundname = search( t->name, &t->time, 0, ( t->flags & T_FLAG_ISFILE ) );
     t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
     popsettings( t->settings );

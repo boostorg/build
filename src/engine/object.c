@@ -1,37 +1,39 @@
 /*
  * Copyright 1993, 1995 Christopher Seiwald.
+ * Copyright 2011 Steven Watanabe
  *
  * This file is part of Jam - see jam.c for Copyright information.
  */
 
 # include "jam.h"
-# include "newstr.h"
-# include "compile.h"
+# include "object.h"
 # include <stddef.h>
 # include <stdlib.h>
+# include <assert.h>
 
 /*
- * newstr.c - string manipulation routines
- *
- * To minimize string copying, string creation, copying, and freeing
- * is done through newstr.
+ * object.c - object manipulation routines
  *
  * External functions:
  *
- *    newstr() - return a dynamically allocated copy of a string
- *    copystr() - return a copy of a string previously returned by newstr()
- *    freestr() - free a string returned by newstr() or copystr()
- *    str_done() - free string tables
- *
- * Once a string is passed to newstr(), the returned string is readonly.
+ *    object_new()  - create an object from a string
+ *    object_copy() - return a copy of an object
+ *    object_free() - free an object
+ *    object_str()  - get the string value of an object
+ *    object_done() - free string tables
  *
  * This implementation builds a hash table of all strings, so that multiple
- * calls of newstr() on the same string allocate memory for the string once.
+ * calls of object_new() on the same string allocate memory for the string once.
  * Strings are never actually freed.
  */
 
+#define OBJECT_MAGIC 0xa762e0e3u
+
 struct hash_header
 {
+#ifndef NDEBUG
+    unsigned int magic;
+#endif
     unsigned int hash;
     struct hash_item * next;
 };
@@ -169,7 +171,6 @@ static void string_set_resize(string_set *set)
     {
         while ( set->data[i] )
         {
-            int k = 0;
             struct hash_item * temp = set->data[i];
             unsigned pos = temp->header.hash % new_set.num;
             set->data[i] = temp->header.next;
@@ -186,7 +187,6 @@ static const char * string_set_insert ( string_set * set, const char * string )
     unsigned hash = hash_keyval( string );
     unsigned pos = hash % set->num;
     unsigned l;
-    unsigned aligned;
 
     struct hash_item * result;
 
@@ -208,6 +208,9 @@ static const char * string_set_insert ( string_set * set, const char * string )
     result = (struct hash_item *)allocate( sizeof( struct hash_header ) + l + 1 );
     result->header.hash = hash;
     result->header.next = set->data[pos];
+#ifndef NDEBUG
+    result->header.magic = OBJECT_MAGIC;
+#endif
     memcpy( result->data, string, l + 1 );
     set->data[pos] = result;
     strtotal += l + 1;
@@ -216,64 +219,121 @@ static const char * string_set_insert ( string_set * set, const char * string )
     return result->data;
 }
 
+
+static struct hash_item * object_get_item( OBJECT * obj )
+{
+    return (struct hash_item *)( (char *)obj - offsetof( struct hash_item, data ) );
+}
+
+
+static void object_validate( OBJECT * obj )
+{
+    assert( object_get_item( obj )->header.magic == OBJECT_MAGIC );
+}
+
+
 /*
- * newstr() - return a dynamically allocated copy of a string.
+ * object_new() - create an object from a string.
  */
 
-char * newstr( char * string )
+OBJECT * object_new( const char * string )
 {
 #ifdef BJAM_NO_MEM_CACHE
     int l = strlen( string );
-    char * m = (char *)BJAM_MALLOC( l + 1 );
+    struct hash_item * m = (struct hash_item *)BJAM_MALLOC( sizeof(struct hash_header) + l + 1 );
 
     strtotal += l + 1;
-    memcpy( m, string, l + 1 );
-    return m;
+    memcpy( m->data, string, l + 1 );
+    m->header.magic = OBJECT_MAGIC;
+    return (OBJECT *)m->data;
 #else
     if ( ! strhash.data )
         string_set_init( &strhash );
 
     strcount_in += 1;
 
-    return (char *)string_set_insert( &strhash, string );
+    return (OBJECT *)string_set_insert( &strhash, string );
 #endif
 }
 
 
 /*
- * copystr() - return a copy of a string previously returned by newstr()
+ * object_copy() - return a copy of an object
  */
 
-char * copystr( char * s )
+OBJECT * object_copy( OBJECT * obj )
 {
+    object_validate( obj );
 #ifdef BJAM_NO_MEM_CACHE
-    return newstr( s );
+    return object_new( object_str( obj ) );
 #else
     strcount_in += 1;
-    return s;
+    return obj;
 #endif
 }
 
 
 /*
- * freestr() - free a string returned by newstr() or copystr()
+ * object_free() - free an object
  */
 
-void freestr( char * s )
+void object_free( OBJECT * obj )
 {
+    object_validate( obj );
 #ifdef BJAM_NO_MEM_CACHE
-    BJAM_FREE( s );
+    BJAM_FREE( object_get_item( obj ) );
 #endif
-    if( s )
-        strcount_out += 1;
+    strcount_out += 1;
 }
 
 
 /*
- * str_done() - free string tables.
+ * object_str() - return the
  */
 
-void str_done()
+const char * object_str( OBJECT * obj )
+{
+    object_validate( obj );
+    return (const char *)obj;
+}
+
+
+/*
+ * object_equal() - compare two objects
+ */
+
+int object_equal( OBJECT * lhs, OBJECT * rhs )
+{
+    object_validate( lhs );
+    object_validate( rhs );
+#ifdef BJAM_NO_MEM_CACHE
+    return strcmp(object_str(lhs), object_str(rhs)) == 0;
+#else
+    assert( (lhs == rhs) == ( strcmp(object_str(lhs), object_str(rhs)) == 0 ) );
+    return lhs == rhs;
+#endif
+}
+
+
+/*
+ * object_hash() - returns the hash value of an object
+ */
+
+unsigned int object_hash( OBJECT * obj )
+{
+    object_validate( obj );
+#ifdef BJAM_NO_MEM_CACHE
+    return hash_keyval( object_str( obj ) );
+#else
+    return object_get_item( obj )->header.hash;
+#endif
+}
+
+/*
+ * object_done() - free string tables.
+ */
+
+void object_done()
 {
 
 #ifdef BJAM_NEWSTR_NO_ALLOCATE

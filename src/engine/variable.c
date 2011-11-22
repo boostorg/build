@@ -19,7 +19,7 @@
 #include "expand.h"
 #include "hash.h"
 #include "filesys.h"
-#include "newstr.h"
+#include "object.h"
 #include "strings.h"
 #include "pathsys.h"
 #include <stdlib.h>
@@ -59,12 +59,12 @@ typedef struct _variable VARIABLE ;
 
 struct _variable
 {
-    char * symbol;
-    LIST * value;
+    OBJECT * symbol;
+    LIST   * value;
 };
 
-static VARIABLE * var_enter( char * symbol );
-static void var_dump( char * symbol, LIST * value, char * what );
+static VARIABLE * var_enter( OBJECT * symbol );
+static void var_dump( OBJECT * symbol, LIST * value, char * what );
 
 
 /*
@@ -103,6 +103,7 @@ void var_defines( char * const * e, int preprocess )
     for ( ; *e; ++e )
     {
         char * val;
+        OBJECT * varname;
 
 # ifdef OS_MAC
         /* On the mac (MPW), the var=val is actually var\0val */
@@ -133,7 +134,7 @@ void var_defines( char * const * e, int preprocess )
             if ( quoted && preprocess )
             {
                 string_append_range( buf, val + 2, val + len );
-                l = list_new( l, newstr( buf->value ) );
+                l = list_new( l, object_new( buf->value ) );
                 string_truncate( buf, 0 );
             }
             else
@@ -156,16 +157,18 @@ void var_defines( char * const * e, int preprocess )
                 )
                 {
                     string_append_range( buf, pp, p );
-                    l = list_new( l, newstr( buf->value ) );
+                    l = list_new( l, object_new( buf->value ) );
                     string_truncate( buf, 0 );
                 }
 
-                l = list_new( l, newstr( pp ) );
+                l = list_new( l, object_new( pp ) );
             }
 
             /* Get name. */
             string_append_range( buf, *e, val );
-            var_set( buf->value, l, VAR_SET );
+            varname = object_new( buf->value );
+            var_set( varname, l, VAR_SET );
+            object_free( varname );
             string_truncate( buf, 0 );
         }
     }
@@ -179,7 +182,7 @@ void var_defines( char * const * e, int preprocess )
  * Copies in to out; doesn't modify targets & sources.
  */
 
-int var_string( char * in, char * out, int outsize, LOL * lol )
+int var_string( const char * in, char * out, int outsize, LOL * lol )
 {
     char * out0 = out;
     char * oute = out + outsize - 1;
@@ -214,8 +217,8 @@ int var_string( char * in, char * out, int outsize, LOL * lol )
             else if ( ( in[ 0 ] == '@' ) && ( in[ 1 ] == '(' ) )
             {
                 int depth = 1;
-                char * ine = in + 2;
-                char * split = 0;
+                const char * ine = in + 2;
+                const char * split = 0;
 
                 /* Scan the content of the response file @() section. */
                 while ( *ine && ( depth > 0 ) )
@@ -249,6 +252,7 @@ int var_string( char * in, char * out, int outsize, LOL * lol )
                 else if ( depth == 0 )
                 {
                     string file_name_v;
+                    OBJECT * file_name = 0;
                     int file_name_l = 0;
                     const char * file_name_s = 0;
 
@@ -274,7 +278,9 @@ int var_string( char * in, char * out, int outsize, LOL * lol )
                     {
                         int err_redir = strcmp( "STDERR", out ) == 0;
                         out[ 0 ] = '\0';
-                        file_name_s = path_tmpfile();
+
+                        file_name = path_tmpfile();
+                        file_name_s = object_str(file_name);
                         file_name_l = strlen(file_name_s);
                         #ifdef OS_NT
                         if ( ( out + 7 + file_name_l + ( err_redir ? 5 : 0 ) ) >= oute )
@@ -290,12 +296,17 @@ int var_string( char * in, char * out, int outsize, LOL * lol )
                         /* We also make sure that the temp files created by this
                          * get nuked eventually.
                          */
-                        file_remove_atexit( file_name_s );
+                        file_remove_atexit( file_name );
                     }
 
                     /* Expand the file value into the file reference. */
                     var_string_to_file( split + 3, ine - split - 4, file_name_s,
                         lol );
+
+                    if ( file_name )
+                    {
+                        object_free( file_name );
+                    }
 
                     /* Continue on with the expansion. */
                     out += strlen( out );
@@ -329,12 +340,12 @@ int var_string( char * in, char * out, int outsize, LOL * lol )
 
             while ( l )
             {
-                int so = strlen( l->string );
+                int so = strlen( object_str( l->value ) );
 
                 if ( out + so >= oute )
                     return -1;
 
-                strcpy( out, l->string );
+                strcpy( out, object_str( l->value ) );
                 out += so;
                 l = list_next( l );
                 if ( l ) *out++ = ' ';
@@ -429,8 +440,8 @@ void var_string_to_file( const char * in, int insize, const char * out, LOL * lo
 
             while ( l )
             {
-                if ( out_file ) fputs( l->string, out_file );
-                if ( out_debug ) puts( l->string );
+                if ( out_file ) fputs( object_str( l->value ), out_file );
+                if ( out_debug ) puts( object_str( l->value ) );
                 l = list_next( l );
                 if ( l )
                 {
@@ -483,35 +494,35 @@ static LIST * saved_var = 0;
  * Returns NULL if symbol unset.
  */
 
-LIST * var_get( char * symbol )
+LIST * var_get( OBJECT * symbol )
 {
     LIST * result = 0;
 #ifdef OPT_AT_FILES
     /* Some "fixed" variables... */
-    if ( strcmp( "TMPDIR", symbol ) == 0 )
+    if ( strcmp( "TMPDIR", object_str( symbol ) ) == 0 )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, newstr( (char *)path_tmpdir() ) );
+        result = saved_var = list_new( L0, object_new( path_tmpdir() ) );
     }
-    else if ( strcmp( "TMPNAME", symbol ) == 0 )
+    else if ( strcmp( "TMPNAME", object_str( symbol ) ) == 0 )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, (char *)path_tmpnam() );
+        result = saved_var = list_new( L0, path_tmpnam() );
     }
-    else if ( strcmp( "TMPFILE", symbol ) == 0 )
+    else if ( strcmp( "TMPFILE", object_str( symbol ) ) == 0 )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, (char *)path_tmpfile() );
+        result = saved_var = list_new( L0, path_tmpfile() );
     }
-    else if ( strcmp( "STDOUT", symbol ) == 0 )
+    else if ( strcmp( "STDOUT", object_str( symbol ) ) == 0 )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, newstr( "STDOUT" ) );
+        result = saved_var = list_new( L0, object_new( "STDOUT" ) );
     }
-    else if ( strcmp( "STDERR", symbol ) == 0 )
+    else if ( strcmp( "STDERR", object_str( symbol ) ) == 0 )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, newstr( "STDERR" ) );
+        result = saved_var = list_new( L0, object_new( "STDERR" ) );
     }
     else
 #endif
@@ -542,7 +553,7 @@ LIST * var_get( char * symbol )
  * Copies symbol. Takes ownership of value.
  */
 
-void var_set( char * symbol, LIST * value, int flag )
+void var_set( OBJECT * symbol, LIST * value, int flag )
 {
     VARIABLE * v = var_enter( symbol );
 
@@ -577,7 +588,7 @@ void var_set( char * symbol, LIST * value, int flag )
  * var_swap() - swap a variable's value with the given one.
  */
 
-LIST * var_swap( char * symbol, LIST * value )
+LIST * var_swap( OBJECT * symbol, LIST * value )
 {
     VARIABLE * v = var_enter( symbol );
     LIST     * oldvalue = v->value;
@@ -592,7 +603,7 @@ LIST * var_swap( char * symbol, LIST * value )
  * var_enter() - make new var symbol table entry, returning var ptr.
  */
 
-static VARIABLE * var_enter( char * symbol )
+static VARIABLE * var_enter( OBJECT * symbol )
 {
     VARIABLE var;
     VARIABLE * v = &var;
@@ -604,7 +615,7 @@ static VARIABLE * var_enter( char * symbol )
     v->value = 0;
 
     if ( hashenter( varhash, (HASHDATA * *)&v ) )
-        v->symbol = newstr( symbol );  /* never freed */
+        v->symbol = object_copy( symbol );
 
     return v;
 }
@@ -614,9 +625,9 @@ static VARIABLE * var_enter( char * symbol )
  * var_dump() - dump a variable to stdout.
  */
 
-static void var_dump( char * symbol, LIST * value, char * what )
+static void var_dump( OBJECT * symbol, LIST * value, char * what )
 {
-    printf( "%s %s = ", what, symbol );
+    printf( "%s %s = ", what, object_str( symbol ) );
     list_print( value );
     printf( "\n" );
 }
@@ -629,7 +640,7 @@ static void var_dump( char * symbol, LIST * value, char * what )
 static void delete_var_( void * xvar, void * data )
 {
     VARIABLE * v = (VARIABLE *)xvar;
-    freestr( v->symbol );
+    object_free( v->symbol );
     list_free( v-> value );
 }
 

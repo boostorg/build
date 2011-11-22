@@ -88,7 +88,7 @@ static struct
     char   *target;           /* buffer to hold action and target invoked */
     char   *command;          /* buffer to hold command being invoked */
     char   *buffer[2];        /* buffer to hold stdout and stderr, if any */
-    void    (*func)( void *closure, int status, timing_info*, char *, char * );
+    void    (*func)( void *closure, int status, timing_info*, const char *, const char * );
     void   *closure;
     time_t  start_dt;         /* start of command timestamp */
 } cmdtab[ MAXJOBS ] = {{0}};
@@ -110,12 +110,12 @@ void onintr( int disp )
 
 void exec_cmd
 (
-    char * string,
-    void (*func)( void *closure, int status, timing_info*, char *, char * ),
+    const char * string,
+    void (*func)( void *closure, int status, timing_info*, const char *, const char * ),
     void * closure,
     LIST * shell,
-    char * action,
-    char * target
+    const char * action,
+    const char * target
 )
 {
     static int initialized = 0;
@@ -123,7 +123,7 @@ void exec_cmd
     int    err[2];
     int    slot;
     int    len;
-    char * argv[ MAXARGC + 1 ];  /* +1 for NULL */
+    const char * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
     /* Find a slot in the running commands table for this one. */
     for ( slot = 0; slot < MAXJOBS; ++slot )
@@ -149,11 +149,11 @@ void exec_cmd
 
         for ( i = 0; shell && i < MAXARGC; ++i, shell = list_next( shell ) )
         {
-            switch ( shell->string[0] )
+            switch ( object_str( shell->value )[0] )
             {
                 case '%': argv[ i ] = string; ++gotpercent; break;
                 case '!': argv[ i ] = jobno;                break;
-                default : argv[ i ] = shell->string;
+                default : argv[ i ] = object_str( shell->value );
             }
             if ( DEBUG_EXECCMD )
                 printf( "argv[%d] = '%s'\n", i, argv[ i ] );
@@ -242,7 +242,7 @@ void exec_cmd
             setrlimit( RLIMIT_CPU, &r_limit );
         }
         setpgid( pid,pid );
-        execvp( argv[0], argv );
+        execvp( argv[0], (char * *)argv );
         perror( "execvp" );
         _exit( 127 );
     }

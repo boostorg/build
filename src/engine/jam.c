@@ -54,18 +54,18 @@
  * are layered thus:
  *
  *                     variable|expand
- *                      /  |   |   |
- *                     /   |   |   |
- *                    /    |   |   |
- *                 lists   |   |   pathsys
- *                    \    |   |
- *                     \   |   |
- *                      \  |   |
- *                     newstr  |
+ *                      /      |   |
+ *                     /       |   |
+ *                    /        |   |
+ *                 lists       |   pathsys
+ *                    \        |
+ *                     \      hash
+ *                      \      |
+ *                       \     |
  *                        \    |
  *                         \   |
  *                          \  |
- *                          hash
+ *                         object
  *
  * Roughly, the modules are:
  *
@@ -84,7 +84,7 @@
  *  lists.c - maintain lists of strings
  *  make.c - bring a target up to date, once rules are in place
  *  make1.c - execute command to bring targets up to date
- *  newstr.c - string manipulation routines
+ *  object.c - string manipulation routines
  *  option.c - command line option processing
  *  parse.c - make and destroy parse trees as driven by the parser
  *  path*.c - manipulate file names on *
@@ -115,7 +115,7 @@
 #include "compile.h"
 #include "builtins.h"
 #include "rules.h"
-#include "newstr.h"
+#include "object.h"
 #include "scan.h"
 #include "timestamp.h"
 #include "make.h"
@@ -123,6 +123,10 @@
 #include "expand.h"
 #include "filesys.h"
 #include "output.h"
+#include "search.h"
+#include "class.h"
+#include "execcmd.h"
+#include "constants.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC
@@ -213,7 +217,7 @@ int anyhow = 0;
 
 void regex_done();
 
-char *saved_argv0;
+const char *saved_argv0;
 
 int main( int argc, char * * argv, char * * arg_environ )
 {
@@ -225,6 +229,8 @@ int main( int argc, char * * argv, char * * arg_environ )
     int                     arg_c = argc;
     char          *       * arg_v = argv;
     char            const * progname = argv[0];
+    OBJECT                * varname;
+    module_t              * environ_module;
 
     saved_argv0 = argv[0];
 
@@ -340,6 +346,8 @@ int main( int argc, char * * argv, char * * arg_environ )
             globs.debug[i--] = 1;
     }
 
+    constants_init();
+
     {
         PROFILE_ENTER( MAIN );
 
@@ -379,15 +387,19 @@ int main( int argc, char * * argv, char * * arg_environ )
 #endif
 
         /* Set JAMDATE. */
-        var_set( "JAMDATE", list_new( L0, outf_time(time(0)) ), VAR_SET );
+        varname = object_new( "JAMDATE" );
+        var_set( varname, list_new( L0, outf_time(time(0)) ), VAR_SET );
+        object_free( varname );
 
         /* Set JAM_VERSION. */
-        var_set( "JAM_VERSION",
+        varname = object_new( "JAM_VERSION" );
+        var_set( varname,
                  list_new( list_new( list_new( L0,
-                   newstr( VERSION_MAJOR_SYM ) ),
-                   newstr( VERSION_MINOR_SYM ) ),
-                   newstr( VERSION_PATCH_SYM ) ),
+                   object_new( VERSION_MAJOR_SYM ) ),
+                   object_new( VERSION_MINOR_SYM ) ),
+                   object_new( VERSION_PATCH_SYM ) ),
                    VAR_SET );
+        object_free( varname );
 
         /* Set JAMUNAME. */
 #ifdef unix
@@ -396,17 +408,19 @@ int main( int argc, char * * argv, char * * arg_environ )
 
             if ( uname( &u ) >= 0 )
             {
-                var_set( "JAMUNAME",
+                varname = object_new( "JAMUNAME" );
+                var_set( varname,
                          list_new(
                              list_new(
                                  list_new(
                                      list_new(
                                          list_new( L0,
-                                            newstr( u.sysname ) ),
-                                         newstr( u.nodename ) ),
-                                     newstr( u.release ) ),
-                                 newstr( u.version ) ),
-                             newstr( u.machine ) ), VAR_SET );
+                                            object_new( u.sysname ) ),
+                                         object_new( u.nodename ) ),
+                                     object_new( u.release ) ),
+                                 object_new( u.version ) ),
+                             object_new( u.machine ) ), VAR_SET );
+                object_free( varname );
             }
         }
 #endif /* unix */
@@ -418,10 +432,13 @@ int main( int argc, char * * argv, char * * arg_environ )
          */
         var_defines( use_environ, 1 );
 
+        varname = object_new( ".ENVIRON" );
+        environ_module = bindmodule( varname );
+        object_free( varname );
         /* Then into .ENVIRON, without splitting. */
-        enter_module( bindmodule(".ENVIRON") );
+        enter_module( environ_module );
         var_defines( use_environ, 0 );
-        exit_module( bindmodule(".ENVIRON") );
+        exit_module( environ_module );
 
         /*
          * Jam defined variables OS & OSPLAT. We load them after environment, so
@@ -437,15 +454,19 @@ int main( int argc, char * * argv, char * * arg_environ )
             symv[ 0 ] = s;
             symv[ 1 ] = 0;
             var_defines( symv, 1 );
-            enter_module( bindmodule(".ENVIRON") );
+            enter_module( environ_module );
             var_defines( symv, 0 );
-            exit_module( bindmodule(".ENVIRON") );
+            exit_module( environ_module );
         }
 
         /* Set the ARGV to reflect the complete list of arguments of invocation.
          */
+        varname = object_new( "ARGV" );
         for ( n = 0; n < arg_c; ++n )
-            var_set( "ARGV", list_new( L0, newstr( arg_v[n] ) ), VAR_APPEND );
+        {
+            var_set( varname, list_new( L0, object_new( arg_v[n] ) ), VAR_APPEND );
+        }
+        object_free( varname );
 
         /* Initialize built-in rules. */
         load_builtins();
@@ -461,29 +482,47 @@ int main( int argc, char * * argv, char * * arg_environ )
             }
             else
             {
-                mark_target_for_updating( arg_v[ n ] );
+                OBJECT * target = object_new( arg_v[ n ] );
+                mark_target_for_updating( target );
+                object_free( target );
             }
         }
 
         if (!targets_to_update())
-            mark_target_for_updating("all");
+        {
+            OBJECT * target = object_new( "all" );
+            mark_target_for_updating( target );
+            object_free( target );
+        }
 
         /* Parse ruleset. */
         {
             FRAME frame[ 1 ];
             frame_init( frame );
             for ( n = 0; ( s = getoptval( optv, 'f', n ) ); ++n )
-                parse_file( s, frame );
+            {
+                OBJECT * filename = object_new( s );
+                parse_file( filename, frame );
+                object_free( filename );
+            }
 
             if ( !n )
-                parse_file( "+", frame );
+            {
+                OBJECT * filename = object_new( "+" );
+                parse_file( filename, frame );
+                object_free( filename );
+            }
         }
 
         status = yyanyerrors();
 
         /* Manually touch -t targets. */
         for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
-            touch_target( s );
+        {
+            OBJECT * target = object_new( s );
+            touch_target( target );
+            object_free( target );
+        }
 
         /* If an output file is specified, set globs.cmdout to that. */
         if ( ( s = getoptval( optv, 'o', 0 ) ) )
@@ -500,13 +539,15 @@ int main( int argc, char * * argv, char * * arg_environ )
            options.  */
         {
             LIST *p = L0;
-            p = var_get ("PARALLELISM");
-            if (p)
+            varname = object_new( "PARALLELISM" );
+            p = var_get ( varname );
+            object_free( varname );
+            if ( p )
             {
-                int j = atoi (p->string);
-                if (j == -1)
+                int j = atoi( object_str( p->value ) );
+                if ( j == -1 )
                 {
-                    printf( "Invalid value of PARALLELISM: %s\n", p->string);
+                    printf( "Invalid value of PARALLELISM: %s\n", object_str( p->value ) );
                 }
                 else
                 {
@@ -518,11 +559,13 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* KEEP_GOING overrides -q option. */
         {
             LIST *p = L0;
-            p = var_get ("KEEP_GOING");
-            if (p)
+            varname = object_new( "KEEP_GOING" );
+            p = var_get( varname );
+            object_free(varname);
+            if ( p )
             {
-                int v = atoi (p->string);
-                if (v == 0)
+                int v = atoi( object_str( p->value ) );
+                if ( v == 0 )
                     globs.quitquick = 1;
                 else
                     globs.quitquick = 0;
@@ -537,11 +580,11 @@ int main( int argc, char * * argv, char * * arg_environ )
             if (targets)
             {
                 int targets_count = list_length( targets );
-                const char * * targets2 = (const char * *)
-                    BJAM_MALLOC( targets_count * sizeof( char * ) );
+                OBJECT * * targets2 = (OBJECT * *)
+                    BJAM_MALLOC( targets_count * sizeof( OBJECT * ) );
                 int n = 0;
                 for ( ; targets; targets = list_next( targets ) )
-                    targets2[ n++ ] = targets->string;
+                    targets2[ n++ ] = targets->value;
                 status |= make( targets_count, targets2, anyhow );
                 BJAM_FREE( (void *)targets2 );
             }
@@ -576,8 +619,10 @@ int main( int argc, char * * argv, char * * arg_environ )
     modules_done();
     regex_done();
     exec_done();
+    pwd_done();
     list_done();
-    str_done();
+    constants_done();
+    object_done();
 
     /* Close cmdout. */
     if ( globs.cmdout )
@@ -594,7 +639,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 
 #if defined(_WIN32)
 #include <windows.h>
-char *executable_path(char *argv0) {
+char *executable_path(const char *argv0) {
     char buf[1024];
     DWORD ret = GetModuleFileName(NULL, buf, sizeof(buf));
     if (ret == 0 || ret == sizeof(buf)) return NULL;
@@ -602,7 +647,7 @@ char *executable_path(char *argv0) {
 }
 #elif defined(__APPLE__)  /* Not tested */
 #include <mach-o/dyld.h>
-char *executable_path(char *argv0) {
+char *executable_path(const char *argv0) {
     char buf[1024];
     uint32_t size = sizeof(buf);
     int ret = _NSGetExecutablePath(buf, &size);
@@ -612,12 +657,12 @@ char *executable_path(char *argv0) {
 #elif defined(sun) || defined(__sun) /* Not tested */
 #include <stdlib.h>
 
-char *executable_path(char *argv0) {
+char *executable_path(const char *argv0) {
     return strdup(getexecname());
 }
 #elif defined(__FreeBSD__)
 #include <sys/sysctl.h>
-char *executable_path(char *argv0) {
+char *executable_path(const char *argv0) {
     int mib[4];
     mib[0] = CTL_KERN;
     mib[1] = KERN_PROC;
@@ -631,16 +676,16 @@ char *executable_path(char *argv0) {
 }
 #elif defined(__linux__)
 #include <unistd.h>
-char *executable_path(char *argv0) {
+char *executable_path(const char *argv0) {
     char buf[1024];
     ssize_t ret = readlink("/proc/self/exe", buf, sizeof(buf));
     if (ret == 0 || ret == sizeof(buf)) return NULL;
     return strndup(buf, ret);
 }
 #else
-char *executable_path(char *argv0) {
+char *executable_path(const char *argv0) {
     /* If argv0 is absolute path, assume it's the right absolute path. */
-    if (argv0[0] == "/")
+    if (argv0[0] == '/')
         return strdup(argv0);
     return NULL;
 }

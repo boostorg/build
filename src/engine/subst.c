@@ -3,7 +3,7 @@
 #include "regexp.h"
 #include "hash.h"
 
-#include "newstr.h"
+#include "object.h"
 #include "lists.h"
 #include "parse.h"
 #include "compile.h"
@@ -11,14 +11,14 @@
 
 struct regex_entry
 {
-    const char* pattern;
+    OBJECT* pattern;
     regexp* regex;
 };
 typedef struct regex_entry regex_entry;
 
 static struct hash* regex_hash;
 
-regexp* regex_compile( const char* pattern )
+regexp* regex_compile( OBJECT* pattern )
 {
     regex_entry entry, *e = &entry;
     entry.pattern = pattern;
@@ -28,7 +28,7 @@ regexp* regex_compile( const char* pattern )
 
     if ( hashenter( regex_hash, (HASHDATA **)&e ) )
     {
-        e->pattern = newstr( (char*)pattern );
+        e->pattern = object_copy( pattern );
         e->regex = regcomp( (char*)pattern );
     }
 
@@ -46,8 +46,8 @@ builtin_subst(
   if ( arg1 && list_next(arg1) && list_next(list_next(arg1)) )
   {
 
-      const char* source = arg1->string;
-      const char* pattern = list_next(arg1)->string;
+      const char* source = object_str( arg1->value );
+      OBJECT * pattern = list_next(arg1)->value;
       regexp* repat = regex_compile( pattern );
 
       if ( regexec( repat, (char*)source) )
@@ -58,10 +58,10 @@ builtin_subst(
           {
 # define BUFLEN 4096
               char buf[BUFLEN + 1];
-              const char* in = subst->string;
+              const char* in = object_str( subst->value );
               char* out = buf;
 
-              for ( in = subst->string; *in && out < buf + BUFLEN; ++in )
+              for ( in = object_str( subst->value ); *in && out < buf + BUFLEN; ++in )
               {
                   if ( *in == '\\' || *in == '$' )
                   {
@@ -86,7 +86,7 @@ builtin_subst(
               }
               *out = 0;
 
-              result = list_new( result, newstr( buf ) );
+              result = list_new( result, object_new( buf ) );
 #undef BUFLEN
           }
       }
@@ -99,7 +99,7 @@ builtin_subst(
 static void free_regex( void * xregex, void * data )
 {
     regex_entry * regex = (regex_entry *)xregex;
-    freestr( (char *)regex->pattern );
+    object_free( regex->pattern );
     BJAM_FREE( regex->regex );
 }
 

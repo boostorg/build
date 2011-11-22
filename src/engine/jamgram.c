@@ -75,14 +75,14 @@
 #include "parse.h"
 #include "scan.h"
 #include "compile.h"
-#include "newstr.h"
+#include "object.h"
 #include "rules.h"
 
 # define YYMAXDEPTH 10000	/* for OSF and other less endowed yaccs */
 
 # define F0 (LIST *(*)(PARSE *, FRAME *))0
 # define P0 (PARSE *)0
-# define S0 (char *)0
+# define S0 (OBJECT *)0
 
 # define pappend( l,r )    	parse_make( compile_append,l,r,P0,S0,S0,0 )
 # define peval( c,l,r )	parse_make( compile_eval,l,r,P0,S0,S0,c )

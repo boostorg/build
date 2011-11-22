@@ -16,7 +16,7 @@
 # include "filesys.h"
 # include "pathsys.h"
 # include "strings.h"
-# include "newstr.h"
+# include "object.h"
 
 # ifdef OS_NT
 
@@ -57,7 +57,7 @@
  * file_dirscan() - scan a directory for files
  */
 
-void file_dirscan( char * dir, scanback func, void * closure )
+void file_dirscan( OBJECT * dir, scanback func, void * closure )
 {
     PROFILE_ENTER( FILE_DIRSCAN );
 
@@ -84,11 +84,11 @@ void file_dirscan( char * dir, scanback func, void * closure )
         int ret;
         struct _finddata_t finfo[ 1 ];
         LIST * files = L0;
-        int d_length = strlen( d->name );
+        int d_length = strlen( object_str( d->name ) );
 
         memset( (char *)&f, '\0', sizeof( f ) );
 
-        f.f_dir.ptr = d->name;
+        f.f_dir.ptr = object_str( d->name );
         f.f_dir.len = d_length;
 
         /* Now enter contents of directory */
@@ -103,8 +103,8 @@ void file_dirscan( char * dir, scanback func, void * closure )
              * its trailing path separator or otherwise we would not support the
              * Windows root folder specified without its drive letter, i.e. '\'.
              */
-            char trailingChar = d->name[ d_length - 1 ] ;
-            string_copy( filespec, d->name );
+            char trailingChar = object_str( d->name )[ d_length - 1 ] ;
+            string_copy( filespec, object_str( d->name ) );
             if ( ( trailingChar != '\\' ) && ( trailingChar != '/' ) )
                 string_append( filespec, "\\" );
             string_append( filespec, "*" );
@@ -132,7 +132,7 @@ void file_dirscan( char * dir, scanback func, void * closure )
             string_truncate( filename, 0 );
             path_build( &f, filename );
 
-            files = list_new( files, newstr(filename->value) );
+            files = list_new( files, object_new(filename->value) );
             ff = file_info( filename->value );
             ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
             ff->is_dir = finfo->ff_attrib & FA_DIREC ? 1 : 0;
@@ -154,6 +154,7 @@ void file_dirscan( char * dir, scanback func, void * closure )
         string_new( filename );
         while ( !ret )
         {
+            OBJECT * filename_obj;
             file_info_t * ff = 0;
 
             f.f_base.ptr = finfo->name;
@@ -162,8 +163,9 @@ void file_dirscan( char * dir, scanback func, void * closure )
             string_truncate( filename, 0 );
             path_build( &f, filename, 0 );
 
-            files = list_new( files, newstr( filename->value ) );
-            ff = file_info( filename->value );
+            filename_obj = object_new( filename->value );
+            files = list_new( files, filename_obj );
+            ff = file_info( filename_obj );
             ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
             ff->is_dir = finfo->attrib & _A_SUBDIR ? 1 : 0;
             ff->size = finfo->size;
@@ -182,10 +184,12 @@ void file_dirscan( char * dir, scanback func, void * closure )
 
     /* Special case \ or d:\ : enter it */
     {
-        unsigned long len = strlen(d->name);
-        if ( len == 1 && d->name[0] == '\\' )
+        unsigned long len = strlen( object_str( d->name ) );
+        if ( len == 1 && object_str( d->name )[0] == '\\' )
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
-        else if ( len == 3 && d->name[1] == ':' ) {
+        else if ( len == 3 && object_str( d->name )[1] == ':' ) {
+            char buf[4];
+            OBJECT * dir2;
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
             /* We've just entered 3-letter drive name spelling (with trailing
                slash), into the hash table. Now enter two-letter variant,
@@ -199,8 +203,11 @@ void file_dirscan( char * dir, scanback func, void * closure )
                There will be no trailing slash in $(p), but there will be one
                in $(p2). But, that seems rather fragile.                
             */
-            d->name[2] = 0;
-            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
+            strcpy( buf, object_str( d->name ) );
+            buf[2] = 0;
+            dir2 = object_new( buf );
+            (*func)( closure, dir2, 1 /* stat()'ed */, d->time );
+            object_free( dir2 );
         }
     }
 
@@ -210,7 +217,7 @@ void file_dirscan( char * dir, scanback func, void * closure )
         LIST * files = d->files;
         while ( files )
         {
-            file_info_t * ff = file_info( files->string );
+            file_info_t * ff = file_info( files->value );
             (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
             files = list_next( files );
         }
@@ -219,14 +226,14 @@ void file_dirscan( char * dir, scanback func, void * closure )
     PROFILE_EXIT( FILE_DIRSCAN );
 }
 
-file_info_t * file_query( char * filename )
+file_info_t * file_query( OBJECT * filename )
 {
     file_info_t * ff = file_info( filename );
     if ( ! ff->time )
     {
         struct stat statbuf;
 
-        if ( stat( *filename ? filename : ".", &statbuf ) < 0 )
+        if ( stat( *object_str( filename ) ? object_str( filename ) : ".", &statbuf ) < 0 )
             return 0;
 
         ff->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
@@ -243,8 +250,8 @@ file_info_t * file_query( char * filename )
 
 int
 file_time(
-    char    *filename,
-    time_t  *time )
+    OBJECT * filename,
+    time_t * time )
 {
     file_info_t * ff = file_query( filename );
     if ( !ff ) return -1;
@@ -252,14 +259,14 @@ file_time(
     return 0;
 }
 
-int file_is_file(char* filename)
+int file_is_file( OBJECT * filename )
 {
     file_info_t * ff = file_query( filename );
     if ( !ff ) return -1;
     return ff->is_file;
 }
 
-int file_mkdir(char *pathname)
+int file_mkdir( const char * pathname )
 {
     return _mkdir(pathname);
 }
@@ -290,9 +297,9 @@ struct ar_hdr {
 
 void
 file_archscan(
-    char *archive,
-    scanback func,
-    void *closure )
+    const char * archive,
+    scanback     func,
+    void       * closure )
 {
     struct ar_hdr ar_hdr;
     char *string_table = 0;
@@ -320,9 +327,10 @@ file_archscan(
     {
         long    lar_date;
         long    lar_size;
-        char    *name = 0;
-        char    *endname;
-        char    *c;
+        char   * name = 0;
+        char   * endname;
+        char   * c;
+        OBJECT * member;
 
         sscanf( ar_hdr.ar_date, "%ld", &lar_date );
         sscanf( ar_hdr.ar_size, "%ld", &lar_size );
@@ -375,7 +383,9 @@ file_archscan(
         name = c + 1;
 
         sprintf( buf, "%s(%.*s)", archive, endname - name, name );
-        (*func)( closure, buf, 1 /* time valid */, (time_t)lar_date );
+        member = object_new( buf );
+        (*func)( closure, member, 1 /* time valid */, (time_t)lar_date );
+        object_free( member );
 
         offset += SARHDR + lar_size;
         lseek( fd, offset, 0 );

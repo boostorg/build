@@ -34,6 +34,7 @@ $ CC_FLAGS = "/DEFINE=VMS /STANDARD=VAXC /PREFIX_LIBRARY_ENTRIES=ALL_ENTRIES "
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]builtins.obj builtins.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]command.obj command.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]compile.obj compile.c
+$ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]constants.obj constants.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]execvms.obj execvms.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]expand.obj expand.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]filesys.obj filesys.c
@@ -49,7 +50,7 @@ $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]lists.obj lists.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]make.obj make.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]make1.obj make1.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]modules.obj modules.c
-$ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]newstr.obj newstr.c
+$ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]object.obj object.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]option.obj option.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]parse.obj parse.c
 $ cc 'CC_FLAGS /OBJECT=[.bootstrap_vms]pathvms.obj pathvms.c
@@ -67,6 +68,7 @@ $ link -
  [.bootstrap_vms]builtins.obj, -
  [.bootstrap_vms]command.obj, -
  [.bootstrap_vms]compile.obj, -
+ [.bootstrap_vms]constants.obj, -
  [.bootstrap_vms]execvms.obj, -
  [.bootstrap_vms]expand.obj, -
  [.bootstrap_vms]filesys.obj, -
@@ -82,7 +84,7 @@ $ link -
  [.bootstrap_vms]make.obj, -
  [.bootstrap_vms]make1.obj, -
  [.bootstrap_vms]modules.obj, -
- [.bootstrap_vms]newstr.obj, -
+ [.bootstrap_vms]object.obj, -
  [.bootstrap_vms]option.obj, -
  [.bootstrap_vms]parse.obj, -
  [.bootstrap_vms]pathvms.obj, -

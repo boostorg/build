@@ -7,7 +7,7 @@
 #include "variable.h"
 #include "frames.h"
 #include "rules.h"
-#include "newstr.h"
+#include "object.h"
 
 #include "hash.h"
 
@@ -19,26 +19,26 @@ static void check_defined( LIST * class_names )
 {
     for ( ; class_names; class_names = class_names->next )
     {
-        char * * p = &class_names->string;
+        OBJECT * * p = &class_names->value;
         if ( !hashcheck( classes, (HASHDATA * *)&p ) )
         {
-            printf( "Class %s is not defined\n", class_names->string );
+            printf( "Class %s is not defined\n", object_str( class_names->value ) );
             abort();
         }
     }
 }
 
 
-static char * class_module_name( char * declared_name )
+static OBJECT * class_module_name( OBJECT * declared_name )
 {
     string name[ 1 ];
-    char * result;
+    OBJECT * result;
 
     string_new( name );
     string_append( name, "class@" );
-    string_append( name, declared_name );
+    string_append( name, object_str( declared_name ) );
 
-    result = newstr( name->value );
+    result = object_new( name->value );
     string_free( name );
 
     return result;
@@ -47,7 +47,7 @@ static char * class_module_name( char * declared_name )
 
 struct import_base_data
 {
-    char     * base_name;
+    OBJECT   * base_name;
     module_t * base_module;
     module_t * class_module;
 };
@@ -60,14 +60,19 @@ static void import_base_rule( void * r_, void * d_ )
     RULE * ir2;
     struct import_base_data * d = (struct import_base_data *)d_;
     string qualified_name[ 1 ];
+    OBJECT * qname;
 
     string_new      ( qualified_name               );
-    string_append   ( qualified_name, d->base_name );
+    string_append   ( qualified_name, object_str( d->base_name ) );
     string_push_back( qualified_name, '.'          );
-    string_append   ( qualified_name, r->name      );
+    string_append   ( qualified_name, object_str( r->name ) );
+
+    qname = object_new( qualified_name->value );
 
     ir1 = import_rule( r, d->class_module, r->name );
-    ir2 = import_rule( r, d->class_module, qualified_name->value );
+    ir2 = import_rule( r, d->class_module, qname );
+
+    object_free( qname );
 
     /* Copy 'exported' flag. */
     ir1->exported = ir2->exported = r->exported;
@@ -87,43 +92,45 @@ static void import_base_rule( void * r_, void * d_ )
  * marked as exported.
  */
 
-static void import_base_rules( module_t * class, char * base )
+static void import_base_rules( module_t * class_, OBJECT * base )
 {
-    char * module_name = class_module_name( base );
+    OBJECT * module_name = class_module_name( base );
     module_t * base_module = bindmodule( module_name );
     LIST * imported;
     struct import_base_data d;
     d.base_name = base;
     d.base_module = base_module;
-    d.class_module = class;
-    freestr( module_name );
+    d.class_module = class_;
+    object_free( module_name );
 
     if ( base_module->rules )
         hashenumerate( base_module->rules, import_base_rule, &d );
 
     imported = imported_modules( base_module );
-    import_module( imported, class );
+    import_module( imported, class_ );
     list_free( imported );
 }
 
 
-char * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
+OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
 {
-    char       * name = class_module_name( xname->string );
-    char     * * pp = &xname->string;
+    OBJECT     * name = class_module_name( xname->value );
+    OBJECT   * * pp = &xname->value;
     module_t   * class_module = 0;
     module_t   * outer_module = frame->module;
+    OBJECT     * name_ = object_new( "__name__" );
+    OBJECT     * bases_ = object_new( "__bases__" );
 
     if ( !classes )
-        classes = hashinit( sizeof( char * ), "classes" );
+        classes = hashinit( sizeof( OBJECT * ), "classes" );
 
     if ( hashenter( classes, (HASHDATA * *)&pp ) )
     {
-        *pp = copystr( xname->string );
+        *pp = object_copy( xname->value );
     }
     else
     {
-        printf( "Class %s already defined\n", xname->string );
+        printf( "Class %s already defined\n", object_str( xname->value ) );
         abort();
     }
     check_defined( bases );
@@ -133,21 +140,24 @@ char * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     exit_module( outer_module );
     enter_module( class_module );
 
-    var_set( "__name__", xname, VAR_SET );
-    var_set( "__bases__", bases, VAR_SET );
+    var_set( name_, xname, VAR_SET );
+    var_set( bases_, bases, VAR_SET );
 
     exit_module( class_module );
     enter_module( outer_module );
 
     for ( ; bases; bases = bases->next )
-        import_base_rules( class_module, bases->string );
+        import_base_rules( class_module, bases->value );
+
+    object_free( bases_ );
+    object_free( name_ );
 
     return name;
 }
 
 static void free_class( void * xclass, void * data )
 {
-    freestr( *(char **)xclass );
+    object_free( *(OBJECT * *)xclass );
 }
 
 void class_done( void )

@@ -9,7 +9,7 @@
 # include "variable.h"
 # include "expand.h"
 # include "pathsys.h"
-# include "newstr.h"
+# include "object.h"
 # include <assert.h>
 # include <stdlib.h>
 # include <limits.h>
@@ -50,8 +50,8 @@ typedef struct
     PATHPART join;        /* :J -- join list with char */
 } VAR_EDITS ;
 
-static void var_edit_parse( char * mods, VAR_EDITS * edits );
-static void var_edit_file ( char * in, string * out, VAR_EDITS * edits );
+static void var_edit_parse( const char * mods, VAR_EDITS * edits );
+static void var_edit_file ( const char * in, string * out, VAR_EDITS * edits );
 static void var_edit_shift( string * out, VAR_EDITS * edits );
 
 #define MAGIC_COLON '\001'
@@ -70,14 +70,14 @@ static void var_edit_shift( string * out, VAR_EDITS * edits );
  * Returns a newly created list.
  */
 
-LIST * var_expand( LIST * l, char * in, char * end, LOL * lol, int cancopyin )
+LIST * var_expand( LIST * l, const char * in, const char * end, LOL * lol, OBJECT * cancopyin )
 {
     char out_buf[ MAXSYM ];
     string buf[ 1 ];
     string out1[ 1 ];  /* temporary buffer */
     size_t prefix_length;
     char * out;
-    char * inp = in;
+    const char * inp = in;
     char * ov;  /* for temp copy of variable in outbuf */
     int depth;
 
@@ -151,7 +151,7 @@ LIST * var_expand( LIST * l, char * in, char * end, LOL * lol, int cancopyin )
         {
             LIST * r;
             string_copy( buf, at_buf );
-            r = list_new( l, newstr( buf->value ) );
+            r = list_new( l, object_new( buf->value ) );
             string_free( buf );
             BJAM_FREE( at_buf );
             return r;
@@ -167,17 +167,17 @@ LIST * var_expand( LIST * l, char * in, char * end, LOL * lol, int cancopyin )
     /* No variables expanded - just add copy of input string to list. */
 
     /* 'cancopyin' is an optimization: if the input was already a list item, we
-     * can use copystr() to put it on the new list. Otherwise, we use the slower
-     * newstr().
+     * can use obect_copy() to put it on the new list. Otherwise, we use the slower
+     * object_new().
      */
     if ( cancopyin )
-        return list_new( l, copystr( inp ) );
+        return list_new( l, object_copy( cancopyin ) );
 
     {
         LIST * r;
         string_new( buf );
         string_append_range( buf, inp, end );
-        r = list_new( l, newstr( buf->value ) );
+        r = list_new( l, object_new( buf->value ) );
         string_free( buf );
         return r;
     }
@@ -282,7 +282,7 @@ expand:
             /* Look for a : modifier in the variable name. Must copy into
              * varname so we can modify it.
              */
-            string_copy( variable, vars->string );
+            string_copy( variable, object_str( vars->value ) );
             varname = variable->value;
 
             if ( ( colon = strchr( varname, MAGIC_COLON ) ) )
@@ -378,7 +378,11 @@ expand:
             }
 
             if ( !value )
-                value = var_get( varname );
+            {
+                OBJECT * v = object_new( varname );
+                value = var_get( v );
+                object_free( v );
+            }
 
             /* Handle negitive indexes: part two. */
             {
@@ -416,7 +420,7 @@ expand:
 
             /* Empty w/ :E=default?. */
             if ( !value && colon && edits.empty.ptr )
-                evalue = value = list_new( L0, newstr( edits.empty.ptr ) );
+                evalue = value = list_new( L0, object_new( edits.empty.ptr ) );
 
             /* For each variable value. */
             string_new( out1 );
@@ -435,9 +439,9 @@ expand:
                 /* Apply : mods, if present */
 
                 if ( colon && edits.filemods )
-                    var_edit_file( value->string, out1, &edits );
+                    var_edit_file( object_str( value->value ), out1, &edits );
                 else
-                    string_append( out1, value->string );
+                    string_append( out1, object_str( value->value ) );
 
                 if ( colon && ( edits.upshift || edits.downshift || edits.to_slashes || edits.to_windows ) )
                     var_edit_shift( out1, &edits );
@@ -461,7 +465,7 @@ expand:
                 /* If no remainder, append result to output chain. */
                 if ( in == end )
                 {
-                    l = list_new( l, newstr( buf->value ) );
+                    l = list_new( l, object_new( buf->value ) );
                     continue;
                 }
 
@@ -473,8 +477,8 @@ expand:
                 for ( rem = remainder; rem; rem = list_next( rem ) )
                 {
                     string_truncate( buf, postfix_start );
-                    string_append( buf, rem->string );
-                    l = list_new( l, newstr( buf->value ) );
+                    string_append( buf, object_str( rem->value ) );
+                    l = list_new( l, object_new( buf->value ) );
                 }
             }
             string_free( out1 );
@@ -538,7 +542,7 @@ expand:
  * var_edit_file() below and path_build() obligingly follow this convention.
  */
 
-static void var_edit_parse( char * mods, VAR_EDITS * edits )
+static void var_edit_parse( const char * mods, VAR_EDITS * edits )
 {
     int havezeroed = 0;
     memset( (char *)edits, 0, sizeof( *edits ) );
@@ -619,7 +623,7 @@ static void var_edit_parse( char * mods, VAR_EDITS * edits )
  * var_edit_file() - copy input target name to output, modifying filename.
  */
 
-static void var_edit_file( char * in, string * out, VAR_EDITS * edits )
+static void var_edit_file( const char * in, string * out, VAR_EDITS * edits )
 {
     PATHNAME pathname;
 
@@ -680,11 +684,14 @@ void var_expand_unit_test()
     LOL lol[ 1 ];
     LIST * l;
     LIST * l2;
-    LIST * expected = list_new( list_new( L0, newstr( "axb" ) ), newstr( "ayb" ) );
+    LIST * expected = list_new( list_new( L0, object_new( "axb" ) ), object_new( "ayb" ) );
     LIST * e2;
     char axyb[] = "a$(xy)b";
     char azb[] = "a$($(z))b";
     char path[] = "$(p:W)";
+    OBJECT * xy = object_new( "xy" );
+    OBJECT * z = object_new( "z" );
+    OBJECT * p = object_new( "p" );
 
 # ifdef OS_CYGWIN
     char cygpath[ 256 ];
@@ -694,20 +701,20 @@ void var_expand_unit_test()
 # endif
 
     lol_init(lol);
-    var_set( "xy", list_new( list_new( L0, newstr( "x" ) ), newstr( "y" ) ), VAR_SET );
-    var_set( "z", list_new( L0, newstr( "xy" ) ), VAR_SET );
-    var_set( "p", list_new( L0, newstr( cygpath ) ), VAR_SET );
+    var_set( xy, list_new( list_new( L0, object_new( "x" ) ), object_new( "y" ) ), VAR_SET );
+    var_set( z, list_new( L0, object_new( "xy" ) ), VAR_SET );
+    var_set( p, list_new( L0, object_new( cygpath ) ), VAR_SET );
 
     l = var_expand( 0, axyb, axyb + sizeof( axyb ) - 1, lol, 0 );
     for ( l2 = l, e2 = expected; l2 && e2; l2 = list_next( l2 ), e2 = list_next( e2 ) )
-        assert( !strcmp( e2->string, l2->string ) );
+        assert( object_equal( e2->value, l2->value ) );
     assert( l2 == 0 );
     assert( e2 == 0 );
     list_free( l );
 
     l = var_expand( 0, azb, azb + sizeof( azb ) - 1, lol, 0 );
     for ( l2 = l, e2 = expected; l2 && e2; l2 = list_next( l2 ), e2 = list_next( e2 ) )
-        assert( !strcmp( e2->string, l2->string ) );
+        assert( object_equal( e2->value, l2->value ) );
     assert( l2 == 0 );
     assert( e2 == 0 );
     list_free( l );
@@ -721,11 +728,14 @@ void var_expand_unit_test()
      * to C:\ as opposed to C:\cygwin. Since case of the drive letter will not
      * matter, we allow for both.
      */
-    assert( !strcmp( l->string, "c:\\foo\\bar" ) ||
-            !strcmp( l->string, "C:\\foo\\bar" ) );
+    assert( !strcmp( object_str( l->value ), "c:\\foo\\bar" ) ||
+            !strcmp( object_str( l->value ), "C:\\foo\\bar" ) );
 # else
-    assert( !strcmp( l->string, cygpath ) );
+    assert( !strcmp( object_str( l->value), cygpath ) );
 # endif
+    object_free(xy);
+    object_free(z);
+    object_free(p);
     list_free( l );
     list_free( expected );
     lol_free( lol );

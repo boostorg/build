@@ -8,7 +8,7 @@
 #include "modules.h"
 #include "string.h"
 #include "hash.h"
-#include "newstr.h"
+#include "object.h"
 #include "lists.h"
 #include "parse.h"
 #include "rules.h"
@@ -20,19 +20,7 @@
 static struct hash * module_hash = 0;
 
 
-static char * new_module_str( module_t * m, char * suffix )
-{
-    char * result;
-    string s;
-    string_copy( &s, m->name );
-    string_append( &s, suffix );
-    result = newstr( s.value );
-    string_free( &s );
-    return result;
-}
-
-
-module_t * bindmodule( char * name )
+module_t * bindmodule( OBJECT * name )
 {
     PROFILE_ENTER( BINDMODULE );
 
@@ -46,21 +34,25 @@ module_t * bindmodule( char * name )
     string_new( &s );
     if ( name )
     {
-        string_append( &s, name );
+        string_append( &s, object_str( name ) );
         string_push_back( &s, '.' );
     }
 
-    m->name = s.value;
+    m->name = name = object_new( s.value );
 
     if ( hashenter( module_hash, (HASHDATA * *)&m ) )
     {
-        m->name = newstr( m->name );
+        m->name = m->name;
         m->variables = 0;
         m->rules = 0;
         m->imported_modules = 0;
         m->class_module = 0;
         m->native_rules = 0;
         m->user_module = 0;
+    }
+    else
+    {
+        object_free( name );
     }
     string_free( &s );
 
@@ -75,7 +67,7 @@ module_t * bindmodule( char * name )
 struct hash * demand_rules( module_t * m )
 {
     if ( !m->rules )
-        m->rules = hashinit( sizeof( RULE ), new_module_str( m, "rules" ) );
+        m->rules = hashinit( sizeof( RULE ), "rules" );
     return m->rules;
 }
 
@@ -95,7 +87,7 @@ static void delete_native_rule( void * xrule, void * data )
     native_rule_t * rule = (native_rule_t *)xrule;
     if ( rule->arguments )
         args_free( rule->arguments );
-    freestr( rule->name );
+    object_free( rule->name );
     if ( rule->procedure )
         parse_free( rule->procedure );
 }
@@ -103,7 +95,7 @@ static void delete_native_rule( void * xrule, void * data )
 
 static void delete_imported_modules( void * xmodule_name, void * data )
 {
-    freestr( *(char * *)xmodule_name );
+    object_free( *(OBJECT * *)xmodule_name );
 }
 
 
@@ -112,17 +104,13 @@ void delete_module( module_t * m )
     /* Clear out all the rules. */
     if ( m->rules )
     {
-        char * name;
         hashenumerate( m->rules, delete_rule_, (void *)0 );
-        name = hashname( m->rules );
         hashdone( m->rules );
-        freestr( name );
         m->rules = 0;
     }
 
     if ( m->native_rules )
     {
-        char * name;
         hashenumerate( m->native_rules, delete_native_rule, (void *)0 );
         hashdone( m->native_rules );
         m->native_rules = 0;
@@ -153,7 +141,7 @@ static void delete_module_( void * xmodule, void * data )
 
     if ( m->name )
     {
-        freestr( m->name );
+        object_free( m->name );
     }
 }
 
@@ -196,11 +184,11 @@ void import_module( LIST * module_names, module_t * target_module )
 
     for ( ; module_names; module_names = module_names->next )
     {
-        char * s = module_names->string;
-        char * * ss = &s;
+        OBJECT * s = module_names->value;
+        OBJECT * * ss = &s;
         if( hashenter( h, (HASHDATA * *)&ss ) )
         {
-            *ss = copystr( s );
+            *ss = object_copy( s );
         }
     }
 
@@ -210,10 +198,10 @@ void import_module( LIST * module_names, module_t * target_module )
 
 static void add_module_name( void * r_, void * result_ )
 {
-    char * * r = (char * *)r_;
+    OBJECT * * r = (OBJECT * *)r_;
     LIST * * result = (LIST * *)result_;
 
-    *result = list_new( *result, copystr( *r ) );
+    *result = list_new( *result, object_copy( *r ) );
 }
 
 

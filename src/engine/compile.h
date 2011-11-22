@@ -16,6 +16,7 @@
 # include "frames.h"
 # include "parse.h"
 # include "regexp.h"
+# include "object.h"
 
 /*
  * compile.h - compile parsed jam statements
@@ -43,10 +44,10 @@ LIST *compile_settings( PARSE *parse, FRAME *frame );
 LIST *compile_switch( PARSE *parse, FRAME *frame );
 LIST *compile_while( PARSE *parse, FRAME *frame );
 
-LIST *evaluate_rule( char *rulename, FRAME *frame );
-LIST *call_rule( char *rulename, FRAME* caller_frame, ...);
+LIST *evaluate_rule( OBJECT * rulename, FRAME * frame );
+LIST *call_rule( OBJECT * rulename, FRAME * caller_frame, ...);
 
-regexp* regex_compile( const char* pattern );
+regexp* regex_compile( OBJECT * pattern );
 
 /* Flags for compile_set(), etc */
 

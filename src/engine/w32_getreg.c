@@ -9,7 +9,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 # if defined( OS_NT ) || defined( OS_CYGWIN )
 
 # include "lists.h"
-# include "newstr.h"
+# include "object.h"
 # include "parse.h"
 # include "frames.h"
 # include "strings.h"
@@ -62,7 +62,7 @@ builtin_system_registry(
     PARSE    *parse,
     FRAME    *frame )
 {
-    char const* path = lol_get(frame->args, 0)->string;
+    char const* path = object_str( lol_get(frame->args, 0)->value );
     LIST* result = L0;
     HKEY key = get_key(&path);
 
@@ -77,7 +77,7 @@ builtin_system_registry(
         LIST const* const field = lol_get(frame->args, 1);
 
         if ( ERROR_SUCCESS ==
-             RegQueryValueEx(key, field ? field->string : 0, 0, &type, data, &len) )
+             RegQueryValueEx(key, field ? object_str( field->value ) : 0, 0, &type, data, &len) )
         {
             switch (type)
             {
@@ -97,7 +97,7 @@ builtin_system_registry(
 
                      expanded->size = len - 1;
 
-                     result = list_new( result, newstr(expanded->value) );
+                     result = list_new( result, object_new(expanded->value) );
                      string_free( expanded );
                  }
                  break;
@@ -107,7 +107,7 @@ builtin_system_registry(
                      char* s;
 
                      for (s = (char*)data; *s; s += strlen(s) + 1)
-                         result = list_new( result, newstr(s) );
+                         result = list_new( result, object_new(s) );
 
                  }
                  break;
@@ -116,12 +116,12 @@ builtin_system_registry(
                  {
                      char buf[100];
                      sprintf( buf, "%u", *(PDWORD)data );
-                     result = list_new( result, newstr(buf) );
+                     result = list_new( result, object_new(buf) );
                  }
                  break;
 
              case REG_SZ:
-                 result = list_new( result, newstr((char*)data) );
+                 result = list_new( result, object_new( (const char *)data ) );
                  break;
             }
         }
@@ -151,7 +151,7 @@ static LIST* get_subkey_names(HKEY key, char const* path)
         )
         {
             name[name_size] = 0;
-            result = list_append(result, list_new(0, newstr(name)));
+            result = list_append(result, list_new(0, object_new(name)));
         }
 
         RegCloseKey(key);
@@ -178,7 +178,7 @@ static LIST* get_value_names(HKEY key, char const* path)
         )
         {
             name[name_size] = 0;
-            result = list_append(result, list_new(0, newstr(name)));
+            result = list_append(result, list_new(0, object_new(name)));
         }
 
         RegCloseKey(key);
@@ -192,8 +192,8 @@ builtin_system_registry_names(
     PARSE    *parse,
     FRAME    *frame )
 {
-    char const* path        = lol_get(frame->args, 0)->string;
-    char const* result_type = lol_get(frame->args, 1)->string;
+    char const* path        = object_str( lol_get(frame->args, 0)->value );
+    char const* result_type = object_str( lol_get(frame->args, 1)->value );
 
     HKEY key = get_key(&path);
 

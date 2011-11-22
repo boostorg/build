@@ -8,7 +8,13 @@
  * expand.h - expand a buffer, given variable values
  */
 
-#include "lists.h"
+#ifndef EXPAND_SW20111118_H
+#define EXPAND_SW20111118_H
 
-LIST *var_expand( LIST  *l, char *in, char *end, LOL *lol, int cancopyin );
+#include "lists.h"
+#include "object.h"
+
+LIST * var_expand( LIST  * l, const char * in, const char *end, LOL * lol, OBJECT * cancopyin );
 void var_expand_unit_test();
+
+#endif

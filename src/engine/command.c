@@ -34,7 +34,7 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
 {
     CMD * cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
     /* Lift line-length limitation entirely when JAMSHELL is just "%". */
-    int no_limit = ( shell && !strcmp(shell->string,"%") && !list_next(shell) );
+    int no_limit = ( shell && !strcmp(object_str(shell->value),"%") && !list_next(shell) );
     int max_line = MAXLINE;
     int allocated = -1;
 
@@ -56,7 +56,7 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
         if ( cmd->buf == 0 )
             break;
 
-        allocated = var_string( rule->actions->command, cmd->buf, max_line, &cmd->args );
+        allocated = var_string( object_str( rule->actions->command ), cmd->buf, max_line, &cmd->args );
 
         max_line = max_line * 2;
     }

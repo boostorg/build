@@ -36,6 +36,9 @@
  * CMD - an action, ready to be formatted into a buffer and executed.
  */
 
+#ifndef COMMAND_SW20111118_H
+#define COMMAND_SW20111118_H
+
 typedef struct _cmd CMD;
 
 struct _cmd
@@ -59,3 +62,5 @@ CMD * cmd_new
 void cmd_free( CMD * );
 
 #define cmd_next( c ) ( ( c )->next )
+
+#endif

@@ -16,7 +16,7 @@
 #include "timestamp.h"
 #include "pathsys.h"
 #include "variable.h"
-#include "newstr.h"
+#include "object.h"
 #include "compile.h"
 #include "strings.h"
 #include "hash.h"
@@ -26,8 +26,8 @@
 
 typedef struct _binding
 {
-    char * binding;
-    char * target;
+    OBJECT * binding;
+    OBJECT * target;
 } BINDING;
 
 static struct hash *explicit_bindings = 0;
@@ -35,22 +35,17 @@ static struct hash *explicit_bindings = 0;
 
 void call_bind_rule
 (
-    char * target_,
-    char * boundname_
+    OBJECT * target_,
+    OBJECT * boundname_
 )
 {
-    LIST * bind_rule = var_get( "BINDRULE" );
+    OBJECT * varname = object_new( "BINDRULE" );
+    LIST * bind_rule = var_get( varname );
+    object_free( varname );
     if ( bind_rule )
     {
-        /* No guarantee that the target is an allocated string, so be on the
-         * safe side.
-         */
-        char * target = copystr( target_ );
-
-        /* Likewise, do not rely on implementation details of newstr.c: allocate
-         * a copy of boundname.
-         */
-        char * boundname = copystr( boundname_ );
+        OBJECT * target = object_copy( target_ );
+        OBJECT * boundname = object_copy( boundname_ );
         if ( boundname && target )
         {
             /* Prepare the argument list. */
@@ -62,7 +57,7 @@ void call_bind_rule
 
             lol_add( frame->args, list_new( L0, boundname ) );
             if ( lol_get( frame->args, 1 ) )
-                list_free( evaluate_rule( bind_rule->string, frame ) );
+                list_free( evaluate_rule( bind_rule->value, frame ) );
 
             /* Clean up */
             frame_free( frame );
@@ -70,9 +65,9 @@ void call_bind_rule
         else
         {
             if ( boundname )
-                freestr( boundname );
+                object_free( boundname );
             if ( target )
-                freestr( target );
+                object_free( target );
         }
     }
 }
@@ -93,21 +88,22 @@ void call_bind_rule
  * the third argument.
  */
 
-char *
+OBJECT *
 search(
-    char *target,
+    OBJECT * target,
     time_t *time,
-    char **another_target,
+    OBJECT * * another_target,
     int file
 )
 {
     PATHNAME f[1];
-    LIST    *varlist;
-    string    buf[1];
-    int     found = 0;
+    LIST   * varlist;
+    string   buf[1];
+    int      found = 0;
     /* Will be set to 1 if target location is specified via LOCATE. */
-    int     explicitly_located = 0;
-    char    *boundname = 0;
+    int      explicitly_located = 0;
+    OBJECT * boundname = 0;
+    OBJECT * varname;
 
     if ( another_target )
         *another_target = 0;
@@ -119,55 +115,67 @@ search(
     string_new( buf );
     /* Parse the filename */
 
-    path_parse( target, f );
+    path_parse( object_str( target ), f );
 
     f->f_grist.ptr = 0;
     f->f_grist.len = 0;
 
-    if ( ( varlist = var_get( "LOCATE" ) ) )
-      {
-        f->f_root.ptr = varlist->string;
-        f->f_root.len = strlen( varlist->string );
+    varname = object_new( "LOCATE" );
+    varlist = var_get( varname );
+    object_free( varname );
+    if ( varlist )
+    {
+        OBJECT * key;
+        f->f_root.ptr = object_str( varlist->value );
+        f->f_root.len = strlen( object_str( varlist->value ) );
 
         path_build( f, buf, 1 );
 
         if ( DEBUG_SEARCH )
-            printf( "locate %s: %s\n", target, buf->value );
+            printf( "locate %s: %s\n", object_str( target ), buf->value );
 
         explicitly_located = 1;
 
-        timestamp( buf->value, time );
+        key = object_new( buf->value );
+        timestamp( key, time );
+        object_free( key );
         found = 1;
     }
-    else if ( ( varlist = var_get( "SEARCH" ) ) )
+    else if ( ( varname = object_new( "SEARCH" ),
+                varlist = var_get( varname ),
+                object_free( varname ),
+                varlist ) )
     {
         while ( varlist )
         {
             BINDING b, *ba = &b;
             file_info_t *ff;
+            OBJECT * key;
 
-            f->f_root.ptr = varlist->string;
-            f->f_root.len = strlen( varlist->string );
+            f->f_root.ptr = object_str( varlist->value );
+            f->f_root.len = strlen( object_str( varlist->value ) );
 
             string_truncate( buf, 0 );
             path_build( f, buf, 1 );
 
             if ( DEBUG_SEARCH )
-                printf( "search %s: %s\n", target, buf->value );
+                printf( "search %s: %s\n", object_str( target ), buf->value );
 
-            ff = file_query(buf->value);
-            timestamp( buf->value, time );
+            key = object_new( buf->value );
+            ff = file_query( key );
+            timestamp( key, time );
 
-            b.binding = buf->value;
+            b.binding = key;
 
             if ( hashcheck( explicit_bindings, (HASHDATA**)&ba ) )
             {
                 if ( DEBUG_SEARCH )
                     printf(" search %s: found explicitly located target %s\n",
-                           target, ba->target);
+                           object_str( target ), object_str( ba->target ) );
                 if ( another_target )
                     *another_target = ba->target;
                 found = 1;
+                object_free( key );
                 break;
             }
             else if ( ff && ff->time )
@@ -175,9 +183,11 @@ search(
                 if ( !file || ff->is_file )
                 {
                     found = 1;
+                    object_free( key );
                     break;
                 }
             }
+            object_free( key );
 
             varlist = list_next( varlist );
         }
@@ -188,6 +198,7 @@ search(
         /* Look for the obvious */
         /* This is a questionable move.  Should we look in the */
         /* obvious place if SEARCH is set? */
+        OBJECT * key;
 
         f->f_root.ptr = 0;
         f->f_root.len = 0;
@@ -196,12 +207,14 @@ search(
         path_build( f, buf, 1 );
 
         if ( DEBUG_SEARCH )
-            printf( "search %s: %s\n", target, buf->value );
+            printf( "search %s: %s\n", object_str( target ), buf->value );
 
-        timestamp( buf->value, time );
+        key = object_new( buf->value );
+        timestamp( key, time );
+        object_free( key );
     }
 
-    boundname = newstr( buf->value );
+    boundname = object_new( buf->value );
     string_free( buf );
 
     if ( explicitly_located )
@@ -215,7 +228,7 @@ search(
            compatibility, though. */
         if ( hashenter( explicit_bindings, (HASHDATA * *)&ba ) )
         {
-            ba->binding = copystr( boundname );
+            ba->binding = object_copy( boundname );
         }
     }
 
@@ -229,7 +242,7 @@ search(
 static void free_binding( void * xbinding, void * data )
 {
     BINDING * binding = (BINDING *)xbinding;
-    freestr( binding->binding );
+    object_free( binding->binding );
 }
 
 void search_done( void )
