@@ -7,6 +7,7 @@
 # include "jam.h"
 # include "hash.h"
 # include "compile.h"
+# include "object.h"
 # include <assert.h>
 
 /*
@@ -29,14 +30,11 @@
 #define HASH_DEBUG_PROFILE 1
 /* */
 
-char    *hashsccssid="@(#)hash.c    1.14  ()  6/20/88";
-
 /* Header attached to all data items entered into a hash table. */
 
 struct hashhdr
 {
     struct item  * next;
-    unsigned int   keyval;  /* for quick comparisons */
 };
 
 /* This structure overlays the one handed to hashenter(). Its actual size is
@@ -45,7 +43,7 @@ struct hashhdr
 
 struct hashdata
 {
-    char * key;
+    OBJECT * key;
     /* rest of user data */
 };
 
@@ -89,7 +87,7 @@ struct hash
         } lists[ MAX_LISTS ];
     } items;
 
-    char * name; /* just for hashstats() */
+    const char * name; /* just for hashstats() */
 };
 
 static void hashrehash( struct hash *hp );
@@ -100,39 +98,9 @@ static void hash_mem_free(size_t datalen, void * data);
 static void hash_mem_finalizer(char * key, struct hash * hp);
 #endif
 
-static unsigned int jenkins_one_at_a_time_hash(const unsigned char *key)
+static unsigned int hash_keyval( OBJECT * key )
 {
-    unsigned int hash = 0;
-
-    while ( *key )
-    {
-        hash += *key++;
-        hash += (hash << 10);
-        hash ^= (hash >> 6);
-    }
-    hash += (hash << 3);
-    hash ^= (hash >> 11);
-    hash += (hash << 15);
-	
-    return hash;
-}
-
-/*
-static unsigned int knuth_hash(const unsigned char *key)
-{
-    unsigned int keyval = *key;
-    while ( *key )
-        keyval = keyval * 2147059363 + *key++;
-    return keyval;
-}
-*/
-
-static unsigned int hash_keyval( const char * key_ )
-{
-    /*
-	return knuth_hash((const unsigned char *)key_);
-	*/
-    return jenkins_one_at_a_time_hash((const unsigned char *)key_);
+    return object_hash( key );
 }
 
 #define hash_bucket(hp,keyval) ((hp)->tab.base + ( (keyval) % (hp)->tab.nel ))
@@ -145,7 +113,7 @@ static unsigned int hash_keyval( const char * key_ )
 static ITEM * hash_search(
     struct hash *hp,
     unsigned int keyval,
-    const char * keydata,
+    OBJECT * keydata,
     ITEM * * previous )
 {
     ITEM * i = *hash_bucket(hp,keyval);
@@ -153,8 +121,7 @@ static ITEM * hash_search(
 
     for ( ; i; i = i->hdr.next )
     {
-        if ( ( keyval == i->hdr.keyval ) &&
-            !strcmp( i->data.key, keydata ) )
+        if ( object_equal( i->data.key, keydata ) )
         {
             if (previous)
             {
@@ -213,7 +180,7 @@ hashitem(
     int enter )
 {
     register ITEM *i;
-    char *b = (*data)->key;
+    OBJECT *b = (*data)->key;
     unsigned int keyval = hash_keyval(b);
 
     #ifdef HASH_DEBUG_PROFILE
@@ -262,7 +229,6 @@ hashitem(
         }
         hp->items.more--;
         memcpy( (char *)&i->data, (char *)*data, hp->items.datalen );
-        i->hdr.keyval = keyval;
         i->hdr.next = *base;
         *base = i;
         *data = &i->data;
@@ -312,7 +278,7 @@ static void hashrehash( register struct hash *hp )
         for ( ; nel--; next += hp->items.size )
         {
             register ITEM *i = (ITEM *)next;
-            ITEM **ip = hp->tab.base + i->hdr.keyval % hp->tab.nel;
+            ITEM **ip = hp->tab.base + object_hash( i->data.key ) % hp->tab.nel;
             /* code currently assumes rehashing only when there are no free items */
             assert( i->data.key != 0 );
 
@@ -352,7 +318,7 @@ void hashenumerate( struct hash * hp, void (* f)( void *, void * ), void * data 
 struct hash *
 hashinit(
     int datalen,
-    char *name )
+    const char *name )
 {
     struct hash *hp = (struct hash *)hash_mem_alloc( datalen, sizeof( *hp ) );
 
@@ -376,7 +342,7 @@ hashinit(
  */
 
 void
-hashdone( struct hash *hp )
+hashdone( struct hash * hp )
 {
     int i;
 
@@ -393,7 +359,7 @@ hashdone( struct hash *hp )
     hash_mem_free( hp->items.datalen, (char *)hp );
 }
 
-char *
+const char *
 hashname ( struct hash * hp )
 {
     return hp->name;
@@ -424,7 +390,7 @@ static void hash_mem_free(size_t datalen, void * data)
 }
 
 #ifdef OPT_BOEHM_GC
-static void hash_mem_finalizer(char * key, struct hash * hp)
+static void hash_mem_finalizer(OBJECT * key, struct hash * hp)
 {
     HASHDATA d;
     d.key = key;
@@ -441,7 +407,7 @@ static void hashstat( struct hash * hp )
     int nel = hp->tab.nel;
     int count = 0;
     int sets = 0;
-    int run = ( tab[ nel - 1 ] != (ITEM *)0 );
+    int run = tab && ( tab[ nel - 1 ] != (ITEM *)0 );
     int i;
     int here;
 

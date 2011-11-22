@@ -62,10 +62,10 @@ struct argument_list
 /* Build actions corresponding to a rule. */
 struct rule_actions
 {
-    int    reference_count;
-    char * command;          /* command string from ACTIONS */
-    LIST * bindlist;
-    int    flags;            /* modifiers on ACTIONS */
+    int      reference_count;
+    OBJECT * command;          /* command string from ACTIONS */
+    LIST   * bindlist;
+    int      flags;            /* modifiers on ACTIONS */
 
 #define RULE_NEWSRCS   0x01  /* $(>) is updated sources only */
 #define RULE_TOGETHER  0x02  /* combine actions on single target */
@@ -80,7 +80,7 @@ typedef struct argument_list argument_list;
 
 struct _rule
 {
-    char          * name;
+    OBJECT        * name;
     PARSE         * procedure;  /* parse tree from RULE */
     argument_list * arguments;  /* argument checking info, or NULL for unchecked
                                  */
@@ -118,7 +118,7 @@ struct _action
 struct _settings
 {
     SETTINGS * next;
-    char     * symbol;        /* symbol name for var_set() */
+    OBJECT   * symbol;        /* symbol name for var_set() */
     LIST     * value;         /* symbol value for var_set() */
     int multiple;
 };
@@ -134,8 +134,8 @@ struct _targets
 /* TARGET - an entity (e.g. a file) that can be built. */
 struct _target
 {
-    char     * name;
-    char     * boundname;             /* if search() relocates target */
+    OBJECT   * name;
+    OBJECT   * boundname;             /* if search() relocates target */
     ACTIONS  * actions;               /* rules to execute, if any */
     SETTINGS * settings;              /* variables to define */
 
@@ -236,7 +236,7 @@ struct _target
     TARGETS  * parents;               /* used by make1() for completion */
     char     * cmds;                  /* type-punned command list */
 
-    char     * failed;
+    const char * failed;
 };
 
 
@@ -244,7 +244,7 @@ struct _target
 void       action_free  ( ACTION * );
 ACTIONS  * actionlist   ( ACTIONS *, ACTION * );
 void       freeactions  ( ACTIONS * );
-SETTINGS * addsettings  ( SETTINGS *, int flag, char * symbol, LIST * value );
+SETTINGS * addsettings  ( SETTINGS *, int flag, OBJECT * symbol, LIST * value );
 void       pushsettings ( SETTINGS * );
 void       popsettings  ( SETTINGS * );
 SETTINGS * copysettings ( SETTINGS * );
@@ -258,23 +258,23 @@ argument_list * args_new  ();
 void            args_refer( argument_list * );
 
 /* Rule related functions. */
-RULE * bindrule        ( char * rulename, module_t * );
-RULE * import_rule     ( RULE * source, module_t *, char * name );
-RULE * new_rule_body   ( module_t *, char * rulename, argument_list *, PARSE * procedure, int exprt );
-RULE * new_rule_actions( module_t *, char * rulename, char * command, LIST * bindlist, int flags );
+RULE * bindrule        ( OBJECT * rulename, module_t * );
+RULE * import_rule     ( RULE * source, module_t *, OBJECT * name );
+RULE * new_rule_body   ( module_t *, OBJECT * rulename, argument_list *, PARSE * procedure, int exprt );
+RULE * new_rule_actions( module_t *, OBJECT * rulename, OBJECT * command, LIST * bindlist, int flags );
 void   rule_free       ( RULE * );
 
 /* Target related functions. */
 void      bind_explicitly_located_targets();
-TARGET  * bindtarget                     ( char const * target_name );
+TARGET  * bindtarget                     ( OBJECT * target_name );
 TARGET  * copytarget                     ( TARGET const * t );
 void      freetargets                    ( TARGETS * );
-TARGET  * search_for_target              ( char * name, LIST * search_path );
+TARGET  * search_for_target              ( OBJECT * name, LIST * search_path );
 TARGETS * targetchain                    ( TARGETS * chain, TARGETS * );
 TARGETS * targetentry                    ( TARGETS * chain, TARGET * );
 void      target_include                 ( TARGET * including, TARGET * included );
 TARGETS * targetlist                     ( TARGETS * chain, LIST * target_names );
-void      touch_target                   ( char * t );
+void      touch_target                   ( OBJECT * t );
 void      clear_includes                 ( TARGET * );
 
 /* Final module cleanup. */

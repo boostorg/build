@@ -24,14 +24,15 @@
 # define PATHSYS_VP_20020211_H
 
 #include "strings.h"
+#include "object.h"
 
 typedef struct _pathname PATHNAME;
 typedef struct _pathpart PATHPART;
 
 struct _pathpart
 {
-    char * ptr;
-    int    len;
+    const char * ptr;
+    int          len;
 };
 
 struct _pathname
@@ -52,15 +53,15 @@ struct _pathname
 void path_build( PATHNAME * f, string * file, int binding );
 void path_build1( PATHNAME * f, string * file );
 
-void path_parse( char * file, PATHNAME * f );
+void path_parse( const char * file, PATHNAME * f );
 void path_parent( PATHNAME * f );
 
 #ifdef NT
 
-/** Returns newstr-allocated string with long equivivalent of 'short_name'.
+/** Returns object_new-allocated string with long equivivalent of 'short_name'.
     If none exists -- i.e. 'short_path' is already long path, it's returned
     unaltered. */
-char * short_path_to_long_path( char * short_path );
+OBJECT * short_path_to_long_path( OBJECT * short_path );
 
 #endif
 
@@ -72,11 +73,11 @@ const char * path_tmpdir( void );
 
 /** Returns a new temporary name.
 */
-const char * path_tmpnam( void );
+OBJECT * path_tmpnam( void );
 
 /** Returns a new temporary path.
 */
-const char * path_tmpfile( void );
+OBJECT * path_tmpfile( void );
 #endif
 
 /** Give the first argument to 'main', return a full path to
@@ -86,6 +87,6 @@ const char * path_tmpfile( void );
 
     Implemented in jam.c
 */
-char * executable_path (char *argv0);
+char * executable_path (const char *argv0);
 
 #endif

@@ -5,11 +5,11 @@
  */
 
 # include "jam.h"
-# include "newstr.h"
+# include "object.h"
 # include "lists.h"
 
 /*
- * lists.c - maintain lists of strings
+ * lists.c - maintain lists of objects
  *
  * This implementation essentially uses a singly linked list, but
  * guarantees that the head element of every list has a valid pointer
@@ -55,12 +55,12 @@ LIST * list_append( LIST * l, LIST * nl )
  * list_new() - tack a string onto the end of a list of strings
  */
 
-LIST * list_new( LIST * head, char * string )
+LIST * list_new( LIST * head, OBJECT * value )
 {
     LIST * l;
 
     if ( DEBUG_LISTS )
-        printf( "list > %s <\n", string );
+        printf( "list > %s <\n", object_str( value ) );
 
     /* Get list struct from freelist, if one available.  */
     /* Otherwise allocate. */
@@ -69,7 +69,7 @@ LIST * list_new( LIST * head, char * string )
     if ( freelist )
     {
         l = freelist;
-        freestr( l->string );
+        object_free( l->value );
         freelist = freelist->next;
     }
     else
@@ -86,7 +86,7 @@ LIST * list_new( LIST * head, char * string )
     head->tail = l;
     l->next = 0;
 
-    l->string = string;
+    l->value = value;
 
     return head;
 }
@@ -99,7 +99,7 @@ LIST * list_new( LIST * head, char * string )
 LIST * list_copy( LIST * l, LIST * nl )
 {
     for ( ; nl; nl = list_next( nl ) )
-        l = list_new( l, copystr( nl->string ) );
+        l = list_new( l, object_copy( nl->value ) );
     return l;
 }
 
@@ -113,16 +113,16 @@ LIST * list_sublist( LIST * l, int start, int count )
     LIST * nl = 0;
     for ( ; l && start--; l = list_next( l ) );
     for ( ; l && count--; l = list_next( l ) )
-        nl = list_new( nl, copystr( l->string ) );
+        nl = list_new( nl, object_copy( l->value ) );
     return nl;
 }
 
 
 static int str_ptr_compare( void const * va, void const * vb )
 {
-    char * a = *( (char * *)va );
-    char * b = *( (char * *)vb );
-    return strcmp(a, b);
+    OBJECT * a = *( (OBJECT * *)va );
+    OBJECT * b = *( (OBJECT * *)vb );
+    return strcmp(object_str(a), object_str(b));
 }
 
 
@@ -130,7 +130,7 @@ LIST * list_sort( LIST * l )
 {
     int len;
     int ii;
-    char * * strings;
+    OBJECT * * objects;
     LIST * listp;
     LIST * result = 0;
 
@@ -138,21 +138,21 @@ LIST * list_sort( LIST * l )
         return L0;
 
     len = list_length( l );
-    strings = (char * *)BJAM_MALLOC( len * sizeof(char*) );
+    objects = (OBJECT * *)BJAM_MALLOC( len * sizeof(OBJECT*) );
 
     listp = l;
     for ( ii = 0; ii < len; ++ii )
     {
-        strings[ ii ] = listp->string;
+        objects[ ii ] = listp->value;
         listp = listp->next;
     }
 
-    qsort( strings, len, sizeof( char * ), str_ptr_compare );
+    qsort( objects, len, sizeof( OBJECT * ), str_ptr_compare );
 
     for ( ii = 0; ii < len; ++ii )
-        result = list_append( result, list_new( 0, copystr( strings[ ii ] ) ) );
+        result = list_append( result, list_new( 0, object_copy( objects[ ii ] ) ) );
 
-    BJAM_FREE( strings );
+    BJAM_FREE( objects );
 
     return result;
 }
@@ -168,8 +168,8 @@ void list_free( LIST * head )
     LIST *l, *tmp;
     for( l = head; l;  )
     {
-        freestr( l->string );
-        l->string = 0;
+        object_free( l->value );
+        l->value = 0;
         tmp = l;
         l = l->next;
         BJAM_FREE( tmp );
@@ -212,9 +212,9 @@ void list_print( LIST * l )
     LIST * p = 0;
     for ( ; l; p = l, l = list_next( l ) )
         if ( p )
-            printf( "%s ", p->string );
+            printf( "%s ", object_str( p->value ) );
     if ( p )
-        printf( "%s", p->string );
+        printf( "%s", object_str( p->value ) );
 }
 
 
@@ -230,10 +230,10 @@ int list_length( LIST * l )
 }
 
 
-int list_in( LIST * l, char * value )
+int list_in( LIST * l, OBJECT * value )
 {
     for ( ; l; l = l->next )
-        if ( strcmp( l->string, value ) == 0 )
+        if ( object_equal( l->value, value ) )
             return 1;
     return 0;
 }
@@ -246,9 +246,9 @@ LIST * list_unique( LIST * sorted_list )
 
     for ( ; sorted_list; sorted_list = sorted_list->next )
     {
-        if ( !last_added || strcmp( sorted_list->string, last_added->string ) != 0 )
+        if ( !last_added || !object_equal( sorted_list->value, last_added->value ) )
         {
-            result = list_new( result, copystr( sorted_list->string ) );
+            result = list_new( result, object_copy( sorted_list->value ) );
             last_added = sorted_list;
         }
     }
@@ -260,8 +260,8 @@ void list_done()
     LIST *l, *tmp;
     for( l = freelist; l;  )
     {
-        freestr( l->string );
-        l->string = 0;
+        object_free( l->value );
+        l->value = 0;
         tmp = l;
         l = l->next;
         BJAM_FREE( tmp );
@@ -337,7 +337,7 @@ PyObject *list_to_python(LIST *l)
 
     for (; l; l = l->next)
     {
-        PyObject* s = PyString_FromString(l->string);
+        PyObject* s = PyString_FromString(object_str(l->value));
         PyList_Append(result, s);
         Py_DECREF(s);
     }
@@ -354,7 +354,7 @@ LIST *list_from_python(PyObject *l)
     for (i = 0; i < n; ++i)
     {
         PyObject *v = PySequence_GetItem(l, i);        
-        result = list_new (result, newstr (PyString_AsString(v)));
+        result = list_new (result, object_new (PyString_AsString(v)));
         Py_DECREF(v);
     }
 

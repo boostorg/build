@@ -29,7 +29,7 @@
  *
  * If the command is multi-line, or longer than WRTLEN, we write the command
  * block to a temp file, splitting long lines (using "-" at the end of the line
- * to indicate contiuation), and then source that temp file. We use special
+ * to indicate continuation), and then source that temp file. We use special
  * logic to make sure we do not continue in the middle of a quoted string.
  *
  * 05/04/94 (seiwald) - async multiprocess interface; noop on VMS
@@ -48,19 +48,24 @@ char tempnambuf[ L_tmpnam + 1 + 4 ] = { 0 };
 
 void exec_cmd
 (
-    char * string,
-    void (* func)( void * closure, int status, timing_info *, char *, char * ),
+    const char * string,
+    void (* func)( void * closure, int status, timing_info *, const char *, const char * ),
     void * closure,
     LIST * shell,
-    char * rule_name,
-    char * target
+    const char * rule_name,
+    const char * target
 )
 {
-    char * s;
-    char * e;
-    cahr * p;
+    const char * s;
+    const char * e;
+    const char * p;
     int rstat = EXEC_CMD_OK;
     int status;
+    timing_info timing;
+
+    timing.system = 0;
+    timing.user = 0;
+    timing.start = time( 0 );
 
     /* See if string is more than one line discounting leading/trailing white
      * space.
@@ -89,7 +94,8 @@ void exec_cmd
         if ( !( f = fopen( tempnambuf + 1, "w" ) ) )
         {
             printf( "can't open command file\n" );
-            (*func)( closure, EXEC_CMD_FAIL );
+            timing.end = time( 0 );
+            (*func)( closure, EXEC_CMD_FAIL, &timing, "", "" );
             return;
         }
 
@@ -104,9 +110,9 @@ void exec_cmd
             /* For each chunk of a line that needs to be split. */
             while ( len > 0 )
             {
-                char * q = string;
-                char * qe = string + MIN( len, WRTLEN );
-                char * qq = q;
+                const char * q = string;
+                const char * qe = string + MIN( len, WRTLEN );
+                const char * qq = q;
                 int quote = 0;
 
                 /* Look for matching "s. */
@@ -141,15 +147,25 @@ void exec_cmd
     {
         /* Execute single line command. Strip trailing newline before execing.
          */
-        if ( e ) *e = 0;
+        if ( e )
+        {
+            s = strdup( s );
+            e = strchr( s, '\n' );
+            *(char *)e = 0;
+        }
         status = system( s ) & 0x07;
+        if ( e )
+        {
+            free( (void *)s );
+        }
     }
 
     /* Fail for error or fatal error. OK on OK, warning or info exit. */
     if ( ( status == 2 ) || ( status == 4 ) )
         rstat = EXEC_CMD_FAIL;
-
-    (*func)( closure, rstat );
+    
+    timing.end = time( 0 );
+    (*func)( closure, rstat, &timing, "", "" );
 }
 
 

@@ -9,9 +9,9 @@
 
 struct native_rule_t
 {
-    char* name;
-    argument_list* arguments;
-    PARSE* procedure;
+    OBJECT * name;
+    argument_list * arguments;
+    PARSE * procedure;
     /* Version of the interface that the native rule provides.
        It's possible that we want to change the set parameter
        for existing native rule. In that case, version number
@@ -26,8 +26,8 @@ struct native_rule_t
 /* MSVC debugger gets confused unless this is provided */
 typedef struct native_rule_t native_rule_t ;
 
-void declare_native_rule(char* module, char* rule, char** args,
-                         LIST*(*f)(PARSE*, FRAME*), int version);
+void declare_native_rule( const char * module, const char * rule, const char * * args,
+                          LIST * (*f)( PARSE *, FRAME * ), int version );
 
 
 

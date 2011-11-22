@@ -30,27 +30,27 @@ struct _PARSE {
     PARSE  * left;
     PARSE  * right;
     PARSE  * third;
-    char   * string;
-    char   * string1;
+    OBJECT * string;
+    OBJECT * string1;
     int      num;
     int      refs;
 /*  module * module; */
-    char   * rulename;
-    char   * file;
+    OBJECT * rulename;
+    OBJECT * file;
     int      line;
 };
 
-void    parse_file( char *, FRAME * );
+void    parse_file( OBJECT *, FRAME * );
 void    parse_save( PARSE * );
 
 PARSE * parse_make(
-    LIST  * (* func)( PARSE *, FRAME * ),
-    PARSE * left,
-    PARSE * right,
-    PARSE * third,
-    char  * string,
-    char  * string1,
-    int     num );
+    LIST   * (* func)( PARSE *, FRAME * ),
+    PARSE  * left,
+    PARSE  * right,
+    PARSE  * third,
+    OBJECT * string,
+    OBJECT * string1,
+    int      num );
 
 void   parse_refer   ( PARSE * );
 void   parse_free    ( PARSE * );

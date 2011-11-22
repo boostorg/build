@@ -5,7 +5,7 @@
 #include "../native.h"
 #include "../lists.h"
 #include "../strings.h"
-#include "../newstr.h"
+#include "../object.h"
 #include "../variable.h"
 
 
@@ -16,7 +16,7 @@ LIST *add_pair( PARSE *parse, FRAME *frame )
 {
     LIST* arg = lol_get( frame->args, 0 );    
 
-    var_set(arg->string, list_copy(0, arg->next), VAR_APPEND);
+    var_set(arg->value, list_copy(0, arg->next), VAR_APPEND);
 
     return L0;
 }
@@ -24,11 +24,11 @@ LIST *add_pair( PARSE *parse, FRAME *frame )
 /** Given a list and a value, returns position of that value in
     the list, or -1 if not found.
 */
-int list_index(LIST* list, const char* value)
+int list_index(LIST* list, OBJECT* value)
 {
     int result = 0;
     for(; list; list = list->next, ++result) {
-        if (strcmp(list->string, value) == 0)
+        if (object_equal(list->value, value))
             return result;
     }
     return -1;
@@ -92,12 +92,12 @@ LIST *order( PARSE *parse, FRAME *frame )
     for(tmp = arg, src = 0; tmp; tmp = tmp->next, ++src) {
         /* For all object this one depend upon, add elements
            to 'graph' */
-        LIST* dependencies = var_get(tmp->string);
+        LIST* dependencies = var_get(tmp->value);
         int index = 0;
 
         graph[src] = (int*)BJAM_CALLOC(list_length(dependencies)+1, sizeof(int));
         for(; dependencies; dependencies = dependencies->next) {          
-            int dst = list_index(arg, dependencies->string);
+            int dst = list_index(arg, dependencies->value);
             if (dst != -1)
                 graph[src][index++] = dst;
         }
@@ -112,7 +112,7 @@ LIST *order( PARSE *parse, FRAME *frame )
             int i;
             tmp = arg;
             for (i = 0; i < order[index]; ++i, tmp = tmp->next);
-            result = list_new(result, copystr(tmp->string));
+            result = list_new(result, object_copy(tmp->value));
         }
     }
 
@@ -131,12 +131,12 @@ LIST *order( PARSE *parse, FRAME *frame )
 void init_order()
 {
     {
-        char* args[] = { "first", "second", 0 };
+        const char* args[] = { "first", "second", 0 };
         declare_native_rule("class@order", "add-pair", args, add_pair, 1);
     }
 
     {
-        char* args[] = { "objects", "*", 0 };
+        const char* args[] = { "objects", "*", 0 };
         declare_native_rule("class@order", "order", args, order, 1);
     }
 

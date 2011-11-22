@@ -41,11 +41,11 @@
  * path_parse() - split a file name into dir/base/suffix/member.
  */
 
-void path_parse( char * file, PATHNAME * f )
+void path_parse( const char * file, PATHNAME * f )
 {
-    char * p;
-    char * q;
-    char * end;
+    const char * p;
+    const char * q;
+    const char * end;
 
     memset( (char *)f, 0, sizeof( *f ) );
 
@@ -163,12 +163,12 @@ struct dirinf
 
     struct
     {
-        char * ptr;
+        const char * ptr;
         int   len;
     } dev, dir;
 };
 
-static char * strnchr( char * buf, int c, int len )
+static const char * strnchr( const char * buf, int c, int len )
 {
     while ( len-- )
         if ( *buf && ( *buf++ == c ) )
@@ -177,9 +177,9 @@ static char * strnchr( char * buf, int c, int len )
 }
 
 
-static void dir_flags( char * buf, int len, struct dirinf * i )
+static void dir_flags( const char * buf, int len, struct dirinf * i )
 {
-    char * p;
+    const char * p;
 
     if ( !buf || !len )
     {

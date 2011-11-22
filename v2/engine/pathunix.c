@@ -14,7 +14,7 @@
 # include "jam.h"
 # include "pathsys.h"
 # include "strings.h"
-# include "newstr.h"
+# include "object.h"
 # include "filesys.h"
 # include <time.h>
 # include <stdlib.h>
@@ -56,11 +56,11 @@
  * path_parse() - split a file name into dir/base/suffix/member
  */
 
-void path_parse( char * file, PATHNAME * f )
+void path_parse( const char * file, PATHNAME * f )
 {
-    char * p;
-    char * q;
-    char * end;
+    const char * p;
+    const char * q;
+    const char * end;
 
     memset( (char *)f, 0, sizeof( *f ) );
 
@@ -382,15 +382,15 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
     return len;
 }
 
-char* short_path_to_long_path(char* short_path)
+OBJECT * short_path_to_long_path( OBJECT * short_path )
 {
     char buffer2[_MAX_PATH];
-    int ret = ShortPathToLongPath(short_path, buffer2, _MAX_PATH);
+    int ret = ShortPathToLongPath( object_str( short_path ), buffer2, _MAX_PATH );
 
     if (ret)
-    return newstr(buffer2);
+        return object_new( buffer2 );
     else
-      return newstr(short_path);
+      return object_copy( short_path );
 }
 
 #endif
@@ -424,7 +424,7 @@ const char * path_tmpdir()
     return path_tmpdir_result;
 }
 
-const char * path_tmpnam(void)
+OBJECT * path_tmpnam(void)
 {
     char name_buffer[64];
     # ifdef OS_NT
@@ -436,18 +436,21 @@ const char * path_tmpnam(void)
     if (0 == c1) c1 = time(0)&0xffff;
     c1 += 1;
     sprintf(name_buffer,"jam%lx%lx.000",c0,c1);
-    return newstr(name_buffer);
+    return object_new(name_buffer);
 }
 
-const char * path_tmpfile(void)
+OBJECT * path_tmpfile(void)
 {
-    const char * result = 0;
+    OBJECT * result = 0;
+    OBJECT * tmpnam;
 
     string file_path;
     string_copy(&file_path,path_tmpdir());
     string_push_back(&file_path,PATH_DELIM);
-    string_append(&file_path,path_tmpnam());
-    result = newstr(file_path.value);
+    tmpnam = path_tmpnam();
+    string_append(&file_path,object_str(tmpnam));
+    object_free(tmpnam);
+    result = object_new(file_path.value);
     string_free(&file_path);
 
     return result;
