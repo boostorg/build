@@ -865,6 +865,7 @@ call_python_function(RULE* r, FRAME* frame)
 
     frame_before_python_call = frame;
     py_result = PyObject_Call( r->python_function, arguments, kw );
+    frame_before_python_call = NULL;
     Py_DECREF(arguments);
     Py_XDECREF(kw);
     if ( py_result != NULL )
