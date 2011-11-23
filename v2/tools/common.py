@@ -150,7 +150,7 @@ class Configurations(object):
 
     def get(self, id, param):
         """ Returns the value of a configuration parameter. """
-        self.params_.get(param, {}).get(id)
+        return self.params_.get(param, {}).get(id)
 
     def set (self, id, param, value):
         """ Sets the value of a configuration parameter. """
@@ -294,6 +294,8 @@ def get_invocation_command_nodefault(
             #print "warning: initialized from" [ errors.nearest-user-location ] ;
     else:
         command = check_tool(user_provided_command)
+        assert(isinstance(command, list))
+        command=' '.join(command)
         if not command and __debug_configuration:
             print "warning: toolset", toolset, "initialization:"
             print "warning: can't find user-provided command", user_provided_command
