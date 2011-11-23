@@ -15,9 +15,6 @@
  * have the same name:  it never appears in the bound name of a target.
  * (member) is an archive member name: the syntax is arbitrary, but must
  * agree in path_parse(), path_build() and the Jambase.
- *
- * On VMS, we keep track of whether the original path was a directory
- * (without a file), so that $(VAR:D) can climb to the parent.
  */
 
 #ifndef PATHSYS_VP_20020211_H
@@ -38,9 +35,6 @@ struct _pathpart
 struct _pathname
 {
     PATHPART    part[6];
-#ifdef OS_VMS
-    int     parent;
-#endif
 
 #define f_grist    part[0]
 #define f_root     part[1]

@@ -73,7 +73,6 @@
  *  command.c - maintain lists of commands
  *  compile.c - compile parsed jam statements
  *  execunix.c - execute a shell script on UNIX
- *  execvms.c - execute a shell script, ala VMS
  *  expand.c - expand a buffer, given variable values
  *  file*.c - scan directories and archives on *
  *  hash.c - simple in-memory hashing routines
