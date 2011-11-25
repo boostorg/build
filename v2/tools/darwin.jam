@@ -513,7 +513,7 @@ flags darwin.link OPTIONS <optimization>space : -Wl,-dead_strip -no_dead_strip_i
 flags darwin.compile OPTIONS <link>shared : -dynamic ;
 
 # Misc options.
-flags darwin.compile OPTIONS : -no-cpp-precomp -gdwarf-2 -fexceptions ;
+flags darwin.compile OPTIONS : -gdwarf-2 -fexceptions ;
 #~ flags darwin.link OPTIONS : -fexceptions ;
 
 # Add the framework names to use.
