@@ -240,7 +240,7 @@ rule configure-version-specific ( toolset : version : conditions )
 
         # Improve floating-point accuracy. Otherwise, some of C++ Boost's "math"
         # tests will fail.
-        toolset.flags $(toolset).compile CFLAGS $(conditions) : /fp:precise ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : /Op ;
 
         # 7.1 and below have single-threaded static RTL.
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /ML ;
