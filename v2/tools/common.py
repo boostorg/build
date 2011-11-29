@@ -349,7 +349,9 @@ def get_absolute_tool_path(command):
         programs = path.programs_path()
         m = path.glob(programs, [command, command + '.exe' ])
         if not len(m):
-            print "Could not find:", command, "in", programs
+            if __debug_configuration:
+                print "Could not find:", command, "in", programs
+            return None
         return os.path.dirname(m[0])
 
 # ported from trunk@47174
