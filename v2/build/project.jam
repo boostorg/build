@@ -263,7 +263,7 @@ rule find-jamfile (
     {
         errors.error Unable to load Jamfile.
             : Could not find a Jamfile in directory '$(dir)'.
-            : Attempted to find it with pattern '"$(JAMFILE:J=" ")"'.
+            : Attempted to find it with pattern '"$(JAMFILE:J= )"'.
             : Please consult the documentation at 'http://www.boost.org'. ;
     }
 
