@@ -247,6 +247,9 @@ static void free_binding( void * xbinding, void * data )
 
 void search_done( void )
 {
-    hashenumerate( explicit_bindings, free_binding, (void *)0 );
-    hashdone( explicit_bindings );
+    if ( explicit_bindings )
+    {
+        hashenumerate( explicit_bindings, free_binding, (void *)0 );
+        hashdone( explicit_bindings );
+    }
 }
