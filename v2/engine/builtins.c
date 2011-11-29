@@ -2181,8 +2181,11 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
 
 PyObject * bjam_caller( PyObject * self, PyObject * args )
 {
-    return PyString_FromString(
-        object_str( frame_before_python_call->prev->module->name ) );
+    /* Module names in Jam end in dot. The CALLER builtin in jam
+       language strips the dot, and we do the same here to make it
+       easier to port Jam code to Python. */
+    const char *s = object_str( frame_before_python_call->prev->module->name );
+    return PyString_FromStringAndSize(s, strlen(s)-1);
 }
 
 #endif  /* #ifdef HAVE_PYTHON */
