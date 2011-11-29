@@ -238,6 +238,9 @@ static void free_timestamps ( void * xbinding, void * data )
 
 void stamps_done()
 {
-    hashenumerate( bindhash, free_timestamps, (void *)0 );
-    hashdone( bindhash );
+    if ( bindhash )
+    {
+        hashenumerate( bindhash, free_timestamps, (void *)0 );
+        hashdone( bindhash );
+    }
 }

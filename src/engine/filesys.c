@@ -81,8 +81,11 @@ static void free_file_info ( void * xfile, void * data )
 void file_done()
 {
     remove_files_atexit();
-    hashenumerate( filecache_hash, free_file_info, (void *)0 );
-    hashdone( filecache_hash );
+    if ( filecache_hash )
+    {
+        hashenumerate( filecache_hash, free_file_info, (void *)0 );
+        hashdone( filecache_hash );
+    }
 }
 
 void file_remove_atexit( OBJECT * path )
