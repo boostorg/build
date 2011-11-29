@@ -144,11 +144,20 @@ def register_globals ():
     feature.feature ('threading', ['single', 'multi'], ['propagated'])
     feature.feature ('rtti', ['on', 'off'], ['propagated'])
     feature.feature ('exception-handling', ['on', 'off'], ['propagated'])
+
+    # Whether there is support for asynchronous EH (e.g. catching SEGVs).
+    feature.feature ('asynch-exceptions', ['on', 'off'], ['propagated'])
+
+    # Whether all extern "C" functions are considered nothrow by default.
+    feature.feature ('extern-c-nothrow', ['off', 'on'], ['propagated'])
+
     feature.feature ('debug-symbols', ['on', 'off'], ['propagated'])
     feature.feature ('define', [], ['free'])
+    feature.feature ('undef', [], ['free'])
     feature.feature ('include', [], ['free', 'path']) #order-sensitive
     feature.feature ('cflags', [], ['free'])
     feature.feature ('cxxflags', [], ['free'])
+    feature.feature ('asmflags', [], ['free'])
     feature.feature ('linkflags', [], ['free'])
     feature.feature ('archiveflags', [], ['free'])
     feature.feature ('version', [], ['free'])
@@ -309,10 +318,6 @@ def register_globals ():
     variant ('release', ['<optimization>speed', '<debug-symbols>off', '<inlining>full', 
                          '<runtime-debugging>off', '<define>NDEBUG'])
     variant ('profile', ['release'], ['<profiling>on', '<debug-symbols>on'])
-
-    type.register ('H', ['h'])
-    type.register ('HPP', ['hpp'], 'H')
-    type.register ('C', ['c'])
     
 
 reset ()
@@ -700,20 +705,10 @@ class ArchiveGenerator (generators.Generator):
              
         return result
 
-### rule register-archiver ( id composing ? : source_types + : target_types + :
-###                             requirements * )
-### {
-###     local g = [ new ArchiveGenerator $(id) $(composing) : $(source_types) 
-###                 : $(target_types) : $(requirements) ] ;
-###     generators.register $(g) ;
-### }
-### 
-### 
-### IMPORT $(__name__) : register-linker register-archiver 
-###   : : generators.register-linker generators.register-archiver ;
-### 
-### 
-### 
+
+def register_archiver(id, source_types, target_types, requirements):
+    g = ArchiveGenerator(id, True, source_types, target_types, requirements)
+    generators.register(g)
 
 class DummyGenerator(generators.Generator):
      """Generator that accepts everything and produces nothing. Useful as a general

@@ -144,7 +144,7 @@ def flags(rule_or_module, variable_name, condition, values = []):
         transformed = []
         for c in condition:
             # FIXME: 'split' might be a too raw tool here.
-            pl = [property.create_from_string(s) for s in c.split('/')]
+            pl = [property.create_from_string(s,False,True) for s in c.split('/')]
             pl = feature.expand_subfeatures(pl);
             transformed.append(property_set.create(pl))
         condition = transformed
@@ -380,7 +380,6 @@ def add_requirements(requirements):
     
     #if ! $(.ignore-requirements)
     #{
-    print "XXXX", requirements
     __requirements.extend(requirements)
     #}
          
