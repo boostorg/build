@@ -15,7 +15,7 @@
 
 #include "modules.h"
 #include "jam.h"
-#include "parse.h"
+#include "function.h"
 
 
 /*
@@ -81,7 +81,7 @@ typedef struct argument_list argument_list;
 struct _rule
 {
     OBJECT        * name;
-    PARSE         * procedure;  /* parse tree from RULE */
+    FUNCTION      * procedure;
     argument_list * arguments;  /* argument checking info, or NULL for unchecked
                                  */
     rule_actions  * actions;    /* build actions, or NULL for no actions */
@@ -260,7 +260,7 @@ void            args_refer( argument_list * );
 /* Rule related functions. */
 RULE * bindrule        ( OBJECT * rulename, module_t * );
 RULE * import_rule     ( RULE * source, module_t *, OBJECT * name );
-RULE * new_rule_body   ( module_t *, OBJECT * rulename, argument_list *, PARSE * procedure, int exprt );
+RULE * new_rule_body   ( module_t *, OBJECT * rulename, argument_list *, FUNCTION * func, int exprt );
 RULE * new_rule_actions( module_t *, OBJECT * rulename, OBJECT * command, LIST * bindlist, int flags );
 void   rule_free       ( RULE * );
 

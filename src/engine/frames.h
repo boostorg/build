@@ -20,7 +20,8 @@ struct frame
     FRAME      * prev_user;
     LOL          args[ 1 ];
     module_t   * module;
-    PARSE      * procedure;
+    OBJECT     * file;
+    int          line;
     const char * rulename;
 };
 

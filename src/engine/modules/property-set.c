@@ -41,7 +41,7 @@ rule create ( raw-properties * )
 }
 */
 
-LIST *property_set_create( PARSE *parse, FRAME *frame )
+LIST *property_set_create( FRAME *frame, int flags )
 {
     LIST* properties = lol_get( frame->args, 0 );
     LIST* sorted = 0;

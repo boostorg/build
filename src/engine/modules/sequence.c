@@ -10,7 +10,7 @@
 # endif
 
 
-LIST *sequence_select_highest_ranked( PARSE *parse, FRAME *frame )
+LIST *sequence_select_highest_ranked( FRAME *frame, int flags )
 {
    /* Returns all of 'elements' for which corresponding element in parallel */
    /* list 'rank' is equal to the maximum value in 'rank'.                  */

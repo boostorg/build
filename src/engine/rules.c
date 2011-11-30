@@ -45,7 +45,7 @@
  */
 
 static void set_rule_actions( RULE *, rule_actions * );
-static void set_rule_body   ( RULE *, argument_list *, PARSE * procedure );
+static void set_rule_body   ( RULE *, argument_list *, FUNCTION * procedure );
 
 static struct hash * targethash = 0;
 
@@ -93,7 +93,7 @@ static RULE * enter_rule( OBJECT * rulename, module_t * target_module )
     if ( hashenter( demand_rules( target_module ), (HASHDATA * *)&r ) )
     {
         r->name = object_copy( rulename );
-        r->procedure = (PARSE *)0;
+        r->procedure = 0;
         r->module = 0;
         r->actions = 0;
         r->arguments = 0;
@@ -136,7 +136,7 @@ void rule_free( RULE * r )
     object_free( r->name );
     r->name = 0;
     if ( r->procedure )
-        parse_free( r->procedure );
+        function_free( r->procedure );
     r->procedure = 0;
     if ( r->arguments )
         args_free( r->arguments );
@@ -659,7 +659,7 @@ void actions_free( rule_actions * a )
  * set_rule_body() - set the argument list and procedure of the given rule.
  */
 
-static void set_rule_body( RULE * rule, argument_list * args, PARSE * procedure )
+static void set_rule_body( RULE * rule, argument_list * args, FUNCTION * procedure )
 {
     if ( args )
         args_refer( args );
@@ -668,9 +668,9 @@ static void set_rule_body( RULE * rule, argument_list * args, PARSE * procedure 
     rule->arguments = args;
 
     if ( procedure )
-        parse_refer( procedure );
+        function_refer( procedure );
     if ( rule->procedure )
-        parse_free( rule->procedure );
+        function_free( rule->procedure );
     rule->procedure = procedure;
 }
 
@@ -719,7 +719,7 @@ static RULE * global_rule( RULE * r )
  * exported to the global module as modulename.rulename.
  */
 
-RULE * new_rule_body( module_t * m, OBJECT * rulename, argument_list * args, PARSE * procedure, int exported )
+RULE * new_rule_body( module_t * m, OBJECT * rulename, argument_list * args, FUNCTION * procedure, int exported )
 {
     RULE * local = define_rule( m, rulename, m );
     local->exported = exported;
@@ -730,8 +730,8 @@ RULE * new_rule_body( module_t * m, OBJECT * rulename, argument_list * args, PAR
      * can use, e.g. in profiling output. Only do this once, since this could be
      * called multiple times with the same procedure.
      */
-    if ( procedure->rulename == 0 )
-        procedure->rulename = global_rule_name( local );
+    if ( function_rulename( procedure ) == 0 )
+        function_set_rulename( procedure, global_rule_name( local ) );
 
     return local;
 }

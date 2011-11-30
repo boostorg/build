@@ -6,12 +6,8 @@
 #include "hash.h"
 #include "object.h"
 
-# define P0 (PARSE *)0
-# define C0 (OBJECT *)0
-
-
 void declare_native_rule( const char * module, const char * rule, const char * * args,
-                          LIST * (*f)( PARSE *, FRAME * ), int version )
+                          LIST * (*f)( FRAME *, int ), int version )
 {
     OBJECT * module_obj = 0;
     module_t * m;
@@ -40,7 +36,7 @@ void declare_native_rule( const char * module, const char * rule, const char * *
         {
             n.arguments = 0;
         }
-        n.procedure = parse_make( f, P0, P0, P0, C0, C0, 0 );
+        n.procedure = function_builtin( f, 0 );
         n.version = version;
         hashenter(m->native_rules, (HASHDATA**)&np);
     }

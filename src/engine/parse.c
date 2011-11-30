@@ -17,6 +17,7 @@
 #include "object.h"
 #include "modules.h"
 #include "frames.h"
+#include "function.h"
 
 /*
  * parse.c - make and destroy parse trees as driven by the parser
@@ -41,6 +42,7 @@ void parse_file( OBJECT * f, FRAME * frame )
     for ( ; ; )
     {
         PARSE * p;
+        FUNCTION * func;
 
         /* Filled by yyparse() calling parse_save(). */
         yypsave = 0;
@@ -50,8 +52,10 @@ void parse_file( OBJECT * f, FRAME * frame )
             break;
 
         /* Run the parse tree. */
-        list_free( parse_evaluate( p, frame ) );
+        func = function_compile( p );
         parse_free( p );
+        list_free( function_run( func, frame, stack_global() ) );
+        function_free( func );
     }
 }
 
@@ -63,7 +67,7 @@ void parse_save( PARSE * p )
 
 
 PARSE * parse_make(
-    LIST   * (* func)( PARSE *, FRAME * ),
+    int      type,
     PARSE  * left,
     PARSE  * right,
     PARSE  * third,
@@ -73,7 +77,7 @@ PARSE * parse_make(
 {
     PARSE * p = (PARSE *)BJAM_MALLOC( sizeof( PARSE ) );
 
-    p->func = func;
+    p->type = type;
     p->left = left;
     p->right = right;
     p->third = third;
@@ -125,11 +129,4 @@ void parse_free( PARSE * p )
         object_free( p->file );
 
     BJAM_FREE( (char *)p );
-}
-
-
-LIST * parse_evaluate( PARSE * p, FRAME * frame )
-{
-    frame->procedure = p;
-    return (*p->func)( p, frame );
 }

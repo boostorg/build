@@ -202,6 +202,43 @@ LIST * list_pop_front( LIST * l )
     return result;
 }
 
+LIST *  list_reverse( LIST * l )
+{
+    LIST * result = L0;
+    for ( ; l; l = l->next )
+    {
+        result = list_append( list_new(L0, object_copy( l->value ) ), result );
+    }
+    return result;
+}
+
+int list_cmp( LIST * t, LIST * s )
+{
+    int status = 0;
+
+    while ( !status && ( t || s ) )
+    {
+        const char *st = t ? object_str( t->value ) : "";
+        const char *ss = s ? object_str( s->value ) : "";
+
+        status = strcmp( st, ss );
+
+        t = t ? list_next( t ) : t;
+        s = s ? list_next( s ) : s;
+    }
+
+    return status;
+}
+
+int list_is_sublist( LIST * sub, LIST * l )
+{
+    for ( ; sub; sub = sub->next )
+    {
+        if ( !list_in( l, sub->value ) )
+            return 0;
+    }
+    return 1;
+}
 
 /*
  * list_print() - print a list of strings to stdout

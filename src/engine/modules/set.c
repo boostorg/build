@@ -17,7 +17,7 @@
     }
     return $(result) ;
 */
-LIST *set_difference( PARSE *parse, FRAME *frame )
+LIST *set_difference( FRAME *frame, int flags )
 {
 
     LIST* b = lol_get( frame->args, 0 );    

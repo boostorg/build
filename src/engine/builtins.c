@@ -69,20 +69,20 @@
 #define C0 (OBJECT *)0
 
 #if defined( OS_NT ) || defined( OS_CYGWIN )
-    LIST * builtin_system_registry      ( PARSE *, FRAME * );
-    LIST * builtin_system_registry_names( PARSE *, FRAME * );
+    LIST * builtin_system_registry      ( FRAME *, int );
+    LIST * builtin_system_registry_names( FRAME *, int );
 #endif
 
 int glob( const char * s, const char * c );
 
 void backtrace        ( FRAME * );
 void backtrace_line   ( FRAME * );
-void print_source_line( PARSE * );
+void print_source_line( FRAME * );
 
 
-RULE * bind_builtin( const char * name_, LIST * (* f)( PARSE *, FRAME * ), int flags, const char * * args )
+RULE * bind_builtin( const char * name_, LIST * (* f)( FRAME *, int flags ), int flags, const char * * args )
 {
-    PARSE * p;
+    FUNCTION * func;
     RULE * result;
     argument_list* arg_list = 0;
     OBJECT * name = object_new( name_ );
@@ -93,11 +93,11 @@ RULE * bind_builtin( const char * name_, LIST * (* f)( PARSE *, FRAME * ), int f
         lol_build( arg_list->data, args );
     }
 
-    p = parse_make( f, P0, P0, P0, C0, C0, flags );
+    func = function_builtin( f, flags );
 
-    result = new_rule_body( root_module(), name, arg_list, p, 1 );
+    result = new_rule_body( root_module(), name, arg_list, func, 1 );
 
-    parse_free( p );
+    function_free( func );
 
     object_free( name );
 
@@ -434,7 +434,7 @@ void load_builtins()
  * The CALC rule performs simple mathematical operations on two arguments.
  */
 
-LIST * builtin_calc( PARSE * parse, FRAME * frame )
+LIST * builtin_calc( FRAME * frame, int flags )
 {
     LIST * arg = lol_get( frame->args, 0 );
 
@@ -488,7 +488,7 @@ LIST * builtin_calc( PARSE * parse, FRAME * frame )
  * targets and sources as TARGETs.
  */
 
-LIST * builtin_depends( PARSE * parse, FRAME * frame )
+LIST * builtin_depends( FRAME * frame, int flags )
 {
     LIST * targets = lol_get( frame->args, 0 );
     LIST * sources = lol_get( frame->args, 1 );
@@ -502,7 +502,7 @@ LIST * builtin_depends( PARSE * parse, FRAME * frame )
         /* TARGET, creating it if needed.  The internal include */
         /* TARGET shares the name of its parent. */
 
-        if ( parse->num )
+        if ( flags )
         {
             if ( !t->includes )
             {
@@ -534,7 +534,7 @@ LIST * builtin_depends( PARSE * parse, FRAME * frame )
  * argument.
  */
 
-LIST * builtin_rebuilds( PARSE * parse, FRAME * frame )
+LIST * builtin_rebuilds( FRAME * frame, int flags )
 {
     LIST * targets = lol_get( frame->args, 0 );
     LIST * rebuilds = lol_get( frame->args, 1 );
@@ -557,7 +557,7 @@ LIST * builtin_rebuilds( PARSE * parse, FRAME * frame )
  * taken.
  */
 
-LIST * builtin_echo( PARSE * parse, FRAME * frame )
+LIST * builtin_echo( FRAME * frame, int flags )
 {
     list_print( lol_get( frame->args, 0 ) );
     printf( "\n" );
@@ -573,7 +573,7 @@ LIST * builtin_echo( PARSE * parse, FRAME * frame )
  * with a failure status.
  */
 
-LIST * builtin_exit( PARSE * parse, FRAME * frame )
+LIST * builtin_exit( FRAME * frame, int flags )
 {
     list_print( lol_get( frame->args, 0 ) );
     printf( "\n" );
@@ -596,11 +596,11 @@ LIST * builtin_exit( PARSE * parse, FRAME * frame )
  * It binds each target as a TARGET.
  */
 
-LIST * builtin_flags( PARSE * parse, FRAME * frame )
+LIST * builtin_flags( FRAME * frame, int flags )
 {
     LIST * l = lol_get( frame->args, 0 );
     for ( ; l; l = list_next( l ) )
-        bindtarget( l->value )->flags |= parse->num;
+        bindtarget( l->value )->flags |= flags;
     return L0;
 }
 
@@ -697,7 +697,7 @@ static LIST * downcase_list( LIST * in )
 }
 
 
-LIST * builtin_glob( PARSE * parse, FRAME * frame )
+LIST * builtin_glob( FRAME * frame, int flags )
 {
     LIST * l = lol_get( frame->args, 0 );
     LIST * r = lol_get( frame->args, 1 );
@@ -870,7 +870,7 @@ LIST * glob_recursive( const char * pattern )
 }
 
 
-LIST * builtin_glob_recursive( PARSE * parse, FRAME * frame )
+LIST * builtin_glob_recursive( FRAME * frame, int flags )
 {
     LIST * result = L0;
     LIST * l = lol_get( frame->args, 0 );
@@ -884,7 +884,7 @@ LIST * builtin_glob_recursive( PARSE * parse, FRAME * frame )
  * builtin_match() - MATCH rule, regexp matching.
  */
 
-LIST * builtin_match( PARSE * parse, FRAME * frame )
+LIST * builtin_match( FRAME * frame, int flags )
 {
     LIST * l;
     LIST * r;
@@ -930,7 +930,7 @@ LIST * builtin_match( PARSE * parse, FRAME * frame )
     return result;
 }
 
-LIST * builtin_split_by_characters( PARSE * parse, FRAME * frame )
+LIST * builtin_split_by_characters( FRAME * frame, int flags )
 {
     LIST * l1 = lol_get( frame->args, 0 );
     LIST * l2 = lol_get( frame->args, 1 );
@@ -956,7 +956,7 @@ LIST * builtin_split_by_characters( PARSE * parse, FRAME * frame )
     return result;
 }
 
-LIST * builtin_hdrmacro( PARSE * parse, FRAME * frame )
+LIST * builtin_hdrmacro( FRAME * frame, int flags )
 {
   LIST * l = lol_get( frame->args, 0 );
 
@@ -992,7 +992,7 @@ static void add_rule_name( void * r_, void * result_ )
 }
 
 
-LIST * builtin_rulenames( PARSE * parse, FRAME * frame )
+LIST * builtin_rulenames( FRAME * frame, int flags )
 {
     LIST * arg0 = lol_get( frame->args, 0 );
     LIST * result = L0;
@@ -1035,7 +1035,7 @@ static struct hash * get_running_module_vars()
 }
 
 
-LIST * builtin_varnames( PARSE * parse, FRAME * frame )
+LIST * builtin_varnames( FRAME * frame, int flags )
 {
     LIST * arg0 = lol_get( frame->args, 0 );
     LIST * result = L0;
@@ -1060,7 +1060,7 @@ LIST * builtin_varnames( PARSE * parse, FRAME * frame )
  * Clears all rules and variables from the given module.
  */
 
-LIST * builtin_delete_module( PARSE * parse, FRAME * frame )
+LIST * builtin_delete_module( FRAME * frame, int flags )
 {
     LIST     * arg0 = lol_get( frame->args, 0 );
     LIST     * result = L0;
@@ -1100,7 +1100,7 @@ static void unknown_rule( FRAME * frame, const char * key, OBJECT * module_name,
  * variables.
  */
 
-LIST * builtin_import( PARSE * parse, FRAME * frame )
+LIST * builtin_import( FRAME * frame, int flags )
 {
     LIST * source_module_list = lol_get( frame->args, 0 );
     LIST * source_rules       = lol_get( frame->args, 1 );
@@ -1164,7 +1164,7 @@ LIST * builtin_import( PARSE * parse, FRAME * frame )
  * is issued.
  */
 
-LIST * builtin_export( PARSE * parse, FRAME * frame )
+LIST * builtin_export( FRAME * frame, int flags )
 {
     LIST     * module_list = lol_get( frame->args, 0 );
     LIST     * rules       = lol_get( frame->args, 1 );
@@ -1190,12 +1190,12 @@ LIST * builtin_export( PARSE * parse, FRAME * frame )
  * indicated for a given procedure in debug output or an error backtrace.
  */
 
-static void get_source_line( PARSE * procedure, const char * * file, int * line )
+static void get_source_line( FRAME * frame, const char * * file, int * line )
 {
-    if ( procedure )
+    if ( frame->file )
     {
-        const char * f = object_str( procedure->file );
-        int    l = procedure->line;
+        const char * f = object_str( frame->file );
+        int    l = frame->line;
         if ( !strcmp( f, "+" ) )
         {
             f = "jambase.c";
@@ -1212,12 +1212,12 @@ static void get_source_line( PARSE * procedure, const char * * file, int * line 
 }
 
 
-void print_source_line( PARSE * p )
+void print_source_line( FRAME * frame )
 {
     const char * file;
     int    line;
 
-    get_source_line( p, &file, &line );
+    get_source_line( frame, &file, &line );
     if ( line < 0 )
         printf( "(builtin):" );
     else
@@ -1238,7 +1238,7 @@ void backtrace_line( FRAME * frame )
     }
     else
     {
-        print_source_line( frame->procedure );
+        print_source_line( frame );
         printf( " in %s\n", frame->rulename );
     }
 }
@@ -1264,7 +1264,7 @@ void backtrace( FRAME * frame )
  * period.
  */
 
-LIST * builtin_backtrace( PARSE * parse, FRAME * frame )
+LIST * builtin_backtrace( FRAME * frame, int flags )
 {
     LIST * levels_arg = lol_get( frame->args, 0 );
     int levels = levels_arg ? atoi( object_str( levels_arg->value ) ) : (int)( (unsigned int)(-1) >> 1 ) ;
@@ -1275,7 +1275,7 @@ LIST * builtin_backtrace( PARSE * parse, FRAME * frame )
         const char * file;
         int    line;
         char   buf[32];
-        get_source_line( frame->procedure, &file, &line );
+        get_source_line( frame, &file, &line );
         sprintf( buf, "%d", line );
         result = list_new( result, object_new( file ) );
         result = list_new( result, object_new( buf ) );
@@ -1298,7 +1298,7 @@ LIST * builtin_backtrace( PARSE * parse, FRAME * frame )
  * behavior.
  */
 
-LIST * builtin_caller_module( PARSE * parse, FRAME * frame )
+LIST * builtin_caller_module( FRAME * frame, int flags )
 {
     LIST * levels_arg = lol_get( frame->args, 0 );
     int levels = levels_arg ? atoi( object_str( levels_arg->value ) ) : 0 ;
@@ -1328,7 +1328,7 @@ LIST * builtin_caller_module( PARSE * parse, FRAME * frame )
  * Usage: pwd = [ PWD ] ;
  */
 
-LIST * builtin_pwd( PARSE * parse, FRAME * frame )
+LIST * builtin_pwd( FRAME * frame, int flags )
 {
     return pwd();
 }
@@ -1338,7 +1338,7 @@ LIST * builtin_pwd( PARSE * parse, FRAME * frame )
  * Adds targets to the list of target that jam will attempt to update.
  */
 
-LIST * builtin_update( PARSE * parse, FRAME * frame )
+LIST * builtin_update( FRAME * frame, int flags )
 {
     LIST * result = list_copy( L0, targets_to_update() );
     LIST * arg1 = lol_get( frame->args, 0 );
@@ -1358,7 +1358,7 @@ int last_update_now_status;
    Third parameter, if non-empty, specifies that the -n option should have
    no effect -- that is, all out-of-date targets should be rebuild.
 */
-LIST * builtin_update_now( PARSE * parse, FRAME * frame )
+LIST * builtin_update_now( FRAME * frame, int flags )
 {
     LIST * targets = lol_get( frame->args, 0 );
     LIST * log = lol_get( frame->args, 1 );
@@ -1437,7 +1437,7 @@ LIST * builtin_update_now( PARSE * parse, FRAME * frame )
         return L0;
 }
 
-LIST * builtin_search_for_target( PARSE * parse, FRAME * frame )
+LIST * builtin_search_for_target( FRAME * frame, int flags )
 {
     LIST * arg1 = lol_get( frame->args, 0 );
     LIST * arg2 = lol_get( frame->args, 1 );
@@ -1446,7 +1446,7 @@ LIST * builtin_search_for_target( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_import_module( PARSE * parse, FRAME * frame )
+LIST * builtin_import_module( FRAME * frame, int flags )
 {
     LIST * arg1 = lol_get( frame->args, 0 );
     LIST * arg2 = lol_get( frame->args, 1 );
@@ -1456,14 +1456,14 @@ LIST * builtin_import_module( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_imported_modules( PARSE * parse, FRAME * frame )
+LIST * builtin_imported_modules( FRAME * frame, int flags )
 {
     LIST * arg0 = lol_get( frame->args, 0 );
     return imported_modules( bindmodule( arg0 ? arg0->value : 0 ) );
 }
 
 
-LIST * builtin_instance( PARSE * parse, FRAME * frame )
+LIST * builtin_instance( FRAME * frame, int flags )
 {
     LIST * arg1 = lol_get( frame->args, 0 );
     LIST * arg2 = lol_get( frame->args, 1 );
@@ -1474,14 +1474,14 @@ LIST * builtin_instance( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_sort( PARSE * parse, FRAME * frame )
+LIST * builtin_sort( FRAME * frame, int flags )
 {
     LIST * arg1 = lol_get( frame->args, 0 );
     return list_sort( arg1 );
 }
 
 
-LIST * builtin_normalize_path( PARSE * parse, FRAME * frame )
+LIST * builtin_normalize_path( FRAME * frame, int flags )
 {
     LIST * arg = lol_get( frame->args, 0 );
 
@@ -1603,7 +1603,7 @@ LIST * builtin_normalize_path( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_native_rule( PARSE * parse, FRAME * frame )
+LIST * builtin_native_rule( FRAME * frame, int flags )
 {
     LIST * module_name = lol_get( frame->args, 0 );
     LIST * rule_name = lol_get( frame->args, 1 );
@@ -1630,7 +1630,7 @@ LIST * builtin_native_rule( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_has_native_rule( PARSE * parse, FRAME * frame )
+LIST * builtin_has_native_rule( FRAME * frame, int flags )
 {
     LIST * module_name = lol_get( frame->args, 0 );
     LIST * rule_name   = lol_get( frame->args, 1 );
@@ -1651,7 +1651,7 @@ LIST * builtin_has_native_rule( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_user_module( PARSE * parse, FRAME * frame )
+LIST * builtin_user_module( FRAME * frame, int flags )
 {
     LIST * module_name = lol_get( frame->args, 0 );
     for ( ; module_name; module_name = module_name->next )
@@ -1663,7 +1663,7 @@ LIST * builtin_user_module( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_nearest_user_location( PARSE * parse, FRAME * frame )
+LIST * builtin_nearest_user_location( FRAME * frame, int flags )
 {
     FRAME * nearest_user_frame =
         frame->module->user_module ? frame : frame->prev_user;
@@ -1676,7 +1676,7 @@ LIST * builtin_nearest_user_location( PARSE * parse, FRAME * frame )
         int    line;
         char   buf[32];
 
-        get_source_line( nearest_user_frame->procedure, &file, &line );
+        get_source_line( nearest_user_frame, &file, &line );
         sprintf( buf, "%d", line );
         result = list_new( result, object_new( file ) );
         result = list_new( result, object_new( buf ) );
@@ -1685,7 +1685,7 @@ LIST * builtin_nearest_user_location( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_check_if_file( PARSE * parse, FRAME * frame )
+LIST * builtin_check_if_file( FRAME * frame, int flags )
 {
     LIST * name = lol_get( frame->args, 0 );
     return file_is_file( name->value ) == 1
@@ -1694,7 +1694,7 @@ LIST * builtin_check_if_file( PARSE * parse, FRAME * frame )
 }
 
 
-LIST * builtin_md5( PARSE * parse, FRAME * frame )
+LIST * builtin_md5( FRAME * frame, int flags )
 {
     LIST * l = lol_get( frame->args, 0 );
     const char* s = object_str( l->value );
@@ -1715,7 +1715,7 @@ LIST * builtin_md5( PARSE * parse, FRAME * frame )
     return list_new( L0, object_new( hex_output ) );
 }
 
-LIST *builtin_file_open( PARSE * parse, FRAME * frame )
+LIST *builtin_file_open( FRAME * frame, int flags )
 {
     const char * name = object_str( lol_get( frame->args, 0 )->value );
     const char * mode = object_str( lol_get( frame->args, 1 )->value );
@@ -1742,7 +1742,7 @@ LIST *builtin_file_open( PARSE * parse, FRAME * frame )
     }
 }
 
-LIST *builtin_pad( PARSE *parse, FRAME *frame )
+LIST *builtin_pad( FRAME * frame, int flags )
 {
     OBJECT * string = lol_get( frame->args, 0 )->value;
     const char * width_s = object_str( lol_get( frame->args, 1 )->value );
@@ -1767,7 +1767,7 @@ LIST *builtin_pad( PARSE *parse, FRAME *frame )
     }
 }
 
-LIST *builtin_precious( PARSE * parse, FRAME * frame )
+LIST *builtin_precious( FRAME * frame, int flags )
 {
     LIST * targets = lol_get(frame->args, 0);
 
@@ -1780,7 +1780,7 @@ LIST *builtin_precious( PARSE * parse, FRAME * frame )
     return L0;
 }
 
-LIST *builtin_self_path( PARSE * parse, FRAME * frame )
+LIST *builtin_self_path( FRAME * frame, int flags )
 {
     extern const char * saved_argv0;
     char * p = executable_path( saved_argv0 );
@@ -1796,7 +1796,7 @@ LIST *builtin_self_path( PARSE * parse, FRAME * frame )
     }
 }
 
-LIST *builtin_makedir( PARSE * parse, FRAME * frame )
+LIST *builtin_makedir( FRAME * frame, int flags )
 {
     LIST * path = lol_get( frame->args, 0 );
 
@@ -1813,7 +1813,7 @@ LIST *builtin_makedir( PARSE * parse, FRAME * frame )
 
 #ifdef HAVE_PYTHON
 
-LIST * builtin_python_import_rule( PARSE * parse, FRAME * frame )
+LIST * builtin_python_import_rule( FRAME * frame, int flags )
 {
     static int first_time = 1;
     const char * python_module   = object_str( lol_get( frame->args, 0 )->value );
@@ -1944,7 +1944,6 @@ PyObject* bjam_call( PyObject * self, PyObject * args )
     inner->prev = 0;
     inner->prev_user = 0;
     inner->module = bindmodule( constant_python_interface );
-    inner->procedure = 0;
 
     /* Extract the rule name and arguments from 'args'. */
 
@@ -2164,7 +2163,7 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
         int          line;
         char         buf[ 32 ];
 
-        get_source_line( f->procedure, &file, &line );
+        get_source_line( f, &file, &line );
         sprintf( buf, "%d", line );
 
         /* PyTuple_SetItem steals reference. */
@@ -2277,7 +2276,7 @@ static char * rtrim( char * s )
     return s;
 }
 
-LIST * builtin_shell( PARSE * parse, FRAME * frame )
+LIST * builtin_shell( FRAME * frame, int flags )
 {
     LIST   * command = lol_get( frame->args, 0 );
     LIST   * result = 0;
@@ -2357,7 +2356,7 @@ LIST * builtin_shell( PARSE * parse, FRAME * frame )
 
 #else  /* #ifdef HAVE_POPEN */
 
-LIST * builtin_shell( PARSE * parse, FRAME * frame )
+LIST * builtin_shell( FRAME * frame, int flags )
 {
     return L0;
 }

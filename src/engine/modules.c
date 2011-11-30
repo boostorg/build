@@ -89,7 +89,7 @@ static void delete_native_rule( void * xrule, void * data )
         args_free( rule->arguments );
     object_free( rule->name );
     if ( rule->procedure )
-        parse_free( rule->procedure );
+        function_free( rule->procedure );
 }
 
 
