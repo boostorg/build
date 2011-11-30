@@ -76,19 +76,30 @@ def get_toolset():
 
 # Detect the host OS.
 windows = False
-if os.environ.get('OS', '').lower().startswith('windows') or \
-       os.__dict__.has_key('uname') and \
-       os.uname()[0].lower().startswith('cygwin'):
+cygwin = False
+if os.environ.get('OS', '').lower().startswith('windows'):
     windows = True
 
+if os.__dict__.has_key('uname') and \
+       os.uname()[0].lower().startswith('cygwin'):
+    windows = True
+    cygwin = True
 
 suffixes = {}
 
+
+# Configuration stating whether Boost Build is expected to automatically prepend
+# prefixes to built library targets.
+lib_prefix = "lib"
+dll_prefix = "lib"
 
 # Prepare the map of suffixes
 def prepare_suffix_map(toolset):
     global windows
     global suffixes
+    global cygwin
+    global lib_prefix
+    global dll_prefix
     suffixes = {'.exe': '', '.dll': '.so', '.lib': '.a', '.obj': '.o'}
     suffixes['.implib'] = '.no_implib_files_on_this_platform'
     if windows:
@@ -96,9 +107,19 @@ def prepare_suffix_map(toolset):
         if toolset in ["gcc"]:
             suffixes['.lib'] = '.a' # static libs have '.a' suffix with mingw...
             suffixes['.obj'] = '.o'
-        suffixes['.implib'] = '.lib'
+        if cygwin:
+            suffixes['.implib'] = '.lib.a'
+        else:
+            suffixes['.implib'] = '.lib'
     if os.__dict__.has_key('uname') and (os.uname()[0] == 'Darwin'):
         suffixes['.dll'] = '.dylib'
+    
+    lib_prefix = "lib"
+    dll_prefix = "lib"
+    if cygwin:
+        dll_prefix = "cyg"
+    elif windows and not toolset in ["gcc"]:
+        dll_prefix = None
 
 
 def re_remove(sequence, regex):
@@ -117,13 +138,6 @@ def glob_remove(sequence, pattern):
     for r in result:
         sequence.remove(r)
 
-
-# Configuration stating whether Boost Build is expected to automatically prepend
-# prefixes to built library targets.
-lib_prefix = True
-dll_prefix = True
-if windows:
-    dll_prefix = False
 
 
 #
@@ -795,6 +809,7 @@ class Tester(TestCmd.TestCmd):
 
     def adjust_lib_name(self, name):
         global lib_prefix
+        global dll_prefix
         result = name
 
         pos = string.rfind(name, ".")
@@ -803,12 +818,12 @@ class Tester(TestCmd.TestCmd):
             if suffix == ".lib":
                 (head, tail) = os.path.split(name)
                 if lib_prefix:
-                    tail = "lib" + tail
+                    tail = lib_prefix + tail
                     result = os.path.join(head, tail)
             elif suffix == ".dll":
                 (head, tail) = os.path.split(name)
                 if dll_prefix:
-                    tail = "lib" + tail
+                    tail = dll_prefix + tail
                     result = os.path.join(head, tail)
         # If we want to use this name in a Jamfile, we better convert \ to /, as
         # otherwise we would have to quote \.
