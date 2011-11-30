@@ -71,6 +71,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 
     if ( !d || !d->is_dir )
     {
+        object_free( dir );
         PROFILE_EXIT( FILE_DIRSCAN );
         return;
     }
@@ -117,6 +118,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         if ( ret = findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
         {
             string_free( filespec );
+            object_free( dir );
             PROFILE_EXIT( FILE_DIRSCAN );
             return;
         }
@@ -147,6 +149,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         if ( ret = ( handle < 0L ) )
         {
             string_free( filespec );
+            object_free( dir );
             PROFILE_EXIT( FILE_DIRSCAN );
             return;
         }
@@ -223,6 +226,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         }
     }
 
+    object_free( dir );
     PROFILE_EXIT( FILE_DIRSCAN );
 }
 
