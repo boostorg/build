@@ -16,6 +16,7 @@
 void constants_init( void );
 void constants_done( void );
 
+extern OBJECT * constant_empty;             /* "" */
 extern OBJECT * constant_builtin;           /* "(builtin)" */
 extern OBJECT * constant_other;             /* "[OTHER]" */
 extern OBJECT * constant_total;             /* "[TOTAL]" */

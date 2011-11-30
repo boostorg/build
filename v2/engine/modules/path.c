@@ -6,7 +6,7 @@
 #include "../timestamp.h"
 #include "../object.h"
 
-LIST *path_exists( PARSE *parse, FRAME *frame )
+LIST *path_exists( FRAME *frame, int flags )
 {
     LIST* l = lol_get( frame->args, 0 );    
 

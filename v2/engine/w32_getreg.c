@@ -57,10 +57,7 @@ static HKEY get_key(char const** path)
     return p->value;
 }
 
-LIST*
-builtin_system_registry(
-    PARSE    *parse,
-    FRAME    *frame )
+LIST * builtin_system_registry( FRAME * frame, int flags )
 {
     char const* path = object_str( lol_get(frame->args, 0)->value );
     LIST* result = L0;
@@ -187,10 +184,7 @@ static LIST* get_value_names(HKEY key, char const* path)
     return result;
 }
 
-LIST*
-builtin_system_registry_names(
-    PARSE    *parse,
-    FRAME    *frame )
+LIST * builtin_system_registry_names( FRAME * frame, int flags )
 {
     char const* path        = object_str( lol_get(frame->args, 0)->value );
     char const* result_type = object_str( lol_get(frame->args, 1)->value );

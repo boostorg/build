@@ -19,6 +19,7 @@
 
 void constants_init( void )
 {
+    constant_empty              = object_new( "" );
     constant_builtin            = object_new( "(builtin)" );
     constant_other              = object_new( "[OTHER]" );
     constant_total              = object_new( "[TOTAL]" );
@@ -40,6 +41,7 @@ void constants_init( void )
 
 void constants_done( void )
 {
+    object_free( constant_empty );
     object_free( constant_builtin );
     object_free( constant_other );
     object_free( constant_total );
@@ -59,6 +61,7 @@ void constants_done( void )
     object_free( constant_MAIN_PYTHON );
 }
 
+OBJECT * constant_empty;
 OBJECT * constant_builtin;
 OBJECT * constant_other;
 OBJECT * constant_total;

@@ -438,7 +438,7 @@ echo ###
 set YYACC_SOURCES=yyacc.c
 set MKJAMBASE_SOURCES=mkjambase.c
 set BJAM_SOURCES=
-set BJAM_SOURCES=%BJAM_SOURCES% command.c compile.c constants.c debug.c execnt.c expand.c filent.c glob.c hash.c
+set BJAM_SOURCES=%BJAM_SOURCES% command.c compile.c constants.c debug.c execnt.c expand.c filent.c function.c glob.c hash.c
 set BJAM_SOURCES=%BJAM_SOURCES% hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c
 set BJAM_SOURCES=%BJAM_SOURCES% object.c option.c output.c parse.c pathunix.c regexp.c
 set BJAM_SOURCES=%BJAM_SOURCES% rules.c scan.c search.c subst.c timestamp.c variable.c modules.c

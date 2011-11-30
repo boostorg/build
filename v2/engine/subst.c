@@ -5,9 +5,9 @@
 
 #include "object.h"
 #include "lists.h"
-#include "parse.h"
 #include "compile.h"
 #include "frames.h"
+#include "builtins.h"
 
 struct regex_entry
 {
@@ -35,10 +35,7 @@ regexp* regex_compile( OBJECT* pattern )
     return e->regex;
 }
 
-LIST*
-builtin_subst(
-    PARSE    *parse,
-    FRAME      *frame )
+LIST * builtin_subst( FRAME * frame, int flags )
 {
   LIST* result = L0;
   LIST* arg1 = lol_get( frame->args, 0 );

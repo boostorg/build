@@ -87,6 +87,9 @@ LIST *  list_pop_front( LIST *l );
 LIST *  list_sort( LIST *l);
 LIST *  list_unique( LIST *sorted_list);
 int     list_in(LIST* l, OBJECT* value);
+LIST *  list_reverse( LIST * );
+int     list_cmp( LIST * lhs, LIST * rhs );
+int     list_is_sublist( LIST * sub, LIST * l );
 void    list_done();
 
 # define list_next( l ) ((l)->next)

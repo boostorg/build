@@ -25,7 +25,7 @@ rule transform ( list * : pattern : indices * )
     return $(result) ;
 }
 */
-LIST *regex_transform( PARSE *parse, FRAME *frame )
+LIST *regex_transform( FRAME *frame, int flags )
 {
     LIST* l = lol_get( frame->args, 0 );    
     LIST* pattern = lol_get( frame->args, 1 );    

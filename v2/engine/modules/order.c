@@ -12,7 +12,7 @@
 /* Use quite klugy approach: when we add order dependency from 'a' to 'b',
    just append 'b' to of value of variable 'a'.
 */
-LIST *add_pair( PARSE *parse, FRAME *frame )
+LIST *add_pair( FRAME *frame, int flags )
 {
     LIST* arg = lol_get( frame->args, 0 );    
 
@@ -74,7 +74,7 @@ void topological_sort(int** graph, int num_vertices, int* result)
     BJAM_FREE(colors);
 }
 
-LIST *order( PARSE *parse, FRAME *frame )
+LIST *order( FRAME *frame, int flags )
 {
     LIST* arg = lol_get( frame->args, 0 );  
     LIST* tmp;

@@ -126,6 +126,7 @@
 #include "class.h"
 #include "execcmd.h"
 #include "constants.h"
+#include "function.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC
@@ -619,6 +620,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     regex_done();
     exec_done();
     pwd_done();
+    function_done();
     list_done();
     constants_done();
     object_done();
