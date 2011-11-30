@@ -82,7 +82,7 @@ LIST * var_expand( LIST * l, const char * in, const char * end, LOL * lol, OBJEC
     int depth;
 
     if ( DEBUG_VAREXP )
-        printf( "expand '%.*s'\n", end - in, in );
+        printf( "expand '%.*s'\n", (int)( end - in ), in );
 
     /* This gets a lot of cases: $(<) and $(>). */
     if
