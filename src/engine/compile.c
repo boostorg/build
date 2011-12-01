@@ -554,7 +554,11 @@ evaluate_rule(
              && rule->procedure != 0 && !object_equal( rulename, function_rulename( rule->procedure ) ) )
         {
             char buf[256] = "";
-            strncat( buf, object_str( rule->module->name ), sizeof( buf ) - 1 );
+            if ( rule->module->name )
+            {
+                strncat( buf, object_str( rule->module->name ), sizeof( buf ) - 1 );
+                strncat( buf, ".", sizeof( buf ) - 1 );
+            }
             strncat( buf, object_str( rule->name ), sizeof( buf ) - 1 );
             debug_compile( 1, buf, frame );
         }
@@ -590,7 +594,14 @@ evaluate_rule(
     if ( !rule->actions && !rule->procedure )
     {
         backtrace_line( frame->prev );
-        printf( "rule %s unknown in module %s\n", object_str( rule->name ), object_str( frame->module->name ) );
+        if ( frame->module->name )
+        {
+            printf( "rule %s unknown in module %s\n", object_str( rule->name ), object_str( frame->module->name ) );
+        }
+        else
+        {
+            printf( "rule %s unknown in module \n", object_str( rule->name ) );
+        }
         backtrace( frame->prev );
         exit( 1 );
     }
