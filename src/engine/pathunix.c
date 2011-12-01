@@ -384,13 +384,21 @@ DWORD ShortPathToLongPath(LPCTSTR lpszShortPath,LPTSTR lpszLongPath,DWORD
 
 OBJECT * short_path_to_long_path( OBJECT * short_path )
 {
-    char buffer2[_MAX_PATH];
-    int ret = ShortPathToLongPath( object_str( short_path ), buffer2, _MAX_PATH );
-
-    if (ret)
-        return object_new( buffer2 );
+    /* Short circuit names with grists. */
+    if ( object_str( short_path )[ 0 ] == '<' )
+    {
+        return object_copy( short_path );
+    }
     else
-      return object_copy( short_path );
+    {
+        char buffer2[_MAX_PATH];
+        int ret = ShortPathToLongPath( object_str( short_path ), buffer2, _MAX_PATH );
+
+        if (ret)
+            return object_new( buffer2 );
+        else
+          return object_copy( short_path );
+    }
 }
 
 #endif
