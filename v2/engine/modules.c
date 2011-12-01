@@ -18,47 +18,42 @@
 #include <assert.h>
 
 static struct hash * module_hash = 0;
-
+static module_t root;
 
 module_t * bindmodule( OBJECT * name )
 {
-    PROFILE_ENTER( BINDMODULE );
 
-    string s;
-    module_t m_;
-    module_t * m = &m_;
-
-    if ( !module_hash )
-        module_hash = hashinit( sizeof( module_t ), "modules" );
-
-    string_new( &s );
-    if ( name )
+    if ( !name )
     {
-        string_append( &s, object_str( name ) );
-        string_push_back( &s, '.' );
-    }
-
-    m->name = name = object_new( s.value );
-
-    if ( hashenter( module_hash, (HASHDATA * *)&m ) )
-    {
-        m->name = m->name;
-        m->variables = 0;
-        m->rules = 0;
-        m->imported_modules = 0;
-        m->class_module = 0;
-        m->native_rules = 0;
-        m->user_module = 0;
+        return &root;
     }
     else
     {
-        object_free( name );
+        PROFILE_ENTER( BINDMODULE );
+
+        module_t m_;
+        module_t * m = &m_;
+
+        if ( !module_hash )
+            module_hash = hashinit( sizeof( module_t ), "modules" );
+
+        m->name = name;
+
+        if ( hashenter( module_hash, (HASHDATA * *)&m ) )
+        {
+            m->name = object_copy( name );
+            m->variables = 0;
+            m->rules = 0;
+            m->imported_modules = 0;
+            m->class_module = 0;
+            m->native_rules = 0;
+            m->user_module = 0;
+        }
+
+        PROFILE_EXIT( BINDMODULE );
+
+        return m;
     }
-    string_free( &s );
-
-    PROFILE_EXIT( BINDMODULE );
-
-    return m;
 }
 
 /*
@@ -138,11 +133,7 @@ static void delete_module_( void * xmodule, void * data )
     module_t *m = (module_t *)xmodule;
 
     delete_module( m );
-
-    if ( m->name )
-    {
-        object_free( m->name );
-    }
+    object_free( m->name );
 }
 
 void modules_done()
@@ -150,14 +141,12 @@ void modules_done()
     hashenumerate( module_hash, delete_module_, (void *)0 ); 
     hashdone( module_hash );
     module_hash = 0;
+    delete_module( &root );
 }
 
 module_t * root_module()
 {
-    static module_t * root = 0;
-    if ( !root )
-        root = bindmodule( 0 );
-    return root;
+    return &root;
 }
 
 void enter_module( module_t * m )

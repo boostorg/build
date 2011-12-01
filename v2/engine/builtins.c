@@ -1070,10 +1070,18 @@ LIST * builtin_delete_module( FRAME * frame, int flags )
 }
 
 
-static void unknown_rule( FRAME * frame, const char * key, OBJECT * module_name, OBJECT * rule_name )
+static void unknown_rule( FRAME * frame, const char * key, module_t * module, OBJECT * rule_name )
 {
+    const char * module_name = module->name ? object_str( module->name ) : "";
     backtrace_line( frame->prev );
-    printf( "%s error: rule \"%s\" unknown in module \"%s\"\n", key, object_str( rule_name ), object_str( module_name ) );
+    if ( module->name )
+    {
+        printf( "%s error: rule \"%s\" unknown in module \"%s.\"\n", key, object_str( rule_name ), object_str( module->name ) );
+    }
+    else
+    {
+        printf( "%s error: rule \"%s\" unknown in module \"\"\n", key, object_str( rule_name ) );
+    }
     backtrace( frame->prev );
     exit( 1 );
 }
@@ -1128,7 +1136,7 @@ LIST * builtin_import( FRAME * frame, int flags )
 
         if ( !source_module->rules ||
             !hashcheck( source_module->rules, (HASHDATA * *)&r ) )
-            unknown_rule( frame, "IMPORT", source_module->name, r_.name );
+            unknown_rule( frame, "IMPORT", source_module, r_.name );
 
         imported = import_rule( r, target_module, target_name->value );
         if ( localize )
@@ -1177,7 +1185,7 @@ LIST * builtin_export( FRAME * frame, int flags )
         r_.name = rules->value;
 
         if ( !m->rules || !hashcheck( m->rules, (HASHDATA * *)&r ) )
-            unknown_rule( frame, "EXPORT", m->name, r_.name );
+            unknown_rule( frame, "EXPORT", m, r_.name );
 
         r->exported = 1;
     }
@@ -1275,12 +1283,20 @@ LIST * builtin_backtrace( FRAME * frame, int flags )
         const char * file;
         int    line;
         char   buf[32];
+        string module_name[1];
         get_source_line( frame, &file, &line );
         sprintf( buf, "%d", line );
+        string_new( module_name );
+        if ( frame->module->name )
+        {
+            string_append( module_name, object_str( frame->module->name ) );
+            string_append( module_name, "." );
+        }
         result = list_new( result, object_new( file ) );
         result = list_new( result, object_new( buf ) );
-        result = list_new( result, object_copy( frame->module->name ) );
+        result = list_new( result, object_new( module_name->value ) );
         result = list_new( result, object_new( frame->rulename ) );
+        string_free( module_name );
     }
     return result;
 }
@@ -1309,16 +1325,8 @@ LIST * builtin_caller_module( FRAME * frame, int flags )
 
     if ( frame->module == root_module() )
         return L0;
-
-    {
-        LIST * result;
-        string name;
-        string_copy( &name, object_str( frame->module->name ) );
-        string_pop_back( &name );
-        result = list_new( L0, object_new(name.value) );
-        string_free( &name );
-        return result;
-    }
+    else
+        return list_new( L0, object_copy( frame->module->name ) );
 }
 
 
@@ -1621,7 +1629,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
     else
     {
         backtrace_line( frame->prev );
-        printf( "error: no native rule \"%s\" defined in module \"%s\"\n",
+        printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
                 object_str( n.name ), object_str( module->name ) );
         backtrace( frame->prev );
         exit( 1 );
@@ -2162,15 +2170,24 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
         const char * file;
         int          line;
         char         buf[ 32 ];
+        string module_name[1];
 
         get_source_line( f, &file, &line );
         sprintf( buf, "%d", line );
+        string_new( module_name );
+        if ( f->module->name )
+        {
+            string_append( module_name, object_str( f->module->name ) );
+            string_append( module_name, "." );
+        }
 
         /* PyTuple_SetItem steals reference. */
         PyTuple_SetItem( tuple, 0, PyString_FromString( file            ) );
         PyTuple_SetItem( tuple, 1, PyString_FromString( buf             ) );
-        PyTuple_SetItem( tuple, 2, PyString_FromString( object_str( f->module->name ) ) );
+        PyTuple_SetItem( tuple, 2, PyString_FromString( module_name->value ) );
         PyTuple_SetItem( tuple, 3, PyString_FromString( f->rulename ) );
+
+        string_free( module_name );
 
         PyList_Append( result, tuple );
         Py_DECREF( tuple );
@@ -2180,11 +2197,10 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
 
 PyObject * bjam_caller( PyObject * self, PyObject * args )
 {
-    /* Module names in Jam end in dot. The CALLER builtin in jam
-       language strips the dot, and we do the same here to make it
-       easier to port Jam code to Python. */
-    const char *s = object_str( frame_before_python_call->prev->module->name );
-    return PyString_FromStringAndSize(s, strlen(s)-1);
+    const char * s =  frame_before_python_call->prev->module->name ?
+        object_str( frame_before_python_call->prev->module->name ) :
+        "";
+    return PyString_FromString( s );
 }
 
 #endif  /* #ifdef HAVE_PYTHON */
