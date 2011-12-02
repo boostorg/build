@@ -59,6 +59,13 @@ OBJECT * short_path_to_long_path( OBJECT * short_path );
 
 #endif
 
+/** Given a path, returns an object that can be
+    used as a unique key for that path.  Equivalent
+    paths such as a/b, A\B, and a\B on NT all yield the
+    same key.
+ */
+OBJECT * path_as_key( OBJECT * path );
+
 #ifdef USE_PATHUNIX
 /** Returns a static pointer to the system dependent path to the temporary
     directory. NOTE: *without* a trailing path separator.
@@ -82,5 +89,7 @@ OBJECT * path_tmpfile( void );
     Implemented in jam.c
 */
 char * executable_path (const char *argv0);
+
+void path_done( void );
 
 #endif
