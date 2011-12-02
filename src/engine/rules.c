@@ -164,9 +164,6 @@ TARGET * bindtarget( OBJECT * target_name )
     if ( !targethash )
         targethash = hashinit( sizeof( TARGET ), "targets" );
 
-#ifdef NT
-    target_name = short_path_to_long_path( target_name );
-#endif
     t->name = target_name;
 
     if ( hashenter( targethash, (HASHDATA * *)&t ) )
@@ -175,9 +172,6 @@ TARGET * bindtarget( OBJECT * target_name )
         t->name = object_copy( target_name );
         t->boundname = object_copy( t->name );  /* default for T_FLAG_NOTFILE */
     }
-#ifdef NT
-    object_free( target_name );
-#endif
 
     return t;
 }

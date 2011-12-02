@@ -43,6 +43,8 @@ file_info_t * file_info( OBJECT * filename )
     if ( !filecache_hash )
         filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
 
+    filename = path_as_key( filename );
+
     finfo->name = filename;
     finfo->is_file = 0;
     finfo->is_dir = 0;
@@ -54,6 +56,8 @@ file_info_t * file_info( OBJECT * filename )
         /* printf( "file_info: %s\n", filename ); */
         finfo->name = object_copy( finfo->name );
     }
+
+    object_free( filename );
 
     return finfo;
 }

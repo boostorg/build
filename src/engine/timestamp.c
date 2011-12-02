@@ -74,28 +74,9 @@ void timestamp( OBJECT * target, time_t * time )
     BINDING    binding;
     BINDING  * b = &binding;
     string     buf[ 1 ];
-#ifdef DOWNSHIFT_PATHS
-    string     path;
-    char     * p;
-#endif
 
-#ifdef DOWNSHIFT_PATHS
-    string_copy( &path, object_str( target ) );
-    p = path.value;
+    target = path_as_key( target );
 
-    do
-    {
-        *p = tolower( *p );
-#ifdef NT
-        /* On NT, we must use backslashes or the file will not be found. */
-        if ( *p == '/' )
-            *p = PATH_DELIM;
-#endif
-    }
-    while ( *p++ );
-
-    target = object_new( path.value );
-#endif  /* #ifdef DOWNSHIFT_PATHS */
     string_new( buf );
 
     if ( !bindhash )
@@ -184,10 +165,8 @@ void timestamp( OBJECT * target, time_t * time )
 
     *time = b->progress == BIND_FOUND ? b->time : 0;
         string_free( buf );
-#ifdef DOWNSHIFT_PATHS
-    string_free( &path );
+
     object_free( target );
-#endif
 
     PROFILE_EXIT( timestamp );
 }
@@ -199,16 +178,7 @@ static void time_enter( void * closure, OBJECT * target, int found, time_t time 
     BINDING * b = &binding;
     struct hash * bindhash = (struct hash *)closure;
 
-#ifdef DOWNSHIFT_PATHS
-    char path[ MAXJPATH ];
-    char * p = path;
-    const char * t = object_str( target );
-
-    do *p++ = tolower( *t );
-    while ( *t++ );
-
-    target = object_new( path );
-#endif
+    target = path_as_key( target );
 
     b->name = target;
     b->flags = 0;
@@ -222,9 +192,7 @@ static void time_enter( void * closure, OBJECT * target, int found, time_t time 
     if ( DEBUG_BINDSCAN )
         printf( "time ( %s ) : %s\n", object_str( target ), time_progress[ b->progress ] );
 
-#ifdef DOWNSHIFT_PATHS
     object_free( target );
-#endif
 }
 
 static void free_timestamps ( void * xbinding, void * data )

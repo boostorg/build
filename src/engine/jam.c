@@ -620,6 +620,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     regex_done();
     exec_done();
     pwd_done();
+    path_done();
     function_done();
     list_done();
     constants_done();

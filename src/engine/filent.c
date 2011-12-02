@@ -63,8 +63,6 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 
     file_info_t * d = 0;
 
-    dir = short_path_to_long_path( dir );
-
     /* First enter directory itself */
 
     d = file_query( dir );
@@ -85,11 +83,15 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         int ret;
         struct _finddata_t finfo[ 1 ];
         LIST * files = L0;
-        int d_length = strlen( object_str( d->name ) );
+        int d_length;
+
+        dir = short_path_to_long_path( dir );
+
+        d_length = strlen( object_str( dir ) );
 
         memset( (char *)&f, '\0', sizeof( f ) );
 
-        f.f_dir.ptr = object_str( d->name );
+        f.f_dir.ptr = object_str( dir );
         f.f_dir.len = d_length;
 
         /* Now enter contents of directory */
@@ -104,8 +106,8 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
              * its trailing path separator or otherwise we would not support the
              * Windows root folder specified without its drive letter, i.e. '\'.
              */
-            char trailingChar = object_str( d->name )[ d_length - 1 ] ;
-            string_copy( filespec, object_str( d->name ) );
+            char trailingChar = object_str( dir )[ d_length - 1 ] ;
+            string_copy( filespec, object_str( dir ) );
             if ( ( trailingChar != '\\' ) && ( trailingChar != '/' ) )
                 string_append( filespec, "\\" );
             string_append( filespec, "*" );
@@ -181,6 +183,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         # endif
         string_free( filename );
         string_free( filespec );
+        object_free( dir );
 
         d->files = files;
     }
@@ -189,11 +192,17 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
     {
         unsigned long len = strlen( object_str( d->name ) );
         if ( len == 1 && object_str( d->name )[0] == '\\' )
-            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
-        else if ( len == 3 && object_str( d->name )[1] == ':' ) {
+        {
+            OBJECT * dir = short_path_to_long_path( d->name );
+            (*func)( closure, dir, 1 /* stat()'ed */, d->time );
+            object_free( dir );
+        }
+        else if ( len == 3 && object_str( d->name )[1] == ':' )
+        {
             char buf[4];
+            OBJECT * dir1 = short_path_to_long_path( d->name );
             OBJECT * dir2;
-            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
+            (*func)( closure, dir1, 1 /* stat()'ed */, d->time );
             /* We've just entered 3-letter drive name spelling (with trailing
                slash), into the hash table. Now enter two-letter variant,
                without trailing slash, so that if we try to check whether
@@ -206,11 +215,13 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
                There will be no trailing slash in $(p), but there will be one
                in $(p2). But, that seems rather fragile.                
             */
-            strcpy( buf, object_str( d->name ) );
+            strcpy( buf, object_str( dir1 ) );
             buf[2] = 0;
             dir2 = object_new( buf );
             (*func)( closure, dir2, 1 /* stat()'ed */, d->time );
+            printf( "root: %s, %s\n", object_str(dir1), object_str(dir2) );
             object_free( dir2 );
+            object_free( dir1 );
         }
     }
 
@@ -221,12 +232,11 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         while ( files )
         {
             file_info_t * ff = file_info( files->value );
-            (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
+            (*func)( closure, files->value, 1 /* stat()'ed */, ff->time );
             files = list_next( files );
         }
     }
 
-    object_free( dir );
     PROFILE_EXIT( FILE_DIRSCAN );
 }
 
