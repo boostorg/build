@@ -219,7 +219,6 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
             buf[2] = 0;
             dir2 = object_new( buf );
             (*func)( closure, dir2, 1 /* stat()'ed */, d->time );
-            printf( "root: %s, %s\n", object_str(dir1), object_str(dir2) );
             object_free( dir2 );
             object_free( dir1 );
         }
