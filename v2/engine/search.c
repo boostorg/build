@@ -151,6 +151,7 @@ search(
             BINDING b, *ba = &b;
             file_info_t *ff;
             OBJECT * key;
+            OBJECT * test_path;
 
             f->f_root.ptr = object_str( varlist->value );
             f->f_root.len = strlen( object_str( varlist->value ) );
@@ -161,7 +162,9 @@ search(
             if ( DEBUG_SEARCH )
                 printf( "search %s: %s\n", object_str( target ), buf->value );
 
-            key = object_new( buf->value );
+            test_path = object_new( buf->value );
+            key = path_as_key( test_path );
+            object_free( test_path );
             ff = file_query( key );
             timestamp( key, time );
 
@@ -221,14 +224,15 @@ search(
     {
         BINDING b;
         BINDING * ba = &b;
-        b.binding = boundname;
+        OBJECT * key = path_as_key( boundname );
+        b.binding = key;
         b.target = target;
         /* CONSIDER: we probably should issue a warning is another file
            is explicitly bound to the same location. This might break
            compatibility, though. */
-        if ( hashenter( explicit_bindings, (HASHDATA * *)&ba ) )
+        if ( !hashenter( explicit_bindings, (HASHDATA * *)&ba ) )
         {
-            ba->binding = object_copy( boundname );
+            object_free( key );
         }
     }
 
