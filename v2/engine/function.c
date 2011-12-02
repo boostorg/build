@@ -18,6 +18,7 @@
 #include "class.h"
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 
 # ifdef OS_CYGWIN
@@ -89,6 +90,9 @@
 #define INSTR_PUSH_MODULE                   50
 #define INSTR_POP_MODULE                    51
 #define INSTR_CLASS                         52
+
+#define INSTR_APPEND_STRINGS                53
+#define INSTR_WRITE_FILE                    54
 
 typedef struct instruction
 {
@@ -952,6 +956,26 @@ static LIST * expand( expansion_item * elem, int length )
     return result;
 }
 
+static void combine_strings( STACK * s, int n, string * out )
+{
+    int i;
+    LIST * l;
+    for ( i = 0; i < n; ++i )
+    {
+        LIST * values = stack_pop( s );
+        if ( values )
+        {
+            string_append( out, object_str( values->value ) );
+            for ( l = list_next( values ); l; l = list_next( l ) )
+            {
+                string_push_back( out, ' ' );
+                string_append( out, object_str( l->value ) );
+            }
+            list_free( values );
+        }
+    }
+}
+
 struct dynamic_array
 {
     int size;
@@ -1176,6 +1200,7 @@ typedef struct VAR_PARSE_GROUP
 
 #define VAR_PARSE_TYPE_VAR      0
 #define VAR_PARSE_TYPE_STRING   1
+#define VAR_PARSE_TYPE_FILE     2
 
 typedef struct _var_parse
 {
@@ -1195,6 +1220,13 @@ typedef struct
     int type;
     OBJECT * s;
 } VAR_PARSE_STRING;
+
+typedef struct
+{
+    int type;
+    struct dynamic_array filename[1];
+    struct dynamic_array contents[1];
+} VAR_PARSE_FILE;
 
 static void var_parse_free( VAR_PARSE * );
 
@@ -1284,6 +1316,31 @@ static void var_parse_string_free( VAR_PARSE_STRING * string )
 }
 
 /*
+ * VAR_PARSE_FILE
+ */
+
+static VAR_PARSE_FILE * var_parse_file_new( void )
+{
+    VAR_PARSE_FILE * result = (VAR_PARSE_FILE *)BJAM_MALLOC( sizeof( VAR_PARSE_FILE ) );
+    result->type = VAR_PARSE_TYPE_FILE;
+    dynamic_array_init( result->filename );
+    dynamic_array_init( result->contents );
+    return result;
+}
+
+static void var_parse_file_free( VAR_PARSE_FILE * file )
+{
+    int i;
+    for( i = 0; i < file->filename->size; ++i )
+        var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *, file->filename, i ) );
+    dynamic_array_free( file->filename );
+    for( i = 0; i < file->contents->size; ++i )
+        var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *, file->contents, i ) );
+    dynamic_array_free( file->contents );
+    BJAM_FREE( file );
+}
+
+/*
  * VAR_PARSE
  */
 
@@ -1296,6 +1353,10 @@ static void var_parse_free( VAR_PARSE * parse )
     else if ( parse->type == VAR_PARSE_TYPE_STRING )
     {
         var_parse_string_free( (VAR_PARSE_STRING *)parse );
+    }
+    else if ( parse->type == VAR_PARSE_TYPE_FILE )
+    {
+        var_parse_file_free( (VAR_PARSE_FILE *)parse );
     }
     else
     {
@@ -1395,6 +1456,21 @@ static void var_parse_string_compile( const VAR_PARSE_STRING * parse, compiler *
     compile_emit( c, INSTR_PUSH_CONSTANT, compile_emit_constant( c, parse->s ) );
 }
 
+static void var_parse_file_compile( const VAR_PARSE_FILE * parse, compiler * c )
+{
+    int i;
+    for ( i = 0; i < parse->filename->size; ++i )
+    {
+        var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *, parse->filename, parse->filename->size - i - 1 ), c );
+    }
+    compile_emit( c, INSTR_APPEND_STRINGS, parse->filename->size );
+    for ( i = 0; i < parse->contents->size; ++i )
+    {
+        var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *, parse->contents, parse->contents->size - i - 1 ), c );
+    }
+    compile_emit( c, INSTR_WRITE_FILE, parse->contents->size );
+}
+
 static void var_parse_compile( const VAR_PARSE * parse, compiler * c )
 {
     if( parse->type == VAR_PARSE_TYPE_VAR )
@@ -1404,6 +1480,14 @@ static void var_parse_compile( const VAR_PARSE * parse, compiler * c )
     else if( parse->type == VAR_PARSE_TYPE_STRING )
     {
         var_parse_string_compile( (const VAR_PARSE_STRING *)parse, c );
+    }
+    else if( parse->type == VAR_PARSE_TYPE_FILE )
+    {
+        var_parse_file_compile( (const VAR_PARSE_FILE *)parse, c );
+    }
+    else
+    {
+        assert( !"Unknown var parse type." );
     }
 }
 
@@ -1431,6 +1515,7 @@ static void var_parse_group_compile( const VAR_PARSE_GROUP * parse, compiler * c
  * Parse VAR_PARSE_VAR
  */
 
+static VAR_PARSE * parse_at_file( const char * start, const char * mid, const char * end );
 static VAR_PARSE * parse_variable( const char * * string );
 static int try_parse_variable( const char * * s_, const char * * string, VAR_PARSE_GROUP * out);
 static void balance_parentheses( const char * * s_, const char * * string, VAR_PARSE_GROUP * out);
@@ -1478,6 +1563,41 @@ static int try_parse_variable( const char * * s_, const char * * string, VAR_PAR
         var_parse_group_add( out, parse_variable( &s ) );
         *string = s;
         *s_ = s;
+        return 1;
+    }
+    else if(s[0] == '@' && s[1] == '(')
+    {
+        int depth = 1;
+        const char * ine;
+        const char * split = 0;
+        var_parse_group_maybe_add_constant( out, *string, s );
+        s += 2;
+        ine = s;
+
+        /* Scan the content of the response file @() section. */
+        while ( *ine && ( depth > 0 ) )
+        {
+            switch ( *ine )
+            {
+            case '(': ++depth; break;
+            case ')': --depth; break;
+            case ':':
+                if ( ( depth == 1 ) && ( ine[ 1 ] == 'E' ) && ( ine[ 2 ] == '=' ) )
+                    split = ine;
+                break;
+            }
+            ++ine;
+        }
+        
+        if ( !split || depth != 0 )
+        {
+            return 0;
+        }
+        
+        var_parse_group_add( out, parse_at_file( s, split, ine - 1 ) );
+        *string = ine;
+        *s_ = ine;
+
         return 1;
     }
     else
@@ -1612,6 +1732,44 @@ static VAR_PARSE * parse_variable( const char * * string )
             ++s;
         }
     }
+}
+
+static void parse_var_string( const char * first, const char * last, struct dynamic_array * out )
+{
+    const char * saved = first;
+    string buf[1];
+    int state = isspace( *first ) != 0;
+    string_new( buf );
+    for ( ; ; ++first )
+    {
+        if ( first == last || ( isspace( *first ) != 0 ) != state )
+        {
+            VAR_PARSE_GROUP * group;
+            const char * s = buf->value;
+            string_append_range( buf, saved, first );
+            saved = first;
+            group = parse_expansion( &s );
+            string_truncate( buf, 0 );
+            dynamic_array_push( out, group );
+            state = !state;
+        }
+        if ( first == last ) break;
+    }
+    string_free( buf );
+}
+
+/*
+ * start should point to the character immediately following the
+ * opening "@(", mid should point to the ":E=", and end should
+ * point to the closing ")".
+ */
+
+static VAR_PARSE * parse_at_file( const char * start, const char * mid, const char * end )
+{
+    VAR_PARSE_FILE * result = var_parse_file_new();
+    parse_var_string( start, mid, result->filename );
+    parse_var_string( mid + 3, end, result->contents );
+    return (VAR_PARSE *)result;
 }
 
 /*
@@ -3004,6 +3162,64 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
             
             *(module_t * *)stack_allocate( s, sizeof( module_t * ) ) = outer_module;
+
+            break;
+        }
+        
+        case INSTR_APPEND_STRINGS:
+        {
+            string buf[1];
+            string_new( buf );
+            combine_strings( s, code->arg, buf );
+            stack_push( s, list_new( L0, object_new( buf->value ) ) );
+            string_free( buf );
+            break;
+        }
+        
+        case INSTR_WRITE_FILE:
+        {
+            string buf[1];
+            const char * out;
+            LIST * filename;
+            int out_debug = DEBUG_EXEC ? 1 : 0;
+            FILE * out_file = 0;
+            string_new( buf );
+            combine_strings( s, code->arg, buf );
+            filename = stack_top( s );
+            out = object_str( filename->value );
+            if ( !globs.noexec )
+            {
+                string out_name[1];
+                /* Handle "path to file" filenames. */
+                if ( ( out[ 0 ] == '"' ) && ( out[ strlen( out ) - 1 ] == '"' ) )
+                {
+                    string_copy( out_name, out + 1 );
+                    string_truncate( out_name, out_name->size - 1 );
+                }
+                else
+                {
+                    string_copy( out_name, out );
+                }
+                out_file = fopen( out_name->value, "w" );
+            
+                if ( !out_file )
+                {
+                    printf( "failed to write output file '%s'!\n", out_name->value );
+                    exit( EXITBAD );
+                }
+                string_free( out_name );
+            }
+
+            if ( out_debug ) printf( "\nfile %s\n", out );
+
+            if ( out_file ) fputs( buf->value, out_file );
+            if ( out_debug ) puts( buf->value );
+            
+            fflush( out_file );
+            fclose( out_file );
+            string_free( buf );
+
+            if ( out_debug ) fputc( '\n', stdout );
 
             break;
         }
