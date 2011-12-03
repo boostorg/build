@@ -391,6 +391,14 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame, STACK 
         backtrace_line( frame );
         printf( "warning: rulename %s expands to empty string\n", unexpanded );
         backtrace( frame );
+
+        list_free( first );
+
+        for( i = 0; i < n_args; ++i )
+        {
+            list_free( stack_pop( s ) );
+        }
+
         return result;
     }
 
