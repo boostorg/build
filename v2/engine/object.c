@@ -212,6 +212,7 @@ static const char * string_set_insert ( string_set * set, const char * string )
     result->header.magic = OBJECT_MAGIC;
 #endif
     memcpy( result->data, string, l + 1 );
+    assert( hash_keyval( result->data ) == result->header.hash );
     set->data[pos] = result;
     strtotal += l + 1;
     ++set->size;
