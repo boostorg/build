@@ -170,45 +170,60 @@ STACK * stack_global()
     return &result;
 }
 
-void stack_push( STACK * s, LIST * l )
+static void check_alignment( STACK * s )
 {
-    *--(*(LIST * * *)&s->data) = l;
-}
-
-LIST * stack_pop( STACK * s )
-{
-    return *(*(LIST * * *)&s->data)++;
-}
-
-LIST * stack_top(STACK * s)
-{
-    return *(LIST * *)s->data;
-}
-
-LIST * stack_at( STACK * s, int n )
-{
-    return *((LIST * *)s->data + n);
-}
-
-void stack_set( STACK * s, int n, LIST * value )
-{
-    *((LIST * *)s->data + n) = value;
-}
-
-void * stack_get( STACK * s )
-{
-    return (LIST * *)s->data;
+    assert( (unsigned long)s->data % sizeof( LIST * ) == 0 );
 }
 
 void * stack_allocate( STACK * s, int size )
 {
-    *(char * *)&s->data -= size;
+    check_alignment( s );
+    s->data = (char *)s->data - size;
+    check_alignment( s );
     return s->data;
 }
 
 void stack_deallocate( STACK * s, int size )
 {
-    *(char * *)&s->data += size;
+    check_alignment( s );
+    s->data = (char *)s->data + size;
+    check_alignment( s );
+}
+
+void stack_push( STACK * s, LIST * l )
+{
+    *(LIST * *)stack_allocate( s, sizeof( LIST * ) ) = l;
+}
+
+LIST * stack_pop( STACK * s )
+{
+    LIST * result = *(LIST * *)s->data;
+    stack_deallocate( s, sizeof( LIST * ) );
+    return result;
+}
+
+LIST * stack_top(STACK * s)
+{
+    check_alignment( s );
+    return *(LIST * *)s->data;
+}
+
+LIST * stack_at( STACK * s, int n )
+{
+    check_alignment( s );
+    return *((LIST * *)s->data + n);
+}
+
+void stack_set( STACK * s, int n, LIST * value )
+{
+    check_alignment( s );
+    *((LIST * *)s->data + n) = value;
+}
+
+void * stack_get( STACK * s )
+{
+    check_alignment( s );
+    return (LIST * *)s->data;
 }
 
 LIST * frame_get_local( FRAME * frame, int idx )
@@ -2450,6 +2465,27 @@ void function_free( FUNCTION * function_ )
     BJAM_FREE( function_ );
 }
 
+
+/* Alignment check for stack */
+
+struct align_var_edits
+{
+    char ch;
+    VAR_EDITS e;
+};
+
+struct align_expansion_item
+{
+    char ch;
+    expansion_item e;
+};
+
+static char check_align_var_edits[ sizeof(struct align_var_edits) <= sizeof(VAR_EDITS) + sizeof(void *) ? 1 : -1 ];
+static char check_align_expansion_item[ sizeof(struct align_expansion_item) <= sizeof(expansion_item) + sizeof(void *) ? 1 : -1 ];
+
+static char check_ptr_size1[ sizeof(LIST *) <= sizeof(void *) ? 1 : -1 ];
+static char check_ptr_size2[ sizeof(char *) <= sizeof(void *) ? 1 : -1 ];
+
 /*
  * WARNING: The instruction set is tuned for Jam and
  * is not really generic.  Be especially careful about
@@ -2714,6 +2750,18 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
         case INSTR_RETURN:
         {
+#ifndef NDEBUG
+    
+            if ( !( saved_stack == s->data ) )
+            {
+                frame->file = function->file;
+                frame->line = function->line;
+                backtrace_line( frame );
+                printf( "error: stack check failed.\n" );
+                backtrace( frame );
+                assert( saved_stack == s->data );
+            }
+#endif
             assert( saved_stack == s->data );
             return result;
         }
