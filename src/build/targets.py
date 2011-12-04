@@ -1343,7 +1343,7 @@ def apply_default_build(property_set, default_build):
         compressed = feature.compress_subproperties(property_set.all())
 
         result = build_request.expand_no_defaults(
-            b2.build.property_set.create([p]) for p in (compressed + defaults_to_apply))
+            b2.build.property_set.create(feature.expand([p])) for p in (compressed + defaults_to_apply))
 
     else:
         result.append (property_set)
