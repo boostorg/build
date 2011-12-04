@@ -588,8 +588,9 @@ class ProjectTarget (AbstractTarget):
                 l = get('source-location')
                 
             value = os.path.join(l, value)
-            # Now make the value absolute path
-            value = os.path.join(os.getcwd(), value)
+            # Now make the value absolute path. Constants should be in
+            # platform-native form.
+            value = os.path.normpath(os.path.join(os.getcwd(), value))
 
         self.constants_[name] = value
         bjam.call("set-variable", self.project_module(), name, value)

@@ -402,7 +402,7 @@ class AbstractFileTarget (VirtualTarget):
         """ Sets the path. When generating target name, it will override any path
             computation from properties.
         """
-        self.path_ = path
+        self.path_ = os.path.normpath(path)
 
     def action (self):
         """ Returns the action.
@@ -465,7 +465,7 @@ class AbstractFileTarget (VirtualTarget):
 
     def actual_name (self):
         if not self.actual_name_:
-            self.actual_name_ = '<' + self.grist() + '>' + self.name_
+            self.actual_name_ = '<' + self.grist() + '>' + os.path.normpath(self.name_)
 
         return self.actual_name_
 
