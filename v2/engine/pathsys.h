@@ -65,6 +65,7 @@ OBJECT * short_path_to_long_path( OBJECT * short_path );
     same key.
  */
 OBJECT * path_as_key( OBJECT * path );
+void path_add_key( OBJECT * path );
 
 #ifdef USE_PATHUNIX
 /** Returns a static pointer to the system dependent path to the temporary
