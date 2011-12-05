@@ -26,6 +26,10 @@
 #  include <windows.h>
 # endif
 
+int glob( const char * s, const char * c );
+void backtrace( FRAME * frame );
+void backtrace_line( FRAME * frame );
+
 #define INSTR_PUSH_EMPTY                    0
 #define INSTR_PUSH_CONSTANT                 1
 #define INSTR_PUSH_ARG                      2
@@ -2034,7 +2038,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         }
         else
         {
-            printf( "%s:%d: Conditional used as list (check operator precedence).\n", object_str(parse->file), parse->line, parse->num );
+            printf( "%s:%d: Conditional used as list (check operator precedence).\n", object_str(parse->file), parse->line );
             exit( 1 );
         }
     }

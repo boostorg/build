@@ -127,6 +127,8 @@
 #include "execcmd.h"
 #include "constants.h"
 #include "function.h"
+#include "pwd.h"
+#include "hcache.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC

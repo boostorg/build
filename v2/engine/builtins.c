@@ -1373,14 +1373,14 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     LIST * force = lol_get( frame->args, 2 );
     LIST * continue_ = lol_get( frame->args, 3 );
     int status = 0;
-    int original_stdout;
-    int original_stderr;
+    int original_stdout = 0;
+    int original_stderr = 0;
     int n;
     int targets_count;
     OBJECT * * targets2;
     int i;
-    int original_noexec;
-    int original_quitquick;
+    int original_noexec = 0;
+    int original_quitquick = 0;
 	
 
     if ( log )
