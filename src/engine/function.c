@@ -131,18 +131,14 @@ struct _function
 
 typedef struct _builtin_function
 {
-    int type;
-    int reference_count;
-    OBJECT * rulename;
+    FUNCTION base;
     LIST * ( * func )( FRAME *, int flags );
     int flags;
 } BUILTIN_FUNCTION;
 
 typedef struct _jam_function
 {
-    int type;
-    int reference_count;
-    OBJECT * rulename;
+    FUNCTION base;
     instruction * code;
     int num_constants;
     OBJECT * * constants;
@@ -1183,10 +1179,10 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
 {
     JAM_FUNCTION * result = BJAM_MALLOC( sizeof(JAM_FUNCTION) );
     int i;
-    result->type = FUNCTION_JAM;
-    result->reference_count = 1;
+    result->base.type = FUNCTION_JAM;
+    result->base.reference_count = 1;
 
-    result->rulename = 0;
+    result->base.rulename = 0;
 
     result->code = BJAM_MALLOC( c->code->size * sizeof(instruction) );
     memcpy( result->code, c->code->data, c->code->size * sizeof(instruction) );
@@ -1236,7 +1232,7 @@ typedef struct _var_parse
 
 typedef struct
 {
-    int type;
+    VAR_PARSE base;
     VAR_PARSE_GROUP * name;
     VAR_PARSE_GROUP * subscript;
     struct dynamic_array modifiers[1];
@@ -1244,13 +1240,13 @@ typedef struct
 
 typedef struct
 {
-    int type;
+    VAR_PARSE base;
     OBJECT * s;
 } VAR_PARSE_STRING;
 
 typedef struct
 {
-    int type;
+    VAR_PARSE base;
     struct dynamic_array filename[1];
     struct dynamic_array contents[1];
 } VAR_PARSE_FILE;
@@ -1290,7 +1286,7 @@ static void var_parse_group_maybe_add_constant( VAR_PARSE_GROUP * group, const c
     {
         string buf[1];
         VAR_PARSE_STRING * value = (VAR_PARSE_STRING *)BJAM_MALLOC( sizeof(VAR_PARSE_STRING) );
-        value->type = VAR_PARSE_TYPE_STRING;
+        value->base.type = VAR_PARSE_TYPE_STRING;
         string_new( buf );
         string_append_range( buf, start, end );
         value->s = object_new( buf->value );
@@ -1306,7 +1302,7 @@ static void var_parse_group_maybe_add_constant( VAR_PARSE_GROUP * group, const c
 static VAR_PARSE_VAR * var_parse_var_new()
 {
     VAR_PARSE_VAR * result = BJAM_MALLOC( sizeof( VAR_PARSE_VAR ) );
-    result->type = VAR_PARSE_TYPE_VAR;
+    result->base.type = VAR_PARSE_TYPE_VAR;
     result->name = var_parse_group_new();
     result->subscript = 0;
     dynamic_array_init( result->modifiers );
@@ -1349,7 +1345,7 @@ static void var_parse_string_free( VAR_PARSE_STRING * string )
 static VAR_PARSE_FILE * var_parse_file_new( void )
 {
     VAR_PARSE_FILE * result = (VAR_PARSE_FILE *)BJAM_MALLOC( sizeof( VAR_PARSE_FILE ) );
-    result->type = VAR_PARSE_TYPE_FILE;
+    result->base.type = VAR_PARSE_TYPE_FILE;
     dynamic_array_init( result->filename );
     dynamic_array_init( result->contents );
     return result;
@@ -2411,9 +2407,9 @@ void function_location( FUNCTION * function_, OBJECT * * file, int * line )
 FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ), int flags )
 {
     BUILTIN_FUNCTION * result = BJAM_MALLOC( sizeof( BUILTIN_FUNCTION ) );
-    result->type = FUNCTION_BUILTIN;
-    result->reference_count = 1;
-    result->rulename = 0;
+    result->base.type = FUNCTION_BUILTIN;
+    result->base.reference_count = 1;
+    result->base.rulename = 0;
     result->func = func;
     result->flags = flags;
     return (FUNCTION *)result;
