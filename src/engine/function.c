@@ -382,6 +382,7 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame, STACK 
     LIST * first = stack_pop( s );
     LIST * result = L0;
     OBJECT * rulename;
+    LIST * trailing;
 
     frame->file = file;
     frame->line = line;
@@ -420,14 +421,18 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame, STACK 
         stack_pop( s );
     }
 
-    if ( inner->args->count == 0 )
+    trailing = list_pop_front( first );
+    if ( trailing )
     {
-        lol_add( inner->args, list_pop_front( first ) );
-    }
-    else
-    {
-        LIST * * l = &inner->args->list[0];
-        *l = list_append( list_pop_front( first ), *l );
+        if ( inner->args->count == 0 )
+        {
+            lol_add( inner->args, trailing );
+        }
+        else
+        {
+            LIST * * l = &inner->args->list[0];
+            *l = list_append( trailing, *l );
+        }
     }
 
     result = evaluate_rule( rulename, inner );
