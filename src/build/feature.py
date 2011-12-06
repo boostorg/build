@@ -226,7 +226,7 @@ def valid (names):
     if isinstance (names, str):
         return valid_one (names)
     else:
-        return [ valid_one (name) for name in names ]
+        return all([ valid_one (name) for name in names ])
 
 def attributes (feature):
     """ Returns the attributes of the given feature.
@@ -715,7 +715,7 @@ def add_defaults (properties):
         if not p.condition():
             handled_features.add(p.feature())
         
-    missing_top = [f for f in __all_top_features if not f in handled_features]    
+    missing_top = [f for f in __all_top_features if not f in handled_features]
     more = defaults(missing_top)
     result.extend(more)
     for p in more:
