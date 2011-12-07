@@ -66,7 +66,7 @@ def variant (name, parents_or_properties, explicit_properties = []):
         p = parents[0]
         # TODO: the check may be stricter
         if not feature.is_implicit_value (p):
-            raise BaseException ("Invalid base varaint '%s'" % p)
+            raise BaseException ("Invalid base variant '%s'" % p)
         
         inherited = __variant_explicit_properties[p]
 
@@ -325,20 +325,14 @@ reset ()
 register_globals ()
 
 class SearchedLibTarget (virtual_target.AbstractFileTarget):
-    def __init__ (self, name, project, shared, real_name, search, action):
+    def __init__ (self, name, project, shared, search, action):
         virtual_target.AbstractFileTarget.__init__ (self, name, 'SEARCHED_LIB', project, action)
         
         self.shared_ = shared
-        self.real_name_ = real_name
-        if not self.real_name_:
-            self.real_name_ = name
         self.search_ = search
 
     def shared (self):
         return self.shared_
-    
-    def real_name (self):
-        return self.real_name_
     
     def search (self):
         return self.search_
@@ -506,10 +500,10 @@ class SearchedLibGenerator (generators.Generator):
         if real_name:
             real_name = real_name[0]
         else:
-            real_nake = name
+            real_name = name
         search = feature.get_values('<search>', properties)
         usage_requirements = property_set.create(['<xdll-path>' + p for p in search])
-        t = SearchedLibTarget(name, project, shared, real_name, search, a)
+        t = SearchedLibTarget(real_name, project, shared, search, a)
 
         # We return sources for a simple reason. If there's
         #    lib png : z : <name>png ; 
@@ -669,7 +663,7 @@ class LinkingGenerator (generators.Generator):
         fst = []
         for s in sources:
             if type.is_derived(s.type(), 'SEARCHED_LIB'):
-                n = s.real_name()
+                n = s.name()
                 if s.shared():
                     fsa.append(n)
 
