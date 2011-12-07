@@ -1,11 +1,16 @@
+#!/usr/bin/python
+
 # Copyright 2001 Dave Abrahams 
+# Copyright 2011 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0. 
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
-# Test that the patch which allows long command-lines in actions on NT is
-# working. For reasons of backward-compatibility, this patch requires that the
-# action fits on a single command-line, and that the JAMSHELL variable on the
-# target being built is set to "%".
+import BoostBuild
+import os
+
+t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+
+t.write("file.jam", """
 if $(NT)
 {
     #
@@ -37,3 +42,11 @@ if $(NT)
 
     do_echo line_length_test ;
 }
+else
+{
+    NOCARE all ;
+}
+""")
+t.run_build_system("-ffile.jam")
+
+t.cleanup()
