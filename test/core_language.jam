@@ -9,7 +9,10 @@ failed = 0 ;
 
 rule show-result ( id : test-result )
 {
-    ECHO $(test-result): $(id) ;
+    if ! ( --quiet in $(ARGV) )
+    {
+        ECHO $(test-result): $(id) ;
+    }
     $(test-result) = [ CALC $($(test-result)) + 1 ] ;
 }
 
@@ -57,6 +60,9 @@ local select1 = GU BL DBST ;
 local case1 = L U ;
 local vars = 7 8 ;
 local sub = 2 1 ;
+local p0 = name ;
+local p1 = dir/name ;
+local p2 = dir/sub/name ;
 
 check-equal var-product : $(v1)$(v2) : 14 15 16 24 25 26 34 35 36 ;
 
@@ -73,6 +79,16 @@ check-equal var-suffix : $(v6:S) : .txt ;
 check-equal var-dir : $(v6:D) : generic ;
 check-equal var-member : $(v6:M) : (member.txt) ;
 check-equal var-multi : $(v6:$(select1)) : <GRIST> path generic/path.txt ;
+
+check-equal var-D=-0 : name : $(p0:D=) ;
+check-equal var-D=-1 : name : $(p1:D=) ;
+check-equal var-D=-2 : name : $(p2:D=) ;
+check-equal var-D-0 : "" : $(p0:D) ;
+check-equal var-D-1 : dir : $(p1:D) ;
+check-equal var-D-2 : dir/sub : $(p2:D) ;
+check-equal var-S-1 : "" : $(p0:S) ;
+check-equal var-no-at-file-0 : ($(p0)) : [ MATCH ^@(.*) : "@($(p0))" ] ;
+check-equal var-no-at-file-1 : ($(p0)) : [ MATCH @(.*) : "--@($(p0))" ] ;
 
 if $(OS) = CYGWIN
 {
@@ -158,22 +174,35 @@ check-equal var-subscript-range-empty : $(v3[4-3]) : ;
 
 rule test-rule
 {
-    return $(<) $(>) $(1) $(2) $(3) $(4) $(5) $(6) $(7) $(8) $(9) $(10) $(11) $(12) $(13) $(14) $(15) $(16) $(17) $(18) $(19) ;
+    return $(<) - $(>) - $(1) - $(2) - $(3) - $(4) - $(5) - $(6) - $(7) - $(8) - $(9) - $(10) - $(11) - $(12) - $(13) - $(14) - $(15) - $(16) - $(17) - $(18) - $(19) ;
 }
 
-check-equal rule-arguments :
+check-equal rule-arguments-numbered :
     [ test-rule a1 : a2 : a3 : a4 : a5 : a6 : a7 : a8 : a9 : a10 : a11 : a12 : a13 : a14 : a15 : a16 : a17 : a18 : a19 ] :
-    a1 a2 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 ;
+    a1 - a2 - a1 - a2 - a3 - a4 - a5 - a6 - a7 - a8 - a9 - a10 - a11 - a12 - a13 - a14 - a15 - a16 - a17 - a18 - a19 ;
 
 rule test-rule
 {
-    return $(<:L) $(>:L) $(1:L) $(2:L) $(3:L) $(4:L) $(5:L) $(6:L) $(7:L) $(8:L) $(9:L) $(10:L) $(11:L) $(12:L) $(13:L) $(14:L) $(15:L) $(16:L) $(17:L) $(18:L) $(19:L) ;
+    return $(<:L) - $(>:L) - $(1:L) - $(2:L) - $(3:L) - $(4:L) - $(5:L) - $(6:L) - $(7:L) - $(8:L) - $(9:L) - $(10:L) - $(11:L) - $(12:L) - $(13:L) - $(14:L) - $(15:L) - $(16:L) - $(17:L) - $(18:L) - $(19:L) ;
 }
 
 # behavior change
-check-equal rule-arguments :
+check-equal rule-arguments-numbered-lower :
     [ test-rule a1 : a2 : a3 : a4 : a5 : a6 : a7 : a8 : a9 : a10 : a11 : a12 : a13 : a14 : a15 : a16 : a17 : a18 : a19 ] :
-    a1 a2 a1 a2 a3 a4 a5 a6 a7 a8 a9 a10 a11 a12 a13 a14 a15 a16 a17 a18 a19 ;
+    a1 - a2 - a1 - a2 - a3 - a4 - a5 - a6 - a7 - a8 - a9 - a10 - a11 - a12 - a13 - a14 - a15 - a16 - a17 - a18 - a19 ;
+
+
+rule test-rule ( p1 : p2 : p3 : p4 : p5 : p6 : p7 : p8 : p9 :
+                         p10 : p11 : p12 : p13 : p14 : p15 : p16 : p17 : p18 : p19 )
+
+
+{
+    return $(p1) - $(p2) - $(p3) - $(p4) - $(p5) - $(p6) - $(p7) - $(p8) - $(p9) - $(p10) - $(p11) - $(p12) - $(p13) - $(p14) - $(p15) - $(p16) - $(p17) - $(p18) - $(p19) ;
+}
+
+check-equal rule-arguments-named :
+    [ test-rule a1 : a2 : a3 : a4 : a5 : a6 : a7 : a8 : a9 : a10 : a11 : a12 : a13 : a14 : a15 : a16 : a17 : a18 : a19 ] :
+    a1 - a2 - a3 - a4 - a5 - a6 - a7 - a8 - a9 - a10 - a11 - a12 - a13 - a14 - a15 - a16 - a17 - a18 - a19 ;
 
 }
 
@@ -1014,6 +1043,104 @@ rule test-rule
 }
 
 check-equal while-result : [ test-rule ] : x ;
+
+}
+
+# Test NORMALIZE_PATH
+
+{
+check-equal normalize-path : "."     : [ NORMALIZE_PATH ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "" ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "." ] ;
+check-equal normalize-path : ".."    : [ NORMALIZE_PATH ".." ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "/" ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "\\" ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "//" ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "\\\\" ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "//\\\\//\\\\" ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "/." ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "/./" ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "\\\\///.///\\\\\\" ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "./././././." ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "/./././././." ] ;
+check-equal normalize-path : "foo"   : [ NORMALIZE_PATH "foo" ] ;
+check-equal normalize-path : "foo"   : [ NORMALIZE_PATH "foo/" ] ;
+check-equal normalize-path : "foo"   : [ NORMALIZE_PATH "foo\\" ] ;
+check-equal normalize-path : "foo"   : [ NORMALIZE_PATH "foo\\\\/////" ] ;
+check-equal normalize-path : "foo"   : [ NORMALIZE_PATH "foo\\\\/////././." ] ;
+check-equal normalize-path : "foo"   : [ NORMALIZE_PATH "foo\\\\/////./././" ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "foo/.." ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "foo////.." ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "///foo/\\\\/.." ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "\\\\\\foo\\//\\.." ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "foo/./.." ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "foo/././././.." ] ;
+check-equal normalize-path : "foo"   : [ NORMALIZE_PATH "foo/./././bar/./././.././././baz/./././.." ] ;
+check-equal normalize-path : "/foo"  : [ NORMALIZE_PATH "/foo/./././bar/./././.././././baz/./././.." ] ;
+check-equal normalize-path : "foo"   : [ NORMALIZE_PATH "foo/./././bar/./././////.././././baz/./././.." ] ;
+check-equal normalize-path : "/foo"  : [ NORMALIZE_PATH "/foo/./././bar/./././////.././././baz/./././.." ] ;
+check-equal normalize-path : ".."    : [ NORMALIZE_PATH "./.." ] ;
+check-equal normalize-path : ".."    : [ NORMALIZE_PATH "././././.." ] ;
+check-equal normalize-path : "../.." : [ NORMALIZE_PATH "../.." ] ;
+check-equal normalize-path : "../.." : [ NORMALIZE_PATH "./../.." ] ;
+check-equal normalize-path : "../.." : [ NORMALIZE_PATH "././././../.." ] ;
+check-equal normalize-path : "../.." : [ NORMALIZE_PATH "./.././././.." ] ;
+check-equal normalize-path : "../.." : [ NORMALIZE_PATH "././././.././././.." ] ;
+check-equal normalize-path : "../.." : [ NORMALIZE_PATH "..//\\\\\\//.." ] ;
+check-equal normalize-path : "../.." : [ NORMALIZE_PATH "../..\\\\/\\\\" ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "foo/../bar/../baz/.." ] ;
+check-equal normalize-path : "."     : [ NORMALIZE_PATH "foo////..////bar////.//////.////../baz/.." ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "/foo/../bar/../baz/.." ] ;
+check-equal normalize-path : "/"     : [ NORMALIZE_PATH "/foo////..////bar////.//////.////../baz/.." ] ;
+
+# Invalid rooted paths with leading dotdots.
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/.." ] ;
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../" ] ;
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "//\\\\//\\\\/.." ] ;
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "\\\\//\\\\//\\.." ] ;
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../.." ] ;
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../../.." ] ;
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/foo/bar/../baz/../../.." ] ;
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../for/././../././bar/././../././.." ] ;
+check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../foo/bar" ] ;
+
+}
+
+# Test W32_GETREGNAMES
+
+{
+
+if $(NT)
+{
+    local sound = "Beep" "ExtendedSounds" ;
+    local r1 = [ W32_GETREGNAMES "HKEY_CURRENT_USER\\Control Panel\\Sound" : values ] ;
+    check-equal w32_getregnames : $(sound:L) : $(r1:L) ;
+    local r2 = [ W32_GETREGNAMES "HKCU\\Control Panel\\Sound" : values ] ;
+    check-equal w32_getregnames : $(sound:L) : $(r2:L) ;
+
+    local CurrentControlSet = "Control" "Enum" "Hardware Profiles" "Services" ;
+    local r3 = [ W32_GETREGNAMES "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet" : subkeys ] ;
+    check-equal w32_getregnames : $(CurrentControlSet:L) : $(r3:L) ;
+    local r4 = [ W32_GETREGNAMES "HKLM\\SYSTEM\\CurrentControlSet" : subkeys ] ;
+    check-equal w32_getregnames : $(CurrentControlSet:L) : $(r4:L) ;
+}
+
+}
+
+# Test SHELL
+
+{
+
+local c = "echo value" ;
+
+check-equal shell : "value\n"   : [ SHELL $(c) ] ;
+check-equal shell : ""          : [ SHELL $(c) : no-output ] ;
+check-equal shell : "value\n" 0 : [ SHELL $(c) : exit-status ] ;
+check-equal shell : ""      0   : [ SHELL $(c) : no-output : exit-status ] ;
+check-equal command : "value\n"   : [ COMMAND $(c) ] ;
+check-equal command : ""          : [ COMMAND $(c) : no-output ] ;
+check-equal command : "value\n" 0 : [ COMMAND $(c) : exit-status ] ;
+check-equal command : ""      0   : [ COMMAND $(c) : no-output : exit-status ] ;
 
 }
 

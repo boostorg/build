@@ -206,7 +206,7 @@ class Tester(TestCmd.TestCmd):
     def __init__(self, arguments="", executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
-        ignore_toolset_requirements=True, workdir="", **keywords):
+        ignore_toolset_requirements=True, workdir="", pass_d0=True, **keywords):
 
         self.original_workdir = os.getcwd()
         if workdir != '' and not os.path.isabs(workdir):
@@ -273,6 +273,8 @@ class Tester(TestCmd.TestCmd):
                 sys.exit(1)
 
         verbosity = ['-d0', '--quiet']
+        if not pass_d0:
+            verbosity = []
         if '--verbose' in sys.argv:
             keywords['verbose'] = True
             verbosity = ['-d+2']
