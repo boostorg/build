@@ -1238,10 +1238,8 @@ class BasicTarget (AbstractTarget):
         # they are propagated only to direct dependents. We might need
         # a more general mechanism, but for now, only those two
         # features are special.
-        raw = subvariant.sources_usage_requirements().raw()
-        raw = property.change(raw, "<pch-header>", None);
-        raw = property.change(raw, "<pch-file>", None);              
-        result = result.add(property_set.create(raw))
+        removed_pch = filter(lambda prop: prop.feature().name() not in ['<pch-header>', '<pch-file>'], subvariant.sources_usage_requirements().all())
+        result = result.add(property_set.PropertySet(removed_pch))
         
         return result
 
