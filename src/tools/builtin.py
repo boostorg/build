@@ -196,6 +196,14 @@ def register_globals ():
         'on'],        # Fail the compilation if there are warnings.
         ['incidental', 'propagated'])
     
+    feature.feature('c++-template-depth',
+        [str(i) for i in range(64,1024+1,64)] +
+        [str(i) for i in range(20,1000+1,10)] +
+        #   Maximum template instantiation depth guaranteed for ANSI/ISO C++
+        # conforming programs.
+        ['17'],
+        ['incidental', 'optional', 'propagated'])
+
     feature.feature ('source', [], ['free', 'dependency', 'incidental'])
     feature.feature ('library', [], ['free', 'dependency', 'incidental'])
     feature.feature ('file', [], ['free', 'dependency', 'incidental'])
