@@ -1,6 +1,9 @@
+#!/usr/bin/python
+
 # Copyright 2008 Jurko Gospodnetic, Vladimir Prus
-# Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# Copyright 2011 Steven Watanabe
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 #   Added to guard against a bug causing targets to be used before they
 # themselves have finished building. This used to happen for targets built by a
@@ -14,21 +17,16 @@
 # while the action was still running, target A was already reporting as being
 # built causing other targets depending on target A to be built prematurely.
 
-if ! $(BJAM_SUBTEST)
-{
-    ECHO --- Testing -jN parallel execution of multi-file actions - 2... ;
+import BoostBuild
 
-    assert "...found 4 targets...
-...updating 3 targets...
-link dll
-001 - linked
-install installed_dll
-002 - installed
-...updated 3 targets...
-" : (==) : [ SHELL "\"$(ARGV[1])\" -f parallel_multifile_actions_2.jam -sBJAM_SUBTEST=1 -j2" ] ;
-}
-else
-{
+t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+
+t.write("sleep.bat","""@setlocal
+@echo off
+timeout /T %1 /NOBREAK >nul
+""")
+
+t.write("file.jam", """
     actions link
     {
         sleep 1
@@ -46,4 +44,15 @@ else
     DEPENDS installed_dll : dll ;
 
     DEPENDS all : lib installed_dll ;
-}
+""")
+
+t.run_build_system("-ffile.jam -j2", stdout="""...found 4 targets...
+...updating 3 targets...
+link dll
+001 - linked
+install installed_dll
+002 - installed
+...updated 3 targets...
+""")
+
+t.cleanup()
