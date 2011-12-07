@@ -6,6 +6,8 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
+import hashlib
+
 from b2.util.utility import *
 import property, feature, string
 import b2.build.feature
@@ -371,7 +373,9 @@ class PropertySet:
                 is_relative = False
 
             else:
-                p = self.as_path ()
+                p = self.as_path()
+                if hash_maybe:
+                    p = hash_maybe(p)
 
                 # Really, an ugly hack. Boost regression test system requires
                 # specific target paths, and it seems that changing it to handle
@@ -446,4 +450,11 @@ class PropertySet:
 
     def __contains__(self, item):
         return item in self.all_set_
+    
+def hash(p):
+    m = hashlib.md5()
+    m.update(p)
+    return m.hexdigest()
+
+hash_maybe = hash if "--hash" in bjam.variable("ARGV") else None
 
