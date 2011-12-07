@@ -1113,10 +1113,10 @@ check-equal while-result : [ test-rule ] : x ;
     {
         local bt = [ BACKTRACE ] ;
         check-equal backtrace-1-file : $(bt) :
-            core_language.jam [ CALC $(base) +  4 ] ""       backtrace
-            core_language.jam [ CALC $(base) + 28 ] module2. f
-            core_language.jam [ CALC $(base) + 19 ] module1. f
-            core_language.jam [ CALC $(base) + 32 ] ""       "module scope"
+            test.jam [ CALC $(base) +  4 ] ""       backtrace
+            test.jam [ CALC $(base) + 28 ] module2. f
+            test.jam [ CALC $(base) + 19 ] module1. f
+            test.jam [ CALC $(base) + 32 ] ""       "module scope"
         ;
     }
     module module1

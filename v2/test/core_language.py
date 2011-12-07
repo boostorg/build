@@ -8,7 +8,7 @@ import BoostBuild
 
 t = BoostBuild.Tester(pass_toolset=0)
 
-t.set_tree(".")
-t.run_build_system(extra_args="-fcore_language.jam")
+t.set_tree("core-language")
+t.run_build_system(extra_args="-ftest.jam")
 
 t.cleanup()
