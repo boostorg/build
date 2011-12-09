@@ -63,6 +63,7 @@ local sub = 2 1 ;
 local p0 = name ;
 local p1 = dir/name ;
 local p2 = dir/sub/name ;
+local j1 = , - ;
 
 check-equal var-product : $(v1)$(v2) : 14 15 16 24 25 26 34 35 36 ;
 
@@ -79,6 +80,16 @@ check-equal var-suffix : $(v6:S) : .txt ;
 check-equal var-dir : $(v6:D) : generic ;
 check-equal var-member : $(v6:M) : (member.txt) ;
 check-equal var-multi : $(v6:$(select1)) : <GRIST> path generic/path.txt ;
+
+check-equal var-join-0 : $(:J=,) : ;
+check-equal var-join-1 : $(p0:J=,) : name ;
+check-equal var-join-3 : $(v1:J=,) : 1,2,3 ;
+check-equal var-set-grist-join : $(v1:G=grist:J=,) : <grist>1,<grist>2,<grist>3 ;
+# behavior change.  In the past, a J= modifier would
+# cause only the last element of the other modifiers
+# to take effect.
+check-equal var-set-grist-multi-join : $(v1:G=$(g):J=,) : <g1>1,<g1>2,<g1>3 <g2>1,<g2>2,<g2>3 ;
+check-equal var-set-grist-multi-join-multi : $(v1:G=$(g):J=$(j1)) : <g1>1,<g1>2,<g1>3 <g1>1-<g1>2-<g1>3 <g2>1,<g2>2,<g2>3 <g2>1-<g2>2-<g2>3 ;
 
 check-equal var-D=-0 : name : $(p0:D=) ;
 check-equal var-D=-1 : name : $(p1:D=) ;
