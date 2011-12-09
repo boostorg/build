@@ -11,13 +11,27 @@ t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
 t.write("sleep.bat","""@setlocal
 @echo off
-timeout /T %1 /NOBREAK >nul
+@REM timeout /T %1 /NOBREAK >nul
+ping 127.0.0.1 -n 2 -w 1000 >nul
+ping 127.0.0.1 -n %1 -w 1000 >nul
+@endlocal
+@exit /B 0
 """)
 
 t.write("file.jam", """
+
+    if $(NT)
+    {
+        SLEEP = @call sleep.bat ;
+    }
+    else
+    {
+        SLEEP = sleep ;
+    }
+
     actions .gen. {
 echo 001
-sleep 4
+$(SLEEP) 4
 echo 002
 }
     rule .use.1 { DEPENDS $(<) : $(>) ; }
@@ -26,7 +40,7 @@ echo 003
 }
     rule .use.2 { DEPENDS $(<) : $(>) ; }
     actions .use.2 {
-sleep 1
+$(SLEEP) 1
 echo 004
 }
 

@@ -11,7 +11,11 @@ t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
 t.write("sleep.bat","""@setlocal
 @echo off
-timeout /T %1 /NOBREAK >nul
+@REM timeout /T %1 /NOBREAK >nul
+ping 127.0.0.1 -n 2 -w 1000 >nul
+ping 127.0.0.1 -n %1 -w 1000 >nul
+@endlocal
+@exit /B 0
 """)
 
 t.write("file.jam", """
@@ -20,11 +24,11 @@ t.write("file.jam", """
         actions sleeper
         {
 echo [$(<:S)] 0
-sleep 1
+@call sleep.bat 1
 echo [$(<:S)] 1
-sleep 1
+@call sleep.bat 1
 echo [$(<:S)] 2
-sleep $(<:B)
+@call sleep.bat $(<:B)
         }
     }
     else
