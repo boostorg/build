@@ -11,14 +11,27 @@ t = BoostBuild.Tester(pass_toolset=0)
 
 t.write("sleep.bat","""@setlocal
 @echo off
-timeout /T %1 /NOBREAK >nul
+@REM timeout /T %1 /NOBREAK >nul
+ping 127.0.0.1 -n 2 -w 1000 >nul
+ping 127.0.0.1 -n %1 -w 1000 >nul
+@endlocal
+@exit /B 0
 """)
 
 t.write("file.jam", """
 
+if $(NT)
+{
+    SLEEP = @call sleep.bat ;
+}
+else
+{
+    SLEEP = sleep ;
+}
+
 actions .a. {
 echo 001
-sleep 4
+$(SLEEP) 4
 echo 002
 }
 
@@ -27,18 +40,8 @@ echo 002
 DEPENDS all : sleeper ;
 """)
 
-t.run_build_system("-ffile.jam -d1 -l2", status=1, stdout="""...found 2 targets...
-...updating 1 target...
-.a. sleeper
-2 second time limit exceeded
-001
+t.run_build_system("-ffile.jam -d1 -l2", status=1)
 
-echo 001
-sleep 4
-echo 002
-
-...failed .a. sleeper...
-...failed updating 1 target...
-""")
+t.expect_output_line("2 second time limit exceeded")
 
 t.cleanup()
