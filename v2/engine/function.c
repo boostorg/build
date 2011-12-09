@@ -16,6 +16,8 @@
 #include "compile.h"
 #include "search.h"
 #include "class.h"
+#include "pathsys.h"
+#include "filesys.h"
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -3241,13 +3243,47 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             string buf[1];
             const char * out;
-            LIST * filename;
+            OBJECT * tmp_filename = 0;
             int out_debug = DEBUG_EXEC ? 1 : 0;
             FILE * out_file = 0;
             string_new( buf );
             combine_strings( s, code->arg, buf );
-            filename = stack_top( s );
-            out = object_str( filename->value );
+            out = object_str( stack_top( s )->value );
+
+            /* For stdout/stderr we will create a temp file and generate
+                * a command that outputs the content as needed.
+                */
+            if ( ( strcmp( "STDOUT", out ) == 0 ) ||
+                ( strcmp( "STDERR", out ) == 0 ) )
+            {
+                int err_redir = strcmp( "STDERR", out ) == 0;
+                string result[1];
+                tmp_filename = path_tmpfile();
+                string_new( result );
+
+                #ifdef OS_NT
+                string_append( result, "type \"" );
+                #else
+                string_append( result, "cat \"" );
+                #endif
+                string_append( result, object_str( tmp_filename ) );
+                string_push_back( result, '\"' );
+                if ( err_redir )
+                    string_append( result, " 1>&2" );
+
+                /* Replace STDXXX with the temporary file. */
+                list_free( stack_pop( s ) );
+                stack_push( s, list_new( L0, object_new( result->value ) ) );
+                out = object_str( tmp_filename );
+
+                string_free( result );
+
+                /* We also make sure that the temp files created by this
+                    * get nuked eventually.
+                    */
+                file_remove_atexit( tmp_filename );
+            }
+
             if ( !globs.noexec )
             {
                 string out_name[1];
@@ -3279,6 +3315,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             fflush( out_file );
             fclose( out_file );
             string_free( buf );
+            if ( tmp_filename )
+                object_free( tmp_filename );
 
             if ( out_debug ) fputc( '\n', stdout );
 

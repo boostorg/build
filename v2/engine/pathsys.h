@@ -20,6 +20,7 @@
 #ifndef PATHSYS_VP_20020211_H
 # define PATHSYS_VP_20020211_H
 
+#include "jam.h"
 #include "strings.h"
 #include "object.h"
 
