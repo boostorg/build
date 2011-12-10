@@ -1109,7 +1109,8 @@ module project-rules
     
     rule option ( name : value )
     {
-        if $(__name__) != site-config && $(__name__) != user-config && $(__name__) != project-config
+        local m = [ CALLER_MODULE ] ;
+        if $(m) != site-config && $(m) != user-config && $(m) != project-config
         {
             import errors ;
             errors.error "The 'option' rule may be used only in site-config or user-config" ;
