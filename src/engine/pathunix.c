@@ -293,6 +293,12 @@ void ShortPathToLongPath( char * short_path, string * out )
         return;
     }
 
+    if ( short_path[0] == '\\' && short_path[1] == '\0')
+    {
+        string_push_back( out, '\\' );
+        return;
+    }
+
     if ( short_path[1] == ':' &&
         ( short_path[2] == '\0' ||
         ( short_path[2] == '\\' && short_path[3] == '\0' ) ) )
