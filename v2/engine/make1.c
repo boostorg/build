@@ -517,7 +517,7 @@ static void make1c( state * pState )
             rule_name = object_str( cmd->rule->name );
             target = object_str( lol_get( &cmd->args, 0 )->value );
             if ( globs.noexec )
-                out_action( rule_name, target, cmd->buf, "", "", EXIT_OK );
+                out_action( rule_name, target, cmd->buf->value, "", "", EXIT_OK );
         }
 
         if ( globs.noexec )
@@ -529,7 +529,7 @@ static void make1c( state * pState )
         {
             /* Pop state first because exec_cmd() could push state. */
             pop_state( &state_stack );
-            exec_cmd( cmd->buf, make_closure, pState->t, cmd->shell, rule_name,
+            exec_cmd( cmd->buf->value, make_closure, pState->t, cmd->shell, rule_name,
                 target );
         }
     }
@@ -1045,7 +1045,7 @@ static CMD * make1cmds( TARGET * t )
                 cmd = cmd_new( rule, list_copy( L0, nt ),
                     list_sublist( ns, start, chunk ),
                     list_new( L0, object_new( "%" ) ) );
-                fputs( cmd->buf, stdout );
+                fputs( cmd->buf->value, stdout );
                 exit( EXITBAD );
             }
         }

@@ -2100,7 +2100,7 @@ PyObject * bjam_define_action( PyObject * self, PyObject * args )
     int        n;
     int        i;
     OBJECT   * name_str;
-    OBJECT   * body_str;
+    FUNCTION * body_func;
 
     if ( !PyArg_ParseTuple( args, "ssO!i:define_action", &name, &body,
                           &PyList_Type, &bindlist_python, &flags ) )
@@ -2120,9 +2120,9 @@ PyObject * bjam_define_action( PyObject * self, PyObject * args )
     }
 
     name_str = object_new( name );
-    body_str = object_new( body );
-    new_rule_actions( root_module(), name_str, body_str, bindlist, flags );
-    object_free( body_str );
+    body_func = function_compile_actions( body, constant_builtin, -1 );
+    new_rule_actions( root_module(), name_str, body_func, bindlist, flags );
+    function_free( body_func );
     object_free( name_str );
 
     Py_INCREF( Py_None );

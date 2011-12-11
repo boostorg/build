@@ -642,7 +642,7 @@ void actions_free( rule_actions * a )
 {
     if ( --a->reference_count <= 0 )
     {
-        object_free( a->command );
+        function_free( a->command );
         list_free( a->bindlist );
         BJAM_FREE( a );
     }
@@ -745,10 +745,11 @@ static void set_rule_actions( RULE * rule, rule_actions * actions )
 }
 
 
-static rule_actions * actions_new( OBJECT * command, LIST * bindlist, int flags )
+static rule_actions * actions_new( FUNCTION * command, LIST * bindlist, int flags )
 {
     rule_actions * result = (rule_actions *)BJAM_MALLOC( sizeof( rule_actions ) );
-    result->command = object_copy( command );
+    function_refer( command );
+    result->command = command;
     result->bindlist = bindlist;
     result->flags = flags;
     result->reference_count = 0;
@@ -756,7 +757,7 @@ static rule_actions * actions_new( OBJECT * command, LIST * bindlist, int flags 
 }
 
 
-RULE * new_rule_actions( module_t * m, OBJECT * rulename, OBJECT * command, LIST * bindlist, int flags )
+RULE * new_rule_actions( module_t * m, OBJECT * rulename, FUNCTION * command, LIST * bindlist, int flags )
 {
     RULE * local = define_rule( m, rulename, m );
     RULE * global = global_rule( local );

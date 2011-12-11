@@ -16,7 +16,6 @@
 # include "parse.h"
 # include "compile.h"
 # include "variable.h"
-# include "expand.h"
 # include "rules.h"
 # include "object.h"
 # include "make.h"
