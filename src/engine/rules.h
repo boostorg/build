@@ -62,10 +62,10 @@ struct argument_list
 /* Build actions corresponding to a rule. */
 struct rule_actions
 {
-    int      reference_count;
-    OBJECT * command;          /* command string from ACTIONS */
-    LIST   * bindlist;
-    int      flags;            /* modifiers on ACTIONS */
+    int        reference_count;
+    FUNCTION * command;          /* command string from ACTIONS */
+    LIST     * bindlist;
+    int        flags;            /* modifiers on ACTIONS */
 
 #define RULE_NEWSRCS   0x01  /* $(>) is updated sources only */
 #define RULE_TOGETHER  0x02  /* combine actions on single target */
@@ -261,7 +261,7 @@ void            args_refer( argument_list * );
 RULE * bindrule        ( OBJECT * rulename, module_t * );
 RULE * import_rule     ( RULE * source, module_t *, OBJECT * name );
 RULE * new_rule_body   ( module_t *, OBJECT * rulename, argument_list *, FUNCTION * func, int exprt );
-RULE * new_rule_actions( module_t *, OBJECT * rulename, OBJECT * command, LIST * bindlist, int flags );
+RULE * new_rule_actions( module_t *, OBJECT * rulename, FUNCTION * command, LIST * bindlist, int flags );
 void   rule_free       ( RULE * );
 
 /* Target related functions. */

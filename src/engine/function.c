@@ -99,6 +99,7 @@ void backtrace_line( FRAME * frame );
 
 #define INSTR_APPEND_STRINGS                53
 #define INSTR_WRITE_FILE                    54
+#define INSTR_OUTPUT_STRINGS                55
 
 typedef struct instruction
 {
@@ -116,9 +117,9 @@ typedef struct _subfunction
 
 typedef struct _subaction
 {
-    OBJECT * name;
-    OBJECT * command;
-    int      flags;
+    OBJECT   * name;
+    FUNCTION * command;
+    int        flags;
 } SUBACTION;
 
 #define FUNCTION_BUILTIN    0
@@ -1172,12 +1173,12 @@ static int compile_emit_rule( compiler * c, OBJECT * name, PARSE * parse, int ar
     return (int)( c->rules->size - 1 );
 }
 
-static int compile_emit_actions( compiler * c, OBJECT * name, OBJECT * command, int flags )
+static int compile_emit_actions( compiler * c, PARSE * parse )
 {
     SUBACTION a;
-    a.name = object_copy( name );
-    a.command = object_copy( command );
-    a.flags = flags;
+    a.name = object_copy( parse->string );
+    a.command = function_compile_actions( object_str( parse->string1 ), parse->file, parse->line );
+    a.flags = parse->num;
     dynamic_array_push( c->actions, a );
     return (int)( c->actions->size - 1 );
 }
@@ -1227,6 +1228,11 @@ typedef struct VAR_PARSE_GROUP
 {
     struct dynamic_array elems[1];
 } VAR_PARSE_GROUP;
+
+typedef struct VAR_PARSE_ACTIONS
+{
+    struct dynamic_array elems[1];
+} VAR_PARSE_ACTIONS;
 
 #define VAR_PARSE_TYPE_VAR      0
 #define VAR_PARSE_TYPE_STRING   1
@@ -1300,6 +1306,41 @@ static void var_parse_group_maybe_add_constant( VAR_PARSE_GROUP * group, const c
         string_free( buf );
         var_parse_group_add( group, (VAR_PARSE *)value );
     }
+}
+
+VAR_PARSE_STRING * var_parse_group_as_literal( VAR_PARSE_GROUP * group )
+{
+    if ( group->elems->size == 1  )
+    {
+        VAR_PARSE * result = dynamic_array_at( VAR_PARSE *, group->elems, 0 );
+        if ( result->type == VAR_PARSE_TYPE_STRING )
+        {
+            return (VAR_PARSE_STRING *)result;
+        }
+    }
+    return 0;
+}
+
+/*
+ * VAR_PARSE_ACTIONS
+ */
+
+static VAR_PARSE_ACTIONS * var_parse_actions_new()
+{
+    VAR_PARSE_ACTIONS * result = (VAR_PARSE_ACTIONS *)BJAM_MALLOC( sizeof(VAR_PARSE_ACTIONS) );
+    dynamic_array_init( result->elems );
+    return result;
+}
+
+static void var_parse_actions_free( VAR_PARSE_ACTIONS * actions )
+{
+    int i;
+    for ( i = 0; i < actions->elems->size; ++i )
+    {
+        var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *, actions->elems, i ) );
+    }
+    dynamic_array_free( actions->elems );
+    BJAM_FREE( actions );
 }
 
 /*
@@ -1541,6 +1582,16 @@ static void var_parse_group_compile( const VAR_PARSE_GROUP * parse, compiler * c
     }
 }
 
+static void var_parse_actions_compile( const VAR_PARSE_ACTIONS * actions, compiler * c )
+{
+    int i;
+    for ( i = 0; i < actions->elems->size; ++i )
+    {
+        var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *, actions->elems, actions->elems->size - i - 1 ), c );
+    }
+    compile_emit( c, INSTR_OUTPUT_STRINGS, actions->elems->size );
+}
+
 /*
  * Parse VAR_PARSE_VAR
  */
@@ -1549,6 +1600,7 @@ static VAR_PARSE * parse_at_file( const char * start, const char * mid, const ch
 static VAR_PARSE * parse_variable( const char * * string );
 static int try_parse_variable( const char * * s_, const char * * string, VAR_PARSE_GROUP * out);
 static void balance_parentheses( const char * * s_, const char * * string, VAR_PARSE_GROUP * out);
+static void parse_var_string( const char * first, const char * last, struct dynamic_array * out );
 
 /*
  * Parses a string that can contain variables to expand.
@@ -1571,6 +1623,13 @@ static VAR_PARSE_GROUP * parse_expansion( const char * * string )
             ++s;
         }
     }
+}
+
+static VAR_PARSE_ACTIONS * parse_actions( const char * string )
+{
+    VAR_PARSE_ACTIONS * result = var_parse_actions_new();
+    parse_var_string( string, string + strlen( string ), result->elems );
+    return result;
 }
 
 /*
@@ -1767,25 +1826,46 @@ static VAR_PARSE * parse_variable( const char * * string )
 static void parse_var_string( const char * first, const char * last, struct dynamic_array * out )
 {
     const char * saved = first;
-    string buf[1];
-    int state = isspace( *first ) != 0;
-    string_new( buf );
-    for ( ; ; ++first )
+    for ( ; ; )
     {
-        if ( first == last || ( isspace( *first ) != 0 ) != state )
+        /* Handle whitespace */
+        for ( ; first != last; ++first ) if ( !isspace(*first) ) break;
+        if ( saved != first )
         {
-            VAR_PARSE_GROUP * group;
-            const char * s = buf->value;
-            string_append_range( buf, saved, first );
+            VAR_PARSE_GROUP * group = var_parse_group_new();
+            var_parse_group_maybe_add_constant( group, saved, first );
             saved = first;
-            group = parse_expansion( &s );
-            string_truncate( buf, 0 );
             dynamic_array_push( out, group );
-            state = !state;
+        }
+
+        if ( first == last ) break;
+
+        /* Handle non-whitespace */
+
+        {
+            VAR_PARSE_GROUP * group = var_parse_group_new();
+            for ( ; ; )
+            {
+                
+                if( first == last || isspace( *first ) )
+                {
+                    var_parse_group_maybe_add_constant( group, saved, first );
+                    saved = first;
+                    break;
+                }
+                else if ( try_parse_variable( &first, &saved, group ) )
+                {
+                    assert( first <= last );
+                }
+                else 
+                {
+                    ++first;
+                }
+            }
+            dynamic_array_push( out, group );
         }
         if ( first == last ) break;
     }
-    string_free( buf );
 }
 
 /*
@@ -2335,7 +2415,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_SETEXEC )
     {
-        int actions_id = compile_emit_actions( c, parse->string, parse->string1, parse->num );
+        int actions_id = compile_emit_actions( c, parse );
 
         compile_parse( parse->left, c, RESULT_STACK );
 
@@ -2436,6 +2516,24 @@ FUNCTION * function_compile( PARSE * parse )
     return (FUNCTION *)result;
 }
 
+FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int line )
+{
+    compiler c[1];
+    JAM_FUNCTION * result;
+    VAR_PARSE_ACTIONS * parse;
+    current_file = object_str( file );
+    current_line = line;
+    parse = parse_actions( actions );
+    compiler_init( c );
+    var_parse_actions_compile( parse, c );
+    compile_emit( c, INSTR_RETURN, 0 );
+    result = compile_to_function( c );
+    compiler_free( c );
+    result->file = object_copy( file );
+    result->line = line;
+    return (FUNCTION *)result;
+}
+
 void function_refer( FUNCTION * func )
 {
     ++func->reference_count;
@@ -2470,7 +2568,7 @@ void function_free( FUNCTION * function_ )
         for ( i = 0; i < func->num_subactions; ++i )
         {
             object_free( func->actions[i].name );
-            object_free( func->actions[i].command );
+            function_free( func->actions[i].command );
         }
         BJAM_FREE( func->actions );
 
@@ -2500,6 +2598,13 @@ static char check_align_expansion_item[ sizeof(struct align_expansion_item) <= s
 
 static char check_ptr_size1[ sizeof(LIST *) <= sizeof(void *) ? 1 : -1 ];
 static char check_ptr_size2[ sizeof(char *) <= sizeof(void *) ? 1 : -1 ];
+
+void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string * out )
+{
+    *(string * *)stack_allocate( s, sizeof( string * ) ) = out;
+    list_free( function_run( function, frame, s ) );
+    stack_deallocate( s, sizeof( string * ) );
+}
 
 /*
  * WARNING: The instruction set is tuned for Jam and
@@ -3310,16 +3415,26 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             if ( out_debug ) printf( "\nfile %s\n", out );
 
             if ( out_file ) fputs( buf->value, out_file );
-            if ( out_debug ) puts( buf->value );
+            if ( out_debug ) fputs( buf->value, stdout );
             
-            fflush( out_file );
-            fclose( out_file );
+            if ( out_file )
+            {
+                fflush( out_file );
+                fclose( out_file );
+            }
             string_free( buf );
             if ( tmp_filename )
                 object_free( tmp_filename );
 
             if ( out_debug ) fputc( '\n', stdout );
 
+            break;
+        }
+
+        case INSTR_OUTPUT_STRINGS:
+        {
+            string * buf = *(string * *)( (char *)stack_get( s ) + ( code->arg * sizeof( LIST * ) ) );
+            combine_strings( s, code->arg, buf );
             break;
         }
 

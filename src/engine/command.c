@@ -36,7 +36,7 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
     /* Lift line-length limitation entirely when JAMSHELL is just "%". */
     int no_limit = ( shell && !strcmp(object_str(shell->value),"%") && !list_next(shell) );
     int max_line = MAXLINE;
-    int allocated = -1;
+    FRAME frame[1];
 
     cmd->rule = rule;
     cmd->shell = shell;
@@ -45,27 +45,20 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
     lol_init( &cmd->args );
     lol_add( &cmd->args, targets );
     lol_add( &cmd->args, sources );
-    cmd->buf = 0;
+    string_new( cmd->buf );
 
-    do
-    {
-        BJAM_FREE( cmd->buf );  /* free any buffer from previous iteration */
-
-        cmd->buf = (char*)BJAM_MALLOC_ATOMIC( max_line + 1 );
-
-        if ( cmd->buf == 0 )
-            break;
-
-        allocated = var_string( object_str( rule->actions->command ), cmd->buf, max_line, &cmd->args );
-
-        max_line = max_line * 2;
-    }
-    while ( ( allocated < 0 ) && ( max_line < INT_MAX / 2 ) );
+    frame_init( frame );
+    frame->module = rule->module;
+    lol_init( frame->args );
+    lol_add( frame->args, list_copy( L0, targets ) );
+    lol_add( frame->args, list_copy( L0, sources ) );
+    function_run_actions( rule->actions->command, frame, stack_global(), cmd->buf );
+    frame_free( frame );
 
     if ( !no_limit )
     {
         /* Bail if the result will not fit in MAXLINE. */
-        char * s = cmd->buf;
+        char * s = cmd->buf->value;
         while ( *s )
         {
             size_t l = strcspn( s, "\n" );
@@ -95,6 +88,6 @@ void cmd_free( CMD * cmd )
 {
     lol_free( &cmd->args );
     list_free( cmd->shell );
-    BJAM_FREE( cmd->buf );
-    BJAM_FREE( (char *)cmd );
+    string_free( cmd->buf );
+    BJAM_FREE( (void *)cmd );
 }

@@ -73,7 +73,6 @@
  *  command.c - maintain lists of commands
  *  compile.c - compile parsed jam statements
  *  execunix.c - execute a shell script on UNIX
- *  expand.c - expand a buffer, given variable values
  *  file*.c - scan directories and archives on *
  *  hash.c - simple in-memory hashing routines
  *  hdrmacro.c - handle header file parsing for filename macro definitions
@@ -119,7 +118,6 @@
 #include "timestamp.h"
 #include "make.h"
 #include "strings.h"
-#include "expand.h"
 #include "filesys.h"
 #include "output.h"
 #include "search.h"
@@ -202,7 +200,6 @@ static void run_unit_tests()
     execnt_unit_test();
 #endif
     string_unit_test();
-    var_expand_unit_test();
 }
 #endif
 

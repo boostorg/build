@@ -11,6 +11,7 @@
 #include "frames.h"
 #include "lists.h"
 #include "parse.h"
+#include "strings.h"
 
 typedef struct _function FUNCTION;
 typedef struct _stack STACK;
@@ -27,6 +28,9 @@ OBJECT * function_rulename( FUNCTION * );
 void function_set_rulename( FUNCTION *, OBJECT * );
 void function_location( FUNCTION *, OBJECT * *, int * );
 LIST * function_run( FUNCTION * function, FRAME * frame, STACK * s );
+
+FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int line );
+void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string * out );
 
 void function_done( void );
 
