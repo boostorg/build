@@ -199,9 +199,7 @@ static void type_check
 
     if ( !typecheck )
     {
-        OBJECT * str_typecheck = object_new( ".typecheck" );
-        typecheck = bindmodule( str_typecheck );
-        object_free( str_typecheck );
+        typecheck = bindmodule( constant_typecheck );
     }
 
     /* If the checking rule can not be found, also bail. */

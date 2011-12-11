@@ -118,8 +118,6 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     OBJECT   * * pp = &xname->value;
     module_t   * class_module = 0;
     module_t   * outer_module = frame->module;
-    OBJECT     * name_ = object_new( "__name__" );
-    OBJECT     * bases_ = object_new( "__bases__" );
 
     if ( !classes )
         classes = hashinit( sizeof( OBJECT * ), "classes" );
@@ -140,17 +138,14 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     exit_module( outer_module );
     enter_module( class_module );
 
-    var_set( name_, xname, VAR_SET );
-    var_set( bases_, bases, VAR_SET );
+    var_set( constant_name, xname, VAR_SET );
+    var_set( constant_bases, bases, VAR_SET );
 
     exit_module( class_module );
     enter_module( outer_module );
 
     for ( ; bases; bases = bases->next )
         import_base_rules( class_module, bases->value );
-
-    object_free( bases_ );
-    object_free( name_ );
 
     return name;
 }

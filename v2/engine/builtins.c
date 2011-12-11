@@ -858,11 +858,9 @@ LIST * glob_recursive( const char * pattern )
         else
         {
             /** No directory, just a pattern. */
-            OBJECT * d = object_new( "." );
             OBJECT * p = object_new( pattern );
-            result = list_append( result, glob1( d, p ) );
+            result = list_append( result, glob1( constant_dot, p ) );
             object_free( p );
-            object_free( d );
         }
     }
 
@@ -1440,7 +1438,7 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     last_update_now_status = status;
 	
     if ( status == 0 )
-        return list_new( L0, object_new( "ok" ) );
+        return list_new( L0, object_copy( constant_ok ) );
     else
         return L0;
 }
@@ -1653,7 +1651,7 @@ LIST * builtin_has_native_rule( FRAME * frame, int flags )
     {
         int expected_version = atoi( object_str( version->value ) );
         if ( np->version == expected_version )
-            return list_new( 0, object_new( "true" ) );
+            return list_new( 0, object_copy( constant_true ) );
     }
     return L0;
 }
@@ -1697,7 +1695,7 @@ LIST * builtin_check_if_file( FRAME * frame, int flags )
 {
     LIST * name = lol_get( frame->args, 0 );
     return file_is_file( name->value ) == 1
-        ? list_new( 0, object_new( "true" ) )
+        ? list_new( 0, object_copy( constant_true ) )
         : L0 ;
 }
 

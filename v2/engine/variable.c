@@ -188,30 +188,30 @@ LIST * var_get( OBJECT * symbol )
     LIST * result = 0;
 #ifdef OPT_AT_FILES
     /* Some "fixed" variables... */
-    if ( strcmp( "TMPDIR", object_str( symbol ) ) == 0 )
+    if ( object_equal( symbol, constant_TMPDIR ) )
     {
         list_free( saved_var );
         result = saved_var = list_new( L0, object_new( path_tmpdir() ) );
     }
-    else if ( strcmp( "TMPNAME", object_str( symbol ) ) == 0 )
+    else if ( object_equal( symbol, constant_TMPNAME ) )
     {
         list_free( saved_var );
         result = saved_var = list_new( L0, path_tmpnam() );
     }
-    else if ( strcmp( "TMPFILE", object_str( symbol ) ) == 0 )
+    else if ( object_equal( symbol, constant_TMPFILE ) )
     {
         list_free( saved_var );
         result = saved_var = list_new( L0, path_tmpfile() );
     }
-    else if ( strcmp( "STDOUT", object_str( symbol ) ) == 0 )
+    else if ( object_equal( symbol, constant_STDOUT ) )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, object_new( "STDOUT" ) );
+        result = saved_var = list_new( L0, object_copy( constant_STDOUT ) );
     }
-    else if ( strcmp( "STDERR", object_str( symbol ) ) == 0 )
+    else if ( object_equal( symbol, constant_STDERR ) )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, object_new( "STDERR" ) );
+        result = saved_var = list_new( L0, object_copy( constant_STDERR ) );
     }
     else
 #endif

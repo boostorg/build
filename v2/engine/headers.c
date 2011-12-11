@@ -65,19 +65,11 @@ headers( TARGET *t )
 	#endif
     regexp * re[ MAXINC ];
     int rec = 0;
-    OBJECT * hdrscan_str;
-    OBJECT * hdrrule_str;
 
-    hdrscan_str = object_new( "HDRSCAN" );
-    hdrscan = var_get( hdrscan_str );
-    object_free( hdrscan_str );
-    if ( !hdrscan )
+    if ( !( hdrscan = var_get( constant_HDRSCAN ) ) )
         return;
 
-    hdrrule_str = object_new( "HDRRULE" );
-    hdrrule = var_get( hdrrule_str );
-    object_free( hdrrule_str );
-    if ( !hdrrule )
+    if ( !( hdrrule = var_get( constant_HDRRULE ) ) )
         return;
 
     if ( DEBUG_HEADER )

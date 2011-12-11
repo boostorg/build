@@ -39,9 +39,7 @@ void call_bind_rule
     OBJECT * boundname_
 )
 {
-    OBJECT * varname = object_new( "BINDRULE" );
-    LIST * bind_rule = var_get( varname );
-    object_free( varname );
+    LIST * bind_rule = var_get( constant_BINDRULE );
     if ( bind_rule )
     {
         OBJECT * target = object_copy( target_ );
@@ -103,7 +101,6 @@ search(
     /* Will be set to 1 if target location is specified via LOCATE. */
     int      explicitly_located = 0;
     OBJECT * boundname = 0;
-    OBJECT * varname;
 
     if ( another_target )
         *another_target = 0;
@@ -120,10 +117,7 @@ search(
     f->f_grist.ptr = 0;
     f->f_grist.len = 0;
 
-    varname = object_new( "LOCATE" );
-    varlist = var_get( varname );
-    object_free( varname );
-    if ( varlist )
+    if ( ( varlist = var_get( constant_LOCATE ) ) )
     {
         OBJECT * key;
         f->f_root.ptr = object_str( varlist->value );
@@ -141,10 +135,7 @@ search(
         object_free( key );
         found = 1;
     }
-    else if ( ( varname = object_new( "SEARCH" ),
-                varlist = var_get( varname ),
-                object_free( varname ),
-                varlist ) )
+    else if ( varlist = var_get( constant_SEARCH ) )
     {
         while ( varlist )
         {
