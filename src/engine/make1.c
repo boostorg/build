@@ -671,13 +671,10 @@ static void make1c( state * pState )
 static void call_timing_rule( TARGET * target, timing_info * time )
 {
     LIST * timing_rule;
-    OBJECT * varname;
 
-    varname = object_new( "__TIMING_RULE__" );
     pushsettings( target->settings );
-    timing_rule = var_get( varname );
+    timing_rule = var_get( constant_TIMING_RULE );
     popsettings( target->settings );
-    object_free( varname );
 
     if ( timing_rule )
     {
@@ -725,13 +722,10 @@ static void call_action_rule
 )
 {
     LIST   * action_rule;
-    OBJECT * varname;
 
-    varname = object_new( "__ACTION_RULE__" );
     pushsettings( target->settings );
-    action_rule = var_get( varname );
+    action_rule = var_get( constant_ACTION_RULE );
     popsettings( target->settings );
-    object_free( varname );
 
     if ( action_rule )
     {
@@ -986,9 +980,7 @@ static CMD * make1cmds( TARGET * t )
         swap_settings( &settings_module, &settings_target, rule->module, t );
         if ( !shell )
         {
-            OBJECT * varname = object_new( "JAMSHELL" );
-            shell = var_get( varname );  /* shell is per-target */
-            object_free( varname );
+            shell = var_get( constant_JAMSHELL );  /* shell is per-target */
         }
 
         /* If we had 'actions xxx bind vars' we bind the vars now. */
@@ -1044,7 +1036,7 @@ static CMD * make1cmds( TARGET * t )
                 /* Tell the user what didn't fit. */
                 cmd = cmd_new( rule, list_copy( L0, nt ),
                     list_sublist( ns, start, chunk ),
-                    list_new( L0, object_new( "%" ) ) );
+                    list_new( L0, object_copy( constant_percent ) ) );
                 fputs( cmd->buf->value, stdout );
                 exit( EXITBAD );
             }

@@ -75,9 +75,7 @@ static const char * cache_name( void )
     static OBJECT * name = 0;
     if ( !name )
     {
-        OBJECT * hcachename = object_new( "HCACHEFILE" );
-        LIST * hcachevar = var_get( hcachename );
-        object_free( hcachename );
+        LIST * hcachevar = var_get( constant_HCACHEFILE );
 
         if ( hcachevar )
         {
@@ -108,9 +106,7 @@ static const char * cache_name( void )
 static int cache_maxage( void )
 {
     int age = 100;
-    OBJECT * hcacheage = object_new( "HCACHEMAXAGE" );
-    LIST * var = var_get( hcacheage );
-    object_free( hcacheage );
+    LIST * var = var_get( constant_HCACHEMAXAGE );
     if ( var )
     {
         age = atoi( object_str( var->value ) );

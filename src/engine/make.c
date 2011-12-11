@@ -314,9 +314,7 @@ void make0
 
 #ifdef OPT_SEMAPHORE
     {
-        OBJECT * jam_semaphore = object_new( "JAM_SEMAPHORE" );
-        LIST * var = var_get( jam_semaphore );
-        object_free( jam_semaphore );
+        LIST * var = var_get( constant_JAM_SEMAPHORE );
         if ( var )
         {
             TARGET * semaphore = bindtarget( var->value );
