@@ -833,7 +833,7 @@ static void make1d( state * pState )
     if ( ( status == EXEC_CMD_FAIL ) && DEBUG_MAKE )
     {
         if ( !DEBUG_EXEC )
-            printf( "%s\n", cmd->buf );
+            printf( "%s\n", cmd->buf->value );
 
         printf( "...failed %s ", object_str( cmd->rule->name ) );
         list_print( lol_get( &cmd->args, 0 ) );
