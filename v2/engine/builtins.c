@@ -1019,32 +1019,13 @@ static void add_hash_key( void * np, void * result_ )
 }
 
 
-static struct hash * get_running_module_vars()
-{
-    struct hash * dummy;
-    struct hash * vars = NULL;
-    /* Get the global variables pointer (that of the currently running module).
-     */
-    var_hash_swap( &vars );
-    dummy = vars;
-    /* Put the global variables pointer in its right place. */
-    var_hash_swap( &dummy );
-    return vars;
-}
-
-
 LIST * builtin_varnames( FRAME * frame, int flags )
 {
     LIST * arg0 = lol_get( frame->args, 0 );
     LIST * result = L0;
     module_t * source_module = bindmodule( arg0 ? arg0->value : 0 );
 
-    /* The running module _always_ has its 'variables' member set to NULL due to
-     * the way enter_module() and var_hash_swap() work.
-     */
-    struct hash * vars = source_module == frame->module
-        ? get_running_module_vars()
-        : source_module->variables;
+    struct hash * vars = source_module->variables;
 
     if ( vars )
         hashenumerate( vars, add_hash_key, &result );
@@ -1842,19 +1823,7 @@ LIST * builtin_python_import_rule( FRAME * frame, int flags )
 
         first_time = 0;
 
-        if ( outer_module != root_module() )
-        {
-            exit_module( outer_module );
-            enter_module( root_module() );
-        }
-
-        extra = var_get( constant_extra_pythonpath );
-
-        if ( outer_module != root_module() )
-        {
-             exit_module( root_module() );
-             enter_module( outer_module );
-        }
+        extra = var_get( root_module(), constant_extra_pythonpath );
 
         for ( ; extra; extra = extra->next )
         {
@@ -2143,11 +2112,9 @@ PyObject * bjam_variable( PyObject * self, PyObject * args )
     if ( !PyArg_ParseTuple( args, "s", &name ) )
         return NULL;
 
-    enter_module( root_module() );
     varname = object_new( name );
-    value = var_get( varname );
+    value = var_get( root_module(), varname );
     object_free( varname );
-    exit_module( root_module() );
 
     result = PyList_New( list_length( value ) );
     for ( i = 0; value; value = list_next( value ), ++i )

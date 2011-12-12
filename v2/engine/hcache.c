@@ -13,6 +13,7 @@
 # include "hcache.h"
 # include "variable.h"
 # include "search.h"
+# include "modules.h"
 
 #ifdef OPT_HEADER_CACHE_EXT
 
@@ -75,20 +76,20 @@ static const char * cache_name( void )
     static OBJECT * name = 0;
     if ( !name )
     {
-        LIST * hcachevar = var_get( constant_HCACHEFILE );
+        LIST * hcachevar = var_get( root_module(), constant_HCACHEFILE );
 
         if ( hcachevar )
         {
             TARGET * t = bindtarget( hcachevar->value );
 
-            pushsettings( t->settings );
+            pushsettings( root_module(), t->settings );
             /* Do not expect the cache file to be generated, so pass 0 as the
              * third argument to search. Expect the location to be specified via
              * LOCATE, so pass 0 as the fourth arugment.
              */
             object_free( t->boundname );
             t->boundname = search( t->name, &t->time, 0, 0 );
-            popsettings( t->settings );
+            popsettings( root_module(), t->settings );
 
             if ( hcachevar )
                 name = object_copy( t->boundname );
@@ -106,7 +107,7 @@ static const char * cache_name( void )
 static int cache_maxage( void )
 {
     int age = 100;
-    LIST * var = var_get( constant_HCACHEMAXAGE );
+    LIST * var = var_get( root_module(), constant_HCACHEMAXAGE );
     if ( var )
     {
         age = atoi( object_str( var->value ) );

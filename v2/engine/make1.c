@@ -72,7 +72,7 @@
 
 static CMD      * make1cmds    ( TARGET * );
 static LIST     * make1list    ( LIST *, TARGETS *, int flags );
-static SETTINGS * make1settings( LIST * vars );
+static SETTINGS * make1settings( struct module_t * module, LIST * vars );
 static void       make1bind    ( TARGET * );
 
 /* Ugly static - it is too hard to carry it through the callbacks. */
@@ -581,9 +581,9 @@ static void make1c( state * pState )
                 target_to_rescan->includes = 0;
 
                 s = copysettings( target_to_rescan->settings );
-                pushsettings( s );
+                pushsettings( root_module(), s );
                 headers( target_to_rescan );
-                popsettings( s );
+                popsettings( root_module(), s );
                 freesettings( s );
 
                 if ( target_to_rescan->includes )
@@ -672,9 +672,9 @@ static void call_timing_rule( TARGET * target, timing_info * time )
 {
     LIST * timing_rule;
 
-    pushsettings( target->settings );
-    timing_rule = var_get( constant_TIMING_RULE );
-    popsettings( target->settings );
+    pushsettings( root_module(), target->settings );
+    timing_rule = var_get( root_module(), constant_TIMING_RULE );
+    popsettings( root_module(), target->settings );
 
     if ( timing_rule )
     {
@@ -723,9 +723,9 @@ static void call_action_rule
 {
     LIST   * action_rule;
 
-    pushsettings( target->settings );
-    action_rule = var_get( constant_ACTION_RULE );
-    popsettings( target->settings );
+    pushsettings( root_module(), target->settings );
+    action_rule = var_get( root_module(), constant_ACTION_RULE );
+    popsettings( root_module(), target->settings );
 
     if ( action_rule )
     {
@@ -888,29 +888,17 @@ static void swap_settings
     TARGET     * new_target
 )
 {
-    if ( new_module == root_module() )
-        new_module = 0;
-
     if ( ( new_target == *current_target ) && ( new_module == *current_module ) )
         return;
 
     if ( *current_target )
-        popsettings( (*current_target)->settings );
+        popsettings( *current_module, (*current_target)->settings );
 
-    if ( new_module != *current_module )
-    {
-        if ( *current_module )
-            exit_module( *current_module );
-
-        *current_module = new_module;
-
-        if ( new_module )
-            enter_module( new_module );
-    }
-
-    *current_target = new_target;
     if ( new_target )
-        pushsettings( new_target->settings );
+        pushsettings( new_module, new_target->settings );
+
+    *current_module = new_module;
+    *current_target = new_target;
 }
 
 
@@ -980,12 +968,12 @@ static CMD * make1cmds( TARGET * t )
         swap_settings( &settings_module, &settings_target, rule->module, t );
         if ( !shell )
         {
-            shell = var_get( constant_JAMSHELL );  /* shell is per-target */
+            shell = var_get( rule->module, constant_JAMSHELL );  /* shell is per-target */
         }
 
         /* If we had 'actions xxx bind vars' we bind the vars now. */
-        boundvars = make1settings( actions->bindlist );
-        pushsettings( boundvars );
+        boundvars = make1settings( rule->module, actions->bindlist );
+        pushsettings( rule->module, boundvars );
 
         /*
          * Build command, starting with all source args.
@@ -1050,7 +1038,7 @@ static CMD * make1cmds( TARGET * t )
         /* Free the variables whose values were bound by 'actions xxx bind
          * vars'.
          */
-        popsettings( boundvars );
+        popsettings( rule->module, boundvars );
         freesettings( boundvars );
     }
 
@@ -1109,13 +1097,13 @@ static LIST * make1list( LIST * l, TARGETS * targets, int flags )
  * make1settings() - for vars that get bound values, build up replacement lists.
  */
 
-static SETTINGS * make1settings( LIST * vars )
+static SETTINGS * make1settings( struct module_t * module, LIST * vars )
 {
     SETTINGS * settings = 0;
 
     for ( ; vars; vars = list_next( vars ) )
     {
-        LIST * l = var_get( vars->value );
+        LIST * l = var_get( module, vars->value );
         LIST * nl = 0;
 
         for ( ; l; l = list_next( l ) )
@@ -1150,9 +1138,9 @@ static void make1bind( TARGET * t )
     if ( t->flags & T_FLAG_NOTFILE )
         return;
 
-    pushsettings( t->settings );
+    pushsettings( root_module(), t->settings );
     object_free( t->boundname );
     t->boundname = search( t->name, &t->time, 0, ( t->flags & T_FLAG_ISFILE ) );
     t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
-    popsettings( t->settings );
+    popsettings( root_module(), t->settings );
 }

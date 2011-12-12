@@ -280,7 +280,7 @@ void make0
 
     /* Step 2a: set "on target" variables. */
     s = copysettings( t->settings );
-    pushsettings( s );
+    pushsettings( root_module(), s );
 
     /* Step 2b: find and timestamp the target file (if it is a file). */
     if ( ( t->binding == T_BIND_UNBOUND ) && !( t->flags & T_FLAG_NOTFILE ) )
@@ -314,7 +314,7 @@ void make0
 
 #ifdef OPT_SEMAPHORE
     {
-        LIST * var = var_get( constant_JAM_SEMAPHORE );
+        LIST * var = var_get( root_module(), constant_JAM_SEMAPHORE );
         if ( var )
         {
             TARGET * semaphore = bindtarget( var->value );
@@ -329,7 +329,7 @@ void make0
         headers( t );
 
     /* Step 2d: reset "on target" variables. */
-    popsettings( s );
+    popsettings( root_module(), s );
     freesettings( s );
 
     /*

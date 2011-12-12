@@ -385,10 +385,10 @@ int main( int argc, char * * argv, char * * arg_environ )
 #endif
 
         /* Set JAMDATE. */
-        var_set( constant_JAMDATE, list_new( L0, outf_time(time(0)) ), VAR_SET );
+        var_set( root_module(), constant_JAMDATE, list_new( L0, outf_time(time(0)) ), VAR_SET );
 
         /* Set JAM_VERSION. */
-        var_set( constant_JAM_VERSION,
+        var_set( root_module(), constant_JAM_VERSION,
                  list_new( list_new( list_new( L0,
                    object_new( VERSION_MAJOR_SYM ) ),
                    object_new( VERSION_MINOR_SYM ) ),
@@ -402,7 +402,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 
             if ( uname( &u ) >= 0 )
             {
-                var_set( constant_JAMUNAME,
+                var_set( root_module(), constant_JAMUNAME,
                          list_new(
                              list_new(
                                  list_new(
@@ -422,20 +422,18 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* First into the global module, with splitting, for backward
          * compatibility.
          */
-        var_defines( use_environ, 1 );
+        var_defines( root_module(), use_environ, 1 );
 
         environ_module = bindmodule( constant_ENVIRON );
         /* Then into .ENVIRON, without splitting. */
-        enter_module( environ_module );
-        var_defines( use_environ, 0 );
-        exit_module( environ_module );
+        var_defines( environ_module, use_environ, 0 );
 
         /*
          * Jam defined variables OS & OSPLAT. We load them after environment, so
          * that setting OS in environment does not change Jam's notion of the
          * current platform.
          */
-        var_defines( othersyms, 1 );
+        var_defines( root_module(), othersyms, 1 );
 
         /* Load up variables set on command line. */
         for ( n = 0; ( s = getoptval( optv, 's', n ) ); ++n )
@@ -443,17 +441,15 @@ int main( int argc, char * * argv, char * * arg_environ )
             char *symv[2];
             symv[ 0 ] = s;
             symv[ 1 ] = 0;
-            var_defines( symv, 1 );
-            enter_module( environ_module );
-            var_defines( symv, 0 );
-            exit_module( environ_module );
+            var_defines( root_module(), symv, 1 );
+            var_defines( environ_module, symv, 0 );
         }
 
         /* Set the ARGV to reflect the complete list of arguments of invocation.
          */
         for ( n = 0; n < arg_c; ++n )
         {
-            var_set( constant_ARGV, list_new( L0, object_new( arg_v[n] ) ), VAR_APPEND );
+            var_set( root_module(), constant_ARGV, list_new( L0, object_new( arg_v[n] ) ), VAR_APPEND );
         }
 
         /* Initialize built-in rules. */
@@ -523,7 +519,7 @@ int main( int argc, char * * argv, char * * arg_environ )
            options.  */
         {
             LIST *p = L0;
-            p = var_get ( constant_PARALLELISM );
+            p = var_get ( root_module(), constant_PARALLELISM );
             if ( p )
             {
                 int j = atoi( object_str( p->value ) );
@@ -541,7 +537,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* KEEP_GOING overrides -q option. */
         {
             LIST *p = L0;
-            p = var_get( constant_KEEP_GOING );
+            p = var_get( root_module(), constant_KEEP_GOING );
             if ( p )
             {
                 int v = atoi( object_str( p->value ) );
@@ -590,7 +586,6 @@ int main( int argc, char * * argv, char * * arg_environ )
     clear_targets_to_update();
 
     /* Widely scattered cleanup. */
-    var_done();
     file_done();
     rules_done();
     stamps_done();

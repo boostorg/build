@@ -23,8 +23,6 @@ typedef struct module_t module_t ; /* MSVC debugger gets confused unless this is
 
 module_t * bindmodule( OBJECT * name );
 module_t * root_module();
-void enter_module( module_t * );
-void exit_module( module_t * );
 void delete_module( module_t * );
 
 void import_module( LIST * module_names, module_t * target_module );
