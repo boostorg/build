@@ -135,14 +135,8 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
 
     class_module = bindmodule( name );
 
-    exit_module( outer_module );
-    enter_module( class_module );
-
-    var_set( constant_name, xname, VAR_SET );
-    var_set( constant_bases, bases, VAR_SET );
-
-    exit_module( class_module );
-    enter_module( outer_module );
+    var_set( class_module, constant_name, xname, VAR_SET );
+    var_set( class_module, constant_bases, bases, VAR_SET );
 
     for ( ; bases; bases = bases->next )
         import_base_rules( class_module, bases->value );

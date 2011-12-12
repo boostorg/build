@@ -16,7 +16,7 @@ LIST *add_pair( FRAME *frame, int flags )
 {
     LIST* arg = lol_get( frame->args, 0 );    
 
-    var_set(arg->value, list_copy(0, arg->next), VAR_APPEND);
+    var_set(frame->module, arg->value, list_copy(0, arg->next), VAR_APPEND);
 
     return L0;
 }
@@ -92,7 +92,7 @@ LIST *order( FRAME *frame, int flags )
     for(tmp = arg, src = 0; tmp; tmp = tmp->next, ++src) {
         /* For all object this one depend upon, add elements
            to 'graph' */
-        LIST* dependencies = var_get(tmp->value);
+        LIST* dependencies = var_get(frame->module, tmp->value);
         int index = 0;
 
         graph[src] = (int*)BJAM_CALLOC(list_length(dependencies)+1, sizeof(int));

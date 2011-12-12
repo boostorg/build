@@ -211,8 +211,6 @@ static void type_check
             return;
     }
 
-    exit_module( caller->module );
-
     while ( values != 0 )
     {
         LIST *error;
@@ -222,12 +220,9 @@ static void type_check
         frame->prev = caller;
         frame->prev_user = caller->module->user_module ? caller : caller->prev_user;
 
-        enter_module( typecheck );
         /* Prepare the argument list */
         lol_add( frame->args, list_new( L0, object_copy( values->value ) ) );
         error = evaluate_rule( type_name, frame );
-
-        exit_module( typecheck );
 
         if ( error )
             argument_error( object_str( error->value ), called, caller, arg_name );
@@ -235,8 +230,6 @@ static void type_check
         frame_free( frame );
         values = values->next;
     }
-
-    enter_module( caller->module );
 }
 
 /*
@@ -532,13 +525,7 @@ evaluate_rule(
 
         frame->module = m;
 
-        exit_module( prev_module );
-        enter_module( m );
-
         result = call_python_function( rule, frame );
-
-        exit_module( m );
-        enter_module ( prev_module );
 
         return result;
     }
@@ -572,10 +559,6 @@ evaluate_rule(
     {
         /* Propagate current module to nested rule invocations. */
         frame->module = rule->module;
-
-        /* Swap variables. */
-        exit_module( prev_module );
-        enter_module( rule->module );
     }
 
     /* Record current rule name in frame. */
@@ -680,18 +663,12 @@ evaluate_rule(
 
         function_refer( function );
 
-        pushsettings( local_args );
+        pushsettings( frame->module, local_args );
         result = function_run( function, frame, stack_global() );
-        popsettings( local_args );
+        popsettings( frame->module, local_args );
         freesettings( local_args );
 
         function_free( function );
-    }
-
-    if ( frame->module != prev_module )
-    {
-        exit_module( frame->module );
-        enter_module( prev_module );
     }
 
     if ( DEBUG_PROFILE && rule->procedure )

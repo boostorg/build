@@ -11,14 +11,13 @@
 #ifndef VARIABLE_SW20111119_H
 #define VARIABLE_SW20111119_H
 
-struct hash;
+struct module_t;
 
-void    var_defines( char* const *e, int preprocess );
-LIST *  var_get( OBJECT * symbol );
-void    var_set( OBJECT * symbol, LIST * value, int flag );
-LIST *  var_swap( OBJECT * symbol, LIST *value );
-void    var_done();
-void    var_hash_swap( struct hash * * );
+void    var_defines( struct module_t * module, char * const * e, int preprocess );
+LIST *  var_get( struct module_t * module, OBJECT * symbol );
+void    var_set( struct module_t * module, OBJECT * symbol, LIST * value, int flag );
+LIST *  var_swap( struct module_t * module, OBJECT * symbol, LIST * value );
+void    var_done( struct module_t * module );
 
 /*
  * Defines for var_set().

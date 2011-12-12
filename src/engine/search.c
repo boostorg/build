@@ -39,7 +39,7 @@ void call_bind_rule
     OBJECT * boundname_
 )
 {
-    LIST * bind_rule = var_get( constant_BINDRULE );
+    LIST * bind_rule = var_get( root_module(), constant_BINDRULE );
     if ( bind_rule )
     {
         OBJECT * target = object_copy( target_ );
@@ -117,7 +117,7 @@ search(
     f->f_grist.ptr = 0;
     f->f_grist.len = 0;
 
-    if ( ( varlist = var_get( constant_LOCATE ) ) )
+    if ( ( varlist = var_get( root_module(), constant_LOCATE ) ) )
     {
         OBJECT * key;
         f->f_root.ptr = object_str( varlist->value );
@@ -135,7 +135,7 @@ search(
         object_free( key );
         found = 1;
     }
-    else if ( varlist = var_get( constant_SEARCH ) )
+    else if ( varlist = var_get( root_module(), constant_SEARCH ) )
     {
         while ( varlist )
         {

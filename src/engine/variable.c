@@ -21,6 +21,7 @@
 #include "object.h"
 #include "strings.h"
 #include "pathsys.h"
+#include "modules.h"
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -48,8 +49,6 @@
  * 09/11/00 (seiwald) - defunct var_list() removed
  */
 
-static struct hash *varhash = 0;
-
 /*
  * VARIABLE - a user defined multi-value variable
  */
@@ -62,22 +61,8 @@ struct _variable
     LIST   * value;
 };
 
-static VARIABLE * var_enter( OBJECT * symbol );
+static VARIABLE * var_enter( struct module_t * module, OBJECT * symbol );
 static void var_dump( OBJECT * symbol, LIST * value, char * what );
-
-
-/*
- * var_hash_swap() - swap all variable settings with those passed
- *
- * Used to implement separate settings spaces for modules
- */
-
-void var_hash_swap( struct hash * * new_vars )
-{
-    struct hash * old = varhash;
-    varhash = *new_vars;
-    *new_vars = old;
-}
 
 
 /*
@@ -93,7 +78,7 @@ void var_hash_swap( struct hash * * new_vars )
  * Otherwise, split the value at blanks.
  */
 
-void var_defines( char * const * e, int preprocess )
+void var_defines( struct module_t * module, char * const * e, int preprocess )
 {
     string buf[1];
 
@@ -166,7 +151,7 @@ void var_defines( char * const * e, int preprocess )
             /* Get name. */
             string_append_range( buf, *e, val );
             varname = object_new( buf->value );
-            var_set( varname, l, VAR_SET );
+            var_set( module, varname, l, VAR_SET );
             object_free( varname );
             string_truncate( buf, 0 );
         }
@@ -183,7 +168,7 @@ static LIST * saved_var = 0;
  * Returns NULL if symbol unset.
  */
 
-LIST * var_get( OBJECT * symbol )
+LIST * var_get( struct module_t * module, OBJECT * symbol )
 {
     LIST * result = 0;
 #ifdef OPT_AT_FILES
@@ -221,7 +206,7 @@ LIST * var_get( OBJECT * symbol )
 
         v->symbol = symbol;
 
-        if ( varhash && hashcheck( varhash, (HASHDATA * *)&v ) )
+        if ( module->variables && hashcheck( module->variables, (HASHDATA * *)&v ) )
         {
             if ( DEBUG_VARGET )
                 var_dump( v->symbol, v->value, "get" );
@@ -242,9 +227,9 @@ LIST * var_get( OBJECT * symbol )
  * Copies symbol. Takes ownership of value.
  */
 
-void var_set( OBJECT * symbol, LIST * value, int flag )
+void var_set( struct module_t * module, OBJECT * symbol, LIST * value, int flag )
 {
-    VARIABLE * v = var_enter( symbol );
+    VARIABLE * v = var_enter( module, symbol );
 
     if ( DEBUG_VARSET )
         var_dump( symbol, value, "set" );
@@ -277,9 +262,9 @@ void var_set( OBJECT * symbol, LIST * value, int flag )
  * var_swap() - swap a variable's value with the given one.
  */
 
-LIST * var_swap( OBJECT * symbol, LIST * value )
+LIST * var_swap( struct module_t * module, OBJECT * symbol, LIST * value )
 {
-    VARIABLE * v = var_enter( symbol );
+    VARIABLE * v = var_enter( module, symbol );
     LIST     * oldvalue = v->value;
     if ( DEBUG_VARSET )
         var_dump( symbol, value, "set" );
@@ -292,18 +277,18 @@ LIST * var_swap( OBJECT * symbol, LIST * value )
  * var_enter() - make new var symbol table entry, returning var ptr.
  */
 
-static VARIABLE * var_enter( OBJECT * symbol )
+static VARIABLE * var_enter( struct module_t * module, OBJECT * symbol )
 {
     VARIABLE var;
     VARIABLE * v = &var;
 
-    if ( !varhash )
-        varhash = hashinit( sizeof( VARIABLE ), "variables" );
+    if ( !module->variables )
+        module->variables = hashinit( sizeof( VARIABLE ), "variables" );
 
     v->symbol = symbol;
     v->value = 0;
 
-    if ( hashenter( varhash, (HASHDATA * *)&v ) )
+    if ( hashenter( module->variables, (HASHDATA * *)&v ) )
         v->symbol = object_copy( symbol );
 
     return v;
@@ -334,10 +319,10 @@ static void delete_var_( void * xvar, void * data )
 }
 
 
-void var_done()
+void var_done( struct module_t * module )
 {
     list_free( saved_var );
     saved_var = 0;
-    hashenumerate( varhash, delete_var_, (void *)0 );
-    hashdone( varhash );
+    hashenumerate( module->variables, delete_var_, (void *)0 );
+    hashdone( module->variables );
 }

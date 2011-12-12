@@ -188,13 +188,13 @@ static void bind_explicitly_located_target( void * xtarget, void * data )
         {
             if ( strcmp( object_str( s->symbol ), "LOCATE" ) == 0 )
             {
-                pushsettings( t->settings );
+                pushsettings( root_module(), t->settings );
                 /* We are binding a target with explicit LOCATE. So third
                  * argument is of no use: nothing will be returned through it.
                  */
                 object_free( t->boundname );
                 t->boundname = search( t->name, &t->time, 0, 0 );
-                popsettings( t->settings );
+                popsettings( root_module(), t->settings );
                 break;
             }
         }
@@ -471,10 +471,10 @@ SETTINGS * addsettings( SETTINGS * head, int flag, OBJECT * symbol, LIST * value
  * pushsettings() - set all target specific variables.
  */
 
-void pushsettings( SETTINGS * v )
+void pushsettings( struct module_t * module, SETTINGS * v )
 {
     for ( ; v; v = v->next )
-        v->value = var_swap( v->symbol, v->value );
+        v->value = var_swap( module, v->symbol, v->value );
 }
 
 
@@ -482,9 +482,9 @@ void pushsettings( SETTINGS * v )
  * popsettings() - reset target specific variables to their pre-push values.
  */
 
-void popsettings( SETTINGS * v )
+void popsettings( struct module_t * module, SETTINGS * v )
 {
-    pushsettings( v );  /* just swap again */
+    pushsettings( module, v );  /* just swap again */
 }
 
 

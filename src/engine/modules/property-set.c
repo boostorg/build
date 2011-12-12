@@ -82,7 +82,7 @@ LIST *property_set_create( FRAME *frame, int flags )
         string_push_back(var, '-');
     }
     name = object_new(var->value);
-    val = var_get(name);
+    val = var_get(frame->module, name);
     if (val == 0)
     {
         OBJECT* rulename = object_new("new");
@@ -90,7 +90,7 @@ LIST *property_set_create( FRAME *frame, int flags )
                         list_append(list_new(0, object_new("property-set")), unique), 0);
         object_free(rulename);
 
-        var_set(name, list_copy(0, val), VAR_SET);
+        var_set(frame->module, name, list_copy(0, val), VAR_SET);
     }
     else
     {

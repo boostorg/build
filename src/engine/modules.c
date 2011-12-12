@@ -113,9 +113,7 @@ void delete_module( module_t * m )
 
     if ( m->variables )
     {
-        var_hash_swap( &m->variables );
-        var_done();
-        var_hash_swap( &m->variables );
+        var_done( m );
         m->variables = 0;
     }
 
@@ -147,17 +145,6 @@ void modules_done()
 module_t * root_module()
 {
     return &root;
-}
-
-void enter_module( module_t * m )
-{
-    var_hash_swap( &m->variables );
-}
-
-
-void exit_module( module_t * m )
-{
-    var_hash_swap( &m->variables );
 }
 
 

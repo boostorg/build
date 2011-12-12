@@ -14,6 +14,7 @@
 # include "parse.h"
 # include "compile.h"
 # include "rules.h"
+# include "modules.h"
 # include "variable.h"
 # include "regexp.h"
 # include "headers.h"
@@ -56,7 +57,7 @@ static LIST * headers1( LIST * l, OBJECT * file, int rec, regexp * re[]);
 # define MAXINC 10
 
 void
-headers( TARGET *t )
+headers( TARGET * t )
 {
     LIST   * hdrscan;
     LIST   * hdrrule;
@@ -66,10 +67,10 @@ headers( TARGET *t )
     regexp * re[ MAXINC ];
     int rec = 0;
 
-    if ( !( hdrscan = var_get( constant_HDRSCAN ) ) )
+    if ( !( hdrscan = var_get( root_module(), constant_HDRSCAN ) ) )
         return;
 
-    if ( !( hdrrule = var_get( constant_HDRRULE ) ) )
+    if ( !( hdrrule = var_get( root_module(), constant_HDRRULE ) ) )
         return;
 
     if ( DEBUG_HEADER )
