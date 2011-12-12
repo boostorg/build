@@ -457,10 +457,13 @@ set test=###%test%###
 set test=%test:"###=%
 set test=%test:###"=%
 set test=%test:###=%
-if "%test%" == "--update" set BJAM_UPDATE=update
+if "%test%" == "--update" goto Found_Update
 endlocal
 shift
 if not "_%BJAM_UPDATE%_" == "_update_" goto Check_Update
+:Found_Update
+endlocal
+set BJAM_UPDATE=update
 :Check_Update_End
 if "_%BJAM_UPDATE%_" == "_update_" (
     if not exist ".\bootstrap\jam0.exe" (
@@ -506,9 +509,6 @@ rename y.tab.h jamgram.h
 %BOOST_JAM_CC% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES%
 :Skip_Bootstrap
 @if not exist ".\bootstrap\jam0.exe" goto Skip_Jam
-@if "_%BJAM_UPDATE%_" == "_update_" goto Skip_Clean
-.\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " clean
-:Skip_Clean
 @set args=%*
 @echo OFF
 :Set_Args
@@ -526,6 +526,9 @@ set args=%args:~1%
 goto Set_Args
 :Set_Args_End
 @echo ON
+@if "_%BJAM_UPDATE%_" == "_update_" goto Skip_Clean
+.\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %args% clean
+:Skip_Clean
 .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %args%
 :Skip_Jam
 
