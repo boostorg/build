@@ -2526,6 +2526,7 @@ FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int li
     parse = parse_actions( actions );
     compiler_init( c );
     var_parse_actions_compile( parse, c );
+    var_parse_actions_free( parse );
     compile_emit( c, INSTR_RETURN, 0 );
     result = compile_to_function( c );
     compiler_free( c );
