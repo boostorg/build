@@ -54,11 +54,6 @@ project boostbook ;
 feature.feature format : html xhtml htmlhelp onehtml man pdf ps docbook fo tests
   : incidental implicit composite propagated ;
 
-# <boostbook-base-style> sets some default style parameters in
-# the boostbook xsl stylesheets. Search for boost.defaults in
-# the stylesheets for more info.
-feature.feature boostbook-base-style : none Boost : incidental ;
-
 type.register DTDXML : dtdxml ;
 type.register XML : xml ;
 type.register BOOSTBOOK : boostbook : XML ;
@@ -623,13 +618,7 @@ class boostbook-generator : generator
             case ps      : type = PS ;
             case tests   : type = TESTS ;
         }
-
-        local style = [ $(property-set).get <boostbook-base-style> ] ;
-        if $(style) {
-            property-set = [ $(property-set).add-raw
-                <xsl:param>boost.defaults=$(style) ] ;
-        }
-
+        
         if $(manifest)
         {
             # Create DOCBOOK file from BOOSTBOOK sources.
