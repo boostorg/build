@@ -504,29 +504,8 @@ evaluate_rule(
 #ifdef HAVE_PYTHON
     if ( rule->python_function )
     {
-        /* The below messing with modules is due to the way modules are
-         * implemented in Jam. Suppose we are in module M1 now. The global
-         * variable map actually holds 'M1' variables, and M1->variables hold
-         * global variables.
-         *
-         * If we call Python right away, Python calls back Jam and then Jam
-         * does 'module M1 { }' then Jam will try to swap the current global
-         * variables with M1->variables. The result will be that global
-         * variables map will hold global variables, and any variable settings
-         * we do will go to the global module, not M1.
-         *
-         * By restoring basic state, where the global variable map holds global
-         * variable, we make sure any future 'module M1' entry will work OK.
-         */
-
-        LIST * result;
-        module_t * m = python_module();
-
-        frame->module = m;
-
-        result = call_python_function( rule, frame );
-
-        return result;
+        frame->module = python_module();
+        return call_python_function( rule, frame );
     }
 #endif
 
