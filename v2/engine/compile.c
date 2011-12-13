@@ -500,7 +500,6 @@ evaluate_rule(
     module_t      * prev_module = frame->module;
 
     rule = bindrule( rulename, frame->module );
-    rulename = rule->name;
 
 #ifdef HAVE_PYTHON
     if ( rule->python_function )
