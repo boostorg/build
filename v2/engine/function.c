@@ -2108,8 +2108,11 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             compile_emit( c, INSTR_PUSH_APPEND, 0 );
             parse = parse->left;
         }
-        compile_parse( parse->left, c, RESULT_STACK );
-        compile_emit( c, INSTR_PUSH_APPEND, 0 );
+        if ( parse->left->type != PARSE_NULL )
+        {
+            compile_parse( parse->left, c, RESULT_STACK );
+            compile_emit( c, INSTR_PUSH_APPEND, 0 );
+        }
         adjust_result( c, RESULT_STACK, result_location );
     }
     else if ( parse->type == PARSE_EVAL )
