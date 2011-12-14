@@ -2167,19 +2167,18 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if( parse->type == PARSE_IF )
     {
-        int nested_result = result_location == RESULT_NONE? RESULT_NONE : RESULT_RETURN;
         int f = compile_new_label( c );
         /* Emit the condition */
         compile_condition( parse->left, c, 0, f );
         /* Emit the if block */
-        compile_parse( parse->right, c, nested_result );
-        if ( parse->third->type != PARSE_NULL )
+        compile_parse( parse->right, c, result_location );
+        if ( parse->third->type != PARSE_NULL || result_location != RESULT_NONE )
         {
             /* Emit the else block */
             int end = compile_new_label( c );
             compile_emit_branch( c, INSTR_JUMP, end );
             compile_set_label( c, f );
-            compile_parse( parse->third, c, nested_result );
+            compile_parse( parse->third, c, result_location );
             compile_set_label( c, end );
         }
         else
@@ -2187,7 +2186,6 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             compile_set_label( c, f );
         }
 
-        adjust_result( c, nested_result, result_location);
     }
     else if( parse->type == PARSE_WHILE )
     {
