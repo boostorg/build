@@ -1166,6 +1166,23 @@ rule test-rule
 
 check-equal while-result : [ test-rule ] : x ;
 
+rule test-rule
+{
+    local value = 1 2 ;
+    while $(value)
+    {
+        value = $(value[2-]) ;
+        local inner = $(value) ;
+        while $(inner)
+        {
+            inner = $(inner[2-]) ;
+            return x ;
+        }
+    }
+}
+
+check-equal while-result-2 : [ test-rule ] : ;
+
 }
 
 #

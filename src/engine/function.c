@@ -2192,6 +2192,8 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         int nested_result = result_location == RESULT_NONE? RESULT_NONE : RESULT_RETURN;
         int test = compile_new_label( c );
         int top = compile_new_label( c );
+        /* Make sure that we return an empty list if the loop runs zero times. */
+        adjust_result( c, RESULT_NONE, nested_result );
         /* Jump to the loop test */
         compile_emit_branch( c, INSTR_JUMP, test );
         compile_set_label( c, top );
