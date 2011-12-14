@@ -29,6 +29,8 @@
 
 #define OBJECT_MAGIC 0xa762e0e3u
 
+#ifndef object_copy
+
 struct hash_header
 {
 #ifndef NDEBUG
@@ -37,6 +39,8 @@ struct hash_header
     unsigned int hash;
     struct hash_item * next;
 };
+
+#endif
 
 struct hash_item
 {
@@ -257,6 +261,7 @@ OBJECT * object_new( const char * string )
 #endif
 }
 
+#ifndef object_copy
 
 /*
  * object_copy() - return a copy of an object
@@ -329,6 +334,8 @@ unsigned int object_hash( OBJECT * obj )
     return object_get_item( obj )->header.hash;
 #endif
 }
+
+#endif
 
 /*
  * object_done() - free string tables.
