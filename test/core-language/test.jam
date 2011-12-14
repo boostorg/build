@@ -359,6 +359,61 @@ else
 
 check-order if-else-false : r2 ;
 
+rule test-rule
+{
+    if true
+    {
+        return result ;
+    }
+}
+
+check-equal if-true-result : [ test-rule ] : result ;
+
+rule test-rule
+{
+    local idx  = 1 2 ;
+    local values = true ;
+    while $(idx)
+    {
+        local v = $(values[$(idx[1])]) ;
+        idx = $(idx[2-]) ;
+        if $(v)
+        {
+            return result ;
+        }
+    }
+}
+
+check-equal if-false-result : [ test-rule ] : ;
+
+rule test-rule
+{
+    if true
+    {
+        return r1 ;
+    }
+    else
+    {
+        return r2 ;
+    }
+}
+
+check-equal if-else-true-result : [ test-rule ] : r1 ;
+
+rule test-rule
+{
+    if $(false)
+    {
+        return r1 ;
+    }
+    else
+    {
+        return r2 ;
+    }
+}
+
+check-equal if-else-false-result : [ test-rule ] : r2 ;
+
 }
 
 # Check the evaluation of conditions
