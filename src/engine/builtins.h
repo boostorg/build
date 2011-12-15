@@ -43,7 +43,6 @@ LIST *builtin_backtrace( FRAME * frame, int flags );
 LIST *builtin_pwd( FRAME * frame, int flags );
 LIST *builtin_update( FRAME * frame, int flags );
 LIST *builtin_update_now( FRAME * frame, int flags );
-LIST *builtin_search_for_target( FRAME * frame, int flags );
 LIST *builtin_import_module( FRAME * frame, int flags );
 LIST *builtin_imported_modules( FRAME * frame, int flags );
 LIST *builtin_instance( FRAME * frame, int flags );

@@ -283,12 +283,6 @@ void load_builtins()
       }
 
       {
-          const char * args[] = { "target", "*", ":", "path", "*", 0 };
-          bind_builtin( "SEARCH_FOR_TARGET",
-                        builtin_search_for_target, 0, args );
-      }
-
-      {
           const char * args[] = { "modules_to_import", "+", ":", "target_module", "?", 0 };
           bind_builtin( "IMPORT_MODULE",
                         builtin_import_module, 0, args );
@@ -1422,14 +1416,6 @@ LIST * builtin_update_now( FRAME * frame, int flags )
         return list_new( L0, object_copy( constant_ok ) );
     else
         return L0;
-}
-
-LIST * builtin_search_for_target( FRAME * frame, int flags )
-{
-    LIST * arg1 = lol_get( frame->args, 0 );
-    LIST * arg2 = lol_get( frame->args, 1 );
-    TARGET * t = search_for_target( arg1->value, arg2 );
-    return list_new( L0, object_copy( t->name ) );
 }
 
 
