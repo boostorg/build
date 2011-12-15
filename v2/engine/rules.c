@@ -49,15 +49,6 @@ static void set_rule_body   ( RULE *, argument_list *, FUNCTION * procedure );
 
 static struct hash * targethash = 0;
 
-struct _located_target
-{
-    OBJECT * file_name;
-    TARGET * target;
-};
-typedef struct _located_target LOCATED_TARGET ;
-
-static struct hash * located_targets = 0;
-
 
 /*
  * target_include() - adds the 'included' TARGET to the list of targets included
@@ -206,88 +197,6 @@ void bind_explicitly_located_targets()
 {
     if ( targethash )
         hashenumerate( targethash, bind_explicitly_located_target, (void *)0 );
-}
-
-
-/* TODO: It is probably not a good idea to use functions in other modules like
-  this. */
-void call_bind_rule( OBJECT * target, OBJECT * boundname );
-
-
-TARGET * search_for_target ( OBJECT * name, LIST * search_path )
-{
-    PATHNAME f[1];
-    string buf[1];
-    LOCATED_TARGET lt;
-    LOCATED_TARGET * lta = &lt;
-    time_t time;
-    int found = 0;
-    TARGET * result;
-
-    string_new( buf );
-
-    path_parse( object_str( name ), f );
-
-    f->f_grist.ptr = 0;
-    f->f_grist.len = 0;
-
-    while ( search_path )
-    {
-        OBJECT * key;
-        f->f_root.ptr = object_str( search_path->value );
-        f->f_root.len = strlen( object_str( search_path->value ) );
-
-        string_truncate( buf, 0 );
-        path_build( f, buf, 1 );
-
-        lt.file_name = key = object_new( buf->value ) ;
-
-        if ( !located_targets )
-            located_targets = hashinit( sizeof(LOCATED_TARGET),
-                                        "located targets" );
-
-        if ( hashcheck( located_targets, (HASHDATA * *)&lta ) )
-        {
-            object_free( key );
-            string_free( buf );
-            return lta->target;
-        }
-
-        timestamp( key, &time );
-        object_free( key );
-        if ( time )
-        {
-            found = 1;
-            break;
-        }
-
-        search_path = list_next( search_path );
-    }
-
-    if ( !found )
-    {
-        OBJECT * key;
-        f->f_root.ptr = 0;
-        f->f_root.len = 0;
-
-        string_truncate( buf, 0 );
-        path_build( f, buf, 1 );
-
-        key = object_new( buf->value );
-        timestamp( key, &time );
-        object_free( key );
-    }
-
-    result = bindtarget( name );
-    result->boundname = object_new( buf->value );
-    result->time = time;
-    result->binding = time ? T_BIND_EXISTS : T_BIND_MISSING;
-
-    call_bind_rule( result->name, result->boundname );
-
-    string_free( buf );
-
-    return result;
 }
 
 

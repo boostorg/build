@@ -221,6 +221,7 @@ struct _target
 #define T_MAKE_ACTIVE         2       /* make1(target) in make1b() */
 #define T_MAKE_RUNNING        3       /* make1(target) running commands */
 #define T_MAKE_DONE           4       /* make1(target) done */
+#define T_MAKE_NOEXEC_DONE    5       /* make1(target) done with -n in effect */
 
 #ifdef OPT_SEMAPHORE
     #define T_MAKE_SEMAPHORE  5       /* Special target type for semaphores */
@@ -269,7 +270,6 @@ void      bind_explicitly_located_targets();
 TARGET  * bindtarget                     ( OBJECT * target_name );
 TARGET  * copytarget                     ( TARGET const * t );
 void      freetargets                    ( TARGETS * );
-TARGET  * search_for_target              ( OBJECT * name, LIST * search_path );
 TARGETS * targetchain                    ( TARGETS * chain, TARGETS * );
 TARGETS * targetentry                    ( TARGETS * chain, TARGET * );
 void      target_include                 ( TARGET * including, TARGET * included );
