@@ -110,6 +110,9 @@ struct _action
     TARGETS * targets;
     TARGETS * sources;        /* aka $(>) */
     char      running;        /* has been started */
+#define A_INIT           0
+#define A_RUNNING_NOEXEC 1
+#define A_RUNNING        2
     char      status;         /* see TARGET status */
     int       refs;
 };

@@ -25,6 +25,7 @@ echo [$(<:B)] 2
     NOTFILE subtest ;
     .a. subtest_a : subtest ;
     .a. subtest_b : subtest ;
+    FAIL_EXPECTED subtest_b ;
     DEPENDS all : subtest_a subtest_b ;
 """)
 
@@ -44,5 +45,7 @@ echo [subtest_b] 2
     
 ...updated 2 targets...
 """)
+
+t.expect_nothing_more()
 
 t.cleanup()

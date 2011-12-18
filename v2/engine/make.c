@@ -126,7 +126,11 @@ int make( int n_targets, OBJECT * * targets, int anyhow )
     {
         PROFILE_ENTER( MAKE_MAKE0 );
         for ( i = 0; i < n_targets; ++i )
-            make0( bindtarget( targets[ i ] ), 0, 0, counts, anyhow );
+        {
+            TARGET * t = bindtarget( targets[ i ] );
+            if ( t->fate == T_FATE_INIT )
+                make0( t, 0, 0, counts, anyhow );
+        }
         PROFILE_EXIT( MAKE_MAKE0 );
     }
 
