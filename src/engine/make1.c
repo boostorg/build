@@ -281,6 +281,15 @@ static void make1a( state * pState )
                 ++pState->parent->asynccnt;
         }
 
+    /*
+     * If the target has been previously updated with -n in
+     * effect, and we're ignoring -n, update it for real.
+     */
+    if ( !globs.noexec && pState->t->progress == T_MAKE_NOEXEC_DONE )
+    {
+        pState->t->progress = T_MAKE_INIT;
+    }
+
     /* If this target is already being processed then do nothing. There is no
      * need to start processing the same target all over again.
      */
@@ -384,13 +393,21 @@ static void make1b( state * pState )
 
     /* Now ready to build target 't', if dependencies built OK. */
 
-    /* Collect status from dependencies. */
-    for ( c = t->depends; c; c = c->next )
-        if ( c->target->status > t->status && !( c->target->flags & T_FLAG_NOCARE ) )
-        {
-            failed = c->target;
-            pState->t->status = c->target->status;
-        }
+    /* Collect status from dependencies. If -n was passed then
+     * act as though all dependencies built correctly.  The only
+     * way they can fail is if UPDATE_NOW was called.  If
+     * the dependencies can't be found or we got an interrupt,
+     * we can't get here.
+     */
+    if ( !globs.noexec )
+    {
+        for ( c = t->depends; c; c = c->next )
+            if ( c->target->status > t->status && !( c->target->flags & T_FLAG_NOCARE ) )
+            {
+                failed = c->target;
+                pState->t->status = c->target->status;
+            }
+    }
     /* If an internal header node failed to build, we want to output the target
      * that it failed on.
      */
@@ -560,7 +577,10 @@ static void make1c( state * pState )
             TARGET * t = pState->t;
             TARGET * additional_includes = NULL;
 
-            t->progress = T_MAKE_DONE;
+            if ( globs.noexec )
+                t->progress = T_MAKE_NOEXEC_DONE;
+            else
+                t->progress = T_MAKE_DONE;
 
             /* Target has been updated so rescan it for dependencies. */
             if ( ( t->fate >= T_FATE_MISSING ) &&
@@ -811,7 +831,7 @@ static void make1d( state * pState )
     CMD    * cmd    = (CMD *)t->cmds;
     int      status = pState->status;
 
-    if ( t->flags & T_FLAG_FAIL_EXPECTED )
+    if ( t->flags & T_FLAG_FAIL_EXPECTED && !globs.noexec )
     {
         /* Invert execution result when FAIL_EXPECTED has been applied. */
         switch ( status )
@@ -918,6 +938,7 @@ static CMD * make1cmds( TARGET * t )
     module_t * settings_module = 0;
     TARGET   * settings_target = 0;
     ACTIONS  * a0;
+    int running_flag = globs.noexec ? A_RUNNING_NOEXEC : A_RUNNING;
 
     /* Step through actions. Actions may be shared with other targets or grouped
      * using RULE_TOGETHER, so actions already seen are skipped.
@@ -937,10 +958,10 @@ static CMD * make1cmds( TARGET * t )
         /* Only do rules with commands to execute. If this action has already
          * been executed, use saved status.
          */
-        if ( !actions || a0->action->running )
+        if ( !actions || a0->action->running >= running_flag )
             continue;
 
-        a0->action->running = 1;
+        a0->action->running = running_flag;
 
         /* Make LISTS of targets and sources. If `execute together` has been
          * specified for this rule, tack on sources from each instance of this
@@ -950,10 +971,10 @@ static CMD * make1cmds( TARGET * t )
         ns = make1list( L0, a0->action->sources, actions->flags );
         if ( actions->flags & RULE_TOGETHER )
             for ( a1 = a0->next; a1; a1 = a1->next )
-                if ( a1->action->rule == rule && !a1->action->running )
+                if ( a1->action->rule == rule && a1->action->running < running_flag )
                 {
                     ns = make1list( ns, a1->action->sources, actions->flags );
-                    a1->action->running = 1;
+                    a1->action->running = running_flag;
                 }
 
         /* If doing only updated (or existing) sources, but none have been
