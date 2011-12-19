@@ -367,7 +367,7 @@ rule relevant-features ( rule-or-module )
         {
             result = $(result) ;
         }
-        .relevant-features.$(rule-or-module) = $(result);
+        .relevant-features.$(rule-or-module) = $(result) ;
         return $(result) ;
     }
     else
