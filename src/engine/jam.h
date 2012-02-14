@@ -461,6 +461,8 @@ struct globs
 
 extern struct globs globs;
 
+#if defined(unix) || defined(__unix)
+ 
 struct terminated_child
 {
     pid_t  pid;
@@ -469,6 +471,7 @@ struct terminated_child
 
 extern struct terminated_child terminated_children[MAXJOBS];
 
+#endif
 
 #define DEBUG_MAKE     ( globs.debug[ 1 ] )   /* show actions when executed */
 #define DEBUG_MAKEQ    ( globs.debug[ 2 ] )   /* show even quiet actions */
