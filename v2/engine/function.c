@@ -529,7 +529,7 @@ static int var_edit_parse( const char * mods, VAR_EDITS * edits, int havezeroed 
             case 'T': edits->to_slashes = 1; continue;
             case 'W': edits->to_windows = 1; continue;
             default:
-                break;  /* Should complain, but so what... */
+                continue;  /* Should complain, but so what... */
         }
 
     fileval:
@@ -1701,7 +1701,6 @@ static int current_line;
 static void parse_error( const char * message )
 {
     printf( "%s:%d: %s\n", current_file, current_line, message );
-    exit(1);
 }
 
 /*
@@ -1751,10 +1750,14 @@ static VAR_PARSE * parse_variable( const char * * string )
                 else if ( s[0] == '[' )
                 {
                     parse_error("unexpected subscript");
+                    ++s;
                 }
                 else if ( s[0] == '\0' )
                 {
                     parse_error( "unbalanced parentheses" );
+                    var_parse_group_maybe_add_constant( mod, *string, s );
+                    *string = s;
+                    return (VAR_PARSE *)result;
                 }
                 else
                 {
@@ -1777,26 +1780,29 @@ static VAR_PARSE * parse_variable( const char * * string )
                     var_parse_group_maybe_add_constant( subscript, *string, s );
                     ++s;
                     *string = s;
-                    if ( s[0] == '\0' )
-                    {
-                        parse_error( "unbalanced parentheses" );
-                    }
-                    else if ( s[0] == ')' || s[0] == ':' )
+                    if ( s[0] == ')' || s[0] == ':' || s[0] == '\0')
                     {
                         break;
                     }
                     else
                     {
                         parse_error( "unexpected text following []" );
+                        break;
                     }
                 }
                 else if ( isdigit( s[0] ) || s[0] == '-' )
                 {
                     ++s;
                 }
+                else if( s[0] == '\0' )
+                {
+                    parse_error( "malformed subscript" );
+                    break;
+                }
                 else
                 {
                     parse_error( "malformed subscript" );
+                    ++s;
                 }
             }
         }
@@ -1815,6 +1821,9 @@ static VAR_PARSE * parse_variable( const char * * string )
         else if ( s[0] == '\0' ) 
         {
             parse_error( "unbalanced parentheses" );
+            var_parse_group_maybe_add_constant( name, *string, s );
+            *string = s;
+            return (VAR_PARSE *)result;
         }
         else
         {
@@ -1901,9 +1910,15 @@ void balance_parentheses( const char * * s_, const char * * string, VAR_PARSE_GR
     for ( ; ; )
     {
         if ( try_parse_variable( &s, string, out ) ) { }
-        else if(s[0] == ':' || s[0] == '[' || s[0] == '\0') 
+        else if(s[0] == ':' || s[0] == '[') 
         {
             parse_error( "unbalanced parentheses" );
+            ++s;
+        }
+        else if(s[0] == '\0')
+        {
+            parse_error( "unbalanced parentheses" );
+            break;
         }
         else if(s[0] == ')')
         {
@@ -2124,8 +2139,19 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         }
         else
         {
+            int f = compile_new_label( c );
+            int end = compile_new_label( c );
+
             printf( "%s:%d: Conditional used as list (check operator precedence).\n", object_str(parse->file), parse->line );
-            exit( 1 );
+            
+            /* Emit the condition */
+            compile_condition( parse, c, 0, f );
+            compile_emit( c, INSTR_PUSH_CONSTANT, compile_emit_constant( c, constant_true ) );
+            compile_emit_branch( c, INSTR_JUMP, end );
+            compile_set_label( c, f );
+            compile_emit( c, INSTR_PUSH_EMPTY, 0 );
+            compile_set_label( c, end );
+            adjust_result( c, RESULT_STACK, result_location );
         }
     }
     else if ( parse->type == PARSE_FOREACH )
