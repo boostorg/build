@@ -269,6 +269,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     sigaddset(&sigmask, SIGCHLD);
     sigprocmask(SIG_BLOCK, &sigmask, NULL);
     sa.sa_flags = 0;
+    sa.sa_mask = 0;
     sa.sa_handler = child_sig_handler;
     sigaction(SIGCHLD, &sa, NULL);
     sigemptyset(&empty_sigmask);
