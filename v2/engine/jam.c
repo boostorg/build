@@ -271,6 +271,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     sa.sa_flags = 0;
     sa.sa_mask = 0;
     sa.sa_handler = child_sig_handler;
+    sigemptyset(&sa.sa_mask);
     sigaction(SIGCHLD, &sa, NULL);
     sigemptyset(&empty_sigmask);
 #endif
