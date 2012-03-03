@@ -139,7 +139,7 @@ search(
     {
         while ( varlist )
         {
-            BINDING b, *ba = &b;
+            BINDING * ba;
             file_info_t *ff;
             OBJECT * key;
             OBJECT * test_path;
@@ -159,9 +159,7 @@ search(
             ff = file_query( key );
             timestamp( key, time );
 
-            b.binding = key;
-
-            if ( hashcheck( explicit_bindings, (HASHDATA**)&ba ) )
+            if ( ( ba = (BINDING *)hash_find( explicit_bindings, key ) ) )
             {
                 if ( DEBUG_SEARCH )
                     printf(" search %s: found explicitly located target %s\n",
@@ -213,15 +211,19 @@ search(
 
     if ( explicitly_located )
     {
-        BINDING b;
-        BINDING * ba = &b;
+        int found;
+        BINDING * ba;
         OBJECT * key = path_as_key( boundname );
-        b.binding = key;
-        b.target = target;
         /* CONSIDER: we probably should issue a warning is another file
            is explicitly bound to the same location. This might break
            compatibility, though. */
-        if ( !hashenter( explicit_bindings, (HASHDATA * *)&ba ) )
+        ba = (BINDING *)hash_insert( explicit_bindings, key, &found );
+        if ( !found )
+        {
+            ba->binding = key;
+            ba->target = target;
+        }
+        else
         {
             object_free( key );
         }

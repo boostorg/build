@@ -201,12 +201,9 @@ LIST * var_get( struct module_t * module, OBJECT * symbol )
     else
 #endif
     {
-        VARIABLE var;
-        VARIABLE * v = &var;
+        VARIABLE * v;
 
-        v->symbol = symbol;
-
-        if ( module->variables && hashcheck( module->variables, (HASHDATA * *)&v ) )
+        if ( module->variables && ( v = (VARIABLE *)hash_find( module->variables, symbol ) ) )
         {
             if ( DEBUG_VARGET )
                 var_dump( v->symbol, v->value, "get" );
@@ -279,17 +276,18 @@ LIST * var_swap( struct module_t * module, OBJECT * symbol, LIST * value )
 
 static VARIABLE * var_enter( struct module_t * module, OBJECT * symbol )
 {
-    VARIABLE var;
-    VARIABLE * v = &var;
+    int found;
+    VARIABLE * v;
 
     if ( !module->variables )
         module->variables = hashinit( sizeof( VARIABLE ), "variables" );
 
-    v->symbol = symbol;
-    v->value = 0;
-
-    if ( hashenter( module->variables, (HASHDATA * *)&v ) )
+    v = (VARIABLE *)hash_insert( module->variables, symbol, &found );
+    if ( !found )
+    {
         v->symbol = object_copy( symbol );
+        v->value = 0;
+    }
 
     return v;
 }

@@ -203,13 +203,8 @@ static void type_check
     }
 
     /* If the checking rule can not be found, also bail. */
-    {
-        RULE checker_, *checker = &checker_;
-
-        checker->name = type_name;
-        if ( !typecheck->rules || !hashcheck( typecheck->rules, (HASHDATA * *)&checker ) )
-            return;
-    }
+    if ( !typecheck->rules || !hash_find( typecheck->rules, type_name ) )
+        return;
 
     while ( values != 0 )
     {

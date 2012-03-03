@@ -174,8 +174,6 @@ void write_netstring( FILE * f, char const * s )
 
 void hcache_init()
 {
-    HCACHEDATA   cachedata;
-    HCACHEDATA * c;
     FILE       * f;
     OBJECT     * version;
     int          header_count = 0;
@@ -201,6 +199,8 @@ void hcache_init()
 
     while ( 1 )
     {
+        HCACHEDATA   cachedata;
+        HCACHEDATA * c;
         OBJECT * record_type;
         OBJECT * time_str;
         OBJECT * age_str;
@@ -209,6 +209,7 @@ void hcache_init()
         int      i;
         int      count;
         LIST   * l;
+        int      found;
 
         record_type = read_netstring( f );
         if ( !record_type )
@@ -225,21 +226,19 @@ void hcache_init()
             goto bail;
         }
 
-        c = &cachedata;
+        cachedata.boundname = read_netstring( f );
+        time_str            = read_netstring( f );
+        age_str             = read_netstring( f );
+        includes_count_str  = read_netstring( f );
 
-        c->boundname       = read_netstring( f );
-        time_str           = read_netstring( f );
-        age_str            = read_netstring( f );
-        includes_count_str = read_netstring( f );
-
-        if ( !c->boundname || !time_str || !age_str || !includes_count_str )
+        if ( !cachedata.boundname || !time_str || !age_str || !includes_count_str )
         {
             fprintf( stderr, "invalid %s\n", hcachename );
             goto bail;
         }
 
-        c->time = atoi( object_str( time_str ) );
-        c->age = atoi( object_str( age_str ) ) + 1;
+        cachedata.time = atoi( object_str( time_str ) );
+        cachedata.age = atoi( object_str( age_str ) ) + 1;
 
         count = atoi( object_str( includes_count_str ) );
         for ( l = 0, i = 0; i < count; ++i )
@@ -252,7 +251,7 @@ void hcache_init()
             }
             l = list_new( l, s );
         }
-        c->includes = l;
+        cachedata.includes = l;
 
         hdrscan_count_str = read_netstring( f );
         if ( !includes_count_str )
@@ -273,9 +272,18 @@ void hcache_init()
             }
             l = list_new( l, s );
         }
-        c->hdrscan = l;
+        cachedata.hdrscan = l;
 
-        if ( !hashenter( hcachehash, (HASHDATA * *)&c ) )
+        c = (HCACHEDATA *)hash_insert( hcachehash, cachedata.boundname, &found );
+        if ( !found )
+        {
+            c->boundname = cachedata.boundname;
+            c->time      = cachedata.time;
+            c->includes  = cachedata.includes;
+            c->hdrscan   = cachedata.hdrscan;
+            c->age       = cachedata.age;
+        }
+        else
         {
             fprintf( stderr, "can't insert header cache item, bailing on %s\n",
                 hcachename );
@@ -375,76 +383,90 @@ cleanup:
 
 LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
 {
-    HCACHEDATA cachedata;
-    HCACHEDATA * c = &cachedata;
+    HCACHEDATA * c;
 
     LIST * l = 0;
 
     ++queries;
 
-    c->boundname = t->boundname;
-
-    if (hashcheck (hcachehash, (HASHDATA **) &c))
+    if ( ( c = (HCACHEDATA *)hash_find( hcachehash, t->boundname ) ) )
     {
-    if (c->time == t->time)
+        if ( c->time == t->time )
+        {
+            LIST *l1 = hdrscan, *l2 = c->hdrscan;
+            while ( l1 && l2 )
+            {
+                if (l1->value != l2->value)
+                {
+                    l1 = NULL;
+                }
+                else
+                {
+                    l1 = list_next( l1 );
+                    l2 = list_next( l2 );
+                }
+            }
+            if ( l1 || l2 )
+            {
+                if (DEBUG_HEADER)
+                    printf( "HDRSCAN out of date in cache for %s\n",
+                        object_str( t->boundname ) );
+
+                printf( "HDRSCAN out of date for %s\n",
+                    object_str( t->boundname ) );
+                printf(" real  : ");
+                list_print( hdrscan );
+                printf( "\n cached: " );
+                list_print( c->hdrscan );
+                printf( "\n" );
+
+                list_free( c->includes );
+                list_free( c->hdrscan );
+                c->includes = 0;
+                c->hdrscan = 0;
+            }
+            else
+            {
+                if (DEBUG_HEADER)
+                    printf( "using header cache for %s\n",
+                        object_str( t->boundname ) );
+                c->age = 0;
+                ++hits;
+                l = list_copy( 0, c->includes );
+                return l;
+            }
+        }
+        else
+        {
+            if (DEBUG_HEADER)
+                printf ("header cache out of date for %s\n",
+                    object_str( t->boundname ) );
+            list_free( c->includes );
+            list_free( c->hdrscan );
+            c->includes = 0;
+            c->hdrscan = 0;
+        }
+    }
+    else
     {
-        LIST *l1 = hdrscan, *l2 = c->hdrscan;
-        while (l1 && l2) {
-        if (l1->value != l2->value) {
-            l1 = NULL;
-        } else {
-            l1 = list_next(l1);
-            l2 = list_next(l2);
+        int found;
+        c = (HCACHEDATA *)hash_insert( hcachehash, t->boundname, &found );
+        if ( !found )
+        {
+            c->boundname = object_copy( t->boundname );
+            c->next = hcachelist;
+            hcachelist = c;
         }
-        }
-        if (l1 || l2) {
-        if (DEBUG_HEADER)
-            printf("HDRSCAN out of date in cache for %s\n",
-               object_str( t->boundname ));
-
-        printf("HDRSCAN out of date for %s\n", object_str( t->boundname ) );
-        printf(" real  : ");
-        list_print(hdrscan);
-        printf("\n cached: ");
-        list_print(c->hdrscan);
-        printf("\n");
-
-        list_free(c->includes);
-        list_free(c->hdrscan);
-        c->includes = 0;
-        c->hdrscan = 0;
-        } else {
-        if (DEBUG_HEADER)
-            printf ("using header cache for %s\n", object_str( t->boundname ) );
-        c->age = 0;
-        ++hits;
-        l = list_copy (0, c->includes);
-        return l;
-        }
-    } else {
-        if (DEBUG_HEADER)
-            printf ("header cache out of date for %s\n", object_str( t->boundname ) );
-        list_free (c->includes);
-        list_free(c->hdrscan);
-        c->includes = 0;
-        c->hdrscan = 0;
-    }
-    } else {
-    if (hashenter (hcachehash, (HASHDATA **)&c)) {
-        c->boundname = object_copy( c->boundname );
-        c->next = hcachelist;
-        hcachelist = c;
-    }
     }
 
     /* 'c' points at the cache entry. Its out of date. */
 
-    l = headers1 (0, t->boundname, rec, re);
+    l = headers1( 0, t->boundname, rec, re );
 
     c->time = t->time;
     c->age = 0;
-    c->includes = list_copy (0, l);
-    c->hdrscan = list_copy(0, hdrscan);
+    c->includes = list_copy( 0, l );
+    c->hdrscan = list_copy( 0, hdrscan );
 
     return l;
 }
