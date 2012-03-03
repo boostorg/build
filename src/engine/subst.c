@@ -20,13 +20,14 @@ static struct hash* regex_hash;
 
 regexp* regex_compile( OBJECT* pattern )
 {
-    regex_entry entry, *e = &entry;
-    entry.pattern = pattern;
+    int found;
+    regex_entry * e ;
 
     if ( !regex_hash )
         regex_hash = hashinit(sizeof(regex_entry), "regex");
 
-    if ( hashenter( regex_hash, (HASHDATA **)&e ) )
+    e = (regex_entry *)hash_insert( regex_hash, pattern, &found );
+    if ( !found )
     {
         e->pattern = object_copy( pattern );
         e->regex = regcomp( (char*)pattern );

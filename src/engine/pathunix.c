@@ -374,16 +374,18 @@ static struct hash * path_key_cache;
 
 static void path_write_key( char * path_, string * out )
 {
-    struct path_key_entry e, *result = &e;
+    struct path_key_entry * result;
     OBJECT * path = object_new( path_ );
+    int found;
 
     /* This is only called by path_as_key, which initializes the cache. */
     assert( path_key_cache );
 
-    result->path = path;
-    if ( hashenter( path_key_cache, (HASHDATA * *)&result ) )
+    result = (struct path_key_entry *)hash_insert( path_key_cache, path, &found );
+    if ( !found )
     {
         /* path_ is already normalized. */
+        result->path = path;
         ShortPathToLongPath( path_, out );
         result->key = object_new( out->value );
     }
@@ -414,23 +416,25 @@ static void normalize_path( string * path )
 
 void path_add_key( OBJECT * path )
 {
-    struct path_key_entry e, *result = &e;
+    struct path_key_entry * result;
+    int found;
 
     if ( ! path_key_cache )
         path_key_cache = hashinit( sizeof( struct path_key_entry ), "path to key" );
 
-    result->path = path;
-    if ( hashenter( path_key_cache, (HASHDATA * *)&result ) )
+    result = (struct path_key_entry *)hash_insert( path_key_cache, path, &found );
+    if ( !found )
     {
         string buf[1];
         OBJECT * normalized;
-        struct path_key_entry ne, *nresult = &ne;
+        struct path_key_entry * nresult;
+        result->path = path;
         string_copy( buf, object_str( path ) );
         normalize_path( buf );
         normalized = object_new( buf->value );
         string_free( buf );
-        nresult->path = normalized;
-        if ( hashenter( path_key_cache, (HASHDATA * *)&nresult ) || nresult == result )
+        nresult = (struct path_key_entry *)hash_insert( path_key_cache, normalized, &found );
+        if ( !found || nresult == result )
         {
             nresult->path = object_copy( normalized );
             nresult->key = object_copy( path );
@@ -446,24 +450,27 @@ void path_add_key( OBJECT * path )
 
 OBJECT * path_as_key( OBJECT * path )
 {
-    struct path_key_entry e, *result = &e;
+    struct path_key_entry * result;
+    int found;
 
     if ( ! path_key_cache )
         path_key_cache = hashinit( sizeof( struct path_key_entry ), "path to key" );
 
-    result->path = path;
-    if ( hashenter( path_key_cache, (HASHDATA * *)&result ) )
+    result = (struct path_key_entry *)hash_insert( path_key_cache, path, &found );
+    if ( !found )
     {
         string buf[1];
         OBJECT * normalized;
-        struct path_key_entry ne, *nresult = &ne;
+        struct path_key_entry * nresult;
+        result->path = path;
         string_copy( buf, object_str( path ) );
         normalize_path( buf );
         normalized = object_new( buf->value );
-        nresult->path = normalized;
-        if ( hashenter( path_key_cache, (HASHDATA * *)&nresult ) || nresult == result )
+        nresult = (struct path_key_entry *)hash_insert( path_key_cache, normalized, &found );
+        if ( !found || nresult == result )
         {
             string long_path[1];
+            nresult->path = normalized;
             string_new( long_path );
             ShortPathToLongPath( buf->value, long_path );
             nresult->path = object_copy( normalized );

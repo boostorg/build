@@ -30,18 +30,25 @@ void profile_enter( OBJECT * rulename, profile_frame * frame )
     if ( DEBUG_PROFILE )
     {
         clock_t start = clock();
-        profile_info info;
-        profile_info * p = &info;
-
-        if ( !rulename ) p = &profile_other;
+        profile_info * p;
 
         if ( !profile_hash && rulename )
             profile_hash = hashinit( sizeof( profile_info ), "profile" );
 
-        info.name = rulename;
-
-        if ( rulename && hashenter( profile_hash, (HASHDATA * *)&p ) )
-            p->cumulative = p->net = p->num_entries = p->stack_count = p->memory = 0;
+        if ( rulename )
+        {
+            int found;
+            p = (profile_info *)hash_insert( profile_hash, rulename, &found );
+            if ( !found )
+            {
+                p->name = rulename;
+                p->cumulative = p->net = p->num_entries = p->stack_count = p->memory = 0;
+            }
+        }
+        else
+        {
+             p = &profile_other;
+        }
 
         ++p->num_entries;
         ++p->stack_count;

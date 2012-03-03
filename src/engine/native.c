@@ -5,6 +5,7 @@
 #include "native.h"
 #include "hash.h"
 #include "object.h"
+#include "assert.h"
 
 void declare_native_rule( const char * module, const char * rule, const char * * args,
                           LIST * (*f)( FRAME *, int ), int version )
@@ -20,24 +21,28 @@ void declare_native_rule( const char * module, const char * rule, const char * *
     {
         object_free( module_obj );
     }
-    if (m->native_rules == 0) {
+    if (m->native_rules == 0)
+    {
         m->native_rules = hashinit( sizeof( native_rule_t ), "native rules");
     }
 
     {
-        native_rule_t n, *np = &n;
-        n.name = object_new( rule );
-        if (args)
+        native_rule_t *np;
+        OBJECT * name = object_new( rule );
+        int found;
+        np = (native_rule_t *)hash_insert( m->native_rules, name, &found );
+        np->name = name;
+        assert( !found );
+        if ( args )
         {
-            n.arguments = args_new();
-            lol_build( n.arguments->data, args );
+            np->arguments = args_new();
+            lol_build( np->arguments->data, args );
         }
         else
         {
-            n.arguments = 0;
+            np->arguments = 0;
         }
-        n.procedure = function_builtin( f, 0 );
-        n.version = version;
-        hashenter(m->native_rules, (HASHDATA**)&np);
+        np->procedure = function_builtin( f, 0 );
+        np->version = version;
     }
 }

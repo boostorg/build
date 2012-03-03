@@ -19,8 +19,7 @@ static void check_defined( LIST * class_names )
 {
     for ( ; class_names; class_names = class_names->next )
     {
-        OBJECT * * p = &class_names->value;
-        if ( !hashcheck( classes, (HASHDATA * *)&p ) )
+        if ( !hash_find( classes, class_names->value ) )
         {
             printf( "Class %s is not defined\n", object_str( class_names->value ) );
             abort();
@@ -118,11 +117,13 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     OBJECT   * * pp = &xname->value;
     module_t   * class_module = 0;
     module_t   * outer_module = frame->module;
+    int found;
 
     if ( !classes )
         classes = hashinit( sizeof( OBJECT * ), "classes" );
 
-    if ( hashenter( classes, (HASHDATA * *)&pp ) )
+    pp = (OBJECT * *)hash_insert( classes, xname->value, &found );
+    if ( !found )
     {
         *pp = object_copy( xname->value );
     }

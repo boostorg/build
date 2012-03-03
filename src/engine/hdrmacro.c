@@ -95,6 +95,7 @@ macro_headers( TARGET * t )
         if ( regexec( re, buf ) && re->startp[1] )
         {
             OBJECT * symbol;
+            int found;
             /* we detected a line that looks like "#define  MACRO  filename */
             ((char *)re->endp[1])[0] = '\0';
             ((char *)re->endp[2])[0] = '\0';
@@ -107,10 +108,11 @@ macro_headers( TARGET * t )
             if ( !header_macros_hash )
                 header_macros_hash = hashinit( sizeof( HEADER_MACRO ), "hdrmacros" );
 
-            v->symbol   = symbol = object_new( re->startp[1] );
-            v->filename = 0;
-            if ( hashenter( header_macros_hash, (HASHDATA **)&v ) )
+            symbol = object_new( re->startp[1] );
+            v = (HEADER_MACRO *)hash_insert( header_macros_hash, symbol, &found );
+            if ( !found )
             {
+                v->symbol = symbol;
                 v->filename = object_new( re->startp[2] );  /* never freed */
             }
             else
@@ -128,12 +130,9 @@ macro_headers( TARGET * t )
 
 OBJECT * macro_header_get( OBJECT * macro_name )
 {
-    HEADER_MACRO var;
-    HEADER_MACRO * v = &var;
+    HEADER_MACRO * v;
 
-    v->symbol = macro_name;
-
-    if ( header_macros_hash && hashcheck( header_macros_hash, (HASHDATA **)&v ) )
+    if ( header_macros_hash && ( v = (HEADER_MACRO *)hash_find( header_macros_hash, macro_name ) ) )
     {
         if ( DEBUG_HEADER )
             printf( "### macro '%s' evaluated to '%s'\n", object_str( macro_name ), object_str( v->filename ) );

@@ -1102,14 +1102,12 @@ LIST * builtin_import( FRAME * frame, int flags )
           source_name = list_next( source_name ),
           target_name = list_next( target_name ) )
     {
-        RULE   r_;
-        RULE * r = &r_;
+        RULE * r;
         RULE * imported;
-        r_.name = source_name->value;
 
         if ( !source_module->rules ||
-            !hashcheck( source_module->rules, (HASHDATA * *)&r ) )
-            unknown_rule( frame, "IMPORT", source_module, r_.name );
+            !(r = (RULE *)hash_find( source_module->rules, source_name->value ) ) )
+            unknown_rule( frame, "IMPORT", source_module, source_name->value );
 
         imported = import_rule( r, target_module, target_name->value );
         if ( localize )
@@ -1153,12 +1151,10 @@ LIST * builtin_export( FRAME * frame, int flags )
 
     for ( ; rules; rules = list_next( rules ) )
     {
-        RULE   r_;
-        RULE * r = &r_;
-        r_.name = rules->value;
+        RULE * r;
 
-        if ( !m->rules || !hashcheck( m->rules, (HASHDATA * *)&r ) )
-            unknown_rule( frame, "EXPORT", m, r_.name );
+        if ( !m->rules || !(r = (RULE *)hash_find( m->rules, rules->value ) ) )
+            unknown_rule( frame, "EXPORT", m, rules->value );
 
         r->exported = 1;
     }
@@ -1583,10 +1579,8 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
 
     module_t * module = bindmodule( module_name->value );
 
-    native_rule_t n;
-    native_rule_t * np = &n;
-    n.name = rule_name->value;
-    if ( module->native_rules && hashcheck( module->native_rules, (HASHDATA * *)&np ) )
+    native_rule_t * np;
+    if ( module->native_rules && (np = (native_rule_t *)hash_find( module->native_rules, rule_name->value ) ) )
     {
         args_refer( np->arguments );
         new_rule_body( module, np->name, np->arguments, np->procedure, 1 );
@@ -1595,7 +1589,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
     {
         backtrace_line( frame->prev );
         printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
-                object_str( n.name ), object_str( module->name ) );
+                object_str( rule_name->value ), object_str( module->name ) );
         backtrace( frame->prev );
         exit( 1 );
     }
@@ -1611,10 +1605,8 @@ LIST * builtin_has_native_rule( FRAME * frame, int flags )
 
     module_t * module = bindmodule( module_name->value );
 
-    native_rule_t n;
-    native_rule_t * np = &n;
-    n.name = rule_name->value;
-    if ( module->native_rules && hashcheck( module->native_rules, (HASHDATA * *)&np ) )
+    native_rule_t * np;
+    if ( module->native_rules && (np = (native_rule_t *)hash_find( module->native_rules, rule_name->value ) ) )
     {
         int expected_version = atoi( object_str( version->value ) );
         if ( np->version == expected_version )

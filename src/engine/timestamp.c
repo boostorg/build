@@ -71,8 +71,8 @@ void timestamp( OBJECT * target, time_t * time )
 
     PATHNAME   f1;
     PATHNAME   f2;
-    BINDING    binding;
-    BINDING  * b = &binding;
+    int        found;
+    BINDING  * b;
     string     buf[ 1 ];
 
     target = path_as_key( target );
@@ -83,12 +83,14 @@ void timestamp( OBJECT * target, time_t * time )
         bindhash = hashinit( sizeof( BINDING ), "bindings" );
 
     /* Quick path - is it there? */
-    b->name = target;
-    b->time = b->flags = 0;
-    b->progress = BIND_INIT;
 
-    if ( hashenter( bindhash, (HASHDATA * *)&b ) )
+    b = (BINDING *)hash_insert( bindhash, target, &found );
+    if ( !found )
+    {
         b->name = object_copy( target );  /* never freed */
+        b->time = b->flags = 0;
+        b->progress = BIND_INIT;
+    }
 
     if ( b->progress != BIND_INIT )
         goto afterscanning;
@@ -100,8 +102,8 @@ void timestamp( OBJECT * target, time_t * time )
 
     /* Scan directory if not already done so. */
     {
-        BINDING binding;
-        BINDING * b = &binding;
+        int found;
+        BINDING * b;
         OBJECT * name;
 
         f2 = f1;
@@ -109,12 +111,15 @@ void timestamp( OBJECT * target, time_t * time )
         path_parent( &f2 );
         path_build( &f2, buf, 0 );
 
-        b->name = name = object_new( buf->value );
-        b->time = b->flags = 0;
-        b->progress = BIND_INIT;
+        name = object_new( buf->value );
 
-        if ( hashenter( bindhash, (HASHDATA * *)&b ) )
+        b = (BINDING *)hash_insert( bindhash, name, &found );
+        if ( !found )
+        {
             b->name = object_copy( name );
+            b->time = b->flags = 0;
+            b->progress = BIND_INIT;
+        }
 
         if ( !( b->flags & BIND_SCANNED ) )
         {
@@ -128,8 +133,8 @@ void timestamp( OBJECT * target, time_t * time )
     /* Scan archive if not already done so. */
     if ( f1.f_member.len )
     {
-        BINDING binding;
-        BINDING * b = &binding;
+        int found;
+        BINDING * b;
         OBJECT * name;
 
         f2 = f1;
@@ -138,12 +143,15 @@ void timestamp( OBJECT * target, time_t * time )
         string_truncate( buf, 0 );
         path_build( &f2, buf, 0 );
 
-        b->name = name = object_new( buf->value );
-        b->time = b->flags = 0;
-        b->progress = BIND_INIT;
+        name = object_new( buf->value );
 
-        if ( hashenter( bindhash, (HASHDATA * *)&b ) )
+        b = (BINDING *)hash_insert( bindhash, name, &found );
+        if ( !found )
+        {
             b->name = object_copy( name );
+            b->time = b->flags = 0;
+            b->progress = BIND_INIT;
+        }
 
         if ( !( b->flags & BIND_SCANNED ) )
         {
@@ -174,17 +182,18 @@ void timestamp( OBJECT * target, time_t * time )
 
 static void time_enter( void * closure, OBJECT * target, int found, time_t time )
 {
-    BINDING binding;
-    BINDING * b = &binding;
+    int item_found;
+    BINDING * b;
     struct hash * bindhash = (struct hash *)closure;
 
     target = path_as_key( target );
 
-    b->name = target;
-    b->flags = 0;
-
-    if ( hashenter( bindhash, (HASHDATA * *)&b ) )
-        b->name = object_copy( target );  /* never freed */
+    b = (BINDING *)hash_insert( bindhash, target, &item_found );
+    if ( !item_found )
+    {
+        b->name = object_copy( target );
+        b->flags = 0;
+    }
 
     b->time = time;
     b->progress = found ? BIND_FOUND : BIND_SPOTTED;

@@ -76,12 +76,11 @@ void target_include( TARGET * including, TARGET * included )
 
 static RULE * enter_rule( OBJECT * rulename, module_t * target_module )
 {
-    RULE rule;
-    RULE * r = &rule;
+    int found;
+    RULE * r;
 
-    r->name = rulename;
-
-    if ( hashenter( demand_rules( target_module ), (HASHDATA * *)&r ) )
+    r = (RULE *)hash_insert( demand_rules(target_module), rulename, &found );
+    if ( !found )
     {
         r->name = object_copy( rulename );
         r->procedure = 0;
@@ -149,15 +148,14 @@ void rule_free( RULE * r )
 
 TARGET * bindtarget( OBJECT * target_name )
 {
-    TARGET target;
-    TARGET * t = &target;
+    int found;
+    TARGET * t;
 
     if ( !targethash )
         targethash = hashinit( sizeof( TARGET ), "targets" );
 
-    t->name = target_name;
-
-    if ( hashenter( targethash, (HASHDATA * *)&t ) )
+    t = (TARGET *)hash_insert( targethash, target_name, &found );
+    if ( !found )
     {
         memset( (char *)t, '\0', sizeof( *t ) );
         t->name = object_copy( target_name );
@@ -685,35 +683,31 @@ RULE * new_rule_actions( module_t * m, OBJECT * rulename, FUNCTION * command, LI
 
 RULE * lookup_rule( OBJECT * rulename, module_t * m, int local_only )
 {
-    RULE       rule;
-    RULE     * r = &rule;
+    RULE     * r;
     RULE     * result = 0;
     module_t * original_module = m;
-
-    r->name = rulename;
 
     if ( m->class_module )
         m = m->class_module;
 
-    if ( m->rules && hashcheck( m->rules, (HASHDATA * *)&r ) )
+    if ( m->rules && ( r = (RULE *)hash_find( m->rules, rulename ) ) )
         result = r;
     else if ( !local_only && m->imported_modules )
     {
         /* Try splitting the name into module and rule. */
-        char *p = strchr( object_str( r->name ), '.' ) ;
+        char *p = strchr( object_str( rulename ), '.' ) ;
         if ( p )
         {
             string buf[1];
             OBJECT * module_part;
             OBJECT * rule_part;
             string_new( buf );
-            string_append_range( buf, object_str( r->name ), p );
+            string_append_range( buf, object_str( rulename ), p );
             module_part = object_new( buf->value );
             rule_part = object_new( p + 1 );
-            r->name = module_part;
             /* Now, r->name keeps the module name, and p+1 keeps the rule name.
              */
-            if ( hashcheck( m->imported_modules, (HASHDATA * *)&r ) )
+            if ( hash_find( m->imported_modules, module_part ) )
                 result = lookup_rule( rule_part, bindmodule( module_part ), 1 );
             object_free( rule_part );
             object_free( module_part );

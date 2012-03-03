@@ -31,15 +31,14 @@ module_t * bindmodule( OBJECT * name )
     {
         PROFILE_ENTER( BINDMODULE );
 
-        module_t m_;
-        module_t * m = &m_;
+        module_t * m;
+        int found;
 
         if ( !module_hash )
             module_hash = hashinit( sizeof( module_t ), "modules" );
 
-        m->name = name;
-
-        if ( hashenter( module_hash, (HASHDATA * *)&m ) )
+        m = (module_t *)hash_insert( module_hash, name, &found );
+        if ( !found )
         {
             m->name = object_copy( name );
             m->variables = 0;
@@ -160,9 +159,10 @@ void import_module( LIST * module_names, module_t * target_module )
 
     for ( ; module_names; module_names = module_names->next )
     {
+        int found;
         OBJECT * s = module_names->value;
-        OBJECT * * ss = &s;
-        if( hashenter( h, (HASHDATA * *)&ss ) )
+        OBJECT * * ss = (OBJECT * *)hash_insert( h, s, &found );
+        if( !found )
         {
             *ss = object_copy( s );
         }
