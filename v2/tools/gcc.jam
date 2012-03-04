@@ -446,7 +446,11 @@ rule setup-address-model ( targets * : sources * : properties * )
         }
         else
         {
-            if $(model) = 32
+			# do not apply -m32 for ARM platform, because this
+			# option is not valid on ARM
+			# FIXME: use property architecture instead os.platform
+			# FIXME: unfortunately architecture seams not to be set 
+            if $(model) = 32 && [ os.platform ] != ARM
             {
                 option = -m32 ;
             }
