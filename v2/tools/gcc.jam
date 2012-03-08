@@ -1101,8 +1101,8 @@ local rule cpu-flags ( toolset variable : architecture : instruction-set + : val
 #
 # x86 and compatible
 # The 'native' option appeared in gcc 4.2 so we cannot safely use it
-# as default. Don't use i386 instead otherwise you get combinations like
-# -march=i386 -m64.
+# as default. Use conservative i386 instead for 32-bit.
+toolset.flags gcc OPTIONS <architecture>x86/<address-model>32/<instruction-set> : -march=i386 ;
 cpu-flags gcc OPTIONS : x86 : native : -march=native ;
 cpu-flags gcc OPTIONS : x86 : i386 : -march=i386 ;
 cpu-flags gcc OPTIONS : x86 : i486 : -march=i486 ;
