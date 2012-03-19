@@ -160,7 +160,7 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
 }
 
 
-static LIST * saved_var = 0;
+static LIST * saved_var = L0;
 
 /*
  * var_get() - get value of a user defined symbol.
@@ -170,7 +170,7 @@ static LIST * saved_var = 0;
 
 LIST * var_get( struct module_t * module, OBJECT * symbol )
 {
-    LIST * result = 0;
+    LIST * result = L0;
 #ifdef OPT_AT_FILES
     /* Some "fixed" variables... */
     if ( object_equal( symbol, constant_TMPDIR ) )
@@ -246,7 +246,7 @@ void var_set( struct module_t * module, OBJECT * symbol, LIST * value, int flag 
 
     case VAR_DEFAULT:
         /* Set only if unset */
-        if ( !v->value )
+        if ( list_empty( v->value ) )
             v->value = value;
         else
             list_free( value );
@@ -286,7 +286,7 @@ static VARIABLE * var_enter( struct module_t * module, OBJECT * symbol )
     if ( !found )
     {
         v->symbol = object_copy( symbol );
-        v->value = 0;
+        v->value = L0;
     }
 
     return v;
@@ -320,7 +320,7 @@ static void delete_var_( void * xvar, void * data )
 void var_done( struct module_t * module )
 {
     list_free( saved_var );
-    saved_var = 0;
+    saved_var = L0;
     hashenumerate( module->variables, delete_var_, (void *)0 );
     hashdone( module->variables );
 }

@@ -319,9 +319,9 @@ void make0
 #ifdef OPT_SEMAPHORE
     {
         LIST * var = var_get( root_module(), constant_JAM_SEMAPHORE );
-        if ( var )
+        if ( !list_empty( var ) )
         {
-            TARGET * semaphore = bindtarget( var->value );
+            TARGET * semaphore = bindtarget( list_front( var ) );
             semaphore->progress = T_MAKE_SEMAPHORE;
             t->semaphore = semaphore;
         }
@@ -793,7 +793,7 @@ static TARGETS * make0sort( TARGETS * chain )
 }
 
 
-static LIST * targets_to_update_ = 0;
+static LIST * targets_to_update_ = L0;
 
 
 void mark_target_for_updating( OBJECT * target )
@@ -811,5 +811,5 @@ LIST * targets_to_update()
 void clear_targets_to_update()
 {
     list_free( targets_to_update_ );
-    targets_to_update_ = 0;
+    targets_to_update_ = L0;
 }

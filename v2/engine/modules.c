@@ -152,15 +152,17 @@ void import_module( LIST * module_names, module_t * target_module )
     PROFILE_ENTER( IMPORT_MODULE );
 
     struct hash * h;
+    LISTITER iter, end;
 
     if ( !target_module->imported_modules )
         target_module->imported_modules = hashinit( sizeof( char * ), "imported" );
     h = target_module->imported_modules;
 
-    for ( ; module_names; module_names = module_names->next )
+    iter = list_begin( module_names ), end = list_end( module_names );
+    for ( ; iter != end; iter = list_next( iter ) )
     {
         int found;
-        OBJECT * s = module_names->value;
+        OBJECT * s = list_item( iter );
         OBJECT * * ss = (OBJECT * *)hash_insert( h, s, &found );
         if( !found )
         {

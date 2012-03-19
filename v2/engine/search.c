@@ -40,7 +40,7 @@ void call_bind_rule
 )
 {
     LIST * bind_rule = var_get( root_module(), constant_BINDRULE );
-    if ( bind_rule )
+    if ( !list_empty( bind_rule ) )
     {
         OBJECT * target = object_copy( target_ );
         OBJECT * boundname = object_copy( boundname_ );
@@ -55,7 +55,7 @@ void call_bind_rule
 
             lol_add( frame->args, list_new( L0, boundname ) );
             if ( lol_get( frame->args, 1 ) )
-                list_free( evaluate_rule( bind_rule->value, frame ) );
+                list_free( evaluate_rule( list_front( bind_rule ), frame ) );
 
             /* Clean up */
             frame_free( frame );
@@ -117,11 +117,12 @@ search(
     f->f_grist.ptr = 0;
     f->f_grist.len = 0;
 
-    if ( ( varlist = var_get( root_module(), constant_LOCATE ) ) )
+    varlist = var_get( root_module(), constant_LOCATE );
+    if ( !list_empty( varlist ) )
     {
         OBJECT * key;
-        f->f_root.ptr = object_str( varlist->value );
-        f->f_root.len = strlen( object_str( varlist->value ) );
+        f->f_root.ptr = object_str( list_front( varlist ) );
+        f->f_root.len = strlen( object_str( list_front( varlist ) ) );
 
         path_build( f, buf, 1 );
 
@@ -135,17 +136,18 @@ search(
         object_free( key );
         found = 1;
     }
-    else if ( varlist = var_get( root_module(), constant_SEARCH ) )
+    else if ( varlist = var_get( root_module(), constant_SEARCH ), !list_empty( varlist ) )
     {
-        while ( varlist )
+        LISTITER iter = list_begin( varlist ), end = list_end( varlist );
+        for ( ; iter != end; iter = list_next( iter ) )
         {
             BINDING * ba;
             file_info_t *ff;
             OBJECT * key;
             OBJECT * test_path;
 
-            f->f_root.ptr = object_str( varlist->value );
-            f->f_root.len = strlen( object_str( varlist->value ) );
+            f->f_root.ptr = object_str( list_item( iter ) );
+            f->f_root.len = strlen( object_str( list_item( iter ) ) );
 
             string_truncate( buf, 0 );
             path_build( f, buf, 1 );
@@ -180,8 +182,6 @@ search(
                 }
             }
             object_free( key );
-
-            varlist = list_next( varlist );
         }
     }
 

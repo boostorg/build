@@ -220,7 +220,7 @@ void exec_cmd
      * for a JAMSHELL setting of "%", indicating that the command should be
      * invoked directly.
      */
-    if ( shell && !strcmp( object_str( shell->value ), "%" ) && !list_next( shell ) )
+    if ( !list_empty( shell ) && !strcmp( object_str( list_front( shell ) ), "%" ) && list_next( list_begin( shell ) ) == list_end( shell ) )
     {
         raw_cmd = 1;
         shell = 0;
@@ -290,8 +290,8 @@ void exec_cmd
 
         if ( DEBUG_EXECCMD )
         {
-            if ( shell )
-                printf( "using user-specified shell: %s", object_str( shell->value ) );
+            if ( !list_empty( shell ) )
+                printf( "using user-specified shell: %s", object_str( list_front( shell ) ) );
             else
                 printf( "Executing through .bat file\n" );
         }
@@ -305,16 +305,17 @@ void exec_cmd
         int i;
         char jobno[ 4 ];
         int gotpercent = 0;
+        LISTITER shell_iter = list_begin( shell ), shell_end = list_end( shell );
 
         sprintf( jobno, "%d", slot + 1 );
 
-        for ( i = 0; shell && ( i < MAXARGC ); ++i, shell = list_next( shell ) )
+        for ( i = 0; shell_iter != shell_end && ( i < MAXARGC ); ++i, shell_iter = list_next( shell_iter ) )
         {
-            switch ( object_str( shell->value )[ 0 ] )
+            switch ( object_str( list_item( shell_iter ) )[ 0 ] )
             {
                 case '%': argv[ i ] = command; ++gotpercent; break;
                 case '!': argv[ i ] = jobno; break;
-                default : argv[ i ] = object_str( shell->value );
+                default : argv[ i ] = object_str( list_item( shell_iter ) );
             }
             if ( DEBUG_EXECCMD )
                 printf( "argv[%d] = '%s'\n", i, argv[ i ] );

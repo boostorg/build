@@ -78,9 +78,9 @@ static const char * cache_name( void )
     {
         LIST * hcachevar = var_get( root_module(), constant_HCACHEFILE );
 
-        if ( hcachevar )
+        if ( !list_empty( hcachevar ) )
         {
-            TARGET * t = bindtarget( hcachevar->value );
+            TARGET * t = bindtarget( list_front( hcachevar ) );
 
             pushsettings( root_module(), t->settings );
             /* Do not expect the cache file to be generated, so pass 0 as the
@@ -91,8 +91,7 @@ static const char * cache_name( void )
             t->boundname = search( t->name, &t->time, 0, 0 );
             popsettings( root_module(), t->settings );
 
-            if ( hcachevar )
-                name = object_copy( t->boundname );
+            name = object_copy( t->boundname );
         }
     }
     return name ? object_str( name ) : 0;
@@ -108,9 +107,9 @@ static int cache_maxage( void )
 {
     int age = 100;
     LIST * var = var_get( root_module(), constant_HCACHEMAXAGE );
-    if ( var )
+    if ( !list_empty( var ) )
     {
-        age = atoi( object_str( var->value ) );
+        age = atoi( object_str( list_front( var ) ) );
         if ( age < 0 )
             age = 0;
     }
@@ -241,7 +240,7 @@ void hcache_init()
         cachedata.age = atoi( object_str( age_str ) ) + 1;
 
         count = atoi( object_str( includes_count_str ) );
-        for ( l = 0, i = 0; i < count; ++i )
+        for ( l = L0, i = 0; i < count; ++i )
         {
             OBJECT * s = read_netstring( f );
             if ( !s )
@@ -262,7 +261,7 @@ void hcache_init()
         }
 
         count = atoi( object_str( hdrscan_count_str ) );
-        for ( l = 0, i = 0; i < count; ++i )
+        for ( l = L0, i = 0; i < count; ++i )
         {
             OBJECT * s = read_netstring( f );
             if ( !s )
@@ -329,7 +328,7 @@ void hcache_done()
     c = hcachelist;
     for ( c = hcachelist; c; c = c->next )
     {
-        LIST * l;
+        LISTITER iter, end;
         char   time_str[ 30 ];
         char   age_str[ 30 ];
         char   includes_count_str[ 30 ];
@@ -350,11 +349,13 @@ void hcache_done()
         write_netstring( f, time_str );
         write_netstring( f, age_str );
         write_netstring( f, includes_count_str );
-        for ( l = c->includes; l; l = list_next( l ) )
-            write_netstring( f, object_str( l->value ) );
+        for ( iter = list_begin( c->includes ), end = list_end( c->includes );
+            iter != end; iter = list_next( iter ) )
+            write_netstring( f, object_str( list_item( iter ) ) );
         write_netstring( f, hdrscan_count_str );
-        for ( l = c->hdrscan; l; l = list_next( l ) )
-            write_netstring( f, object_str( l->value ) );
+        for ( iter = list_begin( c->hdrscan ), end = list_end( c->hdrscan );
+            iter != end; iter = list_next( iter ) )
+            write_netstring( f, object_str( list_item( iter ) ) );
         fputs( "\n", f );
         ++header_count;
     }
@@ -394,19 +395,21 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
         if ( c->time == t->time )
         {
             LIST *l1 = hdrscan, *l2 = c->hdrscan;
-            while ( l1 && l2 )
+            LISTITER iter1 = list_begin( l1 ), end1 = list_end( l1 ),
+                iter2 = list_begin( l2 ), end2 = list_end( l2 );
+            while ( iter1 != end1 && iter2 != end2 )
             {
-                if (l1->value != l2->value)
+                if ( list_item( iter1 ) != list_item( iter2 ) )
                 {
-                    l1 = NULL;
+                    iter1 = end1;
                 }
                 else
                 {
-                    l1 = list_next( l1 );
-                    l2 = list_next( l2 );
+                    iter1 = list_next( iter1 );
+                    iter2 = list_next( iter2 );
                 }
             }
-            if ( l1 || l2 )
+            if ( iter1 != end1 || iter2 != end2 )
             {
                 if (DEBUG_HEADER)
                     printf( "HDRSCAN out of date in cache for %s\n",
@@ -422,8 +425,8 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
 
                 list_free( c->includes );
                 list_free( c->hdrscan );
-                c->includes = 0;
-                c->hdrscan = 0;
+                c->includes = L0;
+                c->hdrscan = L0;
             }
             else
             {
@@ -432,7 +435,7 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
                         object_str( t->boundname ) );
                 c->age = 0;
                 ++hits;
-                l = list_copy( 0, c->includes );
+                l = list_copy( L0, c->includes );
                 return l;
             }
         }
@@ -443,8 +446,8 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
                     object_str( t->boundname ) );
             list_free( c->includes );
             list_free( c->hdrscan );
-            c->includes = 0;
-            c->hdrscan = 0;
+            c->includes = L0;
+            c->hdrscan = L0;
         }
     }
     else
@@ -461,12 +464,12 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
 
     /* 'c' points at the cache entry. Its out of date. */
 
-    l = headers1( 0, t->boundname, rec, re );
+    l = headers1( L0, t->boundname, rec, re );
 
     c->time = t->time;
     c->age = 0;
-    c->includes = list_copy( 0, l );
-    c->hdrscan = list_copy( 0, hdrscan );
+    c->includes = list_copy( L0, l );
+    c->hdrscan = list_copy( L0, hdrscan );
 
     return l;
 }

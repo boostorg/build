@@ -55,7 +55,7 @@ file_info_t * file_info( OBJECT * filename )
         finfo->is_dir = 0;
         finfo->size = 0;
         finfo->time = 0;
-        finfo->files = 0;
+        finfo->files = L0;
     }
 
     object_free( filename );
@@ -67,13 +67,13 @@ static LIST * files_to_remove = L0;
 
 static void remove_files_atexit(void)
 {
-    /* we do pop front in case this exit function is called
-       more than once */
-    while ( files_to_remove )
+    LISTITER iter = list_begin( files_to_remove ), end = list_end( files_to_remove );
+    for ( ; iter != end; iter = list_next( iter ) )
     {
-        remove( object_str( files_to_remove->value ) );
-        files_to_remove = list_pop_front( files_to_remove );
+        remove( object_str( list_item( iter ) ) );
     }
+    list_free( files_to_remove );
+    files_to_remove = L0;
 }
 
 static void free_file_info ( void * xfile, void * data )

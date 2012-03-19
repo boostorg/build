@@ -62,25 +62,28 @@ headers( TARGET * t )
     LIST   * hdrscan;
     LIST   * hdrrule;
 	#ifndef OPT_HEADER_CACHE_EXT
-    LIST   * headlist = 0;
+    LIST   * headlist = L0;
 	#endif
     regexp * re[ MAXINC ];
     int rec = 0;
+    LISTITER iter, end;
 
-    if ( !( hdrscan = var_get( root_module(), constant_HDRSCAN ) ) )
+    hdrscan = var_get( root_module(), constant_HDRSCAN );
+    if ( list_empty( hdrscan ) )
         return;
 
-    if ( !( hdrrule = var_get( root_module(), constant_HDRRULE ) ) )
+    hdrrule = var_get( root_module(), constant_HDRRULE );
+    if ( list_empty( hdrrule ) )
         return;
 
     if ( DEBUG_HEADER )
         printf( "header scan %s\n", object_str( t->name ) );
 
     /* Compile all regular expressions in HDRSCAN */
-    while ( ( rec < MAXINC ) && hdrscan )
+    iter = list_begin( hdrscan ), end = list_end( hdrscan );
+    for ( ; ( rec < MAXINC ) && iter != end; iter = list_next( iter ) )
     {
-        re[ rec++ ] = regex_compile( hdrscan->value );
-        hdrscan = list_next( hdrscan );
+        re[ rec++ ] = regex_compile( list_item( iter ) );
     }
 
     /* Doctor up call to HDRRULE rule */
@@ -101,7 +104,7 @@ headers( TARGET * t )
              * $(<) */
             lol_add( frame->args, list_new( L0, object_copy( t->boundname ) ) );
 
-            list_free( evaluate_rule( hdrrule->value, frame ) );
+            list_free( evaluate_rule( list_front( hdrrule ), frame ) );
         }
 
         /* Clean up. */

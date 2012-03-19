@@ -532,7 +532,7 @@ static void make1c( state * pState )
             ( !( cmd->rule->actions->flags & RULE_QUIETLY ) && DEBUG_MAKE ) )
         {
             rule_name = object_str( cmd->rule->name );
-            target = object_str( lol_get( &cmd->args, 0 )->value );
+            target = object_str( list_front( lol_get( &cmd->args, 0 ) ) );
             if ( globs.noexec )
                 out_action( rule_name, target, cmd->buf->value, "", "", EXIT_OK );
         }
@@ -696,7 +696,7 @@ static void call_timing_rule( TARGET * target, timing_info * time )
     timing_rule = var_get( root_module(), constant_TIMING_RULE );
     popsettings( root_module(), target->settings );
 
-    if ( timing_rule )
+    if ( !list_empty( timing_rule ) )
     {
         /* rule timing-rule ( args * : target : start end user system ) */
 
@@ -705,7 +705,7 @@ static void call_timing_rule( TARGET * target, timing_info * time )
         frame_init( frame );
 
         /* args * :: $(__TIMING_RULE__[2-]) */
-        lol_add( frame->args, list_copy( L0, timing_rule->next ) );
+        lol_add( frame->args, list_copy_range( timing_rule, list_next( list_begin( timing_rule ) ), list_end( timing_rule ) ) );
 
         /* target :: the name of the target */
         lol_add( frame->args, list_new( L0, object_copy( target->name ) ) );
@@ -718,7 +718,7 @@ static void call_timing_rule( TARGET * target, timing_info * time )
             outf_double( time->system ) ) );
 
         /* Call the rule. */
-        evaluate_rule( timing_rule->value, frame );
+        evaluate_rule( list_front( timing_rule ), frame );
 
         /* Clean up. */
         frame_free( frame );
@@ -747,7 +747,7 @@ static void call_action_rule
     action_rule = var_get( root_module(), constant_ACTION_RULE );
     popsettings( root_module(), target->settings );
 
-    if ( action_rule )
+    if ( !list_empty( action_rule ) )
     {
         /* rule action-rule (
             args * :
@@ -760,7 +760,7 @@ static void call_action_rule
         frame_init( frame );
 
         /* args * :: $(__ACTION_RULE__[2-]) */
-        lol_add( frame->args, list_copy( L0, action_rule->next ) );
+        lol_add( frame->args, list_copy_range( action_rule, list_next( list_begin( action_rule ) ), list_end( action_rule ) ) );
 
         /* target :: the name of the target */
         lol_add( frame->args, list_new( L0, object_copy( target->name ) ) );
@@ -782,7 +782,7 @@ static void call_action_rule
             lol_add( frame->args, L0 );
 
         /* Call the rule. */
-        evaluate_rule( action_rule->value, frame );
+        evaluate_rule( list_front( action_rule ), frame );
 
         /* Clean up. */
         frame_free( frame );
@@ -872,16 +872,17 @@ static void make1d( state * pState )
     if (status != EXEC_CMD_OK) 
     {
         LIST * targets = lol_get( &cmd->args, 0 );
-        for ( ; targets; targets = list_next( targets ) )
+        LISTITER iter = list_begin( targets ), end = list_end( targets );
+        for ( ; iter != end; iter = list_next( iter ) )
         {
             int need_unlink = 1;
-            TARGET* t = bindtarget ( targets->value );
+            TARGET* t = bindtarget ( list_item( iter ) );
             if (t->flags & T_FLAG_PRECIOUS)
             {                
                 need_unlink = 0;
             }
-            if (need_unlink && !unlink( object_str( targets->value ) ) )
-                printf( "...removing %s\n", object_str( targets->value ) );
+            if (need_unlink && !unlink( object_str( list_item( iter ) ) ) )
+                printf( "...removing %s\n", object_str( list_item( iter ) ) );
         }
     }
 
@@ -934,7 +935,7 @@ static void swap_settings
 static CMD * make1cmds( TARGET * t )
 {
     CMD      * cmds = 0;
-    LIST     * shell = 0;
+    LIST     * shell = L0;
     module_t * settings_module = 0;
     TARGET   * settings_target = 0;
     ACTIONS  * a0;
@@ -980,14 +981,14 @@ static CMD * make1cmds( TARGET * t )
         /* If doing only updated (or existing) sources, but none have been
          * updated (or exist), skip this action.
          */
-        if ( !ns && ( actions->flags & ( RULE_NEWSRCS | RULE_EXISTING ) ) )
+        if ( list_empty( ns ) && ( actions->flags & ( RULE_NEWSRCS | RULE_EXISTING ) ) )
         {
             list_free( nt );
             continue;
         }
 
         swap_settings( &settings_module, &settings_target, rule->module, t );
-        if ( !shell )
+        if ( list_empty( shell ) )
         {
             shell = var_get( rule->module, constant_JAMSHELL );  /* shell is per-target */
         }
@@ -1098,11 +1099,11 @@ static LIST * make1list( LIST * l, TARGETS * targets, int flags )
         /* Prohibit duplicates for RULE_TOGETHER. */
         if ( flags & RULE_TOGETHER )
         {
-            LIST * m;
-            for ( m = l; m; m = m->next )
-                if ( object_equal( m->value, t->boundname ) )
+            LISTITER iter = list_begin( l ), end = list_end( l );
+            for ( ; iter != end; iter = list_next( iter ) )
+                if ( object_equal( list_item( iter ), t->boundname ) )
                     break;
-            if ( m )
+            if ( iter != end )
                 continue;
         }
 
@@ -1122,14 +1123,16 @@ static SETTINGS * make1settings( struct module_t * module, LIST * vars )
 {
     SETTINGS * settings = 0;
 
-    for ( ; vars; vars = list_next( vars ) )
+    LISTITER vars_iter = list_begin( vars ), vars_end = list_end( vars );
+    for ( ; vars_iter != vars_end; vars_iter = list_next( vars_iter ) )
     {
-        LIST * l = var_get( module, vars->value );
-        LIST * nl = 0;
+        LIST * l = var_get( module, list_item( vars_iter ) );
+        LIST * nl = L0;
+        LISTITER iter = list_begin( l ), end = list_end( l );
 
-        for ( ; l; l = list_next( l ) )
+        for ( ; iter != end; iter = list_next( iter ) )
         {
-            TARGET * t = bindtarget( l->value );
+            TARGET * t = bindtarget( list_item( iter ) );
 
             /* Make sure the target is bound. */
             if ( t->binding == T_BIND_UNBOUND )
@@ -1140,7 +1143,7 @@ static SETTINGS * make1settings( struct module_t * module, LIST * vars )
         }
 
         /* Add to settings chain. */
-        settings = addsettings( settings, VAR_SET, vars->value, nl );
+        settings = addsettings( settings, VAR_SET, list_item( vars_iter ), nl );
     }
 
     return settings;

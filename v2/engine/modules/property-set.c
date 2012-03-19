@@ -44,15 +44,15 @@ rule create ( raw-properties * )
 LIST *property_set_create( FRAME *frame, int flags )
 {
     LIST* properties = lol_get( frame->args, 0 );
-    LIST* sorted = 0;
+    LIST* sorted = L0;
 #if 0
     LIST* order_sensitive = 0;
 #endif
     LIST* unique;
-    LIST* tmp;
     LIST* val;
     string var[1];
     OBJECT* name;
+    LISTITER iter, end;
 
 #if 0
     /* Sort all properties which are not order sensitive */
@@ -77,25 +77,26 @@ LIST *property_set_create( FRAME *frame, int flags )
     string_new(var);
     string_append(var, ".ps.");
 
-    for(tmp = unique; tmp; tmp = tmp->next) {
-        string_append(var, object_str( tmp->value ));
+    iter = list_begin( unique ), end = list_end( unique );
+    for( ; iter != end; iter = list_next( iter ) ) {
+        string_append(var, object_str( list_item( iter ) ));
         string_push_back(var, '-');
     }
     name = object_new(var->value);
     val = var_get(frame->module, name);
-    if (val == 0)
+    if (list_empty(val))
     {
         OBJECT* rulename = object_new("new");
         val = call_rule(rulename, frame,
-                        list_append(list_new(0, object_new("property-set")), unique), 0);
+                        list_append(list_new(L0, object_new("property-set")), unique), 0);
         object_free(rulename);
 
-        var_set(frame->module, name, list_copy(0, val), VAR_SET);
+        var_set(frame->module, name, list_copy(L0, val), VAR_SET);
     }
     else
     {
         list_free(unique);
-        val = list_copy(0, val);
+        val = list_copy(L0, val);
     }
     object_free(name);
 

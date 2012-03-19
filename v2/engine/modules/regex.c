@@ -33,18 +33,19 @@ LIST *regex_transform( FRAME *frame, int flags )
     int* indices = 0;
     int size;
     int* p;
-    LIST* result = 0;
+    LIST* result = L0;
 
     string buf[1];
     string_new(buf);
 
-    if (indices_list)
+    if (!list_empty(indices_list))
     {
+        LISTITER iter = list_begin(indices_list), end = list_end(indices_list);
         size = list_length(indices_list);
         indices = (int*)BJAM_MALLOC(size*sizeof(int));
-        for(p = indices; indices_list; indices_list = indices_list->next)
+        for(p = indices; iter != end; iter = list_next(iter))
         {
-            *p++ = atoi(object_str(indices_list->value));
+            *p++ = atoi(object_str(list_item(iter)));
         }        
     }
     else 
@@ -56,11 +57,12 @@ LIST *regex_transform( FRAME *frame, int flags )
 
     {
         /* Result is cached and intentionally never freed */
-        regexp *re = regex_compile( pattern->value );
+        regexp *re = regex_compile( list_front( pattern ) );
 
-        for(; l; l = l->next)
+        LISTITER iter = list_begin( l ), end = list_end( l );
+        for( ; iter != end; iter = list_next( iter ) )
         {
-            if( regexec( re, object_str( l->value ) ) )
+            if( regexec( re, object_str( list_item( iter ) ) ) )
             {
                 int i = 0;
                 for(; i < size; ++i)

@@ -15,8 +15,9 @@
 LIST *add_pair( FRAME *frame, int flags )
 {
     LIST* arg = lol_get( frame->args, 0 );    
+    LISTITER iter = list_begin( arg ), end = list_end( arg );
 
-    var_set(frame->module, arg->value, list_copy(0, arg->next), VAR_APPEND);
+    var_set( frame->module, list_item( iter ), list_copy_range( arg, list_next( iter ), end ), VAR_APPEND );
 
     return L0;
 }
@@ -27,8 +28,9 @@ LIST *add_pair( FRAME *frame, int flags )
 int list_index(LIST* list, OBJECT* value)
 {
     int result = 0;
-    for(; list; list = list->next, ++result) {
-        if (object_equal(list->value, value))
+    LISTITER iter = list_begin(list), end = list_end(list);
+    for(; iter != end; iter = list_next(iter), ++result) {
+        if (object_equal(list_item(iter), value))
             return result;
     }
     return -1;
@@ -76,10 +78,10 @@ void topological_sort(int** graph, int num_vertices, int* result)
 
 LIST *order( FRAME *frame, int flags )
 {
-    LIST* arg = lol_get( frame->args, 0 );  
-    LIST* tmp;
-    LIST* result = 0;
+    LIST* arg = lol_get( frame->args, 0 );
+    LIST* result = L0;
     int src;
+    LISTITER iter = list_begin(arg), end = list_end(arg);
 
     /* We need to create a graph of order dependencies between
        the passed objects. We assume that there are no duplicates
@@ -89,15 +91,16 @@ LIST *order( FRAME *frame, int flags )
     int** graph = (int**)BJAM_CALLOC(length, sizeof(int*));
     int* order = (int*)BJAM_MALLOC((length+1)*sizeof(int));
    
-    for(tmp = arg, src = 0; tmp; tmp = tmp->next, ++src) {
+    for(src = 0; iter != end; iter = list_next(iter), ++src) {
         /* For all object this one depend upon, add elements
            to 'graph' */
-        LIST* dependencies = var_get(frame->module, tmp->value);
+        LIST* dependencies = var_get(frame->module, list_item(iter));
         int index = 0;
+        LISTITER dep_iter = list_begin(dependencies), dep_end = list_end(dependencies);
 
         graph[src] = (int*)BJAM_CALLOC(list_length(dependencies)+1, sizeof(int));
-        for(; dependencies; dependencies = dependencies->next) {          
-            int dst = list_index(arg, dependencies->value);
+        for(; dep_iter != dep_end; dep_iter = list_next(dep_iter)) {          
+            int dst = list_index(arg, list_item(dep_iter));
             if (dst != -1)
                 graph[src][index++] = dst;
         }
@@ -110,9 +113,9 @@ LIST *order( FRAME *frame, int flags )
         int index = length-1;
         for(; index >= 0; --index) {
             int i;
-            tmp = arg;
-            for (i = 0; i < order[index]; ++i, tmp = tmp->next);
-            result = list_new(result, object_copy(tmp->value));
+            iter = list_begin(arg), end = list_end(arg);
+            for (i = 0; i < order[index]; ++i, iter = list_next(iter));
+            result = list_new(result, object_copy(list_item(iter)));
         }
     }
 

@@ -11,10 +11,10 @@ LIST *path_exists( FRAME *frame, int flags )
     LIST* l = lol_get( frame->args, 0 );    
 
     time_t time;
-    timestamp(l->value, &time);
+    timestamp(list_front(l), &time);
     if (time != 0)
     {
-        return list_new(0, object_new("true"));
+        return list_new(L0, object_new("true"));
     }
     else
     {

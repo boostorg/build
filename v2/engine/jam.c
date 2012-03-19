@@ -521,7 +521,7 @@ int main( int argc, char * * argv, char * * arg_environ )
             }
         }
 
-        if (!targets_to_update())
+        if ( list_empty( targets_to_update() ) )
         {
             mark_target_for_updating( constant_all );
         }
@@ -569,12 +569,12 @@ int main( int argc, char * * argv, char * * arg_environ )
         {
             LIST *p = L0;
             p = var_get ( root_module(), constant_PARALLELISM );
-            if ( p )
+            if ( !list_empty( p ) )
             {
-                int j = atoi( object_str( p->value ) );
+                int j = atoi( object_str( list_front( p ) ) );
                 if ( j == -1 )
                 {
-                    printf( "Invalid value of PARALLELISM: %s\n", object_str( p->value ) );
+                    printf( "Invalid value of PARALLELISM: %s\n", object_str( list_front( p ) ) );
                 }
                 else
                 {
@@ -587,9 +587,9 @@ int main( int argc, char * * argv, char * * arg_environ )
         {
             LIST *p = L0;
             p = var_get( root_module(), constant_KEEP_GOING );
-            if ( p )
+            if ( !list_empty( p ) )
             {
-                int v = atoi( object_str( p->value ) );
+                int v = atoi( object_str( list_front( p ) ) );
                 if ( v == 0 )
                     globs.quitquick = 1;
                 else
@@ -602,14 +602,15 @@ int main( int argc, char * * argv, char * * arg_environ )
             PROFILE_ENTER( MAIN_MAKE );
 
             LIST * targets = targets_to_update();
-            if (targets)
+            if ( !list_empty( targets ) )
             {
                 int targets_count = list_length( targets );
+                LISTITER iter = list_begin( targets ), end = list_end( targets );
                 OBJECT * * targets2 = (OBJECT * *)
                     BJAM_MALLOC( targets_count * sizeof( OBJECT * ) );
                 int n = 0;
-                for ( ; targets; targets = list_next( targets ) )
-                    targets2[ n++ ] = targets->value;
+                for ( ; iter != end; iter = list_next( iter ) )
+                    targets2[ n++ ] = list_item( iter );
                 status |= make( targets_count, targets2, anyhow );
                 BJAM_FREE( (void *)targets2 );
             }
