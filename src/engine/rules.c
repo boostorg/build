@@ -237,8 +237,9 @@ void touch_target( OBJECT * t )
 
 TARGETS * targetlist( TARGETS * chain, LIST * target_names )
 {
-    for ( ; target_names; target_names = list_next( target_names ) )
-        chain = targetentry( chain, bindtarget( target_names->value ) );
+    LISTITER iter = list_begin( target_names ), end = list_end( target_names );
+    for ( ; iter != end; iter = list_next( iter ) )
+        chain = targetentry( chain, bindtarget( list_item( iter ) ) );
     return chain;
 }
 
@@ -404,7 +405,7 @@ SETTINGS * copysettings( SETTINGS * head )
     SETTINGS * copy = 0;
     SETTINGS * v;
     for ( v = head; v; v = v->next )
-        copy = addsettings( copy, VAR_SET, v->symbol, list_copy( 0, v->value ) );
+        copy = addsettings( copy, VAR_SET, v->symbol, list_copy( L0, v->value ) );
     return copy;
 }
 

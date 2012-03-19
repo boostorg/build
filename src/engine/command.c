@@ -33,8 +33,9 @@
 CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
 {
     CMD * cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
+    LISTITER iter = list_begin( shell ), end = list_end( shell );
     /* Lift line-length limitation entirely when JAMSHELL is just "%". */
-    int no_limit = ( shell && !strcmp(object_str(shell->value),"%") && !list_next(shell) );
+    int no_limit = ( iter != end && !strcmp( object_str( list_item( iter ) ), "%") && list_next( iter ) == end );
     int max_line = MAXLINE;
     FRAME frame[1];
 

@@ -140,21 +140,22 @@ void exec_cmd
     /* Forumulate argv. If shell was defined, be prepared for % and ! subs.
      * Otherwise, use stock /bin/sh on unix or cmd.exe on NT.
      */
-    if ( shell )
+    if ( !list_empty( shell ) )
     {
         int  i;
         char jobno[4];
         int  gotpercent = 0;
+        LISTITER iter = list_begin( shell ), end = list_end( shell );
 
         sprintf( jobno, "%d", slot + 1 );
 
-        for ( i = 0; shell && i < MAXARGC; ++i, shell = list_next( shell ) )
+        for ( i = 0; iter != end && i < MAXARGC; ++i, iter = list_next( iter ) )
         {
-            switch ( object_str( shell->value )[0] )
+            switch ( object_str( list_item( iter ) )[0] )
             {
                 case '%': argv[ i ] = string; ++gotpercent; break;
                 case '!': argv[ i ] = jobno;                break;
-                default : argv[ i ] = object_str( shell->value );
+                default : argv[ i ] = object_str( list_item( iter ) );
             }
             if ( DEBUG_EXECCMD )
                 printf( "argv[%d] = '%s'\n", i, argv[ i ] );

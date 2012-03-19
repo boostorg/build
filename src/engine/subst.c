@@ -40,26 +40,27 @@ LIST * builtin_subst( FRAME * frame, int flags )
 {
   LIST* result = L0;
   LIST* arg1 = lol_get( frame->args, 0 );
+  LISTITER iter = list_begin( arg1 ), end = list_end( arg1 );
 
-  if ( arg1 && list_next(arg1) && list_next(list_next(arg1)) )
+  if ( iter != end && list_next( iter ) != end && list_next( list_next( iter ) ) != end )
   {
 
-      const char* source = object_str( arg1->value );
-      OBJECT * pattern = list_next(arg1)->value;
+      const char* source = object_str( list_item( iter ) );
+      OBJECT * pattern = list_item( list_next( iter ) );
       regexp* repat = regex_compile( pattern );
 
       if ( regexec( repat, (char*)source) )
       {
-          LIST* subst = list_next(arg1);
+          LISTITER subst = list_next( iter );
 
-          while ((subst = list_next(subst)) != L0)
+          while ( ( subst = list_next( subst ) ) != end )
           {
 # define BUFLEN 4096
               char buf[BUFLEN + 1];
-              const char* in = object_str( subst->value );
+              const char* in = object_str( list_item( subst ) );
               char* out = buf;
 
-              for ( in = object_str( subst->value ); *in && out < buf + BUFLEN; ++in )
+              for ( ; *in && out < buf + BUFLEN; ++in )
               {
                   if ( *in == '\\' || *in == '$' )
                   {

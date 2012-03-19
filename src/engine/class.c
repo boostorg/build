@@ -17,11 +17,12 @@ static struct hash * classes = 0;
 
 static void check_defined( LIST * class_names )
 {
-    for ( ; class_names; class_names = class_names->next )
+    LISTITER iter = list_begin( class_names ), end = list_end( class_names );
+    for ( ; iter != end; iter = list_next( iter ) )
     {
-        if ( !hash_find( classes, class_names->value ) )
+        if ( !hash_find( classes, list_item( iter ) ) )
         {
-            printf( "Class %s is not defined\n", object_str( class_names->value ) );
+            printf( "Class %s is not defined\n", object_str( list_item( iter ) ) );
             abort();
         }
     }
@@ -113,23 +114,24 @@ static void import_base_rules( module_t * class_, OBJECT * base )
 
 OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
 {
-    OBJECT     * name = class_module_name( xname->value );
-    OBJECT   * * pp = &xname->value;
+    OBJECT     * name = class_module_name( list_front( xname ) );
+    OBJECT   * * pp;
     module_t   * class_module = 0;
     module_t   * outer_module = frame->module;
     int found;
+    LISTITER iter, end;
 
     if ( !classes )
         classes = hashinit( sizeof( OBJECT * ), "classes" );
 
-    pp = (OBJECT * *)hash_insert( classes, xname->value, &found );
+    pp = (OBJECT * *)hash_insert( classes, list_front( xname ), &found );
     if ( !found )
     {
-        *pp = object_copy( xname->value );
+        *pp = object_copy( list_front( xname ) );
     }
     else
     {
-        printf( "Class %s already defined\n", object_str( xname->value ) );
+        printf( "Class %s already defined\n", object_str( list_front( xname ) ) );
         abort();
     }
     check_defined( bases );
@@ -139,8 +141,9 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     var_set( class_module, constant_name, xname, VAR_SET );
     var_set( class_module, constant_bases, bases, VAR_SET );
 
-    for ( ; bases; bases = bases->next )
-        import_base_rules( class_module, bases->value );
+    iter = list_begin( bases ), end = list_end( bases );
+    for ( ; iter != end; iter = list_next( iter ) )
+        import_base_rules( class_module, list_item( iter ) );
 
     return name;
 }

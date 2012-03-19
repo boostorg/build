@@ -115,7 +115,7 @@ void frame_free( FRAME* frame )
 }
 
 
-static void argument_error( const char * message, RULE * rule, FRAME * frame, LIST * arg )
+static void argument_error( const char * message, RULE * rule, FRAME * frame, OBJECT * arg )
 {
     LOL * actual = frame->args;
     assert( rule->procedure != 0 );
@@ -124,7 +124,7 @@ static void argument_error( const char * message, RULE * rule, FRAME * frame, LI
     lol_print( rule->arguments->data );
     printf( " )\n* called with: ( " );
     lol_print( actual );
-    printf( " )\n* %s %s\n", message, arg ? object_str ( arg->value ) : "" );
+    printf( " )\n* %s %s\n", message, arg ? object_str ( arg ) : "" );
     function_location( rule->procedure, &frame->file, &frame->line );
     print_source_line( frame );
     printf( "see definition of rule '%s' being called\n", object_str( rule->name ) );
@@ -157,11 +157,12 @@ static int is_type_name( const char * s )
  * lists.
  */
 
-static char arg_modifier( LIST * formal )
+static char arg_modifier( LISTITER iter, LISTITER end )
 {
-    if ( formal->next )
+    iter = list_next( iter );
+    if ( iter != end )
     {
-        const char * next = object_str( formal->next->value );
+        const char * next = object_str( list_item( iter ) );
         if ( next && ( next[ 0 ] != 0 ) && ( next[ 1 ] == 0 ) )
             return next[ 0 ];
     }
@@ -188,10 +189,11 @@ static void type_check
     LIST    * values,
     FRAME   * caller,
     RULE    * called,
-    LIST    * arg_name
+    OBJECT  * arg_name
 )
 {
     static module_t * typecheck = 0;
+    LISTITER iter, end;
 
     /* If nothing to check, bail now. */
     if ( !values || !type_name )
@@ -206,7 +208,7 @@ static void type_check
     if ( !typecheck->rules || !hash_find( typecheck->rules, type_name ) )
         return;
 
-    while ( values != 0 )
+    for ( iter = list_begin( values ), end = list_end( values ); iter != end; iter = list_next( iter ) )
     {
         LIST *error;
         FRAME frame[1];
@@ -216,14 +218,13 @@ static void type_check
         frame->prev_user = caller->module->user_module ? caller : caller->prev_user;
 
         /* Prepare the argument list */
-        lol_add( frame->args, list_new( L0, object_copy( values->value ) ) );
+        lol_add( frame->args, list_new( L0, object_copy( list_item( iter ) ) ) );
         error = evaluate_rule( type_name, frame );
 
-        if ( error )
-            argument_error( object_str( error->value ), called, caller, arg_name );
+        if ( !list_empty( error ) )
+            argument_error( object_str( list_front( error ) ), called, caller, arg_name );
 
         frame_free( frame );
-        values = values->next;
     }
 }
 
@@ -250,55 +251,59 @@ collect_arguments( RULE* rule, FRAME* frame )
             OBJECT * type_name = 0;
 
             LIST *formal;
-            for ( formal = lol_get( all_formal, n ); formal; formal = formal->next )
+            LISTITER formal_iter, formal_end;
+            LISTITER actual_iter = list_begin( actual ), actual_end = list_end( actual );
+            for ( formal = lol_get( all_formal, n ),
+                formal_iter = list_begin( formal ), formal_end = list_end( formal );
+                formal_iter != formal_end; formal_iter = list_next( formal_iter ) )
             {
-                OBJECT * name = formal->value;
+                OBJECT * name = list_item( formal_iter );
 
                 if ( is_type_name( object_str( name ) ) )
                 {
                     if ( type_name )
-                        argument_error( "missing argument name before type name:", rule, frame, formal );
+                        argument_error( "missing argument name before type name:", rule, frame, name );
 
-                    if ( !formal->next )
-                        argument_error( "missing argument name after type name:", rule, frame, formal );
+                    if ( list_next( formal_iter ) == formal_end )
+                        argument_error( "missing argument name after type name:", rule, frame, name );
 
-                    type_name = formal->value;
+                    type_name = name;
                 }
                 else
                 {
-                    LIST* value = 0;
+                    LIST* value = L0;
                     char modifier;
-                    LIST* arg_name = formal; /* hold the argument name for type checking */
+                    OBJECT* arg_name = list_item( formal_iter ); /* hold the argument name for type checking */
                     int multiple = 0;
 
                     /* Stop now if a variable number of arguments are specified */
                     if ( object_str( name )[0] == '*' && object_str( name )[1] == 0 )
                         return locals;
 
-                    modifier = arg_modifier( formal );
+                    modifier = arg_modifier( formal_iter, formal_end );
 
-                    if ( !actual && modifier != '?' && modifier != '*' )
-                        argument_error( "missing argument", rule, frame, formal );
+                    if ( actual_iter == actual_end && modifier != '?' && modifier != '*' )
+                        argument_error( "missing argument", rule, frame, name );
 
                     switch ( modifier )
                     {
                     case '+':
                     case '*':
-                        value = list_copy( 0, actual );
+                        value = list_copy_range( actual, actual_iter, actual_end );
                         multiple = 1;
-                        actual = 0;
+                        actual_iter = actual_end;
                         /* skip an extra element for the modifier */
-                        formal = formal->next;
+                        formal_iter = list_next( formal_iter );
                         break;
                     case '?':
                         /* skip an extra element for the modifier */
-                        formal = formal->next;
+                        formal_iter = list_next( formal_iter );
                         /* fall through */
                     default:
-                        if ( actual ) /* in case actual is missing */
+                        if ( actual_iter != actual_end ) /* in case actual is missing */
                         {
-                            value = list_new( 0, object_copy( actual->value ) );
-                            actual = actual->next;
+                            value = list_new( L0, object_copy( list_item( actual_iter ) ) );
+                            actual_iter = list_next( actual_iter );
                         }
                     }
 
@@ -309,9 +314,9 @@ collect_arguments( RULE* rule, FRAME* frame )
                 }
             }
 
-            if ( actual )
+            if ( actual_iter != actual_end )
             {
-                argument_error( "extra argument", rule, frame, actual );
+                argument_error( "extra argument", rule, frame, list_item( actual_iter ) );
             }
         }
     }
@@ -386,8 +391,8 @@ call_python_function(RULE* r, FRAME* frame)
             if (args->multiple)
                 value = list_to_python(args->value);
             else {
-                if (args->value)
-                    value = PyString_FromString(object_str(args->value->value));
+                if (!list_empty(args->value))
+                    value = PyString_FromString(object_str(list_front(args->value)));
             }
 
             if (value)
@@ -403,10 +408,11 @@ call_python_function(RULE* r, FRAME* frame)
         {
             PyObject * arg = PyList_New(0);
             LIST* l = lol_get( frame->args, i);
+            LISTITER iter = list_begin( l ), end = list_end( l );
             
-            for ( ; l; l = l->next )
+            for ( ; iter != end; iter = list_next( iter ) )
             {
-                PyObject * v = PyString_FromString(object_str(l->value));
+                PyObject * v = PyString_FromString(object_str(list_item(iter)));
                 PyList_Append( arg, v );
                 Py_DECREF(v);
             }
@@ -446,7 +452,7 @@ call_python_function(RULE* r, FRAME* frame)
         {
             OBJECT *s = python_to_string(py_result);
             if (s)
-                result = list_new(0, s);
+                result = list_new(L0, s);
             else 
                 /* We have tried all we could.  Return empty list. There are
                    cases, e.g.  feature.feature function that should return

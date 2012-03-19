@@ -59,7 +59,7 @@ static HKEY get_key(char const** path)
 
 LIST * builtin_system_registry( FRAME * frame, int flags )
 {
-    char const* path = object_str( lol_get(frame->args, 0)->value );
+    char const* path = object_str( list_front( lol_get(frame->args, 0) ) );
     LIST* result = L0;
     HKEY key = get_key(&path);
 
@@ -71,10 +71,10 @@ LIST * builtin_system_registry( FRAME * frame, int flags )
         DWORD  type;
         BYTE   data[MAX_REGISTRY_DATA_LENGTH];
         DWORD  len = sizeof(data);
-        LIST const* const field = lol_get(frame->args, 1);
+        LIST * const field = lol_get(frame->args, 1);
 
         if ( ERROR_SUCCESS ==
-             RegQueryValueEx(key, field ? object_str( field->value ) : 0, 0, &type, data, &len) )
+             RegQueryValueEx(key, field ? object_str( list_front( field ) ) : 0, 0, &type, data, &len) )
         {
             switch (type)
             {
@@ -186,8 +186,8 @@ static LIST* get_value_names(HKEY key, char const* path)
 
 LIST * builtin_system_registry_names( FRAME * frame, int flags )
 {
-    char const* path        = object_str( lol_get(frame->args, 0)->value );
-    char const* result_type = object_str( lol_get(frame->args, 1)->value );
+    char const* path        = object_str( list_front( lol_get(frame->args, 0) ) );
+    char const* result_type = object_str( list_front( lol_get(frame->args, 1) ) );
 
     HKEY key = get_key(&path);
 

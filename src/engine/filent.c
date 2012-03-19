@@ -226,14 +226,14 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
     }
 
     /* Now enter contents of directory */
-    if ( d->files )
+    if ( !list_empty( d->files ) )
     {
         LIST * files = d->files;
-        while ( files )
+        LISTITER iter = list_begin( files ), end = list_end( files );
+        for ( ; iter != end; iter = list_next( iter ) )
         {
-            file_info_t * ff = file_info( files->value );
-            (*func)( closure, files->value, 1 /* stat()'ed */, ff->time );
-            files = list_next( files );
+            file_info_t * ff = file_info( list_item( iter ) );
+            (*func)( closure, list_item( iter ), 1 /* stat()'ed */, ff->time );
         }
     }
 
