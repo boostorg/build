@@ -1127,7 +1127,7 @@ LIST * builtin_import( FRAME * frame, int flags )
 
         imported = import_rule( r, target_module, list_item( target_iter ) );
         if ( !list_empty( localize ) )
-            imported->module = target_module;
+            rule_localize( imported, target_module );
         /* This rule is really part of some other module. Just refer to it here,
          * but do not let it out.
          */
@@ -1459,6 +1459,7 @@ LIST * builtin_instance( FRAME * frame, int flags )
     module_t * const instance     = bindmodule( list_front( arg1 ) );
     module_t * const class_module = bindmodule( list_front( arg2 ) );
     instance->class_module = class_module;
+    module_set_fixed_variables( instance, class_module->num_fixed_variables );
     return L0;
 }
 

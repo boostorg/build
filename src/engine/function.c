@@ -36,6 +36,7 @@ void backtrace_line( FRAME * frame );
 #define INSTR_PUSH_CONSTANT                 1
 #define INSTR_PUSH_ARG                      2
 #define INSTR_PUSH_VAR                      3
+#define INSTR_PUSH_VAR_FIXED                57
 #define INSTR_PUSH_GROUP                    4
 #define INSTR_PUSH_RESULT                   5
 #define INSTR_PUSH_APPEND                   6
@@ -69,6 +70,12 @@ void backtrace_line( FRAME * frame );
 #define INSTR_APPEND                        27
 #define INSTR_DEFAULT                       28
 
+#define INSTR_PUSH_LOCAL_FIXED              58
+#define INSTR_POP_LOCAL_FIXED               59
+#define INSTR_SET_FIXED                     60
+#define INSTR_APPEND_FIXED                  61
+#define INSTR_DEFAULT_FIXED                 62
+
 #define INSTR_PUSH_LOCAL_GROUP              29
 #define INSTR_POP_LOCAL_GROUP               30
 #define INSTR_SET_GROUP                     31
@@ -97,6 +104,7 @@ void backtrace_line( FRAME * frame );
 #define INSTR_PUSH_MODULE                   50
 #define INSTR_POP_MODULE                    51
 #define INSTR_CLASS                         52
+#define INSTR_BIND_MODULE_VARIABLES         63
 
 #define INSTR_APPEND_STRINGS                53
 #define INSTR_WRITE_FILE                    54
@@ -131,6 +139,8 @@ struct _function
     int type;
     int reference_count;
     OBJECT * rulename;
+    struct arg_list * formal_arguments;
+    int num_formal_arguments;
 };
 
 typedef struct _builtin_function
@@ -143,6 +153,7 @@ typedef struct _builtin_function
 typedef struct _jam_function
 {
     FUNCTION base;
+    int code_size;
     instruction * code;
     int num_constants;
     OBJECT * * constants;
@@ -150,6 +161,7 @@ typedef struct _jam_function
     SUBFUNCTION * functions;
     int num_subactions;
     SUBACTION * actions;
+    FUNCTION * generic;
     OBJECT * file;
     int line;
 } JAM_FUNCTION;
@@ -1192,9 +1204,12 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
     int i;
     result->base.type = FUNCTION_JAM;
     result->base.reference_count = 1;
+    result->base.formal_arguments = 0;
+    result->base.num_formal_arguments = 0;
 
     result->base.rulename = 0;
 
+    result->code_size = c->code->size;
     result->code = BJAM_MALLOC( c->code->size * sizeof(instruction) );
     memcpy( result->code, c->code->data, c->code->size * sizeof(instruction) );
 
@@ -1216,6 +1231,8 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
     result->actions = BJAM_MALLOC( c->actions->size * sizeof(SUBACTION) );
     memcpy( result->actions, c->actions->data, c->actions->size * sizeof(SUBACTION) );
     result->num_subactions = c->actions->size;
+
+    result->generic = 0;
 
     result->file = 0;
     result->line = -1;
@@ -2242,6 +2259,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     {
         compile_parse( parse->left, c, RESULT_STACK );
         compile_emit( c, INSTR_INCLUDE, 0 );
+        compile_emit( c, INSTR_BIND_MODULE_VARIABLES, 0 );
         adjust_result( c, RESULT_NONE, result_location );
     }
     else if ( parse->type == PARSE_MODULE )
@@ -2268,6 +2286,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         }
         compile_emit( c, INSTR_CLASS, 0 );
         compile_parse( parse->right, c, RESULT_NONE );
+        compile_emit( c, INSTR_BIND_MODULE_VARIABLES, 0 );
         compile_emit( c, INSTR_POP_MODULE, 0 );
 
         adjust_result( c, RESULT_NONE, result_location );
@@ -2533,6 +2552,8 @@ FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ), int 
     result->base.type = FUNCTION_BUILTIN;
     result->base.reference_count = 1;
     result->base.rulename = 0;
+    result->base.formal_arguments = 0;
+    result->base.num_formal_arguments = 0;
     result->func = func;
     result->flags = flags;
     return (FUNCTION *)result;
@@ -2571,6 +2592,429 @@ FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int li
     return (FUNCTION *)result;
 }
 
+void argument_error( const char * message, RULE * rule, FRAME * frame, OBJECT * arg );
+int is_type_name( const char * s );
+
+void type_check_range
+(
+    OBJECT  * type_name,
+    LISTITER  iter,
+    LISTITER  end,
+    FRAME   * caller,
+    RULE    * called,
+    OBJECT  * arg_name
+);
+
+void type_check
+(
+    OBJECT  * type_name,
+    LIST    * values,
+    FRAME   * caller,
+    RULE    * called,
+    OBJECT  * arg_name
+);
+
+struct argument {
+    int flags;
+#define ARG_ONE 0
+#define ARG_OPTIONAL 1
+#define ARG_PLUS 2
+#define ARG_STAR 3
+#define ARG_VARIADIC 4
+    OBJECT * type_name;
+    OBJECT * arg_name;
+    int index;
+};
+
+struct arg_list {
+    int size;
+    struct argument * args;
+};
+
+void argument_list_check( struct arg_list * formal, int formal_count, RULE * rule, FRAME * frame )
+{
+    LOL * all_actual = frame->args;
+    int i, j;
+
+    for ( i = 0; i < formal_count; ++i )
+    {
+        LIST *actual = lol_get( all_actual, i );
+        LISTITER actual_iter = list_begin( actual ), actual_end = list_end( actual );
+        for ( j = 0; j < formal[i].size; ++j )
+        {
+            struct argument * formal_arg = &formal[i].args[j];
+            LIST * value;
+
+            switch ( formal_arg->flags )
+            {
+            case ARG_ONE:
+                if ( actual_iter == actual_end )
+                    argument_error( "missing argument", rule, frame, formal_arg->arg_name );
+                type_check_range( formal_arg->type_name, actual_iter, list_next( actual_iter ), frame, rule, formal_arg->arg_name );
+                actual_iter = list_next( actual_iter );
+                break;
+            case ARG_OPTIONAL:
+                if ( actual_iter == actual_end )
+                    value = L0;
+                else
+                {
+                    type_check_range( formal_arg->type_name, actual_iter, list_next( actual_iter ), frame, rule, formal_arg->arg_name );
+                    actual_iter = list_next( actual_iter );
+                }
+                break;
+            case ARG_PLUS:
+                if ( actual_iter == actual_end )
+                    argument_error( "missing argument", rule, frame, formal_arg->arg_name );
+                /* fallthrough */
+            case ARG_STAR:
+                 type_check_range( formal_arg->type_name, actual_iter, actual_end, frame, rule, formal_arg->arg_name );
+                actual_iter = actual_end;
+            case ARG_VARIADIC:
+                return;
+            }
+        }
+
+        if ( actual_iter != actual_end )
+        {
+            argument_error( "extra argument", rule, frame, list_item( actual_iter ) );
+        }
+    }
+
+    for ( ; i < all_actual->count; ++i )
+    {
+        LIST * actual = lol_get( all_actual, i );
+        if ( !list_empty( actual ) )
+        {
+            argument_error( "extra argument", rule, frame, list_front( actual ) );
+        }
+    }
+}
+
+void argument_list_push( struct arg_list * formal, int formal_count, RULE * rule, FRAME * frame, STACK * s )
+{
+    LOL * all_actual = frame->args;
+    int i, j;
+
+    for ( i = 0; i < formal_count; ++i )
+    {
+        LIST *actual = lol_get( all_actual, i );
+        LISTITER actual_iter = list_begin( actual ), actual_end = list_end( actual );
+        for ( j = 0; j < formal[i].size; ++j )
+        {
+            struct argument * formal_arg = &formal[i].args[j];
+            LIST * value;
+
+            switch ( formal_arg->flags )
+            {
+            case ARG_ONE:
+                if ( actual_iter == actual_end )
+                    argument_error( "missing argument", rule, frame, formal_arg->arg_name );
+                value = list_new( L0, object_copy( list_item( actual_iter ) ) );
+                actual_iter = list_next( actual_iter );
+                break;
+            case ARG_OPTIONAL:
+                if ( actual_iter == actual_end )
+                    value = L0;
+                else
+                {
+                    value = list_new( L0, object_copy( list_item( actual_iter ) ) );
+                    actual_iter = list_next( actual_iter );
+                }
+                break;
+            case ARG_PLUS:
+                if ( actual_iter == actual_end )
+                    argument_error( "missing argument", rule, frame, formal_arg->arg_name );
+                /* fallthrough */
+            case ARG_STAR:
+                value = list_copy_range( actual, actual_iter, actual_end );
+                actual_iter = actual_end;
+                break;
+            case ARG_VARIADIC:
+                return;
+            }
+
+            type_check( formal_arg->type_name, value, frame, rule, formal_arg->arg_name );
+
+            if ( formal_arg->index != -1 )
+            {
+                LIST * * old = &frame->module->fixed_variables[ formal_arg->index ];
+                stack_push( s, *old );
+                *old = value;
+            }
+            else
+            {
+                stack_push( s, var_swap( frame->module, formal_arg->arg_name, value ) );
+            }
+        }
+
+        if ( actual_iter != actual_end )
+        {
+            argument_error( "extra argument", rule, frame, list_item( actual_iter ) );
+        }
+    }
+
+    for ( ; i < all_actual->count; ++i )
+    {
+        LIST * actual = lol_get( all_actual, i );
+        if ( !list_empty( actual ) )
+        {
+            argument_error( "extra argument", rule, frame, list_front( actual ) );
+        }
+    }
+}
+
+void argument_list_pop( struct arg_list * formal, int formal_count, FRAME * frame, STACK * s )
+{
+    int i, j;
+
+    for ( i = formal_count - 1; i >= 0; --i )
+    {
+        for ( j = formal[i].size - 1; j >= 0 ; --j )
+        {
+            struct argument * formal_arg = &formal[i].args[j];
+
+            if ( formal_arg->flags == ARG_VARIADIC )
+            {
+                continue;
+            }
+            else if ( formal_arg->index != -1 )
+            {
+                LIST * old = stack_pop( s );
+                LIST * * pos = &frame->module->fixed_variables[ formal_arg->index ];
+                list_free( *pos );
+                *pos = old;
+            }
+            else
+            {
+                var_set( frame->module, formal_arg->arg_name, stack_pop( s ), VAR_SET );
+            }
+        }
+    }
+}
+
+
+struct arg_list * argument_list_compile( LOL * all_formal, RULE * rule )
+{
+    struct arg_list * result = (struct arg_list *)BJAM_MALLOC( sizeof( struct arg_list ) * all_formal->count );
+
+    int n;
+    struct dynamic_array args[1];
+    dynamic_array_init( args );
+    for ( n = 0; n < all_formal->count ; ++n )
+    {
+        LIST *formal;
+        LISTITER formal_iter, formal_end;
+        for ( formal = lol_get( all_formal, n ),
+            formal_iter = list_begin( formal ), formal_end = list_end( formal );
+            formal_iter != formal_end; )
+        {
+            struct argument arg;
+            arg.type_name = 0;
+            arg.arg_name = list_item( formal_iter );
+            arg.index = -1;
+
+            if ( is_type_name( object_str( arg.arg_name ) ) )
+            {
+
+                formal_iter = list_next( formal_iter );
+
+                if ( formal_iter == formal_end )
+                    argument_error( "missing argument name after type name:", rule, 0, arg.arg_name );
+
+                arg.type_name = arg.arg_name;
+                arg.arg_name = list_item( formal_iter );
+
+                if ( is_type_name( object_str( arg.arg_name ) ) )
+                    argument_error( "missing argument name before type name:", rule, 0, arg.arg_name );
+            }
+
+            formal_iter = list_next( formal_iter );
+
+            if ( object_equal( arg.arg_name, constant_star ) )
+            {
+                arg.flags = ARG_VARIADIC;
+            }
+            else if ( formal_iter != formal_end )
+            {
+                if ( object_equal( list_item( formal_iter ), constant_question_mark ) )
+                {
+                    arg.flags = ARG_OPTIONAL;
+                    formal_iter = list_next( formal_iter );
+                }
+                else if ( object_equal( list_item( formal_iter ), constant_plus ) )
+                {
+                    arg.flags = ARG_PLUS;
+                    formal_iter = list_next( formal_iter );
+                }
+                else if ( object_equal( list_item( formal_iter ), constant_star ) )
+                {
+                    arg.flags = ARG_STAR;
+                    formal_iter = list_next( formal_iter );
+                }
+                else
+                    arg.flags = ARG_ONE;
+            }
+            else
+            {
+                arg.flags = ARG_ONE;
+            }
+
+            dynamic_array_push( args, arg );
+        }
+
+        result[ n ].args = BJAM_MALLOC( args[ 0 ].size * sizeof( struct argument ) );
+        result[ n ].size = args[ 0 ].size;
+        memcpy( result[n].args, args[ 0 ].data, args[ 0 ].size * sizeof( struct argument ) );
+        args[ 0 ].size = 0;
+    }
+    dynamic_array_free( args );
+
+    return result;
+}
+
+
+struct arg_list * argument_list_bind_variables( struct arg_list * formal, int formal_count, module_t * module, int * counter )
+{
+    if ( formal )
+    {
+        struct arg_list * result = (struct arg_list *)BJAM_MALLOC( sizeof( struct arg_list ) * formal_count );
+        int i, j;
+
+        for ( i = 0; i < formal_count; ++i )
+        {
+            struct argument * args = (struct argument *)BJAM_MALLOC( sizeof( struct argument ) * formal[ i ].size );
+            for ( j = 0; j < formal[ i ].size; ++j )
+            {
+                args[ j ] = formal[ i ].args[ j ];
+                if ( args[ j ].flags != ARG_VARIADIC )
+                {
+                    args[ j ].index = module_add_fixed_var( module, args[ j ].arg_name, counter );
+                }
+            }
+            result[ i ].args = args;
+            result[ i ].size = formal[ i ].size;
+        }
+    
+        return result;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+
+void argument_list_free( struct arg_list * args, int args_count )
+{
+    int i;
+    for ( i = 0; i < args_count; ++i )
+    {
+        BJAM_FREE( args[ i ].args );
+    }
+    BJAM_FREE( args );
+}
+
+
+void function_set_argument_list( FUNCTION * f, LOL * formal, RULE * rule )
+{
+    if ( !f->formal_arguments && formal )
+    {
+        f->formal_arguments = argument_list_compile( formal, rule );
+        f->num_formal_arguments = formal->count;
+    }
+}
+
+
+FUNCTION * function_unbind_variables( FUNCTION * f )
+{
+    if ( f->type == FUNCTION_JAM )
+    {
+        JAM_FUNCTION * func = (JAM_FUNCTION *)f;
+        if ( func->generic )
+            return func->generic;
+        else
+            return (FUNCTION *)func;
+    }
+    else
+    {
+        return f;
+    }
+}
+
+FUNCTION * function_bind_variables( FUNCTION * f, module_t * module, int * counter )
+{
+    if ( f->type == FUNCTION_BUILTIN )
+    {
+        return f;
+    }
+    else
+    {
+        JAM_FUNCTION * func = (JAM_FUNCTION *)f;
+        JAM_FUNCTION * new_func = BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
+        instruction * code;
+        int i;
+        memcpy( new_func, func, sizeof( JAM_FUNCTION ) );
+        new_func->base.reference_count = 1;
+        new_func->base.formal_arguments = argument_list_bind_variables( f->formal_arguments, f->num_formal_arguments, module, counter );
+        new_func->code = BJAM_MALLOC( func->code_size * sizeof( instruction ) );
+        memcpy( new_func->code, func->code, func->code_size * sizeof( instruction ) );
+        new_func->generic = (FUNCTION *)func;
+        func = new_func;
+        for ( i = 0; ; ++i )
+        {
+            OBJECT * key;
+            int op_code;
+            code = func->code + i;
+            switch ( code->op_code )
+            {
+            case INSTR_PUSH_VAR: op_code = INSTR_PUSH_VAR_FIXED; break;
+            case INSTR_PUSH_LOCAL: op_code = INSTR_PUSH_LOCAL_FIXED; break;
+            case INSTR_POP_LOCAL: op_code = INSTR_POP_LOCAL_FIXED; break;
+            case INSTR_SET: op_code = INSTR_SET_FIXED; break;
+            case INSTR_APPEND: op_code = INSTR_APPEND_FIXED; break;
+            case INSTR_DEFAULT: op_code = INSTR_DEFAULT_FIXED; break;
+            case INSTR_RETURN: return (FUNCTION *)new_func;
+            case INSTR_CALL_RULE: ++i; continue;
+            case INSTR_PUSH_MODULE:
+                {
+                    int depth = 1;
+                    ++i;
+                    while ( depth > 0 )
+                    {
+                        code = func->code + i;
+                        switch ( code->op_code )
+                        {
+                        case INSTR_PUSH_MODULE:
+                        case INSTR_CLASS:
+                            ++depth;
+                            break;
+                        case INSTR_POP_MODULE:
+                            --depth;
+                            break;
+                        case INSTR_CALL_RULE:
+                            ++i;
+                            break;
+                        }
+                        ++i;
+                    }
+                    --i;
+                }
+            default: continue;
+            }
+            key = func->constants[ code->arg ];
+            if ( !( object_equal( key, constant_TMPDIR ) ||
+                    object_equal( key, constant_TMPNAME ) ||
+                    object_equal( key, constant_TMPFILE ) ||
+                    object_equal( key, constant_STDOUT ) ||
+                    object_equal( key, constant_STDERR ) ) )
+            {
+                code->op_code = op_code;
+                code->arg = module_add_fixed_var( module, key, counter );
+            }
+        }
+    }
+}
+
 void function_refer( FUNCTION * func )
 {
     ++func->reference_count;
@@ -2581,35 +3025,47 @@ void function_free( FUNCTION * function_ )
     int i;
 
     if ( --function_->reference_count != 0 ) return;
-
-    if ( function_->rulename ) object_free( function_->rulename );
+    
+    if ( function_->formal_arguments ) argument_list_free( function_->formal_arguments, function_->num_formal_arguments );
 
     if ( function_->type == FUNCTION_JAM )
     {
         JAM_FUNCTION * func = (JAM_FUNCTION *)function_;
 
         BJAM_FREE( func->code );
-        for ( i = 0; i < func->num_constants; ++i )
-        {
-            object_free( func->constants[i] );
-        }
-        BJAM_FREE( func->constants );
 
-        for ( i = 0; i < func->num_subfunctions; ++i )
+        if ( func->generic )
+            function_free( func->generic );
+        else
         {
-            object_free( func->functions[i].name );
-            function_free( func->functions[i].code );
-        }
-        BJAM_FREE( func->functions );
+            if ( function_->rulename ) object_free( function_->rulename );
 
-        for ( i = 0; i < func->num_subactions; ++i )
-        {
-            object_free( func->actions[i].name );
-            function_free( func->actions[i].command );
-        }
-        BJAM_FREE( func->actions );
+            for ( i = 0; i < func->num_constants; ++i )
+            {
+                object_free( func->constants[i] );
+            }
+            BJAM_FREE( func->constants );
 
-        object_free( func->file );
+            for ( i = 0; i < func->num_subfunctions; ++i )
+            {
+                object_free( func->functions[i].name );
+                function_free( func->functions[i].code );
+            }
+            BJAM_FREE( func->functions );
+
+            for ( i = 0; i < func->num_subactions; ++i )
+            {
+                object_free( func->actions[i].name );
+                function_free( func->actions[i].command );
+            }
+            BJAM_FREE( func->actions );
+
+            object_free( func->file );
+        }
+    }
+    else
+    {
+        if ( function_->rulename ) object_free( function_->rulename );
     }
 
     BJAM_FREE( function_ );
@@ -2641,6 +3097,28 @@ void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string
     *(string * *)stack_allocate( s, sizeof( string * ) ) = out;
     list_free( function_run( function, frame, s ) );
     stack_deallocate( s, sizeof( string * ) );
+}
+
+LIST * function_run_with_args( FUNCTION * function_, FRAME * frame, STACK * s, RULE * rule )
+{
+    LIST * result;
+    if ( function_->type == FUNCTION_BUILTIN )
+    {
+        BUILTIN_FUNCTION * f = (BUILTIN_FUNCTION *)function_;
+        if ( function_->formal_arguments )
+            argument_list_check( function_->formal_arguments, function_->num_formal_arguments, rule, frame );
+        return f->func( frame, f->flags );
+    }
+    
+    if ( function_->formal_arguments )
+        argument_list_push( function_->formal_arguments, function_->num_formal_arguments, rule, frame, s );
+    
+    result = function_run( function_, frame, s );
+
+    if ( function_->formal_arguments )
+        argument_list_pop( function_->formal_arguments, function_->num_formal_arguments, frame, s );
+
+    return result;
 }
 
 /*
@@ -2697,6 +3175,12 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_VAR:
         {
             stack_push( s, function_get_variable( function, frame, code->arg ) );
+            break;
+        }
+
+        case INSTR_PUSH_VAR_FIXED:
+        {
+            stack_push( s, list_copy( L0, frame->module->fixed_variables[ code->arg ] ) );
             break;
         }
 
@@ -2952,6 +3436,26 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             break;
         }
 
+        case INSTR_PUSH_LOCAL_FIXED:
+        {
+            LIST * value = stack_pop( s );
+            LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
+            assert( code->arg < frame->module->num_fixed_variables );
+            stack_push( s, *ptr );
+            *ptr = value;
+            break;
+        }
+
+        case INSTR_POP_LOCAL_FIXED:
+        {
+            LIST * value = stack_pop( s );
+            LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
+            assert( code->arg < frame->module->num_fixed_variables );
+            list_free( *ptr );
+            *ptr = value;
+            break;
+        }
+
         case INSTR_PUSH_LOCAL_GROUP:
         {
             LIST * value = stack_pop( s );
@@ -3101,9 +3605,36 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             function_append_variable( function, frame, code->arg, list_copy( L0, stack_top( s ) ) );
             break;
         }
+
         case INSTR_DEFAULT:
         {
             function_default_variable( function, frame, code->arg, list_copy( L0, stack_top( s ) ) );
+            break;
+        }
+
+        case INSTR_SET_FIXED:
+        {
+            LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
+            assert( code->arg < frame->module->num_fixed_variables );
+            list_free( *ptr );
+            *ptr = list_copy( L0, stack_top( s ) );
+            break;
+        }
+
+        case INSTR_APPEND_FIXED:
+        {
+            LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
+            assert( code->arg < frame->module->num_fixed_variables );
+            *ptr = list_append( *ptr, list_copy( L0, stack_top( s ) ) );
+            break;
+        }
+
+        case INSTR_DEFAULT_FIXED:
+        {
+            LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
+            assert( code->arg < frame->module->num_fixed_variables );
+            if ( list_empty( *ptr ) )
+                *ptr = list_copy( L0, stack_top( s ) );
             break;
         }
 
@@ -3372,6 +3903,12 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             
             *(module_t * *)stack_allocate( s, sizeof( module_t * ) ) = outer_module;
 
+            break;
+        }
+
+        case INSTR_BIND_MODULE_VARIABLES:
+        {
+            module_bind_variables( frame->module );
             break;
         }
         

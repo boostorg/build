@@ -115,7 +115,7 @@ void frame_free( FRAME* frame )
 }
 
 
-static void argument_error( const char * message, RULE * rule, FRAME * frame, OBJECT * arg )
+void argument_error( const char * message, RULE * rule, FRAME * frame, OBJECT * arg )
 {
     LOL * actual = frame->args;
     assert( rule->procedure != 0 );
@@ -144,7 +144,7 @@ static void argument_error( const char * message, RULE * rule, FRAME * frame, OB
  * specification.
  */
 
-static int is_type_name( const char * s )
+int is_type_name( const char * s )
 {
     return ( s[ 0 ] == TYPE_OPEN_DELIM ) &&
         ( s[ strlen( s ) - 1 ] == TYPE_CLOSE_DELIM );
@@ -183,20 +183,20 @@ static char arg_modifier( LISTITER iter, LISTITER end )
  *                 checked
  */
 
-static void type_check
+void type_check_range
 (
     OBJECT  * type_name,
-    LIST    * values,
+    LISTITER  iter,
+    LISTITER  end,
     FRAME   * caller,
     RULE    * called,
     OBJECT  * arg_name
 )
 {
     static module_t * typecheck = 0;
-    LISTITER iter, end;
 
     /* If nothing to check, bail now. */
-    if ( !values || !type_name )
+    if ( iter == end || !type_name )
         return;
 
     if ( !typecheck )
@@ -208,7 +208,7 @@ static void type_check
     if ( !typecheck->rules || !hash_find( typecheck->rules, type_name ) )
         return;
 
-    for ( iter = list_begin( values ), end = list_end( values ); iter != end; iter = list_next( iter ) )
+    for ( ; iter != end; iter = list_next( iter ) )
     {
         LIST *error;
         FRAME frame[1];
@@ -227,6 +227,19 @@ static void type_check
         frame_free( frame );
     }
 }
+
+void type_check
+(
+    OBJECT  * type_name,
+    LIST    * values,
+    FRAME   * caller,
+    RULE    * called,
+    OBJECT  * arg_name
+)
+{
+    type_check_range( type_name, list_begin( values ), list_end( values ), caller, called, arg_name );
+}
+
 
 /*
  * collect_arguments() - local argument checking and collection
@@ -485,6 +498,7 @@ module_t * python_module()
 
 #endif
 
+LIST * function_run_with_args( FUNCTION * function_, FRAME * frame, STACK * s, RULE * rule );
 
 /*
  * evaluate_rule() - execute a rule invocation.
@@ -637,16 +651,10 @@ evaluate_rule(
      */
     if ( rule->procedure )
     {
-        SETTINGS * local_args = collect_arguments( rule, frame );
         FUNCTION * function = rule->procedure;
 
         function_refer( function );
-
-        pushsettings( frame->module, local_args );
-        result = function_run( function, frame, stack_global() );
-        popsettings( frame->module, local_args );
-        freesettings( local_args );
-
+        result = function_run_with_args( function, frame, stack_global(), rule );
         function_free( function );
     }
 

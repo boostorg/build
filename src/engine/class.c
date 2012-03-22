@@ -80,7 +80,10 @@ static void import_base_rule( void * r_, void * d_ )
     /* If we are importing a class method, localize it. */
     if ( ( r->module == d->base_module ) || ( r->module->class_module &&
         ( r->module->class_module == d->base_module ) ) )
-        ir1->module = ir2->module = d->class_module;
+    {
+        rule_localize( ir1, d->class_module );
+        rule_localize( ir2, d->class_module );
+    }
 
     string_free( qualified_name );
 }
