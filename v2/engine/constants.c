@@ -23,6 +23,8 @@ void constants_init( void )
     constant_dot                = object_new( "." );
     constant_percent            = object_new( "%" );
     constant_plus               = object_new( "+" );
+    constant_star               = object_new( "*" );
+    constant_question_mark      = object_new( "?" );
     constant_ok                 = object_new( "ok" );
     constant_true               = object_new( "true" );
     constant_name               = object_new( "__name__" );
@@ -77,6 +79,8 @@ void constants_done( void )
     object_free( constant_dot );
     object_free( constant_percent );
     object_free( constant_plus );
+    object_free( constant_star );
+    object_free( constant_question_mark );
     object_free( constant_ok );
     object_free( constant_true );
     object_free( constant_name );
@@ -129,6 +133,8 @@ OBJECT * constant_empty;
 OBJECT * constant_dot;
 OBJECT * constant_percent;
 OBJECT * constant_plus;
+OBJECT * constant_star;
+OBJECT * constant_question_mark;
 OBJECT * constant_ok;
 OBJECT * constant_true;
 OBJECT * constant_name;

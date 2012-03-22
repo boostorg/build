@@ -13,6 +13,9 @@ struct module_t
     OBJECT * name;
     struct hash * rules;
     struct hash * variables;
+    struct hash * variable_indices;
+    int num_fixed_variables;
+    LIST * * fixed_variables;
     struct hash * imported_modules;
     struct module_t * class_module;
     struct hash * native_rules;
@@ -29,6 +32,20 @@ void import_module( LIST * module_names, module_t * target_module );
 LIST* imported_modules(module_t* module);
 
 struct hash * demand_rules( module_t * );
+
+void module_bind_variables( struct module_t * m );
+
+/*
+ * After calling module_add_fixed_var, module_set_fixed_variables
+ * must be called before accessing any variables in the module.
+ */
+int module_add_fixed_var( struct module_t * m, OBJECT * name, int * n );
+void module_set_fixed_variables( struct module_t * m, int n );
+
+/*
+ * Returns the index of the variable or -1 if none exists.
+ */
+int module_get_fixed_var( struct module_t * m, OBJECT * name );
 
 void modules_done();
 

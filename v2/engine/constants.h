@@ -20,6 +20,8 @@ extern OBJECT * constant_empty;             /* "" */
 extern OBJECT * constant_dot;               /* "." */
 extern OBJECT * constant_percent;           /* "%" */
 extern OBJECT * constant_plus;              /* "+" */
+extern OBJECT * constant_star;              /* "*" */
+extern OBJECT * constant_question_mark;     /* "?" */
 extern OBJECT * constant_ok;                /* "ok" */
 extern OBJECT * constant_true;              /* "true" */
 extern OBJECT * constant_name;              /* "__name__" */

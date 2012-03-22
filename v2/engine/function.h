@@ -32,6 +32,9 @@ LIST * function_run( FUNCTION * function, FRAME * frame, STACK * s );
 FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int line );
 void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string * out );
 
+FUNCTION * function_bind_variables( FUNCTION * f, module_t * module, int * counter );
+FUNCTION * function_unbind_variables( FUNCTION * f );
+
 void function_done( void );
 
 #endif

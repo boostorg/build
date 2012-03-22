@@ -556,6 +556,7 @@ void actions_free( rule_actions * a )
     }
 }
 
+void function_set_argument_list( FUNCTION * f, LOL * formal, RULE * rule );
 
 /*
  * set_rule_body() - set the argument list and procedure of the given rule.
@@ -568,6 +569,9 @@ static void set_rule_body( RULE * rule, argument_list * args, FUNCTION * procedu
     if ( rule->arguments )
         args_free( rule->arguments );
     rule->arguments = args;
+
+    if ( procedure && args )
+        function_set_argument_list( procedure, args->data, rule );
 
     if ( procedure )
         function_refer( procedure );
@@ -762,3 +766,17 @@ RULE * import_rule( RULE * source, module_t * m, OBJECT * name )
     set_rule_actions( dest, source->actions );
     return dest;
 }
+
+
+void rule_localize( RULE * rule, module_t * m )
+{
+    rule->module = m;
+    if ( rule->procedure )
+    {
+        FUNCTION * procedure = function_unbind_variables( rule->procedure );
+        function_refer( procedure );
+        function_free( rule->procedure );
+        rule->procedure = procedure;
+    }
+}
+
