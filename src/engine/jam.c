@@ -604,15 +604,7 @@ int main( int argc, char * * argv, char * * arg_environ )
             LIST * targets = targets_to_update();
             if ( !list_empty( targets ) )
             {
-                int targets_count = list_length( targets );
-                LISTITER iter = list_begin( targets ), end = list_end( targets );
-                OBJECT * * targets2 = (OBJECT * *)
-                    BJAM_MALLOC( targets_count * sizeof( OBJECT * ) );
-                int n = 0;
-                for ( ; iter != end; iter = list_next( iter ) )
-                    targets2[ n++ ] = list_item( iter );
-                status |= make( targets_count, targets2, anyhow );
-                BJAM_FREE( (void *)targets2 );
+                status |= make( targets, anyhow );
             }
             else
             {

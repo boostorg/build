@@ -106,9 +106,8 @@ static const char * target_bind[] =
  * make() - make a target, given its name.
  */
 
-int make( int n_targets, OBJECT * * targets, int anyhow )
+int make( LIST * targets, int anyhow )
 {
-    int    i;
     COUNTS counts[ 1 ];
     int    status = 0;     /* 1 if anything fails */
 
@@ -124,10 +123,11 @@ int make( int n_targets, OBJECT * * targets, int anyhow )
     bind_explicitly_located_targets();
 
     {
+        LISTITER iter, end;
         PROFILE_ENTER( MAKE_MAKE0 );
-        for ( i = 0; i < n_targets; ++i )
+        for ( iter = list_begin( targets ), end = list_end( targets ); iter != end; iter = list_next( iter ) )
         {
-            TARGET * t = bindtarget( targets[ i ] );
+            TARGET * t = bindtarget( list_item( iter ) );
             if ( t->fate == T_FATE_INIT )
                 make0( t, 0, 0, counts, anyhow );
         }
@@ -136,8 +136,11 @@ int make( int n_targets, OBJECT * * targets, int anyhow )
 
 #ifdef OPT_GRAPH_DEBUG_EXT
     if ( DEBUG_GRAPH )
-        for ( i = 0; i < n_targets; ++i )
-            dependGraphOutput( bindtarget( targets[ i ] ), 0 );
+    {
+        LISTITER iter, end;
+        for ( iter = list_begin( targets ), end = list_end( targets ); iter != end; iter = list_next( iter ) )
+           dependGraphOutput( bindtarget( list_item( iter ) ), 0 );
+    }
 #endif
 
     if ( DEBUG_MAKE )
@@ -162,9 +165,10 @@ int make( int n_targets, OBJECT * * targets, int anyhow )
     status = counts->cantfind || counts->cantmake;
 
     {
+        LISTITER iter, end;
         PROFILE_ENTER( MAKE_MAKE1 );
-        for ( i = 0; i < n_targets; ++i )
-            status |= make1( bindtarget( targets[ i ] ) );
+        for ( iter = list_begin( targets ), end = list_end( targets ); iter != end; iter = list_next( iter ) )
+            status |= make1( bindtarget( list_item( iter ) ) );
         PROFILE_EXIT( MAKE_MAKE1 );
     }
 
