@@ -1360,16 +1360,11 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     LIST * log = lol_get( frame->args, 1 );
     LIST * force = lol_get( frame->args, 2 );
     LIST * continue_ = lol_get( frame->args, 3 );
-    int status = 0;
+    int status;
     int original_stdout = 0;
     int original_stderr = 0;
-    int n;
-    int targets_count;
-    OBJECT * * targets2;
-    int i;
     int original_noexec = 0;
     int original_quitquick = 0;
-    LISTITER iter, end;
 	
 
     if ( !list_empty( log ) )
@@ -1396,13 +1391,7 @@ LIST * builtin_update_now( FRAME * frame, int flags )
         globs.quitquick = 0;
     }
 
-    targets_count = list_length( targets );
-    targets2 = (OBJECT * *)BJAM_MALLOC( targets_count * sizeof( OBJECT * ) );    
-    iter = list_begin( targets ), end = list_end( targets );
-    for (i = 0 ; iter != end; iter = list_next( iter ) )
-        targets2[ i++ ] = list_item( iter );
-    status |= make( targets_count, targets2, anyhow);
-    BJAM_FREE( (void *)targets2 );
+    status = make( targets, anyhow );
 
     if ( !list_empty( force ) )
     {

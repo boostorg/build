@@ -14,7 +14,7 @@
 #include "lists.h"
 #include "object.h"
 
-int make( int n_targets, OBJECT * * targets, int anyhow );
+int make( LIST * targets, int anyhow );
 int make1( TARGET * t );
 
 typedef struct {
