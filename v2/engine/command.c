@@ -51,8 +51,8 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
     frame_init( frame );
     frame->module = rule->module;
     lol_init( frame->args );
-    lol_add( frame->args, list_copy( L0, targets ) );
-    lol_add( frame->args, list_copy( L0, sources ) );
+    lol_add( frame->args, list_copy( targets ) );
+    lol_add( frame->args, list_copy( sources ) );
     function_run_actions( rule->actions->command, frame, stack_global(), cmd->buf );
     frame_free( frame );
 

@@ -91,12 +91,12 @@ LIST *property_set_create( FRAME *frame, int flags )
                         list_append(list_new(L0, object_new("property-set")), unique), 0);
         object_free(rulename);
 
-        var_set(frame->module, name, list_copy(L0, val), VAR_SET);
+        var_set(frame->module, name, list_copy(val), VAR_SET);
     }
     else
     {
         list_free(unique);
-        val = list_copy(L0, val);
+        val = list_copy(val);
     }
     object_free(name);
 

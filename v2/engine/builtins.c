@@ -1335,7 +1335,7 @@ LIST * builtin_pwd( FRAME * frame, int flags )
 
 LIST * builtin_update( FRAME * frame, int flags )
 {
-    LIST * result = list_copy( L0, targets_to_update() );
+    LIST * result = list_copy( targets_to_update() );
     LIST * arg1 = lol_get( frame->args, 0 );
     LISTITER iter = list_begin( arg1 ), end = list_end( arg1 );
     clear_targets_to_update();

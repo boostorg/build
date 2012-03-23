@@ -80,7 +80,7 @@ struct _lol {
 };
 
 LIST *  list_append( LIST *l, LIST *nl );
-LIST *  list_copy( LIST *l, LIST  *nl );
+LIST *  list_copy( LIST  *l );
 LIST *  list_copy_range( LIST *l, LISTITER first, LISTITER last );
 void    list_free( LIST *head );
 LIST *  list_new( LIST *head, OBJECT *string );
