@@ -1568,7 +1568,12 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
      */
     if ( dotdots )
     {
-        if ( rooted ) return L0;
+        if ( rooted )
+        {
+            string_free( out );
+            string_free( in );
+            return L0;
+        }
         do
             string_append( out, "/.." );
         while ( --dotdots );
