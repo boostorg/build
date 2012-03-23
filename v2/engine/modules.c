@@ -235,7 +235,9 @@ void module_bind_variables( struct module_t * m )
 {
     if ( m != root_module() && m->rules )
     {
-        struct bind_vars_t data = { m, m->num_fixed_variables };
+        struct bind_vars_t data;
+        data.module = m;
+        data.counter = m->num_fixed_variables;
         hashenumerate( m->rules, &bind_variables_for_rule, &data );
         module_set_fixed_variables( m, data.counter );
     }
