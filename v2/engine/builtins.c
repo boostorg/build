@@ -688,9 +688,10 @@ static LIST * downcase_list( LIST * in )
 
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        string_copy( s, object_str( list_item( iter ) ) );
+        string_append( s, object_str( list_item( iter ) ) );
         downcase_inplace( s->value );
         result = list_append( result, list_new( L0, object_new( s->value ) ) );
+        string_truncate( s, 0 );
     }
 
     string_free( s );
