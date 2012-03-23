@@ -435,7 +435,7 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
                         object_str( t->boundname ) );
                 c->age = 0;
                 ++hits;
-                l = list_copy( L0, c->includes );
+                l = list_copy( c->includes );
                 return l;
             }
         }
@@ -468,8 +468,8 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
 
     c->time = t->time;
     c->age = 0;
-    c->includes = list_copy( L0, l );
-    c->hdrscan = list_copy( L0, hdrscan );
+    c->includes = list_copy( l );
+    c->hdrscan = list_copy( hdrscan );
 
     return l;
 }

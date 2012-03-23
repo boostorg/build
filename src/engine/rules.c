@@ -405,7 +405,7 @@ SETTINGS * copysettings( SETTINGS * head )
     SETTINGS * copy = 0;
     SETTINGS * v;
     for ( v = head; v; v = v->next )
-        copy = addsettings( copy, VAR_SET, v->symbol, list_copy( L0, v->value ) );
+        copy = addsettings( copy, VAR_SET, v->symbol, list_copy( v->value ) );
     return copy;
 }
 

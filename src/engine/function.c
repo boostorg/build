@@ -245,7 +245,7 @@ void * stack_get( STACK * s )
 LIST * frame_get_local( FRAME * frame, int idx )
 {
     /* The only local variables are the arguments */
-    return list_copy( L0, lol_get( frame->args, idx ) );
+    return list_copy( lol_get( frame->args, idx ) );
 }
 
 static OBJECT * function_get_constant( JAM_FUNCTION * function, int idx )
@@ -255,7 +255,7 @@ static OBJECT * function_get_constant( JAM_FUNCTION * function, int idx )
 
 static LIST * function_get_variable( JAM_FUNCTION * function, FRAME * frame, int idx )
 {
-    return list_copy( L0, var_get( frame->module, function->constants[idx] ) );
+    return list_copy( var_get( frame->module, function->constants[idx] ) );
 }
 
 static void function_set_variable( JAM_FUNCTION * function, FRAME * frame, int idx, LIST * value )
@@ -363,11 +363,11 @@ static LIST * function_get_named_variable( JAM_FUNCTION * function, FRAME * fram
     int idx = get_argument_index( object_str( name ) );
     if( idx != -1 )
     {
-        return list_copy( L0, lol_get( frame->args, idx ) );
+        return list_copy( lol_get( frame->args, idx ) );
     }
     else
     {
-        return list_copy( L0, var_get( frame->module, name ) );
+        return list_copy( var_get( frame->module, name ) );
     }
 }
 
@@ -3180,7 +3180,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
         case INSTR_PUSH_VAR_FIXED:
         {
-            stack_push( s, list_copy( L0, frame->module->fixed_variables[ code->arg ] ) );
+            stack_push( s, list_copy( frame->module->fixed_variables[ code->arg ] ) );
             break;
         }
 
@@ -3463,7 +3463,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             l = stack_pop( s );
             for( iter = list_begin( l ), end = list_end( l ); iter != end; iter = list_next( iter ) )
             {
-                LIST * saved = function_swap_named_variable( function, frame, list_item( iter ), list_copy( L0, value ) );
+                LIST * saved = function_swap_named_variable( function, frame, list_item( iter ), list_copy( value ) );
                 stack_push( s, saved );
             }
             list_free( value );
@@ -3540,7 +3540,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 for ( ; vars_iter != vars_end; vars_iter = list_next( vars_iter ) )
                     t->settings = addsettings( t->settings, VAR_SET, list_item( vars_iter ),
-                        list_copy( L0, value ) );
+                        list_copy( value ) );
             }
             list_free( vars );
             list_free( targets );
@@ -3561,7 +3561,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 for ( ; vars_iter != vars_end; vars_iter = list_next( vars_iter ) )
                     t->settings = addsettings( t->settings, VAR_APPEND, list_item( vars_iter ),
-                        list_copy( L0, value ) );
+                        list_copy( value ) );
             }
             list_free( vars );
             list_free( targets );
@@ -3582,7 +3582,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 for ( ; vars_iter != vars_end; vars_iter = list_next( vars_iter ) )
                     t->settings = addsettings( t->settings, VAR_DEFAULT, list_item( vars_iter ),
-                        list_copy( L0, value ) );
+                        list_copy( value ) );
             }
             list_free( vars );
             list_free( targets );
@@ -3596,19 +3596,19 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
         case INSTR_SET:
         {
-            function_set_variable( function, frame, code->arg, list_copy( L0, stack_top( s ) ) );
+            function_set_variable( function, frame, code->arg, list_copy( stack_top( s ) ) );
             break;
         }
 
         case INSTR_APPEND:
         {
-            function_append_variable( function, frame, code->arg, list_copy( L0, stack_top( s ) ) );
+            function_append_variable( function, frame, code->arg, list_copy( stack_top( s ) ) );
             break;
         }
 
         case INSTR_DEFAULT:
         {
-            function_default_variable( function, frame, code->arg, list_copy( L0, stack_top( s ) ) );
+            function_default_variable( function, frame, code->arg, list_copy( stack_top( s ) ) );
             break;
         }
 
@@ -3617,7 +3617,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
             list_free( *ptr );
-            *ptr = list_copy( L0, stack_top( s ) );
+            *ptr = list_copy( stack_top( s ) );
             break;
         }
 
@@ -3625,7 +3625,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
-            *ptr = list_append( *ptr, list_copy( L0, stack_top( s ) ) );
+            *ptr = list_append( *ptr, list_copy( stack_top( s ) ) );
             break;
         }
 
@@ -3634,7 +3634,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
             if ( list_empty( *ptr ) )
-                *ptr = list_copy( L0, stack_top( s ) );
+                *ptr = list_copy( stack_top( s ) );
             break;
         }
 
@@ -3644,7 +3644,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             LIST * vars = stack_pop( s );
             LISTITER iter = list_begin( vars ), end = list_end( vars );
             for( ; iter != end; iter = list_next( iter ) )
-                function_set_named_variable( function, frame, list_item( iter ), list_copy( L0, value ) );
+                function_set_named_variable( function, frame, list_item( iter ), list_copy( value ) );
             list_free( vars );
             stack_push( s, value );
             break;
@@ -3656,7 +3656,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             LIST * vars = stack_pop( s );
             LISTITER iter = list_begin( vars ), end = list_end( vars );
             for( ; iter != end; iter = list_next( iter ) )
-                function_append_named_variable( function, frame, list_item( iter ), list_copy( L0, value ) );
+                function_append_named_variable( function, frame, list_item( iter ), list_copy( value ) );
             list_free( vars );
             stack_push( s, value );
             break;
@@ -3668,7 +3668,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             LIST * vars = stack_pop( s );
             LISTITER iter = list_begin( vars ), end = list_end( vars );
             for( ; iter != end; iter = list_next( iter ) )
-                function_default_named_variable( function, frame, list_item( iter ), list_copy( L0, value ) );
+                function_default_named_variable( function, frame, list_item( iter ), list_copy( value ) );
             list_free( vars );
             stack_push( s, value );
             break;

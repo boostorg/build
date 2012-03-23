@@ -1020,9 +1020,9 @@ static CMD * make1cmds( TARGET * t )
         {
             /* Build cmd: cmd_new consumes its lists. */
             CMD * cmd = cmd_new( rule,
-                list_copy( L0, nt ),
+                list_copy( nt ),
                 list_sublist( ns, start, chunk ),
-                list_copy( L0, shell ) );
+                list_copy( shell ) );
 
             if ( cmd )
             {
@@ -1044,7 +1044,7 @@ static CMD * make1cmds( TARGET * t )
                     );
 
                 /* Tell the user what didn't fit. */
-                cmd = cmd_new( rule, list_copy( L0, nt ),
+                cmd = cmd_new( rule, list_copy( nt ),
                     list_sublist( ns, start, chunk ),
                     list_new( L0, object_copy( constant_percent ) ) );
                 fputs( cmd->buf->value, stdout );

@@ -81,8 +81,26 @@ LIST * list_append( LIST * l, LIST * nl )
     }
     else
     {
-        l = list_copy( l, nl );
-        list_free( nl );
+        int l_size = list_length( l );
+        int nl_size = list_length( nl );
+        int size = l_size + nl_size;
+        unsigned bucket;
+        int i;
+
+        bucket = get_bucket( size );
+        /* Do we need to reallocate? */
+        if ( l_size <= ( 1u << (bucket - 1) ) )
+        {
+            LIST * result = list_alloc( size );
+            memcpy( list_begin( result ), list_begin( l ), l_size * sizeof( OBJECT * ) );
+            list_dealloc( l );
+            l = result;
+        }
+
+        l->impl.size = size;
+        memcpy( list_begin( l ) + l_size, list_begin( nl ), nl_size *  sizeof( OBJECT * ) );
+        list_dealloc( nl );
+        return l;
     }
 
     return l;
@@ -140,31 +158,21 @@ LIST * list_new( LIST * head, OBJECT * value )
  * list_copy() - copy a whole list of strings (nl) onto end of another (l).
  */
 
-LIST * list_copy( LIST * l, LIST * nl )
+LIST * list_copy( LIST * l )
 {
-    int l_size = list_length( l );
-    int nl_size = list_length( nl );
-    int size = l_size + nl_size;
-    unsigned bucket;
+    int size = list_length( l );
     int i;
+    LIST * result;
 
     if ( size == 0 ) return L0;
 
-    bucket = get_bucket( size );
-    if ( bucket == 0 || l_size <= ( 1u << (bucket - 1) ) )
+    result = list_alloc( size );
+    result->impl.size = size;
+    for ( i = 0; i < size; ++i )
     {
-        LIST * result = list_alloc( size );
-        memcpy( list_begin( result ), list_begin( l ), l_size * sizeof( OBJECT * ) );
-        list_dealloc( l );
-        l = result;
+        list_begin( result )[ i ] = object_copy( list_begin( l )[ i ] );
     }
-
-    l->impl.size = size;
-    for ( i = 0; i < nl_size; ++i )
-    {
-        list_begin( l )[ i + l_size ] = object_copy( list_begin( nl )[ i ] );
-    }
-    return l;
+    return result;
 }
 
 
@@ -221,7 +229,7 @@ LIST * list_sort( LIST * l )
         return L0;
 
     len = list_length( l );
-    result = list_copy( L0, l );
+    result = list_copy( l );
 
     qsort( list_begin( result ), len, sizeof( OBJECT * ), str_ptr_compare );
 
