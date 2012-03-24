@@ -19,7 +19,7 @@ LIST* get_grist(char* f)
     string_new(s);
 
     string_append_range(s, f, end+1);
-    result = list_new(0, object_new(s->value));
+    result = list_new(object_new(s->value));
 
     string_free(s);
     return result;
@@ -88,7 +88,7 @@ LIST *property_set_create( FRAME *frame, int flags )
     {
         OBJECT* rulename = object_new("new");
         val = call_rule(rulename, frame,
-                        list_append(list_new(L0, object_new("property-set")), unique), 0);
+                        list_append(list_new(object_new("property-set")), unique), 0);
         object_free(rulename);
 
         var_set(frame->module, name, list_copy(val), VAR_SET);

@@ -122,11 +122,31 @@ LISTITER list_end( LIST * l )
         return 0;
 }
 
+LIST * list_new( OBJECT * value )
+{   
+    LIST * head;
+    if ( freelist[ 0 ] )
+    {
+        struct freelist_node * result = freelist[ 0 ];
+        freelist[ 0 ] = result->next;
+        head = (LIST *)result;
+    }
+    else
+    {
+        head = BJAM_MALLOC( sizeof( LIST * ) + sizeof( OBJECT * ) );
+    }
+
+    head->impl.size = 1;
+    list_begin( head )[ 0 ] = value;
+
+    return head;
+}
+
 /*
- * list_new() - tack a string onto the end of a list of strings
+ * list_push_back() - tack a string onto the end of a list of strings
  */
 
-LIST * list_new( LIST * head, OBJECT * value )
+LIST * list_push_back( LIST * head, OBJECT * value )
 {
     unsigned int size = list_length( head );
     unsigned int i;
@@ -385,7 +405,7 @@ LIST * list_unique( LIST * sorted_list )
     {
         if ( !last_added || !object_equal( list_item( iter ), last_added ) )
         {
-            result = list_new( result, object_copy( list_item( iter ) ) );
+            result = list_push_back( result, object_copy( list_item( iter ) ) );
             last_added = list_item( iter );
         }
     }
@@ -496,7 +516,7 @@ LIST *list_from_python(PyObject *l)
     for (i = 0; i < n; ++i)
     {
         PyObject *v = PySequence_GetItem(l, i);        
-        result = list_new (result, object_new (PyString_AsString(v)));
+        result = list_push_back(result, object_new (PyString_AsString(v)));
         Py_DECREF(v);
     }
 

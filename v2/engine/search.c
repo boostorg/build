@@ -51,9 +51,9 @@ void call_bind_rule
             frame_init( frame );
 
             /* First argument is the target name. */
-            lol_add( frame->args, list_new( L0, target ) );
+            lol_add( frame->args, list_new( target ) );
 
-            lol_add( frame->args, list_new( L0, boundname ) );
+            lol_add( frame->args, list_new( boundname ) );
             if ( lol_get( frame->args, 1 ) )
                 list_free( evaluate_rule( list_front( bind_rule ), frame ) );
 

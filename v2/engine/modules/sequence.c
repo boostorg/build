@@ -31,7 +31,7 @@ LIST *sequence_select_highest_ranked( FRAME *frame, int flags )
     elements_iter = list_begin(elements), elements_end = list_end(elements);
     for (; iter != end; iter = list_next(iter), elements_iter = list_next(elements_iter))
         if (atoi(object_str(list_item(iter))) == highest_rank)
-            result = list_new(result, object_copy(list_item(elements_iter)));
+            result = list_push_back(result, object_copy(list_item(elements_iter)));
 
     return result;
 }

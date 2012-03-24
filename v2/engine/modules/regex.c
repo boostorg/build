@@ -75,7 +75,7 @@ LIST *regex_transform( FRAME *frame, int flags )
                     if (re->startp[index] != re->endp[index])
                     {
                         string_append_range( buf, re->startp[index], re->endp[index] );
-                        result = list_new( result, object_new( buf->value ) ); 
+                        result = list_push_back( result, object_new( buf->value ) ); 
                         string_truncate( buf, 0 );
                     }
                 }

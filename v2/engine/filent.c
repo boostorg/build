@@ -136,7 +136,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
             string_truncate( filename, 0 );
             path_build( &f, filename );
 
-            files = list_new( files, object_new(filename->value) );
+            files = list_push_back( files, object_new(filename->value) );
             ff = file_info( filename->value );
             ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
             ff->is_dir = finfo->ff_attrib & FA_DIREC ? 1 : 0;
@@ -170,7 +170,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 
             filename_obj = object_new( filename->value );
             path_add_key( filename_obj );
-            files = list_new( files, filename_obj );
+            files = list_push_back( files, filename_obj );
             ff = file_info( filename_obj );
             ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
             ff->is_dir = finfo->attrib & _A_SUBDIR ? 1 : 0;

@@ -64,7 +64,7 @@ pwd(void)
             return L0;
         }
     }
-    return list_new(L0, object_copy( pwd_result ) );
+    return list_new( object_copy( pwd_result ) );
 }
 
 void pwd_done( void )

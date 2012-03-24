@@ -193,7 +193,7 @@ static void add_module_name( void * r_, void * result_ )
     OBJECT * * r = (OBJECT * *)r_;
     LIST * * result = (LIST * *)result_;
 
-    *result = list_new( *result, object_copy( *r ) );
+    *result = list_push_back( *result, object_copy( *r ) );
 }
 
 

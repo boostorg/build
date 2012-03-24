@@ -184,7 +184,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
             path_build( &f, filename, 0 );
 
             filename_obj = object_new( filename->value );
-            files = list_new( files, filename_obj );
+            files = list_push_back( files, filename_obj );
             file_query( filename_obj );
         }
         string_free( filename );

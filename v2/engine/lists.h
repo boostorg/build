@@ -79,11 +79,12 @@ struct _lol {
     LIST    *list[ LOL_MAX ];
 };
 
+LIST *  list_new( OBJECT * value );
 LIST *  list_append( LIST *l, LIST *nl );
 LIST *  list_copy( LIST  *l );
 LIST *  list_copy_range( LIST *l, LISTITER first, LISTITER last );
 void    list_free( LIST *head );
-LIST *  list_new( LIST *head, OBJECT *string );
+LIST *  list_push_back( LIST *head, OBJECT *string );
 void    list_print( LIST *l );
 int list_length( LIST *l );
 LIST *  list_sublist( LIST *l, int start, int count );

@@ -463,7 +463,7 @@ LIST * builtin_calc( FRAME * frame, int flags )
     }
 
     sprintf( buffer, "%ld", result_value );
-    result = list_new( result, object_new( buffer ) );
+    result = list_push_back( result, object_new( buffer ) );
     return result;
 }
 
@@ -660,7 +660,7 @@ static void builtin_glob_back
     {
         if ( !glob( object_str( list_item( iter ) ), buf->value ) )
         {
-            globbing->results = list_new( globbing->results, object_copy( file ) );
+            globbing->results = list_push_back( globbing->results, object_copy( file ) );
             break;
         }
     }
@@ -683,7 +683,7 @@ static LIST * downcase_list( LIST * in )
     {
         string_append( s, object_str( list_item( iter ) ) );
         downcase_inplace( s->value );
-        result = list_append( result, list_new( L0, object_new( s->value ) ) );
+        result = list_push_back( result, object_new( s->value ) );
         string_truncate( s, 0 );
     }
 
@@ -740,14 +740,14 @@ static LIST * append_if_exists( LIST * list, OBJECT * file )
     time_t time;
     timestamp( file, &time );
     return time > 0
-        ? list_new( list, object_copy( file ) )
+        ? list_push_back( list, object_copy( file ) )
         : list;
 }
 
 
 LIST * glob1( OBJECT * dirname, OBJECT * pattern )
 {
-    LIST * plist = list_new( L0, object_copy(pattern) );
+    LIST * plist = list_new( object_copy(pattern) );
     struct globbing globbing;
 
     globbing.results = L0;
@@ -811,7 +811,7 @@ LIST * glob_recursive( const char * pattern )
 
             dirs =  has_wildcards( dirname->value )
                 ? glob_recursive( dirname->value )
-                : list_new( dirs, object_new( dirname->value ) );
+                : list_push_back( dirs, object_new( dirname->value ) );
 
             if ( has_wildcards( basename->value ) )
             {
@@ -920,7 +920,7 @@ LIST * builtin_match( FRAME * frame, int flags )
                 for ( i = 1; i <= top; ++i )
                 {
                     string_append_range( buf, re->startp[ i ], re->endp[ i ] );
-                    result = list_new( result, object_new( buf->value ) );
+                    result = list_push_back( result, object_new( buf->value ) );
                     string_truncate( buf, 0 );
                 }
             }
@@ -948,7 +948,7 @@ LIST * builtin_split_by_characters( FRAME * frame, int flags )
     t = strtok( buf->value, delimiters) ;
     while ( t )
     {
-        result = list_new( result, object_new( t ) );
+        result = list_push_back( result, object_new( t ) );
         t = strtok( NULL, delimiters );
     }
 
@@ -990,7 +990,7 @@ static void add_rule_name( void * r_, void * result_ )
     RULE * r = (RULE *)r_;
     LIST * * result = (LIST * *)result_;
     if ( r->exported )
-        *result = list_new( *result, object_copy( r->name ) );
+        *result = list_push_back( *result, object_copy( r->name ) );
 }
 
 
@@ -1019,7 +1019,7 @@ LIST * builtin_rulenames( FRAME * frame, int flags )
 static void add_hash_key( void * np, void * result_ )
 {
     LIST * * result = (LIST * *)result_;
-    *result = list_new( *result, object_copy( *(OBJECT * *)np ) );
+    *result = list_push_back( *result, object_copy( *(OBJECT * *)np ) );
 }
 
 
@@ -1272,10 +1272,10 @@ LIST * builtin_backtrace( FRAME * frame, int flags )
             string_append( module_name, object_str( frame->module->name ) );
             string_append( module_name, "." );
         }
-        result = list_new( result, object_new( file ) );
-        result = list_new( result, object_new( buf ) );
-        result = list_new( result, object_new( module_name->value ) );
-        result = list_new( result, object_new( frame->rulename ) );
+        result = list_push_back( result, object_new( file ) );
+        result = list_push_back( result, object_new( buf ) );
+        result = list_push_back( result, object_new( module_name->value ) );
+        result = list_push_back( result, object_new( frame->rulename ) );
         string_free( module_name );
     }
     return result;
@@ -1306,7 +1306,7 @@ LIST * builtin_caller_module( FRAME * frame, int flags )
     if ( frame->module == root_module() )
         return L0;
     else
-        return list_new( L0, object_copy( frame->module->name ) );
+        return list_new( object_copy( frame->module->name ) );
 }
 
 
@@ -1412,7 +1412,7 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     last_update_now_status = status;
 	
     if ( status == 0 )
-        return list_new( L0, object_copy( constant_ok ) );
+        return list_new( object_copy( constant_ok ) );
     else
         return L0;
 }
@@ -1578,7 +1578,7 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
     string_free( out );
     string_free( in );
 
-    return list_new( L0, result );
+    return list_new( result );
 }
 
 
@@ -1619,7 +1619,7 @@ LIST * builtin_has_native_rule( FRAME * frame, int flags )
     {
         int expected_version = atoi( object_str( list_front( version ) ) );
         if ( np->version == expected_version )
-            return list_new( L0, object_copy( constant_true ) );
+            return list_new( object_copy( constant_true ) );
     }
     return L0;
 }
@@ -1653,8 +1653,8 @@ LIST * builtin_nearest_user_location( FRAME * frame, int flags )
 
         get_source_line( nearest_user_frame, &file, &line );
         sprintf( buf, "%d", line );
-        result = list_new( result, object_new( file ) );
-        result = list_new( result, object_new( buf ) );
+        result = list_push_back( result, object_new( file ) );
+        result = list_push_back( result, object_new( buf ) );
         return result;
     }
 }
@@ -1664,7 +1664,7 @@ LIST * builtin_check_if_file( FRAME * frame, int flags )
 {
     LIST * name = lol_get( frame->args, 0 );
     return file_is_file( list_front( name ) ) == 1
-        ? list_new( L0, object_copy( constant_true ) )
+        ? list_new( object_copy( constant_true ) )
         : L0 ;
 }
 
@@ -1687,7 +1687,7 @@ LIST * builtin_md5( FRAME * frame, int flags )
     for (di = 0; di < 16; ++di)
         sprintf( hex_output + di * 2, "%02x", digest[di] );
 
-    return list_new( L0, object_new( hex_output ) );
+    return list_new( object_new( hex_output ) );
 }
 
 LIST *builtin_file_open( FRAME * frame, int flags )
@@ -1709,7 +1709,7 @@ LIST *builtin_file_open( FRAME * frame, int flags )
     if (fd != -1)
     {
         sprintf( buffer, "%d", fd );
-        return list_new( L0, object_new( buffer ) );
+        return list_new( object_new( buffer ) );
     }
     else
     {
@@ -1725,7 +1725,7 @@ LIST *builtin_pad( FRAME * frame, int flags )
     int current = strlen( object_str( string ) );
     int desired = atoi( width_s );
     if (current >= desired)
-        return list_new (L0, object_copy( string ) );
+        return list_new( object_copy( string ) );
     else
     {
         char * buffer = BJAM_MALLOC( desired + 1 );
@@ -1736,7 +1736,7 @@ LIST *builtin_pad( FRAME * frame, int flags )
         for ( i = current; i < desired; ++i )
             buffer[i] = ' ';
         buffer[desired] = '\0';
-        result = list_new( L0, object_new( buffer ) );
+        result = list_new( object_new( buffer ) );
         BJAM_FREE( buffer );
         return result;
     }
@@ -1762,7 +1762,7 @@ LIST *builtin_self_path( FRAME * frame, int flags )
     char * p = executable_path( saved_argv0 );
     if ( p )
     {
-        LIST* result = list_new( L0, object_new( p ) );
+        LIST* result = list_new( object_new( p ) );
         free( p );
         return result;
     }
@@ -1778,7 +1778,7 @@ LIST *builtin_makedir( FRAME * frame, int flags )
 
     if ( file_mkdir( object_str( list_front( path ) ) ) == 0 )
     {
-        LIST * result = list_new ( L0, object_copy( list_front( path ) ) );
+        LIST * result = list_new( object_copy( list_front( path ) ) );
         return result;
     }
     else
@@ -1875,7 +1875,7 @@ void lol_build( LOL * lol, const char * * elements )
         }
         else
         {
-            l = list_new( l, object_new( *elements ) );
+            l = list_push_back( l, object_new( *elements ) );
         }
         ++elements;
     }
@@ -1918,7 +1918,7 @@ PyObject* bjam_call( PyObject * self, PyObject * args )
             PyObject * a = PyTuple_GetItem( args, i );
             if ( PyString_Check( a ) )
             {
-                lol_add( inner->args, list_new( 0, object_new(
+                lol_add( inner->args, list_new( object_new(
                     PyString_AsString( a ) ) ) );
             }
             else if ( PySequence_Check( a ) )
@@ -1936,7 +1936,7 @@ PyObject* bjam_call( PyObject * self, PyObject * args )
                         printf( "Invalid parameter type passed from Python\n" );
                         exit( 1 );
                     }
-                    l = list_new( l, object_new( s ) );
+                    l = list_push_back( l, object_new( s ) );
                     Py_DECREF( e );
                 }
                 lol_add( inner->args, l );
@@ -2048,7 +2048,7 @@ PyObject * bjam_define_action( PyObject * self, PyObject * args )
                             "bind list has non-string type" );
             return NULL;
         }
-        bindlist = list_new( bindlist, object_new( PyString_AsString( next ) ) );
+        bindlist = list_push_back( bindlist, object_new( PyString_AsString( next ) ) );
     }
 
     name_str = object_new( name );
@@ -2285,7 +2285,7 @@ LIST * builtin_shell( FRAME * frame, int flags )
     exit_status = pclose( p );
 
     /* The command output is returned first. */
-    result = list_new( L0, object_new( s.value ) );
+    result = list_new( object_new( s.value ) );
     string_free( &s );
 
     /* The command exit result next. */
@@ -2296,7 +2296,7 @@ LIST * builtin_shell( FRAME * frame, int flags )
         else
             exit_status = -1;
         sprintf( buffer, "%d", exit_status );
-        result = list_new( result, object_new( buffer ) );
+        result = list_push_back( result, object_new( buffer ) );
     }
 
     return result;

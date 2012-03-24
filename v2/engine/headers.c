@@ -91,7 +91,7 @@ headers( TARGET * t )
     {
         FRAME   frame[1];
         frame_init( frame );
-        lol_add( frame->args, list_new( L0, object_copy( t->name ) ) );
+        lol_add( frame->args, list_new( object_copy( t->name ) ) );
 #ifdef OPT_HEADER_CACHE_EXT
         lol_add( frame->args, hcache( t, rec, re, hdrscan ) );
 #else
@@ -102,7 +102,7 @@ headers( TARGET * t )
         {
             /* The third argument to HDRRULE is the bound name of
              * $(<) */
-            lol_add( frame->args, list_new( L0, object_copy( t->boundname ) ) );
+            lol_add( frame->args, list_new( object_copy( t->boundname ) ) );
 
             list_free( evaluate_rule( list_front( hdrrule ), frame ) );
         }
@@ -173,7 +173,7 @@ headers1(
                 if ( DEBUG_HEADER )
                     printf( "header found: %s\n", re[i]->startp[1] );
 
-                l = list_new( l, object_new( re[i]->startp[1] ) );
+                l = list_push_back( l, object_new( re[i]->startp[1] ) );
             }
 
         /* special treatment for #include MACRO */
@@ -194,7 +194,7 @@ headers1(
             {
                 if ( DEBUG_HEADER )
                     printf( " resolved to '%s'\n", object_str( header_filename ) );
-                l = list_new( l, object_copy( header_filename ) );
+                l = list_push_back( l, object_copy( header_filename ) );
             }
             else
             {
