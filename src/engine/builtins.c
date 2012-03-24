@@ -84,12 +84,11 @@ RULE * bind_builtin( const char * name_, LIST * (* f)( FRAME *, int flags ), int
 {
     FUNCTION * func;
     RULE * result;
-    argument_list* arg_list = 0;
     OBJECT * name = object_new( name_ );
 
     func = function_builtin( f, flags, args );
 
-    result = new_rule_body( root_module(), name, arg_list, func, 1 );
+    result = new_rule_body( root_module(), name, func, 1 );
 
     function_free( func );
 
@@ -1593,7 +1592,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
     native_rule_t * np;
     if ( module->native_rules && (np = (native_rule_t *)hash_find( module->native_rules, list_front( rule_name ) ) ) )
     {
-        new_rule_body( module, np->name, 0, np->procedure, 1 );
+        new_rule_body( module, np->name, np->procedure, 1 );
     }
     else
     {
@@ -1841,7 +1840,7 @@ LIST * builtin_python_import_rule( FRAME * frame, int flags )
         if ( pFunc && PyCallable_Check( pFunc ) )
         {
             module_t * m = bindmodule( jam_module );
-            new_rule_body( m, jam_rule, 0, function_python( pFunc, 0 ), 0 );
+            new_rule_body( m, jam_rule, function_python( pFunc, 0 ), 0 );
         }
         else
         {
@@ -2005,11 +2004,8 @@ PyObject * bjam_import_rule( PyObject * self, PyObject * args )
         object_free( module_name );
     }
     rule_name = object_new( rule );
-    r = bindrule( rule_name, m );
+    new_rule_body( m, rule_name, function_python( func, bjam_signature ), 0 );
     object_free( rule_name );
-
-    /* Make pFunc owned. */
-    r->procedure = function_python( func, bjam_signature );
 
     Py_INCREF( Py_None );
     return Py_None;
