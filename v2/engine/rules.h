@@ -52,13 +52,6 @@ typedef struct _settings SETTINGS ;
 
 /* RULE - a generic jam rule, the product of RULE and ACTIONS. */
 
-/* A rule's argument list. */
-struct argument_list
-{
-    int reference_count;
-    LOL data[1];
-};
-
 /* Build actions corresponding to a rule. */
 struct rule_actions
 {
@@ -82,8 +75,6 @@ struct _rule
 {
     OBJECT        * name;
     FUNCTION      * procedure;
-    argument_list * arguments;  /* argument checking info, or NULL for unchecked
-                                 */
     rule_actions  * actions;    /* build actions, or NULL for no actions */
     module_t      * module;     /* module in which this rule is executed */
     int             exported;   /* nonzero if this rule is supposed to appear in
@@ -253,16 +244,11 @@ void       freesettings ( SETTINGS * );
 void       actions_refer( rule_actions * );
 void       actions_free ( rule_actions * );
 
-/* Argument list related functions. */
-void            args_free ( argument_list * );
-argument_list * args_new  ();
-void            args_refer( argument_list * );
-
 /* Rule related functions. */
 RULE * bindrule        ( OBJECT * rulename, module_t * );
 RULE * import_rule     ( RULE * source, module_t *, OBJECT * name );
 void   rule_localize   ( RULE * rule, module_t * module );
-RULE * new_rule_body   ( module_t *, OBJECT * rulename, argument_list *, FUNCTION * func, int exprt );
+RULE * new_rule_body   ( module_t *, OBJECT * rulename, FUNCTION * func, int exprt );
 RULE * new_rule_actions( module_t *, OBJECT * rulename, FUNCTION * command, LIST * bindlist, int flags );
 void   rule_free       ( RULE * );
 

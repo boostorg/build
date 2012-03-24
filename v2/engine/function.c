@@ -295,8 +295,7 @@ static void function_default_variable( JAM_FUNCTION * function, FRAME * frame, i
 static void function_set_rule( JAM_FUNCTION * function, FRAME * frame, STACK * s, int idx )
 {
     SUBFUNCTION * sub = function->functions + idx;
-    argument_list * args = 0;
-    new_rule_body( frame->module, sub->name, args, sub->code, !sub->local );
+    new_rule_body( frame->module, sub->name, sub->code, !sub->local );
 }
 
 static void function_set_actions( JAM_FUNCTION * function, FRAME * frame, STACK * s, int idx )
