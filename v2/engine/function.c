@@ -2547,14 +2547,15 @@ void function_location( FUNCTION * function_, OBJECT * * file, int * line )
     }
 }
 
+static struct arg_list * arg_list_compile_builtin( const char * * args, int * num_arguments );
+
 FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ), int flags, const char * * args )
 {
     BUILTIN_FUNCTION * result = BJAM_MALLOC( sizeof( BUILTIN_FUNCTION ) );
     result->base.type = FUNCTION_BUILTIN;
     result->base.reference_count = 1;
     result->base.rulename = 0;
-    result->base.formal_arguments = 0;
-    result->base.num_formal_arguments = 0;
+    result->base.formal_arguments = arg_list_compile_builtin( args, &result->base.num_formal_arguments );
     result->func = func;
     result->flags = flags;
     return (FUNCTION *)result;
@@ -2741,6 +2742,7 @@ void argument_list_check( struct arg_list * formal, int formal_count, FUNCTION *
             case ARG_STAR:
                  type_check_range( formal_arg->type_name, actual_iter, actual_end, frame, function, formal_arg->arg_name );
                 actual_iter = actual_end;
+                break;
             case ARG_VARIADIC:
                 return;
             }
@@ -3063,8 +3065,13 @@ static struct arg_list * arg_list_compile_builtin( const char * * args, int * nu
             struct argument_compiler arg_comp[ 1 ];
             struct arg_list arg;
             argument_compiler_init( arg_comp );
-            for ( ; *args && !strcmp( *args, ":" ); ++args )
+            for ( ; *args; ++args )
             {
+                if ( strcmp( *args, ":" ) == 0 )
+                {
+                    ++args;
+                    break;
+                }
                 argument_compiler_add( arg_comp, object_new( *args ), constant_builtin, -1 );
             }
             arg = arg_compile_impl( arg_comp, constant_builtin, -1 );
