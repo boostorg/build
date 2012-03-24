@@ -95,5 +95,5 @@ void file_done()
 
 void file_remove_atexit( OBJECT * path )
 {
-    files_to_remove = list_new( files_to_remove, object_copy( path ) );
+    files_to_remove = list_push_back( files_to_remove, object_copy( path ) );
 }

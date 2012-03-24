@@ -434,11 +434,11 @@ int main( int argc, char * * argv, char * * arg_environ )
 #endif
 
         /* Set JAMDATE. */
-        var_set( root_module(), constant_JAMDATE, list_new( L0, outf_time(time(0)) ), VAR_SET );
+        var_set( root_module(), constant_JAMDATE, list_new( outf_time(time(0)) ), VAR_SET );
 
         /* Set JAM_VERSION. */
         var_set( root_module(), constant_JAM_VERSION,
-                 list_new( list_new( list_new( L0,
+                 list_push_back( list_push_back( list_new(
                    object_new( VERSION_MAJOR_SYM ) ),
                    object_new( VERSION_MINOR_SYM ) ),
                    object_new( VERSION_PATCH_SYM ) ),
@@ -452,11 +452,11 @@ int main( int argc, char * * argv, char * * arg_environ )
             if ( uname( &u ) >= 0 )
             {
                 var_set( root_module(), constant_JAMUNAME,
-                         list_new(
-                             list_new(
-                                 list_new(
-                                     list_new(
-                                         list_new( L0,
+                         list_push_back(
+                             list_push_back(
+                                 list_push_back(
+                                     list_push_back(
+                                         list_new(
                                             object_new( u.sysname ) ),
                                          object_new( u.nodename ) ),
                                      object_new( u.release ) ),
@@ -498,7 +498,7 @@ int main( int argc, char * * argv, char * * arg_environ )
          */
         for ( n = 0; n < arg_c; ++n )
         {
-            var_set( root_module(), constant_ARGV, list_new( L0, object_new( arg_v[n] ) ), VAR_APPEND );
+            var_set( root_module(), constant_ARGV, list_new( object_new( arg_v[n] ) ), VAR_APPEND );
         }
 
         /* Initialize built-in rules. */

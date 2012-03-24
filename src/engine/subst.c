@@ -85,7 +85,7 @@ LIST * builtin_subst( FRAME * frame, int flags )
               }
               *out = 0;
 
-              result = list_new( result, object_new( buf ) );
+              result = list_push_back( result, object_new( buf ) );
 #undef BUFLEN
           }
       }

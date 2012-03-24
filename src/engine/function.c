@@ -795,7 +795,7 @@ static LIST * apply_subscript( STACK * s )
         get_iters( subscript, &iter, &end, length );
         for ( ; iter != end; iter = list_next( iter ) )
         {
-            result = list_new( result, object_copy( list_item( iter ) ) );
+            result = list_push_back( result, object_copy( list_item( iter ) ) );
         }
     }
     string_free( buf );
@@ -868,7 +868,7 @@ static LIST * apply_modifiers_empty( LIST * result, string * buf, VAR_EDITS * ed
             /** FIXME: is empty.ptr always null-terminated? */
             var_edit_file( edits[i].empty.ptr, buf, edits + i );
             var_edit_shift( buf, 0, edits + i );
-            result = list_new( result, object_new( buf->value ) );
+            result = list_push_back( result, object_new( buf->value ) );
             string_truncate( buf, 0 );
         }
     }
@@ -893,7 +893,7 @@ static LIST * apply_modifiers_non_empty( LIST * result, string * buf, VAR_EDITS 
                 var_edit_file( object_str( list_item( iter ) ), buf, edits + i );
                 var_edit_shift( buf, size, edits + i );
             }
-            result = list_new( result, object_new( buf->value ) );
+            result = list_push_back( result, object_new( buf->value ) );
             string_truncate( buf, 0 );
         }
         else
@@ -902,7 +902,7 @@ static LIST * apply_modifiers_non_empty( LIST * result, string * buf, VAR_EDITS 
             {
                 var_edit_file( object_str( list_item( iter ) ), buf, edits + i );
                 var_edit_shift( buf, 0, edits + i );
-                result = list_new( result, object_new( buf->value ) );
+                result = list_push_back( result, object_new( buf->value ) );
                 string_truncate( buf, 0 );
             }
         }
@@ -980,7 +980,7 @@ static LIST * expand( expansion_item * elem, int length )
             elem[i].size = buf->size;
             string_append( buf, object_str( list_item( elem[i].elem ) ) );
         }
-        result = list_new( result, object_new( buf->value ) );
+        result = list_push_back( result, object_new( buf->value ) );
         while ( --i >= 0 )
         {
             if( list_next( elem[i].elem ) != list_end( elem[i].saved ) )
@@ -2664,7 +2664,7 @@ static void type_check_range
         frame->prev_user = caller->module->user_module ? caller : caller->prev_user;
 
         /* Prepare the argument list */
-        lol_add( frame->args, list_new( L0, object_copy( list_item( iter ) ) ) );
+        lol_add( frame->args, list_new( object_copy( list_item( iter ) ) ) );
         error = evaluate_rule( type_name, frame );
 
         if ( !list_empty( error ) )
@@ -2782,7 +2782,7 @@ void argument_list_push( struct arg_list * formal, int formal_count, FUNCTION * 
             case ARG_ONE:
                 if ( actual_iter == actual_end )
                     argument_error( "missing argument", function, frame, formal_arg->arg_name );
-                value = list_new( L0, object_copy( list_item( actual_iter ) ) );
+                value = list_new( object_copy( list_item( actual_iter ) ) );
                 actual_iter = list_next( actual_iter );
                 break;
             case ARG_OPTIONAL:
@@ -2790,7 +2790,7 @@ void argument_list_push( struct arg_list * formal, int formal_count, FUNCTION * 
                     value = L0;
                 else
                 {
-                    value = list_new( L0, object_copy( list_item( actual_iter ) ) );
+                    value = list_new( object_copy( list_item( actual_iter ) ) );
                     actual_iter = list_next( actual_iter );
                 }
                 break;
@@ -3413,7 +3413,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_CONSTANT:
         {
             OBJECT * value = function_get_constant( function, code->arg );
-            stack_push( s, list_new( L0, object_copy( value ) ) );
+            stack_push( s, list_new( object_copy( value ) ) );
             break;
         }
 
@@ -3602,7 +3602,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
             else
             {
-                r = list_new( L0, object_copy( list_item( iter ) ) );
+                r = list_new( object_copy( list_item( iter ) ) );
                 iter = list_next( iter );
                 *(LISTITER *)stack_allocate( s, sizeof( LISTITER ) ) = iter;
                 stack_push( s, r );
@@ -4170,7 +4170,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             string buf[1];
             string_new( buf );
             combine_strings( s, code->arg, buf );
-            stack_push( s, list_new( L0, object_new( buf->value ) ) );
+            stack_push( s, list_new( object_new( buf->value ) ) );
             string_free( buf );
             break;
         }
@@ -4209,7 +4209,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 /* Replace STDXXX with the temporary file. */
                 list_free( stack_pop( s ) );
-                stack_push( s, list_new( L0, object_new( result->value ) ) );
+                stack_push( s, list_new( object_new( result->value ) ) );
                 out = object_str( tmp_filename );
 
                 string_free( result );
@@ -4498,7 +4498,7 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
                 if ( !s ) {
                     fprintf( stderr, "Non-string object returned by Python call.\n" );
                 } else {
-                    result = list_new( result, s );
+                    result = list_push_back( result, s );
                 }
             }
         }
@@ -4510,7 +4510,7 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
         {
             OBJECT *s = python_to_string( py_result );
             if (s)
-                result = list_new( L0, s );
+                result = list_new( s );
             else 
                 /* We have tried all we could.  Return empty list. There are
                    cases, e.g.  feature.feature function that should return

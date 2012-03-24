@@ -248,7 +248,7 @@ void hcache_init()
                 fprintf( stderr, "invalid %s\n", hcachename );
                 goto bail;
             }
-            l = list_new( l, s );
+            l = list_push_back( l, s );
         }
         cachedata.includes = l;
 
@@ -269,7 +269,7 @@ void hcache_init()
                 fprintf( stderr, "invalid %s\n", hcachename );
                 goto bail;
             }
-            l = list_new( l, s );
+            l = list_push_back( l, s );
         }
         cachedata.hdrscan = l;
 

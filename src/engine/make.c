@@ -802,7 +802,7 @@ static LIST * targets_to_update_ = L0;
 
 void mark_target_for_updating( OBJECT * target )
 {
-    targets_to_update_ = list_new( targets_to_update_, object_copy( target ) );
+    targets_to_update_ = list_push_back( targets_to_update_, object_copy( target ) );
 }
 
 

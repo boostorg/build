@@ -14,7 +14,7 @@ LIST *path_exists( FRAME *frame, int flags )
     timestamp(list_front(l), &time);
     if (time != 0)
     {
-        return list_new(L0, object_new("true"));
+        return list_new(object_new("true"));
     }
     else
     {

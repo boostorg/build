@@ -118,7 +118,7 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
             if ( quoted && preprocess )
             {
                 string_append_range( buf, val + 2, val + len );
-                l = list_new( l, object_new( buf->value ) );
+                l = list_push_back( l, object_new( buf->value ) );
                 string_truncate( buf, 0 );
             }
             else
@@ -141,11 +141,11 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
                 )
                 {
                     string_append_range( buf, pp, p );
-                    l = list_new( l, object_new( buf->value ) );
+                    l = list_push_back( l, object_new( buf->value ) );
                     string_truncate( buf, 0 );
                 }
 
-                l = list_new( l, object_new( pp ) );
+                l = list_push_back( l, object_new( pp ) );
             }
 
             /* Get name. */
@@ -176,27 +176,27 @@ LIST * var_get( struct module_t * module, OBJECT * symbol )
     if ( object_equal( symbol, constant_TMPDIR ) )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, object_new( path_tmpdir() ) );
+        result = saved_var = list_new( object_new( path_tmpdir() ) );
     }
     else if ( object_equal( symbol, constant_TMPNAME ) )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, path_tmpnam() );
+        result = saved_var = list_new( path_tmpnam() );
     }
     else if ( object_equal( symbol, constant_TMPFILE ) )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, path_tmpfile() );
+        result = saved_var = list_new( path_tmpfile() );
     }
     else if ( object_equal( symbol, constant_STDOUT ) )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, object_copy( constant_STDOUT ) );
+        result = saved_var = list_new( object_copy( constant_STDOUT ) );
     }
     else if ( object_equal( symbol, constant_STDERR ) )
     {
         list_free( saved_var );
-        result = saved_var = list_new( L0, object_copy( constant_STDERR ) );
+        result = saved_var = list_new( object_copy( constant_STDERR ) );
     }
     else
 #endif

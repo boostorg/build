@@ -28,7 +28,7 @@ LIST *set_difference( FRAME *frame, int flags )
     for( ; iter != end; iter = list_next( iter ) )
     {
         if (!list_in(a, list_item(iter)))
-            result = list_new(result, object_copy(list_item(iter)));
+            result = list_push_back(result, object_copy(list_item(iter)));
     }
     return result;
 }

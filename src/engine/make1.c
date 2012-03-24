@@ -708,10 +708,10 @@ static void call_timing_rule( TARGET * target, timing_info * time )
         lol_add( frame->args, list_copy_range( timing_rule, list_next( list_begin( timing_rule ) ), list_end( timing_rule ) ) );
 
         /* target :: the name of the target */
-        lol_add( frame->args, list_new( L0, object_copy( target->name ) ) );
+        lol_add( frame->args, list_new( object_copy( target->name ) ) );
 
         /* start end user system :: info about the action command */
-        lol_add( frame->args, list_new( list_new( list_new( list_new( L0,
+        lol_add( frame->args, list_push_back( list_push_back( list_push_back( list_new(
             outf_time  ( time->start  ) ),
             outf_time  ( time->end    ) ),
             outf_double( time->user   ) ),
@@ -763,11 +763,11 @@ static void call_action_rule
         lol_add( frame->args, list_copy_range( action_rule, list_next( list_begin( action_rule ) ), list_end( action_rule ) ) );
 
         /* target :: the name of the target */
-        lol_add( frame->args, list_new( L0, object_copy( target->name ) ) );
+        lol_add( frame->args, list_new( object_copy( target->name ) ) );
 
         /* command status start end user system :: info about the action command */
         lol_add( frame->args,
-            list_new( list_new( list_new( list_new( list_new( list_new( L0,
+            list_push_back( list_push_back( list_push_back( list_push_back( list_push_back( list_new(
                 object_new( executed_command ) ),
                 outf_int( status ) ),
                 outf_time( time->start ) ),
@@ -777,7 +777,7 @@ static void call_action_rule
 
         /* output ? :: the output of the action command */
         if ( command_output )
-            lol_add( frame->args, list_new( L0, object_new( command_output ) ) );
+            lol_add( frame->args, list_new( object_new( command_output ) ) );
         else
             lol_add( frame->args, L0 );
 
@@ -1046,7 +1046,7 @@ static CMD * make1cmds( TARGET * t )
                 /* Tell the user what didn't fit. */
                 cmd = cmd_new( rule, list_copy( nt ),
                     list_sublist( ns, start, chunk ),
-                    list_new( L0, object_copy( constant_percent ) ) );
+                    list_new( object_copy( constant_percent ) ) );
                 fputs( cmd->buf->value, stdout );
                 exit( EXITBAD );
             }
@@ -1108,7 +1108,7 @@ static LIST * make1list( LIST * l, TARGETS * targets, int flags )
         }
 
         /* Build new list. */
-        l = list_new( l, object_copy( t->boundname ) );
+        l = list_push_back( l, object_copy( t->boundname ) );
     }
 
     return l;
@@ -1139,7 +1139,7 @@ static SETTINGS * make1settings( struct module_t * module, LIST * vars )
                 make1bind( t );
 
             /* Build a new list. */
-            nl = list_new( nl, object_copy( t->boundname ) );
+            nl = list_push_back( nl, object_copy( t->boundname ) );
         }
 
         /* Add to settings chain. */
