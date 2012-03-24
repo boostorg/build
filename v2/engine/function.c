@@ -166,6 +166,21 @@ typedef struct _jam_function
 } JAM_FUNCTION;
 
 
+#ifdef HAVE_PYTHON
+
+#define FUNCTION_PYTHON     2
+
+typedef struct _python_function
+{
+    FUNCTION base;
+    PyObject * python_function;
+} PYTHON_FUNCTION;
+
+static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame );
+
+#endif
+
+
 struct _stack
 {
     void * data;
@@ -2516,9 +2531,17 @@ void function_location( FUNCTION * function_, OBJECT * * file, int * line )
         *file = constant_builtin;
         *line = -1;
     }
+#ifdef HAVE_PYTHON
+    if ( function_->type == FUNCTION_PYTHON )
+    {
+        *file = constant_builtin;
+        *line = -1;
+    }
+#endif
     else
     {
         JAM_FUNCTION * function = (JAM_FUNCTION *)function_;
+        assert( function_->type == FUNCTION_JAM );
         *file = function->file;
         *line = function->line;
     }
@@ -2570,8 +2593,25 @@ FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int li
     return (FUNCTION *)result;
 }
 
-int is_type_name( const char * s );
 static void argument_list_print( struct arg_list * args, int num_args );
+
+
+/* Define delimiters for type check elements in argument lists (and return type
+ * specifications, eventually).
+ */
+# define TYPE_OPEN_DELIM '['
+# define TYPE_CLOSE_DELIM ']'
+
+/*
+ * is_type_name() - true iff the given string represents a type check
+ * specification.
+ */
+
+int is_type_name( const char * s )
+{
+    return ( s[ 0 ] == TYPE_OPEN_DELIM ) &&
+        ( s[ strlen( s ) - 1 ] == TYPE_CLOSE_DELIM );
+}
 
 static void argument_error( const char * message, FUNCTION * procedure, FRAME * frame, OBJECT * arg )
 {
@@ -3122,8 +3162,15 @@ FUNCTION * function_unbind_variables( FUNCTION * f )
         else
             return (FUNCTION *)func;
     }
+#ifdef HAVE_PYTHON
+    else if ( f->type == FUNCTION_PYTHON )
+    {
+        return f;
+    }
+#endif
     else
     {
+        assert( f->type == FUNCTION_BUILTIN );
         return f;
     }
 }
@@ -3134,12 +3181,19 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module, int * count
     {
         return f;
     }
+#ifdef HAVE_PYTHON
+    else if ( f->type == FUNCTION_PYTHON )
+    {
+        return f;
+    }
+#endif
     else
     {
         JAM_FUNCTION * func = (JAM_FUNCTION *)f;
         JAM_FUNCTION * new_func = BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
         instruction * code;
         int i;
+        assert( f->type == FUNCTION_JAM );
         memcpy( new_func, func, sizeof( JAM_FUNCTION ) );
         new_func->base.reference_count = 1;
         new_func->base.formal_arguments = argument_list_bind_variables( f->formal_arguments, f->num_formal_arguments, module, counter );
@@ -3250,8 +3304,17 @@ void function_free( FUNCTION * function_ )
             object_free( func->file );
         }
     }
+#ifdef HAVE_PYTHON
+    else if ( function_->type == FUNCTION_PYTHON )
+    {
+        PYTHON_FUNCTION * func = (PYTHON_FUNCTION *)function_;
+        Py_DECREF( func->python_function );
+        if ( function_->rulename ) object_free( function_->rulename );
+    }
+#endif
     else
     {
+        assert( function_->type == FUNCTION_BUILTIN );
         if ( function_->rulename ) object_free( function_->rulename );
     }
 
@@ -3286,28 +3349,6 @@ void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string
     stack_deallocate( s, sizeof( string * ) );
 }
 
-LIST * function_run_with_args( FUNCTION * function_, FRAME * frame, STACK * s )
-{
-    LIST * result;
-    if ( function_->type == FUNCTION_BUILTIN )
-    {
-        BUILTIN_FUNCTION * f = (BUILTIN_FUNCTION *)function_;
-        if ( function_->formal_arguments )
-            argument_list_check( function_->formal_arguments, function_->num_formal_arguments, function_, frame );
-        return f->func( frame, f->flags );
-    }
-    
-    if ( function_->formal_arguments )
-        argument_list_push( function_->formal_arguments, function_->num_formal_arguments, function_, frame, s );
-    
-    result = function_run( function_, frame, s );
-
-    if ( function_->formal_arguments )
-        argument_list_pop( function_->formal_arguments, function_->num_formal_arguments, frame, s );
-
-    return result;
-}
-
 /*
  * WARNING: The instruction set is tuned for Jam and
  * is not really generic.  Be especially careful about
@@ -3326,8 +3367,25 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
     if ( function_->type == FUNCTION_BUILTIN )
     {
         BUILTIN_FUNCTION * f = (BUILTIN_FUNCTION *)function_;
+        if ( function_->formal_arguments )
+            argument_list_check( function_->formal_arguments, function_->num_formal_arguments, function_, frame );
         return f->func( frame, f->flags );
     }
+
+#ifdef HAVE_PYTHON
+
+    else if ( function_->type == FUNCTION_PYTHON )
+    {
+        PYTHON_FUNCTION * f = (PYTHON_FUNCTION *)function_;
+        return call_python_function( f, frame );
+    }
+
+#endif
+
+    assert( function_->type == FUNCTION_JAM );
+    
+    if ( function_->formal_arguments )
+        argument_list_push( function_->formal_arguments, function_->num_formal_arguments, function_, frame, s );
 
     function = (JAM_FUNCTION *)function_;
     code = function->code;
@@ -3590,6 +3648,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
         case INSTR_RETURN:
         {
+            if ( function_->formal_arguments )
+                argument_list_pop( function_->formal_arguments, function_->num_formal_arguments, frame, s );
 #ifndef NDEBUG
     
             if ( !( saved_stack == s->data ) )
@@ -4207,6 +4267,267 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         ++code;
     }
 }
+
+
+#ifdef HAVE_PYTHON
+
+static struct arg_list * arg_list_compile_python( PyObject * bjam_signature, int * num_arguments )
+{
+    if ( bjam_signature )
+    {
+        struct argument_list_compiler c[ 1 ];
+        struct arg_list * result;
+        Py_ssize_t s, i, j, inner;
+        argument_list_compiler_init( c );
+
+        s = PySequence_Size( bjam_signature );
+        for ( i = 0; i < s; ++i )
+        {
+            struct argument_compiler arg_comp[ 1 ];
+            struct arg_list arg;
+            PyObject * v = PySequence_GetItem( bjam_signature, i );
+            argument_compiler_init( arg_comp );
+            
+            inner = PySequence_Size( v );
+            for ( j = 0; j < inner; ++j )
+            {
+                PyObject * x = PySequence_GetItem( v, j );
+                argument_compiler_add( arg_comp, object_new( PyString_AsString( x ) ), constant_builtin, -1 );
+            }
+            
+            arg = arg_compile_impl( arg_comp, constant_builtin, -1 );
+            dynamic_array_push( c->args, arg );
+            argument_compiler_free( arg_comp );
+            Py_DECREF( v );
+        }
+
+        *num_arguments = c->args->size;
+        result = BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
+        memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list ) );
+        argument_list_compiler_free( c );
+        return result;
+    }
+    else
+    {
+        *num_arguments = 0;
+        return 0;
+    }
+}
+
+FUNCTION * function_python( PyObject * function, PyObject * bjam_signature )
+{
+    PYTHON_FUNCTION * result = BJAM_MALLOC( sizeof( PYTHON_FUNCTION ) );
+    
+    result->base.type = FUNCTION_PYTHON;
+    result->base.reference_count = 1;
+    result->base.rulename = 0;
+    result->base.formal_arguments = arg_list_compile_python( bjam_signature, &result->base.num_formal_arguments );
+    Py_INCREF( function );
+    result->python_function = function;
+
+    return (FUNCTION *)result;
+}
+
+static void argument_list_to_python( struct arg_list * formal, int formal_count, FUNCTION * function, FRAME * frame, PyObject * kw )
+{
+    LOL * all_actual = frame->args;
+    int i, j;
+
+    for ( i = 0; i < formal_count; ++i )
+    {
+        LIST *actual = lol_get( all_actual, i );
+        LISTITER actual_iter = list_begin( actual ), actual_end = list_end( actual );
+        for ( j = 0; j < formal[i].size; ++j )
+        {
+            struct argument * formal_arg = &formal[i].args[j];
+            PyObject * value;
+            LIST * l;
+
+            switch ( formal_arg->flags )
+            {
+            case ARG_ONE:
+                if ( actual_iter == actual_end )
+                    argument_error( "missing argument", function, frame, formal_arg->arg_name );
+                type_check_range( formal_arg->type_name, actual_iter, list_next( actual_iter ), frame, function, formal_arg->arg_name );
+                value = PyString_FromString( object_str( list_item( actual_iter) ) );
+                actual_iter = list_next( actual_iter );
+                break;
+            case ARG_OPTIONAL:
+                if ( actual_iter == actual_end )
+                    value = 0;
+                else
+                {
+                    type_check_range( formal_arg->type_name, actual_iter, list_next( actual_iter ), frame, function, formal_arg->arg_name );
+                    value = PyString_FromString( object_str( list_item( actual_iter) ) );
+                    actual_iter = list_next( actual_iter );
+                }
+                break;
+            case ARG_PLUS:
+                if ( actual_iter == actual_end )
+                    argument_error( "missing argument", function, frame, formal_arg->arg_name );
+                /* fallthrough */
+            case ARG_STAR:
+                type_check_range( formal_arg->type_name, actual_iter, actual_end, frame, function, formal_arg->arg_name );
+                l = list_copy_range( actual, actual_iter, actual_end );
+                value = list_to_python( l );
+                list_free( l );
+                actual_iter = actual_end;
+                break;
+            case ARG_VARIADIC:
+                return;
+            }
+            
+            if (value)
+            {
+                PyObject * key = PyString_FromString( object_str( formal_arg->arg_name ) );
+                PyDict_SetItem( kw, key, value );
+                Py_DECREF( key );
+                Py_DECREF( value );
+            }
+        }
+
+        if ( actual_iter != actual_end )
+        {
+            argument_error( "extra argument", function, frame, list_item( actual_iter ) );
+        }
+    }
+
+    for ( ; i < all_actual->count; ++i )
+    {
+        LIST * actual = lol_get( all_actual, i );
+        if ( !list_empty( actual ) )
+        {
+            argument_error( "extra argument", function, frame, list_front( actual ) );
+        }
+    }
+}
+
+/* Given a Python object, return a string to use in Jam
+   code instead of said object.
+   If the object is string, use the string value
+   If the object implemenets __jam_repr__ method, use that.
+   Otherwise return 0. */
+OBJECT * python_to_string( PyObject * value )
+{
+    if ( PyString_Check( value ) )
+    {
+        return object_new( PyString_AsString( value ) );
+    }
+    else
+    {
+        /* See if this is an instance that defines special __jam_repr__
+           method. */
+        if ( PyInstance_Check( value )
+            && PyObject_HasAttrString( value, "__jam_repr__" ) )
+        {
+            PyObject* repr = PyObject_GetAttrString( value, "__jam_repr__" );
+            if ( repr )
+            {
+                PyObject * arguments2 = PyTuple_New( 0 );
+                PyObject * value2 = PyObject_Call( repr, arguments2, 0 );
+                Py_DECREF( repr );
+                Py_DECREF( arguments2 );
+                if ( PyString_Check( value2 ) )
+                {
+                    return object_new( PyString_AsString( value2 ) );
+                }
+                Py_DECREF( value2 );
+            }
+        }
+        return 0;
+    }
+}
+
+static module_t * python_module()
+{
+    static module_t * python = 0;
+    if ( !python )
+        python = bindmodule(constant_python);
+    return python;
+}
+
+static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
+{
+    LIST * result = 0;
+    PyObject * arguments = 0;
+    PyObject * kw = NULL;
+    int i ;
+    PyObject * py_result;
+    FRAME * prev_frame_before_python_call;
+
+    if ( function->base.formal_arguments )
+    {
+        arguments = PyTuple_New(0);
+        kw = PyDict_New();
+
+        argument_list_to_python( function->base.formal_arguments, function->base.num_formal_arguments, &function->base, frame, kw );
+    }
+    else
+    {
+        arguments = PyTuple_New( frame->args->count );
+        for ( i = 0; i < frame->args->count; ++i )
+        {
+            PyTuple_SetItem( arguments, i, list_to_python( lol_get( frame->args, i ) ) );
+        }
+    }
+
+    frame->module = python_module();
+
+    prev_frame_before_python_call = frame_before_python_call;
+    frame_before_python_call = frame;
+    py_result = PyObject_Call( function->python_function, arguments, kw );
+    frame_before_python_call = prev_frame_before_python_call;
+    Py_DECREF( arguments );
+    Py_XDECREF( kw );
+    if ( py_result != NULL )
+    {
+        if ( PyList_Check( py_result ) )
+        {
+            int size = PyList_Size( py_result );
+            int i;
+            for ( i = 0; i < size; ++i )
+            {
+                PyObject * item = PyList_GetItem( py_result, i );
+                OBJECT *s = python_to_string( item );
+                if ( !s ) {
+                    fprintf( stderr, "Non-string object returned by Python call.\n" );
+                } else {
+                    result = list_new( result, s );
+                }
+            }
+        }
+        else if ( py_result == Py_None )
+        {
+            result = L0;
+        }
+        else 
+        {
+            OBJECT *s = python_to_string( py_result );
+            if (s)
+                result = list_new( L0, s );
+            else 
+                /* We have tried all we could.  Return empty list. There are
+                   cases, e.g.  feature.feature function that should return
+                   value for the benefit of Python code and which also can be
+                   called by Jam code, where no sensible value can be
+                   returned. We cannot even emit a warning, since there will
+                   be a pile of them.  */                
+                result = L0;                    
+        }
+
+        Py_DECREF( py_result );
+    }
+    else
+    {
+        PyErr_Print();
+        fprintf( stderr,"Call failed\n" );
+    }
+
+    return result;
+}
+
+#endif
+
 
 void function_done( void )
 {

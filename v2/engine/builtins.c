@@ -1841,12 +1841,7 @@ LIST * builtin_python_import_rule( FRAME * frame, int flags )
         if ( pFunc && PyCallable_Check( pFunc ) )
         {
             module_t * m = bindmodule( jam_module );
-            RULE * r = bindrule( jam_rule, m );
-
-            /* Make pFunc owned. */
-            Py_INCREF( pFunc );
-
-            r->python_function = pFunc;
+            new_rule_body( m, jam_rule, 0, function_python( pFunc, 0 ), 0 );
         }
         else
         {
@@ -2014,25 +2009,7 @@ PyObject * bjam_import_rule( PyObject * self, PyObject * args )
     object_free( rule_name );
 
     /* Make pFunc owned. */
-    Py_INCREF( func );
-
-    r->python_function = func;
-    r->arguments = 0;
-
-    if (bjam_signature)
-    {
-        argument_list * arg_list = args_new();
-        Py_ssize_t i;
-
-        Py_ssize_t s = PySequence_Size (bjam_signature);
-        for (i = 0; i < s; ++i)
-        {
-            PyObject* v = PySequence_GetItem (bjam_signature, i);
-            lol_add(arg_list->data, list_from_python (v));
-            Py_DECREF(v);
-        }
-        r->arguments = arg_list;
-    }
+    r->procedure = function_python( func, bjam_signature );
 
     Py_INCREF( Py_None );
     return Py_None;

@@ -89,9 +89,6 @@ static RULE * enter_rule( OBJECT * rulename, module_t * target_module )
         r->arguments = 0;
         r->exported = 0;
         r->module = target_module;
-#ifdef HAVE_PYTHON
-        r->python_function = 0;
-#endif
     }
     return r;
 }
@@ -134,11 +131,6 @@ void rule_free( RULE * r )
     if ( r->actions )
         actions_free( r->actions );
     r->actions = 0;
-#ifdef HAVE_PYTHON
-    if ( r->python_function )
-        Py_DECREF( r->python_function );
-    r->python_function = 0;
-#endif
 }
 
 
