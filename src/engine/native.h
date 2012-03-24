@@ -5,12 +5,15 @@
 #ifndef NATIVE_H_VP_2003_12_09
 #define NATIVE_H_VP_2003_12_09
 
+#include "lists.h"
+#include "object.h"
+#include "frames.h"
+#include "function.h"
 #include "rules.h"
 
 struct native_rule_t
 {
     OBJECT * name;
-    argument_list * arguments;
     FUNCTION * procedure;
     /* Version of the interface that the native rule provides.
        It's possible that we want to change the set parameter

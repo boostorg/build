@@ -556,8 +556,6 @@ void actions_free( rule_actions * a )
     }
 }
 
-void function_set_argument_list( FUNCTION * f, LOL * formal, RULE * rule );
-
 /*
  * set_rule_body() - set the argument list and procedure of the given rule.
  */
@@ -569,9 +567,6 @@ static void set_rule_body( RULE * rule, argument_list * args, FUNCTION * procedu
     if ( rule->arguments )
         args_free( rule->arguments );
     rule->arguments = args;
-
-    if ( procedure && args )
-        function_set_argument_list( procedure, args->data, rule );
 
     if ( procedure )
         function_refer( procedure );

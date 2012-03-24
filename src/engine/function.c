@@ -120,7 +120,6 @@ typedef struct _subfunction
 {
     OBJECT * name;
     FUNCTION * code;
-    int arguments;
     int local;
 } SUBFUNCTION;
 
@@ -282,22 +281,6 @@ static void function_set_rule( JAM_FUNCTION * function, FRAME * frame, STACK * s
 {
     SUBFUNCTION * sub = function->functions + idx;
     argument_list * args = 0;
-
-    if ( sub->arguments )
-    {
-        int i;
-        args = args_new();
-        for ( i = sub->arguments; i > 0; --i )
-        {
-            lol_add( args->data, stack_at( s, i - 1 ) );
-        }
-       
-        for ( i = 0; i < sub->arguments; ++i )
-        {
-            stack_pop( s );
-        }
-    }
-
     new_rule_body( frame->module, sub->name, args, sub->code, !sub->local );
 }
 
@@ -1078,7 +1061,8 @@ struct stored_rule
 {
     OBJECT * name;
     PARSE * parse;
-    int arguments;
+    int num_arguments;
+    struct arg_list * arguments;
     int local;
 };
 
@@ -1177,11 +1161,12 @@ static int compile_emit_constant( compiler * c, OBJECT * value )
     return c->constants->size - 1;
 }
 
-static int compile_emit_rule( compiler * c, OBJECT * name, PARSE * parse, int arguments, int local )
+static int compile_emit_rule( compiler * c, OBJECT * name, PARSE * parse, int num_arguments, struct arg_list * arguments, int local )
 {
     struct stored_rule rule;
     rule.name = object_copy( name );
     rule.parse = parse;
+    rule.num_arguments = num_arguments;
     rule.arguments = arguments;
     rule.local = local;
     dynamic_array_push( c->rules, rule );
@@ -1224,7 +1209,8 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
         struct stored_rule * rule = &dynamic_array_at( struct stored_rule, c->rules, i );
         result->functions[i].name = rule->name;
         result->functions[i].code = function_compile( rule->parse );
-        result->functions[i].arguments = rule->arguments;
+        result->functions[i].code->num_formal_arguments = rule->num_arguments;
+        result->functions[i].code->formal_arguments = rule->arguments;
         result->functions[i].local = rule->local;
     }
 
@@ -1967,6 +1953,7 @@ void balance_parentheses( const char * * s_, const char * * string, VAR_PARSE_GR
 #define RESULT_NONE 2
 
 static void compile_parse( PARSE * parse, compiler * c, int result_location );
+static struct arg_list * arg_list_compile( PARSE * parse, int * num_arguments );
 
 static void compile_condition( PARSE * parse, compiler * c, int branch_true, int label )
 {
@@ -2451,19 +2438,10 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_SETCOMP )
     {
-        int n_args = 0;
-        int rule_id;
-        if ( parse->right )
-        {
-            PARSE * p;
-            for ( p = parse->right; p; p = p->left )
-            {
-                compile_parse( p->right, c, RESULT_STACK );
-                ++n_args;
-            }
-        }
+        int n_args;
+        struct arg_list * args = arg_list_compile( parse->right, &n_args );
 
-        rule_id = compile_emit_rule( c, parse->string, parse->left, n_args, parse->num );
+        int rule_id = compile_emit_rule( c, parse->string, parse->left, n_args, args, parse->num );
 
         compile_emit( c, INSTR_RULE, rule_id );
         adjust_result( c, RESULT_NONE, result_location );
@@ -2546,7 +2524,7 @@ void function_location( FUNCTION * function_, OBJECT * * file, int * line )
     }
 }
 
-FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ), int flags )
+FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ), int flags, const char * * args )
 {
     BUILTIN_FUNCTION * result = BJAM_MALLOC( sizeof( BUILTIN_FUNCTION ) );
     result->base.type = FUNCTION_BUILTIN;
@@ -2592,27 +2570,81 @@ FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int li
     return (FUNCTION *)result;
 }
 
-void argument_error( const char * message, RULE * rule, FRAME * frame, OBJECT * arg );
 int is_type_name( const char * s );
+static void argument_list_print( struct arg_list * args, int num_args );
 
-void type_check_range
-(
-    OBJECT  * type_name,
-    LISTITER  iter,
-    LISTITER  end,
-    FRAME   * caller,
-    RULE    * called,
-    OBJECT  * arg_name
-);
+static void argument_error( const char * message, FUNCTION * procedure, FRAME * frame, OBJECT * arg )
+{
+    LOL * actual = frame->args;
+    backtrace_line( frame->prev );
+    printf( "*** argument error\n* rule %s ( ", frame->rulename );
+    argument_list_print( procedure->formal_arguments, procedure->num_formal_arguments );
+    printf( " )\n* called with: ( " );
+    lol_print( actual );
+    printf( " )\n* %s %s\n", message, arg ? object_str ( arg ) : "" );
+    function_location( procedure, &frame->file, &frame->line );
+    print_source_line( frame );
+    printf( "see definition of rule '%s' being called\n", frame->rulename );
+    backtrace( frame->prev );
+    exit( 1 );
+}
 
-void type_check
+static void type_check_range
 (
-    OBJECT  * type_name,
-    LIST    * values,
-    FRAME   * caller,
-    RULE    * called,
-    OBJECT  * arg_name
-);
+    OBJECT   * type_name,
+    LISTITER   iter,
+    LISTITER   end,
+    FRAME    * caller,
+    FUNCTION * called,
+    OBJECT   * arg_name
+)
+{
+    static module_t * typecheck = 0;
+
+    /* If nothing to check, bail now. */
+    if ( iter == end || !type_name )
+        return;
+
+    if ( !typecheck )
+    {
+        typecheck = bindmodule( constant_typecheck );
+    }
+
+    /* If the checking rule can not be found, also bail. */
+    if ( !typecheck->rules || !hash_find( typecheck->rules, type_name ) )
+        return;
+
+    for ( ; iter != end; iter = list_next( iter ) )
+    {
+        LIST *error;
+        FRAME frame[1];
+        frame_init( frame );
+        frame->module = typecheck;
+        frame->prev = caller;
+        frame->prev_user = caller->module->user_module ? caller : caller->prev_user;
+
+        /* Prepare the argument list */
+        lol_add( frame->args, list_new( L0, object_copy( list_item( iter ) ) ) );
+        error = evaluate_rule( type_name, frame );
+
+        if ( !list_empty( error ) )
+            argument_error( object_str( list_front( error ) ), called, caller, arg_name );
+
+        frame_free( frame );
+    }
+}
+
+static void type_check
+(
+    OBJECT   * type_name,
+    LIST     * values,
+    FRAME    * caller,
+    FUNCTION * called,
+    OBJECT   * arg_name
+)
+{
+    type_check_range( type_name, list_begin( values ), list_end( values ), caller, called, arg_name );
+}
 
 struct argument {
     int flags;
@@ -2631,7 +2663,7 @@ struct arg_list {
     struct argument * args;
 };
 
-void argument_list_check( struct arg_list * formal, int formal_count, RULE * rule, FRAME * frame )
+void argument_list_check( struct arg_list * formal, int formal_count, FUNCTION * function, FRAME * frame )
 {
     LOL * all_actual = frame->args;
     int i, j;
@@ -2649,8 +2681,8 @@ void argument_list_check( struct arg_list * formal, int formal_count, RULE * rul
             {
             case ARG_ONE:
                 if ( actual_iter == actual_end )
-                    argument_error( "missing argument", rule, frame, formal_arg->arg_name );
-                type_check_range( formal_arg->type_name, actual_iter, list_next( actual_iter ), frame, rule, formal_arg->arg_name );
+                    argument_error( "missing argument", function, frame, formal_arg->arg_name );
+                type_check_range( formal_arg->type_name, actual_iter, list_next( actual_iter ), frame, function, formal_arg->arg_name );
                 actual_iter = list_next( actual_iter );
                 break;
             case ARG_OPTIONAL:
@@ -2658,16 +2690,16 @@ void argument_list_check( struct arg_list * formal, int formal_count, RULE * rul
                     value = L0;
                 else
                 {
-                    type_check_range( formal_arg->type_name, actual_iter, list_next( actual_iter ), frame, rule, formal_arg->arg_name );
+                    type_check_range( formal_arg->type_name, actual_iter, list_next( actual_iter ), frame, function, formal_arg->arg_name );
                     actual_iter = list_next( actual_iter );
                 }
                 break;
             case ARG_PLUS:
                 if ( actual_iter == actual_end )
-                    argument_error( "missing argument", rule, frame, formal_arg->arg_name );
+                    argument_error( "missing argument", function, frame, formal_arg->arg_name );
                 /* fallthrough */
             case ARG_STAR:
-                 type_check_range( formal_arg->type_name, actual_iter, actual_end, frame, rule, formal_arg->arg_name );
+                 type_check_range( formal_arg->type_name, actual_iter, actual_end, frame, function, formal_arg->arg_name );
                 actual_iter = actual_end;
             case ARG_VARIADIC:
                 return;
@@ -2676,7 +2708,7 @@ void argument_list_check( struct arg_list * formal, int formal_count, RULE * rul
 
         if ( actual_iter != actual_end )
         {
-            argument_error( "extra argument", rule, frame, list_item( actual_iter ) );
+            argument_error( "extra argument", function, frame, list_item( actual_iter ) );
         }
     }
 
@@ -2685,12 +2717,12 @@ void argument_list_check( struct arg_list * formal, int formal_count, RULE * rul
         LIST * actual = lol_get( all_actual, i );
         if ( !list_empty( actual ) )
         {
-            argument_error( "extra argument", rule, frame, list_front( actual ) );
+            argument_error( "extra argument", function, frame, list_front( actual ) );
         }
     }
 }
 
-void argument_list_push( struct arg_list * formal, int formal_count, RULE * rule, FRAME * frame, STACK * s )
+void argument_list_push( struct arg_list * formal, int formal_count, FUNCTION * function, FRAME * frame, STACK * s )
 {
     LOL * all_actual = frame->args;
     int i, j;
@@ -2708,7 +2740,7 @@ void argument_list_push( struct arg_list * formal, int formal_count, RULE * rule
             {
             case ARG_ONE:
                 if ( actual_iter == actual_end )
-                    argument_error( "missing argument", rule, frame, formal_arg->arg_name );
+                    argument_error( "missing argument", function, frame, formal_arg->arg_name );
                 value = list_new( L0, object_copy( list_item( actual_iter ) ) );
                 actual_iter = list_next( actual_iter );
                 break;
@@ -2723,7 +2755,7 @@ void argument_list_push( struct arg_list * formal, int formal_count, RULE * rule
                 break;
             case ARG_PLUS:
                 if ( actual_iter == actual_end )
-                    argument_error( "missing argument", rule, frame, formal_arg->arg_name );
+                    argument_error( "missing argument", function, frame, formal_arg->arg_name );
                 /* fallthrough */
             case ARG_STAR:
                 value = list_copy_range( actual, actual_iter, actual_end );
@@ -2733,7 +2765,7 @@ void argument_list_push( struct arg_list * formal, int formal_count, RULE * rule
                 return;
             }
 
-            type_check( formal_arg->type_name, value, frame, rule, formal_arg->arg_name );
+            type_check( formal_arg->type_name, value, frame, function, formal_arg->arg_name );
 
             if ( formal_arg->index != -1 )
             {
@@ -2749,7 +2781,7 @@ void argument_list_push( struct arg_list * formal, int formal_count, RULE * rule
 
         if ( actual_iter != actual_end )
         {
-            argument_error( "extra argument", rule, frame, list_item( actual_iter ) );
+            argument_error( "extra argument", function, frame, list_item( actual_iter ) );
         }
     }
 
@@ -2758,7 +2790,7 @@ void argument_list_push( struct arg_list * formal, int formal_count, RULE * rule
         LIST * actual = lol_get( all_actual, i );
         if ( !list_empty( actual ) )
         {
-            argument_error( "extra argument", rule, frame, list_front( actual ) );
+            argument_error( "extra argument", function, frame, list_front( actual ) );
         }
     }
 }
@@ -2793,83 +2825,248 @@ void argument_list_pop( struct arg_list * formal, int formal_count, FRAME * fram
 }
 
 
-struct arg_list * argument_list_compile( LOL * all_formal, RULE * rule )
+struct argument_compiler
 {
-    struct arg_list * result = (struct arg_list *)BJAM_MALLOC( sizeof( struct arg_list ) * all_formal->count );
+    struct dynamic_array args[ 1 ];
+    struct argument arg;
+    int state;
+#define ARGUMENT_COMPILER_START         0
+#define ARGUMENT_COMPILER_FOUND_TYPE    1
+#define ARGUMENT_COMPILER_FOUND_OBJECT  2
+#define ARGUMENT_COMPILER_DONE          3
+};
 
-    int n;
-    struct dynamic_array args[1];
-    dynamic_array_init( args );
-    for ( n = 0; n < all_formal->count ; ++n )
+
+static void argument_compiler_init( struct argument_compiler * c )
+{
+    dynamic_array_init( c->args );
+    c->state = ARGUMENT_COMPILER_START;
+}
+
+static void argument_compiler_free( struct argument_compiler * c )
+{
+    dynamic_array_free( c->args );
+}
+
+static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg, OBJECT * file, int line )
+{
+    switch ( c->state )
     {
-        LIST *formal;
-        LISTITER formal_iter, formal_end;
-        for ( formal = lol_get( all_formal, n ),
-            formal_iter = list_begin( formal ), formal_end = list_end( formal );
-            formal_iter != formal_end; )
+    case ARGUMENT_COMPILER_FOUND_OBJECT:
+
+        if ( object_equal( arg, constant_question_mark ) )
         {
-            struct argument arg;
-            arg.type_name = 0;
-            arg.arg_name = list_item( formal_iter );
-            arg.index = -1;
-
-            if ( is_type_name( object_str( arg.arg_name ) ) )
-            {
-
-                formal_iter = list_next( formal_iter );
-
-                if ( formal_iter == formal_end )
-                    argument_error( "missing argument name after type name:", rule, 0, arg.arg_name );
-
-                arg.type_name = arg.arg_name;
-                arg.arg_name = list_item( formal_iter );
-
-                if ( is_type_name( object_str( arg.arg_name ) ) )
-                    argument_error( "missing argument name before type name:", rule, 0, arg.arg_name );
-            }
-
-            formal_iter = list_next( formal_iter );
-
-            if ( object_equal( arg.arg_name, constant_star ) )
-            {
-                arg.flags = ARG_VARIADIC;
-            }
-            else if ( formal_iter != formal_end )
-            {
-                if ( object_equal( list_item( formal_iter ), constant_question_mark ) )
-                {
-                    arg.flags = ARG_OPTIONAL;
-                    formal_iter = list_next( formal_iter );
-                }
-                else if ( object_equal( list_item( formal_iter ), constant_plus ) )
-                {
-                    arg.flags = ARG_PLUS;
-                    formal_iter = list_next( formal_iter );
-                }
-                else if ( object_equal( list_item( formal_iter ), constant_star ) )
-                {
-                    arg.flags = ARG_STAR;
-                    formal_iter = list_next( formal_iter );
-                }
-                else
-                    arg.flags = ARG_ONE;
-            }
-            else
-            {
-                arg.flags = ARG_ONE;
-            }
-
-            dynamic_array_push( args, arg );
+            c->arg.flags = ARG_OPTIONAL;
+        }
+        else if ( object_equal( arg, constant_plus ) )
+        {
+            c->arg.flags = ARG_PLUS;
+        }
+        else if ( object_equal( arg, constant_star ) )
+        {
+            c->arg.flags = ARG_STAR;
         }
 
-        result[ n ].args = BJAM_MALLOC( args[ 0 ].size * sizeof( struct argument ) );
-        result[ n ].size = args[ 0 ].size;
-        memcpy( result[n].args, args[ 0 ].data, args[ 0 ].size * sizeof( struct argument ) );
-        args[ 0 ].size = 0;
-    }
-    dynamic_array_free( args );
+        dynamic_array_push( c->args, c->arg );
+        c->state = ARGUMENT_COMPILER_START;
 
+        if ( c->arg.flags != ARG_ONE )
+            break;
+        /* fall-through */
+
+    case ARGUMENT_COMPILER_START:
+
+        c->arg.type_name = 0;
+        c->arg.index = -1;
+        c->arg.flags = ARG_ONE;
+
+        if ( is_type_name( object_str( arg ) ) )
+        {
+            c->arg.type_name = arg;
+            c->state = ARGUMENT_COMPILER_FOUND_TYPE;
+            break;
+        }
+        /* fall-through */
+
+    case ARGUMENT_COMPILER_FOUND_TYPE:
+        
+        if ( is_type_name( object_str( arg ) ) )
+        {
+            printf( "%s:%d: missing argument name before type name: %s\n", object_str( file ), line, object_str( arg ) );
+            exit( 1 );
+        }
+        
+        c->arg.arg_name = arg;
+        if ( object_equal( arg, constant_star ) )
+        {
+            c->arg.flags = ARG_VARIADIC;
+            dynamic_array_push( c->args, c->arg );
+            c->state = ARGUMENT_COMPILER_DONE;
+        }
+        else
+        {
+            c->state = ARGUMENT_COMPILER_FOUND_OBJECT;
+        }
+        break;
+
+    case ARGUMENT_COMPILER_DONE:
+        break;
+    }
+}
+
+static void argument_compiler_recurse( struct argument_compiler * c, PARSE * parse )
+{
+    if ( parse->type == PARSE_APPEND )
+    {
+        argument_compiler_recurse( c, parse->left );
+        argument_compiler_recurse( c, parse->right );
+    }
+    else if ( parse->type != PARSE_NULL )
+    {
+        assert( parse->type == PARSE_LIST );
+        argument_compiler_add( c, parse->string, parse->file, parse->line );
+    }
+}
+
+static struct arg_list arg_compile_impl( struct argument_compiler * c, OBJECT * file, int line )
+{
+    struct arg_list result;
+    switch ( c->state )
+    {
+    case ARGUMENT_COMPILER_START:
+    case ARGUMENT_COMPILER_DONE:
+        break;
+    case ARGUMENT_COMPILER_FOUND_TYPE:
+        printf( "%s:%d: missing argument name after type name: %s\n", object_str( file ), line, object_str( c->arg.type_name ) );
+        exit( 1 );
+    case ARGUMENT_COMPILER_FOUND_OBJECT:
+        dynamic_array_push( c->args, c->arg );
+        break;
+    }
+    result.size = c->args->size;
+    result.args = BJAM_MALLOC( c->args->size * sizeof( struct argument ) );
+    memcpy( result.args, c->args->data, c->args->size * sizeof( struct argument ) );
     return result;
+}
+
+static struct arg_list arg_compile( PARSE * parse )
+{
+    struct argument_compiler c[ 1 ];
+    struct arg_list result;
+    argument_compiler_init( c );
+    argument_compiler_recurse( c, parse );
+    result = arg_compile_impl( c, parse->file, parse->line );
+    argument_compiler_free( c );
+    return result;
+}
+
+struct argument_list_compiler
+{
+    struct dynamic_array args[ 1 ];
+};
+
+static void argument_list_compiler_init( struct argument_list_compiler * c )
+{
+    dynamic_array_init( c->args );
+}
+
+static void argument_list_compiler_free( struct argument_list_compiler * c )
+{
+    dynamic_array_free( c->args );
+}
+
+static void argument_list_compiler_add( struct argument_list_compiler * c, PARSE * parse )
+{
+    struct arg_list args = arg_compile( parse );
+    dynamic_array_push( c->args, args );
+}
+
+static void argument_list_compiler_recurse( struct argument_list_compiler * c, PARSE * parse )
+{
+    if ( parse )
+    {
+        argument_list_compiler_add( c, parse->right );
+        argument_list_compiler_recurse( c, parse->left );
+    }
+}
+
+static struct arg_list * arg_list_compile( PARSE * parse, int * num_arguments )
+{
+    if ( parse )
+    {
+        struct argument_list_compiler c[ 1 ];
+        struct arg_list * result;
+        argument_list_compiler_init( c );
+        argument_list_compiler_recurse( c, parse );
+        *num_arguments = c->args->size;
+        result = BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
+        memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list ) );
+        argument_list_compiler_free( c );
+        return result;
+    }
+    else
+    {
+        *num_arguments = 0;
+        return 0;
+    }
+}
+
+static struct arg_list * arg_list_compile_builtin( const char * * args, int * num_arguments )
+{
+    if ( args )
+    {
+        struct argument_list_compiler c[ 1 ];
+        struct arg_list * result;
+        argument_list_compiler_init( c );
+        while ( *args )
+        {
+            struct argument_compiler arg_comp[ 1 ];
+            struct arg_list arg;
+            argument_compiler_init( arg_comp );
+            for ( ; *args && !strcmp( *args, ":" ); ++args )
+            {
+                argument_compiler_add( arg_comp, object_new( *args ), constant_builtin, -1 );
+            }
+            arg = arg_compile_impl( arg_comp, constant_builtin, -1 );
+            dynamic_array_push( c->args, arg );
+            argument_compiler_free( arg_comp );
+        }
+        *num_arguments = c->args->size;
+        result = BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
+        memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list ) );
+        argument_list_compiler_free( c );
+        return result;
+    }
+    else
+    {
+        *num_arguments = 0;
+        return 0;
+    }
+}
+
+static void argument_list_print( struct arg_list * args, int num_args )
+{
+    if ( args )
+    {
+        int i, j;
+        for ( i = 0; i < num_args; ++i )
+        {
+            if ( i ) printf(" : ");
+            for ( j = 0; j < args[ i ].size; ++j )
+            {
+                struct argument * formal_arg = &args[ i ].args[ j ];
+                if ( j ) printf( " " );
+                if ( formal_arg->type_name ) printf( "%s ", object_str( formal_arg->type_name ) );
+                printf( "%s", formal_arg->arg_name );
+                switch( formal_arg->flags )
+                {
+                case ARG_OPTIONAL: printf( " ?" ); break;
+                case ARG_PLUS:     printf( " +" ); break;
+                case ARG_STAR:     printf( " *" ); break;
+                }
+            }
+        }
+    }
 }
 
 
@@ -2912,16 +3109,6 @@ void argument_list_free( struct arg_list * args, int args_count )
         BJAM_FREE( args[ i ].args );
     }
     BJAM_FREE( args );
-}
-
-
-void function_set_argument_list( FUNCTION * f, LOL * formal, RULE * rule )
-{
-    if ( !f->formal_arguments && formal )
-    {
-        f->formal_arguments = argument_list_compile( formal, rule );
-        f->num_formal_arguments = formal->count;
-    }
 }
 
 
@@ -3099,19 +3286,19 @@ void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string
     stack_deallocate( s, sizeof( string * ) );
 }
 
-LIST * function_run_with_args( FUNCTION * function_, FRAME * frame, STACK * s, RULE * rule )
+LIST * function_run_with_args( FUNCTION * function_, FRAME * frame, STACK * s )
 {
     LIST * result;
     if ( function_->type == FUNCTION_BUILTIN )
     {
         BUILTIN_FUNCTION * f = (BUILTIN_FUNCTION *)function_;
         if ( function_->formal_arguments )
-            argument_list_check( function_->formal_arguments, function_->num_formal_arguments, rule, frame );
+            argument_list_check( function_->formal_arguments, function_->num_formal_arguments, function_, frame );
         return f->func( frame, f->flags );
     }
     
     if ( function_->formal_arguments )
-        argument_list_push( function_->formal_arguments, function_->num_formal_arguments, rule, frame, s );
+        argument_list_push( function_->formal_arguments, function_->num_formal_arguments, function_, frame, s );
     
     result = function_run( function_, frame, s );
 

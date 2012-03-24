@@ -21,7 +21,7 @@ void stack_push( STACK * s, LIST * l );
 LIST * stack_pop( STACK * s );
 
 FUNCTION * function_compile( PARSE * parse );
-FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ), int flags );
+FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ), int flags, const char * * args );
 void function_refer( FUNCTION * );
 void function_free( FUNCTION * );
 OBJECT * function_rulename( FUNCTION * );
