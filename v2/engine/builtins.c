@@ -87,13 +87,7 @@ RULE * bind_builtin( const char * name_, LIST * (* f)( FRAME *, int flags ), int
     argument_list* arg_list = 0;
     OBJECT * name = object_new( name_ );
 
-    if ( args )
-    {
-        arg_list = args_new();
-        lol_build( arg_list->data, args );
-    }
-
-    func = function_builtin( f, flags );
+    func = function_builtin( f, flags, args );
 
     result = new_rule_body( root_module(), name, arg_list, func, 1 );
 
@@ -1599,8 +1593,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
     native_rule_t * np;
     if ( module->native_rules && (np = (native_rule_t *)hash_find( module->native_rules, list_front( rule_name ) ) ) )
     {
-        args_refer( np->arguments );
-        new_rule_body( module, np->name, np->arguments, np->procedure, 1 );
+        new_rule_body( module, np->name, 0, np->procedure, 1 );
     }
     else
     {

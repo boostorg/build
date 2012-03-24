@@ -33,16 +33,7 @@ void declare_native_rule( const char * module, const char * rule, const char * *
         np = (native_rule_t *)hash_insert( m->native_rules, name, &found );
         np->name = name;
         assert( !found );
-        if ( args )
-        {
-            np->arguments = args_new();
-            lol_build( np->arguments->data, args );
-        }
-        else
-        {
-            np->arguments = 0;
-        }
-        np->procedure = function_builtin( f, 0 );
+        np->procedure = function_builtin( f, 0, args );
         np->version = version;
     }
 }

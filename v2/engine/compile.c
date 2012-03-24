@@ -115,7 +115,7 @@ void frame_free( FRAME* frame )
 }
 
 
-void argument_error( const char * message, RULE * rule, FRAME * frame, OBJECT * arg )
+static void argument_error( const char * message, RULE * rule, FRAME * frame, OBJECT * arg )
 {
     LOL * actual = frame->args;
     assert( rule->procedure != 0 );
@@ -183,7 +183,7 @@ static char arg_modifier( LISTITER iter, LISTITER end )
  *                 checked
  */
 
-void type_check_range
+static void type_check_range
 (
     OBJECT  * type_name,
     LISTITER  iter,
@@ -228,7 +228,7 @@ void type_check_range
     }
 }
 
-void type_check
+static void type_check
 (
     OBJECT  * type_name,
     LIST    * values,
@@ -498,7 +498,7 @@ module_t * python_module()
 
 #endif
 
-LIST * function_run_with_args( FUNCTION * function_, FRAME * frame, STACK * s, RULE * rule );
+LIST * function_run_with_args( FUNCTION * function_, FRAME * frame, STACK * s );
 
 /*
  * evaluate_rule() - execute a rule invocation.
@@ -654,7 +654,7 @@ evaluate_rule(
         FUNCTION * function = rule->procedure;
 
         function_refer( function );
-        result = function_run_with_args( function, frame, stack_global(), rule );
+        result = function_run_with_args( function, frame, stack_global() );
         function_free( function );
     }
 

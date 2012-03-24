@@ -82,8 +82,6 @@ static void delete_rule_( void * xrule, void * data )
 static void delete_native_rule( void * xrule, void * data )
 {
     native_rule_t * rule = (native_rule_t *)xrule;
-    if ( rule->arguments )
-        args_free( rule->arguments );
     object_free( rule->name );
     if ( rule->procedure )
         function_free( rule->procedure );
