@@ -2181,14 +2181,11 @@ exe a : a.cpp
           <listitem>
             <para><emphasis>symmetric</emphasis></para>
 
-            <para>A symmetric feature's default value is not automatically
-              included in <link linkend=
-                "bbv2.reference.variants">build variants</link>.  Normally
-              a feature only generates a subvariant directory when its
-              value differs from the value specified by the build variant,
+            <para>Normally a feature only generates a subvariant directory
+              when its value differs from its default value,
               leading to an assymmetric subvariant directory structure for
-              certain values of the feature. A symmetric feature, when
-              relevant to the toolset, always generates a corresponding
+              certain values of the feature. A symmetric feature
+              always generates a corresponding
               subvariant directory.</para>
           </listitem>
 
@@ -2263,24 +2260,6 @@ rule feature ( name : allowed-values * : attributes * )
 
       </section>
     </section>
-
-    <section id="bbv2.reference.variants">
-      <title>Build Variants</title>
-
-      <para>
-        A build variant, or (simply variant) is a special kind of composite
-        feature that automatically incorporates the default values of
-        features that . Typically you'll want at least two separate
-        variants: one for debugging, and one for your release code. [
-        Volodya says: "Yea, we'd need to mention that it's a composite
-        feature and describe how they are declared, in pacticular that
-        default values of non-optional features are incorporated into
-        build variant automagically. Also, do we wan't some variant
-        inheritance/extension/templates. I don't remember how it works in
-        V1, so can't document this for V2.". Will clean up soon -DWA ]
-      </para>
-
-      </section>
 
     <section id="bbv2.reference.variants.proprefine">
       <title>Property refinement</title>
