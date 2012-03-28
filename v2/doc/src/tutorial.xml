@@ -37,14 +37,14 @@ exe hello : hello.cpp ;
       Even with this simple setup, you can do some interesting things. First of
       all, just invoking <command>b2</command> will build the <filename>hello
       </filename> executable by compiling and linking <filename>hello.cpp
-      </filename>. By default, debug variant is built. Now, to build the release
+      </filename>. By default, the debug variant is built. Now, to build the release
       variant of <filename>hello</filename>, invoke
 
 <screen>
 b2 release
 </screen>
 
-      Note that debug and release variants are created in different directories,
+      Note that the debug and release variants are created in different directories,
       so you can switch between variants or even build multiple variants at
       once, without any unnecessary recompilation. Let us extend the example by
       adding another line to our project's <filename>Jamroot</filename>:
@@ -84,9 +84,9 @@ b2 --clean hello2
     <title>Properties</title>
 
     <para>
-      To portably represent aspects of target configuration such as
+      To represent aspects of target configuration such as
       debug and release variants, or single- and multi-threaded
-      builds, Boost.Build uses <firstterm>features</firstterm> with
+      builds portably, Boost.Build uses <firstterm>features</firstterm> with
       associated <firstterm>values</firstterm>.  For
       example, the <code>debug-symbols</code> feature can have a value of <code>on</code> or
       <code>off</code>.  A <firstterm>property</firstterm> is just a (feature,
@@ -128,7 +128,7 @@ b2 variant=release inlining=off debug-symbols=on
     <para>
       <varname>variant</varname> is so commonly-used that it has been given
       special status as an <firstterm>implicit</firstterm> feature&#x2014;
-      Boost.Build will deduce the its identity just from the name of one of its
+      Boost.Build will deduce its identity just from the name of one of its
       values.
     </para>
 
@@ -140,7 +140,7 @@ b2 variant=release inlining=off debug-symbols=on
       <title>Build Requests and Target Requirements</title>
 
       <para>
-        The set of properties specified on the command line constitute
+        The set of properties specified on the command line constitutes
         a <firstterm>build request</firstterm>&#x2014;a description of
         the desired properties for building the requested targets (or,
         if no targets were explicitly requested, the project in the
@@ -195,9 +195,10 @@ exe hello
       <title>Project Attributes</title>
 
       <para>
-        If we want the same requirements for our other target, <filename>hello2
-        </filename>, we could simply duplicate them. However, as projects grow,
-        that approach leads to a great deal of repeated boilerplate in Jamfiles.
+        If we want the same requirements for our other target,
+        <filename>hello2</filename>, we could simply duplicate them. However,
+        as projects grow, that approach leads to a great deal of repeated
+        boilerplate in Jamfiles.
 
         Fortunately, there's a better way. Each project can specify a set of
         <firstterm>attributes</firstterm>, including requirements:
@@ -220,8 +221,8 @@ exe hello2 : hello.cpp ;</programlisting>
     <title>Project Hierarchies</title>
 
     <para>
-      So far we have only considered examples with one project &#x2014;a. with
-      one user-written Boost.Jam file, <filename>Jamroot</filename>). A typical
+      So far we have only considered examples with one project, with
+      one user-written Boost.Jam file, <filename>Jamroot</filename>. A typical
       large codebase would be composed of many projects organized into a tree.
       The top of the tree is called the <firstterm>project root</firstterm>.
       Every subproject is defined by a file called <filename>Jamfile</filename>
@@ -312,7 +313,7 @@ build-project app ;
     <title>Dependent Targets</title>
 
     <para>
-      When a building a target <filename>X</filename> depends on first
+      When building a target <filename>X</filename> that depends on first
       building another target <filename>Y</filename> (such as a
       library that must be linked with <firstterm>X</firstterm>),
       <filename>Y</filename> is called a
@@ -369,11 +370,11 @@ b2 app optimization=full define=USE_ASM
     <para>
       Let's improve this project further. The library probably has some headers
       that must be used when compiling <filename>app.cpp</filename>. We could
-      manually add the necessary <code>#include</code> paths to <filename>app
-      </filename>'s requirements as values of the <varname>&lt;include&gt;
-      </varname> feature, but then this work will be repeated for all programs
-      that use <filename>foo</filename>. A better solution is to modify
-      <filename>util/foo/Jamfile</filename> in this way:
+      manually add the necessary <code>#include</code> paths to
+      <filename>app</filename>'s requirements as values of the
+      <varname>&lt;include&gt;  </varname> feature, but then this work will be
+      repeated for all programs that use <filename>foo</filename>. A better
+      solution is to modify <filename>util/foo/Jamfile</filename> in this way:
 
       <programlisting>
 project
