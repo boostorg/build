@@ -2023,7 +2023,46 @@ exe a : a.cpp
 </programlisting>
       </para>
 
-  </section>
+    </section>
+    
+    <section id="bbv2.reference.buildprocess.targetpath">
+      <title>Target Paths</title>
+
+      <para>Several factors determine the location of a concrete
+      file target.  All files in a project are built under
+      the directory bin unless this is overriden by the build-dir project
+      attribute.  Under bin is a path that depends on the properties
+      used to build each target.  This path is uniquely determined by
+      all non-free, non-incidental properties.  For example,
+      given a property set containing:
+      <code>&lt;toolset&gt;gcc &lt;toolset-gcc:version&gt;4.6.1 &lt;variant&gt;debug
+      &lt;warnings&gt;all &lt;define&gt;_DEBUG &lt;include&gt;/usr/local/include
+      &lt;link&gt;static</code>,
+      the path will be gcc-4.6.1/debug/link-static.  &lt;warnings&gt; is an
+      incidental feature and &lt;define&gt; and &lt;include&gt; are
+      free features, so they do not affect the path.</para>
+      
+      <para>Sometimes the paths produced by Boost.Build can become excessively
+      long.  There are a couple of command line options that can help with this.
+      --abbreviate-paths reduces each element to no more than five characters.
+      For example, link-static becomes lnk-sttc.  The --hash option reduces the
+      path to a single directory using an MD5 hash.</para>
+      
+      <para>There are two features that affect the build
+      directory.  The &lt;location&gt; feature completely
+      overrides the default build directory.  For example,
+      <programlisting>exe a : a.cpp : &lt;location&gt;. ;</programlisting>
+      builds all the files produced by <code>a</code>
+      in the directory of the Jamfile.  This is generally
+      discouraged, as it precludes variant builds.</para>
+    
+      <para>The &lt;location-prefix&gt; feature adds a
+      prefix to the path, under the project's build
+      directory.  For example,
+      <programlisting>exe a : a.cpp : &lt;location-prefix&gt;subdir ;</programlisting>
+      will create the files for <code>a</code> in bin/subdir/gcc-4.6.1/debug</para>
+    
+    </section>
 
   </section>
 
@@ -2125,7 +2164,7 @@ exe a : a.cpp
             <para>Non-incidental features are assumed to affect build
               products, so the files for targets whose build specification
               differs in non-incidental features are placed in different
-              directories as described in "target paths" below. [ where? ]
+              directories as described in <xref linkend="bbv2.reference.buildprocess.targetpath"/>.
             </para>
           </listitem>
 
