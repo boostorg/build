@@ -704,7 +704,7 @@ exe main : main.cpp pch ;
       Making this mechanism work across main target boundaries is possible, but
       imposes certain overhead. For that reason, if there is implicit dependency
       on files from other main targets, the <literal>&lt;implicit-dependency&gt;
-      </literal> [ link ] feature must be used, for example:
+      </literal> feature must be used, for example:
 <programlisting>
 lib parser : parser.y ;
 exe app : app.cpp : &lt;implicit-dependency&gt;parser ;

@@ -455,6 +455,20 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
+      <varlistentry><term><anchor id="bbv2.builtin.features.implicit-dependency"/>
+        <literal>implicit-dependency</literal></term>
+        <indexterm><primary>implicit-dependency</primary></indexterm>
+
+        <listitem>
+          <simpara>
+            Indicates that the target named by the value of this feature
+            may produce files that are included by the sources of the
+            target being declared.  See <xref linkend="bbv2.reference.generated_headers"/>
+            for more information.
+          </simpara>
+        </listitem>
+      </varlistentry>
+
 
       <varlistentry><term><anchor id="bbv2.builtin.features.use"/>
           <literal>use</literal></term>
