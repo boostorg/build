@@ -381,9 +381,16 @@ class Tester(TestCmd.TestCmd):
             os.utime(self.native_file_name(name), None)
 
     def rm(self, names):
-        self.wait_for_time_change_since_last_build()
         if not type(names) == types.ListType:
             names = [names]
+            
+        if names == ["."]:
+            # If we're deleting the entire workspace, there's no
+            # need to wait for a clock tick.
+            self.last_build_time_start = 0
+            self.last_build_time_finish = 0
+
+        self.wait_for_time_change_since_last_build()
 
         # Avoid attempts to remove the current directory.
         os.chdir(self.original_workdir)
@@ -511,6 +518,10 @@ class Tester(TestCmd.TestCmd):
 
         self.tree = tree.build_tree(self.workdir)
         self.difference = tree.trees_difference(self.previous_tree, self.tree)
+        if self.difference.empty():
+            # If nothing was changed, there's no need to wait
+            self.last_build_time_start = 0
+            self.last_build_time_finish = 0
         self.difference.ignore_directories()
         self.unexpected_difference = copy.deepcopy(self.difference)
 
