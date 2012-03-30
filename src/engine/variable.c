@@ -349,5 +349,5 @@ void var_done( struct module_t * module )
     list_free( saved_var );
     saved_var = L0;
     hashenumerate( module->variables, delete_var_, (void *)0 );
-    hashdone( module->variables );
+    hash_free( module->variables );
 }

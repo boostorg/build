@@ -100,14 +100,14 @@ void delete_module( module_t * m )
     if ( m->rules )
     {
         hashenumerate( m->rules, delete_rule_, (void *)0 );
-        hashdone( m->rules );
+        hash_free( m->rules );
         m->rules = 0;
     }
 
     if ( m->native_rules )
     {
         hashenumerate( m->native_rules, delete_native_rule, (void *)0 );
-        hashdone( m->native_rules );
+        hash_free( m->native_rules );
         m->native_rules = 0;
     }
 
@@ -126,16 +126,111 @@ void delete_module( module_t * m )
         }
         BJAM_FREE( m->fixed_variables );
         m->fixed_variables = 0;
-        hashdone( m->variable_indices );
+        hash_free( m->variable_indices );
         m->variable_indices = 0;
     }
 
     if ( m->imported_modules )
     {
         hashenumerate( m->imported_modules, delete_imported_modules, (void *)0 );
-        hashdone( m->imported_modules );
+        hash_free( m->imported_modules );
         m->imported_modules = 0;
     }
+}
+
+
+struct module_stats
+{
+    OBJECT * module_name;
+    struct hashstats rules_stats[ 1 ];
+    struct hashstats variables_stats[ 1 ];
+    struct hashstats variable_indices_stats[ 1 ];
+    struct hashstats imported_modules_stats[ 1 ];
+};
+
+
+static void module_stat( struct hash * hp, OBJECT * module, const char * name )
+{
+    if ( hp )
+    {
+        struct hashstats stats[ 1 ];
+        string id[ 1 ];
+        hashstats_init( stats );
+        string_new( id );
+        string_append( id, object_str( module ) );
+        string_push_back( id, ' ' );
+        string_append( id, name );
+
+        hashstats_add( stats, hp );
+        hashstats_print( stats, id->value );
+
+        string_free( id );
+    }
+}
+
+
+static void class_module_stat( struct hashstats * stats, OBJECT * module, const char * name )
+{
+    if ( stats->item_size )
+    {
+        string id[ 1 ];
+        string_new( id );
+        string_append( id, object_str( module ) );
+        string_append( id, " object " );
+        string_append( id, name );
+
+        hashstats_print( stats, id->value );
+
+        string_free( id );
+    }
+}
+
+
+static void stat_module( void * xmodule, void * data )
+{
+    module_t *m = (module_t *)xmodule;
+
+    if ( DEBUG_MEM || DEBUG_PROFILE )
+    {
+        struct hash * class_info = (struct hash *)data;
+        if ( m->class_module )
+        {
+            int found;
+            struct module_stats * ms = (struct module_stats *)hash_insert( class_info, m->class_module->name, &found );
+            if ( !found )
+            {
+                ms->module_name = m->class_module->name;
+                hashstats_init( ms->rules_stats );
+                hashstats_init( ms->variables_stats );
+                hashstats_init( ms->variable_indices_stats );
+                hashstats_init( ms->imported_modules_stats );
+            }
+
+            hashstats_add( ms->rules_stats, m->rules );
+            hashstats_add( ms->variables_stats, m->variables );
+            hashstats_add( ms->variable_indices_stats, m->variable_indices );
+            hashstats_add( ms->imported_modules_stats, m->imported_modules );
+        }
+        else
+        {
+            module_stat( m->rules, m->name, "rules" );
+            module_stat( m->variables, m->name, "variables" );
+            module_stat( m->variable_indices, m->name, "fixed variables" );
+            module_stat( m->imported_modules, m->name, "imported modules" );
+        }
+    }
+
+    delete_module( m );
+    object_free( m->name );
+}
+
+static void print_class_stats( void * xstats, void * data )
+{
+    struct module_stats * stats = (struct module_stats *)xstats;
+    class_module_stat( stats->rules_stats, stats->module_name, "rules" );
+    class_module_stat( stats->variables_stats, stats->module_name, "variables" );
+    class_module_stat( stats->variable_indices_stats, stats->module_name, "fixed variables" );
+    class_module_stat( stats->imported_modules_stats, stats->module_name, "imported modules" );
 }
 
 
@@ -147,8 +242,16 @@ static void delete_module_( void * xmodule, void * data )
     object_free( m->name );
 }
 
+
 void modules_done()
 {
+    if ( DEBUG_MEM || DEBUG_PROFILE )
+    {
+        struct hash * class_hash = hashinit( sizeof( struct module_stats ), "object info" );
+        hashenumerate( module_hash, stat_module, (void *)class_hash );
+        hashenumerate( class_hash, print_class_stats, (void *)0 );
+        hash_free( class_hash );
+    }
     hashenumerate( module_hash, delete_module_, (void *)0 ); 
     hashdone( module_hash );
     module_hash = 0;

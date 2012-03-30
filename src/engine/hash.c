@@ -305,20 +305,26 @@ hashinit(
     return hp;
 }
 
+void hashdone( struct hash * hp )
+{
+    if ( !hp )
+        return;
+    if ( DEBUG_MEM || DEBUG_PROFILE )
+        hashstat( hp );
+    hash_free( hp );
+}
+
 /*
- * hashdone() - free a hash table, given its handle
+ * hash_free() - free a hash table, given its handle
  */
 
 void
-hashdone( struct hash * hp )
+hash_free( struct hash * hp )
 {
     int i;
 
     if ( !hp )
         return;
-
-    if ( DEBUG_MEM || DEBUG_PROFILE )
-        hashstat( hp );
 
     if ( hp->tab.base )
         BJAM_FREE( (char *)hp->tab.base );
@@ -332,29 +338,59 @@ hashdone( struct hash * hp )
 
 static void hashstat( struct hash * hp )
 {
-    ITEM * * tab = hp->tab.base;
-    int nel = hp->tab.nel;
-    int count = 0;
-    int sets = 0;
-    int run = tab && ( tab[ nel - 1 ] != (ITEM *)0 );
-    int i;
-    int here;
+    struct hashstats stats[ 1 ];
+    hashstats_init( stats );
+    hashstats_add( stats, hp );
+    hashstats_print( stats, hp->name );
+}
 
-    for ( i = nel; i > 0; --i )
+void hashstats_init( struct hashstats * stats )
+{
+    stats->count = 0;
+    stats->num_items = 0;
+    stats->tab_size = 0;
+    stats->item_size = 0;
+    stats->sets = 0;
+}
+
+void hashstats_add( struct hashstats * stats, struct hash * hp )
+{
+    if ( hp )
     {
-        if ( ( here = ( *tab++ != (ITEM *)0 ) ) )
-            count++;
-        if ( here && !run )
-            sets++;
-        run = here;
-    }
+        ITEM * * tab = hp->tab.base;
+        int nel = hp->tab.nel;
+        int count = 0;
+        int sets = 0;
+        int i;
 
+        for ( i = 0; i < nel; ++i )
+        {
+            ITEM * item;
+            int here = 0;
+            for ( item = tab[ i ]; item != 0; item = item->hdr.next )
+                ++here;
+
+            count += here;
+            if ( here > 0 )
+                ++sets;
+        }
+
+        stats->count += count;
+        stats->sets += sets;
+        stats->num_items += hp->items.nel;
+        stats->tab_size += hp->tab.nel;
+        stats->item_size = hp->items.size;
+    }
+}
+
+void hashstats_print( struct hashstats * stats, const char * name )
+{
     printf( "%s table: %d+%d+%d (%dK+%luK) items+table+hash, %f density\n",
-        hp->name,
-        count,
-        hp->items.nel,
-        hp->tab.nel,
-        hp->items.nel * hp->items.size / 1024,
-        (long unsigned)hp->tab.nel * sizeof( ITEM ** ) / 1024,
-        (float)count / (float)sets );
+        name,
+        stats->count,
+        stats->num_items,
+        stats->tab_size,
+        stats->num_items * stats->item_size / 1024,
+        (long unsigned)stats->tab_size * sizeof( ITEM ** ) / 1024,
+        (float)stats->count / (float)stats->sets );
 }

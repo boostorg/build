@@ -26,9 +26,10 @@ typedef struct hashdata HASHDATA;
 struct hash * hashinit     ( int datalen, const char * name );
 
 /*
- * hashdone() - free a hash table, given its handle
+ * hash_free() - free a hash table, given its handle
  */
-void          hashdone     ( struct hash * hp );
+void hash_free( struct hash * hp );
+void hashdone( struct hash * hp );
 
 /*
  * hashenumerate() - call f(i, data) on each item, i in the hash
@@ -61,5 +62,17 @@ HASHDATA *    hash_insert  ( struct hash * hp, OBJECT * key, int * found );
  * hash_find() - find a record in the table or NULL if none exists
  */
 HASHDATA *    hash_find    ( struct hash * hp, OBJECT * key );
+
+struct hashstats {
+    int count;
+    int num_items;
+    int tab_size;
+    int item_size;
+    int sets;
+};
+
+void hashstats_init( struct hashstats * stats );
+void hashstats_add( struct hashstats * stats, struct hash * hp );
+void hashstats_print( struct hashstats * stats, const char * name );
 
 #endif
