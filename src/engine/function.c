@@ -133,6 +133,23 @@ typedef struct _subaction
 #define FUNCTION_BUILTIN    0
 #define FUNCTION_JAM        1
 
+struct argument {
+    int flags;
+#define ARG_ONE 0
+#define ARG_OPTIONAL 1
+#define ARG_PLUS 2
+#define ARG_STAR 3
+#define ARG_VARIADIC 4
+    OBJECT * type_name;
+    OBJECT * arg_name;
+    int index;
+};
+
+struct arg_list {
+    int size;
+    struct argument * args;
+};
+
 struct _function
 {
     int type;
@@ -2614,7 +2631,7 @@ int is_type_name( const char * s )
 }
 
 static void argument_error( const char * message, FUNCTION * procedure, FRAME * frame, OBJECT * arg )
-{
+{ extern void print_source_line( FRAME * );
     LOL * actual = frame->args;
     backtrace_line( frame->prev );
     printf( "*** argument error\n* rule %s ( ", frame->rulename );
@@ -2685,23 +2702,6 @@ static void type_check
 {
     type_check_range( type_name, list_begin( values ), list_end( values ), caller, called, arg_name );
 }
-
-struct argument {
-    int flags;
-#define ARG_ONE 0
-#define ARG_OPTIONAL 1
-#define ARG_PLUS 2
-#define ARG_STAR 3
-#define ARG_VARIADIC 4
-    OBJECT * type_name;
-    OBJECT * arg_name;
-    int index;
-};
-
-struct arg_list {
-    int size;
-    struct argument * args;
-};
 
 void argument_list_check( struct arg_list * formal, int formal_count, FUNCTION * function, FRAME * frame )
 {
