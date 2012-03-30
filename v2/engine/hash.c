@@ -65,7 +65,6 @@ struct hash
         int more;   /* how many more ITEMs fit in lists[ list ] */
         ITEM *free; /* free list of items */
         char *next; /* where to put more ITEMs in lists[ list ] */
-        int datalen;    /* length of records in this hash table */
         int size;   /* sizeof( ITEM ) + aligned datalen */
         int nel;    /* total ITEMs held by all lists[] */
         int list;   /* index into lists[] */
@@ -81,11 +80,6 @@ struct hash
 
 static void hashrehash( struct hash *hp );
 static void hashstat( struct hash *hp );
-static void * hash_mem_alloc(size_t datalen, size_t size);
-static void hash_mem_free(size_t datalen, void * data);
-#ifdef OPT_BOEHM_GC
-static void hash_mem_finalizer(char * key, struct hash * hp);
-#endif
 
 static unsigned int hash_keyval( OBJECT * key )
 {
@@ -230,7 +224,7 @@ static void hashrehash( register struct hash *hp )
 {
     int i = ++hp->items.list;
     hp->items.more = i ? 2 * hp->items.nel : hp->inel;
-    hp->items.next = (char *)hash_mem_alloc( hp->items.datalen, hp->items.more * hp->items.size );
+    hp->items.next = (char *)BJAM_MALLOC( hp->items.more * hp->items.size );
     hp->items.free = 0;
 
     hp->items.lists[i].nel = hp->items.more;
@@ -238,10 +232,10 @@ static void hashrehash( register struct hash *hp )
     hp->items.nel += hp->items.more;
 
     if ( hp->tab.base )
-        hash_mem_free( hp->items.datalen, (char *)hp->tab.base );
+        BJAM_FREE( (char *)hp->tab.base );
 
     hp->tab.nel = hp->items.nel * hp->bloat;
-    hp->tab.base = (ITEM **)hash_mem_alloc( hp->items.datalen, hp->tab.nel * sizeof(ITEM **) );
+    hp->tab.base = (ITEM **)BJAM_MALLOC( hp->tab.nel * sizeof(ITEM **) );
 
     memset( (char *)hp->tab.base, '\0', hp->tab.nel * sizeof( ITEM * ) );
 
@@ -295,14 +289,13 @@ hashinit(
     int datalen,
     const char *name )
 {
-    struct hash *hp = (struct hash *)hash_mem_alloc( datalen, sizeof( *hp ) );
+    struct hash *hp = (struct hash *)BJAM_MALLOC( sizeof( *hp ) );
 
     hp->bloat = 3;
     hp->tab.nel = 0;
     hp->tab.base = (ITEM **)0;
     hp->items.more = 0;
     hp->items.free = 0;
-    hp->items.datalen = datalen;
     hp->items.size = sizeof( struct hashhdr ) + ALIGNED( datalen );
     hp->items.list = -1;
     hp->items.nel = 0;
@@ -328,20 +321,10 @@ hashdone( struct hash * hp )
         hashstat( hp );
 
     if ( hp->tab.base )
-        hash_mem_free( hp->items.datalen, (char *)hp->tab.base );
+        BJAM_FREE( (char *)hp->tab.base );
     for ( i = 0; i <= hp->items.list; ++i )
-        hash_mem_free( hp->items.datalen, hp->items.lists[i].base );
-    hash_mem_free( hp->items.datalen, (char *)hp );
-}
-
-static void * hash_mem_alloc(size_t datalen, size_t size)
-{
-    return BJAM_MALLOC(size);
-}
-
-static void hash_mem_free(size_t datalen, void * data)
-{
-    BJAM_FREE(data);
+        BJAM_FREE( hp->items.lists[i].base );
+    BJAM_FREE( (char *)hp );
 }
 
 
