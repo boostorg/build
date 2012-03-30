@@ -472,8 +472,11 @@ static void freetarget( void * xt, void * data )
 
 void rules_done()
 {
-    hashenumerate( targethash, freetarget, 0 );
-    hashdone( targethash );
+    if ( targethash )
+    {
+        hashenumerate( targethash, freetarget, 0 );
+        hashdone( targethash );
+    }
     while ( settings_freelist )
     {
         SETTINGS * n = settings_freelist->next;
