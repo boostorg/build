@@ -411,7 +411,7 @@ path-constant DATA : data/a.txt ;
             feature, except that it takes effect only for linking. When you want
             to link all targets in a Jamfile to certain library, the
             <code>&lt;library&gt;</code> feature is preferred over
-            <code>&lt;source&gt;X</code> -- the latter will add the library to
+            <code>&lt;source&gt;X</code>&mdash;the latter will add the library to
             all targets, even those that have nothing to do with libraries.
           </simpara>
         </listitem>

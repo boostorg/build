@@ -28,7 +28,7 @@ exe hello : hello.cpp some_library.lib /some_project//library
           : &lt;threading&gt;multi
           ;
 </programlisting>
-      This will create an executable file from the sources -- in this case, one
+      This will create an executable file from the sources&mdash;in this case, one
       C++ file, one library file present in the same directory, and another
       library that is created by Boost.Build. Generally, sources can include C
       and C++ files, object files and libraries. Boost.Build will automatically
