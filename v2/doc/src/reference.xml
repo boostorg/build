@@ -1830,35 +1830,35 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
 
         <listitem id="bbv2.reference.modules.modules.binding">
           <indexterm zone="bbv2.reference.modules.modules.binding"><primary>binding</primary></indexterm>
-          <code lang="jam">rule binding ( module-name )</code>
+          <code language="jam">rule binding ( module-name )</code>
           <para>Returns the filesystem binding of the given module.</para>
           <para>For example, a module can get its own location with:
-          <programlisting>me = [ modules.binding $(__name__) ] ;</programlisting>
+          <programlisting language="jam">me = [ modules.binding $(__name__) ] ;</programlisting>
           </para>
         </listitem>
 
         <listitem id="bbv2.reference.modules.modules.poke">
           <indexterm zone="bbv2.reference.modules.modules.poke"><primary>poke</primary></indexterm>
-          <code lang="jam">rule poke ( module-name ? : variables + : value * )</code>
+          <code language="jam">rule poke ( module-name ? : variables + : value * )</code>
           <para>Sets the module-local value of a variable.</para>
           <para>For example, to set a variable in the global module:
-          <programlisting>modules.poke : ZLIB_INCLUDE : /usr/local/include ;</programlisting>
+          <programlisting language="jam">modules.poke : ZLIB_INCLUDE : /usr/local/include ;</programlisting>
           </para>
         </listitem>
 
         <listitem id="bbv2.reference.modules.modules.peek">
           <indexterm zone="bbv2.reference.modules.modules.peek"><primary>peek</primary></indexterm>
-          <code lang="jam">rule peek ( module-name ? : variables + )</code>
+          <code language="jam">rule peek ( module-name ? : variables + )</code>
           <para>Returns the module-local value of a variable.</para>
           <para>
             For example, to read a variable from the global module:
-            <programlisting>local ZLIB_INCLUDE = [ modules.peek : ZLIB_INCLUDE ] ;</programlisting>
+            <programlisting language="jam">local ZLIB_INCLUDE = [ modules.peek : ZLIB_INCLUDE ] ;</programlisting>
           </para>
         </listitem>
 
         <listitem id="bbv2.reference.modules.modules.call-in">
           <indexterm zone="bbv2.reference.modules.modules.call-in"><primary>call-in</primary></indexterm>
-          <code lang="jam">rule call-in ( module-name ? : rule-name args * : * ) </code>
+          <code language="jam">rule call-in ( module-name ? : rule-name args * : * ) </code>
           <para>Call the given rule locally in the given module. Use
           this for rules accepting rule names as arguments, so that
           the passed rule may be invoked in the context of the rule's
@@ -1867,7 +1867,8 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           <note><para>rules called this way may accept at most
           8 parameters.</para></note></para>
           <para>Example:
-          <programlisting>rule filter ( f : values * )
+<programlisting language="jam">
+rule filter ( f : values * )
 {
     local m = [ CALLER_MODULE ] ;
     local result ;
@@ -1879,13 +1880,14 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
         }
     }
     return result ;
-}</programlisting>
+}
+</programlisting>
           </para>
         </listitem>
 
         <listitem id="bbv2.reference.modules.modules.load">
           <indexterm zone="bbv2.reference.modules.modules.load"><primary>load</primary></indexterm>
-          <code lang="jam">rule load ( module-name : filename ? : search * )</code>
+          <code language="jam">rule load ( module-name : filename ? : search * )</code>
           <para>Load the indicated module if it is not already loaded.</para>
           <variablelist>
             <varlistentry>
@@ -1910,7 +1912,7 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
 
         <listitem id="bbv2.reference.modules.modules.import">
           <indexterm zone="bbv2.reference.modules.modules.import"><primary>import</primary></indexterm>
-          <code lang="jam">rule import ( module-names + : rules-opt * : rename-opt * )</code>
+          <code language="jam">rule import ( module-names + : rules-opt * : rename-opt * )</code>
           <para>Load the indicated module and import rule names into the
           current module. Any members of <code>rules-opt</code> will be
           available without qualification in the caller's module. Any
@@ -1923,16 +1925,18 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           <note><para>The <literal>import</literal> rule is available
           without qualification in all modules.</para></note>
           <para>Examples:
-          <programlisting>import path ;
+<programlisting language="jam">
+import path ;
 import path : * ;
 import path : join ;
-import path : native make : native-path make-path ;</programlisting>
+import path : native make : native-path make-path ;
+</programlisting>
           </para>
         </listitem>
 
         <listitem id="bbv2.reference.modules.modules.clone-rules">
           <indexterm zone="bbv2.reference.modules.modules.clone-rules"><primary>clone-rules</primary></indexterm>
-          <code lang="jam">rule clone-rules ( source-module target-module )</code>
+          <code language="jam">rule clone-rules ( source-module target-module )</code>
           <para>Define exported copies in <code>$(target-module)</code>
           of all rules exported from <code>$(source-module)</code>. Also
           make them available in the global module with qualification,
