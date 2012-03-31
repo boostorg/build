@@ -1883,18 +1883,6 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           </para>
         </listitem>
 
-        <listitem id="bbv2.reference.modules.modules.call-locally">
-          <indexterm zone="bbv2.reference.modules.modules.call-locally"><primary>call-locally</primary></indexterm>
-          <code lang="jam">rule call-locally ( qualified-rule-name args * : * )</code>
-          <para>Given a possibly qualified rule name and arguments, remove
-          any initial module qualification from the rule and invoke it in
-          that module. If there is no module qualification, the rule is
-          invoked in the global module.
-          <note><para>rules called this way may accept at most
-          8 parameters.</para></note>
-          </para>
-        </listitem>
-
         <listitem id="bbv2.reference.modules.modules.load">
           <indexterm zone="bbv2.reference.modules.modules.load"><primary>load</primary></indexterm>
           <code lang="jam">rule load ( module-name : filename ? : search * )</code>
