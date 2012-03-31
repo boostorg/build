@@ -14,13 +14,17 @@
     representation. In it, a path may be either:
     
     <itemizedlist>
-      <listitem><para>'.', or</para></listitem>
-      <listitem><para>['/'] [ ( '..' '/' )* (token '/')* token ]</para></listitem>
+      <listitem><para><code>'.'</code>, or</para></listitem>
+      <listitem>
+        <para>
+          <code>['/'] [ ( '..' '/' )* (token '/')* token ]</code>
+        </para>
+      </listitem>
     </itemizedlist>
     
-    In plain english, path can be rooted, '..' elements are allowed only at the
-    beginning, and it never ends in slash, except for path consisting of slash
-    only.
+    In plain english, a path can be rooted, <code>'..'</code>
+    elements are allowed only at the beginning, and it never
+    ends in slash, except for the path consisting of slash only.
   </para>
 
   <orderedlist>
@@ -39,7 +43,7 @@
         <primary>native</primary>
       </indexterm>
       <code language="jam">rule native ( path )</code>
-      <para>Builds native representation of the path.</para>
+      <para>Builds the native representation of the path.</para>
     </listitem>
 
     <listitem id="bbv2.reference.modules.path.is-rooted">
@@ -71,7 +75,7 @@
         <primary>parent</primary>
       </indexterm>
       <code language="jam">rule parent ( path )</code>
-      <para>Returns parent directory of the path. If no parent exists, error is issued.</para>
+      <para>Returns the parent directory of the path. If no parent exists, an error is issued.</para>
     </listitem>
 
     <listitem id="bbv2.reference.modules.path.reverse">
@@ -126,18 +130,18 @@
       <para>
         Returns the list of files matching the given pattern in the specified
         directory. Both directories and patterns are supplied as portable paths. Each
-        pattern should be non-absolute path, and can't contain "." or ".." elements.
-        Each slash separated element of pattern can contain the following special
+        pattern should be a non-absolute path, and can't contain "." or ".." elements.
+        Each slash separated element of a pattern can contain the following special
         characters:
         <itemizedlist>
           <listitem>
-            <para>'?', which match any character</para>
+            <para>'?' matches any character</para>
           </listitem>
           <listitem>
-            <para>'*', which matches arbitrary number of characters.</para>
+            <para>'*' matches an arbitrary number of characters</para>
           </listitem>
         </itemizedlist>
-        A file $(d)/e1/e2/e3 (where 'd' is in $(dirs)) matches pattern p1/p2/p3 if and
+        A file $(d)/e1/e2/e3 (where 'd' is in $(dirs)) matches the pattern p1/p2/p3 if and
         only if e1 matches p1, e2 matches p2 and so on.
         
         For example:
@@ -168,7 +172,7 @@
         <primary>exists</primary>
       </indexterm>
       <code language="jam">rule exists ( file )</code>
-      <para>Returns true is the specified file exists.</para>
+      <para>Returns true if the specified file exists.</para>
     </listitem>
 
     <listitem id="bbv2.reference.modules.path.all-parents">
@@ -177,7 +181,7 @@
       </indexterm>
       <code language="jam">rule all-parents ( path : upper_limit ? : cwd ? )</code>
       <para>
-        Find out the absolute name of path and returns the list of all the parents,
+        Find out the absolute name of path and return the list of all the parents,
         starting with the immediate one. Parents are returned as relative names. If
         <code language="jam">upper_limit</code> is specified, directories above it
         will be pruned.
@@ -191,7 +195,7 @@
       <code language="jam">rule glob-in-parents ( dir : patterns + : upper-limit ? )</code>
       <para>
         Search for <code language="jam">patterns</code> in parent directories
-        of <code language="jam">dir</code>, up till and including
+        of <code language="jam">dir</code>, up to and including
         <code language="jam">upper_limit</code>, if it is specified, or
         till the filesystem root otherwise.
       </para>
