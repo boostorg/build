@@ -1828,8 +1828,8 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
       
       <orderedlist>
 
-        <listitem>
-          <indexterm><primary>binding</primary></indexterm>
+        <listitem id="bbv2.reference.modules.modules.binding">
+          <indexterm zone="bbv2.reference.modules.modules.binding"><primary>binding</primary></indexterm>
           <code lang="jam">rule binding ( module-name )</code>
           <para>Returns the filesystem binding of the given module.</para>
           <para>For example, a module can get its own location with:
@@ -1837,8 +1837,8 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           </para>
         </listitem>
 
-        <listitem>
-          <indexterm><primary>poke</primary></indexterm>
+        <listitem id="bbv2.reference.modules.modules.poke">
+          <indexterm zone="bbv2.reference.modules.modules.poke"><primary>poke</primary></indexterm>
           <code lang="jam">rule poke ( module-name ? : variables + : value * )</code>
           <para>Sets the module-local value of a variable.</para>
           <para>For example, to set a variable in the global module:
@@ -1846,8 +1846,8 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           </para>
         </listitem>
 
-        <listitem>
-          <indexterm><primary>peek</primary></indexterm>
+        <listitem id="bbv2.reference.modules.modules.peek">
+          <indexterm zone="bbv2.reference.modules.modules.peek"><primary>peek</primary></indexterm>
           <code lang="jam">rule peek ( module-name ? : variables + )</code>
           <para>Returns the module-local value of a variable.</para>
           <para>
@@ -1856,8 +1856,8 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           </para>
         </listitem>
 
-        <listitem>
-          <indexterm><primary>call-in</primary></indexterm>
+        <listitem id="bbv2.reference.modules.modules.call-in">
+          <indexterm zone="bbv2.reference.modules.modules.call-in"><primary>call-in</primary></indexterm>
           <code lang="jam">rule call-in ( module-name ? : rule-name args * : * ) </code>
           <para>Call the given rule locally in the given module. Use
           this for rules accepting rule names as arguments, so that
@@ -1883,8 +1883,8 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           </para>
         </listitem>
 
-        <listitem>
-          <indexterm><primary>call-locally</primary></indexterm>
+        <listitem id="bbv2.reference.modules.modules.call-locally">
+          <indexterm zone="bbv2.reference.modules.modules.call-locally"><primary>call-locally</primary></indexterm>
           <code lang="jam">rule call-locally ( qualified-rule-name args * : * )</code>
           <para>Given a possibly qualified rule name and arguments, remove
           any initial module qualification from the rule and invoke it in
@@ -1895,8 +1895,8 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           </para>
         </listitem>
 
-        <listitem>
-          <indexterm><primary>load</primary></indexterm>
+        <listitem id="bbv2.reference.modules.modules.load">
+          <indexterm zone="bbv2.reference.modules.modules.load"><primary>load</primary></indexterm>
           <code lang="jam">rule load ( module-name : filename ? : search * )</code>
           <para>Load the indicated module if it is not already loaded.</para>
           <variablelist>
@@ -1920,8 +1920,8 @@ using fop : <optional><replaceable>fop-command</replaceable></optional> : <optio
           </variablelist>
         </listitem>
 
-        <listitem>
-          <indexterm><primary>import</primary></indexterm>
+        <listitem id="bbv2.reference.modules.modules.import">
+          <indexterm zone="bbv2.reference.modules.modules.import"><primary>import</primary></indexterm>
           <code lang="jam">rule import ( module-names + : rules-opt * : rename-opt * )</code>
           <para>Load the indicated module and import rule names into the
           current module. Any members of <code>rules-opt</code> will be
@@ -1942,8 +1942,8 @@ import path : native make : native-path make-path ;</programlisting>
           </para>
         </listitem>
 
-        <listitem>
-          <indexterm><primary>clone-rules</primary></indexterm>
+        <listitem id="bbv2.reference.modules.modules.clone-rules">
+          <indexterm zone="bbv2.reference.modules.modules.clone-rules"><primary>clone-rules</primary></indexterm>
           <code lang="jam">rule clone-rules ( source-module target-module )</code>
           <para>Define exported copies in <code>$(target-module)</code>
           of all rules exported from <code>$(source-module)</code>. Also
