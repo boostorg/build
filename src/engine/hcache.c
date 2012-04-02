@@ -428,7 +428,7 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
                 iter2 = list_begin( l2 ), end2 = list_end( l2 );
             while ( iter1 != end1 && iter2 != end2 )
             {
-                if ( list_item( iter1 ) != list_item( iter2 ) )
+                if ( !object_equal( list_item( iter1 ), list_item( iter2 ) ) )
                 {
                     iter1 = end1;
                 }
