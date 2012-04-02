@@ -174,7 +174,7 @@ void write_netstring( FILE * f, char const * s )
 void hcache_init()
 {
     FILE       * f;
-    OBJECT     * version;
+    OBJECT     * version = 0;
     int          header_count = 0;
     const char * hcachename;
 
@@ -190,39 +190,44 @@ void hcache_init()
         return;
 
     version = read_netstring( f );
+
     if ( !version || strcmp( object_str( version ), CACHE_FILE_VERSION ) )
-    {
-        fclose( f );
-        return;
-    }
+        goto bail;
 
     while ( 1 )
     {
         HCACHEDATA   cachedata;
         HCACHEDATA * c;
-        OBJECT * record_type;
-        OBJECT * time_str;
-        OBJECT * age_str;
-        OBJECT * includes_count_str;
-        OBJECT * hdrscan_count_str;
+        OBJECT * record_type = 0;
+        OBJECT * time_str = 0;
+        OBJECT * age_str = 0;
+        OBJECT * includes_count_str = 0;
+        OBJECT * hdrscan_count_str = 0;
         int      i;
         int      count;
         LIST   * l;
         int      found;
 
+        cachedata.boundname = 0;
+        cachedata.includes = 0;
+        cachedata.hdrscan = 0;
+
         record_type = read_netstring( f );
         if ( !record_type )
         {
             fprintf( stderr, "invalid %s\n", hcachename );
-            goto bail;
+            goto cleanup;
         }
         if ( !strcmp( object_str( record_type ), CACHE_RECORD_END ) )
+        {
+            object_free( record_type );
             break;
+        }
         if ( strcmp( object_str( record_type ), CACHE_RECORD_HEADER ) )
         {
             fprintf( stderr, "invalid %s with record separator <%s>\n",
                 hcachename, record_type ? object_str( record_type ) : "<null>" );
-            goto bail;
+            goto cleanup;
         }
 
         cachedata.boundname = read_netstring( f );
@@ -233,7 +238,7 @@ void hcache_init()
         if ( !cachedata.boundname || !time_str || !age_str || !includes_count_str )
         {
             fprintf( stderr, "invalid %s\n", hcachename );
-            goto bail;
+            goto cleanup;
         }
 
         cachedata.time = atoi( object_str( time_str ) );
@@ -246,18 +251,18 @@ void hcache_init()
             if ( !s )
             {
                 fprintf( stderr, "invalid %s\n", hcachename );
-                goto bail;
+                list_free( l );
+                goto cleanup;
             }
             l = list_push_back( l, s );
         }
         cachedata.includes = l;
 
         hdrscan_count_str = read_netstring( f );
-        if ( !includes_count_str )
+        if ( !hdrscan_count_str )
         {
-            list_free( c->includes );
             fprintf( stderr, "invalid %s\n", hcachename );
-            goto bail;
+            goto cleanup;
         }
 
         count = atoi( object_str( hdrscan_count_str ) );
@@ -267,7 +272,8 @@ void hcache_init()
             if ( !s )
             {
                 fprintf( stderr, "invalid %s\n", hcachename );
-                goto bail;
+                list_free( l );
+                goto cleanup;
             }
             l = list_push_back( l, s );
         }
@@ -286,19 +292,42 @@ void hcache_init()
         {
             fprintf( stderr, "can't insert header cache item, bailing on %s\n",
                 hcachename );
-            goto bail;
+            goto cleanup;
         }
 
         c->next = hcachelist;
         hcachelist = c;
 
         ++header_count;
+        
+        object_free( record_type );
+        object_free( time_str );
+        object_free( age_str );
+        object_free( includes_count_str );
+        object_free( hdrscan_count_str );
+        continue;
+
+cleanup:
+
+        if ( record_type ) object_free( record_type );
+        if ( time_str ) object_free( time_str );
+        if ( age_str ) object_free( age_str );
+        if ( includes_count_str ) object_free( includes_count_str );
+        if ( hdrscan_count_str ) object_free( hdrscan_count_str );
+
+        if ( cachedata.boundname ) object_free( cachedata.boundname );
+        if ( cachedata.includes ) list_free( cachedata.includes );
+        if ( cachedata.hdrscan ) list_free( cachedata.hdrscan );
+
+        goto bail;
     }
 
     if ( DEBUG_HEADER )
         printf( "hcache read from file %s\n", hcachename );
 
- bail:
+bail:
+    if ( version )
+        object_free( version );
     fclose( f );
 }
 
