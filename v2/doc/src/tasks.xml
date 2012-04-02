@@ -495,12 +495,12 @@ boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable>
     <title>Custom commands</title>
 
     <para>
-      When you use most of main target rules, Boost.Build automatically figures
-      what commands to run and it what order. As soon as you want to use new
+      For most main target rules, Boost.Build automatically figures out
+      the commands to run.  When you want to use new
       file types or support new tools, one approach is to extend Boost.Build to
-      smoothly support them, as documented in <xref linkend="bbv2.extender"/>.
-      However, if there is only a single place where the new tool is used, it
-      might be easier to just explicitly specify the commands to run.
+      support them smoothly, as documented in <xref linkend="bbv2.extender"/>.
+      However, if the new tool is only used in a single place, it
+      might be easier just to specify the commands to run explicitly.
     </para>
 
     <para>
@@ -511,8 +511,8 @@ boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable>
       of source file, by running a command you specify. The <functionname>
       notfile</functionname> rule allows you to run an arbitrary command,
       without creating any files. And finaly, the <functionname>generate
-      </functionname> rule allows you to describe transformation using
-      Boost.Build's virtual targets. This is higher-level than file names that
+      </functionname> rule allows you to describe a transformation using
+      Boost.Build's virtual targets. This is higher-level than the file names that
       the <functionname>make</functionname> rule operates with and allows you to
       create more than one target, create differently named targets depending on
       properties or use more than one tool.
@@ -532,8 +532,8 @@ boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable>
     them to become accessible. -->
 
     <para>
-      Suppose you want to create file <filename>file.out</filename> from file
-      <filename>file.in</filename> by running command <command>
+      Suppose you want to create the file <filename>file.out</filename> from
+      the file <filename>file.in</filename> by running the command <command>
       in2out</command>. Here is how you would do this in Boost.Build:
 <programlisting>
 make file.out : file.in : @in2out ;

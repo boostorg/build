@@ -1949,6 +1949,7 @@ import path : native make : native-path make-path ;
     </section>
 
     <xi:include href="path.xml"/>
+    <xi:include href="type.xml"/>
   
   </section>
 
