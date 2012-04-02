@@ -498,9 +498,9 @@ alias foo : /other_project//bar/&lt;link&gt;static ;
 exe e1 : e1.cpp foo ;
 exe e10 : e10.cpp foo ;</programlisting>
 
-      The <link linkend="bbv2.tasks.alias"><functionname>alias</functionname>
-      </link> rule is specifically used to rename a reference to a target and
-      possibly change the properties.
+      The <link linkend="bbv2.tasks.alias">alias</link> rule is specifically
+      used to rename a reference to a target and possibly change the
+      properties.
 
       <!-- You should introduce the alias rule in an earlier section, before
            describing how it applies to this specific use-case, and the

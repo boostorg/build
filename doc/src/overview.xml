@@ -462,7 +462,7 @@ actions create-file-from-another
 using <replaceable>tool-name</replaceable> : ... ;
 </programlisting>
 <para>
-      The <functionname>using</functionname> rule is given the name of tool, and
+      The <code language="jam">using</code> rule is given the name of tool, and
       will make that tool available to Boost.Build. For example,
 <programlisting>
 using gcc ;
@@ -478,7 +478,7 @@ using gcc ;
     <para>
       For all the C++ compiler toolsets that Boost.Build supports
       out-of-the-box, the list of parameters to
-      <functionname>using</functionname> is the same: <parameter
+      <code language="jam">using</code> is the same: <parameter
       class="function">toolset-name</parameter>, <parameter
       class="function">version</parameter>, <parameter
       class="function">invocation-command</parameter>, and <parameter
@@ -521,13 +521,13 @@ using msvc : : echo Compiling &#x26;&#x26; foo/bar/baz/cl ;
 
     <para>
       To configure several versions of a toolset, simply invoke the
-      <functionname>using</functionname> rule multiple times:
+      <code language="jam">using</code> rule multiple times:
 <programlisting>
 using gcc : 3.3 ;
 using gcc : 3.4 : g++-3.4 ;
 using gcc : 3.2 : g++-3.2 ;
 </programlisting>
-      Note that in the first call to <functionname>using</functionname>, the
+      Note that in the first call to <code language="jam">using</code>, the
       compiler found in the <envar>PATH</envar> will be used, and there is no
       need to explicitly specify the command.
     </para>
@@ -1109,7 +1109,8 @@ obj test.debug : test.cpp : &lt;variant&gt;debug ;
         files. Sometimes, you'll want to automatically construct the
         list of source files rather than having to spell it out
         manually, in which case you can use the
-        <functionname>glob</functionname> rule. Here are two examples:</para>
+        <link linkend="bbv2.reference.rules.glob">glob</link> rule.
+        Here are two examples:</para>
 <programlisting>
 exe a : a.cpp ;           # a.cpp is the only source file
 exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
@@ -1306,7 +1307,7 @@ exe hello : hello.cpp
          <para>When no target is requested on the command line, all targets in the
          current project will be built. If a target should be built only by
          explicit request, this can be expressed by the
-         <functionname>explicit</functionname> rule:
+         <link linkend="bbv2.reference.rules.explicit">explicit</link> rule:
          <programlisting>
 explicit install_programs ;</programlisting>
          </para>
@@ -1326,7 +1327,7 @@ explicit install_programs ;</programlisting>
       </para>
 
       <para>Projects are named using the
-      <functionname>project</functionname> rule, which has the
+      <code language="jam">project</code> rule, which has the
       following syntax:
 <programlisting>
 project <replaceable>id</replaceable> : <replaceable>attributes</replaceable> ;
@@ -1389,7 +1390,7 @@ project tennis
 
                 <entry>Default value</entry>
 
-                <entry>Handling by the <functionname>project</functionname>
+                <entry>Handling by the <code language="jam">project</code>
                 rule</entry>
 
               </row>
