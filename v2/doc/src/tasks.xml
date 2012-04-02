@@ -211,7 +211,7 @@ lib helpers : helpers.cpp : : : &lt;include&gt;. ;
     <title>Alias</title>
 
     <para>
-      The <functionname>alias</functionname> rule gives an alternative name to a
+      The <code language="jam">alias</code> rule gives an alternative name to a
       group of targets. For example, to give the name <filename>core</filename>
       to a group of three other targets with the following code:
 <programlisting>
@@ -392,8 +392,8 @@ unit-test helpers_test : helpers_test.cpp helpers ;
     </para>
 
     <para>
-      The <functionname>unit-test</functionname> rule behaves like the
-      <functionname>exe</functionname> rule, but after the executable is created
+      The <code language="jam">unit-test</code> rule behaves like the
+      <link linkend="bbv2.tasks.programs">exe</link> rule, but after the executable is created
       it is also run. If the executable returns an error code, the build system
       will also return an error and will try running the executable on the next
       invocation until it runs successfully. This behaviour ensures that you can
@@ -506,22 +506,22 @@ boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable>
     <para>
       <!-- This paragraph requires links to where the terms 'virtual target' &
       'target' are defined. -->
-      Three main target rules can be used for that. The <functionname>make
-      </functionname> rule allows you to construct a single file from any number
-      of source file, by running a command you specify. The <functionname>
-      notfile</functionname> rule allows you to run an arbitrary command,
-      without creating any files. And finaly, the <functionname>generate
-      </functionname> rule allows you to describe a transformation using
+      Three main target rules can be used for that. The <code language="jam">make
+      </code> rule allows you to construct a single file from any number
+      of source file, by running a command you specify. The <code language="jam">
+      notfile</code> rule allows you to run an arbitrary command,
+      without creating any files. And finaly, the <code language="jam">generate
+      </code> rule allows you to describe a transformation using
       Boost.Build's virtual targets. This is higher-level than the file names that
-      the <functionname>make</functionname> rule operates with and allows you to
+      the <code language="jam">make</code> rule operates with and allows you to
       create more than one target, create differently named targets depending on
       properties or use more than one tool.
     </para>
 
     <para>
-      The <functionname>make</functionname> rule is used when you want to create
+      The <code language="jam">make</code> rule is used when you want to create
       one file from a number of sources using some specific command. The
-      <functionname>notfile</functionname> is used to unconditionally run a
+      <code language="jam">notfile</code> is used to unconditionally run a
       command.
     </para>
 
@@ -551,7 +551,7 @@ actions in2out
     <para>
       It could be that you just want to run some command unconditionally, and
       that command does not create any specific files. For that you can use the
-      <functionname>notfile</functionname> rule. For example:
+      <code language="jam">notfile</code> rule. For example:
 <programlisting>
 notfile echo_something : @echo ;
 actions echo
@@ -559,7 +559,7 @@ actions echo
     echo "something"
 }
 </programlisting>
-      The only difference from the <functionname>make</functionname> rule is
+      The only difference from the <code language="jam">make</code> rule is
       that the name of the target is not considered a name of a file, so
       Boost.Build will unconditionally run the action.
     </para>
@@ -567,9 +567,9 @@ actions echo
     <para>
       <!-- This paragraph requires links to where terms like 'virtual target',
       'target', 'project-target' & 'property-set' are defined. -->
-      The <functionname>generate</functionname> rule is used when you want to
+      The <code language="jam">generate</code> rule is used when you want to
       express transformations using Boost.Build's virtual targets, as opposed to
-      just filenames. The <functionname>generate</functionname> rule has the
+      just filenames. The <code language="jam">generate</code> rule has the
       standard main target rule signature, but you are required to specify the
       <literal>generating-rule</literal> property. The value of the property
       should be in the form <literal>
@@ -628,7 +628,7 @@ rule generating-rule ( project name : property-set : sources * )
 cpp-pch pch : pch.hpp ;
 exe main : main.cpp pch ;
 </programlisting>
-          You can use the <functionname>c-pch</functionname> rule if you want to
+          You can use the <code language="jam">c-pch</code> rule if you want to
           use the precompiled header in C programs.
         </para></listitem>
     </orderedlist>

@@ -393,7 +393,7 @@ import type ;
 type.register VERBATIM : verbatim ;
 </programlisting>
 
-      <para>The first parameter to <functionname>type.register</functionname> gives
+      <para>The first parameter to <link linkend="bbv2.reference.modules.type.register">type.register</link> gives
       the name of the declared type. By convention, it's uppercase. The second
       parameter is the suffix for files of this type. So, if Boost.Build sees
       <filename>code.verbatim</filename> in a list of sources, it knows that it's of
@@ -1031,8 +1031,8 @@ feature.compose &lt;parallelism&gt;fake : &lt;library&gt;/mpi//fake/&lt;parallel
   <section id="bbv2.extending.rules">
     <title>Main target rules</title>
     <para>
-      A main target rule (e.g “<functionname>exe</functionname>”
-      Or “<functionname>lib</functionname>”) creates a top-level target. It's quite likely that you'll want to declare your own and
+      A main target rule (e.g “<link linkend="bbv2.tasks.programs">exe</link>”
+      Or “<link linkend="bbv2.tasks.libraries">lib</link>”) creates a top-level target. It's quite likely that you'll want to declare your own and
       there are two ways to do that.
       <!-- Why did "that" get changed to "this" above? -->
     </para>

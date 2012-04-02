@@ -126,7 +126,7 @@ boost-build build-system ;
         <link linkend="bbv2.main-target-rule-syntax">common syntax</link>.</para></listitem>
       </varlistentry>
 
-      <varlistentry>
+      <varlistentry id="bbv2.reference.rules.glob">
         <term><literal>glob</literal></term>
 
         <listitem><para>The <code>glob</code> rule takes a list shell pattern
@@ -178,7 +178,7 @@ ECHO [ glob-tree *.cpp : .svn ] ;
         </para></listitem>
       </varlistentry>
 
-      <varlistentry>
+      <varlistentry id="bbv2.reference.rules.explicit">
         <term><literal>explicit</literal></term>
 
         <listitem><para>The <literal>explicit</literal> rule takes a single
