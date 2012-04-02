@@ -93,6 +93,7 @@ static void delete_imported_modules( void * xmodule_name, void * data )
     object_free( *(OBJECT * *)xmodule_name );
 }
 
+static void free_fixed_variable( void * xvar, void * data );
 
 void delete_module( module_t * m )
 {
@@ -126,6 +127,11 @@ void delete_module( module_t * m )
         }
         BJAM_FREE( m->fixed_variables );
         m->fixed_variables = 0;
+    }
+
+    if ( m->variable_indices )
+    {
+        hashenumerate( m->variable_indices, &free_fixed_variable, (void *)0 );
         hash_free( m->variable_indices );
         m->variable_indices = 0;
     }
@@ -323,6 +329,11 @@ struct bind_vars_t
     module_t * module;
     int counter;
 };
+
+static void free_fixed_variable( void * xvar, void * data )
+{
+    object_free( ( (struct fixed_variable *)xvar )->key );
+}
 
 static void bind_variables_for_rule( void * xrule, void * xdata )
 {

@@ -2923,7 +2923,7 @@ static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg, O
 
         if ( is_type_name( object_str( arg ) ) )
         {
-            c->arg.type_name = arg;
+            c->arg.type_name = object_copy( arg );
             c->state = ARGUMENT_COMPILER_FOUND_TYPE;
             break;
         }
@@ -2937,7 +2937,7 @@ static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg, O
             exit( 1 );
         }
         
-        c->arg.arg_name = arg;
+        c->arg.arg_name = object_copy( arg );
         if ( object_equal( arg, constant_star ) )
         {
             c->arg.flags = ARG_VARIADIC;
@@ -3066,12 +3066,15 @@ static struct arg_list * arg_list_compile_builtin( const char * * args, int * nu
             argument_compiler_init( arg_comp );
             for ( ; *args; ++args )
             {
+                OBJECT * token;
                 if ( strcmp( *args, ":" ) == 0 )
                 {
                     ++args;
                     break;
                 }
-                argument_compiler_add( arg_comp, object_new( *args ), constant_builtin, -1 );
+                token = object_new( *args );
+                argument_compiler_add( arg_comp, token, constant_builtin, -1 );
+                object_free( token );
             }
             arg = arg_compile_impl( arg_comp, constant_builtin, -1 );
             dynamic_array_push( c->args, arg );
@@ -3129,6 +3132,9 @@ struct arg_list * argument_list_bind_variables( struct arg_list * formal, int fo
             for ( j = 0; j < formal[ i ].size; ++j )
             {
                 args[ j ] = formal[ i ].args[ j ];
+                if ( args[ j ].type_name )
+                    args[ j ].type_name = object_copy( args[ j ].type_name );
+                args[ j ].arg_name = object_copy( args[ j ].arg_name );
                 if ( args[ j ].flags != ARG_VARIADIC )
                 {
                     args[ j ].index = module_add_fixed_var( module, args[ j ].arg_name, counter );
@@ -3149,9 +3155,15 @@ struct arg_list * argument_list_bind_variables( struct arg_list * formal, int fo
 
 void argument_list_free( struct arg_list * args, int args_count )
 {
-    int i;
+    int i, j;
     for ( i = 0; i < args_count; ++i )
     {
+        for ( j = 0; j < args[ i ].size; ++j )
+        {
+            if ( args[ i ].args[ j ].type_name  )
+                object_free( args[ i ].args[ j ].type_name );
+            object_free( args[ i ].args[ j ].arg_name );
+        }
         BJAM_FREE( args[ i ].args );
     }
     BJAM_FREE( args );
