@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
+
+<section id="bbv2.reference.class.main-target">
+
+  <title>Class main-target</title>
+  <indexterm>
+    <primary>main-target</primary>
+  </indexterm>
+
+  <para>
+    Derived from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
+  </para>
+
+  <para>
+    A <link linkend="bbv2.reference.class.main-target">main-target</link>
+    represents a named top-level target in a Jamfile.
+  </para>
+
+  <orderedlist>
+
+    <listitem id="bbv2.reference.class.main-target.name">
+      <code language="jam">rule name ( )</code>
+      <para>
+        Returns the name of this target.  Inherited from
+        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
+      </para>
+    </listitem>
+
+    <listitem id="bbv2.reference.class.main-target.project">
+      <code language="jam">rule project ( )</code>
+      <para>
+        Returns the project for this target.  Inherited from
+        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
+      </para>
+    </listitem>
+
+    <listitem id="bbv2.reference.class.main-target.location">
+      <code language="jam">rule location ( )</code>
+      <para>
+        Return the location where the target was declared.  Inherited from
+        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
+      </para>
+    </listitem>
+
+    <listitem id="bbv2.reference.class.main-target.full-name">
+      <code language="jam">rule full-name ( )</code>
+      <para>
+        Returns a user-readable name for this target.  Inherited from
+        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
+      </para>
+    </listitem>
+
+    <listitem id="bbv2.reference.class.main-target.generate">
+      <indexterm zone="bbv2.reference.class.main-target.generate">
+        <primary>generate</primary>
+        <secondary>Main Target Method</secondary>
+      </indexterm>
+      <code language="jam">rule generate ( property-set )</code>
+      <para>
+        Overrides
+        <link linkend="bbv2.reference.class.abstract-target.generate">abstract-target.generate</link>.
+        
+        Select an alternative for this main target, by finding all alternatives
+        whose requirements are satisfied by <literal>property-set</literal> and
+        picking the one with the longest requirements set. Returns the result
+        of calling <link linkend="bbv2.reference.class.basic-target.generate">generate</link>
+        on that alternative.
+      </para>
+      
+      <para>
+        On success, returns:
+        <itemizedlist>
+          <listitem>a property-set with the usage requirements to be applied to dependents</listitem>
+          <listitem>a list of produced virtual targets, which may be empty.</listitem>
+        </itemizedlist>
+      </para>
+    </listitem>
+    
+  </orderedlist>
+  
+</section>
