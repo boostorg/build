@@ -30,7 +30,7 @@
       <filename>example/hello/</filename> directory. The project is described by
       a file called <filename>Jamroot</filename> that contains:
 
-<programlisting>
+<programlisting language="jam">
 exe hello : hello.cpp ;
 </programlisting>
 
@@ -49,7 +49,7 @@ b2 release
       once, without any unnecessary recompilation. Let us extend the example by
       adding another line to our project's <filename>Jamroot</filename>:
 
-<programlisting>
+<programlisting language="jam">
 exe hello2 : hello.cpp ;
 </programlisting>
 
@@ -160,7 +160,7 @@ b2 variant=release inlining=off debug-symbols=on
         illustrates how these requirements might be specified.
       </para>
 
-<programlisting>
+<programlisting language="jam">
 exe hello
     : hello.cpp
     : &lt;include&gt;boost &lt;threading&gt;multi
@@ -203,7 +203,7 @@ exe hello
         Fortunately, there's a better way. Each project can specify a set of
         <firstterm>attributes</firstterm>, including requirements:
 
-<programlisting>
+<programlisting language="jam">
 project
     : requirements &lt;include&gt;/home/ghost/Work/boost &lt;threading&gt;multi
     ;
@@ -272,7 +272,7 @@ top/
       any requirements specified by the subproject.
       For example, if <filename>top/Jamroot</filename> has
 
-<programlisting>
+<programlisting language="jam">
 &lt;include&gt;/home/ghost/local
 </programlisting>
 
@@ -297,7 +297,7 @@ top/
       Jamfile explicitly requests it. In our example,
       <filename>top/Jamroot</filename> might contain:
 
-<programlisting>
+<programlisting language="jam">
 build-project app ;
 </programlisting>
 
@@ -327,14 +327,14 @@ build-project app ;
       use libraries from <filename>top/util/foo</filename>.  If
       <filename>top/util/foo/Jamfile</filename> contains
 
-<programlisting>
+<programlisting language="jam">
 lib bar : bar.cpp ;
 </programlisting>
 
       then to use this library in <filename>top/app/Jamfile</filename>, we can
       write:
 
-<programlisting>
+<programlisting language="jam">
 exe app : app.cpp ../util/foo//bar ;
 </programlisting>
 
@@ -376,7 +376,7 @@ b2 app optimization=full define=USE_ASM
       repeated for all programs that use <filename>foo</filename>. A better
       solution is to modify <filename>util/foo/Jamfile</filename> in this way:
 
-      <programlisting>
+      <programlisting language="jam">
 project
     : usage-requirements &lt;include&gt;.
     ;
@@ -398,7 +398,7 @@ lib foo : foo.cpp ;</programlisting>
       code to <filename>Jamroot</filename>:
     </para>
 
-    <programlisting>
+    <programlisting language="jam">
 use-project /library-example/foo : util/foo ;</programlisting>
 
     <para>
@@ -425,7 +425,7 @@ exe app : app.cpp /library-example/foo//bar ;</programlisting>
         requirements, like this:
       </para>
 
-      <programlisting>
+      <programlisting language="jam">
 project
    : requirements &lt;library&gt;/boost/filesystem//fs
    ;</programlisting>
@@ -451,7 +451,7 @@ project
       command line:
       <programlisting>b2 link=static</programlisting>
       or in the library's requirements:
-      <programlisting>lib l : l.cpp : &lt;link&gt;static ;</programlisting>
+      <programlisting language="jam">lib l : l.cpp : &lt;link&gt;static ;</programlisting>
     </para>
 
     <para>
@@ -470,7 +470,7 @@ project
      VP: to be addressed when this section is moved. See comment below.
 -->
 
-      <programlisting>
+      <programlisting language="jam">
 exe important : main.cpp helpers/&lt;link&gt;static ;</programlisting>
 
       No matter what arguments are specified on the <command>b2</command>
@@ -485,7 +485,7 @@ exe important : main.cpp helpers/&lt;link&gt;static ;</programlisting>
       that library is used by many targets, you <emphasis>could</emphasis> use
       target references everywhere:
 
-      <programlisting>
+      <programlisting language="jam">
 exe e1 : e1.cpp /other_project//bar/&lt;link&gt;static ;
 exe e10 : e10.cpp /other_project//bar/&lt;link&gt;static ;</programlisting>
 
@@ -515,7 +515,7 @@ exe e10 : e10.cpp foo ;</programlisting>
       <para>
         When one library uses another, you put the second library in the source
         list of the first. For example:
-        <programlisting>
+        <programlisting language="jam">
 lib utils : utils.cpp /boost/filesystem//fs ;
 lib core : core.cpp utils ;
 exe app : app.cpp core ;</programlisting>
@@ -554,14 +554,14 @@ exe app : app.cpp core ;</programlisting>
       <code>release</code> variant is built. This can be achieved using
       <firstterm>conditional requirements</firstterm>.
 
-      <programlisting>
+      <programlisting language="jam">
 lib network : network.cpp
     : <emphasis role="bold">&lt;link&gt;shared:&lt;define&gt;NEWORK_LIB_SHARED</emphasis>
      &lt;variant&gt;release:&lt;define&gt;EXTRA_FAST
     ;</programlisting>
 
       In the example above, whenever <filename>network</filename> is built with
-      <code>&lt;link&gt;shared</code>, <code>&lt;define&gt;NEWORK_LIB_SHARED
+      <code language="jam">&lt;link&gt;shared</code>, <code language="jam">&lt;define&gt;NEWORK_LIB_SHARED
       </code> will be in its properties, too. Also, whenever its release variant
       is built, <code>&lt;define&gt;EXTRA_FAST</code> will appear in its
       properties.
@@ -573,15 +573,15 @@ lib network : network.cpp
       library actually uses different source files depending on the toolset used
       to build it. We can express this situation using <firstterm>target
       alternatives</firstterm>:
-      <programlisting>
+      <programlisting language="jam">
 lib demangler : dummy_demangler.cpp ;                      # alternative 1
 lib demangler : demangler_gcc.cpp : &lt;toolset&gt;gcc ;   # alternative 2
 lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3</programlisting>
       When building <filename>demangler</filename>, Boost.Build will compare
       requirements for each alternative with build properties to find the best
-      match. For example, when building with <code>&lt;toolset&gt;gcc</code>
+      match. For example, when building with <code language="jam">&lt;toolset&gt;gcc</code>
       alternative 2, will be selected, and when building with
-      <code>&lt;toolset&gt;msvc</code> alternative 3 will be selected. In all
+      <code language="jam">&lt;toolset&gt;msvc</code> alternative 3 will be selected. In all
       other cases, the most generic alternative 1 will be built.
     </para>
   </section>
@@ -595,7 +595,7 @@ lib demangler : demangler_msvc.cpp : &lt;toolset&gt;msvc ; # alternative 3</prog
       <varname>file</varname> property.  Target alternatives can be used to
       associate multiple library files with a single conceptual target. For
       example:
-      <programlisting>
+      <programlisting language="jam">
 # util/lib2/Jamfile
 lib lib2
     :
@@ -617,7 +617,7 @@ lib lib2
       Once a prebuilt target has been declared, it can be used just like any
       other target:
 
-      <programlisting>
+      <programlisting language="jam">
 exe app : app.cpp ../util/lib2//lib2 ;</programlisting>
 
       As with any target, the alternative selected depends on the properties
@@ -632,7 +632,7 @@ exe app : app.cpp ../util/lib2//lib2 ;</programlisting>
       by searching through some set of predetermined paths&#x2014;should be
       declared almost like regular ones:
 
-      <programlisting>
+      <programlisting language="jam">
 lib pythonlib : : &lt;name&gt;python22 ;</programlisting>
 
       We again don't specify any sources, but give a <varname>name</varname>
@@ -645,12 +645,12 @@ lib pythonlib : : &lt;name&gt;python22 ;</programlisting>
     <para>
       We can also specify where the toolset should look for the library:
 
-      <programlisting>
+      <programlisting language="jam">
 lib pythonlib : : &lt;name&gt;python22 &lt;search&gt;/opt/lib ;</programlisting>
 
       And, of course, target alternatives can be used in the usual way:
 
-      <programlisting>
+      <programlisting language="jam">
 lib pythonlib : : &lt;name&gt;python22 &lt;variant&gt;release ;
 lib pythonlib : : &lt;name&gt;python22_d &lt;variant&gt;debug ;</programlisting>
     </para>
