@@ -1953,6 +1953,14 @@ import path : native make : native-path make-path ;
   
   </section>
 
+  <section id="bbv2.reference.class">
+    <title>Builtin classes</title>
+    <xi:include href="abstract-target.xml"/>
+    <xi:include href="project-target.xml"/>
+    <xi:include href="main-target.xml"/>
+    <xi:include href="basic-target.xml"/>
+  </section>
+
   <section id="bbv2.reference.buildprocess">
     <title>Build process</title>
 
