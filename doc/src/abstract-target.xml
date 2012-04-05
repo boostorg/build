@@ -13,6 +13,17 @@
     Base class for all abstract targets.
   </para>
 
+<programlisting language="jam">
+class abstract-target {
+    rule <link linkend="bbv2.reference.class.abstract-target.__init__">__init__</link> ( name : project )
+    rule <link linkend="bbv2.reference.class.abstract-target.name">name</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.project">project</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.location">location</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.full-name">full-name</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.__init__">generate</link> ( property-set )
+}
+</programlisting>
+
   <para>
     Classes derived from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>:
     <itemizedlist>
@@ -31,19 +42,19 @@
   <orderedlist>
     
     <listitem id="bbv2.reference.class.abstract-target.__init__">
-      <code language="jam">rule __init__ ( name : project-target )</code>
+      <code language="jam">rule __init__ ( name : project )</code>
       <para>
         <variablelist>
           <varlistentry>
-            <literal>name</literal>
+            <term><literal>name</literal></term>
             <listitem>
-              <para>Name of the target in Jamfile.</para>
+              <para>The name of the target in the Jamfile.</para>
             </listitem>
-          </varlistentry>          
+          </varlistentry>
           <varlistentry>
-            <literal>project-target</literal>
+            <term><literal>project</literal></term>
             <listitem>
-              <para>The project target to which this one belongs.</para>
+              <para>The <link linkend="bbv2.reference.class.project-target">project</link> to which this target belongs.</para>
             </listitem>
           </varlistentry>
         </variablelist>
@@ -65,7 +76,7 @@
         <secondary>Abstract Target</secondary>
       </indexterm>
       <code language="jam">rule project ( )</code>
-      <para>Returns the project for this target.</para>
+      <para>Returns the <link linkend="bbv2.reference.class.project-target">project</link> for this target.</para>
     </listitem>
 
     <listitem id="bbv2.reference.class.abstract-target.location">
@@ -74,7 +85,7 @@
         <secondary>Abstract Target</secondary>
       </indexterm>
       <code language="jam">rule location ( )</code>
-      <para>Return the location where the target was declared.</para>
+      <para>Returns the location where the target was declared.</para>
     </listitem>
 
     <listitem id="bbv2.reference.class.abstract-target.full-name">
