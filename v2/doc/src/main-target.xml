@@ -9,9 +9,17 @@
     <primary>main-target</primary>
   </indexterm>
 
-  <para>
-    Derived from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-  </para>
+<programlisting language="jam">
+class main-target : <link linkend="bbv2.reference.class.abstract-target">abstract-target</link> {
+    rule <link linkend="bbv2.reference.class.main-target.generate">generate</link> ( property-set )
+
+    # Methods inherited from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>
+    rule <link linkend="bbv2.reference.class.abstract-target.name">name</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.project">project</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.location">location</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.full-name">full-name</link> ( )
+}
+</programlisting>
 
   <para>
     A <link linkend="bbv2.reference.class.main-target">main-target</link>
@@ -19,38 +27,6 @@
   </para>
 
   <orderedlist>
-
-    <listitem id="bbv2.reference.class.main-target.name">
-      <code language="jam">rule name ( )</code>
-      <para>
-        Returns the name of this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.main-target.project">
-      <code language="jam">rule project ( )</code>
-      <para>
-        Returns the project for this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.main-target.location">
-      <code language="jam">rule location ( )</code>
-      <para>
-        Return the location where the target was declared.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.main-target.full-name">
-      <code language="jam">rule full-name ( )</code>
-      <para>
-        Returns a user-readable name for this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
 
     <listitem id="bbv2.reference.class.main-target.generate">
       <indexterm zone="bbv2.reference.class.main-target.generate">
