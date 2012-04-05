@@ -9,9 +9,19 @@
     <primary>basic-target</primary>
   </indexterm>
 
-  <para>
-    Derived from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-  </para>
+<programlisting language="jam">
+class basic-target : <link linkend="bbv2.reference.class.abstract-target">abstract-target</link> {
+    rule <link linkend="bbv2.reference.class.basic-target.__init__">__init__</link> ( name : project : sources * : requirements * : default-build * : usage-requirements * )  
+    rule <link linkend="bbv2.reference.class.basic-target.generate">generate</link> ( property-set )
+    rule <link linkend="bbv2.reference.class.basic-target.construct">construct</link> ( name : source-targets * : property-set )
+
+    # Methods inherited from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>
+    rule <link linkend="bbv2.reference.class.abstract-target.name">name</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.project">project</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.location">location</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.full-name">full-name</link> ( )
+}
+</programlisting>
 
   <para>
     Implements the most standard way of constructing main target alternative from
@@ -23,39 +33,24 @@
 
   <orderedlist>
 
-    <listitem>
+    <listitem id="bbv2.reference.class.basic-target.__init__">
       <code language="jam">rule __init__ ( name : project : sources * : requirements * : default-build * : usage-requirements * )</code>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.basic-target.name">
-      <code language="jam">rule name ( )</code>
       <para>
-        Returns the name of this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.basic-target.project">
-      <code language="jam">rule project ( )</code>
-      <para>
-        Returns the project for this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.basic-target.location">
-      <code language="jam">rule location ( )</code>
-      <para>
-        Return the location where the target was declared.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.basic-target.full-name">
-      <code language="jam">rule full-name ( )</code>
-      <para>
-        Returns a user-readable name for this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
+        <variablelist>
+          <varlistentry>
+            <term><literal>name</literal></term>
+            <listitem><para>The name of the target</para></listitem>
+          </varlistentry>
+          <varlistentry>
+            <term><literal>project</literal></term>
+            <listitem>
+              <para>
+                The <link linkend="bbv2.reference.class.project-target">project</link>
+                in which the target is declared.
+              </para>
+            </listitem>
+          </varlistentry>
+        </variablelist>
       </para>
     </listitem>
 
@@ -88,10 +83,10 @@
         <primary>construct</primary>
         <secondary>Basic Target Method</secondary>
       </indexterm>
-      <code language="jam">rule construct ( name : source-targets * : properties * )</code>
+      <code language="jam">rule construct ( name : source-targets * : property-set )</code>
       <para>
-        Constructs virtual targets for this abstract target and the dependency
-        graph. Returns a usage-requirements property-set and a list of virtual
+        Constructs virtual targets for this abstract target. Returns a
+        usage-requirements property-set and a list of virtual
         targets. Should be overriden in derived classes.
       </para>
     </listitem>

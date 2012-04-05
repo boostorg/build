@@ -8,10 +8,22 @@
   <indexterm>
     <primary>project-target</primary>
   </indexterm>
+  
+<programlisting language="jam">
+class project-target : <link linkend="bbv2.reference.class.abstract-target">abstract-target</link> {
+    rule <link linkend="bbv2.reference.class.project-target.generate">generate</link> ( property-set )
+    rule <link linkend="bbv2.reference.class.project-target.build-dir">build-dir</link> ( )
+    rule <link linkend="bbv2.reference.class.project-target.main-target">main-target</link> ( name )
+    rule <link linkend="bbv2.reference.class.project-target.has-main-target">has-main-target</link> ( name )
+    rule <link linkend="bbv2.reference.class.project-target.find">find</link> ( id : no-error ? )
 
-  <para>
-    Derived from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-  </para>
+    # Methods inherited from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>
+    rule <link linkend="bbv2.reference.class.abstract-target.name">name</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.project">project</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.location">location</link> ( )
+    rule <link linkend="bbv2.reference.class.abstract-target.full-name">full-name</link> ( )
+}
+</programlisting>
 
   <para>
     This class has the following responsibilities:
@@ -23,58 +35,8 @@
       </listitem>
     </itemizedlist>
   </para>
-  
-  <para>
-    Main targets are constructed in two stages:
-    <itemizedlist>
-      <listitem>
-        <para>
-          When Jamfile is read, a number of calls to 'add-alternative' are made. At
-          that time, alternatives can also be renamed to account for inline targets.
-        </para>
-      </listitem>
-      <listitem>
-        <para>
-          The first time 'main-target' or 'has-main-target' rule is called, all
-          alternatives are enumerated and main targets are created.
-        </para>
-      </listitem>
-    </itemizedlist>
-  </para>
 
   <orderedlist>
-
-    <listitem id="bbv2.reference.class.project-target.name">
-      <code language="jam">rule name ( )</code>
-      <para>
-        Returns the name of this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.project-target.project">
-      <code language="jam">rule project ( )</code>
-      <para>
-        Returns the project for this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.project-target.location">
-      <code language="jam">rule location ( )</code>
-      <para>
-        Return the location of the project.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
-
-    <listitem id="bbv2.reference.class.project-target.full-name">
-      <code language="jam">rule full-name ( )</code>
-      <para>
-        Returns a user-readable name for this target.  Inherited from
-        <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>.
-      </para>
-    </listitem>
 
     <listitem id="bbv2.reference.class.project-target.generate">
       <indexterm zone="bbv2.reference.class.project-target.generate">
@@ -117,7 +79,9 @@
       <code language="jam">rule main-target ( name )</code>
       <para>
         Returns a <link linkend="bbv2.reference.class.main-target">main-target</link>
-        class instance corresponding to <literal>name</literal>.</para>
+        class instance corresponding to <literal>name</literal>.
+        Can only be called after the project has been fully loaded.
+      </para>
     </listitem>
 
     <listitem id="bbv2.reference.class.project-target.has-main-target">
@@ -129,6 +93,7 @@
       <para>
         Returns whether a <link linkend="bbv2.reference.class.main-target">main-target</link>
         with the specified name exists.
+        Can only be called after the project has been fully loaded.
       </para>
     </listitem>
 
