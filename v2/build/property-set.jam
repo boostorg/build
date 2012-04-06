@@ -215,15 +215,6 @@ class property-set
         return $(self.link-incompatible-ps) ;
     }
 
-    rule run-actions ( )
-    {
-        if ! $(self.run)
-        {
-            self.run = [ property-set.create [ feature.run-actions $(self.raw) ] ] ;
-        }
-        return $(self.run) ;
-    }
-
     rule add-defaults ( )
     {
         if ! $(self.defaults)
