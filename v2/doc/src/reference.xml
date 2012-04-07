@@ -1959,6 +1959,7 @@ import path : native make : native-path make-path ;
     <xi:include href="project-target.xml"/>
     <xi:include href="main-target.xml"/>
     <xi:include href="basic-target.xml"/>
+    <xi:include href="typed-target.xml"/>
     <xi:include href="property-set.xml"/>
   </section>
 

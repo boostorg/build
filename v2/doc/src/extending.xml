@@ -143,7 +143,7 @@
         <link linkend="bbv2.reference.class.basic-target">basic-target</link> and create new metatarget rule
         that creates instance of such target. However, in the majority
         of cases, a specific subclass of <link linkend="bbv2.reference.class.basic-target">basic-target</link>&mdash;
-        <classname>typed-target</classname> is used. That class is associated
+        <link linkend="bbv2.reference.class.typed-target">typed-target</link> is used. That class is associated
         with a <firstterm>type</firstterm> and relays to <firstterm>generators</firstterm>
         to construct concrete targets of that type. This process will be explained below.
         When a new type is declared, a new metatarget rule is automatically defined.
@@ -207,11 +207,12 @@ return [ sequence.transform virtual-target.register : $(targets) ] ;
         fact, Boost.Build defines concept of target type and
         <indexterm><primary>generators</primary></indexterm>
         <firstterm>generators</firstterm>, and has special metatarget class
-        <classname>typed-target</classname>.  Target type is merely an
+        <link linkend="bbv2.reference.class.typed-target">typed-target</link>.  Target type is merely an
         identifier. It is associated with a set of file extensions that
         correspond to that type. Generator is an abstraction of a tool. It advertises
         the types it produces and, if called with a set of input target, tries to construct
-        output targets of the advertised types. Finally, <classname>typed-target</classname>
+        output targets of the advertised types. Finally,
+        <link linkend="bbv2.reference.class.typed-target">typed-target</link>
         is associated with specific target type, and relays the generator (or generators)
         for that type.
         </para>
