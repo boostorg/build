@@ -105,7 +105,8 @@
           
           <listitem><para><link linkend="bbv2.reference.class.project-target">project-target</link> that
           corresponds to a project and is not intended for further
-          subclassing. The <methodname>generate</methodname> method of this
+          subclassing. The <link linkend="bbv2.reference.class.project-target.generate">
+          generate</link> method of this
           class builds all targets in the project that are not marked as
           explicit.</para></listitem>
           
