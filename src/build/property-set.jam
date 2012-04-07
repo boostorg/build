@@ -198,23 +198,6 @@ class property-set
         return $(self.propagated-ps) ;
     }
 
-    rule link-incompatible ( )
-    {
-        if ! $(self.link-incompatible-ps)
-        {
-            local result ;
-            for local p in $(self.raw)
-            {
-                if link-incompatible in [ feature.attributes $(p:G) ]
-                {
-                    result += $(p) ;
-                }
-            }
-            self.link-incompatible-ps = [ property-set.create $(result) ] ;
-        }
-        return $(self.link-incompatible-ps) ;
-    }
-
     rule add-defaults ( )
     {
         if ! $(self.defaults)
@@ -292,31 +275,6 @@ class property-set
     rule add-raw ( properties * )
     {
         return [ add [ property-set.create $(properties) ] ] ;
-    }
-
-    rule link-incompatible-with ( ps )
-    {
-        if ! $(.li.$(ps))
-        {
-            local li1 = [ $(__name__).link-incompatible ] ;
-            local li2 = [ $(ps).link-incompatible ] ;
-            if [ set.equal $(li1) : $(li2) ]
-            {
-                .li.$(ps) = false ;
-            }
-            else
-            {
-                .li.$(ps) = true ;
-            }
-        }
-        if $(.li.$(ps)) = true
-        {
-            return true ;
-        }
-        else
-        {
-            return ;
-        }
     }
 
     # Returns all values of 'feature'.
