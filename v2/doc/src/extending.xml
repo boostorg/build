@@ -83,11 +83,13 @@
         
         <para>The <link linkend="bbv2.reference.class.abstract-target.generate">generate</link>
         method takes the build properties
-        (as an instance of the <classname>property-set</classname> class) and returns
+        (as an instance of the <link linkend="bbv2.reference.class.property-set">
+        property-set</link> class) and returns
         a list containing:</para>
         <itemizedlist>
           <listitem><para>As front element&mdash;Usage-requirements from this invocation
-          (an instance of <classname>property-set</classname>)</para></listitem>
+          (an instance of <link linkend="bbv2.reference.class.property-set">
+          property-set</link>)</para></listitem>
           <listitem><para>As subsequent elements&mdash;created concrete targets (
           instances of the <classname>virtual-target</classname> class.)</para></listitem>
         </itemizedlist>
@@ -158,8 +160,8 @@
         subclass is <classname>file-target</classname>. A file target is associated
         with an action that creates it&mdash; an instance of the <classname>action</classname>
         class. The action, in turn, hold a list of source targets. It also holds the 
-        <classname>property-set</classname> instance with the build properties that
-        should be used for the action.</para>
+        <link linkend="bbv2.reference.class.property-set">property-set</link>
+        instance with the build properties that should be used for the action.</para>
 
         <para>Here's an example of creating a target from another target, <code>source</code></para>
 <programlisting>
