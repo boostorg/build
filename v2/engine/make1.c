@@ -608,10 +608,6 @@ static void make1c( state * pState )
 
                 if ( target_to_rescan->includes )
                 {
-                    /* Link the old includes on to make sure that it gets
-                     * cleaned up correctly.
-                     */
-                    target_to_rescan->includes->includes = saved_includes;
                     target_to_rescan->includes->rescanned = 1;
                     /* Tricky. The parents have already been processed, but they
                      * have not seen the internal node, because it was just
@@ -624,6 +620,10 @@ static void make1c( state * pState )
                      * built before this make1a() processing has even started.
                      */
                     make0( target_to_rescan->includes, target_to_rescan->parents->target, 0, 0, 0 );
+                    /* Link the old includes on to make sure that it gets
+                     * cleaned up correctly.
+                     */
+                    target_to_rescan->includes->includes = saved_includes;
                     for ( c = target_to_rescan->parents; c; c = c->next )
                         c->target->depends = targetentry( c->target->depends,
                                                           target_to_rescan->includes );
