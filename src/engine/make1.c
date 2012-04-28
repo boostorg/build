@@ -585,30 +585,25 @@ static void make1c( state * pState )
             /* Target has been updated so rescan it for dependencies. */
             if ( ( t->fate >= T_FATE_MISSING ) &&
                 ( t->status == EXEC_CMD_OK ) &&
-                !t->rescanned )
+                !( t->flags & T_FLAG_INTERNAL ) )
             {
                 TARGET * saved_includes;
-                TARGET * target_to_rescan = t;
                 SETTINGS * s;
 
-                target_to_rescan->rescanned = 1;
-
-                if ( target_to_rescan->flags & T_FLAG_INTERNAL )
-                    target_to_rescan = t->original_target;
+                t->rescanned = 1;
 
                 /* Clean current includes. */
-                saved_includes = target_to_rescan->includes;
-                target_to_rescan->includes = 0;
+                saved_includes = t->includes;
+                t->includes = 0;
 
-                s = copysettings( target_to_rescan->settings );
+                s = copysettings( t->settings );
                 pushsettings( root_module(), s );
-                headers( target_to_rescan );
+                headers( t );
                 popsettings( root_module(), s );
                 freesettings( s );
 
-                if ( target_to_rescan->includes )
+                if ( t->includes )
                 {
-                    target_to_rescan->includes->rescanned = 1;
                     /* Tricky. The parents have already been processed, but they
                      * have not seen the internal node, because it was just
                      * created. We need to make the calls to make1a() that would
@@ -619,20 +614,20 @@ static void make1c( state * pState )
                      * target is built, otherwise the parent would be considered
                      * built before this make1a() processing has even started.
                      */
-                    make0( target_to_rescan->includes, target_to_rescan->parents->target, 0, 0, 0 );
+                    make0( t->includes, t->parents->target, 0, 0, 0 );
                     /* Link the old includes on to make sure that it gets
                      * cleaned up correctly.
                      */
-                    target_to_rescan->includes->includes = saved_includes;
-                    for ( c = target_to_rescan->parents; c; c = c->next )
+                    t->includes->includes = saved_includes;
+                    for ( c = t->parents; c; c = c->next )
                         c->target->depends = targetentry( c->target->depends,
-                                                          target_to_rescan->includes );
+                                                          t->includes );
                     /* Will be processed below. */
-                    additional_includes = target_to_rescan->includes;
+                    additional_includes = t->includes;
                 }
                 else
                 {
-                    target_to_rescan->includes = saved_includes;
+                    t->includes = saved_includes;
                 }
             }
 
