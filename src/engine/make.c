@@ -298,11 +298,11 @@ void make0
         t->boundname = search( t->name, &t->time, &another_target,
                                t->flags & T_FLAG_ISFILE );
         /* If it was detected that this target refers to an already existing and
-         * bound one, we add an include dependency, so that every target
+         * bound one, we add a dependency, so that every target
          * depending on us will depend on that other target as well.
          */
         if ( another_target )
-            target_include( t, bindtarget( another_target ) );
+            t->depends = targetentry( t->depends, bindtarget( another_target ) );
 
         t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
     }
