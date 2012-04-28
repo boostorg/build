@@ -212,6 +212,8 @@ struct _target
 #define T_MAKE_RUNNING        3       /* make1(target) running commands */
 #define T_MAKE_DONE           4       /* make1(target) done */
 #define T_MAKE_NOEXEC_DONE    5       /* make1(target) done with -n in effect */
+#define T_MAKE_FINDCYCLE      6       /* make1(target) searching for cyclic includes after
+                                         rescanning a generated file. */
 
 #ifdef OPT_SEMAPHORE
     #define T_MAKE_SEMAPHORE  5       /* Special target type for semaphores */

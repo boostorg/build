@@ -74,6 +74,7 @@ static CMD      * make1cmds    ( TARGET * );
 static LIST     * make1list    ( LIST *, TARGETS *, int flags );
 static SETTINGS * make1settings( struct module_t * module, LIST * vars );
 static void       make1bind    ( TARGET * );
+static int        make1findcycle( TARGET * t );
 
 /* Ugly static - it is too hard to carry it through the callbacks. */
 
@@ -84,6 +85,8 @@ static struct
     int total;
     int made;
 } counts[ 1 ] ;
+
+int handling_rescan;
 
 /* Target state - remove recursive calls by just keeping track of state target
  * is in.
@@ -97,7 +100,8 @@ typedef struct _state
 #define T_STATE_MAKE1ATAIL 1   /* make1atail() should be called */
 #define T_STATE_MAKE1B     2   /* make1b() should be called */
 #define T_STATE_MAKE1C     3   /* make1c() should be called */
-#define T_STATE_MAKE1D     4   /* make1d() should be called */
+#define T_STATE_MAKE1CTAIL 4   /* make1ctail() should be called */
+#define T_STATE_MAKE1D     5   /* make1d() should be called */
     int             curstate;  /* current state */
     int             status;
 } state;
@@ -106,6 +110,7 @@ static void make1a      ( state * );
 static void make1atail  ( state * );
 static void make1b      ( state * );
 static void make1c      ( state * );
+static void make1ctail  ( state * );
 static void make1d      ( state * );
 static void make_closure( void * closure, int status, timing_info *, const char *, const char * );
 
@@ -227,6 +232,7 @@ int make1( TARGET * t )
                 case T_STATE_MAKE1ATAIL: make1atail( pState ); break;
                 case T_STATE_MAKE1B    : make1b    ( pState ); break;
                 case T_STATE_MAKE1C    : make1c    ( pState ); break;
+                case T_STATE_MAKE1CTAIL: make1ctail( pState ); break;
                 case T_STATE_MAKE1D    : make1d    ( pState ); break;
             }
         }
@@ -273,8 +279,9 @@ static void make1a( state * pState )
     if ( pState->parent )
         switch ( pState->t->progress )
         {
-            case T_MAKE_INIT:
             case T_MAKE_ACTIVE:
+                if ( handling_rescan && make1findcycle( t ) ) break;
+            case T_MAKE_INIT:
             case T_MAKE_RUNNING:
                 pState->t->parents = targetentry( pState->t->parents,
                     pState->parent );
@@ -632,8 +639,12 @@ static void make1c( state * pState )
             }
 
             if ( additional_includes )
+            {
+                ++handling_rescan;
                 for ( c = t->parents; c; c = c->next )
                     push_state( &temp_stack, additional_includes, c->target, T_STATE_MAKE1A );
+                push_state( &temp_stack, additional_includes, NULL, T_STATE_MAKE1CTAIL );
+            }
 
             for ( c = t->parents; c; c = c->next )
                 push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B );
@@ -674,6 +685,12 @@ static void make1c( state * pState )
             push_stack_on_stack( &state_stack, &temp_stack );
         }
     }
+}
+
+static void make1ctail( state * pState )
+{
+    --handling_rescan;
+    pop_state( &state_stack );
 }
 
 
@@ -1162,4 +1179,43 @@ static void make1bind( TARGET * t )
     t->boundname = search( t->name, &t->time, 0, ( t->flags & T_FLAG_ISFILE ) );
     t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
     popsettings( root_module(), t->settings );
+}
+
+
+static int make1findcycle_impl( TARGET * t )
+{
+    TARGETS * c;
+
+    if ( t->progress == T_MAKE_ONSTACK )
+        return 1;
+    else if ( t->progress != T_MAKE_ACTIVE )
+        return 0;
+
+    t->progress = T_MAKE_FINDCYCLE;
+
+    for ( c = t->depends; c; c = c->next )
+        if ( make1findcycle_impl( c->target ) )
+            return 1;
+
+    return 0;
+}
+
+static void make1findcycle_cleanup( TARGET * t )
+{
+    TARGETS * c;
+
+    if ( t->progress != T_MAKE_FINDCYCLE )
+        return;
+
+    t->progress = T_MAKE_ACTIVE;
+
+    for ( c = t->depends; c; c = c->next )
+        make1findcycle_cleanup( c->target );
+}
+
+static int make1findcycle( TARGET * t )
+{
+    int result = make1findcycle_impl( t );
+    make1findcycle_cleanup( t );
+    return result;
 }

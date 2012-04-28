@@ -82,7 +82,7 @@ actions copy {
 
 make header1.h : header1.in : @common.copy ;
 make header2.h : header2.in : @common.copy ;
-make header3.h : header2.in : @common.copy ;
+make header3.h : header3.in : @common.copy ;
 obj test : test.cpp :
   <implicit-dependency>header1.h
   <implicit-dependency>header2.h
@@ -96,5 +96,59 @@ t.expect_addition("bin/$toolset/debug/header2.h")
 t.expect_addition("bin/$toolset/debug/header3.h")
 t.expect_addition("bin/$toolset/debug/test.obj")
 t.expect_nothing_more()
+
+t.rm(".")
+
+# Test a loop in generated headers.
+t.write("test.cpp", """
+#include "header1.h"
+""")
+
+t.write("header1.in", """
+#ifndef HEADER1_H
+#define HEADER1_H
+#include "header2.h"
+#endif
+""")
+
+t.write("header2.in", """
+#ifndef HEADER2_H
+#define HEADER2_H
+#include "header3.h"
+#endif
+""")
+
+t.write("header3.in", """
+#ifndef HEADER2_H
+#define HEADER2_H
+#include "header1.h"
+#endif
+""")
+
+t.write("Jamroot.jam", """
+import common ;
+
+actions copy {
+    sleep 1
+    cp $(>) $(<)
+}
+
+make header1.h : header1.in : @common.copy ;
+make header2.h : header2.in : @common.copy ;
+make header3.h : header3.in : @common.copy ;
+obj test : test.cpp :
+  <implicit-dependency>header1.h
+  <implicit-dependency>header2.h
+  <implicit-dependency>header3.h
+  ;
+""")
+
+t.run_build_system("-j2 test")
+t.expect_addition("bin/$toolset/debug/header1.h")
+t.expect_addition("bin/$toolset/debug/header2.h")
+t.expect_addition("bin/$toolset/debug/header3.h")
+t.expect_addition("bin/$toolset/debug/test.obj")
+t.expect_nothing_more()
+
 
 t.cleanup()
