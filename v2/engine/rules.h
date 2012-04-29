@@ -227,6 +227,7 @@ struct _target
 
     int        asynccnt;              /* child deps outstanding */
     TARGETS  * parents;               /* used by make1() for completion */
+    TARGET   * scc_root;              /* used by make1 to resolve cyclic includes */
     char     * cmds;                  /* type-punned command list */
 
     const char * failed;

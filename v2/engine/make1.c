@@ -74,7 +74,9 @@ static CMD      * make1cmds    ( TARGET * );
 static LIST     * make1list    ( LIST *, TARGETS *, int flags );
 static SETTINGS * make1settings( struct module_t * module, LIST * vars );
 static void       make1bind    ( TARGET * );
-static int        make1findcycle( TARGET * t );
+static TARGET   * make1findcycle( TARGET * t );
+static void       make1breakcycle( TARGET * t, TARGET * cycle_root );
+static TARGET   * make1scc     ( TARGET * );
 
 /* Ugly static - it is too hard to carry it through the callbacks. */
 
@@ -277,16 +279,24 @@ static void make1a( state * pState )
      * target is built.
      */
     if ( pState->parent )
-        switch ( pState->t->progress )
+    {
+        TARGET * dependency = make1scc( t );
+        switch ( dependency->progress )
         {
+            case T_MAKE_ONSTACK:
+                make1breakcycle( pState->parent, dependency ); break;
             case T_MAKE_ACTIVE:
-                if ( handling_rescan && make1findcycle( t ) ) break;
+                if ( handling_rescan && make1findcycle( dependency ) )
+                {
+                    make1breakcycle( pState->parent, dependency ); break;
+                }
             case T_MAKE_INIT:
             case T_MAKE_RUNNING:
-                pState->t->parents = targetentry( pState->t->parents,
+                dependency->parents = targetentry( dependency->parents,
                     pState->parent );
                 ++pState->parent->asynccnt;
         }
+    }
 
     /*
      * If the target has been previously updated with -n in
@@ -646,8 +656,22 @@ static void make1c( state * pState )
                 push_state( &temp_stack, additional_includes, NULL, T_STATE_MAKE1CTAIL );
             }
 
-            for ( c = t->parents; c; c = c->next )
-                push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B );
+            if ( t->scc_root )
+            {
+                TARGET * scc_root = make1scc( t );
+                for ( c = t->parents; c; c = c->next )
+                {
+                    if ( make1scc( c->target ) == scc_root )
+                        push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B );
+                    else
+                        scc_root->parents = targetentry( scc_root->parents, c->target );
+                }
+            }
+            else
+            {
+                for ( c = t->parents; c; c = c->next )
+                    push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B );
+            }
 
 #ifdef OPT_SEMAPHORE
             /* If there is a semaphore, it is now free. */
@@ -1182,20 +1206,41 @@ static void make1bind( TARGET * t )
 }
 
 
-static int make1findcycle_impl( TARGET * t )
+static void make1cyclenode( TARGET * t, TARGET * scc_root )
+{
+    /* if we intersect with another cycle we need to merge the two */
+    if ( t->scc_root )
+    {
+        TARGET * other_root = make1scc( t );
+        if ( other_root != scc_root )
+        {
+            other_root->scc_root = scc_root;
+            other_root->parents = targetentry( other_root->parents, scc_root );
+            ++scc_root->asynccnt;
+        }
+    }
+    t->scc_root = scc_root;
+}
+
+
+static TARGET * make1findcycle_impl( TARGET * t, TARGET * scc_root )
 {
     TARGETS * c;
+    TARGET * result;
 
     if ( t->progress == T_MAKE_ONSTACK )
-        return 1;
+        return t;
     else if ( t->progress != T_MAKE_ACTIVE )
         return 0;
 
     t->progress = T_MAKE_FINDCYCLE;
 
     for ( c = t->depends; c; c = c->next )
-        if ( make1findcycle_impl( c->target ) )
-            return 1;
+        if ( ( result = make1findcycle_impl( c->target, scc_root ) ) )
+        {
+            make1cyclenode( c->target, scc_root );
+            return result;
+        }
 
     return 0;
 }
@@ -1213,9 +1258,34 @@ static void make1findcycle_cleanup( TARGET * t )
         make1findcycle_cleanup( c->target );
 }
 
-static int make1findcycle( TARGET * t )
+static TARGET * make1findcycle( TARGET * t )
 {
-    int result = make1findcycle_impl( t );
+    TARGET * result = make1findcycle_impl( t, t );
     make1findcycle_cleanup( t );
+    return result;
+}
+
+static void make1breakcycle( TARGET * t, TARGET * cycle_root )
+{
+    TARGET * scc_root = make1scc( cycle_root );
+    while ( t != cycle_root )
+    {
+        make1cyclenode( t, scc_root );
+        t = t->parents->target;
+    }
+}
+
+static TARGET * make1scc( TARGET * t )
+{
+    TARGET * result = t;
+    TARGET * tmp;
+    while ( result->scc_root )
+        result = result->scc_root;
+    while ( t->scc_root )
+    {
+        tmp = t->scc_root;
+        t->scc_root = result;
+        t = tmp;
+    }
     return result;
 }
