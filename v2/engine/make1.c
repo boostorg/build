@@ -281,20 +281,24 @@ static void make1a( state * pState )
     if ( pState->parent )
     {
         TARGET * dependency = make1scc( t );
+        TARGET * cycle_root;
         switch ( dependency->progress )
         {
             case T_MAKE_ONSTACK:
                 make1breakcycle( pState->parent, dependency ); break;
             case T_MAKE_ACTIVE:
-                if ( handling_rescan && make1findcycle( dependency ) )
+                if ( handling_rescan && ( cycle_root = make1findcycle( dependency ) ) )
                 {
-                    make1breakcycle( pState->parent, dependency ); break;
+                    make1breakcycle( pState->parent, cycle_root ); break;
                 }
             case T_MAKE_INIT:
             case T_MAKE_RUNNING:
-                dependency->parents = targetentry( dependency->parents,
-                    pState->parent );
-                ++pState->parent->asynccnt;
+                if( dependency != pState->parent )
+                {
+                    dependency->parents = targetentry( dependency->parents,
+                        pState->parent );
+                    ++pState->parent->asynccnt;
+                }
         }
     }
 
