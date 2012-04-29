@@ -220,5 +220,83 @@ t.expect_addition("bin/$toolset/debug/test2.obj")
 t.expect_addition("bin/$toolset/debug/test.exe")
 t.expect_nothing_more()
 
+t.rm(".")
+
+# Test a loop that includes a generated header
+t.write("test1.cpp", """
+#include "header1.h"
+""")
+
+t.write("test2.cpp", """
+#include "header2.h"
+
+int main() {}
+""")
+
+t.write("header1.h", """
+#ifndef HEADER1_H
+#define HEADER1_H
+#include "header2.h"
+#endif
+""")
+
+t.write("header2.in", """
+#ifndef HEADER2_H
+#define HEADER2_H
+#include "header3.h"
+#endif
+""")
+
+t.write("header3.h", """
+#ifndef HEADER3_H
+#define HEADER3_H
+#include "header1.h"
+#endif
+""")
+
+t.write("sleep.bat","""@setlocal
+@echo off
+@REM timeout /T %1 /NOBREAK >nul
+ping 127.0.0.1 -n 2 -w 1000 >nul
+ping 127.0.0.1 -n %1 -w 1000 >nul
+@endlocal
+@exit /B 0
+""")
+
+t.write("Jamroot.jam", """
+import common ;
+import os ;
+
+if [ os.name ] = NT
+{
+    SLEEP = call sleep.bat ;
+}
+else
+{
+    SLEEP = sleep ;
+}
+
+rule copy {
+    common.copy $(<) : $(>) ;
+}
+
+actions copy {
+    $(SLEEP) 1
+}
+
+make header2.h : header2.in : @copy ;
+exe test : test2.cpp test1.cpp :
+  <implicit-dependency>header2.h
+  <include>.
+  ;
+""")
+
+t.run_build_system("-j2 test")
+t.expect_addition("bin/$toolset/debug/header2.h")
+t.expect_addition("bin/$toolset/debug/test1.obj")
+t.expect_addition("bin/$toolset/debug/test2.obj")
+t.expect_addition("bin/$toolset/debug/test.exe")
+t.expect_nothing_more()
+
 
 t.cleanup()
