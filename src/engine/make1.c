@@ -1232,7 +1232,8 @@ static void make1cyclenode( TARGET * t, TARGET * scc_root )
             ++scc_root->asynccnt;
         }
     }
-    t->scc_root = scc_root;
+    if ( t != scc_root )
+        t->scc_root = scc_root;
 }
 
 
