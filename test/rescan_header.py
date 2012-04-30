@@ -220,6 +220,14 @@ t.expect_addition("bin/$toolset/debug/test2.obj")
 t.expect_addition("bin/$toolset/debug/test.exe")
 t.expect_nothing_more()
 
+t.touch("header3.in")
+t.run_build_system("-j2 test")
+t.expect_touch("bin/$toolset/debug/header3.h")
+t.expect_touch("bin/$toolset/debug/test1.obj")
+t.expect_touch("bin/$toolset/debug/test2.obj")
+t.expect_touch("bin/$toolset/debug/test.exe")
+t.expect_nothing_more()
+
 t.rm(".")
 
 # Test a loop that includes a generated header

@@ -228,6 +228,7 @@ struct _target
     int        asynccnt;              /* child deps outstanding */
     TARGETS  * parents;               /* used by make1() for completion */
     TARGET   * scc_root;              /* used by make1 to resolve cyclic includes */
+    int        depth;                 /* The depth of the target in the make0 stack. */
     char     * cmds;                  /* type-punned command list */
 
     const char * failed;
@@ -265,6 +266,7 @@ void      target_include                 ( TARGET * including, TARGET * included
 TARGETS * targetlist                     ( TARGETS * chain, LIST * target_names );
 void      touch_target                   ( OBJECT * t );
 void      clear_includes                 ( TARGET * );
+TARGET *  target_scc                     ( TARGET * t );
 
 /* Final module cleanup. */
 void rules_done();

@@ -214,6 +214,26 @@ void touch_target( OBJECT * t )
     bindtarget( t )->flags |= T_FLAG_TOUCHED;
 }
 
+/*
+ * target_scc() - returns the root of the strongly
+ *                connected component that this target
+ *                is a part of.
+ */
+TARGET * target_scc( TARGET * t )
+{
+    TARGET * result = t;
+    TARGET * tmp;
+    while ( result->scc_root )
+        result = result->scc_root;
+    while ( t->scc_root )
+    {
+        tmp = t->scc_root;
+        t->scc_root = result;
+        t = tmp;
+    }
+    return result;
+}
+
 
 /*
  * targetlist() - turn list of target names into a TARGET chain.

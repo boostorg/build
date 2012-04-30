@@ -280,6 +280,7 @@ void make0
         printf( "make\t--\t%s%s\n", spaces( depth ), object_str( t->name ) );
 
     t->fate = T_FATE_MAKING;
+    t->depth = depth;
 
     /*
      * Step 2: under the influence of "on target" variables,
@@ -397,6 +398,25 @@ void make0
         t->depends = targetchain( t->depends, incs );
     }
 
+    /* Step 3d: detect cycles. */
+    {
+        int cycle_depth = depth;
+        for ( c = t->depends; c; c = c->next )
+        {
+            TARGET * scc_root = target_scc( c->target );
+            if ( scc_root->fate == T_FATE_MAKING &&
+                ( !scc_root->includes ||
+                  scc_root->includes->fate != T_FATE_MAKING ) )
+            {
+                if ( scc_root->depth < cycle_depth )
+                {
+                    cycle_depth = scc_root->depth;
+                    t->scc_root = scc_root;
+                }
+            }
+        }
+    }
+
     /*
      * Step 4: compute time & fate
      */
@@ -407,6 +427,20 @@ void make0
     fate = T_FATE_STABLE;
     for ( c = t->depends; c; c = c->next )
     {
+        /* If we're in a different strongly connected component,
+         * pull timestamps from the root.
+         */
+        if ( c->target->scc_root )
+        {
+            TARGET * scc_root = target_scc( c->target );
+            if ( scc_root != t->scc_root )
+            {
+                c->target->leaf = max( c->target->leaf, scc_root->leaf );
+                c->target->time = max( c->target->time, scc_root->time );
+                c->target->fate = max( c->target->fate, scc_root->fate );
+            }
+        }
+
         /* If LEAVES has been applied, we only heed the timestamps of the leaf
          * source nodes.
          */
