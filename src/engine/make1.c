@@ -270,13 +270,13 @@ int make1( TARGET * t )
 
 static void make1a( state * pState )
 {
-    TARGET * t = target_scc( pState->t );
+
+    TARGET * t = pState->t;
+    TARGET * scc_root = target_scc( t );
     TARGETS * c;
 
-    if ( pState->parent == NULL || target_scc( pState->parent ) != t )
-        pState->t = t;
-    else
-        t = pState->t;
+    if ( pState->parent == NULL || target_scc( pState->parent ) != scc_root )
+        pState->t = t = scc_root;
 
     /* If the parent is the first to try to build this target or this target is
      * in the make1c() quagmire, arrange for the parent to be notified when this
@@ -288,9 +288,12 @@ static void make1a( state * pState )
         switch ( t->progress )
         {
             case T_MAKE_ONSTACK:
-                if ( target_scc( pState->parent ) != t )
-                    make1breakcycle( pState->parent, t );
-                break;
+                if ( t->depth == handling_rescan )
+                {
+                    if ( target_scc( pState->parent ) != scc_root )
+                        make1breakcycle( pState->parent, t );
+                    break;
+                }
             case T_MAKE_ACTIVE:
                 if ( handling_rescan && ( cycle_root = make1findcycle( t ) ) )
                 {
@@ -346,6 +349,7 @@ static void make1a( state * pState )
 
     /* Guard against circular dependencies. */
     t->progress = T_MAKE_ONSTACK;
+    t->depth = handling_rescan;
 
     {
         stack temp_stack = { NULL };
@@ -1238,11 +1242,15 @@ static TARGET * make1findcycle_impl( TARGET * t, TARGET * scc_root )
     TARGET * result;
 
     if ( t->progress == T_MAKE_ONSTACK )
-        return t;
-    else if ( t->progress != T_MAKE_ACTIVE )
+        if ( t->depth == handling_rescan )
+            return t;
+        else
+            t->progress = T_MAKE_FINDCYCLE_ONSTACK;
+    else if ( t->progress == T_MAKE_ACTIVE )
+        t->progress = T_MAKE_FINDCYCLE_ACTIVE;
+    else
         return 0;
 
-    t->progress = T_MAKE_FINDCYCLE;
 
     for ( c = t->depends; c; c = c->next )
         if ( ( result = make1findcycle_impl( c->target, scc_root ) ) )
@@ -1258,10 +1266,12 @@ static void make1findcycle_cleanup( TARGET * t )
 {
     TARGETS * c;
 
-    if ( t->progress != T_MAKE_FINDCYCLE )
+    if ( t->progress == T_MAKE_FINDCYCLE_ACTIVE )
+        t->progress = T_MAKE_ACTIVE;
+    else if ( t->progress == T_MAKE_FINDCYCLE_ONSTACK )
+        t->progress = T_MAKE_ONSTACK;
+    else
         return;
-
-    t->progress = T_MAKE_ACTIVE;
 
     for ( c = t->depends; c; c = c->next )
         make1findcycle_cleanup( c->target );
