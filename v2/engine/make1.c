@@ -76,7 +76,6 @@ static SETTINGS * make1settings( struct module_t * module, LIST * vars );
 static void       make1bind    ( TARGET * );
 static TARGET   * make1findcycle( TARGET * t );
 static void       make1breakcycle( TARGET * t, TARGET * cycle_root );
-static TARGET   * make1scc     ( TARGET * );
 
 /* Ugly static - it is too hard to carry it through the callbacks. */
 
@@ -271,8 +270,13 @@ int make1( TARGET * t )
 
 static void make1a( state * pState )
 {
-    TARGET * t = pState->t;
+    TARGET * t = target_scc( pState->t );
     TARGETS * c;
+
+    if ( pState->parent == NULL || target_scc( pState->parent ) != t )
+        pState->t = t;
+    else
+        t = pState->t;
 
     /* If the parent is the first to try to build this target or this target is
      * in the make1c() quagmire, arrange for the parent to be notified when this
@@ -280,22 +284,23 @@ static void make1a( state * pState )
      */
     if ( pState->parent )
     {
-        TARGET * dependency = make1scc( t );
         TARGET * cycle_root;
-        switch ( dependency->progress )
+        switch ( t->progress )
         {
             case T_MAKE_ONSTACK:
-                make1breakcycle( pState->parent, dependency ); break;
+                if ( target_scc( pState->parent ) != t )
+                    make1breakcycle( pState->parent, t );
+                break;
             case T_MAKE_ACTIVE:
-                if ( handling_rescan && ( cycle_root = make1findcycle( dependency ) ) )
+                if ( handling_rescan && ( cycle_root = make1findcycle( t ) ) )
                 {
                     make1breakcycle( pState->parent, cycle_root ); break;
                 }
             case T_MAKE_INIT:
             case T_MAKE_RUNNING:
-                if( dependency != pState->parent )
+                if( t != pState->parent )
                 {
-                    dependency->parents = targetentry( dependency->parents,
+                    t->parents = targetentry( t->parents,
                         pState->parent );
                     ++pState->parent->asynccnt;
                 }
@@ -306,15 +311,15 @@ static void make1a( state * pState )
      * If the target has been previously updated with -n in
      * effect, and we're ignoring -n, update it for real.
      */
-    if ( !globs.noexec && pState->t->progress == T_MAKE_NOEXEC_DONE )
+    if ( !globs.noexec && t->progress == T_MAKE_NOEXEC_DONE )
     {
-        pState->t->progress = T_MAKE_INIT;
+        t->progress = T_MAKE_INIT;
     }
 
     /* If this target is already being processed then do nothing. There is no
      * need to start processing the same target all over again.
      */
-    if ( pState->t->progress != T_MAKE_INIT )
+    if ( t->progress != T_MAKE_INIT )
     {
         pop_state( &state_stack );
         return;
@@ -328,7 +333,7 @@ static void make1a( state * pState )
      * processing all of our other dependencies our build might be triggerred
      * prematurely.
      */
-    pState->t->asynccnt = 1;
+    t->asynccnt = 1;
 
     /* Add header nodes created during the building process. */
     {
@@ -340,12 +345,12 @@ static void make1a( state * pState )
     }
 
     /* Guard against circular dependencies. */
-    pState->t->progress = T_MAKE_ONSTACK;
+    t->progress = T_MAKE_ONSTACK;
 
     {
         stack temp_stack = { NULL };
         for ( c = t->depends; c && !intr; c = c->next )
-            push_state( &temp_stack, c->target, pState->t, T_STATE_MAKE1A );
+            push_state( &temp_stack, c->target, t, T_STATE_MAKE1A );
 
         /* Using stacks reverses the order of execution. Reverse it back. */
         push_stack_on_stack( &state_stack, &temp_stack );
@@ -662,10 +667,10 @@ static void make1c( state * pState )
 
             if ( t->scc_root )
             {
-                TARGET * scc_root = make1scc( t );
+                TARGET * scc_root = target_scc( t );
                 for ( c = t->parents; c; c = c->next )
                 {
-                    if ( make1scc( c->target ) == scc_root )
+                    if ( target_scc( c->target ) == scc_root )
                         push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B );
                     else
                         scc_root->parents = targetentry( scc_root->parents, c->target );
@@ -1215,7 +1220,7 @@ static void make1cyclenode( TARGET * t, TARGET * scc_root )
     /* if we intersect with another cycle we need to merge the two */
     if ( t->scc_root )
     {
-        TARGET * other_root = make1scc( t );
+        TARGET * other_root = target_scc( t );
         if ( other_root != scc_root )
         {
             other_root->scc_root = scc_root;
@@ -1271,25 +1276,10 @@ static TARGET * make1findcycle( TARGET * t )
 
 static void make1breakcycle( TARGET * t, TARGET * cycle_root )
 {
-    TARGET * scc_root = make1scc( cycle_root );
+    TARGET * scc_root = target_scc( cycle_root );
     while ( t != cycle_root )
     {
         make1cyclenode( t, scc_root );
         t = t->parents->target;
     }
-}
-
-static TARGET * make1scc( TARGET * t )
-{
-    TARGET * result = t;
-    TARGET * tmp;
-    while ( result->scc_root )
-        result = result->scc_root;
-    while ( t->scc_root )
-    {
-        tmp = t->scc_root;
-        t->scc_root = result;
-        t = tmp;
-    }
-    return result;
 }
