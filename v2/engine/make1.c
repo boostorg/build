@@ -1279,7 +1279,7 @@ static void make1findcycle_cleanup( TARGET * t )
 
 static TARGET * make1findcycle( TARGET * t )
 {
-    TARGET * result = make1findcycle_impl( t, t );
+    TARGET * result = make1findcycle_impl( t, target_scc( t ) );
     make1findcycle_cleanup( t );
     return result;
 }
