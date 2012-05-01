@@ -212,8 +212,6 @@ struct _target
 #define T_MAKE_RUNNING        3       /* make1(target) running commands */
 #define T_MAKE_DONE           4       /* make1(target) done */
 #define T_MAKE_NOEXEC_DONE    5       /* make1(target) done with -n in effect */
-#define T_MAKE_FINDCYCLE_ONSTACK  6   /* make1(target) searching for cyclic includes after */
-#define T_MAKE_FINDCYCLE_ACTIVE   7   /* rescanning a generated file. */
 
 #ifdef OPT_SEMAPHORE
     #define T_MAKE_SEMAPHORE  5       /* Special target type for semaphores */
@@ -227,7 +225,8 @@ struct _target
 
     int        asynccnt;              /* child deps outstanding */
     TARGETS  * parents;               /* used by make1() for completion */
-    TARGET   * scc_root;              /* used by make1 to resolve cyclic includes */
+    TARGET   * scc_root;              /* used by make to resolve cyclic includes */
+    TARGET   * rescanning;            /* used by make0 to mark visited targets when rescanning */
     int        depth;                 /* The depth of the target in the make0 stack. */
     char     * cmds;                  /* type-punned command list */
 

@@ -509,7 +509,14 @@ LIST * builtin_depends( FRAME * frame, int flags )
     for ( ; iter != end; iter = list_next( iter ) )
     {
         TARGET * s = bindtarget( list_item( iter ) );
-        s->dependants = targetlist( s->dependants, targets );
+        if ( flags )
+        {
+            LISTITER t_iter = list_begin( targets ), t_end = list_end( targets );
+            for ( ; t_iter != t_end; t_iter = list_next( t_iter ) )
+                s->dependants = targetentry( s->dependants, bindtarget( list_item( t_iter ) )->includes );
+        }
+        else
+            s->dependants = targetlist( s->dependants, targets );
     }
 
     return L0;

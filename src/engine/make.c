@@ -129,7 +129,7 @@ int make( LIST * targets, int anyhow )
         {
             TARGET * t = bindtarget( list_item( iter ) );
             if ( t->fate == T_FATE_INIT )
-                make0( t, 0, 0, counts, anyhow );
+                make0( t, 0, 0, counts, anyhow, 0 );
         }
         PROFILE_EXIT( MAKE_MAKE0 );
     }
@@ -240,6 +240,48 @@ static void force_rebuilds( TARGET * t )
 }
 
 
+int make0rescan( TARGET * t, TARGET * rescanning )
+{
+    int result = 0;
+    TARGETS * c;
+    /* Check whether we've already found a cycle. */
+    if( target_scc( t ) == rescanning )
+    {
+        return 1;
+    }
+    /* If we've already visited this node, ignore it. */
+    if ( t->rescanning == rescanning )
+        return 0;
+
+    /* If t is already updated, ignore it. */
+    if ( t->scc_root == NULL &&
+        t->progress != T_MAKE_INIT &&
+        t->progress != T_MAKE_ONSTACK &&
+        t->progress != T_MAKE_ACTIVE )
+        return 0;
+
+    t->rescanning = rescanning;
+    for ( c = t->depends; c; c = c->next )
+    {
+        TARGET * dependency = c->target;
+        /* Always start at the root of each new strongly connected component. */
+        if ( target_scc( dependency ) != target_scc( t ) )
+            dependency = target_scc( dependency );
+        result |= make0rescan( dependency, rescanning );
+
+        /* Make sure that we pick up the new include node. */
+        if ( c->target->includes == rescanning )
+            result = 1;
+    }
+    if ( result && t->scc_root == NULL )
+    {
+        t->scc_root = rescanning;
+        rescanning->depends = targetentry( rescanning->depends, t );
+    }
+    return result;
+}
+
+
 /*
  * make0() - bind and scan everything to make a TARGET.
  *
@@ -253,7 +295,8 @@ void make0
     TARGET * p,       /* parent */
     int      depth,   /* for display purposes */
     COUNTS * counts,  /* for reporting */
-    int      anyhow
+    int      anyhow,
+    TARGET * rescanning
 )  /* forcibly touch all (real) targets */
 {
     TARGETS    * c;
@@ -303,7 +346,11 @@ void make0
          * depending on us will depend on that other target as well.
          */
         if ( another_target )
-            t->depends = targetentry( t->depends, bindtarget( another_target ) );
+        {
+            TARGET * other = bindtarget( another_target );
+            t->depends = targetentry( t->depends, other );
+            other->dependants = targetentry( other->dependants, t );
+        }
 
         t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
     }
@@ -380,14 +427,18 @@ void make0
          * other alot.
          */
         if ( c->target->fate == T_FATE_INIT )
-            make0( c->target, ptime, depth + 1, counts, anyhow );
+            make0( c->target, ptime, depth + 1, counts, anyhow, rescanning );
         else if ( c->target->fate == T_FATE_MAKING && !internal )
             printf( "warning: %s depends on itself\n", object_str( c->target->name ) );
+        else if ( c->target->fate != T_FATE_MAKING && rescanning )
+            make0rescan( c->target, rescanning );
+        if ( rescanning && c->target->includes && c->target->includes->fate != T_FATE_MAKING )
+            make0rescan( target_scc( c->target->includes ), rescanning );
     }
 
     /* Step 3b: recursively make0() internal includes node. */
     if ( t->includes )
-        make0( t->includes, p, depth + 1, counts, anyhow );
+        make0( t->includes, p, depth + 1, counts, anyhow, rescanning );
 
     /* Step 3c: add dependencies' includes to our direct dependencies. */
     {
