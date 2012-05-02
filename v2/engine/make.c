@@ -301,6 +301,7 @@ void make0
 {
     TARGETS    * c;
     TARGET     * ptime = t;
+    TARGET     * located_target = 0;
     time_t       last;
     time_t       leaf;
     time_t       hlast;
@@ -346,11 +347,7 @@ void make0
          * depending on us will depend on that other target as well.
          */
         if ( another_target )
-        {
-            TARGET * other = bindtarget( another_target );
-            t->depends = targetentry( t->depends, other );
-            other->dependants = targetentry( other->dependants, t );
-        }
+            located_target = bindtarget( another_target );
 
         t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
     }
@@ -436,6 +433,14 @@ void make0
             make0rescan( target_scc( c->target->includes ), rescanning );
     }
 
+    if ( located_target )
+    {
+        if ( located_target->fate == T_FATE_INIT )
+            make0( located_target, ptime, depth + 1, counts, anyhow, rescanning );
+        else if ( located_target->fate != T_FATE_MAKING && rescanning )
+            make0rescan( located_target, rescanning );
+    }
+
     /* Step 3b: recursively make0() internal includes node. */
     if ( t->includes )
         make0( t->includes, p, depth + 1, counts, anyhow, rescanning );
@@ -448,6 +453,9 @@ void make0
                 incs = targetentry( incs, c->target->includes );
         t->depends = targetchain( t->depends, incs );
     }
+
+    if ( located_target )
+        t->depends = targetentry( t->depends, located_target );
 
     /* Step 3d: detect cycles. */
     {
