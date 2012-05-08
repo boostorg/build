@@ -739,7 +739,7 @@ The =MATCH= rule does pattern matching.
 rule MATCH ( /regexps/ + : /list/ * )
 ]
 
-Matches the =egrep=(1) style regular expressions /regexps/ against the strings in /list/. The result is the concatenation of matching =()= subexpressions for each string in /list/, and for each regular expression in /regexps/. Only useful within the "=[ ]=" construct, to change the result into a list.
+Matches the =egrep=(1) style regular expressions /regexps/ against the strings in /list/. The result is a list of matching =()= subexpressions for each string in /list/, and for each regular expression in /regexps/.
 
 [endsect]
 
