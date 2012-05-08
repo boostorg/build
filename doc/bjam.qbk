@@ -683,7 +683,7 @@ rule RMOLD ( /targets/ * )
 rule ISFILE ( /targets/ * )
 ]
 
-=ISFILE= marks targets as required to be files. This changes the way =bjam= searches for the target such that it ignores mathes for file system items that are not file, like directories. This makes it possible to avoid `#include "exception"` matching if one happens to have a directory named exception in the header search path.
+=ISFILE= marks targets as required to be files. This changes the way =bjam= searches for the target such that it ignores matches for file system items that are not files, like directories. This makes it possible to avoid `#include "exception"` matching if one happens to have a directory named exception in the header search path.
 
 [warning This is currently not fully implemented.]
 
