@@ -299,7 +299,7 @@ local rule print-help-usage ( )
         Output the used build commands to file '"x"'. ;
     print.list-item -q;
         Quit as soon as a build failure is encountered. Without this option
-        Boost.Jam will continue building as many targets as it can.
+        Boost.Jam will continue building as many targets as it can. ;
     print.list-item -sx=y;
         Sets a Jam variable '"x"' to the value '"y"', overriding any value that
         variable would have from the environment. ;
