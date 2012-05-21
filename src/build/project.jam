@@ -263,7 +263,7 @@ rule find-jamfile (
     {
         errors.error Unable to load Jamfile.
             : Could not find a Jamfile in directory '$(dir)'.
-            : Attempted to find it with pattern '"$(JAMFILE:J= )"'.
+            : Attempted to find it with pattern '$(JAMFILE:J=" ")'.
             : Please consult the documentation at 'http://www.boost.org'. ;
     }
 
@@ -287,14 +287,14 @@ local rule load-jamfile (
     {
         jamfile-to-load = [ find-jamfile $(dir) ] ;
     }
-    
+
     if $(jamfile-to-load[2])
     {
-        errors.error "Multiple Jamfiles found at '$(dir)'" 
+        errors.error "Multiple Jamfiles found at '$(dir)'"
           :  "Filenames are: " $(jamfile-to-load:D=) ;
     }
-    
-    # Now load the Jamfile in it's own context. 
+
+    # Now load the Jamfile in it's own context.
     # The call to 'initialize' may load parent Jamfile, which might have
     # 'use-project' statement that causes a second attempt to load the
     # same project we're loading now.  Checking inside .jamfile-modules
@@ -420,7 +420,7 @@ rule initialize (
     else if $(module-name) = project-config
     {
         parent-module = user-config ;
-    }    
+    }
     else
     {
         # We search for parent/project-root only if Jamfile was specified, i.e.
@@ -437,13 +437,13 @@ rule initialize (
             {
                 # If project-config module exist, inherit from it.
                 if $(project-config.attributes)
-                {   
+                {
                     parent-module = project-config ;
                 }
                 else
-                {                    
+                {
                     parent-module = user-config ;
-                }                
+                }
                 jamroot = true ;
             }
         }
@@ -480,7 +480,7 @@ rule initialize (
             if ! $(s)
             {
                 errors.error "Could not determine project location $(module-name)" ;
-            }        
+            }
             $(attributes).set source-location : $(s:D) : exact ;
         }
 
@@ -784,7 +784,7 @@ rule use ( id : location )
             $(project-module) )
         {
             errors.user-error Attempt to redeclare already existing project id
-                '$(id)' 
+                '$(id)'
                 location '$(location)' ;
         }
         $(id).jamfile-module = $(project-module) ;
@@ -856,13 +856,13 @@ rule glob-internal ( project : wildcards + : excludes * : rule-name )
             # Otherwise, use full path just to avoid any ambiguities.
             local rel = [ path.relative $(p) $(location) : no-error ] ;
             if $(rel) = not-a-child
-            {                   
+            {
                 result += [ path.root $(p) [ path.pwd ] ] ;
             }
             else
             {
                 result += $(rel) ;
-            }                
+            }
         }
     }
     else
@@ -1064,9 +1064,9 @@ module project-rules
         for local n in $(target-names)
         {
             $(t).mark-target-as-always $(n) ;
-        }        
+        }
     }
-    
+
     rule glob ( wildcards + : excludes * )
     {
         import project ;
@@ -1106,7 +1106,7 @@ module project-rules
             return $(condition):$(requirements) ;
         }
     }
-    
+
     rule option ( name : value )
     {
         local m = [ CALLER_MODULE ] ;
@@ -1114,8 +1114,8 @@ module project-rules
         {
             import errors ;
             errors.error "The 'option' rule may be used only in site-config or user-config" ;
-        }        
+        }
         import option ;
         option.set $(name) : $(value) ;
-    }    
+    }
 }
