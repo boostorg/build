@@ -137,7 +137,10 @@ headers1(
     static int count = 0;
     ++count;
     if ( ((count == 100) || !( count % 1000 )) && DEBUG_MAKE )
+    {
         printf("...patience...\n");
+        fflush(stdout);
+    }
 #endif
 
     /* the following regexp is used to detect cases where a  */

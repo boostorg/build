@@ -714,7 +714,10 @@ void make0
         ++counts->targets;
 #else
         if ( !( ++counts->targets % 1000 ) && DEBUG_MAKE )
+        {
             printf( "...patience...\n" );
+            fflush(stdout);
+        }
 #endif
 
         if ( fate == T_FATE_ISTMP )
