@@ -533,7 +533,7 @@ rule unit-test ( target : source : properties * )
 actions unit-test
 {
     $(PATH_SETUP)
-    $(LAUNCHER) $(>) $(ARGS) && $(.MAKE_FILE) $(<)
+    $(LAUNCHER) "$(>)" $(ARGS) && $(.MAKE_FILE) "$(<)"
 }
 
 
