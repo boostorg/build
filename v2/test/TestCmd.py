@@ -405,7 +405,13 @@ class TestCmd:
             # (e.g. on Windows). We will be using the os.popen3() Python API
             # which takes a string parameter and so needs its executable quoted
             # in case its name contains spaces.
-            cmd[0] = '"' + cmd[0] + '"'
+            for i in xrange(len(cmd)):
+                if '"' in cmd[i]:
+                    pass
+                elif cmd[i][-1] == '\\':
+                    cmd[i] = '"' + cmd[i] + '\\"'
+                else:
+                    cmd[i] = '"' + cmd[i] + '"'
             command_string = join(cmd, " ")
             if ( os.name == 'nt' ):
                 # This is a workaround for a longstanding Python bug on Windows
