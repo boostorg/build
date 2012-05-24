@@ -947,12 +947,16 @@ LIST * builtin_split_by_characters( FRAME * frame, int flags )
     
     string buf[ 1 ];
 
-    const char * delimiters = object_str( list_front( l2 ) );
+    const char * delimiters;
     char * t;
 
-    string_copy( buf, object_str( list_front( l1 ) ) );
+    if ( list_empty( l1 ) || list_empty( l2 ) )
+        return L0;
 
-    t = strtok( buf->value, delimiters) ;
+    string_copy( buf, object_str( list_front( l1 ) ) );
+    delimiters = object_str( list_front( l2 ) );
+
+    t = strtok( buf->value, delimiters ) ;
     while ( t )
     {
         result = list_push_back( result, object_new( t ) );
