@@ -556,9 +556,9 @@ rule record-time ( target : source : start end user system )
 IMPORT testing : record-time : : testing.record-time ;
 
 
-# Calling this rule requests that Boost Build time how long it taks to build the
-# 'source' target and display the results both on the standard output and in the
-# 'target' file.
+# Calling this rule requests that Boost Build time how long it takes to build
+# the 'source' target and display the results both on the standard output and in
+# the 'target' file.
 #
 rule time ( target : source : properties *  )
 {
