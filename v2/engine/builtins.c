@@ -161,9 +161,9 @@ void load_builtins()
                     builtin_match, 0, 0 ) );
 
     {
-        const char * args[] = { "string", ":", "delimiters" };
+        const char * args[] = { "string", ":", "delimiters", 0 };
         bind_builtin( "SPLIT_BY_CHARACTERS",
-                      builtin_split_by_characters, 0, 0 );
+                      builtin_split_by_characters, 0, args );
     }
 
     duplicate_rule( "NoCare",
@@ -947,14 +947,10 @@ LIST * builtin_split_by_characters( FRAME * frame, int flags )
 
     string buf[ 1 ];
 
-    const char * delimiters;
+    const char * delimiters = object_str( list_front( l2 ) );
     char * t;
 
-    if ( list_empty( l1 ) || list_empty( l2 ) )
-        return L0;
-
     string_copy( buf, object_str( list_front( l1 ) ) );
-    delimiters = object_str( list_front( l2 ) );
 
     t = strtok( buf->value, delimiters ) ;
     while ( t )
