@@ -1298,11 +1298,30 @@ if $(NT)
     local r2 = [ W32_GETREGNAMES "HKCU\\Control Panel\\Sound" : values ] ;
     check-equal w32_getregnames : $(sound:L) : $(r2:L) ;
 
+    #   On Windows 7 & later there may be an additional 'Policies' key under
+    # 'CurrentControlSet'.
+    local rule remove-policies ( param * )
+    {
+        local found ;
+        local r ;
+        for local x in $(param:L)
+        {
+            if ! $(found) && $(x) = "policies"
+            {
+                found = true ;
+            }
+            else
+            {
+                r += $(x) ;
+            }
+        }
+        return $(r) ;
+    }
     local CurrentControlSet = "Control" "Enum" "Hardware Profiles" "Services" ;
     local r3 = [ W32_GETREGNAMES "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet" : subkeys ] ;
-    check-equal w32_getregnames : $(CurrentControlSet:L) : $(r3:L) ;
+    check-equal w32_getregnames : $(CurrentControlSet:L) : [ remove-policies $(r3:L) ] ;
     local r4 = [ W32_GETREGNAMES "HKLM\\SYSTEM\\CurrentControlSet" : subkeys ] ;
-    check-equal w32_getregnames : $(CurrentControlSet:L) : $(r4:L) ;
+    check-equal w32_getregnames : $(CurrentControlSet:L) : [ remove-policies $(r4:L) ] ;
 }
 
 }
