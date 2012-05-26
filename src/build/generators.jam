@@ -485,7 +485,7 @@ class generator
         {
             # Relative path is always relative to the source
             # directory. Retain it, so that users can have files
-            # with the same in two different subdirectories.
+            # with the same name in two different subdirectories.
             name = $(dir)/$(name) ;                
         }            
         return $(name) ;
@@ -607,7 +607,7 @@ class generator
             missing-types = ;
         }
 
-        # TODO: we should check that only one source type if create of
+        # TODO: we should check that only one source type is created if
         # 'only-one' is true.
 
         if $(missing-types)
