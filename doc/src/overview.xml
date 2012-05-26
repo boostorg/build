@@ -367,7 +367,7 @@ actions create-file-from-another
 }
 </programlisting>
         In this example, the rule checks if a certain build property is specified.
-        If so, it sets the variable <varname>OPIONS</varname> that is then used
+        If so, it sets the variable <varname>OPTIONS</varname> that is then used
         inside the action. Note that the variables set "on a target" will be
         visible only inside actions building that target, not globally. Were
         they set globally, using variable named <varname>OPTIONS</varname> in
