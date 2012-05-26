@@ -175,7 +175,7 @@ actions quietly updated ignore piecemeal together RmTemps
 actions unit-test
 {
     $(PATH_SETUP)
-    $(LAUNCHER) $(>) $(ARGS) && $(.MAKE_FILE) $(<)
+    $(LAUNCHER) "$(>)" $(ARGS) && $(.MAKE_FILE) "$(<)"
 }
 
 rule record-time ( target : source : start end user system )
@@ -185,9 +185,9 @@ rule record-time ( target : source : start end user system )
     SYSTEM_TIME on $(target) += $(src-string)$(system) ;
 }
 
-# Calling this rule requests that Boost Build time how long it taks to build the
-# 'source' target and display the results both on the standard output and in the
-# 'target' file.
+# Calling this rule requests that Boost Build time how long it takes to build
+# the 'source' target and display the results both on the standard output and in
+# the 'target' file.
 #
 rule time ( target : source : properties *  )
 {
