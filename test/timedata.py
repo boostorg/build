@@ -7,6 +7,20 @@
 
 # Tests the build step timing facilities.
 
+# TODO: Missing tests:
+# 1. 'time' target with a source target representing more than one virtual
+#    target. This happens in practice, e.g. when using the time rule on a msvc
+#    exe target whose generator actually constructs an EXE and a PDB target.
+#    When this is done - only te main virtual target's constructing action
+#    should be timed.
+# 2. 'time' target with a source target representing a virtual target that
+#    actually gets built by multiple actions run in sequence. In that case a
+#    separate timing result should be reported for each of those actions. This
+#    happens in practice, e.g. when using the time rule on a msvc exe target
+#    which first gets created as a result of some link action and then its
+#    manifest gets embedded inside it as a resource using a separate action
+#    (assuming an appropriate property has been set for this target - see the
+#    msvc module for details).
 
 import BoostBuild
 import re
