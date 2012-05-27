@@ -199,14 +199,14 @@ rule record-time ( target : source : start end user system )
 # the 'source' target and display the results both on the standard output and in
 # the 'target' file.
 #
-rule time ( target : source : properties *  )
+rule time ( target : sources + : properties *  )
 {
     # Set up rule for recording timing information.
-    __TIMING_RULE__ on $(source) = testing.record-time $(target) ;
+    __TIMING_RULE__ on $(sources) = testing.record-time $(target) ;
 
-    # Make sure that the source is rebuilt any time we need to retrieve that
+    # Make sure the sources get rebuilt any time we need to retrieve that
     # information.
-    REBUILDS $(target) : $(source) ;
+    REBUILDS $(target) : $(sources) ;
 }
 
 
