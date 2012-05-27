@@ -545,11 +545,21 @@ type.register TIME : time ;
 generators.register-standard testing.time : : TIME ;
 
 
+# Note that this rule may be called multiple times for a single target in case
+# there are multiple actions operating on the same target in sequence. One such
+# example are msvc exe targets first created by a linker action and then updated
+# with an embedded manifest file by a separate action.
 rule record-time ( target : source : start end user system )
 {
     local src-string = [$(source:G=:J=",")"] " ;
     USER_TIME on $(target) += $(src-string)$(user) ;
     SYSTEM_TIME on $(target) += $(src-string)$(system) ;
+
+    # We need the following variables because attempting to perform such
+    # variable expansion in actions would not work due to quotes getting treated
+    # as regular characters.
+    USER_TIME_SECONDS on $(target) += $(src-string)$(user)" seconds" ;
+    SYSTEM_TIME_SECONDS on $(target) += $(src-string)$(system)" seconds" ;
 }
 
 
@@ -576,6 +586,6 @@ actions time
     echo user: $(USER_TIME)
     echo system: $(SYSTEM_TIME)
 
-    echo user: $(USER_TIME)" seconds" > "$(<)"
-    echo system: $(SYSTEM_TIME)" seconds" >> "$(<)"
+    echo user: $(USER_TIME_SECONDS) > "$(<)"
+    echo system: $(SYSTEM_TIME_SECONDS) >> "$(<)"
 }

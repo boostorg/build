@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # Copyright 2005 David Abrahams
-# Copyright 2008 Jurko Gospodnetic
+# Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -104,8 +104,10 @@ time my-time : my-exe ;
     t.expect_addition("bin/$toolset/debug/my-exe.exe")
     t.expect_addition("bin/$toolset/debug/my-time.time")
 
-    t.expect_content_line("bin/$toolset/debug/my-time.time", "user: *")
-    t.expect_content_line("bin/$toolset/debug/my-time.time", "system: *")
+    t.expect_content_line("bin/$toolset/debug/my-time.time",
+        "user: *[0-9] seconds")
+    t.expect_content_line("bin/$toolset/debug/my-time.time",
+        "system: *[0-9] seconds")
 
     t.cleanup()
 
