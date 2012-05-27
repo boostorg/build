@@ -541,8 +541,11 @@ IMPORT $(__name__) : compile compile-fail run run-fail link link-fail
     : : compile compile-fail run run-fail link link-fail ;
 
 
+# This is a composing generator to support cases where a generator for the
+# specified target constructs other targets as well. One such example is msvc's
+# exe generator that constructs both EXE and PDB targets.
 type.register TIME : time ;
-generators.register-standard testing.time : : TIME ;
+generators.register-composing testing.time : : TIME ;
 
 
 # Note that this rule may be called multiple times for a single target in case
@@ -570,14 +573,14 @@ IMPORT testing : record-time : : testing.record-time ;
 # the 'source' target and display the results both on the standard output and in
 # the 'target' file.
 #
-rule time ( target : source : properties *  )
+rule time ( target : sources + : properties *  )
 {
     # Set up rule for recording timing information.
-    __TIMING_RULE__ on $(source) = testing.record-time $(target) ;
+    __TIMING_RULE__ on $(sources) = testing.record-time $(target) ;
 
-    # Make sure that the source is rebuilt any time we need to retrieve that
+    # Make sure the sources get rebuilt any time we need to retrieve that
     # information.
-    REBUILDS $(target) : $(source) ;
+    REBUILDS $(target) : $(sources) ;
 }
 
 
