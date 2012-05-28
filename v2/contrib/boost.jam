@@ -206,6 +206,8 @@ rule boost_std ( inc ? lib ? )
         <link>shared:<define>BOOST_GRAPH_DYN_LINK ;
     lib iostreams        : : : :
         <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK ;
+    lib locale    : : : :
+        <link>shared:<define>BOOST_LOCALE_DYN_LINK ;
     lib math_tr1         : : : :
         <link>shared:<define>BOOST_MATH_TR1_DYN_LINK ;
     lib math_tr1f         : : : :
@@ -223,6 +225,8 @@ rule boost_std ( inc ? lib ? )
     lib program_options  : : : : 
         <link>shared:<define>BOOST_PROGRAM_OPTIONS_DYN_LINK ;
     lib python           : : : : 
+        <link>shared:<define>BOOST_PYTHON_DYN_LINK ;
+    lib python3   : : : :
         <link>shared:<define>BOOST_PYTHON_DYN_LINK ;
     lib random           : : : :
         <link>shared:<define>BOOST_RANDOM_DYN_LINK ;
