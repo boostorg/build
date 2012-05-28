@@ -79,7 +79,7 @@
 # -----------------
 
 # Configure assuming QTDIR gives the installation prefix.
-using qt : /Users/asydorchuk/Downloads/Qt ;
+# using qt ;
 
 # Configure with an explicit installation prefix.
 # using qt : /usr/opt/qt ;
