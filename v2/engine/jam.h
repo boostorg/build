@@ -456,22 +456,9 @@ struct globs
                                  * default 0 for no limit.
                                  */
     int    dart;                /* output build and test results formatted for Dart */
-    int    maxbuf;              /* limit action output buffer to maxbuf kb's of data */
 };
 
 extern struct globs globs;
-
-#if defined(unix) || defined(__unix)
- 
-struct terminated_child
-{
-    pid_t  pid;
-    int    status;
-};
-
-extern struct terminated_child terminated_children[MAXJOBS];
-
-#endif
 
 #define DEBUG_MAKE     ( globs.debug[ 1 ] )   /* show actions when executed */
 #define DEBUG_MAKEQ    ( globs.debug[ 2 ] )   /* show even quiet actions */
@@ -505,13 +492,5 @@ extern struct terminated_child terminated_children[MAXJOBS];
 
 /* They also get the profile functions. */
 #include "debug.h"
-
-/* Handle child process termination */
-#if defined(unix) || defined(__unix)
-#include <signal.h>
-extern sigset_t empty_sigmask;
-extern volatile sig_atomic_t child_events;
-void child_sig_handler(int x);
-#endif
 
 #endif
