@@ -102,8 +102,6 @@
  */
 
 
-#include "limits.h"
-
 #include "jam.h"
 #include "option.h"
 #include "patchlevel.h"
@@ -136,36 +134,9 @@
 #endif
 
 /* And UNIX for this. */
-#if defined(unix) || defined(__unix)
+#ifdef unix
     #include <sys/utsname.h>
-    #include <sys/wait.h>
     #include <signal.h>
-
-     #include <sys/utsname.h>
-     #include <signal.h>
-
-     sigset_t empty_sigmask;
-     volatile sig_atomic_t child_events = 0;
-     struct terminated_child terminated_children[MAXJOBS] = {{ 0 }};
-
-     void child_sig_handler(int x) {
-         pid_t pid;
-         int i, status;
-         pid = waitpid(-1, &status, WNOHANG);
-         if (0 < pid) {
-           /* save terminated child pid and status */
-           for (i=0; i<MAXJOBS; ++i) {
-             /* find first available slot */
-             if (terminated_children[i].pid == 0) {
-                 terminated_children[i].pid = pid;
-                 terminated_children[i].status = status;
-                 break;
-             }
-           }
-         }
-         ++child_events;
-         signal(SIGCHLD, child_sig_handler);
-     }
 #endif
 
 struct globs globs =
@@ -181,9 +152,7 @@ struct globs globs =
     { 0, 1 },   /* debug ... */
 #endif
     0,          /* output commands, not run them */
-    0,          /* action timeout */
-    0,          
-    INT_MAX     /* default is to accept all action output */
+    0           /* action timeout */
 };
 
 /* Symbols to be defined as true for use in Jambase. */
@@ -261,20 +230,6 @@ int main( int argc, char * * argv, char * * arg_environ )
     char            const * progname = argv[0];
     module_t              * environ_module;
 
-#if defined(unix) || defined(__unix)
-    sigset_t sigmask;
-    struct sigaction sa;
-
-    sigemptyset(&sigmask);
-    sigaddset(&sigmask, SIGCHLD);
-    sigprocmask(SIG_BLOCK, &sigmask, NULL);
-    sa.sa_flags = 0;
-    sa.sa_handler = child_sig_handler;
-    sigemptyset(&sa.sa_mask);
-    sigaction(SIGCHLD, &sa, NULL);
-    sigemptyset(&empty_sigmask);
-#endif
-
     saved_argv0 = argv[0];
 
     BJAM_MEM_INIT();
@@ -286,7 +241,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     --argc;
     ++argv;
 
-    if ( getoptions( argc, argv, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
+    if ( getoptions( argc, argv, "-:l:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
     {
         printf( "\nusage: %s [ options ] targets...\n\n", progname );
 
@@ -296,7 +251,6 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* printf( "-g      Build from newest sources first.\n" ); */
         printf( "-jx     Run up to x shell commands concurrently.\n" );
         printf( "-lx     Limit actions to x number of seconds after which they are stopped.\n" );
-        printf( "-mx     Limit action output buffer to x kb's of data, after which action output is read and ignored.\n" );
         printf( "-n      Don't actually execute the updating actions.\n" );
         printf( "-ox     Write the updating actions to file x.\n" );
         printf( "-px     x=0, pipes action stdout and stderr merged into action output.\n" );
@@ -363,9 +317,6 @@ int main( int argc, char * * argv, char * * arg_environ )
 
     if ( ( s = getoptval( optv, 'l', 0 ) ) )
         globs.timeout = atoi( s );
-
-    if ( ( s = getoptval( optv, 'm', 0 ) ) )
-        globs.maxbuf = atoi( s ) * 1024;
 
     /* Turn on/off debugging */
     for ( n = 0; ( s = getoptval( optv, 'd', n ) ); ++n )
@@ -445,7 +396,7 @@ int main( int argc, char * * argv, char * * arg_environ )
                    VAR_SET );
 
         /* Set JAMUNAME. */
-#if defined(unix) || defined(__unix)
+#ifdef unix
         {
             struct utsname u;
 
