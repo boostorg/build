@@ -152,7 +152,8 @@ struct globs globs =
     { 0, 1 },   /* debug ... */
 #endif
     0,          /* output commands, not run them */
-    0           /* action timeout */
+    0,          /* action timeout */
+    0           /* maximum buffer size zero is all output */
 };
 
 /* Symbols to be defined as true for use in Jambase. */
@@ -241,7 +242,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     --argc;
     ++argv;
 
-    if ( getoptions( argc, argv, "-:l:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
+    if ( getoptions( argc, argv, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
     {
         printf( "\nusage: %s [ options ] targets...\n\n", progname );
 
@@ -251,6 +252,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* printf( "-g      Build from newest sources first.\n" ); */
         printf( "-jx     Run up to x shell commands concurrently.\n" );
         printf( "-lx     Limit actions to x number of seconds after which they are stopped.\n" );
+        printf( "-mx     Maximum target output saved (kb), default is to save all output.\n" );
         printf( "-n      Don't actually execute the updating actions.\n" );
         printf( "-ox     Write the updating actions to file x.\n" );
         printf( "-px     x=0, pipes action stdout and stderr merged into action output.\n" );
@@ -317,6 +319,9 @@ int main( int argc, char * * argv, char * * arg_environ )
 
     if ( ( s = getoptval( optv, 'l', 0 ) ) )
         globs.timeout = atoi( s );
+
+    if ( ( s = getoptval( optv, 'm', 0 ) ) )
+        globs.max_buf = atoi( s ) * 1024;  /* convert to kb */
 
     /* Turn on/off debugging */
     for ( n = 0; ( s = getoptval( optv, 'd', n ) ); ++n )
