@@ -456,6 +456,7 @@ struct globs
                                  * default 0 for no limit.
                                  */
     int    dart;                /* output build and test results formatted for Dart */
+    int    max_buf;             /* maximum amount of output saved from target (kb) */
 };
 
 extern struct globs globs;

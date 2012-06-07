@@ -88,6 +88,7 @@ static struct
     char   *target;           /* buffer to hold action and target invoked */
     char   *command;          /* buffer to hold command being invoked */
     char   *buffer[2];        /* buffer to hold stdout and stderr, if any */
+    int     buf_size[2];      /* size of buffer (bytes) */
     void    (*func)( void *closure, int status, timing_info*, const char *, const char * );
     void   *closure;
     time_t  start_dt;         /* start of command timestamp */
@@ -353,18 +354,31 @@ int read_descriptor( int i, int s )
         if  ( !cmdtab[ i ].buffer[ s ] )
         {
             /* Never been allocated. */
-            cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( ret + 1 );
-            memcpy( cmdtab[ i ].buffer[ s ], buffer, ret + 1 );
+            if (ret <= globs.max_buf || 0 == globs.max_buf) {
+                cmdtab[ i ].buf_size[ s ] = ret + 1;
+                cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( ret + 1 );
+                memcpy( cmdtab[ i ].buffer[ s ], buffer, ret + 1 );
+            }
+            else {
+                ret = globs.max_buf;
+                buffer[ret] = 0;
+                cmdtab[ i ].buf_size[ s ] = ret + 1;
+                cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( ret + 1 );
+                memcpy( cmdtab[ i ].buffer[ s ], buffer, ret + 1);
+            }
         }
         else
         {
             /* Previously allocated. */
-            char * tmp = cmdtab[ i ].buffer[ s ];
-            len = strlen( tmp );
-            cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( len + ret + 1 );
-            memcpy( cmdtab[ i ].buffer[ s ], tmp, len );
-            memcpy( cmdtab[ i ].buffer[ s ] + len, buffer, ret + 1 );
-            BJAM_FREE( tmp );
+            if (cmdtab[ i ].buf_size[ s ] < globs.max_buf || 0 == globs.max_buf) {
+                char * tmp = cmdtab[ i ].buffer[ s ];
+                len = cmdtab[ i ].buf_size[ s ];
+                cmdtab[ i ].buf_size[ s ] = len + ret + 1;
+                cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( len + ret + 1 );
+                memcpy( cmdtab[ i ].buffer[ s ], tmp, len );
+                memcpy( cmdtab[ i ].buffer[ s ] + len, buffer, ret + 1 );
+                BJAM_FREE( tmp );
+            }
         }
     }
 
@@ -543,9 +557,11 @@ int exec_wait()
 
                         BJAM_FREE( cmdtab[ i ].buffer[ OUT ] );
                         cmdtab[ i ].buffer[ OUT ] = 0;
+                        cmdtab[ i ].buf_size[ OUT ] = 0;
 
                         BJAM_FREE( cmdtab[ i ].buffer[ ERR ] );
                         cmdtab[ i ].buffer[ ERR ] = 0;
+                        cmdtab[ i ].buf_size[ ERR ] = 0;
 
                         BJAM_FREE( cmdtab[ i ].command );
                         cmdtab[ i ].command = 0;
