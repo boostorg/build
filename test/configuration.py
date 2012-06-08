@@ -1,14 +1,14 @@
 #!/usr/bin/python
 
-# Copyright 2008 Jurko Gospodnetic
+# Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Test that Boost Build configuration file handling.
 
 import BoostBuild
+import os
 import os.path
-import string
 
 
 ################################################################################
@@ -28,6 +28,7 @@ def test_user_configuration():
 
     implicitConfigLoadMessage = "notice: Loading user-config configuration file: *"
     explicitConfigLoadMessage = "notice: Loading explicitly specified user configuration file:"
+    disabledConfigLoadMessage = "notice: User configuration file loading explicitly disabled."
     testMessage = "_!_!_!_!_!_!_!_!_ %s _!_!_!_!_!_!_!_!_"
     toolsetName = "__myDummyToolset__"
     subdirName = "ASubDirectory"
@@ -48,62 +49,145 @@ feature.extend toolset : %s ;
 rule init ( ) { }
 """ % toolsetName )
 
-    # Python version of same dummy toolset.
+    # Python version of the same dummy toolset.
     t.write(toolsetName + ".py", """
 from b2.build import feature
 feature.extend('toolset', ['%s'])
 def init(): pass
 """ % toolsetName )
-    
+
     t.write("jamroot.jam", "using %s ;" % toolsetName)
 
-    t.run_build_system()
+    def test(env, *args, **kwargs):
+        env_name = "BOOST_BUILD_USER_CONFIG"
+        previous_env = os.environ.pop(env_name, None)
+        if env is not None:
+            os.environ[env_name] = env
+        try:
+            t.run_build_system(*args, **kwargs)
+        finally:
+            if previous_env is None:
+                os.environ.pop(env_name, None)
+            else:
+                os.environ[env_name] = previous_env
+
+    test(None)
     t.expect_output_line(explicitConfigLoadMessage, False)
+    t.expect_output_line(disabledConfigLoadMessage, False)
     t.expect_output_line(testMessage % configFileNames[0], False)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    t.run_build_system("--user-config=")
+    test(None, "--user-config=")
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
+    t.expect_output_line(disabledConfigLoadMessage)
     t.expect_output_line(testMessage % configFileNames[0], False)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    t.run_build_system('--user-config=""')
+    test(None, '--user-config=""')
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
+    t.expect_output_line(disabledConfigLoadMessage)
     t.expect_output_line(testMessage % configFileNames[0], False)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    t.run_build_system('--user-config="%s"' % configFileNames[0])
+    test(None, '--user-config="%s"' % configFileNames[0])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
-    t.expect_output_line(testMessage % configFileNames[0]       )
+    t.expect_output_line(disabledConfigLoadMessage, False)
+    t.expect_output_line(testMessage % configFileNames[0])
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    t.run_build_system('--user-config="%s"' % configFileNames[2])
+    test(None, '--user-config="%s"' % configFileNames[2])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
+    t.expect_output_line(disabledConfigLoadMessage, False)
     t.expect_output_line(testMessage % configFileNames[0], False)
     t.expect_output_line(testMessage % configFileNames[1], False)
-    t.expect_output_line(testMessage % configFileNames[2]       )
+    t.expect_output_line(testMessage % configFileNames[2])
 
-    t.run_build_system('--user-config="%s"' % os.path.abspath(configFileNames[1]))
+    test(None, '--user-config="%s"' % os.path.abspath(configFileNames[1]))
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
+    t.expect_output_line(disabledConfigLoadMessage, False)
     t.expect_output_line(testMessage % configFileNames[0], False)
-    t.expect_output_line(testMessage % configFileNames[1]       )
+    t.expect_output_line(testMessage % configFileNames[1])
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    t.run_build_system('--user-config="%s"' % os.path.abspath(configFileNames[2]))
+    test(None, '--user-config="%s"' % os.path.abspath(configFileNames[2]))
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
+    t.expect_output_line(disabledConfigLoadMessage, False)
     t.expect_output_line(testMessage % configFileNames[0], False)
     t.expect_output_line(testMessage % configFileNames[1], False)
-    t.expect_output_line(testMessage % configFileNames[2]       )
+    t.expect_output_line(testMessage % configFileNames[2])
+
+    test("")
+    t.expect_output_line(explicitConfigLoadMessage, False)
+    t.expect_output_line(disabledConfigLoadMessage, False)
+    t.expect_output_line(testMessage % configFileNames[0], False)
+    t.expect_output_line(testMessage % configFileNames[1], False)
+    t.expect_output_line(testMessage % configFileNames[2], False)
+
+    test('""')
+    t.expect_output_line(implicitConfigLoadMessage, False)
+    t.expect_output_line(explicitConfigLoadMessage, False)
+    t.expect_output_line(disabledConfigLoadMessage)
+    t.expect_output_line(testMessage % configFileNames[0], False)
+    t.expect_output_line(testMessage % configFileNames[1], False)
+    t.expect_output_line(testMessage % configFileNames[2], False)
+
+    test(configFileNames[1])
+    t.expect_output_line(implicitConfigLoadMessage, False)
+    t.expect_output_line(explicitConfigLoadMessage)
+    t.expect_output_line(disabledConfigLoadMessage, False)
+    t.expect_output_line(testMessage % configFileNames[0], False)
+    t.expect_output_line(testMessage % configFileNames[1])
+    t.expect_output_line(testMessage % configFileNames[2], False)
+
+    test(configFileNames[1], '--user-config=""')
+    t.expect_output_line(implicitConfigLoadMessage, False)
+    t.expect_output_line(explicitConfigLoadMessage, False)
+    t.expect_output_line(disabledConfigLoadMessage)
+    t.expect_output_line(testMessage % configFileNames[0], False)
+    t.expect_output_line(testMessage % configFileNames[1], False)
+    t.expect_output_line(testMessage % configFileNames[2], False)
+
+    test(configFileNames[1], '--user-config="%s"' % configFileNames[0])
+    t.expect_output_line(implicitConfigLoadMessage, False)
+    t.expect_output_line(explicitConfigLoadMessage)
+    t.expect_output_line(disabledConfigLoadMessage, False)
+    t.expect_output_line(testMessage % configFileNames[0])
+    t.expect_output_line(testMessage % configFileNames[1], False)
+    t.expect_output_line(testMessage % configFileNames[2], False)
+
+    test("", '--user-config="%s"' % configFileNames[0])
+    t.expect_output_line(implicitConfigLoadMessage, False)
+    t.expect_output_line(explicitConfigLoadMessage)
+    t.expect_output_line(disabledConfigLoadMessage, False)
+    t.expect_output_line(testMessage % configFileNames[0])
+    t.expect_output_line(testMessage % configFileNames[1], False)
+    t.expect_output_line(testMessage % configFileNames[2], False)
+
+    test("\"\"", '--user-config="%s"' % configFileNames[0])
+    t.expect_output_line(implicitConfigLoadMessage, False)
+    t.expect_output_line(explicitConfigLoadMessage)
+    t.expect_output_line(disabledConfigLoadMessage, False)
+    t.expect_output_line(testMessage % configFileNames[0])
+    t.expect_output_line(testMessage % configFileNames[1], False)
+    t.expect_output_line(testMessage % configFileNames[2], False)
+
+    test("invalid", '--user-config="%s"' % configFileNames[0])
+    t.expect_output_line(implicitConfigLoadMessage, False)
+    t.expect_output_line(explicitConfigLoadMessage)
+    t.expect_output_line(disabledConfigLoadMessage, False)
+    t.expect_output_line(testMessage % configFileNames[0])
+    t.expect_output_line(testMessage % configFileNames[1], False)
+    t.expect_output_line(testMessage % configFileNames[2], False)
 
     t.cleanup()
 
