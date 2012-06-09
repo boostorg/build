@@ -348,29 +348,24 @@ int read_descriptor( int i, int s )
     int  len;
     char buffer[BUFSIZ];
 
-    while ( 0 < ( ret = fread( buffer, sizeof(char),  BUFSIZ-1, cmdtab[ i ].stream[ s ] ) ) )
+    while ( 0 < ( ret = fread( buffer, sizeof(char), BUFSIZ-1, cmdtab[ i ].stream[ s ] ) ) )
     {
-        buffer[ret] = 0;
-        if  ( !cmdtab[ i ].buffer[ s ] )
+        buffer[ ret ] = 0;
+        if ( !cmdtab[ i ].buffer[ s ] )
         {
             /* Never been allocated. */
-            if (ret <= globs.max_buf || 0 == globs.max_buf) {
-                cmdtab[ i ].buf_size[ s ] = ret + 1;
-                cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( ret + 1 );
-                memcpy( cmdtab[ i ].buffer[ s ], buffer, ret + 1 );
-            }
-            else {
+            if ( ret > globs.max_buf && 0 != globs.max_buf ) {
                 ret = globs.max_buf;
-                buffer[ret] = 0;
-                cmdtab[ i ].buf_size[ s ] = ret + 1;
-                cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( ret + 1 );
-                memcpy( cmdtab[ i ].buffer[ s ], buffer, ret + 1);
+                buffer[ ret ] = 0;
             }
+            cmdtab[ i ].buf_size[ s ] = ret + 1;
+            cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( ret + 1 );
+            memcpy( cmdtab[ i ].buffer[ s ], buffer, ret + 1 );
         }
         else
         {
             /* Previously allocated. */
-            if (cmdtab[ i ].buf_size[ s ] < globs.max_buf || 0 == globs.max_buf) {
+            if ( cmdtab[ i ].buf_size[ s ] < globs.max_buf || 0 == globs.max_buf ) {
                 char * tmp = cmdtab[ i ].buffer[ s ];
                 len = cmdtab[ i ].buf_size[ s ];
                 cmdtab[ i ].buf_size[ s ] = len + ret + 1;
@@ -382,7 +377,7 @@ int read_descriptor( int i, int s )
         }
     }
 
-    return feof(cmdtab[ i ].stream[ s ]);
+    return feof( cmdtab[ i ].stream[ s ] );
 }
 
 
