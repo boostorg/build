@@ -43,14 +43,14 @@ def test_user_configuration():
 
     # Prepare a dummy toolset so we do not get errors in case the default one is
     # not found.
-    t.write(toolsetName + ".jam", """
+    t.write(toolsetName + ".jam", """\
 import feature ;
 feature.extend toolset : %s ;
 rule init ( ) { }
 """ % toolsetName )
 
     # Python version of the same dummy toolset.
-    t.write(toolsetName + ".py", """
+    t.write(toolsetName + ".py", """\
 from b2.build import feature
 feature.extend('toolset', ['%s'])
 def init(): pass
