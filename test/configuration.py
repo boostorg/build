@@ -56,20 +56,33 @@ feature.extend('toolset', ['%s'])
 def init(): pass
 """ % toolsetName )
 
-    t.write("jamroot.jam", "using %s ;" % toolsetName)
+    t.write("jamroot.jam", """\
+local test-index = [ MATCH ---test-index---=(.*) : [ modules.peek : ARGV ] ] ;
+ECHO test-index: $(test-index:E=(unknown)) ;
+using %s ;""" % toolsetName)
 
-    def test(env, *args, **kwargs):
-        env_name = "BOOST_BUILD_USER_CONFIG"
-        previous_env = os.environ.pop(env_name, None)
-        if env is not None:
-            os.environ[env_name] = env
-        try:
-            t.run_build_system(*args, **kwargs)
-        finally:
-            if previous_env is None:
-                os.environ.pop(env_name, None)
-            else:
-                os.environ[env_name] = previous_env
+    class CountingTester:
+        def __init__(self):
+            self.__test_counter = 0
+
+        def __call__(self, env, extra_args="", *args, **kwargs):
+            env_name = "BOOST_BUILD_USER_CONFIG"
+            previous_env = os.environ.pop(env_name, None)
+            if env is not None:
+                os.environ[env_name] = env
+            try:
+                self.__test_counter += 1
+                if extra_args:
+                    extra_args += " "
+                extra_args += "---test-index---={}".format(self.__test_counter)
+                t.run_build_system(extra_args, *args, **kwargs)
+            finally:
+                if previous_env is None:
+                    os.environ.pop(env_name, None)
+                else:
+                    os.environ[env_name] = previous_env
+
+    test = CountingTester()
 
     test(None)
     t.expect_output_line(explicitConfigLoadMessage, False)
