@@ -477,12 +477,16 @@ int exec_wait()
             /* select() will wait until: i/o on a descriptor, a signal, or we
              * time out.
              */
-            ret = select( fd_max + 1, &fds, 0, 0, &tv );
+            while ((ret = select( fd_max + 1, &fds, 0, 0, &tv )) == -1) {
+                if (errno != EINTR) break;
+            }
         }
         else
         {
             /* select() will wait until i/o on a descriptor or a signal. */
-            ret = select( fd_max + 1, &fds, 0, 0, 0 );
+            while ((ret = select( fd_max + 1, &fds, 0, 0, 0 )) == -1) {
+                if (errno != EINTR) break;
+            }
         }
 
         if ( 0 < ret )
@@ -507,7 +511,9 @@ int exec_wait()
                         close_streams( i, ERR );
 
                     /* Reap the child and release resources. */
-                    pid = waitpid( cmdtab[ i ].pid, &status, 0 );
+                    while ((pid = waitpid( cmdtab[ i ].pid, &status, 0 )) == -1) {
+                      if (errno != EINTR) break;
+                    }
 
                     if ( pid == cmdtab[ i ].pid )
                     {
