@@ -406,7 +406,7 @@ class TestCmd:
             # which takes a string parameter and so needs its executable quoted
             # in case its name contains spaces.
             for i in xrange(len(cmd)):
-                if '"' in cmd[i]:
+                if not cmd[i] or '"' in cmd[i]:
                     pass
                 elif cmd[i][-1] == '\\':
                     cmd[i] = '"' + cmd[i] + '\\"'
