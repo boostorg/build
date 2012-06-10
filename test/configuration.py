@@ -18,7 +18,19 @@ import os.path
 #
 ###############################################################################
 
+#ttt - temporarily added this wrapper function to help with debugging failed
+# test runs on different platforms (Jurko)
 def test_user_configuration():
+    try:
+        test_user_configuration_impl()
+    except:
+        import sys
+        e = sys.exc_value
+        BoostBuild.annotation("failure", "debugging unhandled exception - %s "
+            "- %s" % (e.__class__.__name__, str(e)))
+        del e
+
+def test_user_configuration_impl():
     """Test Boost Build user configuration handling. Both relative and absolute
     path handling is tested.
     """
