@@ -57,24 +57,26 @@ def init(): pass
 """ % toolsetName )
 
     t.write("jamroot.jam", """\
-local test-index = [ MATCH ---test-index---=(.*) : [ modules.peek : ARGV ] ] ;
+local test-index = [ MATCH ---test-id---=(.*) : [ modules.peek : ARGV ] ] ;
 ECHO test-index: $(test-index:E=(unknown)) ;
 using %s ;""" % toolsetName)
 
-    class CountingTester:
-        def __init__(self):
-            self.__test_counter = 0
+    class LocalTester:
+        def __init__(self, tester):
+            self.__tester = tester
+            self.__test_ids = []
 
-        def __call__(self, env, extra_args="", *args, **kwargs):
+        def __call__(self, test_id, env, extra_args="", *args, **kwargs):
+            if env == "" and not canSetEmptyEnvironmentVariable:
+                self.__assertionFailure("Can not set empty environment "
+                    "variables on this platform.")
+            self.__registerTestId(str(test_id))
+            extra_args += " ---test-id---={}".format(test_id)
             env_name = "BOOST_BUILD_USER_CONFIG"
             previous_env = os.environ.pop(env_name, None)
             if env is not None:
                 os.environ[env_name] = env
             try:
-                self.__test_counter += 1
-                if extra_args:
-                    extra_args += " "
-                extra_args += "---test-index---={}".format(self.__test_counter)
                 t.run_build_system(extra_args, *args, **kwargs)
             finally:
                 if previous_env is None:
@@ -82,16 +84,27 @@ using %s ;""" % toolsetName)
                 else:
                     os.environ[env_name] = previous_env
 
-    test = CountingTester()
+        def __assertionFailure(self, message):
+            BoostBuild.annotation("failure", "Internal test assertion failure "
+                "- {}".format(message))
+            self.__tester.fail_test(1)
 
-    test(None)
+        def __registerTestId(self, test_id):
+            if test_id in self.__test_ids:
+                self.__assertionFailure("Multiple test cases encountered "
+                    "using the same test id '{}'.".format(test_id))
+            self.__test_ids.append(test_id)
+
+    test = LocalTester(t)
+
+    test(1, None)
     t.expect_output_line(explicitConfigLoadMessage, False)
     t.expect_output_line(disabledConfigLoadMessage, False)
     t.expect_output_line(testMessage % configFileNames[0], False)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(None, "--user-config=")
+    test(2, None, "--user-config=")
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
     t.expect_output_line(disabledConfigLoadMessage)
@@ -99,7 +112,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(None, '--user-config=""')
+    test(3, None, '--user-config=""')
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
     t.expect_output_line(disabledConfigLoadMessage)
@@ -107,7 +120,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(None, '--user-config="%s"' % configFileNames[0])
+    test(4, None, '--user-config="%s"' % configFileNames[0])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -115,7 +128,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(None, '--user-config="%s"' % configFileNames[2])
+    test(5, None, '--user-config="%s"' % configFileNames[2])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -123,7 +136,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2])
 
-    test(None, '--user-config="%s"' % os.path.abspath(configFileNames[1]))
+    test(6, None, '--user-config="%s"' % os.path.abspath(configFileNames[1]))
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -131,7 +144,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1])
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(None, '--user-config="%s"' % os.path.abspath(configFileNames[2]))
+    test(7, None, '--user-config="%s"' % os.path.abspath(configFileNames[2]))
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -139,14 +152,16 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2])
 
-    test("")
-    t.expect_output_line(explicitConfigLoadMessage, False)
-    t.expect_output_line(disabledConfigLoadMessage, False)
-    t.expect_output_line(testMessage % configFileNames[0], False)
-    t.expect_output_line(testMessage % configFileNames[1], False)
-    t.expect_output_line(testMessage % configFileNames[2], False)
+    if canSetEmptyEnvironmentVariable:
+        test(8, "")
+        t.expect_output_line(implicitConfigLoadMessage, False)
+        t.expect_output_line(explicitConfigLoadMessage, False)
+        t.expect_output_line(disabledConfigLoadMessage, True)
+        t.expect_output_line(testMessage % configFileNames[0], False)
+        t.expect_output_line(testMessage % configFileNames[1], False)
+        t.expect_output_line(testMessage % configFileNames[2])
 
-    test('""')
+    test(9, '""')
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
     t.expect_output_line(disabledConfigLoadMessage)
@@ -154,7 +169,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(configFileNames[1])
+    test(10, configFileNames[1])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -162,7 +177,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1])
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(configFileNames[1], '--user-config=""')
+    test(11, configFileNames[1], '--user-config=""')
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
     t.expect_output_line(disabledConfigLoadMessage)
@@ -170,7 +185,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(configFileNames[1], '--user-config="%s"' % configFileNames[0])
+    test(12, configFileNames[1], '--user-config="%s"' % configFileNames[0])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -178,7 +193,16 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test("", '--user-config="%s"' % configFileNames[0])
+    if canSetEmptyEnvironmentVariable:
+        test(13, "", '--user-config="%s"' % configFileNames[0])
+        t.expect_output_line(implicitConfigLoadMessage, False)
+        t.expect_output_line(explicitConfigLoadMessage)
+        t.expect_output_line(disabledConfigLoadMessage, False)
+        t.expect_output_line(testMessage % configFileNames[0])
+        t.expect_output_line(testMessage % configFileNames[1], False)
+        t.expect_output_line(testMessage % configFileNames[2], False)
+
+    test(14, '""', '--user-config="%s"' % configFileNames[0])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -186,15 +210,7 @@ using %s ;""" % toolsetName)
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test("\"\"", '--user-config="%s"' % configFileNames[0])
-    t.expect_output_line(implicitConfigLoadMessage, False)
-    t.expect_output_line(explicitConfigLoadMessage)
-    t.expect_output_line(disabledConfigLoadMessage, False)
-    t.expect_output_line(testMessage % configFileNames[0])
-    t.expect_output_line(testMessage % configFileNames[1], False)
-    t.expect_output_line(testMessage % configFileNames[2], False)
-
-    test("invalid", '--user-config="%s"' % configFileNames[0])
+    test(15, "invalid", '--user-config="%s"' % configFileNames[0])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -205,11 +221,33 @@ using %s ;""" % toolsetName)
     t.cleanup()
 
 
+def _canSetEmptyEnvironmentVariable():
+    """
+      Unfortunately different OSs (and possibly Python implementations as well)
+    have different interpretations of what it means to set an evironment
+    variable to an empty string. Some (e.g. Windows) interpret it as unsetting
+    the variable and some (e.g. AIX or Darwin) actually set it to an empty
+    string.
+
+    """
+    dummyName = "UGNABUNGA_FOO_BAR_BAZ_FEE_FAE_FOU_FAM"
+    original = os.getenv(dummyName)
+    os.putenv(dummyName, "")
+    result = os.getenv(dummyName) == ""
+    if original is None:
+        os.unsetenv(dummyName)
+    else:
+        os.putenv(dummyName)
+    return result
+
+
 ################################################################################
 #
 # main()
 # ------
 #
 ################################################################################
+
+canSetEmptyEnvironmentVariable = _canSetEmptyEnvironmentVariable()
 
 test_user_configuration()
