@@ -11,12 +11,12 @@ import os
 import os.path
 
 
-################################################################################
+###############################################################################
 #
 # test_user_configuration()
 # -------------------------
 #
-################################################################################
+###############################################################################
 
 def test_user_configuration():
     """Test Boost Build user configuration handling. Both relative and absolute
@@ -37,12 +37,12 @@ def test_user_configuration():
 
     for configFileName in configFileNames:
         message = "ECHO \"%s\" ;" % testMessage % configFileName
-        # We need to double any backslashes in the message or Jam will interpret
-        # them as escape characters.
+        # We need to double any backslashes in the message or Jam will
+        # interpret them as escape characters.
         t.write(configFileName, message.replace("\\", "\\\\"))
 
-    # Prepare a dummy toolset so we do not get errors in case the default one is
-    # not found.
+    # Prepare a dummy toolset so we do not get errors in case the default one
+    # is not found.
     t.write(toolsetName + ".jam", """\
 import feature ;
 feature.extend toolset : %s ;
@@ -66,6 +66,11 @@ using %s ;""" % toolsetName)
             self.__tester = tester
             self.__test_ids = []
 
+        def __assertionFailure(self, message):
+            BoostBuild.annotation("failure", "Internal test assertion failure "
+                "- {}".format(message))
+            self.__tester.fail_test(1)
+
         def __call__(self, test_id, env, extra_args="", *args, **kwargs):
             #ttt - temporarily commented out to make sure all the other tests pass (Jurko)
             #if env == "" and not canSetEmptyEnvironmentVariable:
@@ -78,17 +83,12 @@ using %s ;""" % toolsetName)
             if env is not None:
                 os.environ[env_name] = env
             try:
-                t.run_build_system(extra_args, *args, **kwargs)
+                self.__tester.run_build_system(extra_args, *args, **kwargs)
             finally:
                 if previous_env is None:
                     os.environ.pop(env_name, None)
                 else:
                     os.environ[env_name] = previous_env
-
-        def __assertionFailure(self, message):
-            BoostBuild.annotation("failure", "Internal test assertion failure "
-                "- {}".format(message))
-            self.__tester.fail_test(1)
 
         def __registerTestId(self, test_id):
             if test_id in self.__test_ids:
