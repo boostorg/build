@@ -367,7 +367,7 @@ int read_descriptor( int i, int s )
             /* Previously allocated. */
             if ( cmdtab[ i ].buf_size[ s ] < globs.max_buf || 0 == globs.max_buf ) {
                 char * tmp = cmdtab[ i ].buffer[ s ];
-                len = cmdtab[ i ].buf_size[ s ];
+                len = cmdtab[ i ].buf_size[ s ] - 1;
                 cmdtab[ i ].buf_size[ s ] = len + ret + 1;
                 cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( len + ret + 1 );
                 memcpy( cmdtab[ i ].buffer[ s ], tmp, len );
