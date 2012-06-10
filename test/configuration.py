@@ -25,10 +25,14 @@ def test_user_configuration():
         test_user_configuration_impl()
     except:
         import sys
-        e = sys.exc_value
         BoostBuild.annotation("failure", "debugging unhandled exception - %s "
-            "- %s" % (e.__class__.__name__, str(e)))
-        del e
+            "- %s" % (sys.exc_value.__class__.__name__, str(sys.exc_value)))
+        # Any runaway exceptions other than SystemExit might be the cause for
+        # this test breaking the whole test run on some platforms so we report
+        # them and raise a SystemExit instead.
+        if sys.exc_value is not SystemExit:
+            sys.exit(-99)
+        raise
 
 def test_user_configuration_impl():
     """Test Boost Build user configuration handling. Both relative and absolute
