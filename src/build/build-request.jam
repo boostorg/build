@@ -153,7 +153,7 @@ rule from-command-line ( command-line * )
                 properties += [ convert-command-line-element $(e) :
                     $(feature-space) ] ;
             }
-            else
+            else if $(e)
             {
                 targets += $(e) ;
             }
