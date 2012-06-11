@@ -84,7 +84,7 @@ using %s ;""" % toolsetName)
 
         def __assertionFailure(self, message):
             BoostBuild.annotation("failure", "Internal test assertion failure "
-                "- {}".format(message))
+                "- %s" % message)
             self.__tester.fail_test(1)
 
         def __call__(self, test_id, env, extra_args="", *args, **kwargs):
@@ -93,7 +93,7 @@ using %s ;""" % toolsetName)
             #    self.__assertionFailure("Can not set empty environment "
             #        "variables on this platform.")
             self.__registerTestId(str(test_id))
-            extra_args += " ---test-id---={}".format(test_id)
+            extra_args += " ---test-id---=%s" % test_id
             env_name = "BOOST_BUILD_USER_CONFIG"
             previous_env = os.environ.pop(env_name, None)
             if env is not None:
@@ -109,7 +109,7 @@ using %s ;""" % toolsetName)
         def __registerTestId(self, test_id):
             if test_id in self.__test_ids:
                 self.__assertionFailure("Multiple test cases encountered "
-                    "using the same test id '{}'.".format(test_id))
+                    "using the same test id '%s'." % test_id)
             self.__test_ids.append(test_id)
 
     test = LocalTester(t)
