@@ -83,7 +83,6 @@ def run_tests(critical_tests, other_tests):
                 print("PASSED")
             else:
                 print("FAILED")
-            BoostBuild.clear_annotations()
         else:
             rs = "succeed"
             if not passed:
@@ -99,6 +98,7 @@ def run_tests(critical_tests, other_tests):
 </test-log>
 """
         sys.stdout.flush()  # Makes testing under emacs more entertaining.
+        BoostBuild.clear_annotations()
 
     # Erase the file on success.
     if failures_count == 0:
