@@ -239,7 +239,7 @@ def _canSetEmptyEnvironmentVariable():
     if original is None:
         os.unsetenv(dummyName)
     else:
-        os.putenv(dummyName)
+        os.putenv(dummyName, original)
     return result
 
 
