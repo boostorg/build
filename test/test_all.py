@@ -59,9 +59,15 @@ def run_tests(critical_tests, other_tests):
         try:
             __import__(test)
             passed = 1
+        except KeyboardInterrupt:
+            """This allows us to abort the testing manually using Ctrl-C."""
+            raise
         except SystemExit:
             """This is the regular way our test scripts are supposed to report
             test failures."""
+        except:
+            BoostBuild.annotation("failure - unhandled exception", "%s - %s" %
+                (sys.exc_value.__class__.__name__, sys.exc_value))
 
         if passed:
             pass_count += 1
