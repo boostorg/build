@@ -58,6 +58,14 @@ def set_defer_annotations(n):
     defer_annotations = n
 
 
+def annotate_stack_trace(tb=None):
+    if tb is None:
+        trace = TestCmd.caller(traceback.extract_stack(), 1)
+    else:
+        trace = TestCmd.caller(traceback.extract_tb(tb), 0)
+    annotation("stacktrace", trace)
+
+
 def annotation(name, value):
     """Records an annotation about the test run.
     """
@@ -590,8 +598,7 @@ class Tester(TestCmd.TestCmd):
             print "The failed command was:"
             print ' '.join(self.last_program_invocation)
 
-        at = TestCmd.caller(traceback.extract_stack(), 0)
-        annotation("stacktrace", at)
+        annotate_stack_trace()
         sys.exit(1)
 
     # A number of methods below check expectations with actual difference
@@ -941,6 +948,7 @@ class List:
         result = List()
         result.l = self.l[:] + other.l[:]
         return result
+
 
 # Quickie tests. Should use doctest instead.
 if __name__ == '__main__':
