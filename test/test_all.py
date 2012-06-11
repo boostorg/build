@@ -43,13 +43,17 @@ def run_tests(critical_tests, other_tests):
     all_tests = critical_tests + other_tests
 
     invocation_dir = os.getcwd()
+    max_test_name_len = 10
+    for x in all_tests:
+        if len(x) > max_test_name_len:
+            max_test_name_len = len(x)
 
     pass_count = 0
     failures_count = 0
 
     for test in all_tests:
         if not xml:
-            print("%-25s :" % test),
+            print("%%-%ds :" % max_test_name_len % test),
 
         passed = 0
         try:
