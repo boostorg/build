@@ -4,9 +4,10 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-# Test that Boost Build configuration file handling.
+# Test Boost Build configuration file handling.
 
 import BoostBuild
+
 import os
 import os.path
 
@@ -34,11 +35,12 @@ def test_user_configuration():
             sys.exit(-99)
         raise
 
-def test_user_configuration_impl():
-    """Test Boost Build user configuration handling. Both relative and absolute
-    path handling is tested.
+def test_user_configuration():
     """
+      Test Boost Build user configuration handling. Both relative and absolute
+    path handling is tested.
 
+    """
     t = BoostBuild.Tester("--debug-configuration", pass_toolset=False,
         use_test_config=False)
 
