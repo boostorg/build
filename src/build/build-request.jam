@@ -142,7 +142,7 @@ rule from-command-line ( command-line * )
         {
             skip-next = ;
         }
-        else if ! [ MATCH "^(-).*" : $(e) ]
+        else if ! [ MATCH ^(-) : $(e) ]
         {
             # Build request spec either has "=" in it or completely consists of
             # implicit feature values.
