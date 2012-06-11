@@ -35,7 +35,7 @@ def run_tests(critical_tests, other_tests):
 
       Writes the name of the first failed test to test_results.txt. Critical
     tests are run in the specified order, other tests are run starting with the
-    one that failed first on the last test time.
+    one that failed first on the last test run.
 
     """
     last_failed = last_failed_test()
