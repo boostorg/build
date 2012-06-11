@@ -66,8 +66,16 @@ def run_tests(critical_tests, other_tests):
             """This is the regular way our test scripts are supposed to report
             test failures."""
         except:
-            BoostBuild.annotation("failure - unhandled exception", "%s - %s" %
-                (sys.exc_value.__class__.__name__, sys.exc_value))
+            exc_type, exc_value, exc_tb = sys.exc_info()
+            try:
+                BoostBuild.annotation("failure - unhandled exception", "%s - "
+                    "%s" % (exc_type.__name__, exc_value))
+                BoostBuild.annotate_stack_trace(exc_tb)
+            finally:
+                #   Explicitly clear a hard-to-garbage-collect traceback
+                # related reference cycle as per documented sys.exc_info()
+                # usage suggestion.
+                del exc_tb
 
         if passed:
             pass_count += 1
