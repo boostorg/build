@@ -10,6 +10,7 @@ import BoostBuild
 
 import os
 import os.path
+import re
 
 
 ###############################################################################
@@ -25,8 +26,6 @@ def test_user_configuration():
     path handling is tested.
 
     """
-    t = BoostBuild.Tester("--debug-configuration", pass_toolset=False,
-        use_test_config=False)
 
     implicitConfigLoadMessage = "notice: Loading user-config configuration file: *"
     explicitConfigLoadMessage = "notice: Loading explicitly specified user configuration file:"
@@ -49,19 +48,22 @@ def test_user_configuration():
 import feature ;
 feature.extend toolset : %s ;
 rule init ( ) { }
-""" % toolsetName )
+""" % toolsetName)
 
     # Python version of the same dummy toolset.
     t.write(toolsetName + ".py", """\
 from b2.build import feature
 feature.extend('toolset', ['%s'])
 def init(): pass
-""" % toolsetName )
+""" % toolsetName)
 
     t.write("jamroot.jam", """\
 local test-index = [ MATCH ---test-id---=(.*) : [ modules.peek : ARGV ] ] ;
 ECHO test-index: $(test-index:E=(unknown)) ;
-using %s ;""" % toolsetName)
+""")
+
+    t = BoostBuild.Tester("toolset=%s --debug-configuration" % toolsetName,
+        pass_toolset=False, use_test_config=False)
 
     class LocalTester:
         def __init__(self, tester):
@@ -223,6 +225,12 @@ using %s ;""" % toolsetName)
     t.cleanup()
 
 
+###############################################################################
+#
+# Private interface.
+#
+###############################################################################
+
 def _canSetEmptyEnvironmentVariable():
     """
       Unfortunately different OSs (and possibly Python implementations as well)
@@ -243,12 +251,12 @@ def _canSetEmptyEnvironmentVariable():
     return result
 
 
-################################################################################
+###############################################################################
 #
 # main()
 # ------
 #
-################################################################################
+###############################################################################
 
 canSetEmptyEnvironmentVariable = _canSetEmptyEnvironmentVariable()
 
