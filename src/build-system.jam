@@ -613,15 +613,6 @@ local rule should-clean-project ( project )
         $(extra-properties) ] ;
     local target-ids = [ $(build-request).get-at 1 ] ;
     local properties = [ $(build-request).get-at 2 ] ;
-    #   '--plinky-plonky' - Temporary debugging code related to tracking down
-    # the cause of some Boost Build test failured on different platforms.
-    #                                                (11.06.2012.) (Jurko)
-    if --plinky-plonky in $(.argv)
-    {
-       ECHO ... argv: \"$(.argv)\" ... ;
-       ECHO ... target-ids: \"$(target-ids)\" ... ;
-       ECHO ... properties: \"$(properties)\" ... ;
-    }
 
 
     # Expand properties specified on the command line into multiple property

@@ -25,10 +25,7 @@ def test_user_configuration():
     path handling is tested.
 
     """
-    #   '--plinky-plonky' - Temporary debugging code related to tracking down
-    # the cause of some Boost Build test failured on different platforms.
-    #                                                (11.06.2012.) (Jurko)
-    t = BoostBuild.Tester("--debug-configuration --plinky-plonky", pass_toolset=False,
+    t = BoostBuild.Tester("--debug-configuration", pass_toolset=False,
         use_test_config=False)
 
     implicitConfigLoadMessage = "notice: Loading user-config configuration file: *"
