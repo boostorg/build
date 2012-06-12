@@ -573,7 +573,7 @@ class Tester(TestCmd.TestCmd):
         else:
             return result
 
-    def fail_test(self, condition, dump_stdio=True, *args):
+    def fail_test(self, condition, dump_stdio=True, dump_stack=True):
         if not condition:
             return
 
@@ -598,7 +598,8 @@ class Tester(TestCmd.TestCmd):
             print "The failed command was:"
             print ' '.join(self.last_program_invocation)
 
-        annotate_stack_trace()
+        if dump_stack:
+            annotate_stack_trace()
         sys.exit(1)
 
     # A number of methods below check expectations with actual difference
