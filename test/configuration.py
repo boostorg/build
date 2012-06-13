@@ -237,13 +237,10 @@ def _canSetEmptyEnvironmentVariable():
 
     """
     dummyName = "UGNABUNGA_FOO_BAR_BAZ_FEE_FAE_FOU_FAM"
-    original = os.getenv(dummyName)
-    os.putenv(dummyName, "")
-    result = os.getenv(dummyName) == ""
-    if original is None:
-        os.unsetenv(dummyName)
-    else:
-        os.putenv(dummyName, original)
+    original = os.environ.get(dummyName)
+    _env_set(dummyName, "")
+    result = _getExternalEnv(dummyName) == ""
+    _env_set(dummyName, original)
     return result
 
 
@@ -272,6 +269,45 @@ def _env_set(name, value):
         _env_del(name)
     else:
         os.environ[name] = value
+
+
+def _getExternalEnv(name):
+    toolsetName = "__myDummyToolset__"
+
+    t = BoostBuild.Tester("toolset=%s" % toolsetName, pass_toolset=False,
+        use_test_config=False)
+    try:
+        #   Prepare a dummy toolset so we do not get errors in case the default
+        # one is not found.
+        t.write(toolsetName + ".jam", """\
+import feature ;
+feature.extend toolset : %s ;
+rule init ( ) { }
+""" % toolsetName)
+
+        # Python version of the same dummy toolset.
+        t.write(toolsetName + ".py", """\
+from b2.build import feature
+feature.extend('toolset', ['%s'])
+def init(): pass
+""" % toolsetName)
+
+        t.write("jamroot.jam", """\
+import os ;
+local names = [ MATCH ^---var-name---=(.*) : [ modules.peek : ARGV ] ] ;
+for x in $(names)
+{
+    value = [ os.environ $(x) ] ;
+    ECHO "###" $(x): '$(value)' "###" ;
+}
+""")
+
+        t.run_build_system("---var-name---=%s" % name)
+        m = re.search("^### %s: '(.*)' ###$" % name, t.stdout(), re.MULTILINE)
+        if m:
+            return m.group(1)
+    finally:
+        t.cleanup()
 
 
 ###############################################################################
