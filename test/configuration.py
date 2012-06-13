@@ -36,6 +36,9 @@ def test_user_configuration():
     configFileNames = ["ups_lala_1.jam", "ups_lala_2.jam",
         os.path.join(subdirName, "ups_lala_3.jam")]
 
+    t = BoostBuild.Tester("toolset=%s --debug-configuration" % toolsetName,
+        pass_toolset=False, use_test_config=False)
+
     for configFileName in configFileNames:
         message = "ECHO \"%s\" ;" % testMessage % configFileName
         # We need to double any backslashes in the message or Jam will
@@ -61,9 +64,6 @@ def init(): pass
 local test-index = [ MATCH ---test-id---=(.*) : [ modules.peek : ARGV ] ] ;
 ECHO test-index: $(test-index:E=(unknown)) ;
 """)
-
-    t = BoostBuild.Tester("toolset=%s --debug-configuration" % toolsetName,
-        pass_toolset=False, use_test_config=False)
 
     class LocalTester:
         def __init__(self, tester):
@@ -255,7 +255,7 @@ def _env_del(name):
       since prior to Python 2.6 these functions did not remove the actual
       environment variable by calling os.unsetenv().
 
-    """"
+    """
     try:
         del os.environ[name]
     except KeyError:
