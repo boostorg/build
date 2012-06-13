@@ -185,6 +185,7 @@ tests = ["absolute_sources",
          "core_update_now",
          "core_variables_in_actions",
          "custom_generator",
+         "collect_debug_info",
          "default_build",
          "default_features",
 # This test is known to be broken itself.
