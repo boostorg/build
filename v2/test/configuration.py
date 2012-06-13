@@ -159,7 +159,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
         t.expect_output_line(disabledConfigLoadMessage, True)
         t.expect_output_line(testMessage % configFileNames[0], False)
         t.expect_output_line(testMessage % configFileNames[1], False)
-        t.expect_output_line(testMessage % configFileNames[2])
+        t.expect_output_line(testMessage % configFileNames[2], False)
 
     test(9, '""')
     t.expect_output_line(implicitConfigLoadMessage, False)
