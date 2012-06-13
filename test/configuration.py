@@ -82,16 +82,12 @@ ECHO test-index: $(test-index:E=(unknown)) ;
             self.__registerTestId(str(test_id))
             extra_args += " ---test-id---=%s" % test_id
             env_name = "BOOST_BUILD_USER_CONFIG"
-            previous_env = os.environ.pop(env_name, None)
-            if env is not None:
-                os.environ[env_name] = env
+            previous_env = os.environ.get(env_name)
+            _env_set(env_name, env)
             try:
                 self.__tester.run_build_system(extra_args, *args, **kwargs)
             finally:
-                if previous_env is None:
-                    os.environ.pop(env_name, None)
-                else:
-                    os.environ[env_name] = previous_env
+                _env_set(env_name, previous_env)
 
         def __registerTestId(self, test_id):
             if test_id in self.__test_ids:
@@ -249,6 +245,33 @@ def _canSetEmptyEnvironmentVariable():
     else:
         os.putenv(dummyName, original)
     return result
+
+
+def _env_del(name):
+    """
+      Unsets the given environment variable if it is currently set.
+
+        Note that we can not use os.environ.pop() or os.environ.clear() here
+      since prior to Python 2.6 these functions did not remove the actual
+      environment variable by calling os.unsetenv().
+
+    """"
+    try:
+        del os.environ[name]
+    except KeyError:
+        pass
+
+
+def _env_set(name, value):
+    """
+      Sets the given environment variable value or unsets it, if the value is
+    None.
+
+    """
+    if value is None:
+        _env_del(name)
+    else:
+        os.environ[name] = value
 
 
 ###############################################################################
