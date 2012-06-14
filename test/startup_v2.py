@@ -6,7 +6,6 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
-import os
 import os.path
 import re
 
