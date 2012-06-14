@@ -163,6 +163,7 @@ rule __test__ ( )
 {
     import assert ;
     import "class" : new ;
+    import errors : try catch ;
 
     # This will be the construction function for a class called 'myclass'.
     #
