@@ -113,7 +113,7 @@ rule ungrist ( names * )
     for local name in $(names)
     {
         local stripped = [ MATCH ^<(.*)>$ : $(name) ] ;
-        if ! $(stripped)
+        if ! $(stripped)-defined
         {
             import errors ;
             local quoted-names = \"$(names)\" ;
@@ -183,6 +183,7 @@ rule __test__ ( )
     assert.result \"foo\" : unquote \"\"foo\"\" ;
 
     assert.result         : ungrist ;
+    assert.result ""      : ungrist <> ;
     assert.result foo     : ungrist <foo> ;
     assert.result <foo>   : ungrist <<foo>> ;
     assert.result foo bar : ungrist <foo> <bar> ;
@@ -192,12 +193,6 @@ rule __test__ ( )
         ungrist "" ;
     }
     catch "in" ungrist \"\": \"\" is not of the form <.*> ;
-
-    try ;
-    {
-        ungrist <> ;
-    }
-    catch "in" ungrist \"<>\": \"<>\" is not of the form <.*> ;
 
     try ;
     {
