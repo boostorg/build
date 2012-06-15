@@ -5,7 +5,6 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import "class" : is-instance ;
-import errors ;
 
 
 # For all elements of 'list' which do not already have 'suffix', add 'suffix'.
@@ -116,7 +115,10 @@ rule ungrist ( names * )
         local stripped = [ MATCH ^<(.*)>$ : $(name) ] ;
         if ! $(stripped)
         {
-            errors.error "in ungrist $(names) : $(name) is not of the form <.*>" ;
+            import errors ;
+            local quoted-names = \"$(names)\" ;
+            errors.error "in" ungrist $(quoted-names:J=" "): \"$(name)\" is not
+                of the form <.*> ;
         }
         result += $(stripped) ;
     }
@@ -189,47 +191,47 @@ rule __test__ ( )
     {
         ungrist "" ;
     }
-    catch "in ungrist  :  is not of the form <.*>" ;
+    catch "in" ungrist \"\": \"\" is not of the form <.*> ;
 
     try ;
     {
         ungrist <> ;
     }
-    catch "in ungrist <> : <> is not of the form <.*>" ;
+    catch "in" ungrist \"<>\": \"<>\" is not of the form <.*> ;
 
     try ;
     {
         ungrist foo ;
     }
-    catch "in ungrist foo : foo is not of the form <.*>" ;
+    catch "in" ungrist \"foo\": \"foo\" is not of the form <.*> ;
 
     try ;
     {
         ungrist <foo ;
     }
-    catch "in ungrist <foo : <foo is not of the form <.*>" ;
+    catch "in" ungrist \"<foo\": \"<foo\" is not of the form <.*> ;
 
     try ;
     {
         ungrist foo> ;
     }
-    catch "in ungrist foo> : foo> is not of the form <.*>" ;
+    catch "in" ungrist \"foo>\": \"foo>\" is not of the form <.*> ;
 
     try ;
     {
         ungrist foo bar ;
     }
-    catch "in ungrist foo : foo is not of the form <.*>" ;
+    catch "in" ungrist "\"foo\" \"bar\"": \"foo\" is not of the form <.*> ;
 
     try ;
     {
         ungrist foo <bar> ;
     }
-    catch "in ungrist foo : foo is not of the form <.*>" ;
+    catch "in" ungrist "\"foo\" \"<bar>\"": \"foo\" is not of the form <.*> ;
 
     try ;
     {
         ungrist <foo> bar ;
     }
-    catch "in ungrist bar : bar is not of the form <.*>" ;
+    catch "in" ungrist "\"<foo>\" \"bar\"": \"bar\" is not of the form <.*> ;
 }
