@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-# Copyright 2003 Dave Abrahams 
-# Copyright 2002, 2003 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Copyright 2002, 2003 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # This tests that :
 #  1) the 'make' correctly assigns types to produced targets
@@ -22,14 +22,14 @@ t.write("jamfile.jam", r'''
 import os ;
 if [ os.name ] = NT
 {
-    actions create 
+    actions create
     {
         echo int main() {} > $(<)
     }
 }
 else
 {
-    actions create 
+    actions create
     {
         echo "int main() {}" > $(<)
     }
@@ -39,7 +39,7 @@ IMPORT $(__name__) : create : : create ;
 
 exe a : l dummy.cpp ;
 
-# Needs to be static lib for Windows - main() cannot appear in DLL.
+# Needs to be a static lib for Windows - main() cannot appear in DLL.
 static-lib l : a.cpp b.cpp ;
 
 make b.cpp : : create ;
