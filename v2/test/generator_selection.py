@@ -18,7 +18,7 @@ import BoostBuild
 
 def test_generator_added_after_already_building_a_target_of_its_target_type():
     """Regression test for a Boost Build bug causing it to not use a generator
-    if it got added after already building a targer of its target type.
+    if it got added after already building a target of its target type.
     """
 
     t = BoostBuild.Tester()
@@ -70,7 +70,7 @@ def f(*args):
     print "Generating a CPP file..."
 
 get_manager().engine().register_action("mygen.generate-a-cpp-file",
-                                       action, function=f)    
+                                       action, function=f)
 """)
 
     t.write("Other/jamfile.jam", """
