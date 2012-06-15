@@ -176,6 +176,9 @@ rule __test__ ( )
 
     assert.result         : unquote ;
     assert.result ""      : unquote "" ;
+    assert.result ""      : unquote \"\" ;
+    assert.result \"      : unquote \"\"\" ;
+    assert.result \"\"    : unquote \"\"\"\" ;
     assert.result foo     : unquote foo ;
     assert.result \"foo   : unquote \"foo ;
     assert.result foo\"   : unquote foo\" ;
