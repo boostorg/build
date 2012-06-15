@@ -63,7 +63,7 @@ rule match ( pattern : string : indices * )
 
 # Matches all elements of 'list' agains the 'pattern' and returns a list of
 # elements indicated by indices of all successful matches. If 'indices' is
-# omitted returns a list of first paranthethised groups of all successful
+# omitted returns a list of first parenthesised groups of all successful
 # matches.
 #
 rule transform ( list * : pattern : indices * )
