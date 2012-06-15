@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Copyright 2008 Jurko Gospodnetic
+# Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -9,18 +9,19 @@
 import BoostBuild
 
 
-################################################################################
+###############################################################################
 #
 # test_generator_added_after_already_building_a_target_of_its_target_type()
 # -------------------------------------------------------------------------
 #
-################################################################################
+###############################################################################
 
 def test_generator_added_after_already_building_a_target_of_its_target_type():
-    """Regression test for a Boost Build bug causing it to not use a generator
-    if it got added after already building a target of its target type.
     """
+      Regression test for a Boost Build bug causing it to not use a generator
+    if it got added after already building a target of its target type.
 
+    """
     t = BoostBuild.Tester()
 
     t.write("dummy.cpp", "void f() {}\n")
@@ -69,8 +70,8 @@ else:
 def f(*args):
     print "Generating a CPP file..."
 
-get_manager().engine().register_action("mygen.generate-a-cpp-file",
-                                       action, function=f)
+get_manager().engine().register_action("mygen.generate-a-cpp-file", action,
+    function=f)
 """)
 
     t.write("Other/jamfile.jam", """
@@ -86,19 +87,19 @@ obj other-obj : source.extension ;
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # test_using_a_derived_source_type_created_after_generator_already_used()
 # -----------------------------------------------------------------------
 #
-################################################################################
+###############################################################################
 
 def test_using_a_derived_source_type_created_after_generator_already_used():
-    """Regression test for a Boost Build bug causing it to not use a generator
+    """
+      Regression test for a Boost Build bug causing it to not use a generator
     with a source type derived from one of the generator's sources but created
     only after already using the generateor.
     """
-
     t = BoostBuild.Tester()
 
     t.write("dummy.cpp", "void f() {}\n")
@@ -129,12 +130,12 @@ obj other-obj : source.unga_cpp ;
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # main()
 # ------
 #
-################################################################################
+###############################################################################
 
 test_generator_added_after_already_building_a_target_of_its_target_type()
 test_using_a_derived_source_type_created_after_generator_already_used()
