@@ -99,32 +99,46 @@ def test_using_a_derived_source_type_created_after_generator_already_used():
       Regression test for a Boost Build bug causing it to not use a generator
     with a source type derived from one of the generator's sources but created
     only after already using the generateor.
+
+      We do not use the internal C++-compiler CPP --> OBJ generator to avoid
+    problems with some compilers reporting errors when run with a source file
+    whose suffix is not '.cpp'. This has been detected on IBM's AIX test runner
+    'AIX Version 5.3 TL7 SP5 (5300-07-05-0831)' using the 'IBM XL C/C++ for
+    AIX, V12.1 (Version: 12.01.0000.0000)' compiler.
+
     """
     t = BoostBuild.Tester()
 
-    t.write("dummy.cpp", "void f() {}\n")
+    t.write("dummy.xxx", "Hello. My name is Peter Pan.\n")
 
     t.write("jamroot.jam", """
-# Building this dummy target must not cause a later defined UNGA_CPP target type
-# not to be recognized as a viable source type for building OBJ targets.
-obj dummy : dummy.cpp ;
-alias the-test-output : Other//other-obj ;
+import common ;
+import generators ;
+import type ;
+type.register XXX : xxx ;
+type.register YYY : yyy ;
+generators.register-standard common.copy : XXX : YYY ;
+
+# Building this dummy target must not cause a later defined XXX2 target type not
+# to be recognized as a viable source type for building YYY targets.
+yyy dummy : dummy.xxx ;
+alias the-test-output : Other//other ;
 """)
 
-    t.write("Other/source.unga_cpp", "void g() {}\n")
+    t.write("Other/source.xxx2", "Hello. My name is Tinkerbell.\n")
 
     t.write("Other/jamfile.jam", """
 import type ;
-type.register UNGA_CPP : unga_cpp : CPP ;
-# We are careful not to do anything between defining our new UNGA_CPP target
-# type and using the CPP --> OBJ generator that could potentially cover the
-# Boost Build bug by clearing its internal viable source target type state.
-obj other-obj : source.unga_cpp ;
+type.register XXX2 : xxx2 : XXX ;
+# We are careful not to do anything between defining our new XXX2 target type
+# and using the XXX --> YYY generator that could potentially cover the Boost
+# Build bug by clearing its internal viable source target type state.
+yyy other : source.xxx2 ;
 """)
 
     t.run_build_system()
-    t.expect_addition("bin/$toolset/debug/dummy.obj")
-    t.expect_addition("Other/bin/$toolset/debug/other-obj.obj")
+    t.expect_addition("bin/$toolset/debug/dummy.yyy")
+    t.expect_addition("Other/bin/$toolset/debug/other.yyy")
     t.expect_nothing_more()
 
     t.cleanup()
