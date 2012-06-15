@@ -18,10 +18,4 @@ t.expect_addition("bin/$toolset/debug/" * BoostBuild.List("a.exe a.obj "
 t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("c.obj "
     "auxilliary.lib"))
 
-t.run_build_system(subdir='lib')
-t.expect_addition(["lib/bin/$toolset/debug/auxilliary2.dll"])
-
-t.run_build_system(subdir='lib', extra_args="link=static")
-t.expect_addition(["lib/bin/$toolset/debug/link-static/auxilliary2.lib"])
-
 t.cleanup()
