@@ -1,95 +1,192 @@
-# Copyright 2002, 2003, 2004, 2005 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2002, 2003, 2004, 2005 Vladimir Prus
+# Copyright 2012 Jurko Gospodnetic
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
+import appender ;
 
 import "class" : new ;
-
-import lex ;
-import qt ;
-import extra ;
-
+import generators ;
 import type ;
 
+
+################################################################################
+#
+#   We use our own custom EXE, LIB & OBJ target generators as using the regular
+# ones would force us to have to deal with different compiler/linker specific
+# 'features' that really have nothing to do with this test. For example, IBM XL
+# C/C++ for AIX, V12.1 (Version: 12.01.0000.0000) compiler exits with a non-zero
+# exit code and thus fails our build when run with a source file using an
+# unknown suffix like '.marked_cpp'.
+#
+################################################################################
+
+type.register MY_EXE : my_exe ;
+type.register MY_LIB : my_lib ;
+type.register MY_OBJ : my_obj ;
+
+appender.register compile-c : C : MY_OBJ ;
+appender.register compile-cpp : CPP : MY_OBJ ;
+appender.register link-lib true : MY_OBJ : MY_LIB ;
+appender.register link-exe true : MY_OBJ MY_LIB : MY_EXE ;
+
+
+################################################################################
+#
+# LEX --> C
+#
+################################################################################
+
+type.register LEX : l ;
+
+appender.register lex-to-c : LEX : C ;
+
+
+################################################################################
+#
+#        /--> tUI_H --\
+# tUI --<              >--> CPP
+#        \------------/
+#
+################################################################################
+
 type.register tUI : tui ;
-type.register tUIC_H ;
-type.set-generated-target-suffix tUIC_H : : h ;
+type.register tUI_H : tui_h ;
+
+appender.register ui-to-cpp : tUI tUI_H : CPP ;
+appender.register ui-to-h : tUI : tUI_H ;
+
+
+################################################################################
+#
+#          /--> X1 --\
+# X_PRO --<           >--> CPP
+#          \--> X2 --/
+#
+################################################################################
 
 type.register X1 : x1 ;
 type.register X2 : x2  ;
 type.register X_PRO : x_pro ;
 
-import generators ;
+appender.register x1-x2-to-cpp : X1 X2 : CPP ;
+appender.register x-pro-to-x1-x2 : X_PRO : X1 X2 ;
 
-generators.register-standard qt.uic : tUI tUIC_H : CPP ;
-generators.register-standard qt.uic-h : tUI : tUIC_H ;
 
-# That's an interesting example. Currently, X_PRO will be processed
-# twice.
-generators.register-standard extra.x : X1 X2 : CPP ;
-generators.register-standard extra.x_pro : X_PRO : X1 X2 ;
-
-# The point of this setup of to implement this functionality
-# "When main target type is EST_EXE, build OBJ from CPP-MARKED, not
-# for anything else (like CPP)
-# Unfortunately, this does not really works.
-
-#if $(no-var) {
-import nm ;
+################################################################################
+#
+#   When the main target type is NM_EXE, build OBJ from CPP-MARKED and not from
+# anything else, e.g. directly from CPP.
+#
+################################################################################
 
 type.register CPP_MARKED : marked_cpp : CPP ;
 type.register POSITIONS : positions ;
 type.register NM.TARGET.CPP : target_cpp : CPP ;
-type.register NM_EXE : : EXE ;
+type.register NM_EXE : : MY_EXE ;
 
-generators.register-standard nm.target-source : CPP_MARKED : NM.TARGET.CPP ;
-generators.register-standard nm.cpp-mark : CPP : CPP_MARKED POSITIONS ;
-    
+appender.register marked-to-target-cpp : CPP_MARKED : NM.TARGET.CPP ;
+appender.register cpp-to-marked-positions : CPP : CPP_MARKED POSITIONS ;
+
 class nm::target::cpp-obj-generator : generator
 {
-    rule __init__ ( )
-    {        
-        generator.__init__ nm.target-obj : NM.TARGET.CPP : OBJ ;
+    rule __init__ ( id )
+    {
+        generator.__init__ $(id) : NM.TARGET.CPP : MY_OBJ ;
+        generator.set-rule-name appender.appender ;
     }
-    
+
     rule requirements ( )
     {
         return <main-target-type>NM_EXE ;
     }
-        
-    # Consider: it it OK to ignore all other generated targets except for the first?
-    rule run ( project name ? : properties * : source : multiple ? ) 
+
+    rule run ( project name ? : properties * : source : multiple ? )
     {
-        if [ $(source).type ] = CPP {    
-            local converted = [ generators.construct $(project) : NM.TARGET.CPP : $(properties) : $(source) ] ;
-        if $(converted[1])
-            {            
-                local result = [ generators.construct $(project) : OBJ : $(properties) : $(converted[2]) ] ;
-                return $(result) ;
-            }
-            else
-            {
-                return ;
-            }        
-        }
-        else
+        if [ $(source).type ] = CPP
         {
-            return ;
-        }        
-    }                
+            local converted = [ generators.construct $(project) : NM.TARGET.CPP
+                : $(properties) : $(source) ] ;
+            if $(converted)
+            {
+                return [ generators.construct $(project) : MY_OBJ :
+                    $(properties) : $(converted[2]) ] ;
+            }
+        }
+    }
 }
-
-generators.register [ new nm::target::cpp-obj-generator ] ;
-
-generators.override nm.target-obj : all ;
-
-#}
+generators.register [ new nm::target::cpp-obj-generator target-obj ] ;
+generators.override target-obj : all ;
 
 
+################################################################################
+#
+# A more complex test case scenario with the following generators:
+#  1. WHL --> CPP, WHL_LR0, H, H(%_symbols)
+#  2. DLP --> CPP
+#  3. WD --> WHL(%_parser) DLP(%_lexer)
+#  4. A custom generator of higher priority than generators 1. & 2. that helps
+#     disambiguate between them when generating CPP files from WHL and DLP
+#     sources.
+#
+################################################################################
+
+type.register WHL : whl ;
+type.register DLP : dlp ;
+type.register WHL_LR0 : lr0 ;
+type.register WD : wd ;
+
+local whale-generator-id = [ appender.register whale : WHL : CPP WHL_LR0 H
+    H(%_symbols) ] ;
+local dolphin-generator-id = [ appender.register dolphin : DLP : CPP ] ;
+appender.register wd : WD : WHL(%_parser) DLP(%_lexer) ;
+
+class wd-to-cpp : generator
+{
+    rule __init__ ( id : sources * : targets * )
+    {
+        generator.__init__ $(id) : $(sources) : $(targets) ;
+    }
+
+    rule run ( project name ? : property-set : source )
+    {
+        local new-sources = $(source) ;
+        if ! [ $(source).type ] in WHL DLP
+        {
+            local r1 = [ generators.construct $(project) $(name) : WHL :
+                $(property-set) : $(source) ] ;
+            local r2 = [ generators.construct $(project) $(name) : DLP :
+                $(property-set) : $(source) ] ;
+            new-sources = [ sequence.unique $(r1[2-]) $(r2[2-]) ] ;
+        }
+
+        local result ;
+        for local i in $(new-sources)
+        {
+            local t = [ generators.construct $(project) $(name) : CPP :
+                $(property-set) : $(i) ] ;
+            result += $(t[2-]) ;
+        }
+        return $(result) ;
+    }
+}
+generators.override $(__name__).wd-to-cpp : $(whale-generator-id) ;
+generators.override $(__name__).wd-to-cpp : $(dolphin-generator-id) ;
+generators.register [ new wd-to-cpp $(__name__).wd-to-cpp : : CPP ] ;
 
 
+################################################################################
+#
+# Declare build targets.
+#
+################################################################################
 
+# This should not cause two CPP --> MY_OBJ constructions for a.cpp or b.cpp.
+my-exe a : a.cpp b.cxx obj_1 obj_2 c.tui d.wd x.l y.x_pro lib//auxilliary ;
+my-exe f : a.cpp b.cxx obj_1 obj_2 lib//auxilliary ;
 
+# This should cause two CPP --> MY_OBJ constructions for z.cpp.
+my-obj obj_1 : z.cpp ;
+my-obj obj_2 : z.cpp ;
 
-
-
+nm-exe e : e.cpp ;

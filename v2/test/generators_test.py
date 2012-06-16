@@ -10,14 +10,15 @@ import BoostBuild
 t = BoostBuild.Tester()
 t.set_tree("generators-test")
 
-t.run_build_system()
-t.expect_addition("bin/$toolset/debug/" * BoostBuild.List("a.exe a.obj "
-    "b.obj c.h c.cpp c.obj d_parser.whl d_lexer.dlp d_parser.cpp d_lexer.cpp "
-    "d_lexer.obj d_parser.lr0 d_parser.h d_parser.obj d_parser_symbols.h x.c "
-    "x.obj y.x1 y.x2 y.cpp y.obj e.marked_cpp e.positions e.target_cpp e.obj "
-    "e.exe f.exe obj_1.obj obj_2.obj"))
-t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("c.obj "
-    "auxilliary.lib"))
+t.run_build_system("-d1")
+t.expect_addition("bin/$toolset/debug/" * BoostBuild.List("a.my_exe a.my_obj "
+    "b.my_obj c.tui_h c.cpp c.my_obj d_parser.whl d_lexer.dlp d_parser.cpp "
+    " d_lexer.cpp d_lexer.my_obj d_parser.lr0 d_parser.h d_parser.my_obj "
+    "d_parser_symbols.h x.c x.my_obj y.x1 y.x2 y.cpp y.my_obj e.marked_cpp "
+    "e.positions e.target_cpp e.my_obj e.my_exe f.my_exe obj_1.my_obj "
+    "obj_2.my_obj"))
+t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("c.my_obj "
+    "auxilliary.my_lib"))
 t.expect_nothing_more()
 
 t.cleanup()
