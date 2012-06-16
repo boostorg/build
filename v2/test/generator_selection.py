@@ -26,7 +26,7 @@ def test_generator_added_after_already_building_a_target_of_its_target_type():
 
     t.write("dummy.cpp", "void f() {}\n")
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 # Building this dummy target must not cause a later defined CPP target type
 # generator not to be recognized as viable.
 obj dummy : dummy.cpp ;
@@ -35,31 +35,24 @@ alias the-other-obj : Other//other-obj ;
 
     t.write("Other/source.extension", "A dummy source file.")
 
-    t.write("Other/mygen.jam", """
+    t.write("Other/mygen.jam", """\
+import common ;
 import generators ;
-import os ;
 import type ;
 type.register MY_TYPE : extension ;
-generators.register-standard mygen.generate-a-cpp-file : MY_TYPE : CPP ;
+generators.register-standard $(__name__).generate-a-cpp-file : MY_TYPE : CPP ;
 rule generate-a-cpp-file { ECHO Generating a CPP file... ; }
-if [ os.name ] = NT
-{
-    actions generate-a-cpp-file { echo void g() {} > "$(<)" }
-}
-else
-{
-    actions generate-a-cpp-file { echo "void g() {}" > "$(<)" }
-}
+CREATE-FILE = [ common.file-creation-command ] ;
+actions generate-a-cpp-file { $(CREATE-FILE) "$(<)" }
 """)
 
-    t.write("Other/mygen.py", """
+    t.write("Other/mygen.py", """\
 import b2.build.generators as generators
 import b2.build.type as type
 
 from b2.manager import get_manager
 
 import os
-
 
 type.register('MY_TYPE', ['extension'])
 generators.register_standard('mygen.generate-a-cpp-file', ['MY_TYPE'], ['CPP'])
@@ -74,7 +67,7 @@ get_manager().engine().register_action("mygen.generate-a-cpp-file", action,
     function=f)
 """)
 
-    t.write("Other/jamfile.jam", """
+    t.write("Other/jamfile.jam", """\
 import mygen ;
 obj other-obj : source.extension ;
 """)
