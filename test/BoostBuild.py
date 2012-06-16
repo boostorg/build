@@ -568,7 +568,7 @@ class Tester(TestCmd.TestCmd):
         f = open(self.glob_file(name), "rb")
         lines = f.readlines()
         result = string.join(map(string.rstrip, lines), "\n")
-        if lines and lines[-1][-1] == '\n':
+        if lines and lines[-1][-1] != '\n':
             return result + '\n'
         else:
             return result
