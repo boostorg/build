@@ -901,7 +901,7 @@ class List:
     def __init__(self, s=""):
         elements = []
         if isinstance(s, type("")):
-            # Have to handle espaced spaces correctly.
+            # Have to handle escaped spaces correctly.
             s = string.replace(s, "\ ", '\001')
             elements = string.split(s)
         else:
