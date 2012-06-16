@@ -1,0 +1,77 @@
+# Copyright 2012 Jurko Gospodnetic
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+#   Support for registering test generators that construct their targets by
+# simply appending their given input data, e.g. list of sources & targets.
+
+import "class" : new ;
+import generators ;
+import modules ;
+import sequence ;
+
+rule register ( id composing ? : source-types + : target-types + )
+{
+    local caller-module = [ CALLER_MODULE ] ;
+    id = $(caller-module).$(id) ;
+    local g = [ new generator $(id) $(composing) : $(source-types) :
+        $(target-types) ] ;
+    $(g).set-rule-name $(__name__).appender ;
+    generators.register $(g) ;
+    return $(id) ;
+}
+
+if [ modules.peek : NT ]
+{
+    escape-char = ^ ;
+    X = ")" ;
+    ECHO_CMD = (echo. ;
+}
+else
+{
+    escape-char = \\ ;
+    X = \" ;
+    ECHO_CMD = "echo $(X)" ;
+}
+
+local appender-runs ;
+
+rule appender ( targets + : sources + : properties * )
+{
+    appender-runs = [ CALC $(appender-runs:E=0) + 1 ] ;
+    local target-index = 0 ;
+    local target-count = [ sequence.length $(targets) ] ;
+    local original-targets ;
+    for x in $(targets)
+    {
+        target-index = [ CALC $(target-index) + 1 ] ;
+        local x-path = [ MATCH ^<.(.*)>$ : $(x:G) ] ;
+        original-targets += $(x-path)//$(x:G=) ;
+        if $(targets[2])-defined
+        {
+            local t = $(appender-runs) [$(target-index)/$(target-count)] ;
+            appender-run on $(x) = $(t:J=" ") ;
+        }
+        append1 $(x) : $(sources) : $(properties) ;
+    }
+    original-targets on $(targets) = '$(original-targets:J="' '")' ;
+    if ! $(targets[2])-defined
+    {
+        appender-run on $(targets) = $(appender-runs) ;
+    }
+}
+
+actions append1
+{
+    $(ECHO_CMD)----------------------------------------------------$(X)
+    $(ECHO_CMD)Appender run: $(appender-run)$(X)
+    $(ECHO_CMD)Appender run: $(appender-run)$(X)>> "$(<)"
+    $(ECHO_CMD)Target group: $(original-targets)$(X)
+    $(ECHO_CMD)Target group: $(original-targets)$(X)>> "$(<)"
+    $(ECHO_CMD)      Target: '$(<)'$(X)
+    $(ECHO_CMD)      Target: '$(<)'$(X)>> "$(<)"
+    $(ECHO_CMD)     Sources: '$(>:J=' ')'$(X)
+    $(ECHO_CMD)     Sources: '$(>:J=' ')'$(X)>> "$(<)"
+    $(ECHO_CMD)====================================================$(X)
+    $(ECHO_CMD)----------------------------------------------------$(X)>> "$(<)"
+}
