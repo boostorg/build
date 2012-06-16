@@ -6,6 +6,17 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
+import re
+
+def match_count_is(lines, pattern, expected):
+    count = 0
+    for x in lines:
+        if re.search(pattern, x):
+            count += 1
+        if count > expected:
+            return False
+    return count == expected
+
 
 t = BoostBuild.Tester()
 t.set_tree("generators-test")
@@ -20,5 +31,18 @@ t.expect_addition("bin/$toolset/debug/" * BoostBuild.List("a.my_exe a.my_obj "
 t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("c.my_obj "
     "auxilliary.my_lib"))
 t.expect_nothing_more()
+
+t.expect_content_line("bin/$toolset/debug/obj_1.my_obj", "Sources: 'z.cpp'")
+t.expect_content_line("bin/$toolset/debug/obj_2.my_obj", "Sources: 'z.cpp'")
+t.expect_content_line("bin/$toolset/debug/a.my_obj", "Sources: 'a.cpp'")
+
+lines = t.stdout().splitlines()
+source_lines = [x for x in lines if re.match("^     Sources: '", x)]
+if not match_count_is(source_lines, "'z.cpp'", 2):
+    BoostBuild.annotation("failure", "z.cpp must be compiled exactly twice.")
+    t.fail_test(1)
+if not match_count_is(source_lines, "'a.cpp'", 1):
+    BoostBuild.annotation("failure", "a.cpp must be compiled exactly once.")
+    t.fail_test(1)
 
 t.cleanup()
