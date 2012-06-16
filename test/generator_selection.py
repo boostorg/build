@@ -5,6 +5,12 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Tests that generators get selected correctly.
+#
+# We do not use the internal C++-compiler CPP --> OBJ generator to avoid
+# problems with specific compilers or their configurations, e.g. IBM's AIX test
+# runner 'AIX Version 5.3 TL7 SP5 (5300-07-05-0831)' using the 'IBM XL C/C++ for
+# AIX, V12.1 (Version: 12.01.0000.0000)' reporting errors when run with a source
+# file whose suffix is not '.cpp'.
 
 import BoostBuild
 
@@ -27,9 +33,15 @@ def test_generator_added_after_already_building_a_target_of_its_target_type():
     t.write("dummy.cpp", "void f() {}\n")
 
     t.write("jamroot.jam", """\
+import common ;
+import generators ;
+import type ;
+type.register MY_OBJ : my_obj ;
+generators.register-standard common.copy : CPP : MY_OBJ ;
+
 # Building this dummy target must not cause a later defined CPP target type
 # generator not to be recognized as viable.
-obj dummy : dummy.cpp ;
+my-obj dummy : dummy.cpp ;
 alias the-other-obj : Other//other-obj ;
 """)
 
@@ -69,13 +81,15 @@ get_manager().engine().register_action("mygen.generate-a-cpp-file", action,
 
     t.write("Other/jamfile.jam", """\
 import mygen ;
-obj other-obj : source.extension ;
+my-obj other-obj : source.extension ;
 """)
 
     t.run_build_system()
     t.expect_output_line("Generating a CPP file...")
-    t.expect_addition("bin/$toolset/debug/dummy.obj")
-    t.expect_addition("Other/bin/$toolset/debug/other-obj.obj")
+    t.expect_addition("bin/$toolset/debug/dummy.my_obj")
+    t.expect_addition("Other/bin/$toolset/debug/other-obj.cpp")
+    t.expect_addition("Other/bin/$toolset/debug/other-obj.my_obj")
+    t.expect_nothing_more()
 
     t.cleanup()
 
@@ -92,12 +106,6 @@ def test_using_a_derived_source_type_created_after_generator_already_used():
       Regression test for a Boost Build bug causing it to not use a generator
     with a source type derived from one of the generator's sources but created
     only after already using the generateor.
-
-      We do not use the internal C++-compiler CPP --> OBJ generator to avoid
-    problems with some compilers reporting errors when run with a source file
-    whose suffix is not '.cpp'. This has been detected on IBM's AIX test runner
-    'AIX Version 5.3 TL7 SP5 (5300-07-05-0831)' using the 'IBM XL C/C++ for
-    AIX, V12.1 (Version: 12.01.0000.0000)' compiler.
 
     """
     t = BoostBuild.Tester()
