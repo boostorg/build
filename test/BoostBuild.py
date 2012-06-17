@@ -441,9 +441,8 @@ class Tester(TestCmd.TestCmd):
 
         try:
             if os.path.isabs(subdir):
-                if stderr:
-                    print "You must pass a relative directory to subdir <"+subdir+">."
-                status = 1
+                print("You must pass a relative directory to subdir <%s>." %
+                    subdir)
                 return
 
             self.previous_tree = tree.build_tree(self.workdir)
