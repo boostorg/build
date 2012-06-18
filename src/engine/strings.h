@@ -18,17 +18,16 @@ typedef struct string
 #endif
 } string;
 
-void string_new( string* );
-void string_copy( string*, char const* );
-void string_free( string* );
-void string_append( string*, char const* );
-void string_append_range( string*, char const*, char const* );
-void string_push_back( string* s, char x );
-void string_reserve( string*, size_t );
-void string_truncate( string*, size_t );
-void string_pop_back( string* );
-char string_back( string* );
+void string_new( string * );
+void string_copy( string *, char const * );
+void string_free( string * );
+void string_append( string *, char const * );
+void string_append_range( string *, char const *, char const * );
+void string_push_back( string * s, char x );
+void string_reserve( string *, size_t );
+void string_truncate( string *, size_t );
+void string_pop_back( string * );
+char string_back( string * );
 void string_unit_test();
 
 #endif
-

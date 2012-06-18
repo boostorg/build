@@ -29,7 +29,7 @@ static void assert_invariants( string* self )
     assert( ( self->capacity <= sizeof(self->opt) ) == ( self->value == self->opt ) );
     assert( strlen( self->value ) == self->size );
 
-    for (i = 0; i < 4; ++i)
+    for ( i = 0; i < 4; ++i )
     {
         assert( self->magic[i] == JAM_STRING_MAGIC );
         assert( self->value[self->capacity + i] == JAM_STRING_MAGIC );
@@ -107,7 +107,7 @@ void string_append( string* self, char const* rhs )
     char* end = self->value + self->capacity;
     assert_invariants( self );
 
-    while ( *rhs && p != end)
+    while ( *rhs && p != end )
         *p++ = *rhs++;
 
     if ( p != end )
@@ -195,7 +195,6 @@ void string_unit_test()
     }
 
     string_free(s);
-
 }
 #endif
 
