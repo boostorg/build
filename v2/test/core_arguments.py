@@ -8,12 +8,12 @@
 import BoostBuild
 
 
-def test(t, type, input, output):
+def test(t, type, input, output, status=0):
     code = ["include echo_args.jam ; echo_%s" % type]
     if input: code.append(input)
     code.append(";")
     t.write("file.jam", " ".join(code))
-    t.run_build_system("-ffile.jam", status=1)
+    t.run_build_system("-ffile.jam", status=status)
     t.expect_output_line(output);
 
 
@@ -28,6 +28,8 @@ def test_varargs(t, *args, **kwargs):
 t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
 t.write("echo_args.jam", """
+NOCARE all ;
+
 rule echo_args ( a b ? c ? : d + : e * )
 {
     ECHO a= $(a) b= $(b) c= $(c) ":" d= $(d) ":" e= $(e) ;
@@ -45,9 +47,9 @@ rule echo_varargs ( a b ? c ? : d + : e * : * )
 }
 """)
 
-test_args(t, "", "* missing argument a")
-test_args(t, "1 2 : 3 : 4 : 5", "* extra argument 5")
-test_args(t, "a b c1 c2 : d", "* extra argument c2")
+test_args(t, "", "* missing argument a", status=1)
+test_args(t, "1 2 : 3 : 4 : 5", "* extra argument 5", status=1)
+test_args(t, "a b c1 c2 : d", "* extra argument c2", status=1)
 
 # Check modifier '?'
 test_args(t, "1 2 3 : 4", "a= 1 b= 2 c= 3 : d= 4 : e=")
@@ -56,7 +58,7 @@ test_args(t, "1 2 : 3", "a= 1 b= 2 c= : d= 3 : e=")
 test_args(t, "1 : 2", "a= 1 b= c= : d= 2 : e=")
 
 # Check modifier '+'
-test_args(t, "1", "* missing argument d")
+test_args(t, "1", "* missing argument d", status=1)
 test_args(t, "1 : 2 3", "a= 1 b= c= : d= 2 3 : e=")
 test_args(t, "1 : 2 3 4", "a= 1 b= c= : d= 2 3 4 : e=")
 
