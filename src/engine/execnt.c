@@ -66,7 +66,7 @@ int maxline();
 /* delete and argv list */
 static void free_argv( char const * * );
 /* convert a command string into arguments */
-static const char** string_to_args( char const * );
+static char const * * string_to_args( char const * );
 /* bump intr to note command interruption */
 static void onintr( int );
 /* is the command suitable for direct execution via CreateProcess() */
@@ -133,7 +133,7 @@ static struct
     int                 exit_reason;  /* reason why a command completed */
 
     /* Function called when the command completes. */
-    void (* func)( void * closure, int status, timing_info *, const char *, const char * );
+    void (* func)( void * closure, int status, timing_info *, char const *, char const * );
 
     /* Opaque data passed back to the 'func' callback called when the command
      * completes.
@@ -182,7 +182,7 @@ void execnt_unit_test()
         /* Work around vc6 bug; it does not like escaped string literals inside
          * assert.
          */
-        const char * * argv = string_to_args(" \"g++\" -c -I\"Foobar\"" );
+        char const * * argv = string_to_args(" \"g++\" -c -I\"Foobar\"" );
         char const expected[] = "-c -I\"Foobar\"";
 
         assert( !strcmp( argv[ 0 ], "g++" ) );
@@ -199,20 +199,20 @@ void execnt_unit_test()
 
 void exec_cmd
 (
-    const char * command,
-    void (* func)( void * closure, int status, timing_info *, const char * invoked_command, const char * command_output ),
+    char const * command,
+    void (* func)( void * closure, int status, timing_info *, char const * invoked_command, char const * command_output ),
     void       * closure,
     LIST       * shell,
-    const char * action,
-    const char * target
+    char const * action,
+    char const * target
 )
 {
     int slot;
     int raw_cmd = 0 ;
-    const char * argv_static[ MAXARGC + 1 ];  /* +1 for NULL */
-    const char * * argv = argv_static;
+    char const * argv_static[ MAXARGC + 1 ];  /* +1 for NULL */
+    char const * * argv = argv_static;
     char * p;
-    const char * command_orig = command;
+    char const * command_orig = command;
 
     /* Check to see if we need to hack around the line-length limitation. Look
      * for a JAMSHELL setting of "%", indicating that the command should be
@@ -434,7 +434,7 @@ void exec_cmd
 
         /* Put together the command we run. */
         {
-            const char * * argp = argv;
+            char const * * argp = argv;
             string_new( &cmd );
             string_copy( &cmd, *(argp++) );
             while ( *argp )
@@ -586,7 +586,7 @@ int exec_wait()
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-static void free_argv( const char * * args )
+static void free_argv( char const * * args )
 {
     BJAM_FREE( (void *)args[ 0 ] );
     BJAM_FREE( (void *)args );
@@ -622,14 +622,14 @@ int maxline()
  * New strategy: break the string in at most one place.
  */
 
-static const char * * string_to_args( char const * string )
+static char const * * string_to_args( char const * string )
 {
-    int            src_len;
-    int            in_quote;
-    char         * line;
-    char   const * src;
-    char         * dst;
-    const char * * argv;
+    int src_len;
+    int in_quote;
+    char * line;
+    char const * src;
+    char * dst;
+    char const * * argv;
 
     /* Drop leading and trailing whitespace if any. */
     while ( isspace( *string ) )
@@ -706,9 +706,9 @@ static void onintr( int disp )
  * command-line. Otherwise, return zero.
  */
 
-long can_spawn( const char * command )
+long can_spawn( char const * command )
 {
-    const char * p;
+    char const * p;
     char inquote = 0;
 
     /* Move to the first non-whitespace. */
