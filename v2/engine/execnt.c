@@ -33,7 +33,7 @@
 /*
  * execnt.c - execute a shell command on Windows NT
  *
- * If $(JAMSHELL) is defined, uses that to formulate execvp()/spawnvp().
+ * If $(JAMSHELL) is defined, uses that to formulate the actual command.
  * The default is:
  *
  *  /bin/sh -c %        [ on UNIX/AmigaOS ]
@@ -41,12 +41,11 @@
  *
  * Each word must be an individual element in a jam variable value.
  *
- * In $(JAMSHELL), % expands to the command string and ! expands to
- * the slot number (starting at 1) for multiprocess (-j) invocations.
- * If $(JAMSHELL) doesn't include a %, it is tacked on as the last
- * argument.
+ * In $(JAMSHELL), % expands to the command string and ! expands to the slot
+ * number (starting at 1) for multiprocess (-j) invocations. If $(JAMSHELL) does
+ * not include a %, it is tacked on as the last argument.
  *
- * Don't just set JAMSHELL to /bin/sh or cmd.exe - it won't work!
+ * Do not just set JAMSHELL to /bin/sh or cmd.exe - it will not work!
  *
  * External routines:
  *  exec_cmd() - launch an async command execution.
@@ -61,46 +60,45 @@
  * 06/02/97 (gsar)    - full async multiprocess support for Win32
  */
 
-/* get the maximum command line length according to the OS */
+/* get the maximum shell command line length according to the OS */
 int maxline();
 
 /* delete and argv list */
-static void free_argv(const char * *);
-/* Convert a command string into arguments for spawnvp. */
-static const char** string_to_args(const char*);
+static void free_argv( char const * * );
+/* convert a command string into arguments */
+static const char** string_to_args( char const * );
 /* bump intr to note command interruption */
-static void onintr(int);
-/* If the command is suitable for execution via spawnvp */
-long can_spawn(const char*);
-/* Add two 64-bit unsigned numbers, h1l1 and h2l2 */
+static void onintr( int );
+/* is the command suitable for direct execution via CreateProcess() */
+long can_spawn( char const * );
+/* add two 64-bit unsigned numbers, h1l1 and h2l2 */
 static FILETIME add_64(
     unsigned long h1, unsigned long l1,
-    unsigned long h2, unsigned long l2);
-static FILETIME add_FILETIME(FILETIME t1, FILETIME t2);
-static FILETIME negate_FILETIME(FILETIME t);
-/* Convert a FILETIME to a number of seconds */
-static double filetime_seconds(FILETIME t);
+    unsigned long h2, unsigned long l2 );
+static FILETIME add_FILETIME( FILETIME t1, FILETIME t2 );
+static FILETIME negate_FILETIME( FILETIME t );
+/* convert a FILETIME to a number of seconds */
+static double filetime_seconds( FILETIME t );
 /* record the timing info for the process */
-static void record_times(HANDLE, timing_info*);
+static void record_times( HANDLE, timing_info * );
 /* calc the current running time of an *active* process */
-static double running_time(HANDLE);
+static double running_time( HANDLE );
 /* */
-DWORD get_process_id(HANDLE);
-/* terminate the given process, after terminating all its children */
-static void kill_process_tree(DWORD, HANDLE);
-/* waits for a command to complete or for the given timeout, whichever is first */
-static int try_wait(int timeoutMillis);
+DWORD get_process_id( HANDLE );
+/* terminate the given process, after terminating all its children first */
+static void kill_process_tree( DWORD, HANDLE );
+/* waits for a command to complete or time out */
+static int try_wait( int timeoutMillis );
 /* reads any pending output for running commands */
 static void read_output();
 /* checks if a command ran out of time, and kills it */
 static int try_kill_one();
 /* */
-static double creation_time(HANDLE);
-/* Recursive check if first process is parent (directly or indirectly) of
-the second one. */
-static int is_parent_child(DWORD, DWORD);
+static double creation_time( HANDLE );
+/* is the first process a parent (direct or indirect) to second one */
+static int is_parent_child( DWORD, DWORD );
 /* */
-static void close_alert(HANDLE);
+static void close_alert( HANDLE );
 /* close any alerts hanging around */
 static void close_alerts();
 
@@ -181,8 +179,8 @@ void execnt_unit_test()
     }
 
     {
-        /* Work around vc6 bug; it doesn't like escaped string
-         * literals inside assert
+        /* Work around vc6 bug; it does not like escaped string literals inside
+         * assert.
          */
         const char * * argv = string_to_args(" \"g++\" -c -I\"Foobar\"" );
         char const expected[] = "-c -I\"Foobar\"";
@@ -209,24 +207,26 @@ void exec_cmd
     const char * target
 )
 {
-    int      slot;
-    int      raw_cmd = 0 ;
-    const char   * argv_static[ MAXARGC + 1 ];  /* +1 for NULL */
+    int slot;
+    int raw_cmd = 0 ;
+    const char * argv_static[ MAXARGC + 1 ];  /* +1 for NULL */
     const char * * argv = argv_static;
-    char   * p;
+    char * p;
     const char * command_orig = command;
 
     /* Check to see if we need to hack around the line-length limitation. Look
      * for a JAMSHELL setting of "%", indicating that the command should be
      * invoked directly.
      */
-    if ( !list_empty( shell ) && !strcmp( object_str( list_front( shell ) ), "%" ) && list_next( list_begin( shell ) ) == list_end( shell ) )
+    if ( !list_empty( shell ) &&
+        !strcmp( object_str( list_front( shell ) ), "%" ) &&
+        list_next( list_begin( shell ) ) == list_end( shell ) )
     {
         raw_cmd = 1;
         shell = 0;
     }
 
-    /* Find a slot in the running commands table for this one. */
+    /* Find a free slot in the running commands table. */
     for ( slot = 0; slot < MAXJOBS; ++slot )
         if ( !cmdtab[ slot ].pi.hProcess )
             break;
@@ -259,7 +259,7 @@ void exec_cmd
     if ( raw_cmd && ( can_spawn( command ) >= MAXLINE ) )
     {
         if ( DEBUG_EXECCMD )
-            printf("Executing raw command directly\n");
+            printf( "Executing raw command directly\n" );
     }
     else
     {
@@ -268,7 +268,7 @@ void exec_cmd
         raw_cmd = 0;
 
         /* Write command to bat file. For some reason this open can fail
-         * intermitently. But doing some retries works. Most likely this is due
+         * intermittently. But doing some retries works. Most likely this is due
          * to a previously existing file of the same name that happens to be
          * opened by an active virus scanner. Pointed out and fixed by Bronek
          * Kozicki.
@@ -305,11 +305,13 @@ void exec_cmd
         int i;
         char jobno[ 4 ];
         int gotpercent = 0;
-        LISTITER shell_iter = list_begin( shell ), shell_end = list_end( shell );
+        LISTITER shell_iter = list_begin( shell );
+        LISTITER shell_end = list_end( shell );
 
         sprintf( jobno, "%d", slot + 1 );
 
-        for ( i = 0; shell_iter != shell_end && ( i < MAXARGC ); ++i, shell_iter = list_next( shell_iter ) )
+        for ( i = 0; shell_iter != shell_end && ( i < MAXARGC );
+            ++i, shell_iter = list_next( shell_iter ) )
         {
             switch ( object_str( list_item( shell_iter ) )[ 0 ] )
             {
@@ -344,11 +346,10 @@ void exec_cmd
 
     /* Start the command. */
     {
-        SECURITY_ATTRIBUTES sa
-            = { sizeof( SECURITY_ATTRIBUTES ), 0, 0 };
+        SECURITY_ATTRIBUTES sa = { sizeof( SECURITY_ATTRIBUTES ), 0, 0 };
         SECURITY_DESCRIPTOR sd;
-        STARTUPINFO si
-            = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+        STARTUPINFO si = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0, 0, 0, 0, 0 };
         string cmd;
 
         /* Init the security data. */
@@ -376,10 +377,13 @@ void exec_cmd
             }
         }
 
-        /* Set handle inheritance off for the pipe ends the parent reads from. */
-        SetHandleInformation( cmdtab[ slot ].pipe_out[ 0 ], HANDLE_FLAG_INHERIT, 0 );
+        /* Set handle inheritance off for the pipe ends the parent reads from.
+         */
+        SetHandleInformation( cmdtab[ slot ].pipe_out[ 0 ], HANDLE_FLAG_INHERIT,
+            0 );
         if ( globs.pipe_action == 2 )
-            SetHandleInformation( cmdtab[ slot ].pipe_err[ 0 ], HANDLE_FLAG_INHERIT, 0 );
+            SetHandleInformation( cmdtab[ slot ].pipe_err[ 0 ],
+                HANDLE_FLAG_INHERIT, 0 );
 
         /* Hide the child window, if any. */
         si.dwFlags |= STARTF_USESHOWWINDOW;
@@ -404,15 +408,19 @@ void exec_cmd
             si.hStdError = cmdtab[ slot ].pipe_out[ 1 ];
         }
 
-        /* Let the child inherit stdin, as some commands assume it's available. */
-        si.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
+        /* Let the child inherit stdin, as some commands assume it is
+         * available.
+         */
+        si.hStdInput = GetStdHandle( STD_INPUT_HANDLE );
 
         /* Save the operation for exec_wait() to find. */
         cmdtab[ slot ].func = func;
         cmdtab[ slot ].closure = closure;
         if ( action && target )
         {
+            string_free( &cmdtab[ slot ].action );
             string_copy( &cmdtab[ slot ].action, action );
+            string_free( &cmdtab[ slot ].target );
             string_copy( &cmdtab[ slot ].target, target );
         }
         else
@@ -499,7 +507,7 @@ int exec_wait()
     do
     {
         /* Check for a complete command, briefly. */
-        i = try_wait(500);
+        i = try_wait( 500 );
         /* Read in the output of all running commands. */
         read_output();
         /* Close out pending debug style dialogs. */
@@ -546,7 +554,7 @@ int exec_wait()
             cmdtab[ i ].buffer_err.size > 0 ? cmdtab[ i ].buffer_err.value : 0,
             cmdtab[ i ].exit_reason );
 
-        /* Call the callback, may call back to jam rule land. Assume -p0 in
+        /* Call the callback, may call back to jam rule land. Assume -p0 is in
          * effect so only pass buffer containing merged output.
          */
         (*cmdtab[ i ].func)(
@@ -597,19 +605,19 @@ int maxline()
     os_info.dwOSVersionInfoSize = sizeof( os_info );
     GetVersionEx( &os_info );
 
-    if ( os_info.dwMajorVersion >= 5 ) return 8191; /* XP >     */
+    if ( os_info.dwMajorVersion >= 5 ) return 8191; /* XP       */
     if ( os_info.dwMajorVersion == 4 ) return 2047; /* NT 4.x   */
     return 996;                                     /* NT 3.5.1 */
 }
 
 
 /*
- * Convert a command string into arguments for spawnvp(). The original code,
- * inherited from ftjam, tried to break up every argument on the command-line,
- * dealing with quotes, but that is really a waste of time on Win32, at least.
- * It turns out that all you need to do is get the raw path to the executable in
- * the first argument to spawnvp(), and you can pass all the rest of the
- * command-line arguments to spawnvp() in one, un-processed string.
+ * Convert a command string into arguments as used by Unix spawnvp() API. The
+ * original code, inherited from ftjam, tried to break up every argument on the
+ * command-line, dealing with quotes, but that is really a waste of time on
+ * Win32, at least. It turns out that all you need to do is get the raw path to
+ * the executable in the first argument to spawnvp(), and you can pass all the
+ * rest of the command-line arguments to spawnvp() in one, un-processed string.
  *
  * New strategy: break the string in at most one place.
  */
@@ -641,7 +649,7 @@ static const char * * string_to_args( char const * string )
      *   element 1: stores the command-line arguments to the executable
      *   element 2: NULL terminator
      */
-    argv = (const char * *)BJAM_MALLOC( 3 * sizeof( const char * ) );
+    argv = (char const * *)BJAM_MALLOC( 3 * sizeof( char const * ) );
     if ( !argv )
     {
         BJAM_FREE( line );
@@ -693,9 +701,9 @@ static void onintr( int disp )
 
 
 /*
- * can_spawn() - If the command is suitable for execution via spawnvp(), return
- * a number >= the number of characters it would occupy on the command-line.
- * Otherwise, return zero.
+ * can_spawn() - If the command is suitable for execution via CreateProcessA(),
+ * return a number >= the number of characters it would occupy on the
+ * command-line. Otherwise, return zero.
  */
 
 long can_spawn( const char * command )
@@ -708,11 +716,10 @@ long can_spawn( const char * command )
 
     p = command;
 
-    /* Look for newlines and unquoted i/o redirection. */
+    /* Look for newlines and unquoted I/O redirection. */
     do
     {
-        p += strcspn( p, "'\n\"<>|" );
-
+        p += strcspn( p, "\n\"'<>|" );
         switch ( *p )
         {
         case '\n':
@@ -732,7 +739,7 @@ long can_spawn( const char * command )
             {
                 if ( inquote == *p )
                     inquote = 0;
-                else if ( inquote == 0 )
+                else if ( !inquote )
                     inquote = *p;
             }
             ++p;
@@ -1049,22 +1056,23 @@ typedef LONG (__stdcall * NtQueryInformationProcess__)(
     PVOID ProcessInformation,
     ULONG ProcessInformationLength,
     PULONG ReturnLength);
-static NtQueryInformationProcess__ NtQueryInformationProcess_ = NULL;
-static HMODULE NTDLL_ = NULL;
+static NtQueryInformationProcess__ NtQueryInformationProcess_;
+static HMODULE NTDLL_;
 DWORD get_process_id( HANDLE process )
 {
     PROCESS_BASIC_INFORMATION_ pinfo;
     if ( !NtQueryInformationProcess_ )
     {
-        if ( ! NTDLL_ )
+        if ( !NTDLL_ )
             NTDLL_ = GetModuleHandleA( "ntdll" );
         if ( NTDLL_ )
-            NtQueryInformationProcess_
-                = (NtQueryInformationProcess__)GetProcAddress( NTDLL_, "NtQueryInformationProcess" );
+            NtQueryInformationProcess_ =
+                (NtQueryInformationProcess__)GetProcAddress( NTDLL_,
+                    "NtQueryInformationProcess" );
     }
     if ( NtQueryInformationProcess_ )
     {
-        LONG r = (*NtQueryInformationProcess_)( process,
+        (*NtQueryInformationProcess_)( process,
             /* ProcessBasicInformation == */ 0, &pinfo,
             sizeof( PROCESS_BASIC_INFORMATION_ ), NULL );
         return pinfo.UniqueProcessId;
