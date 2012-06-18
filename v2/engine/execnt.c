@@ -599,7 +599,7 @@ static void free_argv( char const * * args )
  *     http://support.microsoft.com/default.aspx?scid=kb;en-us;830473
  */
 
-int maxline()
+static int raw_maxline()
 {
     OSVERSIONINFO os_info;
     os_info.dwOSVersionInfoSize = sizeof( os_info );
@@ -608,6 +608,13 @@ int maxline()
     if ( os_info.dwMajorVersion >= 5 ) return 8191; /* XP       */
     if ( os_info.dwMajorVersion == 4 ) return 2047; /* NT 4.x   */
     return 996;                                     /* NT 3.5.1 */
+}
+
+int maxline()
+{
+    static result;
+    if ( !result ) result = raw_maxline();
+    return result;
 }
 
 
