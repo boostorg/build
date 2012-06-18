@@ -719,7 +719,8 @@ long can_spawn( char const * command )
     char inquote = 0;
 
     /* Move to the first non-whitespace. */
-    command += strspn( command, " \t" );
+    while ( isspace( *command ) )
+        ++command;
 
     p = command;
 
