@@ -70,7 +70,7 @@ static char const * * string_to_args( char const * );
 /* bump intr to note command interruption */
 static void onintr( int );
 /* is the command suitable for direct execution via CreateProcessA() */
-long can_spawn( char const * );
+static long can_spawn( char const * );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
 static FILETIME add_64(
     unsigned long h1, unsigned long l1,
@@ -212,18 +212,6 @@ void exec_cmd
     char const * command = command_orig;
     string command_local;
 
-    /* Check to see if we need to hack around the line-length limitation. Look
-     * for a JAMSHELL setting of "%", indicating that the command should be
-     * invoked directly.
-     */
-    if ( !list_empty( shell ) &&
-        !strcmp( object_str( list_front( shell ) ), "%" ) &&
-        list_next( list_begin( shell ) ) == list_end( shell ) )
-    {
-        raw_cmd = 1;
-        shell = 0;
-    }
-
     /* Find a free slot in the running commands table. */
     for ( slot = 0; slot < MAXJOBS; ++slot )
         if ( !cmdtab[ slot ].pi.hProcess )
@@ -234,36 +222,50 @@ void exec_cmd
         exit( EXITBAD );
     }
 
-    /* Compute the name of a temp batch file, for possible use. */
-    if ( !cmdtab[ slot ].tempfile_bat )
-    {
-        char const * tempdir = path_tmpdir();
-        DWORD procID = GetCurrentProcessId();
-
-        /* SVA - allocate 64 bytes extra just to be safe. */
-        cmdtab[ slot ].tempfile_bat = BJAM_MALLOC_ATOMIC( strlen( tempdir ) + 64 );
-
-        sprintf( cmdtab[ slot ].tempfile_bat, "%s\\jam%d-%02d.bat",
-            tempdir, procID, slot );
-    }
-
     /* Trim leading, -ending- white space */
     while ( *( command + 1 ) && isspace( *command ) )
         ++command;
 
-    /* Write to .BAT file unless the line would be too long and it meets the
-     * other spawnability criteria.
+    /* Check to see if we need to hack around the line-length limitation. Look
+     * for a JAMSHELL setting of "%", indicating that the command should be
+     * invoked directly.
      */
-    if ( raw_cmd && ( can_spawn( command ) >= MAXLINE ) )
+    if ( !list_empty( shell ) &&
+        !strcmp( object_str( list_front( shell ) ), "%" ) &&
+        list_next( list_begin( shell ) ) == list_end( shell ) )
     {
-        if ( DEBUG_EXECCMD )
-            printf( "Executing raw command directly\n" );
+        /* Check to see if we need to hack around the line-length limitation.
+         * JAMSHELL setting of "%", indicates that the command should be invoked
+         * directly if it satisfies all the spawnability criteria or using a
+         * batch file and the default shell if not.
+         */
+        raw_cmd = can_spawn( command ) >= MAXLINE;
+        shell = L0;
     }
-    else
+
+    /* If we are not running a raw command directly, prepare a .BAT file to be
+     * executed using an external shell (default or not - does not matter here).
+     */
+    if ( !raw_cmd )
     {
         FILE * f = 0;
         int tries = 0;
-        raw_cmd = 0;
+
+        /* Compute the name of a temp batch file if we have not used it already
+         * for this command slot.
+         */
+        if ( !cmdtab[ slot ].tempfile_bat )
+        {
+            char const * tempdir = path_tmpdir();
+            DWORD procID = GetCurrentProcessId();
+
+            /* SVA - allocate 64 bytes extra just to be safe. */
+            cmdtab[ slot ].tempfile_bat = BJAM_MALLOC_ATOMIC( strlen( tempdir )
+                + 64 );
+
+            sprintf( cmdtab[ slot ].tempfile_bat, "%s\\jam%d-%02d.bat", tempdir,
+                procID, slot );
+        }
 
         /* Write command to bat file. For some reason this open can fail
          * intermittently. But doing some retries works. Most likely this is due
@@ -293,6 +295,11 @@ void exec_cmd
             else
                 printf( "Executing through .bat file\n" );
         }
+    }
+    else
+    {
+        if ( DEBUG_EXECCMD )
+            printf( "Executing raw command directly\n" );
     }
 
     /* Formulate argv; If shell was defined, be prepared for % and ! subs.
@@ -719,7 +726,7 @@ static void onintr( int disp )
  * command-line. Otherwise, return zero.
  */
 
-long can_spawn( char const * command )
+static long can_spawn( char const * command )
 {
     char const * p;
     char inquote = 0;
