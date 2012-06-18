@@ -454,6 +454,10 @@ void exec_cmd
         string_new( &cmdtab[ slot ].buffer_out );
         string_new( &cmdtab[ slot ].buffer_err );
 
+        if ( DEBUG_EXECCMD )
+            printf( "Command string to be sent to CreateProcessA(): '%s'\n",
+                cmd.value );
+
         /* Run the command by creating a sub-process for it. */
         if (
             ! CreateProcessA(
