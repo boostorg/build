@@ -199,7 +199,7 @@ void execnt_unit_test()
 
 void exec_cmd
 (
-    char const * command,
+    char const * command_orig,
     void (* func)( void * closure, int status, timing_info *, char const * invoked_command, char const * command_output ),
     void       * closure,
     LIST       * shell,
@@ -209,9 +209,8 @@ void exec_cmd
 {
     int slot;
     int raw_cmd = 0 ;
-    char * p;
-    char const * command_orig = command;
-    string cmd;
+    char const * command = command_orig;
+    string command_local;
 
     /* Check to see if we need to hack around the line-length limitation. Look
      * for a JAMSHELL setting of "%", indicating that the command should be
@@ -343,15 +342,15 @@ void exec_cmd
             argv[ 3 ] = 0;
         }
 
-        /* Put together the command we run. */
+        /* Put together the final command string we are to run. */
         {
             char const * * argp = argv;
-            string_new( &cmd );
-            string_copy( &cmd, *(argp++) );
+            string_new( &command_local );
+            string_append( &command_local, *(argp++) );
             while ( *argp )
             {
-                string_push_back( &cmd, ' ' );
-                string_append( &cmd, *(argp++) );
+                string_push_back( &command_local, ' ' );
+                string_append( &command_local, *(argp++) );
             }
         }
 
@@ -456,13 +455,13 @@ void exec_cmd
 
         if ( DEBUG_EXECCMD )
             printf( "Command string to be sent to CreateProcessA(): '%s'\n",
-                cmd.value );
+                command_local.value );
 
         /* Run the command by creating a sub-process for it. */
         if (
             ! CreateProcessA(
                 NULL                    ,  /* application name               */
-                cmd.value               ,  /* command line                   */
+                command_local.value     ,  /* command line                   */
                 NULL                    ,  /* process attributes             */
                 NULL                    ,  /* thread attributes              */
                 TRUE                    ,  /* inherit handles                */
@@ -480,8 +479,8 @@ void exec_cmd
         }
     }
 
-    /* Clean up temporary stuff. */
-    string_free( &cmd );
+    /* Free our local command string copy. */
+    string_free( &command_local );
 
     /* Wait until we are under the limit of concurrent commands. Do not trust
      * globs.jobs alone.
