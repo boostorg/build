@@ -69,7 +69,7 @@ static void free_argv( char const * * );
 static char const * * string_to_args( char const * );
 /* bump intr to note command interruption */
 static void onintr( int );
-/* is the command suitable for direct execution via CreateProcess() */
+/* is the command suitable for direct execution via CreateProcessA() */
 long can_spawn( char const * );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
 static FILETIME add_64(
@@ -209,10 +209,9 @@ void exec_cmd
 {
     int slot;
     int raw_cmd = 0 ;
-    char const * argv_static[ MAXARGC + 1 ];  /* +1 for NULL */
-    char const * * argv = argv_static;
     char * p;
     char const * command_orig = command;
+    string cmd;
 
     /* Check to see if we need to hack around the line-length limitation. Look
      * for a JAMSHELL setting of "%", indicating that the command should be
@@ -300,44 +299,64 @@ void exec_cmd
     /* Formulate argv; If shell was defined, be prepared for % and ! subs.
      * Otherwise, use stock cmd.exe.
      */
-    if ( shell )
     {
-        int i;
-        char jobno[ 4 ];
-        int gotpercent = 0;
-        LISTITER shell_iter = list_begin( shell );
-        LISTITER shell_end = list_end( shell );
+        char const * argv_static[ MAXARGC + 1 ];  /* +1 for NULL */
+        char const * * argv = argv_static;
 
-        sprintf( jobno, "%d", slot + 1 );
-
-        for ( i = 0; shell_iter != shell_end && ( i < MAXARGC );
-            ++i, shell_iter = list_next( shell_iter ) )
+        if ( shell )
         {
-            switch ( object_str( list_item( shell_iter ) )[ 0 ] )
+            int i;
+            char jobno[ 4 ];
+            int gotpercent = 0;
+            LISTITER shell_iter = list_begin( shell );
+            LISTITER shell_end = list_end( shell );
+
+            sprintf( jobno, "%d", slot + 1 );
+
+            for ( i = 0; shell_iter != shell_end && ( i < MAXARGC );
+                ++i, shell_iter = list_next( shell_iter ) )
             {
-                case '%': argv[ i ] = command; ++gotpercent; break;
-                case '!': argv[ i ] = jobno; break;
-                default : argv[ i ] = object_str( list_item( shell_iter ) );
+                switch ( object_str( list_item( shell_iter ) )[ 0 ] )
+                {
+                    case '%': argv[ i ] = command; ++gotpercent; break;
+                    case '!': argv[ i ] = jobno; break;
+                    default : argv[ i ] = object_str( list_item( shell_iter ) );
+                }
+                if ( DEBUG_EXECCMD )
+                    printf( "argv[%d] = '%s'\n", i, argv[ i ] );
             }
-            if ( DEBUG_EXECCMD )
-                printf( "argv[%d] = '%s'\n", i, argv[ i ] );
+
+            if ( !gotpercent )
+                argv[ i++ ] = command;
+
+            argv[ i ] = 0;
+        }
+        else if ( raw_cmd )
+        {
+            argv = string_to_args( command );
+        }
+        else
+        {
+            argv[ 0 ] = "cmd.exe";
+            argv[ 1 ] = "/Q/C";  /* anything more is non-portable */
+            argv[ 2 ] = command;
+            argv[ 3 ] = 0;
         }
 
-        if ( !gotpercent )
-            argv[ i++ ] = command;
+        /* Put together the command we run. */
+        {
+            char const * * argp = argv;
+            string_new( &cmd );
+            string_copy( &cmd, *(argp++) );
+            while ( *argp )
+            {
+                string_push_back( &cmd, ' ' );
+                string_append( &cmd, *(argp++) );
+            }
+        }
 
-        argv[ i ] = 0;
-    }
-    else if ( raw_cmd )
-    {
-        argv = string_to_args( command );
-    }
-    else
-    {
-        argv[ 0 ] = "cmd.exe";
-        argv[ 1 ] = "/Q/C";  /* anything more is non-portable */
-        argv[ 2 ] = command;
-        argv[ 3 ] = 0;
+        if ( argv != argv_static )
+            free_argv( argv );
     }
 
     /* Catch interrupts whenever commands are running. */
@@ -350,7 +369,6 @@ void exec_cmd
         SECURITY_DESCRIPTOR sd;
         STARTUPINFO si = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0 };
-        string cmd;
 
         /* Init the security data. */
         InitializeSecurityDescriptor( &sd, SECURITY_DESCRIPTOR_REVISION );
@@ -432,25 +450,13 @@ void exec_cmd
         }
         string_copy( &cmdtab[ slot ].command, command_orig );
 
-        /* Put together the command we run. */
-        {
-            char const * * argp = argv;
-            string_new( &cmd );
-            string_copy( &cmd, *(argp++) );
-            while ( *argp )
-            {
-                string_push_back( &cmd, ' ' );
-                string_append( &cmd, *(argp++) );
-            }
-        }
-
         /* Create output buffers. */
         string_new( &cmdtab[ slot ].buffer_out );
         string_new( &cmdtab[ slot ].buffer_err );
 
         /* Run the command by creating a sub-process for it. */
         if (
-            ! CreateProcess(
+            ! CreateProcessA(
                 NULL                    ,  /* application name               */
                 cmd.value               ,  /* command line                   */
                 NULL                    ,  /* process attributes             */
@@ -468,10 +474,10 @@ void exec_cmd
             perror( "CreateProcess" );
             exit( EXITBAD );
         }
-
-        /* Clean up temporary stuff. */
-        string_free( &cmd );
     }
+
+    /* Clean up temporary stuff. */
+    string_free( &cmd );
 
     /* Wait until we are under the limit of concurrent commands. Do not trust
      * globs.jobs alone.
@@ -479,9 +485,6 @@ void exec_cmd
     while ( ( cmdsrunning >= MAXJOBS ) || ( cmdsrunning >= globs.jobs ) )
         if ( !exec_wait() )
             break;
-
-    if ( argv != argv_static )
-        free_argv( argv );
 }
 
 
