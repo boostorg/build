@@ -475,7 +475,7 @@ void exec_cmd
                 )
             )
         {
-            perror( "CreateProcess" );
+            perror( "CreateProcessA" );
             exit( EXITBAD );
         }
     }
