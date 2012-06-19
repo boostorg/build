@@ -9,7 +9,7 @@
 
 typedef struct string
 {
-    char* value;
+    char * value;
     unsigned long size;
     unsigned long capacity;
     char opt[32];

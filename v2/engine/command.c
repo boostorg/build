@@ -27,16 +27,18 @@
 
 
 /*
- * cmd_new() - return a new CMD or 0 if too many args
+ * cmd_new() - return a new CMD or 0 if any of the command lines are too long.
  */
 
 CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
 {
     CMD * cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
-    LISTITER iter = list_begin( shell ), end = list_end( shell );
+    LISTITER iter = list_begin( shell );
+    LISTITER end = list_end( shell );
     /* Lift line-length limitation entirely when JAMSHELL is just "%". */
-    int no_limit = ( iter != end && !strcmp( object_str( list_item( iter ) ), "%") && list_next( iter ) == end );
-    int max_line = MAXLINE;
+    int no_limit = iter != end
+        && !strcmp( object_str( list_item( iter ) ), "%")
+        && list_next( iter ) == end;
     FRAME frame[1];
 
     cmd->rule = rule;
@@ -53,7 +55,8 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
     lol_init( frame->args );
     lol_add( frame->args, list_copy( targets ) );
     lol_add( frame->args, list_copy( sources ) );
-    function_run_actions( rule->actions->command, frame, stack_global(), cmd->buf );
+    function_run_actions( rule->actions->command, frame, stack_global(),
+        cmd->buf );
     frame_free( frame );
 
     if ( !no_limit )

@@ -131,11 +131,9 @@ static struct
     int                 exit_reason;  /* reason why a command completed */
 
     /* Function called when the command completes. */
-    void (* func)( void * closure, int status, timing_info *, char const *, char const * );
+    ExecCmdCallback func;
 
-    /* Opaque data passed back to the 'func' callback called when the command
-     * completes.
-     */
+    /* Opaque data passed back to the 'func' callback. */
     void * closure;
 }
 cmdtab[ MAXJOBS ] = { { 0 } };
@@ -191,9 +189,9 @@ void execnt_unit_test()
 void exec_cmd
 (
     char const * command_orig,
-    void (* func)( void * closure, int status, timing_info *, char const * invoked_command, char const * command_output ),
-    void       * closure,
-    LIST       * shell,
+    ExecCmdCallback func,
+    void * closure,
+    LIST * shell,
     char const * action,
     char const * target
 )
