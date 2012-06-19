@@ -68,7 +68,7 @@ static void onintr( int );
 /* trim leading and trailing whitespace */
 void string_new_trimmed( string * pResult, char const * command );
 /* is the command suitable for direct execution via CreateProcessA() */
-static long can_spawn( char const * );
+static long can_spawn( string * pCommand );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
 static FILETIME add_64(
     unsigned long h1, unsigned long l1,
@@ -153,26 +153,32 @@ void execnt_unit_test()
      */
     typedef struct test { char * command; int result; } test;
     test tests[] = {
-        { "x", 0 },
-        { "x\ny", 1 },
-        { "x\n\n y", 1 },
-        { "echo x > foo.bar", 1 },
-        { "echo x < foo.bar", 1 },
-        { "echo x \">\" foo.bar", 0 },
-        { "echo x \"<\" foo.bar", 0 },
-        { "echo x \\\">\\\" foo.bar", 1 },
-        { "echo x \\\"<\\\" foo.bar", 1 } };
+        { "x", 1 },
+        { "x\ny", 0 },
+        { "x\n\n y", 0 },
+        { "echo x > foo.bar", 0 },
+        { "echo x < foo.bar", 0 },
+        { "echo x \">\" foo.bar", 1 },
+        { "echo x \"<\" foo.bar", 1 },
+        { "echo x \\\">\\\" foo.bar", 0 },
+        { "echo x \\\"<\\\" foo.bar", 0 } };
     int i;
     for ( i = 0; i < sizeof( tests ) / sizeof( *tests ); ++i )
-        assert( !can_spawn( tests[ i ].command ) == tests[ i ].result );
+    {
+        string temp;
+        string_copy( &temp, tests[ i ].command );
+        assert( !!can_spawn( &temp ) == tests[ i ].result );
+    }
 
     {
-        char * long_command = BJAM_MALLOC_ATOMIC( MAXLINE + 10 );
-        assert( long_command != 0 );
-        memset( long_command, 'x', MAXLINE + 9 );
-        long_command[ MAXLINE + 9 ] = 0;
-        assert( can_spawn( long_command ) == MAXLINE + 9 );
-        BJAM_FREE( long_command );
+        string long_command;
+        string_new( &long_command );
+        string_reserve( &long_command, MAXLINE + 10 );
+        long_command.size = long_command.capacity - 1;
+        memset( long_command.value, 'x', long_command.size );
+        long_command.value[ long_command.size ] = 0;
+        assert( can_spawn( &long_command ) == MAXLINE + 9 );
+        string_free( &long_command );
     }
 #endif
 }
@@ -222,7 +228,7 @@ void exec_cmd
          * directly if it satisfies all the spawnability criteria or using a
          * batch file and the default shell if not.
          */
-        raw_cmd = can_spawn( command_local.value ) >= MAXLINE;
+        raw_cmd = can_spawn( &command_local ) >= MAXLINE;
         shell = L0;
     }
 
@@ -288,7 +294,14 @@ void exec_cmd
         char const * command = cmdtab[ slot ].tempfile_bat;
         char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
-        if ( shell )
+        if ( list_empty( shell ) )
+        {
+            argv[ 0 ] = "cmd.exe";
+            argv[ 1 ] = "/Q/C";  /* anything more is non-portable */
+            argv[ 2 ] = command;
+            argv[ 3 ] = 0;
+        }
+        else
         {
             int i;
             char jobno[ 4 ];
@@ -319,13 +332,6 @@ void exec_cmd
                 argv[ i++ ] = command;
 
             argv[ i ] = 0;
-        }
-        else
-        {
-            argv[ 0 ] = "cmd.exe";
-            argv[ 1 ] = "/Q/C";  /* anything more is non-portable */
-            argv[ 2 ] = command;
-            argv[ 3 ] = 0;
         }
 
         if ( DEBUG_EXECCMD )
@@ -449,7 +455,7 @@ void exec_cmd
 
         /* Run the command by creating a sub-process for it. */
         if (
-            ! CreateProcessA(
+            !CreateProcessA(
                 NULL                    ,  /* application name               */
                 command_local.value     ,  /* command line                   */
                 NULL                    ,  /* process attributes             */
@@ -639,13 +645,13 @@ static void onintr( int disp )
  * already been trimmed of all leading and trailing whitespace.
  */
 
-static long can_spawn( char const * command )
+static long can_spawn( string * pCommand )
 {
-    char const * p = command;
+    char const * p = pCommand->value;
     char inquote = 0;
 
-    assert( !isspace( *command ) );
-    assert( !command[0] || !isspace( command[ strlen(command) - 1 ] ) );
+    assert( !isspace( *pCommand->value ) );
+    assert( !pCommand->size || !isspace( pCommand->value[ pCommand->size - 1 ] ) );
 
     /* Look for newlines and unquoted I/O redirection. */
     do
@@ -663,7 +669,7 @@ static long can_spawn( char const * command )
 
         case '"':
         case '\'':
-            if ( ( p > command ) && ( p[-1] != '\\' ) )
+            if ( ( p > pCommand->value ) && ( p[-1] != '\\' ) )
             {
                 if ( inquote == *p )
                     inquote = 0;
@@ -685,7 +691,7 @@ static long can_spawn( char const * command )
     while ( *p );
 
     /* Return the number of characters the command will occupy. */
-    return p - command;
+    return p - pCommand->value;
 }
 
 
