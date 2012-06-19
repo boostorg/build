@@ -289,12 +289,7 @@ void exec_cmd
         command = cmdtab[ slot ].tempfile_bat;
 
         if ( DEBUG_EXECCMD )
-        {
-            if ( !list_empty( shell ) )
-                printf( "using user-specified shell: %s", object_str( list_front( shell ) ) );
-            else
-                printf( "Executing through .bat file\n" );
-        }
+            printf( "Executing through .bat file\n" );
     }
     else
     {
@@ -319,6 +314,12 @@ void exec_cmd
 
             sprintf( jobno, "%d", slot + 1 );
 
+            if ( DEBUG_EXECCMD )
+            {
+                printf( "Using user-specified shell: " );
+                list_print( shell );
+                printf( "\n" );
+            }
             for ( i = 0; shell_iter != shell_end && ( i < MAXARGC );
                 ++i, shell_iter = list_next( shell_iter ) )
             {
@@ -328,8 +329,6 @@ void exec_cmd
                     case '!': argv[ i ] = jobno; break;
                     default : argv[ i ] = object_str( list_item( shell_iter ) );
                 }
-                if ( DEBUG_EXECCMD )
-                    printf( "argv[%d] = '%s'\n", i, argv[ i ] );
             }
 
             if ( !gotpercent )
@@ -347,6 +346,13 @@ void exec_cmd
             argv[ 1 ] = "/Q/C";  /* anything more is non-portable */
             argv[ 2 ] = command;
             argv[ 3 ] = 0;
+        }
+
+        if ( DEBUG_EXECCMD )
+        {
+            int i;
+            for ( i = 0 ; argv[ i ]; ++i )
+                printf( "argv[%d] = '%s'\n", i, argv[ i ] );
         }
 
         /* Put together the final command string we are to run. */
