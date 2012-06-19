@@ -970,9 +970,6 @@ static CMD * make1cmds( TARGET * t )
         LIST         * nt;
         LIST         * ns;
         ACTIONS      * a1;
-        int            start;
-        int            chunk;
-        int            length;
 
         /* Only do rules with commands to execute. If this action has already
          * been executed, use saved status.
@@ -1031,46 +1028,59 @@ static CMD * make1cmds( TARGET * t )
          *
          * Note we loop through at least once, for sourceless actions.
          */
-
-        start = 0;
-        chunk = length = list_length( ns );
-
-        do
         {
-            /* Build cmd: cmd_new consumes its lists. */
-            CMD * cmd = cmd_new( rule,
-                list_copy( nt ),
-                list_sublist( ns, start, chunk ),
-                list_copy( shell ) );
+            int const length = list_length( ns );
+            int start = 0;
+            int chunk = length;
+            LIST * cmd_targets = L0;
+            LIST * cmd_shell = L0;
+            do
+            {
+                CMD * cmd;
+                LIST * cmd_sources = list_sublist( ns, start, chunk );
 
-            if ( cmd )
-            {
-                /* It fit: chain it up. */
-                if ( !cmds ) cmds = cmd;
-                else cmds->tail->next = cmd;
-                cmds->tail = cmd;
-                start += chunk;
-            }
-            else if ( ( actions->flags & RULE_PIECEMEAL ) && ( chunk > 1 ) )
-            {
-                /* Reduce chunk size slowly. */
-                chunk = chunk * 9 / 10;
-            }
-            else
-            {
-                /* Too long and not splittable. */
-                printf( "%s action is too long (max %d):\n", object_str(
-                    rule->name ), MAXLINE );
+                /* Build cmd: cmd_new() consumes its lists if successful. */
+                if ( list_empty( cmd_targets ) ) cmd_targets = list_copy( nt );
+                if ( list_empty( cmd_shell ) ) cmd_shell = list_copy( shell );
+                cmd = cmd_new( rule, cmd_targets, cmd_sources, cmd_shell );
 
-                /* Tell the user what did not fit. */
-                cmd = cmd_new( rule, list_copy( nt ),
-                    list_sublist( ns, start, chunk ),
-                    list_new( object_copy( constant_percent ) ) );
-                fputs( cmd->buf->value, stdout );
-                exit( EXITBAD );
+                if ( cmd )
+                {
+                    /* It fit: chain it up. */
+                    if ( !cmds ) cmds = cmd;
+                    else cmds->tail->next = cmd;
+                    cmds->tail = cmd;
+                    start += chunk;
+
+                    /* Mark consumed lists. */
+                    cmd_targets = L0;
+                    cmd_shell = L0;
+                }
+                else
+                {
+                    if ( ( actions->flags & RULE_PIECEMEAL ) && ( chunk > 1 ) )
+                    {
+                        /* Reduce chunk size slowly. */
+                        chunk = chunk * 9 / 10;
+                    }
+                    else
+                    {
+                        /* Too long and not splittable. */
+                        printf( "%s action is too long (max %d):\n", object_str(
+                            rule->name ), MAXLINE );
+
+                        /* Tell the user what did not fit. */
+                        cmd = cmd_new( rule, cmd_targets, cmd_sources,
+                            list_new( object_copy( constant_percent ) ) );
+                        fputs( cmd->buf->value, stdout );
+                        exit( EXITBAD );
+                    }
+
+                    list_free( cmd_sources );
+                }
             }
+            while ( start < length );
         }
-        while ( start < length );
 
         /* These were always copied when used. */
         list_free( nt );
