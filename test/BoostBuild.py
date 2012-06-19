@@ -572,11 +572,12 @@ class Tester(TestCmd.TestCmd):
         else:
             return result
 
-    def fail_test(self, condition, dump_stdio=True, dump_stack=True):
+    def fail_test(self, condition, dump_difference=True, dump_stdio=True,
+        dump_stack=True):
         if not condition:
             return
 
-        if hasattr(self, 'difference'):
+        if dump_difference and hasattr(self, 'difference'):
             f = StringIO.StringIO()
             self.difference.pprint(f)
             annotation("changes caused by the last build command", f.getvalue())

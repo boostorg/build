@@ -187,12 +187,8 @@ def collectDebugInfo():
     except:
         _info_exc()
 
-    # Avoid the 'changes caused by the last build command' report.
-    if hasattr(t, 'difference'):
-        del t.difference
-
     # Report prepared annotations.
-    t.fail_test(1, dump_stdio=False, dump_stack=False)
+    t.fail_test(1, dump_difference=False, dump_stdio=False, dump_stack=False)
 
 
 ###############################################################################
