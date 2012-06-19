@@ -448,7 +448,6 @@ void exec_cmd
          * Unicode (2-byte) nul-terminator character.
          */
         #define MAX_RAW_COMMAND_LENGTH 32766
-printf("...strlen:%d/%d...max:%d...\n", strlen(command_local.value), command_local.size, MAX_RAW_COMMAND_LENGTH);
         if ( command_local.size > MAX_RAW_COMMAND_LENGTH )
         {
             printf( "Command line too long (%d characters). Maximum executable "
