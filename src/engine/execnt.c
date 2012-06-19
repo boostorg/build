@@ -66,7 +66,7 @@ int maxline();
 /* bump intr to note command interruption */
 static void onintr( int );
 /* trim leading and trailing whitespace */
-void string_new_trimmed( string * pResult, char const * command );
+void string_new_trimmed( string * pResult, char const * source );
 /* is the command suitable for direct execution via CreateProcessA() */
 static long can_spawn( string * pCommand );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
@@ -628,20 +628,20 @@ int maxline()
 
 
 /*
- * Creates and returns a new trimmed copy of the given command string. Returned
+ * Creates and returns a new trimmed copy of the given source string. Returned
  * value needs to be released using string_free().
  */
 
-void string_new_trimmed( string * pResult, char const * command )
+void string_new_trimmed( string * pResult, char const * source )
 {
-    int command_len;
-    while ( isspace( *command ) )
-        ++command;
-    command_len = strlen( command );
-    while ( ( command_len > 0 ) && isspace( command[ command_len - 1 ] ) )
-        --command_len;
+    int source_len;
+    while ( isspace( *source ) )
+        ++source;
+    source_len = strlen( source );
+    while ( ( source_len > 0 ) && isspace( source[ source_len - 1 ] ) )
+        --source_len;
     string_new( pResult );
-    string_append_range( pResult, command, command + command_len );
+    string_append_range( pResult, source, source + source_len );
 }
 
 
