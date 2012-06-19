@@ -66,7 +66,7 @@ int maxline();
 /* bump intr to note command interruption */
 static void onintr( int );
 /* trim leading and trailing whitespace */
-void string_new_trimmed( string * pResult, char const * source );
+void string_new_trimmed( string * pResult, string const * source );
 /* is the command suitable for direct execution via CreateProcessA() */
 static long can_spawn( string * pCommand );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
@@ -188,7 +188,7 @@ void execnt_unit_test()
 
 void exec_cmd
 (
-    char const * command_orig,
+    string const * pCommand_orig,
     ExecCmdCallback func,
     void * closure,
     LIST * shell,
@@ -211,7 +211,7 @@ void exec_cmd
     }
 
     /* Trim all leading and trailing leading whitespace. */
-    string_new_trimmed( &command_local, command_orig );
+    string_new_trimmed( &command_local, pCommand_orig );
 
     /* Check to see if we need to hack around the line-length limitation. Look
      * for a JAMSHELL setting of "%", indicating that the command should be
@@ -441,7 +441,7 @@ void exec_cmd
             string_free( &cmdtab[ slot ].target );
             string_new ( &cmdtab[ slot ].target );
         }
-        string_copy( &cmdtab[ slot ].command, command_orig );
+        string_copy( &cmdtab[ slot ].command, pCommand_orig->value );
 
         /* CreateProcessA() Windows API places a limit of 32768 characters
          * (bytes) on the allowed command-line length, including a trailing
@@ -629,12 +629,13 @@ int maxline()
  * value needs to be released using string_free().
  */
 
-void string_new_trimmed( string * pResult, char const * source )
+void string_new_trimmed( string * pResult, string const * pSource )
 {
+    char const * source = pSource->value;
     int source_len;
     while ( isspace( *source ) )
         ++source;
-    source_len = strlen( source );
+    source_len = pSource->size - ( source - pSource->value );
     while ( ( source_len > 0 ) && isspace( source[ source_len - 1 ] ) )
         --source_len;
     string_new( pResult );

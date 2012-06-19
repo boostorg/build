@@ -554,8 +554,8 @@ static void make1c( state * pState )
         {
             /* Pop state first because exec_cmd() could push state. */
             pop_state( &state_stack );
-            exec_cmd( cmd->buf->value, make_closure, pState->t, cmd->shell,
-                rule_name, target );
+            exec_cmd( cmd->buf, make_closure, pState->t, cmd->shell, rule_name,
+                target );
         }
     }
     else

@@ -9,6 +9,7 @@
 #include "lists.h"
 #include "execcmd.h"
 #include "output.h"
+#include "strings.h"
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -115,7 +116,7 @@ void onintr( int disp )
 
 void exec_cmd
 (
-    char const * command,
+    string const * pCommand,
     ExecCmdCallback func,
     void * closure,
     LIST * shell,
@@ -157,7 +158,7 @@ void exec_cmd
         {
             switch ( object_str( list_item( iter ) )[0] )
             {
-                case '%': argv[ i ] = command; ++gotpercent; break;
+                case '%': argv[ i ] = pCommand->value; ++gotpercent; break;
                 case '!': argv[ i ] = jobno; break;
                 default : argv[ i ] = object_str( list_item( iter ) );
             }
@@ -166,7 +167,7 @@ void exec_cmd
         }
 
         if ( !gotpercent )
-        argv[ i++ ] = command;
+        argv[ i++ ] = pCommand->value;
 
         argv[ i ] = 0;
     }
@@ -174,7 +175,7 @@ void exec_cmd
     {
         argv[ 0 ] = "/bin/sh";
         argv[ 1 ] = "-c";
-        argv[ 2 ] = command;
+        argv[ 2 ] = pCommand->value;
         argv[ 3 ] = 0;
     }
 
@@ -182,8 +183,8 @@ void exec_cmd
     ++cmdsrunning;
 
     /* Save off actual command string. */
-    cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC( strlen( command ) + 1 );
-    strcpy( cmdtab[ slot ].command, command );
+    cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC( pCommand->size + 1 );
+    strcpy( cmdtab[ slot ].command, pCommand->value );
 
     /* Initialize only once. */
     if ( !initialized )
