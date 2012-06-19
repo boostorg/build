@@ -77,21 +77,25 @@ static struct tms old_time;
 
 static struct
 {
-    int     pid;              /* on win32, a real process handle */
-    int     fd[2];            /* file descriptors for stdout and stderr */
-    FILE   *stream[2];        /* child's stdout (0) and stderr (1) file stream */
-    clock_t start_time;       /* start time of child process */
-    int     exit_reason;      /* termination status */
-    int     action_length;    /* length of action string */
-    int     target_length;    /* length of target string */
-    char   *action;           /* buffer to hold action and target invoked */
-    char   *target;           /* buffer to hold action and target invoked */
-    char   *command;          /* buffer to hold command being invoked */
-    char   *buffer[2];        /* buffer to hold stdout and stderr, if any */
-    int     buf_size[2];      /* size of buffer (bytes) */
-    void    (*func)( void *closure, int status, timing_info*, const char *, const char * );
-    void   *closure;
-    time_t  start_dt;         /* start of command timestamp */
+    int      pid;            /* on win32, a real process handle */
+    int      fd[2];          /* file descriptors for stdout and stderr */
+    FILE   * stream[2];      /* child's stdout (0) and stderr (1) file stream */
+    clock_t  start_time;     /* start time of child process */
+    int      exit_reason;    /* termination status */
+    int      action_length;  /* length of action string */
+    int      target_length;  /* length of target string */
+    char   * action;         /* buffer to hold action and target invoked */
+    char   * target;         /* buffer to hold action and target invoked */
+    char   * command;        /* buffer to hold command being invoked */
+    char   * buffer[2];      /* buffer to hold stdout and stderr, if any */
+    int      buf_size[2];    /* size of buffer (bytes) */
+    time_t   start_dt;       /* start of command timestamp */
+
+    /* Function called when the command completes. */
+    ExecCmdCallback func;
+
+    /* Opaque data passed back to the 'func' callback. */
+    void * closure;
 } cmdtab[ MAXJOBS ] = {{0}};
 
 /*
@@ -111,20 +115,20 @@ void onintr( int disp )
 
 void exec_cmd
 (
-    const char * string,
-    void (*func)( void *closure, int status, timing_info*, const char *, const char * ),
+    char const * command,
+    ExecCmdCallback func,
     void * closure,
     LIST * shell,
-    const char * action,
-    const char * target
+    char const * action,
+    char const * target
 )
 {
-    static int initialized = 0;
-    int    out[2];
-    int    err[2];
-    int    slot;
-    int    len;
-    const char * argv[ MAXARGC + 1 ];  /* +1 for NULL */
+    static int initialized;
+    int out[2];
+    int err[2];
+    int slot;
+    int len;
+    char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
     /* Find a slot in the running commands table for this one. */
     for ( slot = 0; slot < MAXJOBS; ++slot )
@@ -153,8 +157,8 @@ void exec_cmd
         {
             switch ( object_str( list_item( iter ) )[0] )
             {
-                case '%': argv[ i ] = string; ++gotpercent; break;
-                case '!': argv[ i ] = jobno;                break;
+                case '%': argv[ i ] = command; ++gotpercent; break;
+                case '!': argv[ i ] = jobno; break;
                 default : argv[ i ] = object_str( list_item( iter ) );
             }
             if ( DEBUG_EXECCMD )
@@ -162,7 +166,7 @@ void exec_cmd
         }
 
         if ( !gotpercent )
-        argv[ i++ ] = string;
+        argv[ i++ ] = command;
 
         argv[ i ] = 0;
     }
@@ -170,7 +174,7 @@ void exec_cmd
     {
         argv[ 0 ] = "/bin/sh";
         argv[ 1 ] = "-c";
-        argv[ 2 ] = string;
+        argv[ 2 ] = command;
         argv[ 3 ] = 0;
     }
 
@@ -178,8 +182,8 @@ void exec_cmd
     ++cmdsrunning;
 
     /* Save off actual command string. */
-    cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC( strlen( string ) + 1 );
-    strcpy( cmdtab[ slot ].command, string );
+    cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC( strlen( command ) + 1 );
+    strcpy( cmdtab[ slot ].command, command );
 
     /* Initialize only once. */
     if ( !initialized )
