@@ -445,6 +445,20 @@ void exec_cmd
         }
         string_copy( &cmdtab[ slot ].command, command_orig );
 
+        /* CreateProcessA() Windows API places a limit of 32768 characters
+         * (bytes) on the allowed command-line length, including a trailing
+         * Unicode (2-byte) nul-terminator character.
+         */
+        #define MAX_RAW_COMMAND_LENGTH 32766
+printf("...strlen:%d/%d...max:%d...\n", strlen(command_local.value), command_local.size, MAX_RAW_COMMAND_LENGTH);
+        if ( command_local.size > MAX_RAW_COMMAND_LENGTH )
+        {
+            printf( "Command line too long (%d characters). Maximum executable "
+                "command-line length is %d.", command_local.size,
+                MAX_RAW_COMMAND_LENGTH );
+            exit( EXITBAD );
+        }
+
         /* Create output buffers. */
         string_new( &cmdtab[ slot ].buffer_out );
         string_new( &cmdtab[ slot ].buffer_err );
