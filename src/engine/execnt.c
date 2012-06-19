@@ -63,12 +63,10 @@
 /* get the maximum shell command line length according to the OS */
 int maxline();
 
-/* delete and argv list */
-static void free_argv( char const * * );
-/* convert a command string into arguments */
-static char const * * string_to_args( char const * );
 /* bump intr to note command interruption */
 static void onintr( int );
+/* trim leading and trailing whitespace */
+void string_new_trimmed( string * pResult, char const * command );
 /* is the command suitable for direct execution via CreateProcessA() */
 static long can_spawn( char const * );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
@@ -156,7 +154,6 @@ void execnt_unit_test()
     typedef struct test { char * command; int result; } test;
     test tests[] = {
         { "x", 0 },
-        { "x\n ", 0 },
         { "x\ny", 1 },
         { "x\n\n y", 1 },
         { "echo x > foo.bar", 1 },
@@ -176,18 +173,6 @@ void execnt_unit_test()
         long_command[ MAXLINE + 9 ] = 0;
         assert( can_spawn( long_command ) == MAXLINE + 9 );
         BJAM_FREE( long_command );
-    }
-
-    {
-        /* Work around vc6 bug; it does not like escaped string literals inside
-         * assert.
-         */
-        char const * * argv = string_to_args(" \"g++\" -c -I\"Foobar\"" );
-        char const expected[] = "-c -I\"Foobar\"";
-
-        assert( !strcmp( argv[ 0 ], "g++" ) );
-        assert( !strcmp( argv[ 1 ], expected ) );
-        free_argv( argv );
     }
 #endif
 }
@@ -209,7 +194,6 @@ void exec_cmd
 {
     int slot;
     int raw_cmd = 0 ;
-    char const * command = command_orig;
     string command_local;
 
     /* Find a free slot in the running commands table. */
@@ -222,9 +206,8 @@ void exec_cmd
         exit( EXITBAD );
     }
 
-    /* Trim leading, -ending- white space */
-    while ( *( command + 1 ) && isspace( *command ) )
-        ++command;
+    /* Trim all leading and trailing leading whitespace. */
+    string_new_trimmed( &command_local, command_orig );
 
     /* Check to see if we need to hack around the line-length limitation. Look
      * for a JAMSHELL setting of "%", indicating that the command should be
@@ -239,7 +222,7 @@ void exec_cmd
          * directly if it satisfies all the spawnability criteria or using a
          * batch file and the default shell if not.
          */
-        raw_cmd = can_spawn( command ) >= MAXLINE;
+        raw_cmd = can_spawn( command_local.value ) >= MAXLINE;
         shell = L0;
     }
 
@@ -283,10 +266,8 @@ void exec_cmd
             printf( "failed to write command file!\n" );
             exit( EXITBAD );
         }
-        fputs( command, f );
+        fputs( command_local.value, f );
         fclose( f );
-
-        command = cmdtab[ slot ].tempfile_bat;
 
         if ( DEBUG_EXECCMD )
             printf( "Executing through .bat file\n" );
@@ -297,12 +278,15 @@ void exec_cmd
             printf( "Executing raw command directly\n" );
     }
 
-    /* Formulate argv; If shell was defined, be prepared for % and ! subs.
-     * Otherwise, use stock cmd.exe.
+    /* If we are running a command directly, we already have it prepared in
+     * command_local. Now prepare the final command-string to execute in case we
+     * are using a shell. If a custom shell was defined, be prepared for % and !
+     * subs. Otherwise, use stock cmd.exe.
      */
+    if ( !raw_cmd )
     {
-        char const * argv_static[ MAXARGC + 1 ];  /* +1 for NULL */
-        char const * * argv = argv_static;
+        char const * command = cmdtab[ slot ].tempfile_bat;
+        char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
         if ( shell )
         {
@@ -336,10 +320,6 @@ void exec_cmd
 
             argv[ i ] = 0;
         }
-        else if ( raw_cmd )
-        {
-            argv = string_to_args( command );
-        }
         else
         {
             argv[ 0 ] = "cmd.exe";
@@ -358,7 +338,7 @@ void exec_cmd
         /* Put together the final command string we are to run. */
         {
             char const * * argp = argv;
-            string_new( &command_local );
+            string_truncate( &command_local, 0 );
             string_append( &command_local, *(argp++) );
             while ( *argp )
             {
@@ -366,9 +346,6 @@ void exec_cmd
                 string_append( &command_local, *(argp++) );
             }
         }
-
-        if ( argv != argv_static )
-            free_argv( argv );
     }
 
     /* Catch interrupts whenever commands are running. */
@@ -605,13 +582,6 @@ int exec_wait()
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
-static void free_argv( char const * * args )
-{
-    BJAM_FREE( (void *)args[ 0 ] );
-    BJAM_FREE( (void *)args );
-}
-
-
 /*
  * For more details on Windows cmd.exe shell command-line length limitations see
  * the following MSDN article:
@@ -638,84 +608,20 @@ int maxline()
 
 
 /*
- * Convert a command string into arguments as used by Unix spawnvp() API. The
- * original code, inherited from ftjam, tried to break up every argument on the
- * command-line, dealing with quotes, but that is really a waste of time on
- * Win32, at least. It turns out that all you need to do is get the raw path to
- * the executable in the first argument to spawnvp(), and you can pass all the
- * rest of the command-line arguments to spawnvp() in one, un-processed string.
- *
- * New strategy: break the string in at most one place.
+ * Creates and returns a new trimmed copy of the given command string. Returned
+ * value needs to be released using string_free().
  */
 
-static char const * * string_to_args( char const * string )
+void string_new_trimmed( string * pResult, char const * command )
 {
-    int src_len;
-    int in_quote;
-    char * line;
-    char const * src;
-    char * dst;
-    char const * * argv;
-
-    /* Drop leading and trailing whitespace if any. */
-    while ( isspace( *string ) )
-        ++string;
-
-    src_len = strlen( string );
-    while ( ( src_len > 0 ) && isspace( string[ src_len - 1 ] ) )
-        --src_len;
-
-    /* Copy the input string into a buffer we can modify. */
-    line = (char *)BJAM_MALLOC_ATOMIC( src_len + 1 );
-    if ( !line )
-        return 0;
-
-    /* Allocate the argv array.
-     *   element 0: stores the path to the executable
-     *   element 1: stores the command-line arguments to the executable
-     *   element 2: NULL terminator
-     */
-    argv = (char const * *)BJAM_MALLOC( 3 * sizeof( char const * ) );
-    if ( !argv )
-    {
-        BJAM_FREE( line );
-        return 0;
-    }
-
-    /* Strip quotes from the first command-line argument and find where it ends.
-     * Quotes are illegal in Win32 pathnames, so we do not need to worry about
-     * preserving escaped quotes here. Spaces can not be escaped in Win32, only
-     * enclosed in quotes, so removing backslash escapes is also a non-issue.
-     */
-    in_quote = 0;
-    for ( src = string, dst = line ; *src; ++src )
-    {
-        if ( *src == '"' )
-            in_quote = !in_quote;
-        else if ( !in_quote && isspace( *src ) )
-            break;
-        else
-            *dst++ = *src;
-    }
-    *dst++ = 0;
-    argv[ 0 ] = line;
-
-    /* Skip whitespace in src. */
-    while ( isspace( *src ) )
-        ++src;
-
-    argv[ 1 ] = dst;
-
-    /* Copy the rest of the arguments verbatim. */
-    src_len -= src - string;
-
-    /* Use strncat() because it appends a trailing nul. */
-    *dst = 0;
-    strncat( dst, src, src_len );
-
-    argv[ 2 ] = 0;
-
-    return argv;
+    int command_len;
+    while ( isspace( *command ) )
+        ++command;
+    command_len = strlen( command );
+    while ( ( command_len > 0 ) && isspace( command[ command_len - 1 ] ) )
+        --command_len;
+    string_new( pResult );
+    string_append_range( pResult, command, command + command_len );
 }
 
 
@@ -729,19 +635,17 @@ static void onintr( int disp )
 /*
  * can_spawn() - If the command is suitable for execution via CreateProcessA(),
  * return a number >= the number of characters it would occupy on the
- * command-line. Otherwise, return zero.
+ * command-line. Otherwise, return zero. Expects the command string to have
+ * already been trimmed of all leading and trailing whitespace.
  */
 
 static long can_spawn( char const * command )
 {
-    char const * p;
+    char const * p = command;
     char inquote = 0;
 
-    /* Move to the first non-whitespace. */
-    while ( isspace( *command ) )
-        ++command;
-
-    p = command;
+    assert( !isspace( *command ) );
+    assert( !command[0] || !isspace( command[ strlen(command) - 1 ] ) );
 
     /* Look for newlines and unquoted I/O redirection. */
     do
@@ -750,19 +654,16 @@ static long can_spawn( char const * command )
         switch ( *p )
         {
         case '\n':
-            /* Skip over any following spaces. */
-            while ( isspace( *p ) )
-                ++p;
-            /* Must use a .bat file if there is anything significant following
-             * the newline.
+            /* If our command contains newlines we can not execute it directly.
+             * Note that there is no need to check for leading or trailing
+             * newlines since we already assume the command string has been
+             * trimmed prior to this call.
              */
-            if ( *p )
-                return 0;
-            break;
+            return 0;
 
         case '"':
         case '\'':
-            if ( ( p > command ) && ( p[ -1 ] != '\\' ) )
+            if ( ( p > command ) && ( p[-1] != '\\' ) )
             {
                 if ( inquote == *p )
                     inquote = 0;
