@@ -797,7 +797,11 @@ class Tester(TestCmd.TestCmd):
             open(e, "w").write(expected)
             open(a, "w").write(actual)
             print "DIFFERENCE"
-            if os.system("diff -u %s %s" % (e, a)):
+            # Current diff should return 1 to indicate 'different input files'
+            # but some older diff versions may return 0 and depending on the
+            # exact Python/OS platform os.system() call may gobble out the
+            # external process's return code and return 0 itself.
+            if os.system("diff -u %s %s" % (e, a)) not in [0, 1]:
                 print "Unable to compute difference: diff -u %s %s" % (e, a)
             os.unlink(e)
             os.unlink(a)
