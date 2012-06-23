@@ -2,8 +2,8 @@
 
 # Copyright 2008 Jurko Gospodnetic, Vladimir Prus
 # Copyright 2011 Steven Watanabe
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 #   Added to guard against a bug causing targets to be used before they
 # themselves have finished building. This used to happen for targets built by a
@@ -21,17 +21,16 @@ import BoostBuild
 
 t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
-t.write("sleep.bat","""@setlocal
-@echo off
+t.write("sleep.bat", """\
+@setlocal
 @REM timeout /T %1 /NOBREAK >nul
-ping 127.0.0.1 -n 2 -w 1000 >nul
-ping 127.0.0.1 -n %1 -w 1000 >nul
+@ping 127.0.0.1 -n 2 -w 1000 >nul
+@ping 127.0.0.1 -n %1 -w 1000 >nul
 @endlocal
 @exit /B 0
 """)
 
-t.write("file.jam", """
-
+t.write("file.jam", """\
     if $(NT)
     {
         SLEEP = @call sleep.bat ;
@@ -60,7 +59,8 @@ t.write("file.jam", """
     DEPENDS all : lib installed_dll ;
 """)
 
-t.run_build_system("-ffile.jam -j2", stdout="""...found 4 targets...
+t.run_build_system("-ffile.jam -j2", stdout="""\
+...found 4 targets...
 ...updating 3 targets...
 link dll
 001 - linked

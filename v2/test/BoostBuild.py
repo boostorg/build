@@ -218,7 +218,8 @@ class Tester(TestCmd.TestCmd):
 
         self.original_workdir = os.getcwd()
         if workdir != '' and not os.path.isabs(workdir):
-            raise "Parameter workdir <"+workdir+"> must point to an absolute directory: "
+            raise ("Parameter workdir <%s> must point to an absolute "
+                "directory: " % workdir)
 
         self.last_build_time_start = 0
         self.last_build_time_finish = 0
@@ -238,8 +239,10 @@ class Tester(TestCmd.TestCmd):
             elif (os.name == 'posix') and os.__dict__.has_key('uname'):
                 if os.uname()[0].lower().startswith('cygwin'):
                     jam_build_dir = "bin.cygwinx86"
-                    if 'TMP' in os.environ and os.environ['TMP'].find('~') != -1:
-                        print 'Setting $TMP to /tmp to get around problem with short path names'
+                    if ('TMP' in os.environ and
+                        os.environ['TMP'].find('~') != -1):
+                        print('Setting $TMP to /tmp to get around problem '
+                            'with short path names')
                         os.environ['TMP'] = '/tmp'
                 elif os.uname()[0] == 'Linux':
                     cpu = os.uname()[4]
@@ -270,8 +273,7 @@ class Tester(TestCmd.TestCmd):
             # Find where jam_src is located. Try for the debug version if it is
             # lying around.
             dirs = [os.path.join('../engine', jam_build_dir + '.debug'),
-                    os.path.join('../engine', jam_build_dir),
-                    ]
+                    os.path.join('../engine', jam_build_dir)]
             for d in dirs:
                 if os.path.exists(d):
                     jam_build_dir = d
@@ -420,8 +422,7 @@ class Tester(TestCmd.TestCmd):
         os.chdir(self.workdir)
 
     def expand_toolset(self, name):
-        """Expands $toolset in the given file to tested toolset.
-        """
+        """Expands $toolset in the given file to tested toolset."""
         content = self.read(name)
         content = string.replace(content, "$toolset", self.toolset)
         self.write(name, content)
@@ -790,7 +791,7 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1)
 
     def maybe_do_diff(self, actual, expected):
-        if os.environ.has_key("DO_DIFF") and os.environ["DO_DIFF"] != '':
+        if os.environ.get("DO_DIFF"):
             e = tempfile.mktemp("expected")
             a = tempfile.mktemp("actual")
             open(e, "w").write(expected)
