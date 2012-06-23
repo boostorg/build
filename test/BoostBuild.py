@@ -797,7 +797,7 @@ class Tester(TestCmd.TestCmd):
             open(e, "w").write(expected)
             open(a, "w").write(actual)
             print "DIFFERENCE"
-            if os.system("diff -u " + e + " " + a):
+            if os.system("diff -u %s %s" % (e, a)):
                 print "Unable to compute difference: diff -u %s %s" % (e, a)
             os.unlink(e)
             os.unlink(a)
