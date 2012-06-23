@@ -27,7 +27,11 @@ static void assert_invariants( string * self )
 
     assert( self->size < self->capacity );
     assert( ( self->capacity <= sizeof( self->opt ) ) == ( self->value == self->opt ) );
-    assert( strlen( self->value ) == self->size );
+    assert( self->value[ self->size ] == 0 );
+    /* String objects modified manually after construction to contain embedded
+     * '\0' characters are considered structurally valid.
+     */
+    assert( strlen( self->value ) <= self->size );
 
     for ( i = 0; i < 4; ++i )
     {
