@@ -58,7 +58,6 @@
  */
 
 static clock_t tps;
-static struct timeval tv;
 static int select_timeout;
 static int intr;
 static int cmdsrunning;
