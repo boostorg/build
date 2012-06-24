@@ -302,9 +302,10 @@ int main( int argc, char * * argv, char * * arg_environ )
     if ( ( s = getoptval( optv, 'j', 0 ) ) )
     {
         globs.jobs = atoi( s );
-        if ( !globs.jobs )
+        if ( globs.jobs < 1 || globs.jobs > MAXJOBS )
         {
-            printf( "Invalid value for the '-j' option.\n" );
+            printf( "Invalid value for the '-j' option, valid values are 1 "
+                "through %d.\n", MAXJOBS );
             exit( EXITBAD );
         }
     }
@@ -518,9 +519,10 @@ int main( int argc, char * * argv, char * * arg_environ )
             if ( !list_empty( p ) )
             {
                 int const j = atoi( object_str( list_front( p ) ) );
-                if ( j == -1 )
-                    printf( "Invalid value of PARALLELISM: %s\n", object_str(
-                        list_front( p ) ) );
+                if ( j < 1 || j > MAXJOBS )
+                    printf( "Invalid value of PARALLELISM: %s. Valid values "
+                        "are 1 through %d.\n", object_str( list_front( p ) ),
+                        MAXJOBS );
                 else
                     globs.jobs = j;
             }
