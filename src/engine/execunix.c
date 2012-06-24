@@ -172,6 +172,7 @@ void exec_cmd
     /* Create pipes from child to parent. */
     if ( pipe( out ) < 0 || pipe( err ) < 0 )
     {
+        perror( "pipe" );
         exit( EXITBAD );
     }
 
