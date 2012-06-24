@@ -12,16 +12,18 @@
  */
 
 #include "jam.h"
-#include "lists.h"
 #include "execcmd.h"
+
+#include "lists.h"
+#include "output.h"
 #include "pathsys.h"
 #include "string.h"
-#include "output.h"
-#include <errno.h>
+
 #include <assert.h>
 #include <ctype.h>
-#include <time.h>
+#include <errno.h>
 #include <math.h>
+#include <time.h>
 
 #ifdef USE_EXECNT
 
@@ -33,31 +35,21 @@
 /*
  * execnt.c - execute a shell command on Windows NT
  *
- * If $(JAMSHELL) is defined, uses that to formulate the actual command.
- * The default is:
- *
- *  /bin/sh -c %        [ on UNIX/AmigaOS ]
- *  cmd.exe /c %        [ on Windows NT ]
- *
- * Each word must be an individual element in a jam variable value.
+ * If $(JAMSHELL) is defined, uses that to formulate the actual command. The
+ * default is: cmd.exe /Q/C
  *
  * In $(JAMSHELL), % expands to the command string and ! expands to the slot
  * number (starting at 1) for multiprocess (-j) invocations. If $(JAMSHELL) does
  * not include a %, it is tacked on as the last argument.
  *
- * Do not just set JAMSHELL to /bin/sh or cmd.exe - it will not work!
+ * Each $(JAMSHELL) placeholder must be specified as a separate individual
+ * element in a jam variable value.
+ *
+ * Do not just set JAMSHELL to cmd.exe - it will not work!
  *
  * External routines:
  *  exec_cmd() - launch an async command execution.
- *  exec_wait() - wait and drive at most one execution completion.
- *
- * Internal routines:
- *  onintr() - bump intr to note command interruption.
- *
- * 04/08/94 (seiwald) - Coherent/386 support added.
- * 05/04/94 (seiwald) - async multiprocess interface
- * 01/22/95 (seiwald) - $(JAMSHELL) support
- * 06/02/97 (gsar)    - full async multiprocess support for Win32
+ *  exec_wait() - wait for any of the async command processes to terminate.
  */
 
 /* get the maximum shell command line length according to the OS */
@@ -73,7 +65,9 @@ static long can_spawn( string * pCommand );
 static FILETIME add_64(
     unsigned long h1, unsigned long l1,
     unsigned long h2, unsigned long l2 );
+/* */
 static FILETIME add_FILETIME( FILETIME t1, FILETIME t2 );
+/* */
 static FILETIME negate_FILETIME( FILETIME t );
 /* convert a FILETIME to a number of seconds */
 static double filetime_seconds( FILETIME t );
@@ -93,12 +87,14 @@ static void read_output();
 static int try_kill_one();
 /* */
 static double creation_time( HANDLE );
-/* is the first process a parent (direct or indirect) to second one */
+/* is the first process a parent (direct or indirect) to the second one */
 static int is_parent_child( DWORD, DWORD );
 /* */
 static void close_alert( HANDLE );
 /* close any alerts hanging around */
 static void close_alerts();
+/* returns a string's value buffer if not empty or 0 if empty */
+static char const * null_if_empty( string const * str );
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -110,11 +106,11 @@ static void (* istat)( int );
 /* The list of commands we run. */
 static struct
 {
-    string action;   /* buffer to hold action */
-    string target;   /* buffer to hold target */
-    string command;  /* buffer to hold command being invoked */
+    string action[ 1 ];   /* buffer to hold action */
+    string target[ 1 ];   /* buffer to hold target */
+    string command[ 1 ];  /* buffer to hold command being invoked */
 
-    /* Temporary batch file used to execute the action when needed. */
+    /* Temporary command file used to execute the action when needed. */
     char * tempfile_bat;
 
     /* Pipes for communicating with the child process. Parent reads from (0),
@@ -123,12 +119,12 @@ static struct
     HANDLE pipe_out[ 2 ];
     HANDLE pipe_err[ 2 ];
 
-    string              buffer_out;   /* buffer to hold stdout, if any */
-    string              buffer_err;   /* buffer to hold stderr, if any */
+    string buffer_out[ 1 ];  /* buffer to hold stdout, if any */
+    string buffer_err[ 1 ];  /* buffer to hold stderr, if any */
 
-    PROCESS_INFORMATION pi;           /* running process information */
-    DWORD               exit_code;    /* executed command's exit code */
-    int                 exit_reason;  /* reason why a command completed */
+    PROCESS_INFORMATION pi;  /* running process information */
+    DWORD exit_code;         /* executed command's exit code */
+    int exit_reason;         /* reason why a command completed */
 
     /* Function called when the command completes. */
     ExecCmdCallback func;
@@ -169,14 +165,14 @@ void execnt_unit_test()
     }
 
     {
-        string long_command;
-        string_new( &long_command );
-        string_reserve( &long_command, MAXLINE + 10 );
-        long_command.size = long_command.capacity - 1;
-        memset( long_command.value, 'x', long_command.size );
-        long_command.value[ long_command.size ] = 0;
-        assert( can_spawn( &long_command ) == MAXLINE + 9 );
-        string_free( &long_command );
+        string long_command[ 1 ];
+        string_new( long_command );
+        string_reserve( long_command, MAXLINE + 10 );
+        long_command->size = long_command->capacity - 1;
+        memset( long_command->value, 'x', long_command->size );
+        long_command->value[ long_command->size ] = 0;
+        assert( can_spawn( long_command ) == MAXLINE + 9 );
+        string_free( long_command );
     }
 #endif
 }
@@ -198,7 +194,7 @@ void exec_cmd
 {
     int slot;
     int raw_cmd = 0 ;
-    string command_local;
+    string cmd_local[ 1 ];
 
     /* Find a free slot in the running commands table. */
     for ( slot = 0; slot < MAXJOBS; ++slot )
@@ -211,7 +207,7 @@ void exec_cmd
     }
 
     /* Trim all leading and trailing leading whitespace. */
-    string_new_trimmed( &command_local, pCommand_orig );
+    string_new_trimmed( cmd_local, pCommand_orig );
 
     /* Check to see if we need to hack around the line-length limitation. Look
      * for a JAMSHELL setting of "%", indicating that the command should be
@@ -226,7 +222,7 @@ void exec_cmd
          * directly if it satisfies all the spawnability criteria or using a
          * batch file and the default shell if not.
          */
-        raw_cmd = can_spawn( &command_local ) >= MAXLINE;
+        raw_cmd = can_spawn( cmd_local ) >= MAXLINE;
         shell = L0;
     }
 
@@ -270,7 +266,7 @@ void exec_cmd
             printf( "failed to write command file!\n" );
             exit( EXITBAD );
         }
-        fputs( command_local.value, f );
+        fputs( cmd_local->value, f );
         fclose( f );
 
         if ( DEBUG_EXECCMD )
@@ -283,8 +279,8 @@ void exec_cmd
     }
 
     /* If we are running a command directly, we already have it prepared in
-     * command_local. Now prepare the final command-string to execute in case we
-     * are using a shell. If a custom shell was defined, be prepared for % and !
+     * cmd_local. Now prepare the final command-string to execute in case we are
+     * using a shell. If a custom shell was defined, be prepared for % and !
      * subs. Otherwise, use stock cmd.exe.
      */
     if ( !raw_cmd )
@@ -342,12 +338,12 @@ void exec_cmd
         /* Put together the final command string we are to run. */
         {
             char const * * argp = argv;
-            string_truncate( &command_local, 0 );
-            string_append( &command_local, *(argp++) );
+            string_truncate( cmd_local, 0 );
+            string_append( cmd_local, *(argp++) );
             while ( *argp )
             {
-                string_push_back( &command_local, ' ' );
-                string_append( &command_local, *(argp++) );
+                string_push_back( cmd_local, ' ' );
+                string_append( cmd_local, *(argp++) );
             }
         }
     }
@@ -429,46 +425,46 @@ void exec_cmd
         cmdtab[ slot ].closure = closure;
         if ( action && target )
         {
-            string_free( &cmdtab[ slot ].action );
-            string_copy( &cmdtab[ slot ].action, action );
-            string_free( &cmdtab[ slot ].target );
-            string_copy( &cmdtab[ slot ].target, target );
+            string_free( cmdtab[ slot ].action );
+            string_copy( cmdtab[ slot ].action, action );
+            string_free( cmdtab[ slot ].target );
+            string_copy( cmdtab[ slot ].target, target );
         }
         else
         {
-            string_free( &cmdtab[ slot ].action );
-            string_new ( &cmdtab[ slot ].action );
-            string_free( &cmdtab[ slot ].target );
-            string_new ( &cmdtab[ slot ].target );
+            string_free( cmdtab[ slot ].action );
+            string_new ( cmdtab[ slot ].action );
+            string_free( cmdtab[ slot ].target );
+            string_new ( cmdtab[ slot ].target );
         }
-        string_copy( &cmdtab[ slot ].command, pCommand_orig->value );
+        string_copy( cmdtab[ slot ].command, pCommand_orig->value );
 
         /* CreateProcessA() Windows API places a limit of 32768 characters
          * (bytes) on the allowed command-line length, including a trailing
          * Unicode (2-byte) nul-terminator character.
          */
         #define MAX_RAW_COMMAND_LENGTH 32766
-        if ( command_local.size > MAX_RAW_COMMAND_LENGTH )
+        if ( cmd_local->size > MAX_RAW_COMMAND_LENGTH )
         {
             printf( "Command line too long (%d characters). Maximum executable "
-                "command-line length is %d.", command_local.size,
+                "command-line length is %d.", cmd_local->size,
                 MAX_RAW_COMMAND_LENGTH );
             exit( EXITBAD );
         }
 
         /* Create output buffers. */
-        string_new( &cmdtab[ slot ].buffer_out );
-        string_new( &cmdtab[ slot ].buffer_err );
+        string_new( cmdtab[ slot ].buffer_out );
+        string_new( cmdtab[ slot ].buffer_err );
 
         if ( DEBUG_EXECCMD )
             printf( "Command string to be sent to CreateProcessA(): '%s'\n",
-                command_local.value );
+                cmd_local->value );
 
         /* Run the command by creating a sub-process for it. */
         if (
             !CreateProcessA(
                 NULL                    ,  /* application name               */
-                command_local.value     ,  /* command line                   */
+                cmd_local->value        ,  /* command line                   */
                 NULL                    ,  /* process attributes             */
                 NULL                    ,  /* thread attributes              */
                 TRUE                    ,  /* inherit handles                */
@@ -487,7 +483,7 @@ void exec_cmd
     }
 
     /* Free our local command string copy. */
-    string_free( &command_local );
+    string_free( cmd_local );
 
     /* Wait until we are under the limit of concurrent commands. Do not trust
      * globs.jobs alone.
@@ -560,35 +556,31 @@ int exec_wait()
 
         /* Output the action block. */
         out_action(
-            cmdtab[ i ].action.size     > 0 ? cmdtab[ i ].action.value     : 0,
-            cmdtab[ i ].target.size     > 0 ? cmdtab[ i ].target.value     : 0,
-            cmdtab[ i ].command.size    > 0 ? cmdtab[ i ].command.value    : 0,
-            cmdtab[ i ].buffer_out.size > 0 ? cmdtab[ i ].buffer_out.value : 0,
-            cmdtab[ i ].buffer_err.size > 0 ? cmdtab[ i ].buffer_err.value : 0,
+            null_if_empty( cmdtab[ i ].action ),
+            null_if_empty( cmdtab[ i ].target ),
+            null_if_empty( cmdtab[ i ].command ),
+            null_if_empty( cmdtab[ i ].buffer_out ),
+            null_if_empty( cmdtab[ i ].buffer_err ),
             cmdtab[ i ].exit_reason );
 
         /* Call the callback, may call back to jam rule land. Assume -p0 is in
          * effect so only pass buffer containing merged output.
          */
-        (*cmdtab[ i ].func)(
-            cmdtab[ i ].closure,
-            rstat,
-            &time,
-            cmdtab[ i ].command.value,
-            cmdtab[ i ].buffer_out.value );
+        (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time,
+            cmdtab[ i ].command->value, cmdtab[ i ].buffer_out->value );
 
         /* Clean up the command data, process, etc. */
-        string_free( &cmdtab[ i ].action  ); string_new( &cmdtab[ i ].action  );
-        string_free( &cmdtab[ i ].target  ); string_new( &cmdtab[ i ].target  );
-        string_free( &cmdtab[ i ].command ); string_new( &cmdtab[ i ].command );
+        string_free( cmdtab[ i ].action  ); string_new( cmdtab[ i ].action  );
+        string_free( cmdtab[ i ].target  ); string_new( cmdtab[ i ].target  );
+        string_free( cmdtab[ i ].command ); string_new( cmdtab[ i ].command );
         if ( cmdtab[ i ].pi.hProcess   ) { CloseHandle( cmdtab[ i ].pi.hProcess   ); cmdtab[ i ].pi.hProcess   = 0; }
         if ( cmdtab[ i ].pi.hThread    ) { CloseHandle( cmdtab[ i ].pi.hThread    ); cmdtab[ i ].pi.hThread    = 0; }
         if ( cmdtab[ i ].pipe_out[ 0 ] ) { CloseHandle( cmdtab[ i ].pipe_out[ 0 ] ); cmdtab[ i ].pipe_out[ 0 ] = 0; }
         if ( cmdtab[ i ].pipe_out[ 1 ] ) { CloseHandle( cmdtab[ i ].pipe_out[ 1 ] ); cmdtab[ i ].pipe_out[ 1 ] = 0; }
         if ( cmdtab[ i ].pipe_err[ 0 ] ) { CloseHandle( cmdtab[ i ].pipe_err[ 0 ] ); cmdtab[ i ].pipe_err[ 0 ] = 0; }
         if ( cmdtab[ i ].pipe_err[ 1 ] ) { CloseHandle( cmdtab[ i ].pipe_err[ 1 ] ); cmdtab[ i ].pipe_err[ 1 ] = 0; }
-        string_free( &cmdtab[ i ].buffer_out ); string_new( &cmdtab[ i ].buffer_out );
-        string_free( &cmdtab[ i ].buffer_err ); string_new( &cmdtab[ i ].buffer_err );
+        string_free( cmdtab[ i ].buffer_out ); string_new( cmdtab[ i ].buffer_out );
+        string_free( cmdtab[ i ].buffer_err ); string_new( cmdtab[ i ].buffer_err );
         cmdtab[ i ].exit_code = 0;
         cmdtab[ i ].exit_reason = EXIT_OK;
     }
@@ -611,9 +603,9 @@ static int raw_maxline()
     os_info.dwOSVersionInfoSize = sizeof( os_info );
     GetVersionEx( &os_info );
 
-    if ( os_info.dwMajorVersion >= 5 ) return 8191; /* XP       */
-    if ( os_info.dwMajorVersion == 4 ) return 2047; /* NT 4.x   */
-    return 996;                                     /* NT 3.5.1 */
+    if ( os_info.dwMajorVersion >= 5 ) return 8191;  /* XP       */
+    if ( os_info.dwMajorVersion == 4 ) return 2047;  /* NT 4.x   */
+    return 996;                                      /* NT 3.5.1 */
 }
 
 int maxline()
@@ -874,10 +866,10 @@ static void read_output()
     {
         /* Read stdout data. */
         if ( cmdtab[ i ].pipe_out[ 0 ] )
-            read_pipe( cmdtab[ i ].pipe_out[ 0 ], & cmdtab[ i ].buffer_out );
+            read_pipe( cmdtab[ i ].pipe_out[ 0 ], cmdtab[ i ].buffer_out );
         /* Read stderr data. */
         if ( cmdtab[ i ].pipe_err[ 0 ] )
-            read_pipe( cmdtab[ i ].pipe_err[ 0 ], & cmdtab[ i ].buffer_err );
+            read_pipe( cmdtab[ i ].pipe_err[ 0 ], cmdtab[ i ].buffer_err );
     }
 }
 
@@ -913,7 +905,7 @@ static int try_wait( int timeoutMillis )
     if ( ( WAIT_OBJECT_0 <= wait_api_result ) &&
         ( wait_api_result < WAIT_OBJECT_0 + num_active ) )
     {
-        /* Rerminated process detected - return its index. */
+        /* Terminated process detected - return its index. */
         return active_procs[ wait_api_result - WAIT_OBJECT_0 ];
     }
 
@@ -1246,6 +1238,16 @@ static void close_alert( HANDLE process )
         p.pid = pid;
         EnumWindows( &close_alert_window_enum, (LPARAM)&p );
     }
+}
+
+
+/*
+ * Returns a string's value buffer if not empty or 0 if empty.
+ */
+
+static char const * null_if_empty( string const * str )
+{
+    return str->size ? str->value : 0;
 }
 
 
