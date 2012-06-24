@@ -884,7 +884,7 @@ static void make1d( state * pState )
         for ( ; iter != end; iter = list_next( iter ) )
         {
             int need_unlink = 1;
-            TARGET * t = bindtarget( list_item( iter ) );
+            TARGET * const t = bindtarget( list_item( iter ) );
             if ( t->flags & T_FLAG_PRECIOUS )
                 need_unlink = 0;
             if ( need_unlink && !unlink( object_str( list_item( iter ) ) ) )
