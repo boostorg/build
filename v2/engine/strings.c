@@ -188,22 +188,31 @@ char string_back( string * self )
 #ifndef NDEBUG
 void string_unit_test()
 {
-    string s[ 1 ];
-    int i;
-    char buffer[ sizeof( s->opt ) * 2 + 2 ];
-    int limit = sizeof( buffer ) > 254 ? 254 : sizeof( buffer );
-
-    string_new( s );
-
-    for ( i = 0; i < limit; ++i )
-        string_push_back( s, (char)( i + 1 ) );
-
-    for ( i = 0; i < limit; ++i )
     {
-        assert( i < s->size );
-        assert( s->value[ i ] == (char)( i + 1 ) );
+        string s[ 1 ];
+        int i;
+        int const limit = sizeof( s->opt ) * 2 + 2;
+        string_new( s );
+        assert( s->value == s->opt );
+        for ( i = 0; i < limit; ++i )
+        {
+            string_push_back( s, (char)( i + 1 ) );
+            assert( s->size == i + 1 );
+        }
+        assert( s->size == limit );
+        assert( s->value != s->opt );
+        for ( i = 0; i < limit; ++i )
+            assert( s->value[ i ] == (char)( i + 1 ) );
+        string_free( s );
     }
 
-    string_free( s );
+    {
+        char * const original = "  \n\t\v  Foo \r\n\v \tBar\n\n\r\r\t\n\v\t \t";
+        string copy[ 1 ];
+        string_copy( copy, original );
+        assert( !strcmp( copy->value, original ) );
+        assert( copy->size == strlen( original ) );
+        string_free( copy );
+    }
 }
 #endif
