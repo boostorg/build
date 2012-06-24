@@ -1297,9 +1297,4 @@ static void reportWindowsError( char const * const apiName )
 }
 
 
-void exec_done( void )
-{
-}
-
-
 #endif /* USE_EXECNT */
