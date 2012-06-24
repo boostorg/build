@@ -48,23 +48,23 @@ typedef struct _cmd CMD;
 struct _cmd
 {
     CMD  * next;
-    CMD  * tail;   /* valid on in head */
-    RULE * rule;   /* rule->actions contains shell script */
-    LIST * shell;  /* $(SHELL) value */
-    LOL    args;   /* LISTs for $(<), $(>) */
-    string buf[1]; /* actual commands */
+    CMD  * tail;    /* valid on in head */
+    RULE * rule;    /* rule->actions contains shell script */
+    LIST * shell;   /* $(JAMSHELL) value */
+    LOL    args;    /* LISTs for $(<), $(>) */
+    string buf[1];  /* actual commands */
 };
 
 CMD * cmd_new
 (
     RULE * rule,     /* rule (referenced) */
-    LIST * targets,  /* $(<) (freed) */
-    LIST * sources,  /* $(>) (freed) */
-    LIST * shell     /* $(SHELL) (freed) */
+    LIST * targets,  /* $(<) (ownership transferred) */
+    LIST * sources,  /* $(>) (ownership transferred) */
+    LIST * shell     /* $(JAMSHELL) (ownership transferred) */
 );
 
 void cmd_free( CMD * );
 
-#define cmd_next( c ) ( ( c )->next )
+#define cmd_next( c ) ((c)->next)
 
 #endif

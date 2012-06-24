@@ -29,7 +29,7 @@ typedef struct _pathpart PATHPART;
 
 struct _pathpart
 {
-    const char * ptr;
+    char const * ptr;
     int          len;
 };
 
@@ -48,7 +48,7 @@ struct _pathname
 void path_build( PATHNAME * f, string * file, int binding );
 void path_build1( PATHNAME * f, string * file );
 
-void path_parse( const char * file, PATHNAME * f );
+void path_parse( char const * file, PATHNAME * f );
 void path_parent( PATHNAME * f );
 
 #ifdef NT
@@ -72,7 +72,7 @@ void path_add_key( OBJECT * path );
 /** Returns a static pointer to the system dependent path to the temporary
     directory. NOTE: *without* a trailing path separator.
 */
-const char * path_tmpdir( void );
+char const * path_tmpdir( void );
 
 /** Returns a new temporary name.
 */
@@ -83,14 +83,13 @@ OBJECT * path_tmpnam( void );
 OBJECT * path_tmpfile( void );
 #endif
 
-/** Give the first argument to 'main', return a full path to
-    our executable.  Returns null in the unlikely case it
-    cannot be determined. Caller is responsible for freeing
-    the string.
+/** Give the first argument to 'main', return a full path to our executable.
+    Returns null in the unlikely case it cannot be determined. Caller is
+    responsible for freeing the string.
 
     Implemented in jam.c
 */
-char * executable_path (const char *argv0);
+char * executable_path( char const * argv0 );
 
 void path_done( void );
 
