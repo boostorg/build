@@ -360,6 +360,8 @@ void exec_cmd
         signal( SIGINT, onintr );
     }
 
+    ++cmdsrunning;
+
     /* Start the command. */
     {
         SECURITY_ATTRIBUTES sa = { sizeof( SECURITY_ATTRIBUTES ), 0, 0 };
