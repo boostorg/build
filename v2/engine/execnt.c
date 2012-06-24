@@ -91,6 +91,8 @@ static int is_parent_child( DWORD, DWORD );
 static void close_alert( HANDLE );
 /* close any alerts hanging around */
 static void close_alerts();
+/* Invoke the actual external process using the given command line. */
+static void invoke_cmd( char const * const command, int const slot );
 /* returns a string's value buffer if not empty or 0 if empty */
 static char const * null_if_empty( string const * str );
 /* find a free slot in the running commands table */
@@ -349,77 +351,8 @@ void exec_cmd
         signal( SIGINT, onintr );
     }
 
-    ++cmdsrunning;
-
-    /* Start the command. */
+    /* Save input data into the selected running commands table slot. */
     {
-        SECURITY_ATTRIBUTES sa = { sizeof( SECURITY_ATTRIBUTES ), 0, 0 };
-        SECURITY_DESCRIPTOR sd;
-        STARTUPINFO si = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0 };
-
-        /* Init the security data. */
-        InitializeSecurityDescriptor( &sd, SECURITY_DESCRIPTOR_REVISION );
-        SetSecurityDescriptorDacl( &sd, TRUE, NULL, FALSE );
-        sa.lpSecurityDescriptor = &sd;
-        sa.bInheritHandle = TRUE;
-
-        /* Create the stdout, which is also the merged out + err, pipe. */
-        if ( !CreatePipe( &cmdtab[ slot ].pipe_out[ 0 ],
-            &cmdtab[ slot ].pipe_out[ 1 ], &sa, 0 ) )
-        {
-            reportWindowsError( "CreatePipe" );
-            exit( EXITBAD );
-        }
-
-        /* Create the stdout, which is also the merged out+err, pipe. */
-        if ( globs.pipe_action == 2 )
-        {
-            if ( !CreatePipe( &cmdtab[ slot ].pipe_err[ 0 ],
-                &cmdtab[ slot ].pipe_err[ 1 ], &sa, 0 ) )
-            {
-                reportWindowsError( "CreatePipe" );
-                exit( EXITBAD );
-            }
-        }
-
-        /* Set handle inheritance off for the pipe ends the parent reads from.
-         */
-        SetHandleInformation( cmdtab[ slot ].pipe_out[ 0 ], HANDLE_FLAG_INHERIT,
-            0 );
-        if ( globs.pipe_action == 2 )
-            SetHandleInformation( cmdtab[ slot ].pipe_err[ 0 ],
-                HANDLE_FLAG_INHERIT, 0 );
-
-        /* Hide the child window, if any. */
-        si.dwFlags |= STARTF_USESHOWWINDOW;
-        si.wShowWindow = SW_HIDE;
-
-        /* Set the child outputs to the pipes. */
-        si.dwFlags |= STARTF_USESTDHANDLES;
-        si.hStdOutput = cmdtab[ slot ].pipe_out[ 1 ];
-        if ( globs.pipe_action == 2 )
-        {
-            /* Pipe stderr to the action error output. */
-            si.hStdError = cmdtab[ slot ].pipe_err[ 1 ];
-        }
-        else if ( globs.pipe_action == 1 )
-        {
-            /* Pipe stderr to the console error output. */
-            si.hStdError = GetStdHandle( STD_ERROR_HANDLE );
-        }
-        else
-        {
-            /* Pipe stderr to the action merged output. */
-            si.hStdError = cmdtab[ slot ].pipe_out[ 1 ];
-        }
-
-        /* Let the child inherit stdin, as some commands assume it is
-         * available.
-         */
-        si.hStdInput = GetStdHandle( STD_INPUT_HANDLE );
-
-        /* Save the operation for exec_wait() to find. */
         cmdtab[ slot ].func = func;
         cmdtab[ slot ].closure = closure;
         /* No need to free action and target cmdtab[ slot ] members here as they
@@ -444,44 +377,20 @@ void exec_cmd
             string_new( cmdtab[ slot ].target );
         }
         string_copy( cmdtab[ slot ].command, cmd_orig->value );
-
-        if ( cmd_local->size > MAX_RAW_COMMAND_LENGTH )
-        {
-            printf( "Command line too long (%d characters). Maximum executable "
-                "command-line length is %d.", cmd_local->size,
-                MAX_RAW_COMMAND_LENGTH );
-            exit( EXITBAD );
-        }
-
-        /* Create output buffers. */
-        string_new( cmdtab[ slot ].buffer_out );
-        string_new( cmdtab[ slot ].buffer_err );
-
-        if ( DEBUG_EXECCMD )
-            printf( "Command string to be sent to CreateProcessA(): '%s'\n",
-                cmd_local->value );
-
-        /* Run the command by creating a sub-process for it. */
-        if (
-            !CreateProcessA(
-                NULL                    ,  /* application name               */
-                cmd_local->value        ,  /* command line                   */
-                NULL                    ,  /* process attributes             */
-                NULL                    ,  /* thread attributes              */
-                TRUE                    ,  /* inherit handles                */
-                CREATE_NEW_PROCESS_GROUP,  /* create flags                   */
-                NULL                    ,  /* env vars, null inherits env    */
-                NULL                    ,  /* current dir, null is our       */
-                                           /* current dir                    */
-                &si                     ,  /* startup info                   */
-                &cmdtab[ slot ].pi         /* child process info, if created */
-                )
-            )
-        {
-            reportWindowsError( "CreateProcessA" );
-            exit( EXITBAD );
-        }
     }
+
+    if ( cmd_local->size > MAX_RAW_COMMAND_LENGTH )
+    {
+        printf( "Command line too long (%d characters). Maximum executable "
+            "command-line length is %d.", cmd_local->size,
+            MAX_RAW_COMMAND_LENGTH );
+        exit( EXITBAD );
+    }
+
+    ++cmdsrunning;
+
+    /* Invoke the actual external process using the constructed command line. */
+    invoke_cmd( cmd_local->value, slot );
 
     /* Free our local command string copy. */
     string_free( cmd_local );
@@ -589,6 +498,100 @@ int exec_wait()
 
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
+/*
+ * Invoke the actual external process using the given command line. Track the
+ * process in our running commands table.
+ */
+
+static void invoke_cmd( char const * const command, int const slot )
+{
+    SECURITY_ATTRIBUTES sa = { sizeof( SECURITY_ATTRIBUTES ), 0, 0 };
+    SECURITY_DESCRIPTOR sd;
+    STARTUPINFO si = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, 0, 0, 0, 0 };
+
+    /* Init the security data. */
+    InitializeSecurityDescriptor( &sd, SECURITY_DESCRIPTOR_REVISION );
+    SetSecurityDescriptorDacl( &sd, TRUE, NULL, FALSE );
+    sa.lpSecurityDescriptor = &sd;
+    sa.bInheritHandle = TRUE;
+
+    /* Create the stdout, which is also the merged out + err, pipe. */
+    if ( !CreatePipe( &cmdtab[ slot ].pipe_out[ 0 ],
+        &cmdtab[ slot ].pipe_out[ 1 ], &sa, 0 ) )
+    {
+        reportWindowsError( "CreatePipe" );
+        exit( EXITBAD );
+    }
+
+    /* Create the stderr pipe. */
+    if ( globs.pipe_action == 2 )
+    if ( !CreatePipe( &cmdtab[ slot ].pipe_err[ 0 ],
+        &cmdtab[ slot ].pipe_err[ 1 ], &sa, 0 ) )
+    {
+        reportWindowsError( "CreatePipe" );
+        exit( EXITBAD );
+    }
+
+    /* Set handle inheritance off for the pipe ends the parent reads from. */
+    SetHandleInformation( cmdtab[ slot ].pipe_out[ 0 ], HANDLE_FLAG_INHERIT, 0
+        );
+    if ( globs.pipe_action == 2 )
+    SetHandleInformation( cmdtab[ slot ].pipe_err[ 0 ], HANDLE_FLAG_INHERIT, 0
+        );
+
+    /* Hide the child window, if any. */
+    si.dwFlags |= STARTF_USESHOWWINDOW;
+    si.wShowWindow = SW_HIDE;
+
+    /* Set the child outputs to the pipes. */
+    si.dwFlags |= STARTF_USESTDHANDLES;
+    si.hStdOutput = cmdtab[ slot ].pipe_out[ 1 ];
+    if ( globs.pipe_action == 2 )
+    {
+        /* Pipe stderr to the action error output. */
+        si.hStdError = cmdtab[ slot ].pipe_err[ 1 ];
+    }
+    else if ( globs.pipe_action == 1 )
+    {
+        /* Pipe stderr to the console error output. */
+        si.hStdError = GetStdHandle( STD_ERROR_HANDLE );
+    }
+    else
+    {
+        /* Pipe stderr to the action merged output. */
+        si.hStdError = cmdtab[ slot ].pipe_out[ 1 ];
+    }
+
+    /* Let the child inherit stdin, as some commands assume it is available. */
+    si.hStdInput = GetStdHandle( STD_INPUT_HANDLE );
+
+    /* Create output buffers. */
+    string_new( cmdtab[ slot ].buffer_out );
+    string_new( cmdtab[ slot ].buffer_err );
+
+    if ( DEBUG_EXECCMD )
+        printf( "Command string for CreateProcessA(): '%s'\n", command );
+
+    /* Run the command by creating a sub-process for it. */
+    if ( !CreateProcessA(
+        NULL                    ,  /* application name                     */
+        (char *)command         ,  /* command line                         */
+        NULL                    ,  /* process attributes                   */
+        NULL                    ,  /* thread attributes                    */
+        TRUE                    ,  /* inherit handles                      */
+        CREATE_NEW_PROCESS_GROUP,  /* create flags                         */
+        NULL                    ,  /* env vars, null inherits env          */
+        NULL                    ,  /* current dir, null is our current dir */
+        &si                     ,  /* startup info                         */
+        &cmdtab[ slot ].pi ) )     /* child process info, if created       */
+    {
+        reportWindowsError( "CreateProcessA" );
+        exit( EXITBAD );
+    }
+}
+
 
 /*
  * For more details on Windows cmd.exe shell command-line length limitations see
