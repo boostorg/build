@@ -244,7 +244,7 @@ void exec_cmd
          */
         if ( !cmdtab[ slot ].command_file )
         {
-            char const * tempdir = path_tmpdir();
+            char const * const tempdir = path_tmpdir();
             DWORD procID = GetCurrentProcessId();
 
             /* SVA - allocate 64 bytes extra just to be safe. */
@@ -290,7 +290,7 @@ void exec_cmd
      */
     if ( !raw_cmd )
     {
-        char const * command = cmdtab[ slot ].command_file;
+        char const * const command = cmdtab[ slot ].command_file;
         char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
         if ( list_empty( shell ) )
