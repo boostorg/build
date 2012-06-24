@@ -16,6 +16,7 @@
 #ifndef EXECCMD_H
 #define EXECCMD_H
 
+#include "lists.h"
 #include "strings.h"
 #include <time.h>
 
