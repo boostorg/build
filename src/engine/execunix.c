@@ -57,6 +57,11 @@
  *  exec_wait() - wait for any of the async command processes to terminate.
  */
 
+/* find a free slot in the running commands table */
+static int get_free_cmdtab_slot();
+
+/* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
+
 static clock_t tps;
 static int select_timeout;
 static int intr;
@@ -125,22 +130,11 @@ void exec_cmd
     char const * target
 )
 {
-    int slot;
+    int const slot = get_free_cmdtab_slot();
     int out[ 2 ];
     int err[ 2 ];
     int len;
     char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
-
-    /* Find a slot in the running commands table for this one. */
-    for ( slot = 0; slot < MAXJOBS; ++slot )
-        if ( !cmdtab[ slot ].pid )
-            break;
-
-    if ( slot == MAXJOBS )
-    {
-        printf( "no slots for child!\n" );
-        exit( EXITBAD );
-    }
 
     /* Forumulate argv. If shell was defined, be prepared for % and ! subs.
      * Otherwise, use stock /bin/sh.
@@ -589,6 +583,21 @@ int exec_wait()
     }
 
     return 1;
+}
+
+
+/*
+ * Find a free slot in the running commands table.
+ */
+
+static int get_free_cmdtab_slot()
+{
+    int slot;
+    for ( slot = 0; slot < MAXJOBS; ++slot )
+        if ( !cmdtab[ slot ].pid )
+            return slot;
+    printf( "no slots for child!\n" );
+    exit( EXITBAD );
 }
 
 
