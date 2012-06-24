@@ -463,13 +463,17 @@ echo ###
 set YYACC_SOURCES=yyacc.c
 set MKJAMBASE_SOURCES=mkjambase.c
 set BJAM_SOURCES=
-set BJAM_SOURCES=%BJAM_SOURCES% command.c compile.c constants.c debug.c execcmd.c execnt.c filent.c function.c glob.c hash.c
-set BJAM_SOURCES=%BJAM_SOURCES% hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c
-set BJAM_SOURCES=%BJAM_SOURCES% object.c option.c output.c parse.c pathunix.c regexp.c
-set BJAM_SOURCES=%BJAM_SOURCES% rules.c scan.c search.c subst.c timestamp.c variable.c modules.c
-set BJAM_SOURCES=%BJAM_SOURCES% strings.c filesys.c builtins.c md5.c pwd.c class.c w32_getreg.c native.c
-set BJAM_SOURCES=%BJAM_SOURCES% modules/set.c modules/path.c modules/regex.c
-set BJAM_SOURCES=%BJAM_SOURCES% modules/property-set.c modules/sequence.c modules/order.c
+set BJAM_SOURCES=%BJAM_SOURCES% command.c compile.c constants.c debug.c
+set BJAM_SOURCES=%BJAM_SOURCES% execcmd.c execnt.c filent.c function.c glob.c
+set BJAM_SOURCES=%BJAM_SOURCES% hash.c hdrmacro.c headers.c jam.c jambase.c
+set BJAM_SOURCES=%BJAM_SOURCES% jamgram.c lists.c make.c make1.c object.c
+set BJAM_SOURCES=%BJAM_SOURCES% option.c output.c parse.c pathunix.c regexp.c
+set BJAM_SOURCES=%BJAM_SOURCES% rules.c scan.c search.c subst.c timestamp.c
+set BJAM_SOURCES=%BJAM_SOURCES% variable.c modules.c strings.c filesys.c
+set BJAM_SOURCES=%BJAM_SOURCES% builtins.c md5.c pwd.c class.c w32_getreg.c
+set BJAM_SOURCES=%BJAM_SOURCES% native.c modules/set.c modules/path.c
+set BJAM_SOURCES=%BJAM_SOURCES% modules/regex.c modules/property-set.c
+set BJAM_SOURCES=%BJAM_SOURCES% modules/sequence.c modules/order.c
 
 set BJAM_UPDATE=
 :Check_Update
