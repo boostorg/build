@@ -6,15 +6,17 @@
  */
 
 #include "jam.h"
-#include "lists.h"
 #include "execcmd.h"
+
+#include "lists.h"
 #include "output.h"
 #include "strings.h"
+
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
-#include <unistd.h>  /* needed for vfork(), _exit() prototypes */
+#include <unistd.h>  /* vfork(), _exit(), STDOUT_FILENO and such */
 #include <sys/resource.h>
 #include <sys/times.h>
 #include <sys/wait.h>
@@ -37,50 +39,43 @@
 
 
 /*
- * execunix.c - execute a shell script on UNIX/WinNT/OS2/AmigaOS
+ * execunix.c - execute a shell script on UNIX/OS2/AmigaOS
  *
- * If $(JAMSHELL) is defined, uses that to formulate execvp()/spawnvp().
- * The default is:
- *
- *  /bin/sh -c %        [ on UNIX/AmigaOS ]
- *  cmd.exe /c %        [ on OS2/WinNT ]
- *
- * Each word must be an individual element in a jam variable value.
+ * If $(JAMSHELL) is defined, uses that to formulate execvp()/spawnvp(). The
+ * default is: /bin/sh -c
  *
  * In $(JAMSHELL), % expands to the command string and ! expands to the slot
  * number (starting at 1) for multiprocess (-j) invocations. If $(JAMSHELL) does
  * not include a %, it is tacked on as the last argument.
  *
- * Do not just set JAMSHELL to /bin/sh or cmd.exe - it will not work!
+ * Each word must be an individual element in a jam variable value.
+ *
+ * Do not just set JAMSHELL to /bin/sh - it will not work!
  *
  * External routines:
  *  exec_cmd() - launch an async command execution.
- *  exec_wait() - wait and drive at most one execution completion.
- *
- * Internal routines:
- *  onintr() - bump intr to note command interruption.
- *
- * 04/08/94 (seiwald) - Coherent/386 support added.
- * 05/04/94 (seiwald) - async multiprocess interface
- * 01/22/95 (seiwald) - $(JAMSHELL) support
- * 06/02/97 (gsar)    - full async multiprocess support for Win32
+ *  exec_wait() - wait for any of the async command processes to terminate.
  */
 
-static clock_t tps = 0;
+static clock_t tps;
 static struct timeval tv;
-static int select_timeout = 0;
-static int intr = 0;
-static int cmdsrunning = 0;
+static int select_timeout;
+static int intr;
+static int cmdsrunning;
+static int old_time_initialized;
 static struct tms old_time;
 
+/* We hold stdout & stderr child process information in two element arrays
+ * indexed as follows.
+ */
 #define OUT 0
 #define ERR 1
 
 static struct
 {
     int      pid;            /* on win32, a real process handle */
-    int      fd[2];          /* file descriptors for stdout and stderr */
-    FILE   * stream[2];      /* child's stdout (0) and stderr (1) file stream */
+    int      fd[ 2 ];        /* file descriptors for stdout and stderr */
+    FILE   * stream[ 2 ];    /* child's stdout (0) and stderr (1) file stream */
     clock_t  start_time;     /* start time of child process */
     int      exit_reason;    /* termination status */
     int      action_length;  /* length of action string */
@@ -88,8 +83,8 @@ static struct
     char   * action;         /* buffer to hold action and target invoked */
     char   * target;         /* buffer to hold action and target invoked */
     char   * command;        /* buffer to hold command being invoked */
-    char   * buffer[2];      /* buffer to hold stdout and stderr, if any */
-    int      buf_size[2];    /* size of buffer (bytes) */
+    char   * buffer[ 2 ];    /* buffer to hold stdout and stderr, if any */
+    int      buf_size[ 2 ];  /* size of buffer (bytes) */
     time_t   start_dt;       /* start of command timestamp */
 
     /* Function called when the command completes. */
@@ -97,7 +92,8 @@ static struct
 
     /* Opaque data passed back to the 'func' callback. */
     void * closure;
-} cmdtab[ MAXJOBS ] = {{0}};
+} cmdtab[ MAXJOBS ] = { { 0 } };
+
 
 /*
  * onintr() - bump intr to note command interruption
@@ -114,9 +110,15 @@ void onintr( int disp )
  * exec_cmd() - launch an async command execution.
  */
 
+/* We hold file descriptors for pipes used to communicate with child processes
+ * in a two element arrays indexed as follows.
+ */
+#define EXECCMD_PIPE_READ 0
+#define EXECCMD_PIPE_WRITE 1
+
 void exec_cmd
 (
-    string const * pCommand,
+    string const * command,
     ExecCmdCallback func,
     void * closure,
     LIST * shell,
@@ -124,10 +126,9 @@ void exec_cmd
     char const * target
 )
 {
-    static int initialized;
-    int out[2];
-    int err[2];
     int slot;
+    int out[ 2 ];
+    int err[ 2 ];
     int len;
     char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
@@ -143,22 +144,23 @@ void exec_cmd
     }
 
     /* Forumulate argv. If shell was defined, be prepared for % and ! subs.
-     * Otherwise, use stock /bin/sh on unix or cmd.exe on NT.
+     * Otherwise, use stock /bin/sh.
      */
     if ( !list_empty( shell ) )
     {
-        int  i;
-        char jobno[4];
-        int  gotpercent = 0;
-        LISTITER iter = list_begin( shell ), end = list_end( shell );
+        int i;
+        char jobno[ 4 ];
+        int gotpercent = 0;
+        LISTITER iter = list_begin( shell );
+        LISTITER end = list_end( shell );
 
         sprintf( jobno, "%d", slot + 1 );
 
         for ( i = 0; iter != end && i < MAXARGC; ++i, iter = list_next( iter ) )
         {
-            switch ( object_str( list_item( iter ) )[0] )
+            switch ( object_str( list_item( iter ) )[ 0 ] )
             {
-                case '%': argv[ i ] = pCommand->value; ++gotpercent; break;
+                case '%': argv[ i ] = command->value; ++gotpercent; break;
                 case '!': argv[ i ] = jobno; break;
                 default : argv[ i ] = object_str( list_item( iter ) );
             }
@@ -167,7 +169,7 @@ void exec_cmd
         }
 
         if ( !gotpercent )
-        argv[ i++ ] = pCommand->value;
+        argv[ i++ ] = command->value;
 
         argv[ i ] = 0;
     }
@@ -175,7 +177,7 @@ void exec_cmd
     {
         argv[ 0 ] = "/bin/sh";
         argv[ 1 ] = "-c";
-        argv[ 2 ] = pCommand->value;
+        argv[ 2 ] = command->value;
         argv[ 3 ] = 0;
     }
 
@@ -183,33 +185,29 @@ void exec_cmd
     ++cmdsrunning;
 
     /* Save off actual command string. */
-    cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC( pCommand->size + 1 );
-    strcpy( cmdtab[ slot ].command, pCommand->value );
-
-    /* Initialize only once. */
-    if ( !initialized )
-    {
-        times( &old_time );
-        initialized = 1;
-    }
+    cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC( command->size + 1 );
+    strcpy( cmdtab[ slot ].command, command->value );
 
     /* Create pipes from child to parent. */
+    if ( pipe( out ) < 0 || pipe( err ) < 0 )
     {
-        if ( pipe( out ) < 0 )
-            exit( EXITBAD );
+        exit( EXITBAD );
+    }
 
-        if ( pipe( err ) < 0 )
-            exit( EXITBAD );
+    /* Initialize old_time only once. */
+    if ( !old_time_initialized )
+    {
+        times( &old_time );
+        old_time_initialized = 1;
     }
 
     /* Start the command */
 
-    cmdtab[ slot ].start_dt = time(0);
+    cmdtab[ slot ].start_dt = time( 0 );
 
     if ( 0 < globs.timeout )
     {
-        /*
-         * Handle hung processes by manually tracking elapsed time and signal
+        /* Handle hung processes by manually tracking elapsed time and signal
          * process when time limit expires.
          */
         struct tms buf;
@@ -219,26 +217,32 @@ void exec_cmd
         if ( tps == 0 ) tps = sysconf( _SC_CLK_TCK );
     }
 
-    if ( ( cmdtab[ slot ].pid = vfork() ) == 0 )
+    if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
-        int pid = getpid();
+        perror( "vfork" );
+        exit( EXITBAD );
+    }
 
-        close( out[0] );
-        close( err[0] );
+    if ( cmdtab[ slot ].pid == 0 )
+    {
+        /*****************/
+        /* Child process */
+        /*****************/
+        int const pid = getpid();
 
-        dup2( out[1], STDOUT_FILENO );
+        close( out[ EXECCMD_PIPE_READ ] );
+        close( err[ EXECCMD_PIPE_READ ] );
 
-        if ( globs.pipe_action == 0 )
-            dup2( out[1], STDERR_FILENO );
-        else
-            dup2( err[1], STDERR_FILENO );
-
-        close( out[1] );
-        close( err[1] );
+        /* Redirect stdout and stderr to pipes inherited from the parent. */
+        dup2( out[ EXECCMD_PIPE_WRITE ], STDOUT_FILENO );
+        dup2( globs.pipe_action ? err[ EXECCMD_PIPE_WRITE ] :
+            out[ EXECCMD_PIPE_WRITE ], STDERR_FILENO );
+        close( out[ EXECCMD_PIPE_WRITE ] );
+        close( err[ EXECCMD_PIPE_WRITE ] );
 
         /* Make this process a process group leader so that when we kill it, all
          * child processes of this process are terminated as well. We use
-         * killpg(pid, SIGKILL) to kill the process group leader and all its
+         * killpg( pid, SIGKILL ) to kill the process group leader and all its
          * children.
          */
         if ( 0 < globs.timeout )
@@ -248,51 +252,55 @@ void exec_cmd
             r_limit.rlim_max = globs.timeout;
             setrlimit( RLIMIT_CPU, &r_limit );
         }
-        setpgid( pid,pid );
-        execvp( argv[0], (char * *)argv );
+        setpgid( pid, pid );
+        execvp( argv[ 0 ], (char * *)argv );
         perror( "execvp" );
         _exit( 127 );
     }
-    else if ( cmdtab[ slot ].pid == -1 )
-    {
-        perror( "vfork" );
-        exit( EXITBAD );
-    }
 
+    /******************/
+    /* Parent process */
+    /******************/
     setpgid( cmdtab[ slot ].pid, cmdtab[ slot ].pid );
 
-    /* close write end of pipes */
-    close( out[1] );
-    close( err[1] );
+    /* Close pipe write ends. */
+    close( out[ EXECCMD_PIPE_WRITE ] );
+    close( err[ EXECCMD_PIPE_WRITE ] );
 
-    /* set both file descriptors to non-blocking */
-    fcntl(out[0], F_SETFL, O_NONBLOCK);
-    fcntl(err[0], F_SETFL, O_NONBLOCK);
+    /* Set both file descriptors to non-blocking. */
+    fcntl( out[ EXECCMD_PIPE_READ ], F_SETFL, O_NONBLOCK );
+    fcntl( err[ EXECCMD_PIPE_READ ], F_SETFL, O_NONBLOCK );
 
-    /* child writes stdout to out[1], parent reads from out[0] */
-    cmdtab[ slot ].fd[ OUT ] = out[0];
+    /* Child writes stdout to out[ EXECCMD_PIPE_WRITE ], parent reads from
+     * out[ EXECCMD_PIPE_READ ].
+     */
+    cmdtab[ slot ].fd[ OUT ] = out[ EXECCMD_PIPE_READ ];
     cmdtab[ slot ].stream[ OUT ] = fdopen( cmdtab[ slot ].fd[ OUT ], "rb" );
-    if ( cmdtab[ slot ].stream[ OUT ] == NULL )
+    if ( !cmdtab[ slot ].stream[ OUT ] )
     {
         perror( "fdopen" );
         exit( EXITBAD );
     }
 
-    /* child writes stderr to err[1], parent reads from err[0] */
-    if (globs.pipe_action == 0)
+    /* Child writes stderr to err[ EXECCMD_PIPE_WRITE ], parent reads from
+     * err[ EXECCMD_PIPE_READ ].
+     */
+    if ( globs.pipe_action )
     {
-      close(err[0]);
-    }
-    else
-    {
-        cmdtab[ slot ].fd[ ERR ] = err[0];
+        cmdtab[ slot ].fd[ ERR ] = err[ EXECCMD_PIPE_READ ];
         cmdtab[ slot ].stream[ ERR ] = fdopen( cmdtab[ slot ].fd[ ERR ], "rb" );
-        if ( cmdtab[ slot ].stream[ ERR ] == NULL )
+        if ( !cmdtab[ slot ].stream[ ERR ] )
         {
             perror( "fdopen" );
             exit( EXITBAD );
         }
     }
+    else
+        close( err[ EXECCMD_PIPE_READ ] );
+
+    /* Save input data into the selected running commands table slot. */
+    cmdtab[ slot ].func = func;
+    cmdtab[ slot ].closure = closure;
 
     /* Ensure enough room for rule and target name. */
     if ( action && target )
@@ -324,10 +332,6 @@ void exec_cmd
         cmdtab[ slot ].target_length = 0;
     }
 
-    /* Save the operation for exec_wait() to find. */
-    cmdtab[ slot ].func = func;
-    cmdtab[ slot ].closure = closure;
-
     /* Wait until we are under the limit of concurrent commands. Do not trust
      * globs.jobs alone.
      */
@@ -336,8 +340,11 @@ void exec_cmd
             break;
 }
 
+#undef EXECCMD_PIPE_READ
+#undef EXECCMD_PIPE_WRITE
 
-/* Returns 1 if file is closed, 0 if descriptor is still live.
+
+/* Returns 1 if file descriptor is closed, or 0 if it is still alive.
  *
  * i is index into cmdtab
  *
@@ -349,17 +356,18 @@ void exec_cmd
 
 int read_descriptor( int i, int s )
 {
-    int  ret;
-    int  len;
-    char buffer[BUFSIZ];
+    int ret;
+    char buffer[ BUFSIZ ];
 
-    while ( 0 < ( ret = fread( buffer, sizeof(char), BUFSIZ-1, cmdtab[ i ].stream[ s ] ) ) )
+    while ( 0 < ( ret = fread( buffer, sizeof( char ), BUFSIZ - 1,
+        cmdtab[ i ].stream[ s ] ) ) )
     {
         buffer[ ret ] = 0;
         if ( !cmdtab[ i ].buffer[ s ] )
         {
             /* Never been allocated. */
-            if ( ret > globs.max_buf && 0 != globs.max_buf ) {
+            if ( globs.max_buf && ret > globs.max_buf )
+            {
                 ret = globs.max_buf;
                 buffer[ ret ] = 0;
             }
@@ -370,13 +378,15 @@ int read_descriptor( int i, int s )
         else
         {
             /* Previously allocated. */
-            if ( cmdtab[ i ].buf_size[ s ] < globs.max_buf || 0 == globs.max_buf ) {
+            if ( cmdtab[ i ].buf_size[ s ] < globs.max_buf || !globs.max_buf )
+            {
                 char * tmp = cmdtab[ i ].buffer[ s ];
-                len = cmdtab[ i ].buf_size[ s ] - 1;
-                cmdtab[ i ].buf_size[ s ] = len + ret + 1;
-                cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( len + ret + 1 );
-                memcpy( cmdtab[ i ].buffer[ s ], tmp, len );
-                memcpy( cmdtab[ i ].buffer[ s ] + len, buffer, ret + 1 );
+                int const old_len = cmdtab[ i ].buf_size[ s ] - 1;
+                int const new_len = old_len + ret + 1;
+                cmdtab[ i ].buf_size[ s ] = new_len;
+                cmdtab[ i ].buffer[ s ] = (char*)BJAM_MALLOC_ATOMIC( new_len );
+                memcpy( cmdtab[ i ].buffer[ s ], tmp, old_len );
+                memcpy( cmdtab[ i ].buffer[ s ] + old_len, buffer, ret + 1 );
                 BJAM_FREE( tmp );
             }
         }
@@ -386,48 +396,54 @@ int read_descriptor( int i, int s )
 }
 
 
-void close_streams( int i, int s )
+/*
+ * close_streams() - Close the stream and pipe descriptor.
+ */
+
+void close_streams( int const i, int const s )
 {
-    /* Close the stream and pipe descriptor. */
-    fclose(cmdtab[ i ].stream[ s ]);
+    fclose( cmdtab[ i ].stream[ s ] );
     cmdtab[ i ].stream[ s ] = 0;
 
-    close(cmdtab[ i ].fd[ s ]);
+    close( cmdtab[ i ].fd[ s ] );
     cmdtab[ i ].fd[ s ] = 0;
 }
 
 
-void populate_file_descriptors( int * fmax, fd_set * fds)
+void populate_file_descriptors( int * const fmax, fd_set * const fds )
 {
-    int i, fd_max = 0;
+    int i;
+    int fd_max = 0;
     struct tms buf;
     clock_t current = times( &buf );
     select_timeout = globs.timeout;
 
     /* Compute max read file descriptor for use in select. */
-    FD_ZERO(fds);
+    FD_ZERO( fds );
     for ( i = 0; i < globs.jobs; ++i )
     {
         if ( 0 < cmdtab[ i ].fd[ OUT ] )
         {
-            fd_max = fd_max < cmdtab[ i ].fd[ OUT ] ? cmdtab[ i ].fd[ OUT ] : fd_max;
-            FD_SET(cmdtab[ i ].fd[ OUT ], fds);
+            if ( fd_max < cmdtab[ i ].fd[ OUT ] )
+                fd_max = cmdtab[ i ].fd[ OUT ];
+            FD_SET( cmdtab[ i ].fd[ OUT ], fds );
         }
-        if ( globs.pipe_action != 0 )
+        if ( globs.pipe_action )
         {
-            if (0 < cmdtab[ i ].fd[ ERR ])
+            if ( 0 < cmdtab[ i ].fd[ ERR ] )
             {
-                fd_max = fd_max < cmdtab[ i ].fd[ ERR ] ? cmdtab[ i ].fd[ ERR ] : fd_max;
-                FD_SET(cmdtab[ i ].fd[ ERR ], fds);
+                if ( fd_max < cmdtab[ i ].fd[ ERR ] )
+                    fd_max = cmdtab[ i ].fd[ ERR ];
+                FD_SET( cmdtab[ i ].fd[ ERR ], fds );
             }
         }
 
-        if (globs.timeout && cmdtab[ i ].pid) {
-            clock_t consumed = (current - cmdtab[ i ].start_time) / tps;
+        if ( globs.timeout && cmdtab[ i ].pid )
+        {
+            clock_t consumed = ( current - cmdtab[ i ].start_time ) / tps;
             clock_t process_timesout = globs.timeout - consumed;
-            if (0 < process_timesout && process_timesout < select_timeout) {
+            if ( 0 < process_timesout && process_timesout < select_timeout )
                 select_timeout = process_timesout;
-            }
             if ( globs.timeout <= consumed )
             {
                 killpg( cmdtab[ i ].pid, SIGKILL );
@@ -440,148 +456,135 @@ void populate_file_descriptors( int * fmax, fd_set * fds)
 
 
 /*
- * exec_wait() - wait and drive at most one execution completion.
+ * exec_wait() - wait for any of the async command processes to terminate.
+ *
+ * May register more than one terminated child process but will exit as soon as
+ * at least one has been registered.
  */
 
 int exec_wait()
 {
-    int         i;
-    int         ret;
-    int         fd_max;
-    int         pid;
-    int         status;
-    int         finished;
-    int         rstat;
-    timing_info time_info;
-    fd_set      fds;
-    struct tms  new_time;
+    int fd_max;
+    int finished = 0;
+    fd_set fds;
 
     /* Handle naive make1() which does not know if commands are running. */
     if ( !cmdsrunning )
         return 0;
 
     /* Process children that signaled. */
-    finished = 0;
     while ( !finished && cmdsrunning )
     {
+        int i;
+        int ret;
+        struct timeval tv;
+        struct timeval * ptv = NULL;
+
         /* Compute max read file descriptor for use in select(). */
         populate_file_descriptors( &fd_max, &fds );
 
+        /* Force select() to timeout so we can terminate expired processes. */
         if ( 0 < globs.timeout )
         {
-            /* Force select() to timeout so we can terminate expired processes.
-             */
             tv.tv_sec = select_timeout;
             tv.tv_usec = 0;
-
-            /* select() will wait until: i/o on a descriptor, a signal, or we
-             * time out.
-             */
-            while ((ret = select( fd_max + 1, &fds, 0, 0, &tv )) == -1) {
-                if (errno != EINTR) break;
-            }
-        }
-        else
-        {
-            /* select() will wait until i/o on a descriptor or a signal. */
-            while ((ret = select( fd_max + 1, &fds, 0, 0, 0 )) == -1) {
-                if (errno != EINTR) break;
-            }
+            ptv = &tv;
         }
 
-        if ( 0 < ret )
+        /* select() will wait for I/O on a descriptor, a signal, or timeout. */
+        while ( ( ret = select( fd_max + 1, &fds, 0, 0, ptv ) ) == -1 )
+            if ( errno != EINTR )
+                break;
+        if ( ret <= 0 )
+            continue;
+
+        for ( i = 0; i < globs.jobs; ++i )
         {
-            for ( i = 0; i < globs.jobs; ++i )
+            int out = 0;
+            int err = 0;
+            if ( FD_ISSET( cmdtab[ i ].fd[ OUT ], &fds ) )
+                out = read_descriptor( i, OUT );
+
+            if ( globs.pipe_action && FD_ISSET( cmdtab[ i ].fd[ ERR ], &fds ) )
+                err = read_descriptor( i, ERR );
+
+            /* If feof on either descriptor, we are done. */
+            if ( out || err )
             {
-                int out = 0;
-                int err = 0;
-                if ( FD_ISSET( cmdtab[ i ].fd[ OUT ], &fds ) )
-                    out = read_descriptor( i, OUT );
+                int pid;
+                int status;
+                int rstat;
+                timing_info time_info;
+                struct tms new_time;
 
-                if ( ( globs.pipe_action != 0 ) &&
-                    ( FD_ISSET( cmdtab[ i ].fd[ ERR ], &fds ) ) )
-                    err = read_descriptor( i, ERR );
+                /* Close the stream and pipe descriptors. */
+                close_streams( i, OUT );
+                if ( globs.pipe_action != 0 )
+                    close_streams( i, ERR );
 
-                /* If feof on either descriptor, then we are done. */
-                if ( out || err )
+                /* Reap the child and release resources. */
+                while ( ( pid = waitpid( cmdtab[ i ].pid, &status, 0 ) ) == -1 )
+                    if ( errno != EINTR )
+                        break;
+
+                if ( pid != cmdtab[ i ].pid )
                 {
-                    /* Close the stream and pipe descriptors. */
-                    close_streams( i, OUT );
-                    if ( globs.pipe_action != 0 )
-                        close_streams( i, ERR );
-
-                    /* Reap the child and release resources. */
-                    while ((pid = waitpid( cmdtab[ i ].pid, &status, 0 )) == -1) {
-                      if (errno != EINTR) break;
-                    }
-
-                    if ( pid == cmdtab[ i ].pid )
-                    {
-                        finished = 1;
-                        pid = 0;
-                        cmdtab[ i ].pid = 0;
-
-                        /* Set reason for exit if not timed out. */
-                        if ( WIFEXITED( status ) )
-                        {
-                            cmdtab[ i ].exit_reason = 0 == WEXITSTATUS( status )
-                                ? EXIT_OK
-                                : EXIT_FAIL;
-                        }
-
-                        /* Print out the rule and target name. */
-                        out_action( cmdtab[ i ].action, cmdtab[ i ].target,
-                            cmdtab[ i ].command, cmdtab[ i ].buffer[ OUT ],
-                            cmdtab[ i ].buffer[ ERR ], cmdtab[ i ].exit_reason
-                        );
-
-                        times( &new_time );
-
-                        time_info.system = (double)( new_time.tms_cstime - old_time.tms_cstime ) / CLOCKS_PER_SEC;
-                        time_info.user   = (double)( new_time.tms_cutime - old_time.tms_cutime ) / CLOCKS_PER_SEC;
-                        time_info.start  = cmdtab[ i ].start_dt;
-                        time_info.end    = time( 0 );
-
-                        old_time = new_time;
-
-                        /* Drive the completion. */
-                        --cmdsrunning;
-
-                        if ( intr )
-                            rstat = EXEC_CMD_INTR;
-                        else if ( status != 0 )
-                            rstat = EXEC_CMD_FAIL;
-                        else
-                            rstat = EXEC_CMD_OK;
-
-                        /* Assume -p0 in effect so only pass buffer[ 0 ]
-                         * containing merged output.
-                         */
-                        (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat,
-                            &time_info, cmdtab[ i ].command,
-                            cmdtab[ i ].buffer[ 0 ] );
-
-                        BJAM_FREE( cmdtab[ i ].buffer[ OUT ] );
-                        cmdtab[ i ].buffer[ OUT ] = 0;
-                        cmdtab[ i ].buf_size[ OUT ] = 0;
-
-                        BJAM_FREE( cmdtab[ i ].buffer[ ERR ] );
-                        cmdtab[ i ].buffer[ ERR ] = 0;
-                        cmdtab[ i ].buf_size[ ERR ] = 0;
-
-                        BJAM_FREE( cmdtab[ i ].command );
-                        cmdtab[ i ].command = 0;
-
-                        cmdtab[ i ].func = 0;
-                        cmdtab[ i ].closure = 0;
-                        cmdtab[ i ].start_time = 0;
-                    }
-                    else
-                    {
-                        printf( "unknown pid %d with errno = %d\n", pid, errno );
-                        exit( EXITBAD );
-                    }
+                    printf( "unknown pid %d with errno = %d\n", pid, errno );
+                    exit( EXITBAD );
                 }
+
+                finished = 1;
+                cmdtab[ i ].pid = 0;
+
+                /* Set reason for exit if not timed out. */
+                if ( WIFEXITED( status ) )
+                    cmdtab[ i ].exit_reason = WEXITSTATUS( status )
+                        ? EXIT_FAIL
+                        : EXIT_OK;
+
+                /* Print out the rule and target name. */
+                out_action( cmdtab[ i ].action, cmdtab[ i ].target,
+                    cmdtab[ i ].command, cmdtab[ i ].buffer[ OUT ],
+                    cmdtab[ i ].buffer[ ERR ], cmdtab[ i ].exit_reason );
+
+                times( &new_time );
+                time_info.system = (double)( new_time.tms_cstime - old_time.tms_cstime ) / CLOCKS_PER_SEC;
+                time_info.user   = (double)( new_time.tms_cutime - old_time.tms_cutime ) / CLOCKS_PER_SEC;
+                time_info.start  = cmdtab[ i ].start_dt;
+                time_info.end    = time( 0 );
+                old_time = new_time;
+
+                /* Drive the completion. */
+                --cmdsrunning;
+
+                if ( intr )
+                    rstat = EXEC_CMD_INTR;
+                else if ( status )
+                    rstat = EXEC_CMD_FAIL;
+                else
+                    rstat = EXEC_CMD_OK;
+
+                /* Call the callback, may call back to jam rule land. Assume -p0
+                 * is in effect so only pass buffer[ 0 ] containing merged
+                 * output.
+                 */
+                (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time_info,
+                    cmdtab[ i ].command, cmdtab[ i ].buffer[ 0 ] );
+
+                BJAM_FREE( cmdtab[ i ].buffer[ OUT ] );
+                cmdtab[ i ].buffer[ OUT ] = 0;
+                cmdtab[ i ].buf_size[ OUT ] = 0;
+
+                BJAM_FREE( cmdtab[ i ].buffer[ ERR ] );
+                cmdtab[ i ].buffer[ ERR ] = 0;
+                cmdtab[ i ].buf_size[ ERR ] = 0;
+
+                BJAM_FREE( cmdtab[ i ].command );
+                cmdtab[ i ].command = 0;
+
+                cmdtab[ i ].func = 0;
+                cmdtab[ i ].closure = 0;
+                cmdtab[ i ].start_time = 0;
             }
         }
     }
@@ -589,14 +592,15 @@ int exec_wait()
     return 1;
 }
 
+
 void exec_done( void )
 {
-    int i;
-    for( i = 0; i < MAXJOBS; ++i )
+    int slot;
+    for ( slot = 0; slot < MAXJOBS; ++slot )
     {
-        if( ! cmdtab[i].action ) break;
-        BJAM_FREE( cmdtab[i].action );
-        BJAM_FREE( cmdtab[i].target );
+        if ( !cmdtab[ slot ].action ) break;
+        BJAM_FREE( cmdtab[ slot ].action );
+        BJAM_FREE( cmdtab[ slot ].target );
     }
 }
 
