@@ -95,6 +95,8 @@ static void close_alert( HANDLE );
 static void close_alerts();
 /* returns a string's value buffer if not empty or 0 if empty */
 static char const * null_if_empty( string const * str );
+/* find a free slot in the running commands table */
+static int get_free_cmdtab_slot();
 /* Reports the last failed Windows API related error message. */
 static void reportWindowsError( char const * const apiName );
 
@@ -197,19 +199,9 @@ void exec_cmd
     char const * target
 )
 {
-    int slot;
+    int const slot = get_free_cmdtab_slot();
     int raw_cmd = 0 ;
     string cmd_local[ 1 ];
-
-    /* Find a free slot in the running commands table. */
-    for ( slot = 0; slot < MAXJOBS; ++slot )
-        if ( !cmdtab[ slot ].pi.hProcess )
-            break;
-    if ( slot == MAXJOBS )
-    {
-        printf( "no slots for child!\n" );
-        exit( EXITBAD );
-    }
 
     /* Trim all leading and trailing leading whitespace. */
     string_new_trimmed( cmd_local, cmd_orig );
@@ -1258,6 +1250,21 @@ static void close_alert( HANDLE process )
 static char const * null_if_empty( string const * str )
 {
     return str->size ? str->value : 0;
+}
+
+
+/*
+ * Find a free slot in the running commands table.
+ */
+
+static int get_free_cmdtab_slot()
+{
+    int slot;
+    for ( slot = 0; slot < MAXJOBS; ++slot )
+        if ( !cmdtab[ slot ].pi.hProcess )
+            return slot;
+    printf( "no slots for child!\n" );
+    exit( EXITBAD );
 }
 
 
