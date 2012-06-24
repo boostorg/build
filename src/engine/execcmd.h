@@ -49,8 +49,6 @@ void exec_cmd
 
 int exec_wait();
 
-void exec_done( void );
-
 #define EXEC_CMD_OK    0
 #define EXEC_CMD_FAIL  1
 #define EXEC_CMD_INTR  2

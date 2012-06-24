@@ -122,7 +122,6 @@
 #include "output.h"
 #include "search.h"
 #include "class.h"
-#include "execcmd.h"
 #include "constants.h"
 #include "function.h"
 #include "pwd.h"
@@ -591,7 +590,6 @@ int main( int argc, char * * argv, char * * arg_environ )
     class_done();
     modules_done();
     regex_done();
-    exec_done();
     pwd_done();
     path_done();
     function_done();

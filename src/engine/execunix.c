@@ -600,16 +600,4 @@ static int get_free_cmdtab_slot()
     exit( EXITBAD );
 }
 
-
-void exec_done( void )
-{
-    int slot;
-    for ( slot = 0; slot < MAXJOBS; ++slot )
-    {
-        if ( !cmdtab[ slot ].action ) break;
-        BJAM_FREE( cmdtab[ slot ].action );
-        BJAM_FREE( cmdtab[ slot ].target );
-    }
-}
-
 # endif /* USE_EXECUNIX */
