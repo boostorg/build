@@ -91,12 +91,16 @@ static int is_parent_child( DWORD, DWORD );
 static void close_alert( HANDLE );
 /* close any alerts hanging around */
 static void close_alerts();
+/* prepare a command file to be executed using an external shell */
+static char const * prepare_command_file( string const * command, int slot );
 /* Invoke the actual external process using the given command line. */
 static void invoke_cmd( char const * const command, int const slot );
 /* returns a string's value buffer if not empty or 0 if empty */
 static char const * null_if_empty( string const * str );
 /* find a free slot in the running commands table */
 static int get_free_cmdtab_slot();
+/* put together the final command string we are to run */
+static void string_new_from_argv( string * result, char const * const * argv );
 /* Reports the last failed Windows API related error message. */
 static void reportWindowsError( char const * const apiName );
 
@@ -120,7 +124,7 @@ static struct
     string command[ 1 ];  /* buffer to hold command being invoked */
 
     /* Temporary command file used to execute the action when needed. */
-    char * command_file;
+    string command_file[ 1 ];
 
     /* Pipes for communicating with the child process. Parent reads from (0),
      * child writes to (1).
@@ -199,7 +203,7 @@ void exec_cmd
 )
 {
     int const slot = get_free_cmdtab_slot();
-    int raw_cmd = 0 ;
+    int is_raw_cmd = is_raw_command_request( shell );
     string cmd_local[ 1 ];
 
     /* Trim all leading and trailing leading whitespace. */
@@ -209,139 +213,60 @@ void exec_cmd
      * for a JAMSHELL setting of "%", indicating that the command should be
      * invoked directly.
      */
-    if ( !list_empty( shell ) &&
-        !strcmp( object_str( list_front( shell ) ), "%" ) &&
-        list_next( list_begin( shell ) ) == list_end( shell ) )
+    if ( is_raw_cmd )
     {
         /* Check to see if we need to hack around the line-length limitation.
          * JAMSHELL setting of "%", indicates that the command should be invoked
          * directly if it satisfies all the spawnability criteria or using a
          * batch file and the default shell if not.
          */
-        raw_cmd = can_spawn( cmd_local->value ) >= MAXLINE;
+        is_raw_cmd = can_spawn( cmd_local->value ) >= MAXLINE;
         shell = L0;
     }
 
-    /* If we are not running a raw command directly, prepare a .BAT file to be
-     * executed using an external shell (default or not - does not matter here).
-     */
-    if ( !raw_cmd )
-    {
-        FILE * f = 0;
-        int tries = 0;
-
-        /* Compute the name of a temp batch file if we have not used it already
-         * for this command slot.
-         */
-        if ( !cmdtab[ slot ].command_file )
-        {
-            char const * const tempdir = path_tmpdir();
-            DWORD procID = GetCurrentProcessId();
-
-            /* SVA - allocate 64 bytes extra just to be safe. */
-            cmdtab[ slot ].command_file = BJAM_MALLOC_ATOMIC( strlen( tempdir )
-                + 64 );
-
-            sprintf( cmdtab[ slot ].command_file, "%s\\jam%d-%02d.bat", tempdir,
-                procID, slot );
-        }
-
-        /* Write command to bat file. For some reason this open can fail
-         * intermittently. But doing some retries works. Most likely this is due
-         * to a previously existing file of the same name that happens to be
-         * opened by an active virus scanner. Pointed out and fixed by Bronek
-         * Kozicki.
-         */
-        for ( ; !f && ( tries < 4 ); ++tries )
-        {
-            f = fopen( cmdtab[ slot ].command_file, "w" );
-            if ( !f && ( tries < 4 ) ) Sleep( 250 );
-        }
-        if ( !f )
-        {
-            printf( "failed to write command file!\n" );
-            exit( EXITBAD );
-        }
-        fputs( cmd_local->value, f );
-        fclose( f );
-
-        if ( DEBUG_EXECCMD )
-            printf( "Executing through .bat file\n" );
-    }
-    else
-    {
-        if ( DEBUG_EXECCMD )
+    if ( DEBUG_EXECCMD )
+        if ( is_raw_cmd )
             printf( "Executing raw command directly\n" );
-    }
+        else
+        {
+            printf( "Executing using a command file and the shell: " );
+            if ( list_empty( shell ) )
+                printf( "cmd /Q/C" );
+            else
+                list_print( shell );
+            printf( "\n" );
+        }
 
     /* If we are running a command directly, we already have it prepared in
      * cmd_local. Now prepare the final command-string to execute in case we are
      * using a shell. If a custom shell was defined, be prepared for % and !
      * subs. Otherwise, use stock cmd.exe.
      */
-    if ( !raw_cmd )
+    /* If we are not running a raw command directly, prepare a command file to
+     * be executed using an external shell and the actual command string using
+     * that command file.
+     */
+    if ( !is_raw_cmd )
     {
-        char const * const command = cmdtab[ slot ].command_file;
+        char const * const cmd_file = prepare_command_file( cmd_local, slot );
         char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
-
         if ( list_empty( shell ) )
         {
             argv[ 0 ] = "cmd.exe";
             argv[ 1 ] = "/Q/C";  /* anything more is non-portable */
-            argv[ 2 ] = command;
+            argv[ 2 ] = cmd_file;
             argv[ 3 ] = 0;
         }
         else
-        {
-            int i;
-            char jobno[ 4 ];
-            int gotpercent = 0;
-            LISTITER shell_iter = list_begin( shell );
-            LISTITER shell_end = list_end( shell );
-
-            sprintf( jobno, "%d", slot + 1 );
-
-            if ( DEBUG_EXECCMD )
-            {
-                printf( "Using user-specified shell: " );
-                list_print( shell );
-                printf( "\n" );
-            }
-            for ( i = 0; shell_iter != shell_end && ( i < MAXARGC );
-                ++i, shell_iter = list_next( shell_iter ) )
-            {
-                switch ( object_str( list_item( shell_iter ) )[ 0 ] )
-                {
-                    case '%': argv[ i ] = command; ++gotpercent; break;
-                    case '!': argv[ i ] = jobno; break;
-                    default : argv[ i ] = object_str( list_item( shell_iter ) );
-                }
-            }
-
-            if ( !gotpercent )
-                argv[ i++ ] = command;
-
-            argv[ i ] = 0;
-        }
-
+            argv_from_shell( argv, shell, cmd_file, slot );
         if ( DEBUG_EXECCMD )
         {
             int i;
             for ( i = 0 ; argv[ i ]; ++i )
-                printf( "argv[%d] = '%s'\n", i, argv[ i ] );
+                printf( "    argv[%d] = '%s'\n", i, argv[ i ] );
         }
-
-        /* Put together the final command string we are to run. */
-        {
-            char const * * argp = argv;
-            string_truncate( cmd_local, 0 );
-            string_append( cmd_local, *(argp++) );
-            while ( *argp )
-            {
-                string_push_back( cmd_local, ' ' );
-                string_append( cmd_local, *(argp++) );
-            }
-        }
+        string_free( cmd_local );
+        string_new_from_argv( cmd_local, argv );
     }
 
     /* Catch interrupts whenever commands are running. */
@@ -446,8 +371,8 @@ int exec_wait()
         record_times( cmdtab[ i ].pi.hProcess, &time );
 
         /* Removed the used temporary command file. */
-        if ( cmdtab[ i ].command_file )
-            unlink( cmdtab[ i ].command_file );
+        if ( cmdtab[ i ].command_file->size )
+            unlink( cmdtab[ i ].command_file->value );
 
         /* Find out the process exit code. */
         GetExitCodeProcess( cmdtab[ i ].pi.hProcess, &cmdtab[ i ].exit_code );
@@ -1237,6 +1162,72 @@ static void close_alert( HANDLE process )
 
 
 /*
+ * Open a command file to store the command into for executing using an external
+ * shell. Returns a pointer to a FILE open for writing or 0 in case such a file
+ * could not be opened. The file name used is stored back in the corresponding
+ * running commands table slot.
+ *
+ * Expects the running commands table slot's command_file attribute to contain
+ * either a zeroed out string object or one prepared previously by this same
+ * function.
+ */
+
+static FILE * open_command_file( int const slot )
+{
+    string * const command_file = cmdtab[ slot ].command_file;
+
+    /* If the temporary command file name has not already been prepared for this
+     * slot number, prepare a new one.
+     */
+    if ( !command_file->value )
+    {
+        DWORD const procID = GetCurrentProcessId();
+        char const * const tmpdir = path_tmpdir();
+        string_new( command_file );
+        string_reserve( command_file, strlen( tmpdir ) + 64 );
+        command_file->size = sprintf( command_file->value, "%s\\jam%d-%02d.bat",
+            tmpdir, procID, slot );
+    }
+
+    /* Write command to bat file. For some reason this open can fail
+     * intermittently. But doing some retries works. Most likely this is due to
+     * a previously existing file of the same name that happens to be opened by
+     * an active virus scanner. Pointed out and fixed by Bronek Kozicki.
+     */
+    {
+        int tries = 0;
+        while ( 1 )
+        {
+            FILE * const f = fopen( command_file->value, "w" );
+            if ( f ) return f;
+            if ( ++tries == 3 ) break;
+            Sleep( 250 );
+        }
+    }
+
+    return 0;
+}
+
+
+/*
+ * Prepare a command file to be executed using an external shell.
+ */
+
+static char const * prepare_command_file( string const * command, int slot )
+{
+    FILE * const f = open_command_file( slot );
+    if ( !f )
+    {
+        printf( "failed to write command file!\n" );
+        exit( EXITBAD );
+    }
+    fputs( command->value, f );
+    fclose( f );
+    return cmdtab[ slot ].command_file->value;
+}
+
+
+/*
  * Returns a string's value buffer if not empty or 0 if empty.
  */
 
@@ -1258,6 +1249,23 @@ static int get_free_cmdtab_slot()
             return slot;
     printf( "no slots for child!\n" );
     exit( EXITBAD );
+}
+
+
+/*
+ * Put together the final command string we are to run.
+ */
+
+static void string_new_from_argv( string * result, char const * const * argv )
+{
+    assert( argv );
+    assert( argv[ 0 ] );
+    string_copy( result, *(argv++) );
+    while ( *argv )
+    {
+        string_push_back( result, ' ' );
+        string_append( result, *(argv++) );
+    }
 }
 
 

@@ -127,39 +127,27 @@ void exec_cmd
     /* Forumulate argv. If shell was defined, be prepared for % and ! subs.
      * Otherwise, use stock /bin/sh.
      */
-    if ( !list_empty( shell ) )
-    {
-        int i;
-        char jobno[ 4 ];
-        int gotpercent = 0;
-        LISTITER iter = list_begin( shell );
-        LISTITER end = list_end( shell );
-
-        sprintf( jobno, "%d", slot + 1 );
-
-        for ( i = 0; iter != end && i < MAXARGC; ++i, iter = list_next( iter ) )
-        {
-            switch ( object_str( list_item( iter ) )[ 0 ] )
-            {
-                case '%': argv[ i ] = command->value; ++gotpercent; break;
-                case '!': argv[ i ] = jobno; break;
-                default : argv[ i ] = object_str( list_item( iter ) );
-            }
-            if ( DEBUG_EXECCMD )
-                printf( "argv[%d] = '%s'\n", i, argv[ i ] );
-        }
-
-        if ( !gotpercent )
-        argv[ i++ ] = command->value;
-
-        argv[ i ] = 0;
-    }
-    else
+    if ( list_empty( shell ) )
     {
         argv[ 0 ] = "/bin/sh";
         argv[ 1 ] = "-c";
         argv[ 2 ] = command->value;
         argv[ 3 ] = 0;
+    }
+    else
+        argv_from_shell( argv, shell, command->value, slot );
+
+    if ( DEBUG_EXECCMD )
+    {
+        int i;
+        printf( "Using shell: " );
+        if ( shell == L0 )
+            printf( "/bin/sh -c" );
+        else
+            list_print( shell );
+        printf( "\n" );
+        for ( i = 0; argv[ i ]; ++i )
+            printf( "    argv[%d] = '%s'\n", i, argv[ i ] );
     }
 
     /* Increment jobs running. */
