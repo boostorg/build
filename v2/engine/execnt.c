@@ -60,7 +60,7 @@ static void onintr( int );
 /* trim leading and trailing whitespace */
 void string_new_trimmed( string * pResult, string const * source );
 /* is the command suitable for direct execution via CreateProcessA() */
-static long can_spawn( string * pCommand );
+static long can_spawn( char const * const command );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
 static FILETIME add_64(
     unsigned long h1, unsigned long l1,
@@ -100,6 +100,12 @@ static void reportWindowsError( char const * const apiName );
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
+/* CreateProcessA() Windows API places a limit of 32768 characters (bytes) on
+ * the allowed command-line length, including a trailing Unicode (2-byte)
+ * nul-terminator character.
+ */
+#define MAX_RAW_COMMAND_LENGTH 32766
+
 static int intr = 0;
 static int cmdsrunning = 0;
 static void (* istat)( int );
@@ -113,7 +119,7 @@ static struct
     string command[ 1 ];  /* buffer to hold command being invoked */
 
     /* Temporary command file used to execute the action when needed. */
-    char * tempfile_bat;
+    char * command_file;
 
     /* Pipes for communicating with the child process. Parent reads from (0),
      * child writes to (1).
@@ -147,34 +153,31 @@ void execnt_unit_test()
     /* vc6 preprocessor is broken, so assert with these strings gets confused.
      * Use a table instead.
      */
-    typedef struct test { char * command; int result; } test;
-    test tests[] = {
-        { "x", 1 },
-        { "x\ny", 0 },
-        { "x\n\n y", 0 },
-        { "echo x > foo.bar", 0 },
-        { "echo x < foo.bar", 0 },
-        { "echo x \">\" foo.bar", 1 },
-        { "echo x \"<\" foo.bar", 1 },
-        { "echo x \\\">\\\" foo.bar", 0 },
-        { "echo x \\\"<\\\" foo.bar", 0 } };
-    int i;
-    for ( i = 0; i < sizeof( tests ) / sizeof( *tests ); ++i )
     {
-        string temp;
-        string_copy( &temp, tests[ i ].command );
-        assert( !!can_spawn( &temp ) == tests[ i ].result );
+        typedef struct test { char * command; int result; } test;
+        test tests[] = {
+            { "x", 1 },
+            { "x\ny", 0 },
+            { "x\n\n y", 0 },
+            { "echo x > foo.bar", 0 },
+            { "echo x < foo.bar", 0 },
+            { "echo x \">\" foo.bar", 1 },
+            { "echo x \"<\" foo.bar", 1 },
+            { "echo x \\\">\\\" foo.bar", 0 },
+            { "echo x \\\"<\\\" foo.bar", 0 },
+            { 0 } };
+        test const * t;
+        for ( t = tests; t->command; ++t )
+            assert( !!can_spawn( t->command ) == t->result );
     }
 
     {
-        string long_command[ 1 ];
-        string_new( long_command );
-        string_reserve( long_command, MAXLINE + 10 );
-        long_command->size = long_command->capacity - 1;
-        memset( long_command->value, 'x', long_command->size );
-        long_command->value[ long_command->size ] = 0;
-        assert( can_spawn( long_command ) == MAXLINE + 9 );
-        string_free( long_command );
+        int const length = maxline() + 9;
+        char * const cmd = (char *)BJAM_MALLOC_ATOMIC( length + 1 );
+        memset( cmd, 'x', length );
+        cmd[ length ] = 0;
+        assert( can_spawn( cmd ) == length );
+        BJAM_FREE( cmd );
     }
 #endif
 }
@@ -186,7 +189,7 @@ void execnt_unit_test()
 
 void exec_cmd
 (
-    string const * pCommand_orig,
+    string const * cmd_orig,
     ExecCmdCallback func,
     void * closure,
     LIST * shell,
@@ -209,7 +212,7 @@ void exec_cmd
     }
 
     /* Trim all leading and trailing leading whitespace. */
-    string_new_trimmed( cmd_local, pCommand_orig );
+    string_new_trimmed( cmd_local, cmd_orig );
 
     /* Check to see if we need to hack around the line-length limitation. Look
      * for a JAMSHELL setting of "%", indicating that the command should be
@@ -224,7 +227,7 @@ void exec_cmd
          * directly if it satisfies all the spawnability criteria or using a
          * batch file and the default shell if not.
          */
-        raw_cmd = can_spawn( cmd_local ) >= MAXLINE;
+        raw_cmd = can_spawn( cmd_local->value ) >= MAXLINE;
         shell = L0;
     }
 
@@ -239,16 +242,16 @@ void exec_cmd
         /* Compute the name of a temp batch file if we have not used it already
          * for this command slot.
          */
-        if ( !cmdtab[ slot ].tempfile_bat )
+        if ( !cmdtab[ slot ].command_file )
         {
             char const * tempdir = path_tmpdir();
             DWORD procID = GetCurrentProcessId();
 
             /* SVA - allocate 64 bytes extra just to be safe. */
-            cmdtab[ slot ].tempfile_bat = BJAM_MALLOC_ATOMIC( strlen( tempdir )
+            cmdtab[ slot ].command_file = BJAM_MALLOC_ATOMIC( strlen( tempdir )
                 + 64 );
 
-            sprintf( cmdtab[ slot ].tempfile_bat, "%s\\jam%d-%02d.bat", tempdir,
+            sprintf( cmdtab[ slot ].command_file, "%s\\jam%d-%02d.bat", tempdir,
                 procID, slot );
         }
 
@@ -260,7 +263,7 @@ void exec_cmd
          */
         for ( ; !f && ( tries < 4 ); ++tries )
         {
-            f = fopen( cmdtab[ slot ].tempfile_bat, "w" );
+            f = fopen( cmdtab[ slot ].command_file, "w" );
             if ( !f && ( tries < 4 ) ) Sleep( 250 );
         }
         if ( !f )
@@ -287,7 +290,7 @@ void exec_cmd
      */
     if ( !raw_cmd )
     {
-        char const * command = cmdtab[ slot ].tempfile_bat;
+        char const * command = cmdtab[ slot ].command_file;
         char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
         if ( list_empty( shell ) )
@@ -443,16 +446,11 @@ void exec_cmd
         }
         else
         {
-            string_new ( cmdtab[ slot ].action );
-            string_new ( cmdtab[ slot ].target );
+            string_new( cmdtab[ slot ].action );
+            string_new( cmdtab[ slot ].target );
         }
-        string_copy( cmdtab[ slot ].command, pCommand_orig->value );
+        string_copy( cmdtab[ slot ].command, cmd_orig->value );
 
-        /* CreateProcessA() Windows API places a limit of 32768 characters
-         * (bytes) on the allowed command-line length, including a trailing
-         * Unicode (2-byte) nul-terminator character.
-         */
-        #define MAX_RAW_COMMAND_LENGTH 32766
         if ( cmd_local->size > MAX_RAW_COMMAND_LENGTH )
         {
             printf( "Command line too long (%d characters). Maximum executable "
@@ -545,8 +543,8 @@ int exec_wait()
         record_times( cmdtab[ i ].pi.hProcess, &time );
 
         /* Removed the used temporary command file. */
-        if ( cmdtab[ i ].tempfile_bat )
-            unlink( cmdtab[ i ].tempfile_bat );
+        if ( cmdtab[ i ].command_file )
+            unlink( cmdtab[ i ].command_file );
 
         /* Find out the process exit code. */
         GetExitCodeProcess( cmdtab[ i ].pi.hProcess, &cmdtab[ i ].exit_code );
@@ -656,13 +654,13 @@ static void onintr( int disp )
  * already been trimmed of all leading and trailing whitespace.
  */
 
-static long can_spawn( string * pCommand )
+static long can_spawn( char const * const command )
 {
-    char const * p = pCommand->value;
+    char const * p = command;
     char inquote = 0;
 
-    assert( !isspace( *pCommand->value ) );
-    assert( !pCommand->size || !isspace( pCommand->value[ pCommand->size - 1 ] ) );
+    assert( !isspace( *command ) );
+    assert( !*command || !isspace( command[ strlen( command ) - 1 ] ) );
 
     /* Look for newlines and unquoted I/O redirection. */
     do
@@ -680,7 +678,7 @@ static long can_spawn( string * pCommand )
 
         case '"':
         case '\'':
-            if ( ( p > pCommand->value ) && ( p[-1] != '\\' ) )
+            if ( ( p > command ) && ( p[ -1 ] != '\\' ) )
             {
                 if ( inquote == *p )
                     inquote = 0;
@@ -702,7 +700,7 @@ static long can_spawn( string * pCommand )
     while ( *p );
 
     /* Return the number of characters the command will occupy. */
-    return p - pCommand->value;
+    return p - command;
 }
 
 
