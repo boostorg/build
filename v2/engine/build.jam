@@ -376,7 +376,7 @@ toolset vc11 cl : /Fe /Fe /Fd /Fo : -D
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
     -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
-    
+
 # First set the build commands and options according to the
 # preset toolset.
 toolset = [ MATCH --toolset=(.*) : $(ARGV) ] ;
@@ -710,7 +710,8 @@ SUFEXE ?= "" ;
 
 yacc ?= [ GLOB $(PATH) : yacc$(SUFEXE) ] ;
 yacc ?= [ GLOB $(PATH) : bison$(SUFEXE) ] ;
-yacc ?= [ GLOB "$(ProgramFiles:J= )\\GnuWin32\\bin" "C:\\Program Files\\GnuWin32\\bin" : bison$(SUFEXE) ] ;
+yacc ?= [ GLOB "$(ProgramFiles:J= )\\GnuWin32\\bin"
+    "C:\\Program Files\\GnuWin32\\bin" : bison$(SUFEXE) ] ;
 yacc = $(yacc[1]) ;
 switch $(yacc:D=:S=)
 {
@@ -778,7 +779,7 @@ rule .jam
 {
     $(>).exe = [ .exe $(>) : $(jam.source) ] ;
     DEPENDS all : $($(>).exe) ;
-    
+
     # Make a copy under the old name.
     $(<).exe = $(<:S=$($(>).exe:S)) ;
     LOCATE on $($(<).exe) = $(locate-target) ;
