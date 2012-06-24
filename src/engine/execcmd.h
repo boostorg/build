@@ -17,6 +17,7 @@
 
 #include "lists.h"
 #include "strings.h"
+
 #include <time.h>
 
 typedef struct timing_info
@@ -34,7 +35,12 @@ typedef void (* ExecCmdCallback)
     timing_info *,
     char const * invoked_command,
     char const * command_output
-) ;
+);
+
+/* Status codes passed to ExecCmdCallback routines. */
+#define EXEC_CMD_OK    0
+#define EXEC_CMD_FAIL  1
+#define EXEC_CMD_INTR  2
 
 void exec_cmd
 (
@@ -47,10 +53,6 @@ void exec_cmd
 );
 
 int exec_wait();
-
-#define EXEC_CMD_OK    0
-#define EXEC_CMD_FAIL  1
-#define EXEC_CMD_INTR  2
 
 
 /******************************************************************************
