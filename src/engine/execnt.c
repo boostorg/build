@@ -95,6 +95,8 @@ static void close_alert( HANDLE );
 static void close_alerts();
 /* returns a string's value buffer if not empty or 0 if empty */
 static char const * null_if_empty( string const * str );
+/* Reports the last failed Windows API related error message. */
+static void reportWindowsError( char const * const apiName );
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -369,7 +371,7 @@ void exec_cmd
         if ( !CreatePipe( &cmdtab[ slot ].pipe_out[ 0 ],
             &cmdtab[ slot ].pipe_out[ 1 ], &sa, 0 ) )
         {
-            perror( "CreatePipe" );
+            reportWindowsError( "CreatePipe" );
             exit( EXITBAD );
         }
 
@@ -379,7 +381,7 @@ void exec_cmd
             if ( !CreatePipe( &cmdtab[ slot ].pipe_err[ 0 ],
                 &cmdtab[ slot ].pipe_err[ 1 ], &sa, 0 ) )
             {
-                perror( "CreatePipe" );
+                reportWindowsError( "CreatePipe" );
                 exit( EXITBAD );
             }
         }
@@ -477,7 +479,7 @@ void exec_cmd
                 )
             )
         {
-            perror( "CreateProcessA" );
+            reportWindowsError( "CreateProcessA" );
             exit( EXITBAD );
         }
     }
@@ -1248,6 +1250,35 @@ static void close_alert( HANDLE process )
 static char const * null_if_empty( string const * str )
 {
     return str->size ? str->value : 0;
+}
+
+
+/*
+ * Reports the last failed Windows API related error message.
+ */
+
+static void reportWindowsError( char const * const apiName )
+{
+    char * errorMessage;
+    DWORD const errorCode = GetLastError();
+    DWORD apiResult = FormatMessageA(
+        FORMAT_MESSAGE_ALLOCATE_BUFFER |  /* __in      DWORD dwFlags       */
+        FORMAT_MESSAGE_FROM_SYSTEM |
+        FORMAT_MESSAGE_IGNORE_INSERTS,
+        NULL,                             /* __in_opt  LPCVOID lpSource    */
+        errorCode,                        /* __in      DWORD dwMessageId   */
+        0,                                /* __in      DWORD dwLanguageId  */
+        (LPSTR)&errorMessage,             /* __out     LPTSTR lpBuffer     */
+        0,                                /* __in      DWORD nSize         */
+        0 );                              /* __in_opt  va_list * Arguments */
+    if ( !apiResult )
+        printf( "%s() Windows API failed: %d.\n", apiName, errorCode );
+    else
+    {
+        printf( "%s() Windows API failed: %d - %s\n", apiName, errorCode,
+            errorMessage );
+        LocalFree( errorMessage );
+    }
 }
 
 
