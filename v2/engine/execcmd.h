@@ -59,6 +59,12 @@ int exec_wait();
  *                                                                            *
  ******************************************************************************/
 
+/* Constructs a list of command-line elements using the format specified by the
+ * given shell list.
+ */
+void argv_from_shell( char const * * argv, LIST * shell, char const * command,
+    int const slot );
+
 /* Interrupt routine bumping the internal interrupt counter. Needs to be
  * registered by platform specific exec*.c modules.
  */
@@ -67,5 +73,9 @@ void onintr( int disp );
 /* Returns whether an interrupt has been detected so far. */
 int interrupted( void );
 
+/* Checks whether the given shell list is actually a request to execute raw
+ * commands without an external shell.
+ */
+int is_raw_command_request( LIST * shell );
 
 #endif
