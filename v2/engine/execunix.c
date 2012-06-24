@@ -64,7 +64,6 @@ static int get_free_cmdtab_slot();
 
 static clock_t tps;
 static int select_timeout;
-static int intr;
 static int cmdsrunning;
 static int old_time_initialized;
 static struct tms old_time;
@@ -97,17 +96,6 @@ static struct
     /* Opaque data passed back to the 'func' callback. */
     void * closure;
 } cmdtab[ MAXJOBS ] = { { 0 } };
-
-
-/*
- * onintr() - bump intr to note command interruption
- */
-
-void onintr( int disp )
-{
-    ++intr;
-    printf( "...interrupted\n" );
-}
 
 
 /*
@@ -550,7 +538,7 @@ int exec_wait()
                 /* Drive the completion. */
                 --cmdsrunning;
 
-                if ( intr )
+                if ( interrupted() )
                     rstat = EXEC_CMD_INTR;
                 else if ( status )
                     rstat = EXEC_CMD_FAIL;

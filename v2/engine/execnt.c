@@ -55,8 +55,6 @@
 /* get the maximum shell command line length according to the OS */
 int maxline();
 
-/* bump intr to note command interruption */
-static void onintr( int );
 /* trim leading and trailing whitespace */
 void string_new_trimmed( string * pResult, string const * source );
 /* is the command suitable for direct execution via CreateProcessA() */
@@ -109,7 +107,6 @@ static void reportWindowsError( char const * const apiName );
 #define MAX_RAW_COMMAND_LENGTH 32766
 
 static int intr_installed;
-static int intr;
 static int cmdsrunning;
 
 
@@ -547,7 +544,7 @@ int exec_wait()
         GetExitCodeProcess( cmdtab[ i ].pi.hProcess, &cmdtab[ i ].exit_code );
 
         /* The dispossition of the command. */
-        if ( intr )
+        if ( interrupted() )
             rstat = EXEC_CMD_INTR;
         else if ( cmdtab[ i ].exit_code != 0 )
             rstat = EXEC_CMD_FAIL;
@@ -634,13 +631,6 @@ void string_new_trimmed( string * pResult, string const * pSource )
         --source_len;
     string_new( pResult );
     string_append_range( pResult, source, source + source_len );
-}
-
-
-static void onintr( int disp )
-{
-    ++intr;
-    printf( "...interrupted\n" );
 }
 
 

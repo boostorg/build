@@ -8,9 +8,8 @@
  * execcmd.h - execute a shell script.
  *
  * Defines the interface to be implemented in platform specific implementation
- * modules.
- *
- * 05/04/94 (seiwald) - async multiprocess interface
+ * modules as well as different shared utility functions prepared in the
+ * execcmd.c module.
  */
 
 #ifndef EXECCMD_H
@@ -52,5 +51,21 @@ int exec_wait();
 #define EXEC_CMD_OK    0
 #define EXEC_CMD_FAIL  1
 #define EXEC_CMD_INTR  2
+
+
+/******************************************************************************
+ *                                                                            *
+ * Utility functions defined in the execcmd.c module.                         *
+ *                                                                            *
+ ******************************************************************************/
+
+/* Interrupt routine bumping the internal interrupt counter. Needs to be
+ * registered by platform specific exec*.c modules.
+ */
+void onintr( int disp );
+
+/* Returns whether an interrupt has been detected so far. */
+int interrupted( void );
+
 
 #endif
