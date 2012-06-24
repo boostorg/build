@@ -425,18 +425,25 @@ void exec_cmd
         /* Save the operation for exec_wait() to find. */
         cmdtab[ slot ].func = func;
         cmdtab[ slot ].closure = closure;
+        /* No need to free action and target cmdtab[ slot ] members here as they
+         * have either never been explicitly constructed before (and are thus
+         * zero initialized) or have been freed when the previous command in the
+         * same slot has been cleaned up.
+         */
+        assert( !cmdtab[ slot ].action->size );
+        assert( !cmdtab[ slot ].action->value || cmdtab[ slot ].action->value ==
+            cmdtab[ slot ].action->opt );
+        assert( !cmdtab[ slot ].target->size );
+        assert( !cmdtab[ slot ].target->value || cmdtab[ slot ].target->value ==
+            cmdtab[ slot ].target->opt );
         if ( action && target )
         {
-            string_free( cmdtab[ slot ].action );
             string_copy( cmdtab[ slot ].action, action );
-            string_free( cmdtab[ slot ].target );
             string_copy( cmdtab[ slot ].target, target );
         }
         else
         {
-            string_free( cmdtab[ slot ].action );
             string_new ( cmdtab[ slot ].action );
-            string_free( cmdtab[ slot ].target );
             string_new ( cmdtab[ slot ].target );
         }
         string_copy( cmdtab[ slot ].command, pCommand_orig->value );
