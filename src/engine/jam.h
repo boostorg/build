@@ -12,27 +12,6 @@
 
 /*
  * jam.h - includes and globals for jam
- *
- * 04/08/94 (seiwald) - Coherent/386 support added.
- * 04/21/94 (seiwald) - DGUX is __DGUX__, not just __DGUX.
- * 05/04/94 (seiwald) - new globs.jobs (-j jobs)
- * 11/01/94 (wingerd) - let us define path of Jambase at compile time.
- * 12/30/94 (wingerd) - changed command buffer size for NT (MS-DOS shell).
- * 02/22/95 (seiwald) - Jambase now in /usr/local/lib.
- * 04/30/95 (seiwald) - FreeBSD added.  Live Free or Die.
- * 05/10/95 (seiwald) - SPLITPATH character set up here.
- * 08/20/95 (seiwald) - added LINUX.
- * 08/21/95 (seiwald) - added NCR.
- * 10/23/95 (seiwald) - added SCO.
- * 01/03/96 (seiwald) - SINIX (nixdorf) added.
- * 03/13/96 (seiwald) - Jambase now compiled in; remove JAMBASE variable.
- * 04/29/96 (seiwald) - AIX now has 31 and 42 OSVERs.
- * 11/21/96 (peterk)  - added BeOS with MW CW mwcc
- * 12/21/96 (seiwald) - OSPLAT now defined for NT.
- * 07/19/99 (sickel)  - Mac OS X Server and Client support added
- * 02/18/00 (belmonte)- Support for Cygwin.
- * 09/12/00 (seiwald) - OSSYMS split to OSMAJOR/OSMINOR/OSPLAT
- * 12/29/00 (seiwald) - OSVER dropped.
  */
 
 #ifndef JAM_H_VP_2003_08_01
