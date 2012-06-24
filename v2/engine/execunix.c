@@ -198,6 +198,10 @@ void exec_cmd
         if ( tps == 0 ) tps = sysconf( _SC_CLK_TCK );
     }
 
+    /* Child does not need the read pipe ends used by the parent. */
+    fcntl( out[ EXECCMD_PIPE_READ ], F_SETFD, FD_CLOEXEC );
+    fcntl( err[ EXECCMD_PIPE_READ ], F_SETFD, FD_CLOEXEC );
+
     if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
         perror( "vfork" );
@@ -210,9 +214,6 @@ void exec_cmd
         /* Child process */
         /*****************/
         int const pid = getpid();
-
-        close( out[ EXECCMD_PIPE_READ ] );
-        close( err[ EXECCMD_PIPE_READ ] );
 
         /* Redirect stdout and stderr to pipes inherited from the parent. */
         dup2( out[ EXECCMD_PIPE_WRITE ], STDOUT_FILENO );
