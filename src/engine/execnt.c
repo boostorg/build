@@ -106,9 +106,9 @@ static void reportWindowsError( char const * const apiName );
  */
 #define MAX_RAW_COMMAND_LENGTH 32766
 
-static int intr = 0;
-static int cmdsrunning = 0;
-static void (* istat)( int );
+static int intr_installed;
+static int intr;
+static int cmdsrunning;
 
 
 /* The list of commands we run. */
@@ -354,8 +354,11 @@ void exec_cmd
     }
 
     /* Catch interrupts whenever commands are running. */
-    if ( !cmdsrunning++ )
-        istat = signal( SIGINT, onintr );
+    if ( !intr_installed )
+    {
+        intr_installed = 1;
+        signal( SIGINT, onintr );
+    }
 
     /* Start the command. */
     {
