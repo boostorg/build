@@ -544,13 +544,9 @@ int exec_wait()
         /* The time data for the command. */
         record_times( cmdtab[ i ].pi.hProcess, &time );
 
-        /* Clear the temp file. */
+        /* Removed the used temporary command file. */
         if ( cmdtab[ i ].tempfile_bat )
-        {
             unlink( cmdtab[ i ].tempfile_bat );
-            BJAM_FREE( cmdtab[ i ].tempfile_bat );
-            cmdtab[ i ].tempfile_bat = NULL;
-        }
 
         /* Find out the process exit code. */
         GetExitCodeProcess( cmdtab[ i ].pi.hProcess, &cmdtab[ i ].exit_code );
@@ -578,7 +574,9 @@ int exec_wait()
         (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time,
             cmdtab[ i ].command->value, cmdtab[ i ].buffer_out->value );
 
-        /* Clean up the command data, process, etc. */
+        /* Clean up the command data, process, etc. No need to clear the
+         * temporary command file name as it gets reused.
+         */
         string_free( cmdtab[ i ].action  ); string_new( cmdtab[ i ].action  );
         string_free( cmdtab[ i ].target  ); string_new( cmdtab[ i ].target  );
         string_free( cmdtab[ i ].command ); string_new( cmdtab[ i ].command );
