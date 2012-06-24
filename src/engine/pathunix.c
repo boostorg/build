@@ -57,11 +57,11 @@
  * path_parse() - split a file name into dir/base/suffix/member
  */
 
-void path_parse( const char * file, PATHNAME * f )
+void path_parse( char const * file, PATHNAME * f )
 {
-    const char * p;
-    const char * q;
-    const char * end;
+    char const * p;
+    char const * q;
+    char const * end;
 
     memset( (char *)f, 0, sizeof( *f ) );
 
@@ -284,7 +284,7 @@ static void path_write_key( char * path_, string * out );
 
 void ShortPathToLongPath( char * short_path, string * out )
 {
-    const char * new_element;
+    char const * new_element;
     unsigned long saved_size;
     char * p;
 
@@ -308,7 +308,7 @@ void ShortPathToLongPath( char * short_path, string * out )
         string_push_back( out, '\\' );
         return;
     }
-    
+
     /* '/' already handled. */
     if ( ( p = strrchr( short_path, '\\' ) ) )
     {
@@ -318,7 +318,7 @@ void ShortPathToLongPath( char * short_path, string * out )
         /* special case \ */
         if ( p == short_path )
             ++p;
-        
+
         /* special case D:\ */
         if ( p == short_path + 2  && short_path[1] == ':' )
             ++p;
@@ -337,7 +337,7 @@ void ShortPathToLongPath( char * short_path, string * out )
     {
         string_push_back( out, '\\' );
     }
-    
+
     saved_size = out->size;
     string_append( out, new_element );
 
@@ -522,63 +522,62 @@ void path_done( void )
 
 #endif
 
-static string path_tmpdir_buffer[1];
-static const char * path_tmpdir_result = 0;
-
-const char * path_tmpdir()
+char const * path_tmpdir()
 {
-    if (!path_tmpdir_result)
+    static string buffer[ 1 ];
+    static int have_result;
+    if ( !have_result )
     {
-        # ifdef OS_NT
-        DWORD pathLength = 0;
-        pathLength = GetTempPath(pathLength,NULL);
-        string_new(path_tmpdir_buffer);
-        string_reserve(path_tmpdir_buffer,pathLength);
-        pathLength = GetTempPathA(pathLength,path_tmpdir_buffer[0].value);
-        path_tmpdir_buffer[0].value[pathLength-1] = '\0';
-        path_tmpdir_buffer[0].size = pathLength-1;
-        # else
-        const char * t = getenv("TMPDIR");
-        if (!t)
+        string_new( buffer );
+        #ifdef OS_NT
         {
-            t = "/tmp";
+            DWORD pathLength = GetTempPathA( 0, NULL );
+            string_reserve( buffer, pathLength );
+            pathLength = GetTempPathA( pathLength, buffer->value );
+            buffer->value[ pathLength - 1 ] = '\0';
+            buffer->size = pathLength - 1;
         }
-        string_new(path_tmpdir_buffer);
-        string_append(path_tmpdir_buffer,t);
-        # endif
-        path_tmpdir_result = path_tmpdir_buffer[0].value;
+        #else
+        {
+            char const * t = getenv( "TMPDIR" );
+            if ( !t ) t = "/tmp";
+            string_append( buffer, t );
+        }
+        #endif
+        have_result = 1;
     }
-    return path_tmpdir_result;
+    return buffer->value;
 }
 
-OBJECT * path_tmpnam(void)
+OBJECT * path_tmpnam( void )
 {
-    char name_buffer[64];
+    char name_buffer[ 64 ];
+    unsigned long const c0 =
     # ifdef OS_NT
-    unsigned long c0 = GetCurrentProcessId();
+        GetCurrentProcessId();
     # else
-    unsigned long c0 = getpid();
+        getpid();
     # endif
-    static unsigned long c1 = 0;
-    if (0 == c1) c1 = time(0)&0xffff;
+    static unsigned long c1;
+    if ( !c1 ) c1 = time( 0 ) & 0xffff;
     c1 += 1;
-    sprintf(name_buffer,"jam%lx%lx.000",c0,c1);
-    return object_new(name_buffer);
+    sprintf( name_buffer, "jam%lx%lx.000", c0, c1 );
+    return object_new( name_buffer );
 }
 
-OBJECT * path_tmpfile(void)
+OBJECT * path_tmpfile( void )
 {
-    OBJECT * result = 0;
+    OBJECT * result;
     OBJECT * tmpnam;
 
-    string file_path;
-    string_copy(&file_path,path_tmpdir());
-    string_push_back(&file_path,PATH_DELIM);
+    string file_path[ 1 ];
+    string_copy( file_path, path_tmpdir() );
+    string_push_back( file_path, PATH_DELIM );
     tmpnam = path_tmpnam();
-    string_append(&file_path,object_str(tmpnam));
-    object_free(tmpnam);
-    result = object_new(file_path.value);
-    string_free(&file_path);
+    string_append( file_path, object_str( tmpnam ) );
+    object_free( tmpnam );
+    result = object_new( file_path->value );
+    string_free( file_path );
 
     return result;
 }

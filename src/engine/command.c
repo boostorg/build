@@ -15,13 +15,12 @@
  */
 
 #include "jam.h"
+#include "command.h"
 
+#include "assert.h"
 #include "lists.h"
-#include "parse.h"
-#include "variable.h"
 #include "rules.h"
 
-#include "command.h"
 #include <limits.h>
 #include <string.h>
 
@@ -41,6 +40,7 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
         && list_next( iter ) == end;
     FRAME frame[1];
 
+    assert( cmd );
     cmd->rule = rule;
     cmd->shell = shell;
     cmd->next = 0;
