@@ -257,12 +257,6 @@ void exec_cmd
         char const * const cmd_file = prepare_command_file( cmd_local, slot );
         char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
         argv_from_shell( argv, shell, cmd_file, slot );
-        if ( DEBUG_EXECCMD )
-        {
-            int i;
-            for ( i = 0 ; argv[ i ]; ++i )
-                printf( "    argv[%d] = '%s'\n", i, argv[ i ] );
-        }
         string_free( cmd_local );
         string_new_from_argv( cmd_local, argv );
     }
