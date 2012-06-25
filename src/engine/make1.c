@@ -1025,17 +1025,16 @@ static CMD * make1cmds( TARGET * t )
         /*
          * Build command, starting with all source args.
          *
-         * If cmd_new returns 0, it is because the resulting command length is
-         * > MAXLINE. In this case, we will slowly reduce the number of source
-         * arguments presented until it does fit. This only applies to actions
-         * that allow PIECEMEAL commands.
+         * For actions that allow PIECEMEAL commands, if the constructed command
+         * string is too long, we retry constructing it with a reduced number of
+         * source arguments presented.
          *
          * While reducing slowly takes a bit of compute time to get things just
-         * right, it is worth it to get as close to MAXLINE as possible, because
-         * launching the commands we are executing is likely to be much more
-         * compute intensive.
+         * right, it is worth it to get as close to maximum allowed command
+         * string length as possible, because launching the commands we are
+         * executing is likely to be much more compute intensive.
          *
-         * Note we loop through at least once, for sourceless actions.
+         * Note that we loop through at least once, for sourceless actions.
          */
         {
             int const length = list_length( ns );
@@ -1046,22 +1045,43 @@ static CMD * make1cmds( TARGET * t )
             do
             {
                 CMD * cmd;
-                LIST * const cmd_sources = list_sublist( ns, start, chunk );
+                int line_too_long = 0;
 
-                /* Build cmd: cmd_new() consumes its lists if successful. */
+                /* Build cmd: cmd_new() takes ownership of its lists. */
                 if ( list_empty( cmd_targets ) ) cmd_targets = list_copy( nt );
                 if ( list_empty( cmd_shell ) ) cmd_shell = list_copy( shell );
-                cmd = cmd_new( rule, cmd_targets, cmd_sources, cmd_shell );
+                cmd = cmd_new( rule, cmd_targets, list_sublist( ns, start,
+                    chunk ), cmd_shell );
 
-                if ( cmd )
+                /* Check for too long command string lines. */
+                if ( !is_raw_command_request( cmd->shell ) )
                 {
-                    /* It fit: chain it up. */
+                    char * s = cmd->buf->value;
+                    while ( *s )
+                    {
+                        size_t const l = strcspn( s, "\n" );
+                        if ( l > MAXLINE )
+                        {
+                            line_too_long = 1;
+                            break;
+                        }
+                        s += l;
+                        if ( *s )
+                            ++s;
+                    }
+                }
+
+                if ( !line_too_long )
+                {
+                    /* Chain it up. */
                     if ( !cmds ) cmds = cmd;
                     else cmds->tail->next = cmd;
                     cmds->tail = cmd;
                     start += chunk;
 
-                    /* Mark consumed lists. */
+                    /* Mark lists we need recreated for the next command since
+                     * they got consumed by the cmd object.
+                     */
                     cmd_targets = L0;
                     cmd_shell = L0;
                 }
@@ -1079,13 +1099,15 @@ static CMD * make1cmds( TARGET * t )
                             rule->name ), MAXLINE );
 
                         /* Tell the user what did not fit. */
-                        cmd = cmd_new( rule, cmd_targets, cmd_sources,
-                            list_new( object_new( "%" ) ) );
                         fputs( cmd->buf->value, stdout );
                         exit( EXITBAD );
                     }
 
-                    list_free( cmd_sources );
+                    /* We can reuse targets & shell lists for the next command.
+                     * if we do not let them die with this cmd object.
+                     */
+                    cmd_release_targets_and_shell( cmd );
+                    cmd_free( cmd );
                 }
             }
             while ( start < length );
