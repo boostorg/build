@@ -1182,11 +1182,11 @@ static FILE * open_command_file( int const slot )
     if ( !command_file->value )
     {
         DWORD const procID = GetCurrentProcessId();
-        char const * const tmpdir = path_tmpdir();
+        string const * const tmpdir = path_tmpdir();
         string_new( command_file );
-        string_reserve( command_file, strlen( tmpdir ) + 64 );
+        string_reserve( command_file, tmpdir->size + 64 );
         command_file->size = sprintf( command_file->value, "%s\\jam%d-%02d.bat",
-            tmpdir, procID, slot );
+            tmpdir->value, procID, slot );
     }
 
     /* Write command to bat file. For some reason this open can fail

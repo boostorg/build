@@ -72,7 +72,7 @@ void path_add_key( OBJECT * path );
 /** Returns a static pointer to the system dependent path to the temporary
     directory. NOTE: *without* a trailing path separator.
 */
-char const * path_tmpdir( void );
+string const * path_tmpdir( void );
 
 /** Returns a new temporary name.
 */
