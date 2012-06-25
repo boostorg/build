@@ -233,13 +233,9 @@ int exec_check
     if ( is_raw_command_request( *pShell ) )
     {
         int const raw_cmd_length = raw_command_length( command->value );
-        if ( !raw_cmd_length )
+        if ( raw_cmd_length < 0 )
         {
-            return EXEC_CHECK_SKIP;
-        }
-        else if ( raw_cmd_length < maxline() )
-        {
-            /* Fallback to default shell. */
+            /* Invalid characters detected - fallback to default shell. */
             list_free( *pShell );
             *pShell = L0;
         }
@@ -250,7 +246,7 @@ int exec_check
             return EXEC_CHECK_TOO_LONG;
         }
         else
-            return EXEC_CHECK_OK;
+            return raw_cmd_length ? EXEC_CHECK_OK : EXEC_CHECK_SKIP;
     }
 
     /* Now we know we are using an external shell. Note that there is no need to
