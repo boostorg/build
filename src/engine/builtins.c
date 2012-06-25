@@ -1347,13 +1347,17 @@ LIST * builtin_update( FRAME * frame, int flags )
 extern int anyhow;
 int last_update_now_status;
 
-/* Takes a list of target names as first argument, and immediately
-   updates them.
-   Second parameter, if specified, if the descriptor (converted to a string)
-   of a log file where all build output is redirected.
-   Third parameter, if non-empty, specifies that the -n option should have
-   no effect -- that is, all out-of-date targets should be rebuild.
-*/
+/* Takes a list of target names and immediately updates them.
+ *
+ * Parameters:
+ *  1. Target list.
+ *  2. Optional file descriptor (converted to a string) for a log file where all
+ *     the related build output should be redirected.
+ *  3. If specified, makes the build temporarily disable the -n option, i.e.
+ *     forces all needed out-of-date targets to be rebuilt.
+ *  4. If specified, makes the build temporarily disable the -q option, i.e.
+ *     forces the build to continue even if one of the targets fails to build.
+ */
 LIST * builtin_update_now( FRAME * frame, int flags )
 {
     LIST * targets = lol_get( frame->args, 0 );
@@ -1366,15 +1370,14 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     int original_noexec = 0;
     int original_quitquick = 0;
 
-
     if ( !list_empty( log ) )
     {
-        int fd = atoi( object_str( list_front( log ) ) );
-        /* Redirect stdout and stderr, temporary, to the log file.  */
+        /* Temporarily redirect stdout and stderr to the given log file. */
+        int const fd = atoi( object_str( list_front( log ) ) );
         original_stdout = dup( 0 );
         original_stderr = dup( 1 );
-        dup2 ( fd, 0 );
-        dup2 ( fd, 1 );
+        dup2( fd, 0 );
+        dup2( fd, 1 );
     }
 
     if ( !list_empty( force ) )
@@ -1406,8 +1409,9 @@ LIST * builtin_update_now( FRAME * frame, int flags )
 
     if ( !list_empty( log ) )
     {
-        /* Flush whatever stdio might have buffered, while descriptions
-           0 and 1 still refer to the log file.  */
+        /* Flush whatever stdio might have buffered, while descriptions 0 and 1
+         * still refer to the log file.
+         */
         fflush( stdout );
         fflush( stderr );
         dup2( original_stdout, 0 );
@@ -1418,10 +1422,7 @@ LIST * builtin_update_now( FRAME * frame, int flags )
 
     last_update_now_status = status;
 
-    if ( status == 0 )
-        return list_new( object_copy( constant_ok ) );
-    else
-        return L0;
+    return status ? L0 : list_new( object_copy( constant_ok ) );
 }
 
 
@@ -1429,7 +1430,9 @@ LIST * builtin_import_module( FRAME * frame, int flags )
 {
     LIST * arg1 = lol_get( frame->args, 0 );
     LIST * arg2 = lol_get( frame->args, 1 );
-    module_t * m = !list_empty( arg2 ) ? bindmodule( list_front( arg2 ) ) : root_module();
+    module_t * m = !list_empty( arg2 )
+        ? bindmodule( list_front( arg2 ) )
+        : root_module();
     import_module( arg1, m );
     return L0;
 }
@@ -1437,8 +1440,9 @@ LIST * builtin_import_module( FRAME * frame, int flags )
 
 LIST * builtin_imported_modules( FRAME * frame, int flags )
 {
-    LIST * arg0 = lol_get( frame->args, 0 );
-    return imported_modules( bindmodule( !list_empty( arg0 ) ? list_front( arg0 ) : 0 ) );
+    LIST * const arg0 = lol_get( frame->args, 0 );
+    OBJECT * const module = list_empty( arg0 ) ? 0 : list_front( arg0 );
+    return imported_modules( bindmodule( module ) );
 }
 
 
@@ -1474,11 +1478,11 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
 
     string   in[ 1 ];
     string   out[ 1 ];
-	/* Last character of the part of string still to be processed. */
+    /* Last character of the part of string still to be processed. */
     char   * end;
-	/* Working pointer. */
+    /* Working pointer. */
     char   * current;
-	/* Number of '..' elements seen and not processed yet. */
+    /* Number of '..' elements seen and not processed yet. */
     int      dotdots = 0;
     int      rooted  = 0;
     OBJECT * result  = 0;
@@ -1495,8 +1499,8 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
         if ( object_str( list_item( arg_iter ) )[ 0 ] != '\0' )
         {
             if ( in->size == 1 )
-                rooted = ( ( object_str( list_item( arg_iter ) )[ 0 ] == '/'  ) ||
-                           ( object_str( list_item( arg_iter ) )[ 0 ] == '\\' ) );
+                rooted = ( object_str( list_item( arg_iter ) )[ 0 ] == '/'  ) ||
+                         ( object_str( list_item( arg_iter ) )[ 0 ] == '\\' );
             else
                 string_append( in, "/" );
             string_append( in, object_str( list_item( arg_iter ) ) );
