@@ -163,7 +163,8 @@ static void pop_state( stack * pStack )
 }
 
 
-static state * push_state( stack * pStack, TARGET * t, TARGET * parent, int curstate )
+static state * push_state( stack * pStack, TARGET * t, TARGET * parent,
+    int curstate )
 {
     state * const pState = alloc_state();
 
@@ -399,7 +400,8 @@ static void make1b( state * pState )
     {
         TARGETS * c;
         for ( c = t->depends; c; c = c->next )
-            if ( c->target->status > t->status && !( c->target->flags & T_FLAG_NOCARE ) )
+            if ( c->target->status > t->status && !( c->target->flags &
+                T_FLAG_NOCARE ) )
             {
                 failed = c->target;
                 pState->t->status = c->target->status;
@@ -422,7 +424,8 @@ static void make1b( state * pState )
     if ( ( pState->t->status == EXEC_CMD_FAIL ) && pState->t->actions )
     {
         ++counts->skipped;
-        if ( ( pState->t->flags & ( T_FLAG_RMOLD | T_FLAG_NOTFILE ) ) == T_FLAG_RMOLD )
+        if ( ( pState->t->flags & ( T_FLAG_RMOLD | T_FLAG_NOTFILE ) ) ==
+            T_FLAG_RMOLD )
         {
             if ( !unlink( object_str( pState->t->boundname ) ) )
                 printf( "...removing outdated %s\n", object_str(
@@ -625,7 +628,8 @@ static void make1c( state * pState )
                      * target is built, otherwise the parent would be considered
                      * built before this make1a() processing has even started.
                      */
-                    make0( t->includes, t->parents->target, 0, 0, 0, t->includes );
+                    make0( t->includes, t->parents->target, 0, 0, 0, t->includes
+                        );
                     /* Link the old includes on to make sure that it gets
                      * cleaned up correctly.
                      */
@@ -644,7 +648,8 @@ static void make1c( state * pState )
 
             if ( additional_includes )
                 for ( c = t->parents; c; c = c->next )
-                    push_state( &temp_stack, additional_includes, c->target, T_STATE_MAKE1A );
+                    push_state( &temp_stack, additional_includes, c->target,
+                        T_STATE_MAKE1A );
 
             if ( t->scc_root )
             {
@@ -653,9 +658,11 @@ static void make1c( state * pState )
                 for ( c = t->parents; c; c = c->next )
                 {
                     if ( target_scc( c->target ) == scc_root )
-                        push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B );
+                        push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B
+                            );
                     else
-                        scc_root->parents = targetentry( scc_root->parents, c->target );
+                        scc_root->parents = targetentry( scc_root->parents,
+                            c->target );
                 }
             }
             else
@@ -672,7 +679,8 @@ static void make1c( state * pState )
                 --t->semaphore->asynccnt;
 
                 if ( DEBUG_EXECCMD )
-                    printf( "SEM: %s is now free\n", object_str( t->semaphore->name ) );
+                    printf( "SEM: %s is now free\n", object_str(
+                        t->semaphore->name ) );
 
                 /* If anything is waiting, notify the next target. There is no
                  * point in notifying waiting targets, since they will be
@@ -790,7 +798,8 @@ static void call_action_rule
         /* target :: the name of the target */
         lol_add( frame->args, list_new( object_copy( target->name ) ) );
 
-        /* command status start end user system :: info about the action command */
+        /* command status start end user system :: info about the action command
+         */
         lol_add( frame->args,
             list_push_back( list_push_back( list_push_back( list_push_back( list_push_back( list_new(
                 object_new( executed_command ) ),
