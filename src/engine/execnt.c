@@ -177,11 +177,15 @@ void execnt_unit_test()
             { "echo x < foo.bar", -1 },
             { "echo x | foo.bar", -1 },
             { "echo x \">\" foo.bar", 18 },
-            { "echo x \"<\" foo.bar", 18 },
+            { "echo x '<' foo.bar", 18 },
             { "echo x \"|\" foo.bar", 18 },
             { "echo x \\\">\\\" foo.bar", -1 },
             { "echo x \\\"<\\\" foo.bar", -1 },
             { "echo x \\\"|\\\" foo.bar", -1 },
+            { "\"echo x > foo.bar\"", 18 },
+            { "echo x \"'\"<' foo.bar", -1 },
+            { "echo x \\\\\"<\\\\\" foo.bar", 22 },
+            { "echo x \\x\\\"<\\\\\" foo.bar", -1 },
             { 0 } };
         test const * t;
         for ( t = tests; t->command; ++t )
@@ -599,7 +603,7 @@ static void closeWinHandle( HANDLE * const handle )
 /*
  * Frees and renews the given string.
  */
- 
+
 static void string_renew( string * const s )
 {
     string_free( s );
@@ -625,6 +629,7 @@ static void string_renew( string * const s )
 static long raw_command_length( char const * command )
 {
     char const * p;
+    char const * escape = 0;
     char inquote = 0;
     char const * newline = 0;
 
@@ -637,7 +642,7 @@ static long raw_command_length( char const * command )
     /* Look for newlines and unquoted I/O redirection. */
     do
     {
-        p += strcspn( p, "\n\"'<>|" );
+        p += strcspn( p, "\n\"'<>|\\" );
         switch ( *p )
         {
         case '\n':
@@ -649,15 +654,19 @@ static long raw_command_length( char const * command )
             if ( *p ) return -1;
             break;
 
+        case '\\':
+            escape = escape && escape == p - 1 ? 0 : p;
+            ++p;
+            break;
+
         case '"':
         case '\'':
-            if ( ( p == command ) || ( p[ -1 ] != '\\' ) )
-            {
-                if ( inquote == *p )
-                    inquote = 0;
-                else if ( !inquote )
-                    inquote = *p;
-            }
+            if ( escape && escape == p - 1 )
+                escape = 0;
+            else if ( inquote == *p )
+                inquote = 0;
+            else if ( !inquote )
+                inquote = *p;
             ++p;
             break;
 
@@ -1179,7 +1188,7 @@ BOOL CALLBACK close_alert_window_enum( HWND hwnd, LPARAM lParam )
 
     if ( !GetClassNameA( hwnd, buf, sizeof( buf ) ) )
         /* Failed to read class name; presume it is not a dialog. */
-        return TRUE;  
+        return TRUE;
 
     if ( strcmp( buf, "#32770" ) )
         return TRUE;  /* Not a dialog */
