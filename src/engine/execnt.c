@@ -55,8 +55,6 @@
 
 /* get the maximum shell command line length according to the OS */
 static int maxline();
-/* trim leading and trailing whitespace */
-void string_new_trimmed( string * pResult, string const * source );
 /* is the command suitable for direct execution via CreateProcessA() */
 static long can_spawn( char const * const command );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
@@ -93,7 +91,7 @@ static void close_alert( HANDLE );
 static void close_alerts();
 /* prepare a command file to be executed using an external shell */
 static char const * prepare_command_file( string const * command, int slot );
-/* Invoke the actual external process using the given command line. */
+/* invoke the actual external process using the given command line */
 static void invoke_cmd( char const * const command, int const slot );
 /* returns a string's value buffer if not empty or 0 if empty */
 static char const * null_if_empty( string const * str );
@@ -101,8 +99,14 @@ static char const * null_if_empty( string const * str );
 static int get_free_cmdtab_slot();
 /* put together the final command string we are to run */
 static void string_new_from_argv( string * result, char const * const * argv );
-/* Reports the last failed Windows API related error message. */
+/* trim leading and trailing whitespace */
+static void string_new_trimmed( string * pResult, string const * source );
+/* frees and renews the given string */
+static void string_renew( string * const );
+/* reports the last failed Windows API related error message */
 static void reportWindowsError( char const * const apiName );
+/* closes a Windows HANDLE and resets its variable to 0. */
+static void closeWinHandle( HANDLE * const handle );
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -422,17 +426,17 @@ void exec_wait()
         /* Clean up the command data, process, etc. No need to clear the
          * temporary command file name as it gets reused.
          */
-        string_free( cmdtab[ i ].action  ); string_new( cmdtab[ i ].action  );
-        string_free( cmdtab[ i ].target  ); string_new( cmdtab[ i ].target  );
-        string_free( cmdtab[ i ].command ); string_new( cmdtab[ i ].command );
-        if ( cmdtab[ i ].pi.hProcess   ) { CloseHandle( cmdtab[ i ].pi.hProcess   ); cmdtab[ i ].pi.hProcess   = 0; }
-        if ( cmdtab[ i ].pi.hThread    ) { CloseHandle( cmdtab[ i ].pi.hThread    ); cmdtab[ i ].pi.hThread    = 0; }
-        if ( cmdtab[ i ].pipe_out[ 0 ] ) { CloseHandle( cmdtab[ i ].pipe_out[ 0 ] ); cmdtab[ i ].pipe_out[ 0 ] = 0; }
-        if ( cmdtab[ i ].pipe_out[ 1 ] ) { CloseHandle( cmdtab[ i ].pipe_out[ 1 ] ); cmdtab[ i ].pipe_out[ 1 ] = 0; }
-        if ( cmdtab[ i ].pipe_err[ 0 ] ) { CloseHandle( cmdtab[ i ].pipe_err[ 0 ] ); cmdtab[ i ].pipe_err[ 0 ] = 0; }
-        if ( cmdtab[ i ].pipe_err[ 1 ] ) { CloseHandle( cmdtab[ i ].pipe_err[ 1 ] ); cmdtab[ i ].pipe_err[ 1 ] = 0; }
-        string_free( cmdtab[ i ].buffer_out ); string_new( cmdtab[ i ].buffer_out );
-        string_free( cmdtab[ i ].buffer_err ); string_new( cmdtab[ i ].buffer_err );
+        string_renew( cmdtab[ i ].action  );
+        string_renew( cmdtab[ i ].target  );
+        string_renew( cmdtab[ i ].command );
+        closeWinHandle( &cmdtab[ i ].pi.hProcess   );
+        closeWinHandle( &cmdtab[ i ].pi.hThread    );
+        closeWinHandle( &cmdtab[ i ].pipe_out[ 0 ] );
+        closeWinHandle( &cmdtab[ i ].pipe_out[ 1 ] );
+        closeWinHandle( &cmdtab[ i ].pipe_err[ 0 ] );
+        closeWinHandle( &cmdtab[ i ].pipe_err[ 1 ] );
+        string_renew( cmdtab[ i ].buffer_out );
+        string_renew( cmdtab[ i ].buffer_err );
         cmdtab[ i ].exit_code = 0;
         cmdtab[ i ].exit_reason = EXIT_OK;
     }
@@ -561,11 +565,36 @@ static int maxline()
 
 
 /*
+ * Closes a Windows HANDLE and resets its variable to 0.
+ */
+
+static void closeWinHandle( HANDLE * const handle )
+{
+    if ( *handle )
+    {
+        CloseHandle( *handle );
+        *handle = 0;
+    }
+}
+
+
+/*
+ * Frees and renews the given string.
+ */
+ 
+static void string_renew( string * const s )
+{
+    string_free( s );
+    string_new( s );
+}
+
+
+/*
  * Creates and returns a new trimmed copy of the given source string. Returned
  * value needs to be released using string_free().
  */
 
-void string_new_trimmed( string * pResult, string const * pSource )
+static void string_new_trimmed( string * pResult, string const * pSource )
 {
     char const * source = pSource->value;
     int source_len;
@@ -639,9 +668,11 @@ static long can_spawn( char const * const command )
 /* 64-bit arithmetic helpers. */
 
 /* Compute the carry bit from the addition of two 32-bit unsigned numbers. */
-#define add_carry_bit( a, b ) ( (((a) | (b)) >> 31) & (~((a) + (b)) >> 31) & 0x1 )
+#define add_carry_bit( a, b ) ((((a) | (b)) >> 31) & (~((a) + (b)) >> 31) & 0x1)
 
-/* Compute the high 32 bits of the addition of two 64-bit unsigned numbers, h1l1 and h2l2. */
+/* Compute the high 32 bits of the addition of two 64-bit unsigned numbers, h1l1
+ * and h2l2.
+ */
 #define add_64_hi( h1, l1, h2, l2 ) ((h1) + (h2) + add_carry_bit(l1, l2))
 
 
@@ -682,7 +713,8 @@ static FILETIME negate_FILETIME( FILETIME t )
 
 static double filetime_seconds( FILETIME t )
 {
-    return t.dwHighDateTime * ( (double)( 1UL << 31 ) * 2.0 * 1.0e-7 ) + t.dwLowDateTime * 1.0e-7;
+    return t.dwHighDateTime * ( (double)( 1UL << 31 ) * 2.0 * 1.0e-7 ) +
+        t.dwLowDateTime * 1.0e-7;
 }
 
 
@@ -752,16 +784,16 @@ static void read_pipe
     do
     {
         /* check if we have any data to read */
-        if ( !PeekNamedPipe( in, ioBuffer, IO_BUFFER_SIZE, &bytesInBuffer, &bytesAvailable, NULL ) )
+        if ( !PeekNamedPipe( in, ioBuffer, IO_BUFFER_SIZE, &bytesInBuffer,
+            &bytesAvailable, NULL ) )
             bytesAvailable = 0;
 
         /* read in the available data */
         if ( bytesAvailable > 0 )
         {
             /* we only read in the available bytes, to avoid blocking */
-            if ( ReadFile( in, ioBuffer,
-                bytesAvailable <= IO_BUFFER_SIZE ? bytesAvailable : IO_BUFFER_SIZE,
-                &bytesInBuffer, NULL ) )
+            if ( ReadFile( in, ioBuffer, bytesAvailable <= IO_BUFFER_SIZE ?
+                bytesAvailable : IO_BUFFER_SIZE, &bytesInBuffer, NULL ) )
             {
                 if ( bytesInBuffer > 0 )
                 {
@@ -1054,7 +1086,8 @@ static int is_parent_child( DWORD parent, DWORD child )
                  */
                 double tchild = 0.0;
                 double tparent = 0.0;
-                HANDLE hchild = OpenProcess( PROCESS_QUERY_INFORMATION, FALSE, pinfo.th32ProcessID );
+                HANDLE const hchild = OpenProcess( PROCESS_QUERY_INFORMATION,
+                    FALSE, pinfo.th32ProcessID );
                 CloseHandle( process_snapshot_h );
 
                 /* csrss.exe may display message box like following:
@@ -1073,7 +1106,7 @@ static int is_parent_child( DWORD parent, DWORD child )
                  * times.
                  */
                 if ( !stricmp( pinfo.szExeFile, "csrss.exe" ) &&
-                    ( is_parent_child( parent, pinfo.th32ParentProcessID ) == 2 ) )
+                    is_parent_child( parent, pinfo.th32ParentProcessID ) == 2 )
                     return 1;
                 if ( !stricmp( pinfo.szExeFile, "smss.exe" ) &&
                     ( pinfo.th32ParentProcessID == 4 ) )
@@ -1133,7 +1166,8 @@ BOOL CALLBACK close_alert_window_enum( HWND hwnd, LPARAM lParam )
         return TRUE;
 
     if ( !GetClassNameA( hwnd, buf, sizeof( buf ) ) )
-        return TRUE;  /* Failed to read class name; presume it is not a dialog. */
+        /* Failed to read class name; presume it is not a dialog. */
+        return TRUE;  
 
     if ( strcmp( buf, "#32770" ) )
         return TRUE;  /* Not a dialog */
