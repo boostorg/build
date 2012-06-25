@@ -52,7 +52,7 @@ void exec_cmd
     char const * target
 );
 
-int exec_wait();
+void exec_wait();
 
 
 /******************************************************************************

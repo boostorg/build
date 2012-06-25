@@ -111,6 +111,9 @@ static stack state_stack = { NULL };
 
 static state * state_freelist = NULL;
 
+/* Currently running command counter. */
+static int cmdsrunning;
+
 
 static state * alloc_state()
 {
@@ -204,7 +207,7 @@ int make1( TARGET * t )
     /* Recursively make the target and its dependencies. */
     push_state( &state_stack, t, NULL, T_STATE_MAKE1A );
 
-    do
+    while ( 1 )
     {
         while ( ( pState = current_state( &state_stack ) ) )
         {
@@ -222,9 +225,11 @@ int make1( TARGET * t )
                     assert( !"make1(): Invalid state detected." );
             }
         }
+        if ( !cmdsrunning )
+            break;
+        /* Wait for outstanding commands to finish running. */
+        exec_wait();
     }
-    /* Wait for any outstanding commands to finish running. */
-    while ( exec_wait() );
 
     clear_state_freelist();
 
@@ -538,10 +543,21 @@ static void make1c( state * pState )
         }
         else
         {
-            /* Pop state first because exec_cmd() could push state. */
+            /* Pop state first because exec_wait() will push state. */
             pop_state( &state_stack );
+
+            /* Execute the actual build command. */
             exec_cmd( cmd->buf, make_closure, pState->t, cmd->shell, rule_name,
                 target_name );
+
+            /* Increment the jobs running counter. */
+            ++cmdsrunning;
+
+            /* Wait until we are under the concurrent command count limit. */
+            assert( 0 < globs.jobs );
+            assert( globs.jobs <= MAXJOBS );
+            while ( cmdsrunning >= globs.jobs )
+                exec_wait();
         }
     }
     else
@@ -813,6 +829,8 @@ static void make_closure
 )
 {
     TARGET * built = (TARGET *)closure;
+
+    --cmdsrunning;
 
     call_timing_rule( built, time );
     if ( DEBUG_EXECCMD )
