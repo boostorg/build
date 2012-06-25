@@ -55,8 +55,8 @@
 
 /* get the maximum shell command line length according to the OS */
 static int maxline();
-/* is the command suitable for direct execution via CreateProcessA() */
-static long can_spawn( char const * const command );
+/* valid raw command string length */
+static long raw_command_length( char const * command );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
 static FILETIME add_64(
     unsigned long h1, unsigned long l1,
@@ -99,8 +99,6 @@ static char const * null_if_empty( string const * str );
 static int get_free_cmdtab_slot();
 /* put together the final command string we are to run */
 static void string_new_from_argv( string * result, char const * const * argv );
-/* trim leading and trailing whitespace */
-static void string_new_trimmed( string * pResult, string const * source );
 /* frees and renews the given string */
 static void string_renew( string * const );
 /* reports the last failed Windows API related error message */
@@ -164,19 +162,30 @@ void execnt_unit_test()
     {
         typedef struct test { char * command; int result; } test;
         test tests[] = {
+            { "", 0 },
+            { "  ", 0 },
             { "x", 1 },
-            { "x\ny", 0 },
-            { "x\n\n y", 0 },
-            { "echo x > foo.bar", 0 },
-            { "echo x < foo.bar", 0 },
-            { "echo x \">\" foo.bar", 1 },
-            { "echo x \"<\" foo.bar", 1 },
-            { "echo x \\\">\\\" foo.bar", 0 },
-            { "echo x \\\"<\\\" foo.bar", 0 },
+            { "\nx", 1 },
+            { "x\n", 1 },
+            { "\nx\n", 1 },
+            { "\nx \n", 2 },
+            { "\nx \n ", 2 },
+            { " \n\t\t\v\r\r\n \t  x  \v \t\t\r\n\n\n   \n\n\v\t", 8 },
+            { "x\ny", -1 },
+            { "x\n\n y", -1 },
+            { "echo x > foo.bar", -1 },
+            { "echo x < foo.bar", -1 },
+            { "echo x | foo.bar", -1 },
+            { "echo x \">\" foo.bar", 18 },
+            { "echo x \"<\" foo.bar", 18 },
+            { "echo x \"|\" foo.bar", 18 },
+            { "echo x \\\">\\\" foo.bar", -1 },
+            { "echo x \\\"<\\\" foo.bar", -1 },
+            { "echo x \\\"|\\\" foo.bar", -1 },
             { 0 } };
         test const * t;
         for ( t = tests; t->command; ++t )
-            assert( !!can_spawn( t->command ) == t->result );
+            assert( raw_command_length( t->command ) == t->result );
     }
 
     {
@@ -184,7 +193,7 @@ void execnt_unit_test()
         char * const cmd = (char *)BJAM_MALLOC_ATOMIC( length + 1 );
         memset( cmd, 'x', length );
         cmd[ length ] = 0;
-        assert( can_spawn( cmd ) == length );
+        assert( raw_command_length( cmd ) == length );
         BJAM_FREE( cmd );
     }
 #endif
@@ -203,10 +212,6 @@ int exec_check
     int * error_max_length
 )
 {
-    /* Trim all leading and trailing leading whitespace. */
-    string cmd_local[ 1 ];
-    string_new_trimmed( cmd_local, command );
-
     /* Check prerequisites for executing raw commands.
      *
      * JAMSHELL setting of "%", indicates that the command should be invoked
@@ -215,7 +220,7 @@ int exec_check
      */
     if ( is_raw_command_request( *pShell ) )
     {
-        int const raw_cmd_length = can_spawn( cmd_local->value );
+        int const raw_cmd_length = raw_command_length( command->value );
         if ( raw_cmd_length < maxline() )
         {
             /* Fallback to default shell. */
@@ -226,14 +231,10 @@ int exec_check
         {
             *error_length = raw_cmd_length;
             *error_max_length = MAX_RAW_COMMAND_LENGTH;
-            string_free( cmd_local );
             return EXEC_CHECK_TOO_LONG;
         }
         else
-        {
-            string_free( cmd_local );
             return EXEC_CHECK_OK;
-        }
     }
 
     /* Now we know we are using an external shell. Note that there is no need to
@@ -247,12 +248,8 @@ int exec_check
      */
 
     /* Check for too long command lines. */
-    {
-        int const result = check_cmd_for_too_long_lines( cmd_local->value,
-            maxline(), error_length, error_max_length );
-        string_free( cmd_local );
-        return result;
-    }
+    return check_cmd_for_too_long_lines( command->value, maxline(),
+        error_length, error_max_length );
 }
 
 
@@ -282,9 +279,6 @@ void exec_cmd
     if ( !default_shell )
         default_shell = list_new( object_new( "cmd.exe /Q/C" ) );
 
-    /* Trim all leading and trailing leading whitespace. */
-    string_new_trimmed( cmd_local, cmd_orig );
-
     /* Specifying no shell means requesting the default shell. */
     if ( list_empty( shell ) )
         shell = default_shell;
@@ -299,21 +293,33 @@ void exec_cmd
             printf( "\n" );
         }
 
-    /* If we are running a command directly, we already have it prepared in
-     * cmd_local. Now prepare the final command-string to execute in case we are
-     * using a shell. If a custom shell was defined, be prepared for % and !
-     * subs. Otherwise, use stock cmd.exe.
+    /* If we are running a raw command directly - trim its leading whitespaces
+     * as well as any trailing all-whitespace lines but keep any trailing
+     * whitespace in the final/only line containing something other than
+     * whitespace).
      */
+    if ( is_raw_cmd )
+    {
+        char const * start = cmd_orig->value;
+        char const * p = cmd_orig->value + cmd_orig->size;
+        char const * end = p;
+        while ( isspace( *start ) ) ++start;
+        while ( p > start && isspace( p[-1] ) )
+            if ( *--p == '\n' )
+                end = p;
+        string_new( cmd_local );
+        string_append_range( cmd_local, start, end );
+        assert( cmd_local->size == raw_command_length( cmd_orig->value ) );
+    }
     /* If we are not running a raw command directly, prepare a command file to
      * be executed using an external shell and the actual command string using
      * that command file.
      */
-    if ( !is_raw_cmd )
+    else
     {
-        char const * const cmd_file = prepare_command_file( cmd_local, slot );
+        char const * const cmd_file = prepare_command_file( cmd_orig, slot );
         char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
         argv_from_shell( argv, shell, cmd_file, slot );
-        string_free( cmd_local );
         string_new_from_argv( cmd_local, argv );
     }
 
@@ -590,38 +596,31 @@ static void string_renew( string * const s )
 
 
 /*
- * Creates and returns a new trimmed copy of the given source string. Returned
- * value needs to be released using string_free().
+ * raw_command_length() - valid raw command string length
+ *
+ * Checks whether the given command may be executed as a raw command. If yes,
+ * returns the corresponding command string length. If not, returns -1.
+ *
+ * Rules for constructing raw command strings:
+ *   - Command may not contain unquoted shell I/O redirection characters.
+ *   - May have at most one command line with non-whitespace content.
+ *   - Leading whitespace trimmed.
+ *   - Trailing all-whitespace lines trimmed.
+ *   - Trailing whitespace on the sole command line kept (may theoretically
+ *     affect the executed command).
  */
 
-static void string_new_trimmed( string * pResult, string const * pSource )
+static long raw_command_length( char const * command )
 {
-    char const * source = pSource->value;
-    int source_len;
-    while ( isspace( *source ) )
-        ++source;
-    source_len = pSource->size - ( source - pSource->value );
-    while ( ( source_len > 0 ) && isspace( source[ source_len - 1 ] ) )
-        --source_len;
-    string_new( pResult );
-    string_append_range( pResult, source, source + source_len );
-}
-
-
-/*
- * can_spawn() - If the command is suitable for execution via CreateProcessA(),
- * return a number >= the number of characters it would occupy on the
- * command-line. Otherwise, return zero. Expects the command string to have
- * already been trimmed of all leading and trailing whitespace.
- */
-
-static long can_spawn( char const * const command )
-{
-    char const * p = command;
+    char const * p;
     char inquote = 0;
+    char const * newline = 0;
 
-    assert( !isspace( *command ) );
-    assert( !*command || !isspace( command[ strlen( command ) - 1 ] ) );
+    /* Skip leading whitespace. */
+    while ( isspace( *command ) )
+        ++command;
+
+    p = command;
 
     /* Look for newlines and unquoted I/O redirection. */
     do
@@ -630,12 +629,13 @@ static long can_spawn( char const * const command )
         switch ( *p )
         {
         case '\n':
-            /* If our command contains newlines we can not execute it directly.
-             * Note that there is no need to check for leading or trailing
-             * newlines since we already assume the command string has been
-             * trimmed prior to this call.
+            /* If our command contains non-whitespace content split over
+             * multiple lines we can not execute it directly.
              */
-            return 0;
+            newline = p;
+            while ( isspace( *++p ) );
+            if ( *p ) return -1;
+            break;
 
         case '"':
         case '\'':
@@ -653,7 +653,7 @@ static long can_spawn( char const * const command )
         case '>':
         case '|':
             if ( !inquote )
-                return 0;
+                return -1;
             ++p;
             break;
         }
@@ -661,7 +661,7 @@ static long can_spawn( char const * const command )
     while ( *p );
 
     /* Return the number of characters the command will occupy. */
-    return p - command;
+    return ( newline ? newline : p ) - command;
 }
 
 
