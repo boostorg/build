@@ -206,6 +206,11 @@ void exec_cmd
     int is_raw_cmd = is_raw_command_request( shell );
     string cmd_local[ 1 ];
 
+    /* Initialize default shell - anything more than /Q/C is non-portable. */
+    static LIST * default_shell;
+    if ( !default_shell )
+        default_shell = list_new( object_new( "cmd.exe /Q/C" ) );
+
     /* Trim all leading and trailing leading whitespace. */
     string_new_trimmed( cmd_local, cmd_orig );
 
@@ -224,16 +229,17 @@ void exec_cmd
         shell = L0;
     }
 
+    /* Specifying no shell means requesting the default shell. */
+    if ( list_empty( shell ) )
+        shell = default_shell;
+
     if ( DEBUG_EXECCMD )
         if ( is_raw_cmd )
             printf( "Executing raw command directly\n" );
         else
         {
             printf( "Executing using a command file and the shell: " );
-            if ( list_empty( shell ) )
-                printf( "cmd /Q/C" );
-            else
-                list_print( shell );
+            list_print( shell );
             printf( "\n" );
         }
 
@@ -250,15 +256,7 @@ void exec_cmd
     {
         char const * const cmd_file = prepare_command_file( cmd_local, slot );
         char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
-        if ( list_empty( shell ) )
-        {
-            argv[ 0 ] = "cmd.exe";
-            argv[ 1 ] = "/Q/C";  /* anything more is non-portable */
-            argv[ 2 ] = cmd_file;
-            argv[ 3 ] = 0;
-        }
-        else
-            argv_from_shell( argv, shell, cmd_file, slot );
+        argv_from_shell( argv, shell, cmd_file, slot );
         if ( DEBUG_EXECCMD )
         {
             int i;
