@@ -1149,7 +1149,9 @@ static FILE * open_command_file( int const slot )
     string * const command_file = cmdtab[ slot ].command_file;
 
     /* If the temporary command file name has not already been prepared for this
-     * slot number, prepare a new one.
+     * slot number, prepare a new one containing a '##' place holder that will
+     * be changed later and needs to be located at a fixed distance from the
+     * end.
      */
     if ( !command_file->value )
     {
@@ -1157,22 +1159,39 @@ static FILE * open_command_file( int const slot )
         string const * const tmpdir = path_tmpdir();
         string_new( command_file );
         string_reserve( command_file, tmpdir->size + 64 );
-        command_file->size = sprintf( command_file->value, "%s\\jam%d-%02d.bat",
-            tmpdir->value, procID, slot );
+        command_file->size = sprintf( command_file->value,
+            "%s\\jam%d-%02d-##.bat", tmpdir->value, procID, slot );
     }
 
-    /* Write command to bat file. For some reason this open can fail
-     * intermittently. But doing some retries works. Most likely this is due to
-     * a previously existing file of the same name that happens to be opened by
-     * an active virus scanner. Pointed out and fixed by Bronek Kozicki.
+    /* For some reason opening a command file can fail intermittently. But doing
+     * some retries works. Most likely this is due to a previously existing file
+     * of the same name that happens to still be opened by an active virus
+     * scanner. Originally pointed out and fixed by Bronek Kozicki.
+     *
+     * We first try to open several differently named files to avoid having to
+     * wait idly if not absolutely necessary. Our temporary command file names
+     * contain a fixed position place holder we use for generating different
+     * file names.
      */
     {
-        int tries = 0;
-        while ( 1 )
+        char * const index1 = command_file->value + command_file->size - 6;
+        char * const index2 = index1 + 1;
+        int waits_remaining;
+        assert( command_file->value < index1 );
+        assert( index2 + 1 < command_file->value + command_file->size );
+        assert( index2[ 1 ] == '.' );
+        for ( waits_remaining = 3; ; --waits_remaining )
         {
-            FILE * const f = fopen( command_file->value, "w" );
-            if ( f ) return f;
-            if ( ++tries == 3 ) break;
+            int index;
+            for ( index = 0; index != 20; ++index )
+            {
+                FILE * f;
+                *index1 = '0' + index / 10;
+                *index2 = '0' + index % 10;
+                f = fopen( command_file->value, "w" );
+                if ( f ) return f;
+            }
+            if ( !waits_remaining ) break;
             Sleep( 250 );
         }
     }
