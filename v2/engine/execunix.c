@@ -124,27 +124,26 @@ void exec_cmd
     int len;
     char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
+    /* Initialize default shell. */
+    static LIST * default_shell;
+    if ( !default_shell )
+        default_shell = list_push_back( list_new(
+            object_new( "/bin/sh" ) ),
+            object_new( "-c" ) );
+
+    if ( list_empty( shell ) )
+        shell = default_shell;
+
     /* Forumulate argv. If shell was defined, be prepared for % and ! subs.
      * Otherwise, use stock /bin/sh.
      */
-    if ( list_empty( shell ) )
-    {
-        argv[ 0 ] = "/bin/sh";
-        argv[ 1 ] = "-c";
-        argv[ 2 ] = command->value;
-        argv[ 3 ] = 0;
-    }
-    else
-        argv_from_shell( argv, shell, command->value, slot );
+    argv_from_shell( argv, shell, command->value, slot );
 
     if ( DEBUG_EXECCMD )
     {
         int i;
         printf( "Using shell: " );
-        if ( shell == L0 )
-            printf( "/bin/sh -c" );
-        else
-            list_print( shell );
+        list_print( shell );
         printf( "\n" );
         for ( i = 0; argv[ i ]; ++i )
             printf( "    argv[%d] = '%s'\n", i, argv[ i ] );
