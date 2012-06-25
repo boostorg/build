@@ -63,6 +63,8 @@ CMD * cmd_new
     LIST * shell     /* $(JAMSHELL) (ownership transferred) */
 );
 
+void cmd_release_targets_and_shell( CMD * );
+
 void cmd_free( CMD * );
 
 #define cmd_next( c ) ((c)->next)
