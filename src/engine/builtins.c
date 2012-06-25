@@ -1384,8 +1384,6 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     {
         original_noexec = globs.noexec;
         globs.noexec = 0;
-        original_quitquick = globs.quitquick;
-        globs.quitquick = 0;
     }
 
     if ( !list_empty( continue_ ) )
