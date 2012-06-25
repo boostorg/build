@@ -110,7 +110,15 @@ int exec_check
     int * error_max_length
 )
 {
-    return is_raw_command_request( *pShell )
+    int const is_raw_cmd = is_raw_command_request( *pShell );
+
+    /* We allow empty commands for non-default shells since we do not really
+     * know what they are going to do with such commands.
+     */
+    if ( !command->size && ( is_raw_cmd || list_empty( *pShell ) ) )
+        return EXEC_CHECK_SKIP;
+
+    return is_raw_cmd
         ? EXEC_CHECK_OK
         : check_cmd_for_too_long_lines( command->value, MAXLINE, error_length,
             error_max_length );
