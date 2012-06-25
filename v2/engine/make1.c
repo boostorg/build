@@ -290,7 +290,8 @@ static void make1a( state * pState )
     }
 
     /* If the target has been previously updated with -n in effect, and we are
-     * now ignoring -n, update it for real.
+     * now ignoring -n, update it for real. E.g. if the UPDATE_NOW rule was
+     * called for it twice - first with the -n option and then without.
      */
     if ( !globs.noexec && t->progress == T_MAKE_NOEXEC_DONE )
         t->progress = T_MAKE_INIT;
@@ -1159,7 +1160,7 @@ static LIST * make1list( LIST * l, TARGETS * targets, int flags )
                 ( t->fate <= T_FATE_STABLE ) )
                 continue;
         }
-        else if ( flags & RULE_EXISTING ) 
+        else if ( flags & RULE_EXISTING )
         {
             if ( t->binding != T_BIND_EXISTS )
                 continue;
