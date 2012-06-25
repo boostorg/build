@@ -70,6 +70,29 @@ void argv_from_shell( char const * * argv, LIST * shell, char const * command,
 }
 
 
+/* Returns whether the given command string contains lines longer than the given
+ * maximum.
+ */
+int check_cmd_for_too_long_lines( char const * command, int const max,
+    int * const error_length, int * const error_max_length )
+{
+    while ( *command )
+    {
+        size_t const l = strcspn( command, "\n" );
+        if ( l > max )
+        {
+            *error_length = l;
+            *error_max_length = max;
+            return EXEC_CHECK_LINE_TOO_LONG;
+        }
+        command += l;
+        if ( *command )
+            ++command;
+    }
+    return EXEC_CHECK_OK;
+}
+
+
 /* Checks whether the given shell list is actually a request to execute raw
  * commands without an external shell.
  */

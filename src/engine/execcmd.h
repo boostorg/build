@@ -42,6 +42,19 @@ typedef void (* ExecCmdCallback)
 #define EXEC_CMD_FAIL  1
 #define EXEC_CMD_INTR  2
 
+int exec_check
+(
+    string * command,
+    LIST * * pShell,
+    int * error_length,
+    int * error_max_length
+);
+
+/* exec_check() return codes. */
+#define EXEC_CHECK_OK             101
+#define EXEC_CHECK_LINE_TOO_LONG  102
+#define EXEC_CHECK_TOO_LONG       103
+
 void exec_cmd
 (
     string const * command,
@@ -80,5 +93,10 @@ int interrupted( void );
  */
 int is_raw_command_request( LIST * shell );
 
+/* Utility worker for exec_check() checking whether all the given command lines
+ * are under the specified length limit.
+ */
+int check_cmd_for_too_long_lines( char const * command, int const max,
+    int * const error_length, int * const error_max_length );
 
 #endif

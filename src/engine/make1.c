@@ -1045,7 +1045,11 @@ static CMD * make1cmds( TARGET * t )
             do
             {
                 CMD * cmd;
-                int line_too_long = 0;
+                int cmd_check_result;
+                int cmd_error_length;
+                int cmd_error_max_length;
+                int retry = 0;
+                int accept_command = 0;
 
                 /* Build cmd: cmd_new() takes ownership of its lists. */
                 if ( list_empty( cmd_targets ) ) cmd_targets = list_copy( nt );
@@ -1053,31 +1057,49 @@ static CMD * make1cmds( TARGET * t )
                 cmd = cmd_new( rule, cmd_targets, list_sublist( ns, start,
                     chunk ), cmd_shell );
 
-                /* Check for too long command string lines. */
-                if ( !is_raw_command_request( cmd->shell ) )
+                cmd_check_result = exec_check( cmd->buf, &cmd->shell,
+                    &cmd_error_length, &cmd_error_max_length );
+
+                if ( cmd_check_result == EXEC_CHECK_OK )
                 {
-                    char * s = cmd->buf->value;
-                    while ( *s )
-                    {
-                        size_t const l = strcspn( s, "\n" );
-                        if ( l > MAXLINE )
-                        {
-                            line_too_long = 1;
-                            break;
-                        }
-                        s += l;
-                        if ( *s )
-                            ++s;
-                    }
+                    accept_command = 1;
+                }
+                else if ( ( actions->flags & RULE_PIECEMEAL ) && ( chunk > 1 ) )
+                {
+                    /* Too long but splittable. Reduce chunk size slowly and
+                     * retry.
+                     */
+                    assert( cmd_check_result == EXEC_CHECK_TOO_LONG ||
+                        cmd_check_result == EXEC_CHECK_LINE_TOO_LONG );
+                    chunk = chunk * 9 / 10;
+                    retry = 1;
+                }
+                else
+                {
+                    /* Too long and not splittable. */
+                    char const * const error_message = cmd_check_result ==
+                        EXEC_CHECK_TOO_LONG
+                            ? "is too long"
+                            : "contains a line that is too long";
+                    assert( cmd_check_result == EXEC_CHECK_TOO_LONG ||
+                        cmd_check_result == EXEC_CHECK_LINE_TOO_LONG );
+                    printf( "%s action %s (%d, max %d):\n", object_str(
+                        rule->name ), error_message, cmd_error_length,
+                        cmd_error_max_length );
+
+                    /* Tell the user what did not fit. */
+                    fputs( cmd->buf->value, stdout );
+                    exit( EXITBAD );
                 }
 
-                if ( !line_too_long )
+                assert( !retry || !accept_command );
+
+                if ( accept_command )
                 {
                     /* Chain it up. */
                     if ( !cmds ) cmds = cmd;
                     else cmds->tail->next = cmd;
                     cmds->tail = cmd;
-                    start += chunk;
 
                     /* Mark lists we need recreated for the next command since
                      * they got consumed by the cmd object.
@@ -1087,28 +1109,15 @@ static CMD * make1cmds( TARGET * t )
                 }
                 else
                 {
-                    if ( ( actions->flags & RULE_PIECEMEAL ) && ( chunk > 1 ) )
-                    {
-                        /* Reduce chunk size slowly. */
-                        chunk = chunk * 9 / 10;
-                    }
-                    else
-                    {
-                        /* Too long and not splittable. */
-                        printf( "%s action is too long (max %d):\n", object_str(
-                            rule->name ), MAXLINE );
-
-                        /* Tell the user what did not fit. */
-                        fputs( cmd->buf->value, stdout );
-                        exit( EXITBAD );
-                    }
-
-                    /* We can reuse targets & shell lists for the next command.
+                    /* We can reuse targets & shell lists for the next command
                      * if we do not let them die with this cmd object.
                      */
                     cmd_release_targets_and_shell( cmd );
                     cmd_free( cmd );
                 }
+
+                if ( !retry )
+                    start += chunk;
             }
             while ( start < length );
         }
