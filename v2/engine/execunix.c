@@ -64,7 +64,6 @@ static int get_free_cmdtab_slot();
 
 static clock_t tps;
 static int select_timeout;
-static int cmdsrunning;
 static int old_time_initialized;
 static struct tms old_time;
 
@@ -148,9 +147,6 @@ void exec_cmd
         for ( i = 0; argv[ i ]; ++i )
             printf( "    argv[%d] = '%s'\n", i, argv[ i ] );
     }
-
-    /* Increment jobs running. */
-    ++cmdsrunning;
 
     /* Save off actual command string. */
     cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC( command->size + 1 );
@@ -301,13 +297,6 @@ void exec_cmd
         cmdtab[ slot ].action_length = 0;
         cmdtab[ slot ].target_length = 0;
     }
-
-    /* Wait until we are under the limit of concurrent commands. Do not trust
-     * globs.jobs alone.
-     */
-    while ( ( cmdsrunning >= MAXJOBS ) || ( cmdsrunning >= globs.jobs ) )
-        if ( !exec_wait() )
-            break;
 }
 
 #undef EXECCMD_PIPE_READ
@@ -432,18 +421,14 @@ void populate_file_descriptors( int * const fmax, fd_set * const fds )
  * at least one has been registered.
  */
 
-int exec_wait()
+void exec_wait()
 {
     int fd_max;
     int finished = 0;
     fd_set fds;
 
-    /* Handle naive make1() which does not know if commands are running. */
-    if ( !cmdsrunning )
-        return 0;
-
     /* Process children that signaled. */
-    while ( !finished && cmdsrunning )
+    while ( !finished )
     {
         int i;
         int ret;
@@ -525,8 +510,6 @@ int exec_wait()
                 old_time = new_time;
 
                 /* Drive the completion. */
-                --cmdsrunning;
-
                 if ( interrupted() )
                     rstat = EXEC_CMD_INTR;
                 else if ( status )
@@ -558,8 +541,6 @@ int exec_wait()
             }
         }
     }
-
-    return 1;
 }
 
 

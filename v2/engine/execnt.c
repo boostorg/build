@@ -113,7 +113,6 @@ static void reportWindowsError( char const * const apiName );
 #define MAX_RAW_COMMAND_LENGTH 32766
 
 static int intr_installed;
-static int cmdsrunning;
 
 
 /* The list of commands we run. */
@@ -304,20 +303,11 @@ void exec_cmd
         exit( EXITBAD );
     }
 
-    ++cmdsrunning;
-
     /* Invoke the actual external process using the constructed command line. */
     invoke_cmd( cmd_local->value, slot );
 
     /* Free our local command string copy. */
     string_free( cmd_local );
-
-    /* Wait until we are under the limit of concurrent commands. Do not trust
-     * globs.jobs alone.
-     */
-    while ( ( cmdsrunning >= MAXJOBS ) || ( cmdsrunning >= globs.jobs ) )
-        if ( !exec_wait() )
-            break;
 }
 
 
@@ -326,18 +316,11 @@ void exec_cmd
  *  * wait and drive at most one execution completion.
  *  * waits for one command to complete, while processing the i/o for all
  *    ongoing commands.
- *
- *   Returns 0 if called when there were no more commands being executed or 1
- * otherwise.
  */
 
-int exec_wait()
+void exec_wait()
 {
     int i = -1;
-
-    /* Handle naive make1() which does not know if cmds are running. */
-    if ( !cmdsrunning )
-        return 0;
 
     /* Wait for a command to complete, while snarfing up any output. */
     do
@@ -354,7 +337,6 @@ int exec_wait()
     while ( i < 0 );
 
     /* We have a command... process it. */
-    --cmdsrunning;
     {
         timing_info time;
         int rstat;
@@ -409,8 +391,6 @@ int exec_wait()
         cmdtab[ i ].exit_code = 0;
         cmdtab[ i ].exit_reason = EXIT_OK;
     }
-
-    return 1;
 }
 
 
