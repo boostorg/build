@@ -176,7 +176,7 @@ LIST * var_get( struct module_t * module, OBJECT * symbol )
     if ( object_equal( symbol, constant_TMPDIR ) )
     {
         list_free( saved_var );
-        result = saved_var = list_new( object_new( path_tmpdir() ) );
+        result = saved_var = list_new( object_new( path_tmpdir()->value ) );
     }
     else if ( object_equal( symbol, constant_TMPNAME ) )
     {

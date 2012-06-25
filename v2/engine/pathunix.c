@@ -522,7 +522,7 @@ void path_done( void )
 
 #endif
 
-char const * path_tmpdir()
+string const * path_tmpdir()
 {
     static string buffer[ 1 ];
     static int have_result;
@@ -546,7 +546,7 @@ char const * path_tmpdir()
         #endif
         have_result = 1;
     }
-    return buffer->value;
+    return buffer;
 }
 
 OBJECT * path_tmpnam( void )
@@ -571,7 +571,7 @@ OBJECT * path_tmpfile( void )
     OBJECT * tmpnam;
 
     string file_path[ 1 ];
-    string_copy( file_path, path_tmpdir() );
+    string_copy( file_path, path_tmpdir()->value );
     string_push_back( file_path, PATH_DELIM );
     tmpnam = path_tmpnam();
     string_append( file_path, object_str( tmpnam ) );
