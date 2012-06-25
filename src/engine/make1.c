@@ -1062,7 +1062,7 @@ static CMD * make1cmds( TARGET * t )
 
                         /* Tell the user what did not fit. */
                         cmd = cmd_new( rule, cmd_targets, cmd_sources,
-                            list_new( object_copy( constant_percent ) ) );
+                            list_new( object_new( "%" ) ) );
                         fputs( cmd->buf->value, stdout );
                         exit( EXITBAD );
                     }
