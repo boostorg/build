@@ -32,7 +32,7 @@ typedef void (* ExecCmdCallback)
 (
     void * closure,
     int status,
-    timing_info *,
+    timing_info const *,
     char const * invoked_command,
     char const * command_output
 );
