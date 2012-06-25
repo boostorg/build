@@ -76,7 +76,7 @@ DWORD get_process_id( HANDLE );
 /* terminate the given process, after terminating all its children first */
 static void kill_process_tree( DWORD, HANDLE );
 /* waits for a command to complete or time out */
-static int try_wait( int timeoutMillis );
+static int try_wait( int const timeoutMillis );
 /* reads any pending output for running commands */
 static void read_output();
 /* checks if a command ran out of time, and kills it */
@@ -849,7 +849,7 @@ static void read_output()
  * cmdtab array, or -1.
  */
 
-static int try_wait( int timeoutMillis )
+static int try_wait( int const timeoutMillis )
 {
     int i;
     int num_active;
