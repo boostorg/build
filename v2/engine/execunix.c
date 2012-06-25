@@ -53,6 +53,7 @@
  * Do not just set JAMSHELL to /bin/sh - it will not work!
  *
  * External routines:
+ *  exec_check() - preprocess and validate the command.
  *  exec_cmd() - launch an async command execution.
  *  exec_wait() - wait for any of the async command processes to terminate.
  */
@@ -95,6 +96,25 @@ static struct
     /* Opaque data passed back to the 'func' callback. */
     void * closure;
 } cmdtab[ MAXJOBS ] = { { 0 } };
+
+
+/*
+ * exec_check() - preprocess and validate the command.
+ */
+
+int exec_check
+(
+    string * command,
+    LIST * * pShell,
+    int * error_length,
+    int * error_max_length
+)
+{
+    return is_raw_command_request( *pShell )
+        ? EXEC_CHECK_OK
+        : check_cmd_for_too_long_lines( command->value, MAXLINE, error_length,
+            error_max_length );
+}
 
 
 /*

@@ -48,13 +48,13 @@
  * Do not just set JAMSHELL to cmd.exe - it will not work!
  *
  * External routines:
+ *  exec_check() - preprocess and validate the command.
  *  exec_cmd() - launch an async command execution.
  *  exec_wait() - wait for any of the async command processes to terminate.
  */
 
 /* get the maximum shell command line length according to the OS */
-int maxline();
-
+static int maxline();
 /* trim leading and trailing whitespace */
 void string_new_trimmed( string * pResult, string const * source );
 /* is the command suitable for direct execution via CreateProcessA() */
@@ -188,7 +188,75 @@ void execnt_unit_test()
 
 
 /*
+ * exec_check() - preprocess and validate the command.
+ */
+
+int exec_check
+(
+    string * command,
+    LIST * * pShell,
+    int * error_length,
+    int * error_max_length
+)
+{
+    /* Trim all leading and trailing leading whitespace. */
+    string cmd_local[ 1 ];
+    string_new_trimmed( cmd_local, command );
+
+    /* Check prerequisites for executing raw commands.
+     *
+     * JAMSHELL setting of "%", indicates that the command should be invoked
+     * directly if it satisfies all the spawnability criteria or using a batch
+     * file and the default shell if not.
+     */
+    if ( is_raw_command_request( *pShell ) )
+    {
+        int const raw_cmd_length = can_spawn( cmd_local->value );
+        if ( raw_cmd_length < maxline() )
+        {
+            /* Fallback to default shell. */
+            list_free( *pShell );
+            *pShell = L0;
+        }
+        else if ( raw_cmd_length > MAX_RAW_COMMAND_LENGTH )
+        {
+            *error_length = raw_cmd_length;
+            *error_max_length = MAX_RAW_COMMAND_LENGTH;
+            string_free( cmd_local );
+            return EXEC_CHECK_TOO_LONG;
+        }
+        else
+        {
+            string_free( cmd_local );
+            return EXEC_CHECK_OK;
+        }
+    }
+
+    /* Now we know we are using an external shell. Note that there is no need to
+     * check for too long command strings when using an external shell since we
+     * use a command file and assume no one is going to set up a JAMSHELL format
+     * string longer than a few hundred bytes at most which should be well under
+     * the total command string limit. Should someone actually construct such a
+     * JAMSHELL value it will get reported as an 'invalid parameter'
+     * CreateProcessA() Windows API failure which seems like a good enough
+     * result for such intentional mischief.
+     */
+
+    /* Check for too long command lines. */
+    {
+        int const result = check_cmd_for_too_long_lines( cmd_local->value,
+            maxline(), error_length, error_max_length );
+        string_free( cmd_local );
+        return result;
+    }
+}
+
+
+/*
  * exec_cmd() - launch an async command execution.
+ *
+ * We assume exec_check() already verified that the given command can have its
+ * command string constructed as requested.
  */
 
 void exec_cmd
@@ -202,7 +270,7 @@ void exec_cmd
 )
 {
     int const slot = get_free_cmdtab_slot();
-    int is_raw_cmd = is_raw_command_request( shell );
+    int const is_raw_cmd = is_raw_command_request( shell );
     string cmd_local[ 1 ];
 
     /* Initialize default shell - anything more than /Q/C is non-portable. */
@@ -212,21 +280,6 @@ void exec_cmd
 
     /* Trim all leading and trailing leading whitespace. */
     string_new_trimmed( cmd_local, cmd_orig );
-
-    /* Check to see if we need to hack around the line-length limitation. Look
-     * for a JAMSHELL setting of "%", indicating that the command should be
-     * invoked directly.
-     */
-    if ( is_raw_cmd )
-    {
-        /* Check to see if we need to hack around the line-length limitation.
-         * JAMSHELL setting of "%", indicates that the command should be invoked
-         * directly if it satisfies all the spawnability criteria or using a
-         * batch file and the default shell if not.
-         */
-        is_raw_cmd = can_spawn( cmd_local->value ) >= MAXLINE;
-        shell = L0;
-    }
 
     /* Specifying no shell means requesting the default shell. */
     if ( list_empty( shell ) )
@@ -293,14 +346,6 @@ void exec_cmd
             string_new( cmdtab[ slot ].target );
         }
         string_copy( cmdtab[ slot ].command, cmd_orig->value );
-    }
-
-    if ( cmd_local->size > MAX_RAW_COMMAND_LENGTH )
-    {
-        printf( "Command line too long (%d characters). Maximum executable "
-            "command-line length is %d.", cmd_local->size,
-            MAX_RAW_COMMAND_LENGTH );
-        exit( EXITBAD );
     }
 
     /* Invoke the actual external process using the constructed command line. */
@@ -507,7 +552,7 @@ static int raw_maxline()
     return 996;                                      /* NT 3.5.1 */
 }
 
-int maxline()
+static int maxline()
 {
     static result;
     if ( !result ) result = raw_maxline();

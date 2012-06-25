@@ -46,10 +46,7 @@
 #define OSMINOR "OS=NT"
 #define OS_NT
 #define SPLITPATH ';'
-/* Windows NT 3.51 only allows 996 chars per line, but we deal with the problem
- * in "execnt.c".
- */
-#define MAXLINE (maxline())    /* longest 'together' actions */
+#define MAXLINE (undefined__see_execnt_c)  /* max chars per command line */
 #define USE_EXECNT
 #define USE_PATHUNIX
 #define PATH_DELIM '\\'
@@ -93,7 +90,7 @@
 #define OSMINOR "OS=MINGW"
 #define OS_NT
 #define SPLITPATH ';'
-#define MAXLINE 996    /* longest 'together' actions */
+#define MAXLINE 996  /* max chars per command line */
 #define USE_EXECUNIX
 #define USE_PATHUNIX
 #define PATH_DELIM '\\'
@@ -115,7 +112,7 @@
 
 #ifdef _AIX
     #define unix
-    #define MAXLINE 23552  /* 24k - 1k, longest 'together' actions */
+    #define MAXLINE 23552  /* 24k - 1k, max chars per command line */
     #define OSMINOR "OS=AIX"
     #define OS_AIX
     #define NO_VFORK
@@ -219,7 +216,7 @@
         #define OSMINOR "OS=QNX"
         #define OS_QNX
         #define NO_VFORK
-        #define MAXLINE 996
+        #define MAXLINE 996  /* max chars per command line */
     #endif
 #endif
 #ifdef NeXT
@@ -397,7 +394,7 @@
  */
 
 #ifndef MAXLINE
-    #define MAXLINE 102400 /* longest 'together' actions' */
+    #define MAXLINE 102400  /* max chars per command line */
 #endif
 
 #ifndef EXITOK
