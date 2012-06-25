@@ -212,6 +212,19 @@ int exec_check
     int * error_max_length
 )
 {
+    /* Default shell does nothing when triggered with an empty or a
+     * whitespace-only command so we simply skip running it in that case. We
+     * still pass them on to non-default shells as we do not really know what
+     * they are going to do with such commands.
+     */
+    if ( list_empty( *pShell ) )
+    {
+        char const * s = command->value;
+        while ( isspace( *s ) ) ++s;
+        if ( !*s )
+            return EXEC_CHECK_SKIP;
+    }
+
     /* Check prerequisites for executing raw commands.
      *
      * JAMSHELL setting of "%", indicates that the command should be invoked
@@ -221,7 +234,11 @@ int exec_check
     if ( is_raw_command_request( *pShell ) )
     {
         int const raw_cmd_length = raw_command_length( command->value );
-        if ( raw_cmd_length < maxline() )
+        if ( !raw_cmd_length )
+        {
+            return EXEC_CHECK_SKIP;
+        }
+        else if ( raw_cmd_length < maxline() )
         {
             /* Fallback to default shell. */
             list_free( *pShell );

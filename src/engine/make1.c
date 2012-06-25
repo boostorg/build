@@ -1064,6 +1064,10 @@ static CMD * make1cmds( TARGET * t )
                 {
                     accept_command = 1;
                 }
+                else if ( cmd_check_result == EXEC_CHECK_SKIP )
+                {
+                    /* Simply release the prepared command. */
+                }
                 else if ( ( actions->flags & RULE_PIECEMEAL ) && ( chunk > 1 ) )
                 {
                     /* Too long but splittable. Reduce chunk size slowly and
