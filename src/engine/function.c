@@ -26,7 +26,11 @@
 #include <assert.h>
 
 #ifdef OS_CYGWIN
+# include <cygwin/version.h>
 # include <sys/cygwin.h>
+# ifdef CYGWIN_VERSION_CYGWIN_CONV
+#  include <errno.h>
+# endif
 # include <windows.h>
 #endif
 
@@ -635,23 +639,82 @@ static void var_edit_file( char const * in, string * out, VAR_EDITS * edits )
 }
 
 /*
+ * var_edit_cyg2win() - conversion of a cygwin to a Windows path.
+ *
+ * FIXME: skip grist
+ */
+
+#ifdef OS_CYGWIN
+static void var_edit_cyg2win( string * out, size_t pos, VAR_EDITS * edits )
+{
+    if ( edits->to_windows )
+    {
+    #ifdef CYGWIN_VERSION_CYGWIN_CONV
+        /* Use new Cygwin API added with Cygwin 1.7. */
+        char * dynamicBuffer = 0;
+        char buffer[ MAX_PATH + 1001 ];
+        char const * result = buffer;
+        cygwin_conv_path_t const conv_type = CCP_POSIX_TO_WIN_A | CCP_RELATIVE;
+        ssize_t const apiResult = cygwin_conv_path( conv_type, out->value + pos,
+            buffer, sizeof( buffer ) / sizeof( *buffer ) );
+        assert( apiResult == 0 || apiResult == -1 );
+        assert( apiResult || strlen( result ) < sizeof( buffer ) / sizeof(
+            *buffer ) );
+        if ( apiResult )
+        {
+            result = 0;
+            if ( errno == ENOSPC )
+            {
+                ssize_t const size = cygwin_conv_path( conv_type, out->value +
+                    pos, NULL, 0 );
+                assert( size >= -1 );
+                if ( size > 0 )
+                {
+                    dynamicBuffer = (char *)BJAM_MALLOC_ATOMIC( size );
+                    if ( dynamicBuffer )
+                    {
+                        ssize_t const apiResult = cygwin_conv_path( conv_type,
+                            out->value + pos, dynamicBuffer, size );
+                        assert( apiResult == 0 || apiResult == -1 );
+                        if ( !apiResult )
+                        {
+                            result = dynamicBuffer;
+                            assert( strlen( result ) < size );
+                        }
+                    }
+                }
+            }
+        }
+    #else  /* CYGWIN_VERSION_CYGWIN_CONV */
+        /* Use old Cygwin API deprecated with Cygwin 1.7. */
+        char result[ MAX_PATH + 1 ];
+        cygwin_conv_to_win32_path( out->value + pos, result );
+        assert( strlen( result ) <= MAX_PATH );
+    #endif  /* CYGWIN_VERSION_CYGWIN_CONV */
+        if ( result )
+        {
+            string_truncate( out, pos );
+            string_append( out, result );
+            edits->to_slashes = 0;
+        }
+    #ifdef CYGWIN_VERSION_CYGWIN_CONV
+        if ( dynamicBuffer )
+            BJAM_FREE( dynamicBuffer );
+    #endif
+    }
+}
+#endif  /* OS_CYGWIN */
+
+
+/*
  * var_edit_shift() - do upshift/downshift & other mods.
  */
 
 static void var_edit_shift( string * out, size_t pos, VAR_EDITS * edits )
 {
-# ifdef OS_CYGWIN
-    if ( edits->to_windows )
-    {
-        /* FIXME: skip grist */
-        char result[ MAX_PATH + 1 ];
-        cygwin_conv_to_win32_path( out->value + pos, result );
-        assert( strlen( result ) <= MAX_PATH );
-        string_truncate( out, pos );
-        string_append( out, result );
-        edits->to_slashes = 0;
-    }
-# endif
+#ifdef OS_CYGWIN
+    var_edit_cyg2win( out, pos, edits );
+#endif
 
     if ( edits->upshift || edits->downshift || edits->to_slashes )
     {
