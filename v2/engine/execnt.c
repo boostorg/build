@@ -651,7 +651,7 @@ static long raw_command_length( char const * command )
 
         case '"':
         case '\'':
-            if ( ( p > command ) && ( p[ -1 ] != '\\' ) )
+            if ( ( p == command ) || ( p[ -1 ] != '\\' ) )
             {
                 if ( inquote == *p )
                     inquote = 0;
