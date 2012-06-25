@@ -225,12 +225,7 @@ int exec_check
             return EXEC_CHECK_SKIP;
     }
 
-    /* Check prerequisites for executing raw commands.
-     *
-     * JAMSHELL setting of "%", indicates that the command should be invoked
-     * directly if it satisfies all the spawnability criteria or using a batch
-     * file and the default shell if not.
-     */
+    /* Check prerequisites for executing raw commands. */
     if ( is_raw_command_request( *pShell ) )
     {
         int const raw_cmd_length = raw_command_length( command->value );
