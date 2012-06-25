@@ -543,15 +543,15 @@ static void make1c( state * pState )
         }
         else
         {
-            /* Pop state first because exec_wait() will push state. */
-            pop_state( &state_stack );
+            /* Increment the jobs running counter. */
+            ++cmdsrunning;
 
             /* Execute the actual build command. */
             exec_cmd( cmd->buf, make_closure, pState->t, cmd->shell, rule_name,
                 target_name );
 
-            /* Increment the jobs running counter. */
-            ++cmdsrunning;
+            /* Pop state first because exec_wait() will push state. */
+            pop_state( &state_stack );
 
             /* Wait until we are under the concurrent command count limit. */
             assert( 0 < globs.jobs );
