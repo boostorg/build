@@ -4408,7 +4408,7 @@ static void argument_list_to_python( struct arg_list * formal, int formal_count,
 OBJECT * python_to_string( PyObject * value )
 {
     if ( PyString_Check( value ) )
-        return object_new( PyString_AsString( value ) );
+        return object_new( PyString_AS_STRING( value ) );
 
     /* See if this instance defines the special __jam_repr__ method. */
     if ( PyInstance_Check( value )
@@ -4422,7 +4422,7 @@ OBJECT * python_to_string( PyObject * value )
             Py_DECREF( repr );
             Py_DECREF( arguments2 );
             if ( PyString_Check( value2 ) )
-                return object_new( PyString_AsString( value2 ) );
+                return object_new( PyString_AS_STRING( value2 ) );
             Py_DECREF( value2 );
         }
     }
