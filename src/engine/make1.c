@@ -99,7 +99,7 @@ static void make1atail  ( state * );
 static void make1b      ( state * );
 static void make1c      ( state * );
 static void make1d      ( state * );
-static void make_closure( void * closure, int status, timing_info *,
+static void make_closure( void * closure, int status, timing_info const *,
     char const *, char const * );
 
 typedef struct _stack
@@ -807,7 +807,7 @@ static void make_closure
 (
     void * closure,
     int status,
-    timing_info * time,
+    timing_info const * time,
     char const * executed_command,
     char const * command_output
 )
