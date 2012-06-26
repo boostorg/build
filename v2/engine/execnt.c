@@ -93,8 +93,6 @@ static void close_alerts();
 static char const * prepare_command_file( string const * command, int slot );
 /* invoke the actual external process using the given command line */
 static void invoke_cmd( char const * const command, int const slot );
-/* returns a string's value buffer if not empty or 0 if empty */
-static char const * null_if_empty( string const * str );
 /* find a free slot in the running commands table */
 static int get_free_cmdtab_slot();
 /* put together the final command string we are to run */
@@ -120,9 +118,8 @@ static int intr_installed;
 /* The list of commands we run. */
 static struct
 {
-    string action[ 1 ];   /* buffer to hold action */
-    string target[ 1 ];   /* buffer to hold target */
-    string command[ 1 ];  /* buffer to hold command being invoked */
+    string action[ 1 ];  /* buffer to hold action */
+    string target[ 1 ];  /* buffer to hold target */
 
     /* Temporary command file used to execute the action when needed. */
     string command_file[ 1 ];
@@ -365,7 +362,6 @@ void exec_cmd
             string_new( cmdtab[ slot ].action );
             string_new( cmdtab[ slot ].target );
         }
-        string_copy( cmdtab[ slot ].command, cmd_orig->value );
     }
 
     /* Invoke the actual external process using the constructed command line. */
@@ -428,27 +424,17 @@ void exec_wait()
         else
             rstat = EXEC_CMD_OK;
 
-        /* Output the action block. */
-        out_action(
-            null_if_empty( cmdtab[ i ].action ),
-            null_if_empty( cmdtab[ i ].target ),
-            null_if_empty( cmdtab[ i ].command ),
-            null_if_empty( cmdtab[ i ].buffer_out ),
-            null_if_empty( cmdtab[ i ].buffer_err ),
-            exit_reason );
-
-        /* Call the callback, may call back to jam rule land. Assume -p0 is in
-         * effect so only pass buffer containing merged output.
-         */
+        /* Call the callback, may call back to jam rule land. */
         (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time,
-            cmdtab[ i ].command->value, cmdtab[ i ].buffer_out->value );
+            cmdtab[ i ].buffer_out->value, cmdtab[ i ].buffer_err->value,
+            exit_reason, cmdtab[ i ].action->size ? cmdtab[ i ].action->value :
+            0, cmdtab[ i ].target->size ? cmdtab[ i ].target->value : 0 );
 
         /* Clean up our child process tracking data. No need to clear the
          * temporary command file name as it gets reused.
          */
         string_renew( cmdtab[ i ].action );
         string_renew( cmdtab[ i ].target );
-        string_renew( cmdtab[ i ].command );
         closeWinHandle( &cmdtab[ i ].pi.hProcess );
         closeWinHandle( &cmdtab[ i ].pi.hThread );
         closeWinHandle( &cmdtab[ i ].pipe_out[ 0 ] );
@@ -1310,16 +1296,6 @@ static char const * prepare_command_file( string const * command, int slot )
     fputs( command->value, f );
     fclose( f );
     return cmdtab[ slot ].command_file->value;
-}
-
-
-/*
- * Returns a string's value buffer if not empty or 0 if empty.
- */
-
-static char const * null_if_empty( string const * str )
-{
-    return str->size ? str->value : 0;
 }
 
 

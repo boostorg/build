@@ -100,8 +100,9 @@ static void make1b      ( state * );
 static void make1c      ( state * );
 static void make1d      ( state * );
 static void make_closure( void * const closure, int const status,
-    timing_info const * const, char const * const invoked_command,
-    char const * const command_output );
+    timing_info const * const, char const * const cmd_stdout,
+    char const * const cmd_stderr, int const cmd_exit_reason,
+    char const * const rule_name, char const * const target_name );
 
 typedef struct _stack
 {
@@ -563,15 +564,14 @@ static void make1c( state * pState )
             {
                 timing_info time_info = { 0 } ;
                 time_info.start = time_info.end = time( 0 );
-                out_action( rule_name, target_name, cmd->buf->value, "", "",
-                    EXIT_OK );
-                make_closure( t, EXEC_CMD_OK, &time_info, cmd->buf->value, "" );
+                make_closure( t, EXEC_CMD_OK, &time_info, "", "", EXIT_OK,
+                    rule_name, target_name );
             }
             else
             {
                 exec_cmd( cmd->buf, make_closure, t, cmd->shell, rule_name,
                     target_name );
-                    
+
                 /* Wait until under the concurrent command count limit. */
                 assert( 0 < globs.jobs );
                 assert( globs.jobs <= MAXJOBS );
@@ -848,19 +848,28 @@ static void make_closure
     void * const closure,
     int const status,
     timing_info const * const time,
-    char const * const invoked_command,
-    char const * const command_output
+    char const * const cmd_stdout,
+    char const * const cmd_stderr,
+    int const cmd_exit_reason,
+    char const * const rule_name,
+    char const * const target_name
 )
 {
     TARGET * const t = (TARGET *)closure;
+    CMD const * const cmd = (CMD *)t->cmds;
+    assert( cmd );
 
     --cmdsrunning;
+
+    out_action( rule_name, target_name, cmd->buf->value, cmd_stdout, cmd_stderr,
+        cmd_exit_reason );
 
     call_timing_rule( t, time );
     if ( DEBUG_EXECCMD )
         printf( "%f sec system; %f sec user\n", time->system, time->user );
 
-    call_action_rule( t, status, time, invoked_command, command_output );
+    /* Assume -p0 is in effect so only pass buffer containing merged output. */
+    call_action_rule( t, status, time, cmd->buf->value, cmd_stdout );
 
     push_state( &state_stack, t, NULL, T_STATE_MAKE1D )->status = status;
 }
