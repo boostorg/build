@@ -210,7 +210,7 @@ void execnt_unit_test()
 
 int exec_check
 (
-    string * command,
+    string const * command,
     LIST * * pShell,
     int * error_length,
     int * error_max_length
@@ -278,8 +278,8 @@ void exec_cmd
     ExecCmdCallback func,
     void * closure,
     LIST * shell,
-    char const * action,
-    char const * target
+    char const * const action,
+    char const * const target
 )
 {
     int const slot = get_free_cmdtab_slot();
@@ -421,7 +421,7 @@ void exec_wait()
         /* The dispossition of the command. */
         if ( interrupted() )
             rstat = EXEC_CMD_INTR;
-        else if ( cmdtab[ i ].exit_code != 0 )
+        else if ( cmdtab[ i ].exit_code )
             rstat = EXEC_CMD_FAIL;
         else
             rstat = EXEC_CMD_OK;
@@ -441,14 +441,14 @@ void exec_wait()
         (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time,
             cmdtab[ i ].command->value, cmdtab[ i ].buffer_out->value );
 
-        /* Clean up the command data, process, etc. No need to clear the
+        /* Clean up our child process tracking data. No need to clear the
          * temporary command file name as it gets reused.
          */
-        string_renew( cmdtab[ i ].action  );
-        string_renew( cmdtab[ i ].target  );
+        string_renew( cmdtab[ i ].action );
+        string_renew( cmdtab[ i ].target );
         string_renew( cmdtab[ i ].command );
-        closeWinHandle( &cmdtab[ i ].pi.hProcess   );
-        closeWinHandle( &cmdtab[ i ].pi.hThread    );
+        closeWinHandle( &cmdtab[ i ].pi.hProcess );
+        closeWinHandle( &cmdtab[ i ].pi.hThread );
         closeWinHandle( &cmdtab[ i ].pipe_out[ 0 ] );
         closeWinHandle( &cmdtab[ i ].pipe_out[ 1 ] );
         closeWinHandle( &cmdtab[ i ].pipe_err[ 0 ] );
@@ -912,7 +912,7 @@ static int try_kill_one()
             if ( t > (double)globs.timeout )
             {
                 /* The job may have left an alert dialog around, try and get rid
-                 * of it before killing
+                 * of it before killing.
                  */
                 close_alert( cmdtab[ i ].pi.hProcess );
                 /* We have a "runaway" job, kill it. */

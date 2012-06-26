@@ -99,8 +99,9 @@ static void make1atail  ( state * );
 static void make1b      ( state * );
 static void make1c      ( state * );
 static void make1d      ( state * );
-static void make_closure( void * closure, int status, timing_info const *,
-    char const *, char const * );
+static void make_closure( void * const closure, int const status,
+    timing_info const * const, char const * const invoked_command,
+    char const * const command_output );
 
 typedef struct _stack
 {
@@ -838,29 +839,30 @@ static void call_action_rule
 
 /*
  * make_closure() - internal function passed as a notification callback for when
- * commands finish getting executed by the OS.
+ * commands finish getting executed by the OS or called directly when faking
+ * that the commands had been executed by the OS.
  */
 
 static void make_closure
 (
-    void * closure,
-    int status,
-    timing_info const * time,
-    char const * executed_command,
-    char const * command_output
+    void * const closure,
+    int const status,
+    timing_info const * const time,
+    char const * const invoked_command,
+    char const * const command_output
 )
 {
-    TARGET * built = (TARGET *)closure;
+    TARGET * const t = (TARGET *)closure;
 
     --cmdsrunning;
 
-    call_timing_rule( built, time );
+    call_timing_rule( t, time );
     if ( DEBUG_EXECCMD )
         printf( "%f sec system; %f sec user\n", time->system, time->user );
 
-    call_action_rule( built, status, time, executed_command, command_output );
+    call_action_rule( t, status, time, invoked_command, command_output );
 
-    push_state( &state_stack, built, NULL, T_STATE_MAKE1D )->status = status;
+    push_state( &state_stack, t, NULL, T_STATE_MAKE1D )->status = status;
 }
 
 

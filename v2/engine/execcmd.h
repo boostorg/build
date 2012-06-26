@@ -30,11 +30,11 @@ typedef struct timing_info
 
 typedef void (* ExecCmdCallback)
 (
-    void * closure,
-    int status,
-    timing_info const *,
-    char const * invoked_command,
-    char const * command_output
+    void * const closure,
+    int const status,
+    timing_info const * const,
+    char const * const invoked_command,
+    char const * const command_output
 );
 
 /* Status codes passed to ExecCmdCallback routines. */
@@ -44,7 +44,7 @@ typedef void (* ExecCmdCallback)
 
 int exec_check
 (
-    string * command,
+    string const * command,
     LIST * * pShell,
     int * error_length,
     int * error_max_length
@@ -62,8 +62,8 @@ void exec_cmd
     ExecCmdCallback func,
     void * closure,
     LIST * shell,
-    char const * action,
-    char const * target
+    char const * const action,
+    char const * const target
 );
 
 void exec_wait();
