@@ -29,7 +29,7 @@
 CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
 {
     CMD * cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
-    FRAME frame[1];
+    FRAME frame[ 1 ];
 
     assert( cmd );
     cmd->rule = rule;

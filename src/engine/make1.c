@@ -91,7 +91,7 @@ typedef struct _state
     TARGET        * t;         /* current target */
     TARGET        * parent;    /* parent argument necessary for make1a() */
     int             curstate;  /* current state */
-    int             status;
+    int             status;    /* EXEC_CMD_* - input for make1d() */
 } state;
 
 static void make1a      ( state * );
@@ -547,17 +547,21 @@ static void make1c( state * pState )
         }
         else
         {
+            /* Pop state first in case exec_cmd(), exec_wait() or make_closure()
+             * push a new state. Collect the target off the stack before that to
+             * avoid accessing data later from a freed stack node.
+             */
+            TARGET * t = pState->t ;
+            pop_state( &state_stack );
+
             /* Increment the jobs running counter. */
             ++cmdsrunning;
 
             /* Execute the actual build command. */
-            exec_cmd( cmd->buf, make_closure, pState->t, cmd->shell, rule_name,
+            exec_cmd( cmd->buf, make_closure, t, cmd->shell, rule_name,
                 target_name );
 
-            /* Pop state first because exec_wait() will push state. */
-            pop_state( &state_stack );
-
-            /* Wait until we are under the concurrent command count limit. */
+            /* Wait until under the concurrent command count limit. */
             assert( 0 < globs.jobs );
             assert( globs.jobs <= MAXJOBS );
             while ( cmdsrunning >= globs.jobs )
@@ -591,10 +595,7 @@ static void make1c( state * pState )
             TARGET * t = pState->t;
             TARGET * additional_includes = NULL;
 
-            if ( globs.noexec )
-                t->progress = T_MAKE_NOEXEC_DONE;
-            else
-                t->progress = T_MAKE_DONE;
+            t->progress = globs.noexec ? T_MAKE_NOEXEC_DONE : T_MAKE_DONE;
 
             /* Target has been updated so rescan it for dependencies. */
             if ( ( t->fate >= T_FATE_MISSING ) &&
@@ -969,12 +970,12 @@ static void swap_settings
 
 static CMD * make1cmds( TARGET * t )
 {
-    CMD      * cmds = 0;
-    LIST     * shell = L0;
+    CMD * cmds = 0;
+    LIST * shell = L0;
     module_t * settings_module = 0;
-    TARGET   * settings_target = 0;
-    ACTIONS  * a0;
-    int running_flag = globs.noexec ? A_RUNNING_NOEXEC : A_RUNNING;
+    TARGET * settings_target = 0;
+    ACTIONS * a0;
+    int const running_flag = globs.noexec ? A_RUNNING_NOEXEC : A_RUNNING;
 
     /* Step through actions. Actions may be shared with other targets or grouped
      * using RULE_TOGETHER, so actions already seen are skipped.

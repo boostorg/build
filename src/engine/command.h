@@ -29,6 +29,7 @@
  *  cmd_new() - return a new CMD or 0 if too many args.
  *  cmd_free() - delete CMD and its parts.
  *  cmd_next() - walk the CMD chain.
+ *  cmd_release_targets_and_shell() - CMD forgets about its targets & shell.
  */
 
 
@@ -48,11 +49,11 @@ typedef struct _cmd CMD;
 struct _cmd
 {
     CMD  * next;
-    CMD  * tail;    /* valid on in head */
-    RULE * rule;    /* rule->actions contains shell script */
-    LIST * shell;   /* $(JAMSHELL) value */
-    LOL    args;    /* LISTs for $(<), $(>) */
-    string buf[1];  /* actual commands */
+    CMD  * tail;      /* valid on in head */
+    RULE * rule;      /* rule->actions contains shell script */
+    LIST * shell;     /* $(JAMSHELL) value */
+    LOL    args;      /* LISTs for $(<), $(>) */
+    string buf[ 1 ];  /* actual commands */
 };
 
 CMD * cmd_new
