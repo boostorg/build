@@ -532,52 +532,41 @@ static void make1c( state * pState )
         char const * rule_name = 0;
         char const * target_name = 0;
 
+        /* Pop state first in case exec_cmd(), exec_wait() or make_closure()
+         * push a new state. Collect the target off the stack before that to
+         * avoid accessing data later from a freed stack node.
+         */
+        TARGET * t = pState->t ;
+        pop_state( &state_stack );
+
         if ( DEBUG_MAKEQ ||
             ( !( cmd->rule->actions->flags & RULE_QUIETLY ) && DEBUG_MAKE ) )
         {
             rule_name = object_str( cmd->rule->name );
             target_name = object_str( list_front( lol_get( &cmd->args, 0 ) ) );
-            if ( globs.noexec )
-                out_action( rule_name, target_name, cmd->buf->value, "", "",
-                    EXIT_OK );
         }
 
-        if ( globs.noexec )
+        /* Increment the jobs running counter. */
+        ++cmdsrunning;
+
+        /* Execute the actual build command or fake it if no-op. */
+        if ( globs.noexec || cmd->noop )
         {
-            pState->curstate = T_STATE_MAKE1D;
-            pState->status = EXEC_CMD_OK;
+            timing_info time_info = { 0 } ;
+            time_info.start = time_info.end = time( 0 );
+            make_closure( t, EXEC_CMD_OK, &time_info, "", "", EXIT_OK,
+                rule_name, target_name );
         }
         else
         {
-            /* Pop state first in case exec_cmd(), exec_wait() or make_closure()
-             * push a new state. Collect the target off the stack before that to
-             * avoid accessing data later from a freed stack node.
-             */
-            TARGET * t = pState->t ;
-            pop_state( &state_stack );
+            exec_cmd( cmd->buf, make_closure, t, cmd->shell, rule_name,
+                target_name );
 
-            /* Increment the jobs running counter. */
-            ++cmdsrunning;
-
-            /* Execute the actual build command or fake it if no-op. */
-            if ( cmd->noop )
-            {
-                timing_info time_info = { 0 } ;
-                time_info.start = time_info.end = time( 0 );
-                make_closure( t, EXEC_CMD_OK, &time_info, "", "", EXIT_OK,
-                    rule_name, target_name );
-            }
-            else
-            {
-                exec_cmd( cmd->buf, make_closure, t, cmd->shell, rule_name,
-                    target_name );
-
-                /* Wait until under the concurrent command count limit. */
-                assert( 0 < globs.jobs );
-                assert( globs.jobs <= MAXJOBS );
-                while ( cmdsrunning >= globs.jobs )
-                    exec_wait();
-            }
+            /* Wait until under the concurrent command count limit. */
+            assert( 0 < globs.jobs );
+            assert( globs.jobs <= MAXJOBS );
+            while ( cmdsrunning >= globs.jobs )
+                exec_wait();
         }
     }
     else
@@ -864,12 +853,15 @@ static void make_closure
     out_action( rule_name, target_name, cmd->buf->value, cmd_stdout, cmd_stderr,
         cmd_exit_reason );
 
-    call_timing_rule( t, time );
-    if ( DEBUG_EXECCMD )
-        printf( "%f sec system; %f sec user\n", time->system, time->user );
+    if ( !globs.noexec )
+    {
+        call_timing_rule( t, time );
+        if ( DEBUG_EXECCMD )
+            printf( "%f sec system; %f sec user\n", time->system, time->user );
 
-    /* Assume -p0 is in effect so only pass buffer containing merged output. */
-    call_action_rule( t, status, time, cmd->buf->value, cmd_stdout );
+        /* Assume -p0 is in effect, i.e. cmd_stdout contains merged output. */
+        call_action_rule( t, status, time, cmd->buf->value, cmd_stdout );
+    }
 
     push_state( &state_stack, t, NULL, T_STATE_MAKE1D )->status = status;
 }
