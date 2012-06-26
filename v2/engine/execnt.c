@@ -449,7 +449,7 @@ static void invoke_cmd( char const * const command, int const slot )
         reportWindowsError( "CreatePipe" );
         exit( EXITBAD );
     }
-    if ( globs.pipe_action == 2 && !CreatePipe( &cmdtab[ slot ].pipe_err[
+    if ( globs.pipe_action && !CreatePipe( &cmdtab[ slot ].pipe_err[
         EXECCMD_PIPE_READ ], &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ],
         &sa, 0 ) )
     {
@@ -460,7 +460,7 @@ static void invoke_cmd( char const * const command, int const slot )
     /* Set handle inheritance off for the pipe ends the parent reads from. */
     SetHandleInformation( cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_READ ],
         HANDLE_FLAG_INHERIT, 0 );
-    if ( globs.pipe_action == 2 )
+    if ( globs.pipe_action )
         SetHandleInformation( cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_READ ],
             HANDLE_FLAG_INHERIT, 0 );
 
@@ -471,21 +471,9 @@ static void invoke_cmd( char const * const command, int const slot )
     /* Redirect the child's output streams to our pipes. */
     si.dwFlags |= STARTF_USESTDHANDLES;
     si.hStdOutput = cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ];
-    if ( globs.pipe_action == 2 )
-    {
-        /* Pipe stderr to the action error output. */
-        si.hStdError = cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ];
-    }
-    else if ( globs.pipe_action == 1 )
-    {
-        /* Pipe stderr to the console error output. */
-        si.hStdError = GetStdHandle( STD_ERROR_HANDLE );
-    }
-    else
-    {
-        /* Pipe stderr to the action merged output. */
-        si.hStdError = cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ];
-    }
+    si.hStdError = globs.pipe_action
+        ? cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ]
+        : cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ];
 
     /* Let the child inherit stdin, as some commands assume it is available. */
     si.hStdInput = GetStdHandle( STD_INPUT_HANDLE );
