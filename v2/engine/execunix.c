@@ -81,10 +81,6 @@ static struct
     FILE   * stream[ 2 ];    /* child's stdout (0) and stderr (1) file stream */
     clock_t  start_time;     /* start time of child process */
     int      exit_reason;    /* termination status */
-    int      action_length;  /* length of action string */
-    int      target_length;  /* length of target string */
-    char   * action;         /* buffer to hold the action name (if not quiet) */
-    char   * target;         /* buffer to hold the target name (if not quiet) */
     char   * buffer[ 2 ];    /* buffers to hold stdout and stderr, if any */
     int      buf_size[ 2 ];  /* buffer sizes in bytes */
     time_t   start_dt;       /* start of command timestamp */
@@ -139,9 +135,7 @@ void exec_cmd
     string const * command,
     ExecCmdCallback func,
     void * closure,
-    LIST * shell,
-    char const * const action,
-    char const * const target
+    LIST * shell
 )
 {
     int const slot = get_free_cmdtab_slot();
@@ -290,36 +284,6 @@ void exec_cmd
     /* Save input data into the selected running commands table slot. */
     cmdtab[ slot ].func = func;
     cmdtab[ slot ].closure = closure;
-
-    /* Ensure enough room for rule and target name. */
-    if ( action && target )
-    {
-        len = strlen( action ) + 1;
-        if ( cmdtab[ slot ].action_length < len )
-        {
-            BJAM_FREE( cmdtab[ slot ].action );
-            cmdtab[ slot ].action = BJAM_MALLOC_ATOMIC( len );
-            cmdtab[ slot ].action_length = len;
-        }
-        strcpy( cmdtab[ slot ].action, action );
-        len = strlen( target ) + 1;
-        if ( cmdtab[ slot ].target_length < len )
-        {
-            BJAM_FREE( cmdtab[ slot ].target );
-            cmdtab[ slot ].target = BJAM_MALLOC_ATOMIC( len );
-            cmdtab[ slot ].target_length = len;
-        }
-        strcpy( cmdtab[ slot ].target, target );
-    }
-    else
-    {
-        BJAM_FREE( cmdtab[ slot ].action );
-        BJAM_FREE( cmdtab[ slot ].target );
-        cmdtab[ slot ].action = 0;
-        cmdtab[ slot ].target = 0;
-        cmdtab[ slot ].action_length = 0;
-        cmdtab[ slot ].target_length = 0;
-    }
 }
 
 #undef EXECCMD_PIPE_READ
@@ -538,8 +502,7 @@ void exec_wait()
                 /* Call the callback, may call back to jam rule land. */
                 (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time_info,
                     cmdtab[ i ].buffer[ OUT ], cmdtab[ i ].buffer[ ERR ],
-                    cmdtab[ i ].exit_reason, cmdtab[ i ].action,
-                    cmdtab[ i ].target );
+                    cmdtab[ i ].exit_reason );
 
                 BJAM_FREE( cmdtab[ i ].buffer[ OUT ] );
                 cmdtab[ i ].buffer[ OUT ] = 0;

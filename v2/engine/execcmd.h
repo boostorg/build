@@ -35,9 +35,7 @@ typedef void (* ExecCmdCallback)
     timing_info const * const,
     char const * const cmd_stdout,
     char const * const cmd_stderr,
-    int const cmd_exit_reason,
-    char const * const rule_name,
-    char const * const target_name
+    int const cmd_exit_reason
 );
 
 /* Status codes passed to ExecCmdCallback routines. */
@@ -64,9 +62,7 @@ void exec_cmd
     string const * command,
     ExecCmdCallback func,
     void * closure,
-    LIST * shell,
-    char const * const action,
-    char const * const target
+    LIST * shell
 );
 
 void exec_wait();

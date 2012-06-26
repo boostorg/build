@@ -101,8 +101,7 @@ static void make1c      ( state * );
 static void make1d      ( state * );
 static void make_closure( void * const closure, int const status,
     timing_info const * const, char const * const cmd_stdout,
-    char const * const cmd_stderr, int const cmd_exit_reason,
-    char const * const rule_name, char const * const target_name );
+    char const * const cmd_stderr, int const cmd_exit_reason );
 
 typedef struct _stack
 {
@@ -529,22 +528,12 @@ static void make1c( state * pState )
 
     if ( cmd && ( pState->t->status == EXEC_CMD_OK ) )
     {
-        char const * rule_name = 0;
-        char const * target_name = 0;
-
         /* Pop state first in case exec_cmd(), exec_wait() or make_closure()
          * push a new state. Collect the target off the stack before that to
          * avoid accessing data later from a freed stack node.
          */
         TARGET * t = pState->t ;
         pop_state( &state_stack );
-
-        if ( DEBUG_MAKEQ ||
-            ( !( cmd->rule->actions->flags & RULE_QUIETLY ) && DEBUG_MAKE ) )
-        {
-            rule_name = object_str( cmd->rule->name );
-            target_name = object_str( list_front( lol_get( &cmd->args, 0 ) ) );
-        }
 
         /* Increment the jobs running counter. */
         ++cmdsrunning;
@@ -554,13 +543,11 @@ static void make1c( state * pState )
         {
             timing_info time_info = { 0 } ;
             time_info.start = time_info.end = time( 0 );
-            make_closure( t, EXEC_CMD_OK, &time_info, "", "", EXIT_OK,
-                rule_name, target_name );
+            make_closure( t, EXEC_CMD_OK, &time_info, "", "", EXIT_OK );
         }
         else
         {
-            exec_cmd( cmd->buf, make_closure, t, cmd->shell, rule_name,
-                target_name );
+            exec_cmd( cmd->buf, make_closure, t, cmd->shell );
 
             /* Wait until under the concurrent command count limit. */
             assert( 0 < globs.jobs );
@@ -839,14 +826,22 @@ static void make_closure
     timing_info const * const time,
     char const * const cmd_stdout,
     char const * const cmd_stderr,
-    int const cmd_exit_reason,
-    char const * const rule_name,
-    char const * const target_name
+    int const cmd_exit_reason
 )
 {
     TARGET * const t = (TARGET *)closure;
     CMD const * const cmd = (CMD *)t->cmds;
+    char const * rule_name = 0;
+    char const * target_name = 0;
+
     assert( cmd );
+    if ( DEBUG_MAKEQ ||
+        ( DEBUG_MAKE && !( cmd->rule->actions->flags & RULE_QUIETLY ) ) )
+    {
+        rule_name = object_str( cmd->rule->name );
+        target_name = object_str( list_front( lol_get( (LOL *)&cmd->args, 0 ) )
+            );
+    }
 
     --cmdsrunning;
 

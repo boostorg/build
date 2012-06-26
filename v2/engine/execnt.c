@@ -118,9 +118,6 @@ static int intr_installed;
 /* The list of commands we run. */
 static struct
 {
-    string action[ 1 ];  /* buffer to hold action */
-    string target[ 1 ];  /* buffer to hold target */
-
     /* Temporary command file used to execute the action when needed. */
     string command_file[ 1 ];
 
@@ -272,9 +269,7 @@ void exec_cmd
     string const * cmd_orig,
     ExecCmdCallback func,
     void * closure,
-    LIST * shell,
-    char const * const action,
-    char const * const target
+    LIST * shell
 )
 {
     int const slot = get_free_cmdtab_slot();
@@ -338,31 +333,8 @@ void exec_cmd
     }
 
     /* Save input data into the selected running commands table slot. */
-    {
-        cmdtab[ slot ].func = func;
-        cmdtab[ slot ].closure = closure;
-        /* No need to free action and target cmdtab[ slot ] members here as they
-         * have either never been explicitly constructed before (and are thus
-         * zero initialized) or have been freed when the previous command in the
-         * same slot has been cleaned up.
-         */
-        assert( !cmdtab[ slot ].action->size );
-        assert( !cmdtab[ slot ].action->value || cmdtab[ slot ].action->value ==
-            cmdtab[ slot ].action->opt );
-        assert( !cmdtab[ slot ].target->size );
-        assert( !cmdtab[ slot ].target->value || cmdtab[ slot ].target->value ==
-            cmdtab[ slot ].target->opt );
-        if ( action && target )
-        {
-            string_copy( cmdtab[ slot ].action, action );
-            string_copy( cmdtab[ slot ].target, target );
-        }
-        else
-        {
-            string_new( cmdtab[ slot ].action );
-            string_new( cmdtab[ slot ].target );
-        }
-    }
+    cmdtab[ slot ].func = func;
+    cmdtab[ slot ].closure = closure;
 
     /* Invoke the actual external process using the constructed command line. */
     invoke_cmd( cmd_local->value, slot );
@@ -427,14 +399,11 @@ void exec_wait()
         /* Call the callback, may call back to jam rule land. */
         (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time,
             cmdtab[ i ].buffer_out->value, cmdtab[ i ].buffer_err->value,
-            exit_reason, cmdtab[ i ].action->size ? cmdtab[ i ].action->value :
-            0, cmdtab[ i ].target->size ? cmdtab[ i ].target->value : 0 );
+            exit_reason );
 
         /* Clean up our child process tracking data. No need to clear the
          * temporary command file name as it gets reused.
          */
-        string_renew( cmdtab[ i ].action );
-        string_renew( cmdtab[ i ].target );
         closeWinHandle( &cmdtab[ i ].pi.hProcess );
         closeWinHandle( &cmdtab[ i ].pi.hThread );
         closeWinHandle( &cmdtab[ i ].pipe_out[ 0 ] );
