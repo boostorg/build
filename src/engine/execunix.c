@@ -85,7 +85,6 @@ static struct
     int      target_length;  /* length of target string */
     char   * action;         /* buffer to hold the action name (if not quiet) */
     char   * target;         /* buffer to hold the target name (if not quiet) */
-    char   * command;        /* buffer to hold the command */
     char   * buffer[ 2 ];    /* buffers to hold stdout and stderr, if any */
     int      buf_size[ 2 ];  /* buffer sizes in bytes */
     time_t   start_dt;       /* start of command timestamp */
@@ -175,10 +174,6 @@ void exec_cmd
         for ( i = 0; argv[ i ]; ++i )
             printf( "    argv[%d] = '%s'\n", i, argv[ i ] );
     }
-
-    /* Save off actual command string. */
-    cmdtab[ slot ].command = BJAM_MALLOC_ATOMIC( command->size + 1 );
-    strcpy( cmdtab[ slot ].command, command->value );
 
     /* Create pipes from child to parent. */
     if ( pipe( out ) < 0 || pipe( err ) < 0 )
@@ -525,11 +520,6 @@ void exec_wait()
                         ? EXIT_FAIL
                         : EXIT_OK;
 
-                /* Print out the rule and target name. */
-                out_action( cmdtab[ i ].action, cmdtab[ i ].target,
-                    cmdtab[ i ].command, cmdtab[ i ].buffer[ OUT ],
-                    cmdtab[ i ].buffer[ ERR ], cmdtab[ i ].exit_reason );
-
                 times( &new_time );
                 time_info.system = (double)( new_time.tms_cstime - old_time.tms_cstime ) / CLOCKS_PER_SEC;
                 time_info.user   = (double)( new_time.tms_cutime - old_time.tms_cutime ) / CLOCKS_PER_SEC;
@@ -545,12 +535,11 @@ void exec_wait()
                 else
                     rstat = EXEC_CMD_OK;
 
-                /* Call the callback, may call back to jam rule land. Assume -p0
-                 * is in effect so only pass buffer[ OUT ] containing merged
-                 * output.
-                 */
+                /* Call the callback, may call back to jam rule land. */
                 (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time_info,
-                    cmdtab[ i ].command, cmdtab[ i ].buffer[ OUT ] );
+                    cmdtab[ i ].buffer[ OUT ], cmdtab[ i ].buffer[ ERR ],
+                    cmdtab[ i ].exit_reason, cmdtab[ i ].action,
+                    cmdtab[ i ].target );
 
                 BJAM_FREE( cmdtab[ i ].buffer[ OUT ] );
                 cmdtab[ i ].buffer[ OUT ] = 0;
@@ -559,9 +548,6 @@ void exec_wait()
                 BJAM_FREE( cmdtab[ i ].buffer[ ERR ] );
                 cmdtab[ i ].buffer[ ERR ] = 0;
                 cmdtab[ i ].buf_size[ ERR ] = 0;
-
-                BJAM_FREE( cmdtab[ i ].command );
-                cmdtab[ i ].command = 0;
 
                 cmdtab[ i ].func = 0;
                 cmdtab[ i ].closure = 0;

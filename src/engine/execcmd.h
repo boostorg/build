@@ -33,8 +33,11 @@ typedef void (* ExecCmdCallback)
     void * const closure,
     int const status,
     timing_info const * const,
-    char const * const invoked_command,
-    char const * const command_output
+    char const * const cmd_stdout,
+    char const * const cmd_stderr,
+    int const cmd_exit_reason,
+    char const * const rule_name,
+    char const * const target_name
 );
 
 /* Status codes passed to ExecCmdCallback routines. */
