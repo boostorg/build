@@ -137,8 +137,6 @@ static struct
     string buffer_err[ 1 ];  /* buffer to hold stderr, if any */
 
     PROCESS_INFORMATION pi;  /* running process information */
-    DWORD exit_code;         /* executed command's exit code */
-    int exit_reason;         /* reason why a command completed */
 
     /* Function called when the command completes. */
     ExecCmdCallback func;
@@ -388,9 +386,10 @@ void exec_cmd
 void exec_wait()
 {
     int i = -1;
+    int exit_reason;  /* reason why a command completed */
 
     /* Wait for a command to complete, while snarfing up any output. */
-    do
+    while ( 1 )
     {
         /* Check for a complete command, briefly. */
         i = try_wait( 500 );
@@ -398,13 +397,16 @@ void exec_wait()
         read_output();
         /* Close out pending debug style dialogs. */
         close_alerts();
+        /* Process the completed command we found. */
+        if ( i >= 0 ) { exit_reason = EXIT_OK; break; }
         /* Check if a command ran out of time. */
-        if ( i < 0 ) i = try_kill_one();
+        i = try_kill_one();
+        if ( i >= 0 ) { exit_reason = EXIT_TIMEOUT; break; }
     }
-    while ( i < 0 );
 
     /* We have a command... process it. */
     {
+        DWORD exit_code;
         timing_info time;
         int rstat;
 
@@ -416,12 +418,12 @@ void exec_wait()
             unlink( cmdtab[ i ].command_file->value );
 
         /* Find out the process exit code. */
-        GetExitCodeProcess( cmdtab[ i ].pi.hProcess, &cmdtab[ i ].exit_code );
+        GetExitCodeProcess( cmdtab[ i ].pi.hProcess, &exit_code );
 
         /* The dispossition of the command. */
         if ( interrupted() )
             rstat = EXEC_CMD_INTR;
-        else if ( cmdtab[ i ].exit_code )
+        else if ( exit_code )
             rstat = EXEC_CMD_FAIL;
         else
             rstat = EXEC_CMD_OK;
@@ -433,7 +435,7 @@ void exec_wait()
             null_if_empty( cmdtab[ i ].command ),
             null_if_empty( cmdtab[ i ].buffer_out ),
             null_if_empty( cmdtab[ i ].buffer_err ),
-            cmdtab[ i ].exit_reason );
+            exit_reason );
 
         /* Call the callback, may call back to jam rule land. Assume -p0 is in
          * effect so only pass buffer containing merged output.
@@ -455,8 +457,6 @@ void exec_wait()
         closeWinHandle( &cmdtab[ i ].pipe_err[ 1 ] );
         string_renew( cmdtab[ i ].buffer_out );
         string_renew( cmdtab[ i ].buffer_err );
-        cmdtab[ i ].exit_code = 0;
-        cmdtab[ i ].exit_reason = EXIT_OK;
     }
 }
 
@@ -917,8 +917,7 @@ static int try_kill_one()
                 close_alert( cmdtab[ i ].pi.hProcess );
                 /* We have a "runaway" job, kill it. */
                 kill_process_tree( 0, cmdtab[ i ].pi.hProcess );
-                /* And return it marked as a timeout. */
-                cmdtab[ i ].exit_reason = EXIT_TIMEOUT;
+                /* And return its running commands table slot. */
                 return i;
             }
         }
