@@ -83,11 +83,11 @@ static struct
     int      exit_reason;    /* termination status */
     int      action_length;  /* length of action string */
     int      target_length;  /* length of target string */
-    char   * action;         /* buffer to hold action and target invoked */
-    char   * target;         /* buffer to hold action and target invoked */
-    char   * command;        /* buffer to hold command being invoked */
-    char   * buffer[ 2 ];    /* buffer to hold stdout and stderr, if any */
-    int      buf_size[ 2 ];  /* size of buffer (bytes) */
+    char   * action;         /* buffer to hold the action name (if not quiet) */
+    char   * target;         /* buffer to hold the target name (if not quiet) */
+    char   * command;        /* buffer to hold the command */
+    char   * buffer[ 2 ];    /* buffers to hold stdout and stderr, if any */
+    int      buf_size[ 2 ];  /* buffer sizes in bytes */
     time_t   start_dt;       /* start of command timestamp */
 
     /* Function called when the command completes. */
