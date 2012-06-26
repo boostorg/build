@@ -112,6 +112,12 @@ static void closeWinHandle( HANDLE * const handle );
  */
 #define MAX_RAW_COMMAND_LENGTH 32766
 
+/* We hold handles for pipes used to communicate with child processes in two
+ * element arrays indexed as follows.
+ */
+#define EXECCMD_PIPE_READ 0
+#define EXECCMD_PIPE_WRITE 1
+
 static int intr_installed;
 
 
@@ -406,10 +412,10 @@ void exec_wait()
          */
         closeWinHandle( &cmdtab[ i ].pi.hProcess );
         closeWinHandle( &cmdtab[ i ].pi.hThread );
-        closeWinHandle( &cmdtab[ i ].pipe_out[ 0 ] );
-        closeWinHandle( &cmdtab[ i ].pipe_out[ 1 ] );
-        closeWinHandle( &cmdtab[ i ].pipe_err[ 0 ] );
-        closeWinHandle( &cmdtab[ i ].pipe_err[ 1 ] );
+        closeWinHandle( &cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ] );
+        closeWinHandle( &cmdtab[ i ].pipe_out[ EXECCMD_PIPE_WRITE ] );
+        closeWinHandle( &cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ] );
+        closeWinHandle( &cmdtab[ i ].pipe_err[ EXECCMD_PIPE_WRITE ] );
         string_renew( cmdtab[ i ].buffer_out );
         string_renew( cmdtab[ i ].buffer_err );
     }
@@ -436,41 +442,39 @@ static void invoke_cmd( char const * const command, int const slot )
     sa.lpSecurityDescriptor = &sd;
     sa.bInheritHandle = TRUE;
 
-    /* Create the stdout, which is also the merged out + err, pipe. */
-    if ( !CreatePipe( &cmdtab[ slot ].pipe_out[ 0 ],
-        &cmdtab[ slot ].pipe_out[ 1 ], &sa, 0 ) )
+    /* Create pipes for communicating with the child process. */
+    if ( !CreatePipe( &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_READ ],
+        &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ], &sa, 0 ) )
     {
         reportWindowsError( "CreatePipe" );
         exit( EXITBAD );
     }
-
-    /* Create the stderr pipe. */
-    if ( globs.pipe_action == 2 )
-    if ( !CreatePipe( &cmdtab[ slot ].pipe_err[ 0 ],
-        &cmdtab[ slot ].pipe_err[ 1 ], &sa, 0 ) )
+    if ( globs.pipe_action == 2 && !CreatePipe( &cmdtab[ slot ].pipe_err[
+        EXECCMD_PIPE_READ ], &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ],
+        &sa, 0 ) )
     {
         reportWindowsError( "CreatePipe" );
         exit( EXITBAD );
     }
 
     /* Set handle inheritance off for the pipe ends the parent reads from. */
-    SetHandleInformation( cmdtab[ slot ].pipe_out[ 0 ], HANDLE_FLAG_INHERIT, 0
-        );
+    SetHandleInformation( cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_READ ],
+        HANDLE_FLAG_INHERIT, 0 );
     if ( globs.pipe_action == 2 )
-    SetHandleInformation( cmdtab[ slot ].pipe_err[ 0 ], HANDLE_FLAG_INHERIT, 0
-        );
+        SetHandleInformation( cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_READ ],
+            HANDLE_FLAG_INHERIT, 0 );
 
     /* Hide the child window, if any. */
     si.dwFlags |= STARTF_USESHOWWINDOW;
     si.wShowWindow = SW_HIDE;
 
-    /* Set the child outputs to the pipes. */
+    /* Redirect the child's output streams to our pipes. */
     si.dwFlags |= STARTF_USESTDHANDLES;
-    si.hStdOutput = cmdtab[ slot ].pipe_out[ 1 ];
+    si.hStdOutput = cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ];
     if ( globs.pipe_action == 2 )
     {
         /* Pipe stderr to the action error output. */
-        si.hStdError = cmdtab[ slot ].pipe_err[ 1 ];
+        si.hStdError = cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ];
     }
     else if ( globs.pipe_action == 1 )
     {
@@ -480,7 +484,7 @@ static void invoke_cmd( char const * const command, int const slot )
     else
     {
         /* Pipe stderr to the action merged output. */
-        si.hStdError = cmdtab[ slot ].pipe_out[ 1 ];
+        si.hStdError = cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ];
     }
 
     /* Let the child inherit stdin, as some commands assume it is available. */
@@ -806,11 +810,13 @@ static void read_output()
     for ( i = 0; i < globs.jobs && i < MAXJOBS; ++i )
     {
         /* Read stdout data. */
-        if ( cmdtab[ i ].pipe_out[ 0 ] )
-            read_pipe( cmdtab[ i ].pipe_out[ 0 ], cmdtab[ i ].buffer_out );
+        if ( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ] )
+            read_pipe( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ],
+                cmdtab[ i ].buffer_out );
         /* Read stderr data. */
-        if ( cmdtab[ i ].pipe_err[ 0 ] )
-            read_pipe( cmdtab[ i ].pipe_err[ 0 ], cmdtab[ i ].buffer_err );
+        if ( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ] )
+            read_pipe( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ],
+                cmdtab[ i ].buffer_err );
     }
 }
 
