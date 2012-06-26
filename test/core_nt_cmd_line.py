@@ -34,20 +34,25 @@ def string_of_length(n):
     return " ".join(result)
 
 
-#   Boost Jam currently does not allow preparing actions with completly empty
-# content as it always requires at least a single whitespace after the opening
-# brace in order to satisfy.
+#   Boost Jam currently does not allow preparing actions with completely empty
+# content and always requires at least a single whitespace after the opening
+# brace in order to satisfy its Boost Jam language grammar rules.
 def test_raw_empty():
+    whitespace = "  \n\n\r\r\v\v\t\t   \t   \r\r   \n\n"
     t = BoostBuild.Tester("-d2 -d+4", pass_d0=False, pass_toolset=0,
         use_test_config=False)
     t.write("file.jam", """\
-actions do_empty { %s}
+actions do_empty {%s}
 JAMSHELL = %% ;
 do_empty all ;
-""" % ("  \n\n\r\r\v\v\t\t   \t   \r\r   \n\n"))
+""" % (whitespace))
     t.run_build_system("-ffile.jam")
-    t.expect_output_line("do_empty*", False)
+    t.expect_output_line("do_empty all")
     t.expect_output_line("Executing raw command directly", False)
+    if "\n%s\n" % whitespace not in t.stdout():
+        BoostBuild.annotation("failure", "Whitespace action content not found "
+            "on stdout.")
+        t.fail_test(1, dump_difference=False)
     t.cleanup()
 
 
