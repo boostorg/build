@@ -104,7 +104,7 @@ static struct
 
 int exec_check
 (
-    string * command,
+    string const * command,
     LIST * * pShell,
     int * error_length,
     int * error_max_length
@@ -141,8 +141,8 @@ void exec_cmd
     ExecCmdCallback func,
     void * closure,
     LIST * shell,
-    char const * action,
-    char const * target
+    char const * const action,
+    char const * const target
 )
 {
     int const slot = get_free_cmdtab_slot();
@@ -546,11 +546,11 @@ void exec_wait()
                     rstat = EXEC_CMD_OK;
 
                 /* Call the callback, may call back to jam rule land. Assume -p0
-                 * is in effect so only pass buffer[ 0 ] containing merged
+                 * is in effect so only pass buffer[ OUT ] containing merged
                  * output.
                  */
                 (*cmdtab[ i ].func)( cmdtab[ i ].closure, rstat, &time_info,
-                    cmdtab[ i ].command, cmdtab[ i ].buffer[ 0 ] );
+                    cmdtab[ i ].command, cmdtab[ i ].buffer[ OUT ] );
 
                 BJAM_FREE( cmdtab[ i ].buffer[ OUT ] );
                 cmdtab[ i ].buffer[ OUT ] = 0;
