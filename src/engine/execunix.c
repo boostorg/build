@@ -124,7 +124,7 @@ int exec_check
  */
 
 /* We hold file descriptors for pipes used to communicate with child processes
- * in a two element arrays indexed as follows.
+ * in two element arrays indexed as follows.
  */
 #define EXECCMD_PIPE_READ 0
 #define EXECCMD_PIPE_WRITE 1
@@ -168,8 +168,8 @@ void exec_cmd
             printf( "    argv[%d] = '%s'\n", i, argv[ i ] );
     }
 
-    /* Create pipes from child to parent. */
-    if ( pipe( out ) < 0 || pipe( err ) < 0 )
+    /* Create pipes for collecting child output. */
+    if ( pipe( out ) < 0 || ( globs.pipe_action && pipe( err ) < 0 ) )
     {
         perror( "pipe" );
         exit( EXITBAD );
@@ -200,7 +200,8 @@ void exec_cmd
 
     /* Child does not need the read pipe ends used by the parent. */
     fcntl( out[ EXECCMD_PIPE_READ ], F_SETFD, FD_CLOEXEC );
-    fcntl( err[ EXECCMD_PIPE_READ ], F_SETFD, FD_CLOEXEC );
+    if ( globs.pipe_action )
+        fcntl( err[ EXECCMD_PIPE_READ ], F_SETFD, FD_CLOEXEC );
 
     if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
@@ -220,7 +221,8 @@ void exec_cmd
         dup2( globs.pipe_action ? err[ EXECCMD_PIPE_WRITE ] :
             out[ EXECCMD_PIPE_WRITE ], STDERR_FILENO );
         close( out[ EXECCMD_PIPE_WRITE ] );
-        close( err[ EXECCMD_PIPE_WRITE ] );
+        if ( globs.pipe_action )
+            close( err[ EXECCMD_PIPE_WRITE ] );
 
         /* Make this process a process group leader so that when we kill it, all
          * child processes of this process are terminated as well. We use
@@ -245,17 +247,17 @@ void exec_cmd
     /******************/
     setpgid( cmdtab[ slot ].pid, cmdtab[ slot ].pid );
 
-    /* Close pipe write ends. */
+    /* Parent not need the write pipe ends used by the child. */
     close( out[ EXECCMD_PIPE_WRITE ] );
-    close( err[ EXECCMD_PIPE_WRITE ] );
+    if ( globs.pipe_action )
+        close( err[ EXECCMD_PIPE_WRITE ] );
 
-    /* Set both file descriptors to non-blocking. */
+    /* Set both pipe read file descriptors to non-blocking. */
     fcntl( out[ EXECCMD_PIPE_READ ], F_SETFL, O_NONBLOCK );
-    fcntl( err[ EXECCMD_PIPE_READ ], F_SETFL, O_NONBLOCK );
+    if ( globs.pipe_action )
+        fcntl( err[ EXECCMD_PIPE_READ ], F_SETFL, O_NONBLOCK );
 
-    /* Child writes stdout to out[ EXECCMD_PIPE_WRITE ], parent reads from
-     * out[ EXECCMD_PIPE_READ ].
-     */
+    /* Parent reads from out[ EXECCMD_PIPE_READ ]. */
     cmdtab[ slot ].fd[ OUT ] = out[ EXECCMD_PIPE_READ ];
     cmdtab[ slot ].stream[ OUT ] = fdopen( cmdtab[ slot ].fd[ OUT ], "rb" );
     if ( !cmdtab[ slot ].stream[ OUT ] )
@@ -264,9 +266,7 @@ void exec_cmd
         exit( EXITBAD );
     }
 
-    /* Child writes stderr to err[ EXECCMD_PIPE_WRITE ], parent reads from
-     * err[ EXECCMD_PIPE_READ ].
-     */
+    /* Parent reads from err[ EXECCMD_PIPE_READ ]. */
     if ( globs.pipe_action )
     {
         cmdtab[ slot ].fd[ ERR ] = err[ EXECCMD_PIPE_READ ];
@@ -277,8 +277,6 @@ void exec_cmd
             exit( EXITBAD );
         }
     }
-    else
-        close( err[ EXECCMD_PIPE_READ ] );
 
     /* Save input data into the selected running commands table slot. */
     cmdtab[ slot ].func = func;
