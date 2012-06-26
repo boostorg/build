@@ -35,6 +35,7 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
     cmd->rule = rule;
     cmd->shell = shell;
     cmd->next = 0;
+    cmd->noop = 0;
 
     lol_init( &cmd->args );
     lol_add( &cmd->args, targets );

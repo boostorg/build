@@ -116,7 +116,7 @@ int exec_check
      * know what they are going to do with such commands.
      */
     if ( !command->size && ( is_raw_cmd || list_empty( *pShell ) ) )
-        return EXEC_CHECK_SKIP;
+        return EXEC_CHECK_NOOP;
 
     return is_raw_cmd
         ? EXEC_CHECK_OK

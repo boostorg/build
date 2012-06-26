@@ -53,6 +53,7 @@ struct _cmd
     LIST * shell;     /* $(JAMSHELL) value */
     LOL    args;      /* LISTs for $(<), $(>) */
     string buf[ 1 ];  /* actual commands */
+    int    noop;      /* no-op commands should be faked instead of executed */
 };
 
 CMD * cmd_new

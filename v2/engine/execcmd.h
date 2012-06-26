@@ -52,7 +52,7 @@ int exec_check
 
 /* exec_check() return codes. */
 #define EXEC_CHECK_OK             101
-#define EXEC_CHECK_SKIP           102
+#define EXEC_CHECK_NOOP           102
 #define EXEC_CHECK_LINE_TOO_LONG  103
 #define EXEC_CHECK_TOO_LONG       104
 
