@@ -20,16 +20,12 @@ b all ;
 
 t.run_build_system("-ffile.jam -d0", stdout="")
 
-t.run_build_system("-ffile.jam -d1", stdout=
-"""...found 1 target...
-...updating 1 target...
-a all
-...updated 1 target...
-""")
+t.run_build_system("-ffile.jam -d1")
+t.expect_output_line("a all")
+t.expect_output_line("b all", False)
 
 t.run_build_system("-ffile.jam -d2")
-
-t.fail_test(t.stdout().find("a all") == -1)
-t.fail_test(t.stdout().find("b all") == -1)
+t.expect_output_line("a all")
+t.expect_output_line("b all")
 
 t.cleanup()
