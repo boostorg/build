@@ -557,15 +557,26 @@ static void make1c( state * pState )
             /* Increment the jobs running counter. */
             ++cmdsrunning;
 
-            /* Execute the actual build command. */
-            exec_cmd( cmd->buf, make_closure, t, cmd->shell, rule_name,
-                target_name );
-
-            /* Wait until under the concurrent command count limit. */
-            assert( 0 < globs.jobs );
-            assert( globs.jobs <= MAXJOBS );
-            while ( cmdsrunning >= globs.jobs )
-                exec_wait();
+            /* Execute the actual build command or fake it if no-op. */
+            if ( cmd->noop )
+            {
+                timing_info time_info = { 0 } ;
+                time_info.start = time_info.end = time( 0 );
+                out_action( rule_name, target_name, cmd->buf->value, "", "",
+                    EXIT_OK );
+                make_closure( t, EXEC_CMD_OK, &time_info, cmd->buf->value, "" );
+            }
+            else
+            {
+                exec_cmd( cmd->buf, make_closure, t, cmd->shell, rule_name,
+                    target_name );
+                    
+                /* Wait until under the concurrent command count limit. */
+                assert( 0 < globs.jobs );
+                assert( globs.jobs <= MAXJOBS );
+                while ( cmdsrunning >= globs.jobs )
+                    exec_wait();
+            }
         }
     }
     else
@@ -1076,9 +1087,10 @@ static CMD * make1cmds( TARGET * t )
                 {
                     accept_command = 1;
                 }
-                else if ( cmd_check_result == EXEC_CHECK_SKIP )
+                else if ( cmd_check_result == EXEC_CHECK_NOOP )
                 {
-                    /* Simply release the prepared command. */
+                    accept_command = 1;
+                    cmd->noop = 1;
                 }
                 else if ( ( actions->flags & RULE_PIECEMEAL ) && ( chunk > 1 ) )
                 {

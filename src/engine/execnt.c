@@ -226,7 +226,7 @@ int exec_check
         char const * s = command->value;
         while ( isspace( *s ) ) ++s;
         if ( !*s )
-            return EXEC_CHECK_SKIP;
+            return EXEC_CHECK_NOOP;
     }
 
     /* Check prerequisites for executing raw commands. */
@@ -246,7 +246,7 @@ int exec_check
             return EXEC_CHECK_TOO_LONG;
         }
         else
-            return raw_cmd_length ? EXEC_CHECK_OK : EXEC_CHECK_SKIP;
+            return raw_cmd_length ? EXEC_CHECK_OK : EXEC_CHECK_NOOP;
     }
 
     /* Now we know we are using an external shell. Note that there is no need to
