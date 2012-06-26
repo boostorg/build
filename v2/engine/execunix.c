@@ -300,7 +300,7 @@ void exec_cmd
  *  - cmdtab[ i ].fd    [ s ]
  */
 
-int read_descriptor( int i, int s )
+static int read_descriptor( int i, int s )
 {
     int ret;
     char buffer[ BUFSIZ ];
@@ -346,7 +346,7 @@ int read_descriptor( int i, int s )
  * close_streams() - Close the stream and pipe descriptor.
  */
 
-void close_streams( int const i, int const s )
+static void close_streams( int const i, int const s )
 {
     fclose( cmdtab[ i ].stream[ s ] );
     cmdtab[ i ].stream[ s ] = 0;
@@ -356,7 +356,7 @@ void close_streams( int const i, int const s )
 }
 
 
-void populate_file_descriptors( int * const fmax, fd_set * const fds )
+static void populate_file_descriptors( int * const fmax, fd_set * const fds )
 {
     int i;
     int fd_max = 0;
@@ -461,7 +461,7 @@ void exec_wait()
 
                 /* Close the stream and pipe descriptors. */
                 close_streams( i, OUT );
-                if ( globs.pipe_action != 0 )
+                if ( globs.pipe_action )
                     close_streams( i, ERR );
 
                 /* Reap the child and release resources. */
