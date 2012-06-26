@@ -971,6 +971,7 @@ static void swap_settings
 static CMD * make1cmds( TARGET * t )
 {
     CMD * cmds = 0;
+    CMD * * cmds_next = &cmds;
     LIST * shell = L0;
     module_t * settings_module = 0;
     TARGET * settings_target = 0;
@@ -1112,9 +1113,8 @@ static CMD * make1cmds( TARGET * t )
                 if ( accept_command )
                 {
                     /* Chain it up. */
-                    if ( !cmds ) cmds = cmd;
-                    else cmds->tail->next = cmd;
-                    cmds->tail = cmd;
+                    *cmds_next = cmd;
+                    cmds_next = &cmd->next;
 
                     /* Mark lists we need recreated for the next command since
                      * they got consumed by the cmd object.
