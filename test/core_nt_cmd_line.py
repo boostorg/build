@@ -96,7 +96,11 @@ actions do_echo
 JAMSHELL = %% ;
 do_echo all ;
 """ % (cmd_prefix, string_of_length(data_length), cmd_suffix))
-    t.run_build_system("-ffile.jam", status=1 if error else 0)
+    if error:
+        expected_status = 1
+    else:
+        expected_status = 0
+    t.run_build_system("-ffile.jam", status=expected_status)
     if error:
         t.expect_output_line("Executing raw command directly", False)
         t.expect_output_line("do_echo action is too long (%d, max 32766):" % n)
