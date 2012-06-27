@@ -114,11 +114,11 @@ class res-scanner : scanner
         local quoted = [ regex.transform $(matches) : "#include[ ]*\"([^\"]+)\"" ] ;
         local res = [ regex.transform $(matches) : "[^ ]+[ ]+(BITMAP|CURSOR|FONT|ICON|MESSAGETABLE|RT_MANIFEST)[ ]+(([^ \"]+)|\"([^\"]+)\")" : 3 4 ] ;
 
-        # Icons and other includes may referenced as
+        # Icons and other includes may be referenced as
         #
         # IDR_MAINFRAME ICON "res\\icon.ico"
         #
-        # so we have to replace double backslashes to single ones.
+        # so we have to replace double backslashes with single ones.
         res = [ regex.replace-list $(res) : "\\\\\\\\" : "/" ] ;
 
         # CONSIDER: the new scoping rules seem to defeat "on target" variables.
