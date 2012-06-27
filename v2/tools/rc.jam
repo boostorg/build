@@ -138,14 +138,12 @@ class res-scanner : scanner
         quoted = $(quoted:G=$(g2)) ;
         res = $(res:G=$(g2)) ;
 
-        local all = $(angle) $(quoted) ;
+        local all = $(angle) $(quoted) $(res) ;
 
         INCLUDES $(target) : $(all) ;
-        INCLUDES $(target) : $(res) ;
-        NOCARE $(all) $(res) ;
+        NOCARE $(all) ;
         SEARCH on $(angle) = $(self.includes:G=) ;
-        SEARCH on $(quoted) = $(b) $(self.includes:G=) ;
-        SEARCH on $(res) = $(b) $(self.includes:G=) ;
+        SEARCH on $(quoted) $(res) = $(b) $(self.includes:G=) ;
 
         # Just propagate the current scanner to includes, in hope that includes
         # do not change scanners.
