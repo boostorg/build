@@ -239,14 +239,12 @@ def _getJamVersionInfo(t):
         re.MULTILINE):
         name = m.group(1)
         value = m.group(2)
-        if value:
-            assert len(value) > 2
-            assert value[0] == "'"
-            assert value[-2] == "'"
-            assert value[-1] == " "
+        if not value:
+            value = []
+        elif len(value) > 2 and value[0] == "'" and value[-2:] == "' ":
             value = value[1:-2].split("' '")
         else:
-            value = []
+            value = "RAW:/%s/ (%d)" % (value, len(value))
         result.append("%s = %s" % (name, value))
     result.append("")
 
