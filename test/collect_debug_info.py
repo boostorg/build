@@ -23,7 +23,6 @@ import sys
 def collectDebugInfo():
     t = _init()
 
-    dummyVars = ["WOOF_WOOFIE_%d" % x for x in xrange(4)]
     global tag
 
     tag = "Python version"
@@ -67,6 +66,9 @@ def _collect(results, prefix, name, t):
 
 
 def _collectDebugInfo_environ(t):
+    dummyVars = ["WOOF_WOOFIE_%d" % x for x in xrange(4)]
+    global tag
+
     tag = "XXX in os.environ"
     try:
         def f(name):
