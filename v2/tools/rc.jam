@@ -34,9 +34,9 @@ rule init ( )
 #
 # Even though the arguments are all optional, only when a command, condition,
 # and at minimum the rc-type option are given will the command be configured.
-# This is so that callers don't have to check auto-configuration values
-# before calling this. And still get the functionality of build failures when
-# the resource compiler can't be found.
+# This is so that callers don't have to check auto-configuration values before
+# calling this. And still get the functionality of build failures when the
+# resource compiler can not be found.
 #
 rule configure ( command ? : condition ? : options * )
 {
@@ -77,13 +77,13 @@ actions quietly compile.resource.null
     as /dev/null -o "$(<)"
 }
 
-# Since it's a common practice to write
+# Since it is common practice to write
 # exe hello : hello.cpp hello.rc
 # we change the name of object created from RC file, to
 # avoid conflict with hello.cpp.
 # The reason we generate OBJ and not RES, is that gcc does not
 # seem to like RES files, but works OK with OBJ.
-# See http://article.gmane.org/gmane.comp.lib.boost.build/5643/
+# See http://article.gmane.org/gmane.comp.lib.boost.build/5643
 #
 # Using 'register-c-compiler' adds the build directory to INCLUDES
 generators.register-c-compiler rc.compile.resource : RC : OBJ(%_res) ;
@@ -126,11 +126,12 @@ class res-scanner : scanner
         local b = [ NORMALIZE_PATH $(binding:D) ] ;
 
         # Attach binding of including file to included targets. When a target is
-        # directly created from virtual target this extra information is
+        # directly created from a virtual target this extra information is
         # unnecessary. But in other cases, it allows us to distinguish between
         # two headers of the same name included from different places. We do not
         # need this extra information for angle includes, since they should not
-        # depend on including file (we can not get literal "." in include path).
+        # depend on the including file (we can not get literal "." in the
+        # include path).
         local g2 = $(g)"#"$(b) ;
 
         angle = $(angle:G=$(g)) ;
