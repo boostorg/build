@@ -141,7 +141,7 @@ class res-scanner : scanner
         local all = $(angle) $(quoted) ;
 
         INCLUDES $(target) : $(all) ;
-        DEPENDS $(target) : $(res) ;
+        INCLUDES $(target) : $(res) ;
         NOCARE $(all) $(res) ;
         SEARCH on $(angle) = $(self.includes:G=) ;
         SEARCH on $(quoted) = $(b) $(self.includes:G=) ;
