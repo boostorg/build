@@ -148,6 +148,8 @@ class res-scanner : scanner
         # Just propagate the current scanner to includes, in hope that includes
         # do not change scanners.
         scanner.propagate $(__name__) : $(angle) $(quoted) : $(target) ;
+
+        ISFILE $(all) ;
     }
 }
 
