@@ -38,6 +38,35 @@ def collectDebugInfo():
     except:
         _info_exc()
 
+    tag = "Boost Jam/Build version"
+    try:
+        _infoX(_getJamVersionInfo(t))
+    except:
+        _info_exc()
+
+    #_collectDebugInfo_environ()
+
+    # Report prepared annotations.
+    t.fail_test(1, dump_difference=False, dump_stdio=False, dump_stack=False)
+
+
+###############################################################################
+#
+# Private interface.
+#
+###############################################################################
+
+def _collect(results, prefix, name, t):
+    results.append("%s - %s - os.getenv(): %r" % (prefix, name, os.getenv(
+        name)))
+    results.append("%s - %s - os.environ.get(): %r" % (prefix, name,
+        os.environ.get(name)))
+    external_values = _getExternalValues(t, name)
+    results.append("%s - %s - external: %r" % (prefix, name,
+        external_values[name]))
+
+
+def _collectDebugInfo_environ(t):
     tag = "XXX in os.environ"
     try:
         def f(name):
@@ -187,36 +216,50 @@ def collectDebugInfo():
     except:
         _info_exc()
 
-    # Report prepared annotations.
-    t.fail_test(1, dump_difference=False, dump_stdio=False, dump_stack=False)
-
-
-###############################################################################
-#
-# Private interface.
-#
-###############################################################################
-
-def _collect(results, prefix, name, t):
-    results.append("%s - %s - os.getenv(): %r" % (prefix, name, os.getenv(
-        name)))
-    results.append("%s - %s - os.environ.get(): %r" % (prefix, name,
-        os.environ.get(name)))
-    external_values = _getExternalValues(t, name)
-    results.append("%s - %s - external: %r" % (prefix, name,
-        external_values[name]))
-
 
 def _getExternalValues(t, *args):
-    t.run_build_system(" ".join("--var-name=%s" % x for x in args))
+    t.run_build_system(" ".join("---var-name=%s" % x for x in args))
     result = dict()
     for x in args:
-        m = re.search(r"^\*\*\* %s: '(.*)' \*\*\*$" % x, t.stdout(),
+        m = re.search(r"^\*\*\*ENV\*\*\* %s: '(.*)' \*\*\*$" % x, t.stdout(),
             re.MULTILINE)
         if m:
             result[x] = m.group(1)
         else:
             result[x] = None
+    return result
+
+
+def _getJamVersionInfo(t):
+    result = []
+
+    # JAM version variables.
+    t.run_build_system("---version")
+    for m in re.finditer(r"^\*\*\*VAR\*\*\* (.*): (.*)\*\*\*$", t.stdout(),
+        re.MULTILINE):
+        name = m.group(1)
+        value = m.group(2)
+        if value:
+            assert len(value) > 2
+            assert value[0] == "'"
+            assert value[-2] == "'"
+            assert value[-1] == " "
+            value = value[1:-2].split("' '")
+        else:
+            value = []
+        result.append("%s = %s" % (name, value))
+    result.append("")
+
+    # bjam -v output.
+    t.run_build_system("-v")
+    result.append("--- output for 'bjam -v' ---")
+    result.append(t.stdout())
+
+    # bjam --version output.
+    t.run_build_system("--version", status=1)
+    result.append("--- output for 'bjam --version' ---")
+    result.append(t.stdout())
+
     return result
 
 
@@ -243,11 +286,20 @@ def init(): pass
 
     t.write("jamroot.jam", """\
 import os ;
-local names = [ MATCH ^--var-name=(.*) : [ modules.peek : ARGV ] ] ;
+.argv = [ modules.peek : ARGV ] ;
+local names = [ MATCH ^---var-name=(.*) : $(.argv) ] ;
 for x in $(names)
 {
     value = [ os.environ $(x) ] ;
-    ECHO *** $(x): '$(value)' *** ;
+    ECHO ***ENV*** $(x): '$(value)' *** ;
+}
+if ---version in $(.argv)
+{
+    for x in JAMVERSION JAM_VERSION JAMUNAME
+    {
+        v = [ modules.peek : $(x) ] ;
+        ECHO ***VAR*** $(x): '$(v)' *** ;
+    }
 }
 """)
 
