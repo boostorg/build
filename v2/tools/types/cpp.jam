@@ -37,7 +37,7 @@ class c-scanner : scanner
         local quoted = [ regex.transform $(matches) : "\"(.*)\"" ] ;
         quoted = [ sequence.transform path.native : $(quoted) ] ;
 
-        # CONSIDER: the new scoping rule seem to defeat "on target" variables.
+        # CONSIDER: the new scoping rules seem to defeat "on target" variables.
         local g = [ on $(target) return $(HDRGRIST) ] ;
         local b = [ NORMALIZE_PATH $(binding:D) ] ;
 
@@ -59,7 +59,7 @@ class c-scanner : scanner
         SEARCH on $(angle) = $(self.includes:G=) ;
         SEARCH on $(quoted) = $(b) $(self.includes:G=) ;
 
-        # Just propagate the current scanner to includes in hope that includes
+        # Just propagate the current scanner to includes, in hope that includes
         # do not change scanners.
         scanner.propagate $(__name__) : $(angle) $(quoted) : $(target) ;
 
