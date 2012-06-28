@@ -278,7 +278,7 @@ rule get-invocation-command-nodefault ( toolset : tool :
         command = [ check-tool $(user-provided-command) ] ;
         if ! $(command) && $(.debug-configuration)
         {
-            ECHO warning: toolset $(toolset) initialization:;
+            ECHO warning: toolset $(toolset) initialization: ;
             ECHO warning: can not find user-provided command
                 '$(user-provided-command)' ;
             ECHO warning: initialized from [ errors.nearest-user-location ] ;
