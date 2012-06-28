@@ -540,7 +540,7 @@ else
     actions manifest.dll
     {
         if test -e "$(<[1]).manifest"; then
-          $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
+            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
         fi
     }    
 }
