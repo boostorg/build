@@ -16,7 +16,10 @@ def included_resource_newer_than_rc_script():
     to be considered old and force all of its dependents to rebuild.
 
     """
-    t = BoostBuild.Tester("-d1", pass_d0=False)
+    # Temporarily added the --debug-configuration flag to help with debugging
+    # some detected test failures on different remote Boost library test
+    # runners.
+    t = BoostBuild.Tester("-d1 --debug-configuration", pass_d0=False)
 
     t.write("jamroot.jam", """\
 ECHO {{{ [ modules.peek : XXX ] [ modules.peek : NOEXEC ] }}} ;
