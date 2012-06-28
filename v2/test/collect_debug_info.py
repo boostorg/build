@@ -55,6 +55,9 @@ def collectDebugInfo():
 #
 ###############################################################################
 
+varSeparator = "###$^%~~~"
+
+
 def _collect(results, prefix, name, t):
     results.append("%s - %s - os.getenv(): %r" % (prefix, name, os.getenv(
         name)))
@@ -237,16 +240,16 @@ def _getJamVersionInfo(t):
 
     # JAM version variables.
     t.run_build_system("---version")
-    for m in re.finditer(r"^\*\*\*VAR\*\*\* (.*): (.*)\*\*\*$", t.stdout(),
+    for m in re.finditer(r"^\*\*\*VAR\*\*\* ([^:]*): (.*)\*\*\*$", t.stdout(),
         re.MULTILINE):
         name = m.group(1)
         value = m.group(2)
         if not value:
             value = []
-        elif len(value) > 2 and value[0] == "'" and value[-2:] == "' ":
-            value = value[1:-2].split("' '")
+        elif value[-1] == ' ':
+            value = value[:-1].split(varSeparator)
         else:
-            value = "RAW:/%s/ (%d)" % (value, len(value))
+            value = "!!!INVALID!!! - '%s'" % value
         result.append("%s = %s" % (name, value))
     result.append("")
 
@@ -298,10 +301,10 @@ if ---version in $(.argv)
     for x in JAMVERSION JAM_VERSION JAMUNAME
     {
         v = [ modules.peek : $(x) ] ;
-        ECHO ***VAR*** $(x): '$(v)' *** ;
+        ECHO ***VAR*** $(x): "$(v:J=%s)" *** ;
     }
 }
-""")
+""" % varSeparator)
 
     return t
 
