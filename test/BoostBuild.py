@@ -353,7 +353,9 @@ class Tester(TestCmd.TestCmd):
             os.makedirs(os.path.dirname(nfile))
         except Exception, e:
             pass
-        open(nfile, "wb").write(content)
+        f = open(nfile, "wb")
+        f.write(content)
+        f.close()
 
     def rename(self, old, new):
         try:
@@ -559,7 +561,10 @@ class Tester(TestCmd.TestCmd):
                 openMode += "b"
             else:
                 openMode += "U"
-            return open(name, openMode).read()
+            f = open(name, openMode)
+            result = f.read()
+            f.close()
+            return result
         except:
             annotation("failure", "Could not open '%s'" % name)
             self.fail_test(1)
@@ -570,6 +575,7 @@ class Tester(TestCmd.TestCmd):
             return ''
         f = open(self.glob_file(name), "rb")
         lines = f.readlines()
+        f.close()
         result = string.join(map(string.rstrip, lines), "\n")
         if lines and lines[-1][-1] != '\n':
             return result + '\n'
@@ -797,8 +803,12 @@ class Tester(TestCmd.TestCmd):
         if os.environ.get("DO_DIFF"):
             e = tempfile.mktemp("expected")
             a = tempfile.mktemp("actual")
-            open(e, "w").write(expected)
-            open(a, "w").write(actual)
+            f = open(e, "w")
+            f.write(expected)
+            f.close()
+            f = open(a, "w")
+            f.write(actual)
+            f.close()
             print("DIFFERENCE")
             # Current diff should return 1 to indicate 'different input files'
             # but some older diff versions may return 0 and depending on the
