@@ -579,8 +579,7 @@ class Tester(TestCmd.TestCmd):
         result = string.join(map(string.rstrip, lines), "\n")
         if lines and lines[-1][-1] != '\n':
             return result + '\n'
-        else:
-            return result
+        return result
 
     def fail_test(self, condition, dump_difference=True, dump_stdio=True,
         dump_stack=True):
