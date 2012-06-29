@@ -235,8 +235,10 @@ local rule load-config ( module-name : filename : path + : must-find ? )
 {
     if $(.debug-config)
     {
-        ECHO notice: Searching $(path) for $(module-name) configuration file
-            $(filename) . ;
+        local path-string = $(path) ;
+        if $(path-string) = "" { path-string = . ; }
+        ECHO notice: Searching '$(path-string)' for $(module-name)
+            configuration file '$(filename)'. ;
     }
     local where = [ GLOB $(path) : $(filename) ] ;
     if $(where)
@@ -244,8 +246,11 @@ local rule load-config ( module-name : filename : path + : must-find ? )
         where = [ NORMALIZE_PATH $(where[1]) ] ;
         if $(.debug-config)
         {
-            ECHO notice: Loading $(module-name) configuration file $(filename)
-                from $(where) . ;
+            local where-string = $(where:D) ;
+            if $(where-string) = "" { where-string = . ; }
+            where-string = '$(where-string)' ;
+            ECHO notice: Loading $(module-name) configuration file '$(filename)'
+                from $(where-string:J=" "). ;
         }
 
         # Set source location so that path-constant in config files with
@@ -256,19 +261,20 @@ local rule load-config ( module-name : filename : path + : must-find ? )
         modules.load $(module-name) : $(filename) : $(path) ;
         project.load-used-projects $(module-name) ;
     }
-    else
+    else if $(must-find) || $(.debug-config)
     {
+        local path-string = $(path) ;
+        if $(path-string) = "" { path-string = . ; }
+        path-string = '$(path-string)' ;
+        path-string = $(path-string:J=" ") ;
         if $(must-find)
         {
             import errors ;
-            errors.user-error Configuration file $(filename) not found "in"
-                $(path) . ;
+            errors.user-error Configuration file '$(filename)' not found "in"
+                $(path-string). ;
         }
-        if $(.debug-config)
-        {
-            ECHO notice: Configuration file $(filename) not found "in" $(path) .
-                ;
-        }
+        ECHO notice: Configuration file '$(filename)' not found "in"
+            $(path-string). ;
     }
     return $(where) ;
 }
