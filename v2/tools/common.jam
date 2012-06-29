@@ -370,7 +370,6 @@ rule find-tool ( name : additional-paths * : path-last ? )
     }
 }
 
-
 # Checks if 'command' can be found either in path or is a full name to an
 # existing file.
 #

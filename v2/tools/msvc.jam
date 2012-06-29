@@ -261,7 +261,7 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : /MACHINE:X64 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : /MACHINE:X86 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
-        
+
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest>off : /MANIFEST ;
@@ -356,15 +356,19 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #
 # WARNING: Synchronize any changes this in action with intel-win
 #
-# Notes regarding PDB generation, for when we use <debug-symbols>on/<debug-store>database
+# Notes regarding PDB generation, for when we use
+# <debug-symbols>on/<debug-store>database:
 #
-# 1. PDB_CFLAG is only set for <debug-symbols>on/<debug-store>database, ensuring that the /Fd flag is dropped if PDB_CFLAG is empty
+# 1. PDB_CFLAG is only set for <debug-symbols>on/<debug-store>database, ensuring
+#    that the /Fd flag is dropped if PDB_CFLAG is empty.
 #
-# 2. When compiling executables's source files, PDB_NAME is set on a per-source file basis by rule compile-c-c++. 
-#    The linker will pull these into the executable's PDB
+# 2. When compiling executables's source files, PDB_NAME is set on a per-source
+#    file basis by rule compile-c-c++. The linker will pull these into the
+#    executable's PDB.
 #
-# 3. When compiling library's source files, PDB_NAME is updated to <libname>.pdb for each source file by rule archive, 
-#    as in this case the compiler must be used to create a single PDB for our library.
+# 3. When compiling library's source files, PDB_NAME is updated to <libname>.pdb
+#    for each source file by rule archive, as in this case compiler must be used
+#    to create a single PDB for our library.
 #
 actions compile-c-c++ bind PDB_NAME
 {
@@ -466,18 +470,18 @@ actions compile.rc
 rule link ( targets + : sources * : properties * )
 {
     if <embed-manifest>on in $(properties)
-    {        
+    {
         msvc.manifest $(targets) : $(sources) : $(properties) ;
-    }    
+    }
 }
 
 rule link.dll ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     if <embed-manifest>on in $(properties)
-    {        
+    {
         msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
-    }    
+    }
 }
 
 # Incremental linking a DLL causes no end of problems: if the actual exports do
@@ -497,14 +501,14 @@ if [ os.name ] in NT
         $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
-    
+
     actions manifest
-    {        
+    {
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
     }
-    
+
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
@@ -512,49 +516,51 @@ if [ os.name ] in NT
     }
 
     actions manifest.dll
-    {        
+    {
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
-    }    
+    }
 }
 else
-{        
+{
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 
     actions manifest
-    {        
+    {
         if test -e "$(<[1]).manifest"; then
             $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
         fi
     }
-    
+
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
-    
+
     actions manifest.dll
     {
         if test -e "$(<[1]).manifest"; then
             $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
         fi
-    }    
+    }
 }
 
-# this rule sets up the pdb file that will be used when generating static 
-# libraries and the debug-store option is database, so that the compiler 
-# puts all debug info into a single .pdb file named after the library
+# This rule sets up the pdb file that will be used when generating static
+# libraries and the debug-store option is database, so that the compiler puts
+# all the debug info into a single .pdb file named after the library.
 #
-# Poking at source targets this way is probably not clean, but it's the
+# Poking at source targets this way is probably not clean, but it is the
 # easiest approach.
+#
 rule archive ( targets + : sources * : properties * )
 {
     PDB_NAME on $(>) = $(<:S=.pdb) ;
 }
+
 
 ################################################################################
 #
@@ -797,9 +803,9 @@ local rule configure-really ( version ? : options * )
             # toolset version.
             command = [ common.get-absolute-tool-path $(command[-1]) ] ;
         }
-        
+
         if $(command)
-        {            
+        {
             local parent = [ path.make $(command) ] ;
             parent = [ path.parent $(parent) ] ;
             parent = [ path.native $(parent) ] ;
@@ -937,8 +943,9 @@ local rule configure-really ( version ? : options * )
 
         manifest-tool = [ feature.get-values <manifest-tool> : $(options) ] ;
         manifest-tool ?= mt ;
-        
-        local cc-filter = [ feature.get-values <compiler-filter> : $(options) ] ;
+
+        local cc-filter = [ feature.get-values <compiler-filter> : $(options) ]
+            ;
 
         for local c in $(cpu)
         {
@@ -1064,16 +1071,19 @@ class msvc-linking-generator : linking-generator
         {
             local name-main = [ $(result[0]).name ] ;
             local action = [ $(result[0]).action ] ;
-            
+
             if [ $(property-set).get <debug-symbols> ] = "on"
-            {		 
-                # We force exact name on PDB. The reason is tagging -- the tag rule may
-                # reasonably special case some target types, like SHARED_LIB. The tag rule
-                # will not catch PDB, and it cannot even easily figure if PDB is paired with
-                # SHARED_LIB or EXE or something else. Because PDB always get the
-                # same name as the main target, with .pdb as extension, just force it.
-                local target = [ class.new file-target $(name-main:S=.pdb) exact : PDB : $(project) : $(action) ] ;
-                local registered-target = [ virtual-target.register $(target) ] ;
+            {
+                # We force the exact name on PDB. The reason is tagging -- the
+                # tag rule may reasonably special case some target types, like
+                # SHARED_LIB. The tag rule will not catch PDBs, and it cannot
+                # even easily figure out if a PDB is paired with a SHARED_LIB,
+                # EXE or something else. Because PDBs always get the same name
+                # as the main target, with .pdb as extension, just force it.
+                local target = [ class.new file-target $(name-main:S=.pdb) exact
+                    : PDB : $(project) : $(action) ] ;
+                local registered-target = [ virtual-target.register $(target) ]
+                    ;
                 if $(target) != $(registered-target)
                 {
                     $(action).replace-targets $(target) : $(registered-target) ;
@@ -1083,11 +1093,14 @@ class msvc-linking-generator : linking-generator
 
             if [ $(property-set).get <embed-manifest> ] = "off"
             {
-                # Manifest is evil target. It has .manifest appened to the name of 
-                # main target, including extension. E.g. a.exe.manifest. We use 'exact'
-                # name because to achieve this effect.
-                local target = [ class.new file-target $(name-main).manifest exact : MANIFEST : $(project) : $(action) ] ;
-                local registered-target = [ virtual-target.register $(target) ] ;
+                # Manifest is an evil target. It has .manifest appened to the
+                # name of the main target, including extension, e.g.
+                # a.exe.manifest. We use the 'exact' name to achieve this
+                # effect.
+                local target = [ class.new file-target $(name-main).manifest
+                    exact : MANIFEST : $(project) : $(action) ] ;
+                local registered-target = [ virtual-target.register $(target) ]
+                    ;
                 if $(target) != $(registered-target)
                 {
                     $(action).replace-targets $(target) : $(registered-target) ;
@@ -1132,10 +1145,11 @@ local rule register-toolset-really ( )
         # TODO: Is it possible to combine these? Make the generators
         # non-composing so that they do not convert each source into a separate
         # .rsp file.
-        generators.register [ new msvc-linking-generator 
-            msvc.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ] ;
-        generators.register [ new msvc-linking-generator 
-            msvc.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>msvc ] ;
+        generators.register [ new msvc-linking-generator msvc.link :
+            OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ] ;
+        generators.register [ new msvc-linking-generator msvc.link.dll :
+            OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB :
+            <toolset>msvc ] ;
 
         generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
@@ -1289,7 +1303,8 @@ local rule register-configuration ( version : path ? )
         {
             if $(.debug-configuration)
             {
-                ECHO "notice: [msvc-cfg] msvc-$(version) detected, command: '$(command)'" ;
+                ECHO notice: [msvc-cfg] msvc-$(version) detected, command:
+                    '$(command)' ;
             }
 
             $(.versions).register $(version) ;
@@ -1355,7 +1370,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 
 # Known toolset versions, in order of preference.
-.known-versions = 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1 7.1toolkit 7.0 6.0 ;
+.known-versions = 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+    7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
 .version-alias-6 = 6.0 ;

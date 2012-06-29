@@ -78,12 +78,11 @@ actions quietly compile.resource.null
 }
 
 # Since it is common practice to write
-# exe hello : hello.cpp hello.rc
-# we change the name of object created from RC file, to
-# avoid conflict with hello.cpp.
-# The reason we generate OBJ and not RES, is that gcc does not
-# seem to like RES files, but works OK with OBJ.
-# See http://article.gmane.org/gmane.comp.lib.boost.build/5643
+#   exe hello : hello.cpp hello.rc
+# we change the name of object created from RC file, to avoid conflict with
+# hello.cpp. The reason we generate OBJ and not RES, is that gcc does not seem
+# to like RES files, but works OK with OBJ (see
+# http://article.gmane.org/gmane.comp.lib.boost.build/5643).
 #
 # Using 'register-c-compiler' adds the build directory to INCLUDES
 generators.register-c-compiler rc.compile.resource : RC : OBJ(%_res) ;
@@ -99,7 +98,6 @@ class res-scanner : scanner
     rule __init__ ( includes * )
     {
         scanner.__init__ ;
-
         self.includes = $(includes) ;
     }
 
