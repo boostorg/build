@@ -16,11 +16,39 @@ def included_resource_newer_than_rc_script():
     to be considered old and force all of its dependents to rebuild.
 
     """
-    # Temporarily added the --debug-configuration flag to help with debugging
-    # some detected test failures on different remote Boost library test
-    # runners.
-    t = BoostBuild.Tester("-d1 --debug-configuration", pass_d0=False)
+    toolsetName = "__myDummyResourceCompilerToolset__"
 
+    # We pass the -d4 flag just so we can get additional information in case
+    # this test fails. In the past we had a testing system issue causing this
+    # test to fail sporadically and -d3 output was instrumental in catching the
+    # reason for this (a touched file's timestamp was not as new as it should
+    # have been).
+    t = BoostBuild.Tester("-d4", pass_d0=False, pass_toolset=False,
+        use_test_config=False, translate_suffixes=False)
+
+    # Prepare a dummy toolset so we do not get errors in case the default one
+    # is not found and that we can test rc.jam functionality without having to
+    # depend on the externally specified toolset actually supporting it.
+    t.write(toolsetName + ".jam", """\
+import feature ;
+import rc ;
+local toolset-name = "%s" ;
+feature.extend toolset : $(toolset-name) ;
+rule init ( ) { }
+rc.configure dummy-rc-command : <toolset>$(toolset-name) : <rc-type>dummy ;
+module rc
+{
+    rule compile.resource.dummy ( targets * : sources * : properties * )
+    {
+        import common ;
+        .TOUCH on $(targets) = [ common.file-touch-command ] ;
+    }
+    actions compile.resource.dummy { $(.TOUCH) "$(<)" }
+}
+""" % toolsetName)
+
+    # Prepare project source files.
+    t.write("project-config.jam", "using %s ;\n" % toolsetName)
     t.write("jamroot.jam", """\
 ECHO {{{ [ modules.peek : XXX ] [ modules.peek : NOEXEC ] }}} ;
 obj xxx : xxx.rc ;
@@ -28,17 +56,15 @@ obj xxx : xxx.rc ;
     t.write("xxx.rc", '1 MESSAGETABLE "xxx.bin"\n')
     t.write("xxx.bin", "foo")
 
-    output_line = "*%s*" % t.adjust_suffix("xxx_res.obj")
-
     def test1(n, expect, noexec=False):
         params = "-sXXX=%d" % n
         if noexec:
             params += " -n -sNOEXEC=NOEXEC"
         t.run_build_system(params)
         t.expect_output_line("*NOEXEC*", noexec)
-        t.expect_output_line(output_line, expect)
+        t.expect_output_line("compile.resource.dummy *xxx_res.obj", expect)
         if expect and not noexec:
-            expect("bin/$toolset/debug/xxx_res.obj")
+            expect("bin/%s/debug/xxx_res.obj" % toolsetName)
         t.expect_nothing_more()
 
     def test(n, expect):
