@@ -221,7 +221,6 @@ class Tester(TestCmd.TestCmd):
             raise ("Parameter workdir <%s> must point to an absolute "
                 "directory: " % workdir)
 
-        self.last_build_time_start = 0
         self.last_build_time_finish = 0
         self.translate_suffixes = translate_suffixes
         self.use_test_config = use_test_config
@@ -372,7 +371,6 @@ class Tester(TestCmd.TestCmd):
         self.touch(new)
 
     def copy(self, src, dst):
-        self.wait_for_time_change_since_last_build()
         try:
             self.write(dst, self.read(src, 1))
         except:
@@ -397,10 +395,7 @@ class Tester(TestCmd.TestCmd):
         if names == ["."]:
             # If we are deleting the entire workspace, there is no need to wait
             # for a clock tick.
-            self.last_build_time_start = 0
             self.last_build_time_finish = 0
-
-        self.wait_for_time_change_since_last_build()
 
         # Avoid attempts to remove the current directory.
         os.chdir(self.original_workdir)
@@ -441,7 +436,7 @@ class Tester(TestCmd.TestCmd):
         status=0, match=None, pass_toolset=None, use_test_config=None,
         ignore_toolset_requirements=None, expected_duration=None, **kw):
 
-        self.last_build_time_start = time.time()
+        build_time_start = time.time()
 
         try:
             if os.path.isabs(subdir):
@@ -484,6 +479,7 @@ class Tester(TestCmd.TestCmd):
                 self.dump_stdio()
                 raise
         finally:
+            old_last_build_time_finish = self.last_build_time_finish
             self.last_build_time_finish = time.time()
 
         if (status != None) and _failed(self, status):
@@ -520,7 +516,7 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1, dump_stdio=False)
 
         if not expected_duration is None:
-            actual_duration = self.last_build_time_finish - self.last_build_time_start
+            actual_duration = self.last_build_time_finish - build_time_start
             if actual_duration > expected_duration:
                 print "Test run lasted %f seconds while it was expected to " \
                     "finish in under %f seconds." % (actual_duration,
@@ -530,9 +526,11 @@ class Tester(TestCmd.TestCmd):
         self.tree = tree.build_tree(self.workdir)
         self.difference = tree.trees_difference(self.previous_tree, self.tree)
         if self.difference.empty():
-            # If nothing was changed, there's no need to wait
-            self.last_build_time_start = 0
-            self.last_build_time_finish = 0
+            # If nothing has been changed by this build and sufficient time has
+            # passed since the last build that actually changed something,
+            # there may be no need to wait for touched or newly created files
+            # to get newer timestamps than the currently existing ones.
+            self.last_build_time_finish = old_last_build_time_finish
         self.difference.ignore_directories()
         self.unexpected_difference = copy.deepcopy(self.difference)
 
