@@ -8,18 +8,17 @@
 import BoostBuild
 
 
-################################################################################
+###############################################################################
 #
 # test_alias_rule()
 # -----------------
 #
-################################################################################
+###############################################################################
 
 def test_alias_rule(t):
-    """Basic alias rule test.
-    """
+    """Basic alias rule test."""
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 exe a : a.cpp ;
 exe b : b.cpp ;
 exe c : c.cpp ;
@@ -56,26 +55,27 @@ exe hello : hello.cpp src ;
     t.expect_nothing_more()
 
 
-################################################################################
+###############################################################################
 #
 # test_alias_source_usage_requirements()
 # --------------------------------------
 #
-################################################################################
+###############################################################################
 
 def test_alias_source_usage_requirements(t):
-    """Check whether usage requirements are propagated via "alias". In case they
+    """
+      Check whether usage requirements are propagated via "alias". In case they
     are not, linking will fail as there will be no main() function defined
     anywhere in the source.
+    
     """
-
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 lib l : l.cpp : : : <define>WANT_MAIN ;
 alias la : l ;
 exe main : main.cpp la ;
 """)
 
-    t.write("l.cpp", """
+    t.write("l.cpp", """\
 void
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -83,7 +83,7 @@ __declspec(dllexport)
 foo() {}
 """)
 
-    t.write("main.cpp", """
+    t.write("main.cpp", """\
 #ifdef WANT_MAIN
 int main() {}
 #endif
@@ -92,12 +92,12 @@ int main() {}
     t.run_build_system()
 
 
-################################################################################
+###############################################################################
 #
 # main()
 # ------
 #
-################################################################################
+###############################################################################
 
 t = BoostBuild.Tester()
 

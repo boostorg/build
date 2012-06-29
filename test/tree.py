@@ -22,10 +22,8 @@ class Trees_difference:
         self.touched_files.extend(other.touched_files)
 
     def ignore_directories(self):
-        "Removes directories for list of found differences"
-
-        def not_dir(x):
-            return x[-1] != "/"
+        """Removes directories for list of found differences"""
+        not_dir = lambda x : x[-1] != "/"
         self.added_files = filter(not_dir, self.added_files)
         self.removed_files = filter(not_dir, self.removed_files)
         self.modified_files = filter(not_dir, self.modified_files)
@@ -38,10 +36,8 @@ class Trees_difference:
         print >> f, "Touched files :", self.touched_files
 
     def empty(self):
-        return ( len(self.added_files) == 0 ) and \
-            ( len(self.removed_files) == 0 ) and \
-            ( len(self.modified_files) == 0 ) and \
-            ( len(self.touched_files) == 0 )
+        return (not self.added_files and not self.removed_files and
+            not self.modified_files and not self.touched_files)
 
 def build_tree(dir):
     return svn_tree.build_tree_from_wc(dir, load_props=0, ignore_svn=1)
@@ -54,24 +50,23 @@ def trees_difference(a, b, current_name=""):
     result = Trees_difference()
     try:
         # A and B are both files.
-        if ((a.children is None) and (b.children is None)):
+        if a.children is None and b.children is None:
             assert a.name == b.name
             if svn_tree.compare_file_nodes(a, b):
                 result.modified_files.append(current_name)
-            elif (a.mtime != b.mtime):
+            elif a.mtime != b.mtime:
                 result.touched_files.append(current_name)
 
         # One is a file, one is a directory.
-        # this case is disabled because svn_tree doesn't distinguish
+        # This case has been disabled because svn_tree does not distinguish
         # empty directories from files, at least on Cygwin.
-        elif 0 and (((a.children is None) and (b.children is not None))
-            or ((a.children is not None) and (b.children is None))):
+        elif 0 and bool(a.children is None) != bool(b.children is None):
             a.pprint()
             b.pprint()
             raise svn_tree.SVNTypeMismatch
-        # They're both directories.
+        # They are both directories.
         else:
-            # accounted_for holds childrens present in both trees
+            # accounted_for holds children present in both trees.
             accounted_for = []
             for a_child in (a.children or []):
                 b_child = svn_tree.get_child(b, a_child.name)
@@ -91,13 +86,13 @@ def trees_difference(a, b, current_name=""):
                     result.added_files.extend(traverse_tree(b_child, current_name))
 
     except svn_tree.SVNTypeMismatch:
-        print 'Unequal Types: one Node is a file, the other is a directory'
+        print("Unequal Types: one Node is a file, the other is a directory")
         raise svn_tree.SVNTreeUnequal
     except svn_tree.SVNTreeIsNotDirectory:
-        print "Error: Foolish call to get_child."
+        print("Error: Foolish call to get_child.")
         sys.exit(1)
     except IndexError:
-        print "Error: unequal number of children"
+        print("Error: unequal number of children")
         raise svn_tree.SVNTreeUnequal
     return result
 
@@ -105,13 +100,13 @@ def dump_tree(t):
     svn_tree.dump_tree(t)
 
 def traverse_tree(t, parent_name=""):
-    """ Returns the list of all names in tree. """
+    """Returns the list of all names in tree."""
     if parent_name:
         full_node_name = parent_name + "/" + t.name
     else:
         full_node_name = t.name
 
-    if (t.children is None):
+    if t.children is None:
         result = [full_node_name]
     else:
         result = [full_node_name + "/"]

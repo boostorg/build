@@ -340,12 +340,10 @@ class Tester(TestCmd.TestCmd):
         shutil.copytree(tree_location, self.workdir)
 
         os.chdir(d)
-
         def make_writable(unused, dir, entries):
             for e in entries:
                 name = os.path.join(dir, e)
                 os.chmod(name, os.stat(name)[0] | 0222)
-
         os.path.walk(".", make_writable, None)
 
     def write(self, file, content):
@@ -395,8 +393,8 @@ class Tester(TestCmd.TestCmd):
             names = [names]
 
         if names == ["."]:
-            # If we're deleting the entire workspace, there's no
-            # need to wait for a clock tick.
+            # If we are deleting the entire workspace, there is no need to wait
+            # for a clock tick.
             self.last_build_time_start = 0
             self.last_build_time_finish = 0
 
@@ -405,11 +403,11 @@ class Tester(TestCmd.TestCmd):
         # Avoid attempts to remove the current directory.
         os.chdir(self.original_workdir)
         for name in names:
-            n = self.native_file_name(name)
-            n = glob.glob(n)
+            n = glob.glob(self.native_file_name(name))
             if n: n = n[0]
             if not n:
-                n = self.glob_file(string.replace(name, "$toolset", self.toolset+"*"))
+                n = self.glob_file(string.replace(name, "$toolset",
+                    self.toolset + "*"))
             if n:
                 if os.path.isdir(n):
                     shutil.rmtree(n, ignore_errors=False)
@@ -422,10 +420,13 @@ class Tester(TestCmd.TestCmd):
         os.chdir(self.workdir)
 
     def expand_toolset(self, name):
-        """Expands $toolset in the given file to tested toolset."""
-        content = self.read(name)
-        content = string.replace(content, "$toolset", self.toolset)
-        self.write(name, content)
+        """
+          Expands $toolset placeholder in the given file to the name of the
+        toolset currently being tested.
+
+        """
+        self.write(name, string.replace(self.read(name), "$toolset",
+            self.toolset))
 
     def dump_stdio(self):
         annotation("STDOUT", self.stdout())
@@ -518,7 +519,7 @@ class Tester(TestCmd.TestCmd):
 
         if not expected_duration is None:
             actual_duration = self.last_build_time_finish - self.last_build_time_start
-            if (actual_duration > expected_duration):
+            if actual_duration > expected_duration:
                 print "Test run lasted %f seconds while it was expected to " \
                     "finish in under %f seconds." % (actual_duration,
                     expected_duration)
@@ -536,7 +537,9 @@ class Tester(TestCmd.TestCmd):
     def glob_file(self, name):
         result = None
         if hasattr(self, 'difference'):
-            for f in self.difference.added_files+self.difference.modified_files+self.difference.touched_files:
+            for f in (self.difference.added_files +
+                self.difference.modified_files +
+                self.difference.touched_files):
                 if fnmatch.fnmatch(f, name):
                     result = self.native_file_name(f)
                     break
@@ -608,7 +611,7 @@ class Tester(TestCmd.TestCmd):
     # methods require exact names to be passed. All the 'ignore*' methods allow
     # wildcards.
 
-    # All names can be lists, which are taken to be directory components.
+    # All names can be either a string or a list of strings.
     def expect_addition(self, names):
         for name in self.adjust_names(names):
             try:
@@ -796,17 +799,19 @@ class Tester(TestCmd.TestCmd):
             a = tempfile.mktemp("actual")
             open(e, "w").write(expected)
             open(a, "w").write(actual)
-            print "DIFFERENCE"
+            print("DIFFERENCE")
             # Current diff should return 1 to indicate 'different input files'
             # but some older diff versions may return 0 and depending on the
-            # exact Python/OS platform os.system() call may gobble out the
-            # external process's return code and return 0 itself.
-            if os.system("diff -u %s %s" % (e, a)) not in [0, 1]:
-                print "Unable to compute difference: diff -u %s %s" % (e, a)
+            # exact Python/OS platform version, os.system() call may gobble up
+            # the external process's return code and return 0 itself.
+            if os.system('diff -u "%s" "%s"' % (e, a)) not in [0, 1]:
+                print('Unable to compute difference: diff -u "%s" "%s"' % (e,
+                    a))
             os.unlink(e)
             os.unlink(a)
         else:
-            print "Set environmental variable 'DO_DIFF' to examine difference."
+            print("Set environmental variable 'DO_DIFF' to examine "
+                "difference.")
 
     # Helpers.
     def mul(self, *arguments):
@@ -829,8 +834,7 @@ class Tester(TestCmd.TestCmd):
 
     # Internal methods.
     def ignore_elements(self, list, wildcard):
-        """Removes in-place, element of 'list' that match the given wildcard.
-        """
+        """Removes in-place 'list' elements matching the given 'wildcard'."""
         list[:] = filter(lambda x, w=wildcard: not fnmatch.fnmatch(x, w), list)
 
     def adjust_lib_name(self, name):
@@ -851,29 +855,22 @@ class Tester(TestCmd.TestCmd):
                 if dll_prefix:
                     tail = dll_prefix + tail
                     result = os.path.join(head, tail)
-        # If we want to use this name in a Jamfile, we better convert \ to /, as
-        # otherwise we would have to quote \.
+        # If we want to use this name in a Jamfile, we better convert \ to /,
+        # as otherwise we would have to quote \.
         result = string.replace(result, "\\", "/")
         return result
 
     def adjust_suffix(self, name):
         if not self.translate_suffixes:
             return name
-
         pos = string.rfind(name, ".")
-        if pos != -1:
-            suffix = name[pos:]
-            name = name[:pos]
+        if pos == -1:
+            return name
+        suffix = name[pos:]
+        return name[:pos] + suffixes.get(suffix, suffix)
 
-            if suffixes.has_key(suffix):
-                suffix = suffixes[suffix]
-        else:
-            suffix = ''
-
-        return name + suffix
-
-    # Acceps either a string or a list of strings and returns a list of strings.
-    # Adjusts suffixes on all names.
+    # Acceps either a string or a list of strings and returns a list of
+    # strings. Adjusts suffixes on all names.
     def adjust_names(self, names):
         if type(names) == types.StringType:
             names = [names]
