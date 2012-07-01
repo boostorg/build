@@ -18,12 +18,13 @@ def included_resource_newer_than_rc_script():
     """
     toolsetName = "__myDummyResourceCompilerToolset__"
 
-    # We pass the -d4 flag just so we can get additional information in case
-    # this test fails. In the past we had a testing system issue causing this
-    # test to fail sporadically and -d3 output was instrumental in catching the
-    # reason for this (a touched file's timestamp was not as new as it should
-    # have been).
-    t = BoostBuild.Tester("-d4", pass_d0=False, pass_toolset=False,
+    # We pass -d4 & --debug-configuration flags so we can get additional
+    # information in case this test fails. In the past we have had testing
+    # system issues causing this test to fail sporadically for which -d+3
+    # output had been instrumental in getting to the root cause (a touched
+    # file's timestamp was not as new as it should have been).
+    t = BoostBuild.Tester("-d4 toolset=__myDummyResourceCompilerToolset__ "
+        "--debug-configuration", pass_d0=False, pass_toolset=False,
         use_test_config=False, translate_suffixes=False)
 
     # Prepare a dummy toolset so we do not get errors in case the default one
@@ -48,7 +49,6 @@ module rc
 """ % toolsetName)
 
     # Prepare project source files.
-    t.write("project-config.jam", "using %s ;\n" % toolsetName)
     t.write("jamroot.jam", """\
 ECHO {{{ [ modules.peek : XXX ] [ modules.peek : NOEXEC ] }}} ;
 obj xxx : xxx.rc ;
