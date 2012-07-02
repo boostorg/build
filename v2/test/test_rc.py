@@ -18,14 +18,25 @@ def included_resource_newer_than_rc_script():
     """
     toolsetName = "__myDummyResourceCompilerToolset__"
 
-    # We pass -d4 & --debug-configuration flags so we can get additional
-    # information in case this test fails. In the past we have had testing
-    # system issues causing this test to fail sporadically for which -d+3
-    # output had been instrumental in getting to the root cause (a touched
-    # file's timestamp was not as new as it should have been).
-    t = BoostBuild.Tester("-d4 toolset=__myDummyResourceCompilerToolset__ "
-        "--debug-configuration", pass_d0=False, pass_toolset=False,
-        use_test_config=False, translate_suffixes=False)
+    # Used options rationale:
+    #
+    # -d4 & --debug-configuration
+    #     Display additional information in case of test failure. In the past
+    #   we have had testing system issues  causing this test to fail
+    #   sporadically for which -d+3 output had been instrumental in getting to
+    #   the root cause (a touched file's timestamp was not as new as it should
+    #   have been).
+    #
+    # --ignore-site-config --user-config=
+    #     Disable reading any external Boost Build configuration. This avoids
+    #   being adversly affected by other initialized toolset's global Boost
+    #   Build configuration settings. For example, if the gcc toolset is
+    #   initialized it may, depending on the platform, change the file
+    #   extension Boost Build uses for its OBJ targets to '.o' even though we
+    #   are using our own custom toolset in this test.
+    t = BoostBuild.Tester("-d4 --debug-configuration --ignore-site-config "
+        "--user-config= toolset=%s" % toolsetName, pass_d0=False,
+        pass_toolset=False, use_test_config=False, translate_suffixes=False)
 
     # Prepare a dummy toolset so we do not get errors in case the default one
     # is not found and that we can test rc.jam functionality without having to
