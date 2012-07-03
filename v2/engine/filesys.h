@@ -15,33 +15,34 @@
  */
 
 #ifndef FILESYS_DWA20011025_H
-# define FILESYS_DWA20011025_H
+#define FILESYS_DWA20011025_H
 
-# include "pathsys.h"
 #include "hash.h"
 #include "lists.h"
 #include "object.h"
+#include "pathsys.h"
+
 
 typedef void (*scanback)( void *closure, OBJECT * file, int found, time_t t );
 
 void file_dirscan( OBJECT * dir, scanback func, void * closure );
-void file_archscan( const char * arch, scanback func, void * closure );
+void file_archscan( char const * arch, scanback func, void * closure );
 
 int file_time( OBJECT * filename, time_t * time );
 
-void file_build1(PATHNAME *f, string* file) ;
+void file_build1( PATHNAME * f, string * file ) ;
 int file_is_file( OBJECT * filename );
-int file_mkdir( const char * pathname );
+int file_mkdir( char const * pathname );
 
 typedef struct file_info_t file_info_t ;
 struct file_info_t
 {
-    OBJECT        * name;
-    short           is_file;
-    short           is_dir;
-    unsigned long   size;
-    time_t          time;
-    LIST          * files;
+    OBJECT * name;
+    short is_file;
+    short is_dir;
+    unsigned long size;
+    time_t time;
+    LIST * files;
 };
 
 
@@ -55,7 +56,7 @@ file_info_t * file_query( OBJECT * filename );
 
 void file_done();
 
-/* Marks a path/file to be removed when jam exits. */
-void file_remove_atexit( OBJECT * path );
+/* Marks a path/file to be removed when JAM exits. */
+void file_remove_atexit( OBJECT * const path );
 
 #endif

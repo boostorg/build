@@ -7,23 +7,22 @@
 #include "jam.h"
 #include "function.h"
 
-#include "lists.h"
-#include "pathsys.h"
-#include "mem.h"
-#include "constants.h"
-#include "frames.h"
-#include "rules.h"
-#include "variable.h"
-#include "compile.h"
-#include "search.h"
 #include "class.h"
-#include "pathsys.h"
+#include "compile.h"
+#include "constants.h"
 #include "filesys.h"
+#include "frames.h"
+#include "lists.h"
+#include "mem.h"
+#include "pathsys.h"
+#include "rules.h"
+#include "search.h"
+#include "variable.h"
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef OS_CYGWIN
 # include <cygwin/version.h>
@@ -650,7 +649,9 @@ static void var_edit_cyg2win( string * out, size_t pos, VAR_EDITS * edits )
     if ( edits->to_windows )
     {
     #ifdef CYGWIN_VERSION_CYGWIN_CONV
-        /* Use new Cygwin API added with Cygwin 1.7. */
+        /* Use new Cygwin API added with Cygwin 1.7. Old one had no error
+         * handling and has been deprecated.
+         */
         char * dynamicBuffer = 0;
         char buffer[ MAX_PATH + 1001 ];
         char const * result = buffer;

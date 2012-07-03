@@ -11,16 +11,18 @@
  */
 
 #include "jam.h"
-#include "lists.h"
 #include "search.h"
-#include "timestamp.h"
-#include "pathsys.h"
-#include "variable.h"
-#include "object.h"
+
 #include "compile.h"
-#include "strings.h"
-#include "hash.h"
 #include "filesys.h"
+#include "hash.h"
+#include "lists.h"
+#include "object.h"
+#include "pathsys.h"
+#include "strings.h"
+#include "timestamp.h"
+#include "variable.h"
+
 #include <string.h>
 
 
@@ -30,14 +32,10 @@ typedef struct _binding
     OBJECT * target;
 } BINDING;
 
-static struct hash *explicit_bindings = 0;
+static struct hash * explicit_bindings = 0;
 
 
-void call_bind_rule
-(
-    OBJECT * target_,
-    OBJECT * boundname_
-)
+void call_bind_rule( OBJECT * target_, OBJECT * boundname_ )
 {
     LIST * bind_rule = var_get( root_module(), constant_BINDRULE );
     if ( !list_empty( bind_rule ) )
@@ -47,7 +45,7 @@ void call_bind_rule
         if ( boundname && target )
         {
             /* Prepare the argument list. */
-            FRAME frame[1];
+            FRAME frame[ 1 ];
             frame_init( frame );
 
             /* First argument is the target name. */
@@ -70,48 +68,45 @@ void call_bind_rule
     }
 }
 
+
 /*
- * search.c - find a target along $(SEARCH) or $(LOCATE)
- * First, check if LOCATE is set. If so, use it to determine
- * the location of target and return, regardless of whether anything
- * exists on that location.
+ * search.c - find a target along $(SEARCH) or $(LOCATE).
  *
- * Second, examine all directories in SEARCH. If there's file already
- * or there's another target with the same name which was placed
- * to this location via LOCATE setting, stop and return the location.
- * In case of previous target, return it's name via the third argument.
+ * First, check if LOCATE is set. If so, use it to determine the location of
+ * target and return, regardless of whether anything exists at that location.
  *
- * This bevahiour allow to handle dependency on generated files. If
- * caller does not expect that target is generated, 0 can be passed as
- * the third argument.
+ * Second, examine all directories in SEARCH. If the file exists there or there
+ * is another target with the same name already placed at this location via the
+ * LOCATE setting, stop and return the location. In case of a previous target,
+ * return its name via the 'another_target' argument.
+ *
+ * This bevahiour allows handling dependencies on generated files. If caller
+ * does not expect that the target is generated, 0 can be passed as
+ * 'another_target'.
  */
 
-OBJECT *
-search(
-    OBJECT * target,
-    time_t *time,
-    OBJECT * * another_target,
-    int file
-)
+OBJECT * search( OBJECT * target, time_t * time, OBJECT * * another_target,
+    int file )
 {
-    PATHNAME f[1];
-    LIST   * varlist;
-    string   buf[1];
-    int      found = 0;
-    /* Will be set to 1 if target location is specified via LOCATE. */
-    int      explicitly_located = 0;
+    PATHNAME f[ 1 ];
+    LIST * varlist;
+    string buf[ 1 ];
+    int found = 0;
     OBJECT * boundname = 0;
+
+    /* Set to 1 if target location is specified via LOCATE. */
+    int explicitly_located = 0;
 
     if ( another_target )
         *another_target = 0;
 
-    if (! explicit_bindings )
-        explicit_bindings = hashinit( sizeof(BINDING),
-                                     "explicitly specified locations");
+    if ( !explicit_bindings )
+        explicit_bindings = hashinit( sizeof( BINDING ), "explicitly specified "
+            "locations" );
 
     string_new( buf );
-    /* Parse the filename */
 
+    /* Parse the filename. */
     path_parse( object_str( target ), f );
 
     f->f_grist.ptr = 0;
@@ -136,13 +131,15 @@ search(
         object_free( key );
         found = 1;
     }
-    else if ( varlist = var_get( root_module(), constant_SEARCH ), !list_empty( varlist ) )
+    else if ( varlist = var_get( root_module(), constant_SEARCH ),
+        !list_empty( varlist ) )
     {
-        LISTITER iter = list_begin( varlist ), end = list_end( varlist );
+        LISTITER iter = list_begin( varlist );
+        LISTITER const end = list_end( varlist );
         for ( ; iter != end; iter = list_next( iter ) )
         {
             BINDING * ba;
-            file_info_t *ff;
+            file_info_t * ff;
             OBJECT * key;
             OBJECT * test_path;
 
@@ -187,9 +184,10 @@ search(
 
     if ( !found )
     {
-        /* Look for the obvious */
-        /* This is a questionable move.  Should we look in the */
-        /* obvious place if SEARCH is set? */
+        /* Look for the obvious. */
+        /* This is a questionable move. Should we look in the obvious place if
+         * SEARCH is set?
+         */
         OBJECT * key;
 
         f->f_root.ptr = 0;
@@ -213,10 +211,11 @@ search(
     {
         int found;
         BINDING * ba;
-        OBJECT * key = path_as_key( boundname );
-        /* CONSIDER: we probably should issue a warning is another file
-           is explicitly bound to the same location. This might break
-           compatibility, though. */
+        OBJECT * const key = path_as_key( boundname );
+        /* CONSIDER: We should probably issue a warning if another file is
+         * explicitly bound to the same location. This might break
+         * compatibility, though.
+         */
         ba = (BINDING *)hash_insert( explicit_bindings, key, &found );
         if ( !found )
         {
@@ -224,12 +223,10 @@ search(
             ba->target = target;
         }
         else
-        {
             object_free( key );
-        }
     }
 
-    /* prepare a call to BINDRULE if the variable is set */
+    /* Prepare a call to BINDRULE if the variable is set. */
     call_bind_rule( target, boundname );
 
     return boundname;
@@ -238,9 +235,10 @@ search(
 
 static void free_binding( void * xbinding, void * data )
 {
-    BINDING * binding = (BINDING *)xbinding;
+    BINDING * const binding = (BINDING *)xbinding;
     object_free( binding->binding );
 }
+
 
 void search_done( void )
 {

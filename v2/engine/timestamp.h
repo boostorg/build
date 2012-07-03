@@ -12,7 +12,8 @@
 #define TIMESTAMP_H_SW_2011_11_18
 
 #include "object.h"
-#include "time.h"
+
+#include <time.h>
 
 void timestamp( OBJECT * target, time_t * time );
 void stamps_done();

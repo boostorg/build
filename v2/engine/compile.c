@@ -175,13 +175,10 @@ evaluate_rule(
     {
         backtrace_line( frame->prev );
         if ( frame->module->name )
-        {
-            printf( "rule %s unknown in module %s\n", object_str( rule->name ), object_str( frame->module->name ) );
-        }
+            printf( "rule %s unknown in module %s\n", object_str( rule->name ),
+                object_str( frame->module->name ) );
         else
-        {
             printf( "rule %s unknown in module \n", object_str( rule->name ) );
-        }
         backtrace( frame->prev );
         exit( 1 );
     }

@@ -27,45 +27,27 @@
  * Internal routines:
  *  make0() - bind and scan everything to make a TARGET
  *  make0sort() - reorder TARGETS chain by their time (newest to oldest)
- *
- * 12/26/93 (seiwald) - allow NOTIME targets to be expanded via $(<), $(>).
- * 01/04/94 (seiwald) - print all targets, bounded, when tracing commands.
- * 04/08/94 (seiwald) - progress report now reflects only targets with actions.
- * 04/11/94 (seiwald) - Combined deps & headers into deps[2] in TARGET.
- * 12/20/94 (seiwald) - NOTIME renamed NOTFILE.
- * 12/20/94 (seiwald) - make0() headers after determining fate of target, so
- *                      that headers are not seen as being dependent on
- *                      themselves.
- * 01/19/95 (seiwald) - distinguish between CANTFIND/CANTMAKE targets.
- * 02/02/95 (seiwald) - propagate leaf source time for new LEAVES rule.
- * 02/14/95 (seiwald) - NOUPDATE rule means don't update existing target.
- * 08/22/95 (seiwald) - NOUPDATE targets immune to anyhow (-a) flag.
- * 09/06/00 (seiwald) - NOCARE affects targets with sources/actions.
- * 03/02/01 (seiwald) - reverse NOCARE change.
- * 03/14/02 (seiwald) - TEMPORARY targets no longer take on parents age.
- * 03/16/02 (seiwald) - support for -g (reorder builds by source time).
  */
 
 #include "jam.h"
 
-#include "lists.h"
-#include "parse.h"
-#include "variable.h"
-#include "rules.h"
-
-#ifdef OPT_HEADER_CACHE_EXT
-    #include "hcache.h"
-#endif
-
-#include "search.h"
-#include "object.h"
-#include "make.h"
-#include "headers.h"
 #include "command.h"
+#ifdef OPT_HEADER_CACHE_EXT
+# include "hcache.h"
+#endif
+#include "headers.h"
+#include "lists.h"
+#include "make.h"
+#include "object.h"
+#include "parse.h"
+#include "rules.h"
+#include "search.h"
+#include "variable.h"
+
 #include <assert.h>
 
 #ifndef max
-    #define max( a,b ) ((a)>(b)?(a):(b))
+# define max(a,b) ((a)>(b)?(a):(b))
 #endif
 
 static TARGETS * make0sort( TARGETS * c );
@@ -99,7 +81,7 @@ static const char * target_bind[] =
     "exists",
 };
 
-# define spaces(x) ( "                    " + ( x > 20 ? 0 : 20-x ) )
+#define spaces(x) ( "                    " + ( x > 20 ? 0 : 20-x ) )
 
 
 /*
@@ -109,7 +91,7 @@ static const char * target_bind[] =
 int make( LIST * targets, int anyhow )
 {
     COUNTS counts[ 1 ];
-    int    status = 0;     /* 1 if anything fails */
+    int status = 0;  /* 1 if anything fails */
 
 #ifdef OPT_HEADER_CACHE_EXT
     hcache_init();
@@ -165,9 +147,11 @@ int make( LIST * targets, int anyhow )
     status = counts->cantfind || counts->cantmake;
 
     {
-        LISTITER iter, end;
+        LISTITER iter;
+        LISTITER end;
         PROFILE_ENTER( MAKE_MAKE1 );
-        for ( iter = list_begin( targets ), end = list_end( targets ); iter != end; iter = list_next( iter ) )
+        for ( iter = list_begin( targets ), end = list_end( targets ); iter !=
+            end; iter = list_next( iter ) )
             status |= make1( bindtarget( list_item( iter ) ) );
         PROFILE_EXIT( MAKE_MAKE1 );
     }
@@ -310,7 +294,8 @@ void make0
     SETTINGS   * s;
 
 #ifdef OPT_GRAPH_DEBUG_EXT
-    int savedFate, oldTimeStamp;
+    int savedFate;
+    int oldTimeStamp;
 #endif
 
     if ( DEBUG_MAKEPROG )
@@ -327,8 +312,8 @@ void make0
     t->depth = depth;
 
     /*
-     * Step 2: under the influence of "on target" variables,
-     * bind the target and search for headers.
+     * Step 2: under the influence of "on target" variables, bind the target and
+     * search for headers.
      */
 
     /* Step 2a: set "on target" variables. */
@@ -341,10 +326,10 @@ void make0
         OBJECT * another_target;
         object_free( t->boundname );
         t->boundname = search( t->name, &t->time, &another_target,
-                               t->flags & T_FLAG_ISFILE );
+            t->flags & T_FLAG_ISFILE );
         /* If it was detected that this target refers to an already existing and
-         * bound one, we add a dependency, so that every target
-         * depending on us will depend on that other target as well.
+         * bound target, we add a dependency so that every target depending on
+         * us will depend on that other target as well.
          */
         if ( another_target )
             located_target = bindtarget( another_target );
@@ -370,7 +355,7 @@ void make0
         LIST * var = var_get( root_module(), constant_JAM_SEMAPHORE );
         if ( !list_empty( var ) )
         {
-            TARGET * semaphore = bindtarget( list_front( var ) );
+            TARGET * const semaphore = bindtarget( list_front( var ) );
             semaphore->progress = T_MAKE_SEMAPHORE;
             t->semaphore = semaphore;
         }
@@ -386,27 +371,27 @@ void make0
     freesettings( s );
 
     /*
-     * Pause for a little progress reporting .
+     * Pause for a little progress reporting.
      */
 
     if ( DEBUG_BIND )
     {
-        if ( ! object_equal( t->name, t->boundname ) )
-            printf( "bind\t--\t%s%s: %s\n",
-                spaces( depth ), object_str( t->name ), object_str( t->boundname ) );
+        if ( !object_equal( t->name, t->boundname ) )
+            printf( "bind\t--\t%s%s: %s\n", spaces( depth ),
+                object_str( t->name ), object_str( t->boundname ) );
 
         switch ( t->binding )
         {
         case T_BIND_UNBOUND:
         case T_BIND_MISSING:
         case T_BIND_PARENTS:
-            printf( "time\t--\t%s%s: %s\n",
-                spaces( depth ), object_str( t->name ), target_bind[ (int) t->binding ] );
+            printf( "time\t--\t%s%s: %s\n", spaces( depth ),
+                object_str( t->name ), target_bind[ (int)t->binding ] );
             break;
 
         case T_BIND_EXISTS:
-            printf( "time\t--\t%s%s: %s",
-                spaces( depth ), object_str( t->name ), ctime( &t->time ) );
+            printf( "time\t--\t%s%s: %s", spaces( depth ),
+                object_str( t->name ), ctime( &t->time ) );
             break;
         }
     }
@@ -418,7 +403,7 @@ void make0
     /* Step 3a: recursively make0() dependencies. */
     for ( c = t->depends; c; c = c->next )
     {
-        int internal = t->flags & T_FLAG_INTERNAL;
+        int const internal = t->flags & T_FLAG_INTERNAL;
 
         /* Warn about circular deps, except for includes, which include each
          * other alot.
@@ -426,17 +411,20 @@ void make0
         if ( c->target->fate == T_FATE_INIT )
             make0( c->target, ptime, depth + 1, counts, anyhow, rescanning );
         else if ( c->target->fate == T_FATE_MAKING && !internal )
-            printf( "warning: %s depends on itself\n", object_str( c->target->name ) );
+            printf( "warning: %s depends on itself\n", object_str(
+                c->target->name ) );
         else if ( c->target->fate != T_FATE_MAKING && rescanning )
             make0rescan( c->target, rescanning );
-        if ( rescanning && c->target->includes && c->target->includes->fate != T_FATE_MAKING )
+        if ( rescanning && c->target->includes && c->target->includes->fate !=
+            T_FATE_MAKING )
             make0rescan( target_scc( c->target->includes ), rescanning );
     }
 
     if ( located_target )
     {
         if ( located_target->fate == T_FATE_INIT )
-            make0( located_target, ptime, depth + 1, counts, anyhow, rescanning );
+            make0( located_target, ptime, depth + 1, counts, anyhow, rescanning
+                );
         else if ( located_target->fate != T_FATE_MAKING && rescanning )
             make0rescan( located_target, rescanning );
     }
@@ -486,12 +474,12 @@ void make0
     fate = T_FATE_STABLE;
     for ( c = t->depends; c; c = c->next )
     {
-        /* If we're in a different strongly connected component,
-         * pull timestamps from the root.
+        /* If we are in a different strongly connected component, pull
+         * timestamps from the root.
          */
         if ( c->target->scc_root )
         {
-            TARGET * scc_root = target_scc( c->target );
+            TARGET * const scc_root = target_scc( c->target );
             if ( scc_root != t->scc_root )
             {
                 c->target->leaf = max( c->target->leaf, scc_root->leaf );
@@ -504,13 +492,11 @@ void make0
          * source nodes.
          */
         leaf = max( leaf, c->target->leaf );
-
         if ( t->flags & T_FLAG_LEAVES )
         {
             last = leaf;
             continue;
         }
-
         last = max( last, c->target->time );
         fate = max( fate, c->target->fate );
 
@@ -518,18 +504,18 @@ void make0
         if ( DEBUG_FATE )
             if ( fate < c->target->fate )
                 printf( "fate change %s from %s to %s by dependency %s\n",
-                    object_str( t->name ), target_fate[(int) fate], target_fate[(int) c->target->fate],
-                    object_str( c->target->name ) );
+                    object_str( t->name ), target_fate[ (int)fate ],
+                    target_fate[ (int)c->target->fate ], object_str(
+                    c->target->name ) );
 #endif
     }
 
     /* Step 4b: pick up included headers time */
 
     /*
-     * If a header is newer than a temp source that includes it,
-     * the temp source will need building.
+     * If a header is newer than a temp source that includes it, the temp source
+     * will need building.
      */
-
     hlast = t->includes ? t->includes->time : 0;
 
     /* Step 4c: handle NOUPDATE oddity.
@@ -571,9 +557,8 @@ void make0
         If target newer than non-notfile parent, mark target newer.
         Otherwise, stable!
 
-        Note this block runs from least to most stable:
-        as we make it further down the list, the target's
-        fate is getting stabler.
+        Note this block runs from least to most stable: as we make it further
+        down the list, the target's fate gets more stable.
     */
 
 #ifdef OPT_GRAPH_DEBUG_EXT
@@ -643,8 +628,8 @@ void make0
                 target_fate[ fate ], oldTimeStamp ? " (by timestamp)" : "" );
         else
             printf( "fate change  %s from %s to %s%s\n", object_str( t->name ),
-                target_fate[ savedFate ], target_fate[ fate ],
-                oldTimeStamp ? " (by timestamp)" : "" );
+                target_fate[ savedFate ], target_fate[ fate ], oldTimeStamp ?
+                " (by timestamp)" : "" );
 	}
 #endif
 
@@ -737,7 +722,7 @@ void make0
         flag = "*";
 
     if ( DEBUG_MAKEPROG )
-        printf( "made%s\t%s\t%s%s\n", flag, target_fate[ (int) t->fate ],
+        printf( "made%s\t%s\t%s%s\n", flag, target_fate[ (int)t->fate ],
             spaces( depth ), object_str( t->name ) );
 }
 
@@ -837,7 +822,7 @@ static void dependGraphOutput( TARGET * t, int depth )
     for ( c = t->depends; c; c = c->next )
     {
         printf( "  %s       : Depends on %s (%s)", spaces( depth ),
-               target_name( c->target ), target_fate[ (int) c->target->fate ] );
+           target_name( c->target ), target_fate[ (int)c->target->fate ] );
         if ( c->target->time == t->time )
             printf( " (max time)");
         printf( "\n" );
@@ -877,9 +862,7 @@ static TARGETS * make0sort( TARGETS * chain )
         while ( s && ( s->target->time > c->target->time ) )
             s = s->next;
 
-        /* Insert c in front of s (might be 0). Do not even think of deciphering
-         * this.
-         */
+        /* Insert c in front of s (might be 0). */
         c->next = s;                           /* good even if s = 0       */
         if ( result == s ) result = c;         /* new head of chain?       */
         if ( !s ) s = result;                  /* wrap to ensure a next    */
@@ -898,7 +881,8 @@ static LIST * targets_to_update_ = L0;
 
 void mark_target_for_updating( OBJECT * target )
 {
-    targets_to_update_ = list_push_back( targets_to_update_, object_copy( target ) );
+    targets_to_update_ = list_push_back( targets_to_update_, object_copy(
+        target ) );
 }
 
 

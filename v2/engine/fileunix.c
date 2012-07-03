@@ -107,17 +107,11 @@ struct ar_hdr       /* archive file member header - printable ascii */
  *  file_time() - get timestamp of file, if not done by file_dirscan()
  *  file_archscan() - scan an archive for files
  *
- * File_dirscan() and file_archscan() call back a caller provided function
- * for each file found.  A flag to this callback function lets file_dirscan()
- * and file_archscan() indicate that a timestamp is being provided with the
- * file.   If file_dirscan() or file_archscan() do not provide the file's
- * timestamp, interested parties may later call file_time().
- *
- * 04/08/94 (seiwald) - Coherent/386 support added.
- * 12/19/94 (mikem) - solaris string table insanity support
- * 02/14/95 (seiwald) - parse and build /xxx properly
- * 05/03/96 (seiwald) - split into pathunix.c
- * 11/21/96 (peterk) - BEOS does not have Unix-style archives
+ * File_dirscan() and file_archscan() call back a caller provided function for
+ * each file found. A flag to this callback function lets file_dirscan() and
+ * file_archscan() indicate whether a timestamp is being provided with the file.
+ * If file_dirscan() or file_archscan() do not provide the file's timestamp,
+ * interested parties may later call file_time() for it.
  */
 
 
@@ -204,10 +198,11 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
     if ( !list_empty( d->files ) )
     {
         LIST * files = d->files;
-        LISTITER iter = list_begin( files ), end = list_end( files );
+        LISTITER iter = list_begin( files );
+        LISTITER const end = list_end( files );
         for ( ; iter != end; iter = list_next( iter ) )
         {
-            file_info_t * ff = file_info( list_item( iter ) );
+            file_info_t * const ff = file_info( list_item( iter ) );
             (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
             files = list_next( files );
         }
@@ -219,17 +214,21 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 
 file_info_t * file_query( OBJECT * filename )
 {
-    file_info_t * ff = file_info( filename );
-    if ( ! ff->time )
+    file_info_t * const ff = file_info( filename );
+    if ( !ff->time )
     {
         struct stat statbuf;
 
-        if ( stat( *object_str( filename ) ? object_str( filename ) : ".", &statbuf ) < 0 )
+        if ( stat( *object_str( filename ) ? object_str( filename ) : ".",
+            &statbuf ) < 0 )
             return 0;
 
         ff->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
         ff->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
         ff->size = statbuf.st_size;
+        /* Set the file's timestamp to 1 in case it is 0 or undetected to avoid
+         * confusion with non-existing files.
+         */
         ff->time = statbuf.st_mtime ? statbuf.st_mtime : 1;
     }
     return ff;
@@ -239,12 +238,9 @@ file_info_t * file_query( OBJECT * filename )
  * file_time() - get timestamp of file, if not done by file_dirscan()
  */
 
-int
-file_time(
-    OBJECT * filename,
-    time_t * time )
+int file_time( OBJECT * filename, time_t * time )
 {
-    file_info_t * ff = file_query( filename );
+    file_info_t const * const ff = file_query( filename );
     if ( !ff ) return -1;
     *time = ff->time;
     return 0;
@@ -252,12 +248,13 @@ file_time(
 
 int file_is_file( OBJECT * filename )
 {
-    file_info_t * ff = file_query( filename );
+    file_info_t const * const ff = file_query( filename );
     if ( !ff ) return -1;
     return ff->is_file;
 }
 
-int file_mkdir( const char * pathname )
+
+int file_mkdir( char const * pathname )
 {
     return mkdir( pathname, 0766 );
 }
@@ -266,22 +263,18 @@ int file_mkdir( const char * pathname )
  * file_archscan() - scan an archive for files
  */
 
-# ifndef AIAMAG /* God-fearing UNIX */
+#ifndef AIAMAG  /* God-fearing UNIX */
 
-# define SARFMAG 2
-# define SARHDR sizeof( struct ar_hdr )
+#define SARFMAG  2
+#define SARHDR  sizeof( struct ar_hdr )
 
-void
-file_archscan(
-    const char * archive,
-    scanback func,
-    void * closure )
+void file_archscan( char const * archive, scanback func, void * closure )
 {
-# ifndef NO_AR
+#ifndef NO_AR
     struct ar_hdr ar_hdr;
+    char * string_table = 0;
     char buf[ MAXJPATH ];
     long offset;
-    char    *string_table = 0;
     int fd;
 
     if ( ( fd = open( archive, O_RDONLY, 0 ) ) < 0 )
@@ -299,13 +292,13 @@ file_archscan(
     if ( DEBUG_BINDSCAN )
         printf( "scan archive %s\n", archive );
 
-    while ( ( read( fd, &ar_hdr, SARHDR ) == SARHDR )
-           && !( memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG )
+    while ( ( read( fd, &ar_hdr, SARHDR ) == SARHDR ) &&
+        !( memcmp( ar_hdr.ar_fmag, ARFMAG, SARFMAG )
 #ifdef ARFZMAG
-              /* OSF also has a compressed format */
-              && memcmp( ar_hdr.ar_fmag, ARFZMAG, SARFMAG )
+            /* OSF also has a compressed format */
+            && memcmp( ar_hdr.ar_fmag, ARFZMAG, SARFMAG )
 #endif
-          ) )
+        ) )
     {
         char   lar_name_[257];
         char * lar_name = lar_name_ + 1;
@@ -317,46 +310,45 @@ file_archscan(
         char * dest;
         OBJECT * member;
 
-        strncpy( lar_name, ar_hdr.ar_name, sizeof(ar_hdr.ar_name) );
+        strncpy( lar_name, ar_hdr.ar_name, sizeof( ar_hdr.ar_name ) );
 
         sscanf( ar_hdr.ar_date, "%ld", &lar_date );
         sscanf( ar_hdr.ar_size, "%ld", &lar_size );
 
-        if (ar_hdr.ar_name[0] == '/')
+        if ( ar_hdr.ar_name[ 0 ] == '/' )
         {
-        if (ar_hdr.ar_name[1] == '/')
-        {
-            /* this is the "string table" entry of the symbol table,
-            ** which holds strings of filenames that are longer than
-            ** 15 characters (ie. don't fit into a ar_name
-            */
-
-            string_table = (char *)BJAM_MALLOC_ATOMIC(lar_size);
-            lseek(fd, offset + SARHDR, 0);
-            if (read(fd, string_table, lar_size) != lar_size)
-            printf("error reading string table\n");
-        }
-        else if (string_table && ar_hdr.ar_name[1] != ' ')
-        {
-            /* Long filenames are recognized by "/nnnn" where nnnn is
-            ** the offset of the string in the string table represented
-            ** in ASCII decimals.
-            */
-            dest = lar_name;
-            lar_offset = atoi(lar_name + 1);
-            src = &string_table[lar_offset];
-            while (*src != '/')
-            *dest++ = *src++;
-            *dest = '/';
-        }
+            if ( ar_hdr.ar_name[ 1 ] == '/' )
+            {
+                /* This is the "string table" entry of the symbol table, holding
+                 * filename strings longer than 15 characters, i.e. those that
+                 * do not fit into ar_name.
+                 */
+                string_table = (char *)BJAM_MALLOC_ATOMIC( lar_size );
+                lseek( fd, offset + SARHDR, 0 );
+                if ( read( fd, string_table, lar_size ) != lar_size )
+                    printf("error reading string table\n");
+            }
+            else if ( string_table && ar_hdr.ar_name[ 1 ] != ' ' )
+            {
+                /* Long filenames are recognized by "/nnnn" where nnnn is the
+                 * offset of the string in the string table represented in ASCII
+                 * decimals.
+                 */
+                dest = lar_name;
+                lar_offset = atoi( lar_name + 1 );
+                src = &string_table[ lar_offset ];
+                while ( *src != '/' )
+                    *dest++ = *src++;
+                *dest = '/';
+            }
         }
 
         c = lar_name - 1;
-        while ( ( *++c != ' ' ) && ( *c != '/' ) ) ;
+        while ( ( *++c != ' ' ) && ( *c != '/' ) );
         *c = '\0';
 
         if ( DEBUG_BINDSCAN )
-        printf( "archive name %s found\n", lar_name );
+            printf( "archive name %s found\n", lar_name );
 
         sprintf( buf, "%s(%s)", archive, lar_name );
 
@@ -373,14 +365,14 @@ file_archscan(
 
     close( fd );
 
-# endif /* NO_AR */
+#endif  /* NO_AR */
 
 }
 
-# else /* AIAMAG - RS6000 AIX */
+#else  /* AIAMAG - RS6000 AIX */
 
-static void file_archscan_small(
-    int fd, char const *archive, scanback func, void *closure)
+static void file_archscan_small( int fd, char const * archive, scanback func,
+    void * closure )
 {
     struct fl_hdr fl_hdr;
 
@@ -400,12 +392,11 @@ static void file_archscan_small(
     if ( DEBUG_BINDSCAN )
         printf( "scan archive %s\n", archive );
 
-    while ( ( offset > 0 )
-           && ( lseek( fd, offset, 0 ) >= 0 )
-           && ( read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= (int)sizeof( ar_hdr.hdr ) ) )
+    while ( offset > 0 && lseek( fd, offset, 0 ) >= 0 &&
+        read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= (int)sizeof( ar_hdr.hdr ) )
     {
         long lar_date;
-        int  lar_namlen;
+        int lar_namlen;
         OBJECT * member;
 
         sscanf( ar_hdr.hdr.ar_namlen, "%d" , &lar_namlen );
@@ -428,8 +419,8 @@ static void file_archscan_small(
 /* Check for OS version which supports the big variant. */
 #ifdef AR_HSZ_BIG
 
-static void file_archscan_big(
-    int fd, char const *archive, scanback func, void *closure)
+static void file_archscan_big( int fd, char const * archive, scanback func,
+    void * closure )
 {
     struct fl_hdr_big fl_hdr;
 
@@ -449,9 +440,8 @@ static void file_archscan_big(
     if ( DEBUG_BINDSCAN )
         printf( "scan archive %s\n", archive );
 
-    while ( ( offset > 0 )
-           && ( lseek( fd, offset, 0 ) >= 0 )
-           && ( read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) ) )
+    while ( offset > 0 && lseek( fd, offset, 0 ) >= 0 &&
+        read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) )
     {
         long lar_date;
         int  lar_namlen;
@@ -472,33 +462,32 @@ static void file_archscan_big(
         (*func)( closure, member, 1 /* time valid */, (time_t)lar_date );
         object_free( member );
     }
-
 }
 
 #endif /* AR_HSZ_BIG */
 
-void file_archscan( const char * archive, scanback func, void *closure)
+void file_archscan( char const * archive, scanback func, void * closure )
 {
     int fd;
-    char fl_magic[SAIAMAG];
+    char fl_magic[ SAIAMAG ];
 
-    if (( fd = open( archive, O_RDONLY, 0)) < 0)
+    if ( ( fd = open( archive, O_RDONLY, 0)) < 0 )
         return;
 
-    if (read( fd, fl_magic, SAIAMAG) != SAIAMAG
-       || lseek(fd, 0, SEEK_SET) == -1)
+    if ( read( fd, fl_magic, SAIAMAG ) != SAIAMAG ||
+        lseek( fd, 0, SEEK_SET ) == -1 )
     {
-        close(fd);
+        close( fd );
         return;
     }
 
-    if ( strncmp( AIAMAG, fl_magic, SAIAMAG ) == 0 )
+    if ( !strncmp( AIAMAG, fl_magic, SAIAMAG ) )
     {
         /* read small variant */
         file_archscan_small( fd, archive, func, closure );
     }
 #ifdef AR_HSZ_BIG
-    else if ( strncmp( AIAMAGBIG, fl_magic, SAIAMAG ) == 0 )
+    else if ( !strncmp( AIAMAGBIG, fl_magic, SAIAMAG ) )
     {
         /* read big variant */
         file_archscan_big( fd, archive, func, closure );

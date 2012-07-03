@@ -19,8 +19,8 @@ toolset = BoostBuild.get_toolset()
 
 # Clear environment for testing.
 #
-for s in ('BOOST_ROOT', 'BOOST_BUILD_PATH', 'JAM_TOOLSET', 'BCCROOT', 'MSVCDir',
-    'MSVC', 'MSVCNT', 'MINGW', 'watcom' ):
+for s in ('BOOST_ROOT', 'BOOST_BUILD_PATH', 'JAM_TOOLSET', 'BCCROOT',
+    'MSVCDir', 'MSVC', 'MSVCNT', 'MINGW', 'watcom'):
     try:
         del os.environ[s]
     except:

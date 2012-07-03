@@ -13,9 +13,10 @@
 #ifndef RULES_DWA_20011020_H
 #define RULES_DWA_20011020_H
 
-#include "modules.h"
 #include "jam.h"
+
 #include "function.h"
+#include "modules.h"
 
 
 /*
@@ -33,14 +34,6 @@
  *  SETTINGS - variables to set when executing a TARGET's ACTIONS.
  *  TARGETS - a chain of TARGETs.
  *  TARGET - an entity (e.g. a file) that can be built.
- *
- * 04/11/94 (seiwald) - Combined deps & headers into deps[2] in TARGET.
- * 04/12/94 (seiwald) - actionlist() now just appends a single action.
- * 06/01/94 (seiwald) - new 'actions existing' does existing sources
- * 12/20/94 (seiwald) - NOTIME renamed NOTFILE.
- * 01/19/95 (seiwald) - split DONTKNOW into CANTFIND/CANTMAKE.
- * 02/02/95 (seiwald) - new LEAVES modifier on targets.
- * 02/14/95 (seiwald) - new NOUPDATE modifier on targets.
  */
 
 typedef struct _rule RULE;
@@ -146,19 +139,18 @@ struct _target
 
 /* This flag was added to support a new built-in rule named "FAIL_EXPECTED" used
  * to indicate that the result of running a given action should be inverted,
- * i.e. ok <=> fail. This is useful for launching certain test runs from a
- * Jamfile.
+ * i.e. ok <=> fail. Useful for launching certain test runs from a Jamfile.
  */
 #define T_FLAG_FAIL_EXPECTED  0x0100  /* FAIL_EXPECTED applied */
 
 #define T_FLAG_INTERNAL       0x0200  /* internal INCLUDES node */
 
-/* Indicates that the target must be a file. This prevents matching non-files,
- * like directories, when a target is searched.
+/* Indicates that the target must be a file. Prevents matching non-files, like
+ * directories, when a target is searched.
  */
 #define T_FLAG_ISFILE         0x0400
 
-#define T_FLAG_PRECIOUS       0x0800 
+#define T_FLAG_PRECIOUS       0x0800
 
     char       binding;               /* how target relates to a real file or
                                        * folder
@@ -188,13 +180,13 @@ struct _target
 
 #define T_FATE_STABLE         2       /* target did not need updating */
 #define T_FATE_NEWER          3       /* target newer than parent */
-                                  
+
 #define T_FATE_SPOIL          4       /* >= SPOIL rebuilds parents */
 #define T_FATE_ISTMP          4       /* unneeded temp target oddly present */
 
 #define T_FATE_BUILD          5       /* >= BUILD rebuilds target */
 #define T_FATE_TOUCHED        5       /* manually touched with -t */
-#define T_FATE_REBUILD        6       
+#define T_FATE_REBUILD        6
 #define T_FATE_MISSING        7       /* is missing, needs updating */
 #define T_FATE_NEEDTMP        8       /* missing temp that must be rebuild */
 #define T_FATE_OUTDATED       9       /* is out of date, needs updating */
@@ -230,7 +222,7 @@ struct _target
     int        depth;                 /* The depth of the target in the make0 stack. */
     char     * cmds;                  /* type-punned command list */
 
-    const char * failed;
+    char const * failed;
 };
 
 

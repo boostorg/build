@@ -12,8 +12,11 @@
 #ifndef HDRMACRO_SW20111118_H
 #define HDRMACRO_SW20111118_H
 
-void   macro_headers( TARGET *t );
+#include "object.h"
+#include "rules.h"
 
-OBJECT * macro_header_get( OBJECT *  macro_name );
+void macro_headers( TARGET * t );
+
+OBJECT * macro_header_get( OBJECT * macro_name );
 
 #endif

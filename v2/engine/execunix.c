@@ -335,13 +335,12 @@ static int read_descriptor( int i, int s )
         }
     }
 
-    /* If buffer full, ensure last buffer char is newline
-     * so process jam log finds command status at beginning
-     * of it own line, not appended to end of buffer output.
+    /* If buffer full, ensure last buffer char is newline so that jam log
+     * contains the command status at beginning of it own line instead of
+     * appended to end of the previous output.
      */
-    if ( globs.max_buf && cmdtab[i].buf_size[s] == globs.max_buf ) {
-      cmdtab[i].buffer[s][cmdtab[i].buf_size[s]-2] = '\n';
-    }
+    if ( globs.max_buf && cmdtab[ i ].buf_size[ s ] == globs.max_buf )
+        cmdtab[ i ].buffer[ s ][ cmdtab[ i ].buf_size[ s ] - 2 ] = '\n';
 
     return feof( cmdtab[ i ].stream[ s ] );
 }

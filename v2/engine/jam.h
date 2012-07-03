@@ -440,7 +440,7 @@ extern struct globs globs;
 #define DEBUG_MAKE     ( globs.debug[ 1 ] )   /* show actions when executed */
 #define DEBUG_MAKEQ    ( globs.debug[ 2 ] )   /* show even quiet actions */
 #define DEBUG_EXEC     ( globs.debug[ 2 ] )   /* show text of actons */
-#define DEBUG_MAKEPROG ( globs.debug[ 3 ] )   /* show progress of make0 */
+#define DEBUG_MAKEPROG ( globs.debug[ 3 ] )   /* show make0 progress */
 #define DEBUG_BIND     ( globs.debug[ 3 ] )   /* show when files bound */
 
 #define DEBUG_EXECCMD  ( globs.debug[ 4 ] )   /* show execcmds()'s work */
@@ -449,7 +449,7 @@ extern struct globs globs;
 
 #define DEBUG_HEADER   ( globs.debug[ 6 ] )   /* show result of header scan */
 #define DEBUG_BINDSCAN ( globs.debug[ 6 ] )   /* show result of dir scan */
-#define DEBUG_SEARCH   ( globs.debug[ 6 ] )   /* show attempts at binding */
+#define DEBUG_SEARCH   ( globs.debug[ 6 ] )   /* show binding attempts */
 
 #define DEBUG_VARSET   ( globs.debug[ 7 ] )   /* show variable settings */
 #define DEBUG_VARGET   ( globs.debug[ 8 ] )   /* show variable fetches */
@@ -462,7 +462,7 @@ extern struct globs globs;
 #define DEBUG_PROFILE  ( globs.debug[ 10 ] )  /* dump rule execution times */
 #define DEBUG_PARSE    ( globs.debug[ 11 ] )  /* debug parsing */
 #define DEBUG_GRAPH    ( globs.debug[ 12 ] )  /* debug dependencies */
-#define DEBUG_FATE     ( globs.debug[ 13 ] )  /* show changes to fate in make0() */
+#define DEBUG_FATE     ( globs.debug[ 13 ] )  /* show fate changes in make0() */
 
 /* Everyone gets the memory definitions. */
 #include "mem.h"
