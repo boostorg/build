@@ -14,7 +14,8 @@
 #include "object.h"
 #include <time.h>
 
-OBJECT * search( OBJECT * target, time_t * time, OBJECT * * another_target, int file );
+OBJECT * search( OBJECT * target, time_t * time, OBJECT * * another_target,
+    int file );
 void search_done( void );
 
 #endif

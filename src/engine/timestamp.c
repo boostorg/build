@@ -10,20 +10,19 @@
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
-# include "jam.h"
-
-# include "hash.h"
-# include "filesys.h"
-# include "pathsys.h"
-# include "timestamp.h"
-# include "object.h"
-# include "strings.h"
-
 /*
  * timestamp.c - get the timestamp of a file or archive member
- *
- * 09/22/00 (seiwald) - downshift names on OS2, too
  */
+
+#include "jam.h"
+#include "timestamp.h"
+
+#include "filesys.h"
+#include "hash.h"
+#include "object.h"
+#include "pathsys.h"
+#include "strings.h"
+
 
 /*
  * BINDING - all known files
@@ -35,21 +34,22 @@ struct _binding {
     OBJECT * name;
     short    flags;
 
-# define BIND_SCANNED   0x01    /* if directory or arch, has been scanned */
+#define BIND_SCANNED  0x01  /* if directory or arch, has been scanned */
 
     short    progress;
 
-# define BIND_INIT  0   /* never seen */
-# define BIND_NOENTRY   1   /* timestamp requested but file never found */
-# define BIND_SPOTTED   2   /* file found but not timed yet */
-# define BIND_MISSING   3   /* file found but can't get timestamp */
-# define BIND_FOUND 4   /* file found and time stamped */
+#define BIND_INIT     0  /* never seen */
+#define BIND_NOENTRY  1  /* timestamp requested but file never found */
+#define BIND_SPOTTED  2  /* file found but not timed yet */
+#define BIND_MISSING  3  /* file found but can not get timestamp */
+#define BIND_FOUND    4  /* file found and time stamped */
 
-    time_t   time;      /* update time - 0 if not exist */
+    /* update time - 0 if not exist */
+    time_t   time;
 };
 
 static struct hash * bindhash = 0;
-static void time_enter( void *, OBJECT *, int, time_t );
+static void time_enter( void *, OBJECT *, int const found, time_t );
 
 static char * time_progress[] =
 {
@@ -69,11 +69,11 @@ void timestamp( OBJECT * target, time_t * time )
 {
     PROFILE_ENTER( timestamp );
 
-    PATHNAME   f1;
-    PATHNAME   f2;
-    int        found;
-    BINDING  * b;
-    string     buf[ 1 ];
+    PATHNAME f1;
+    PATHNAME f2;
+    int found;
+    BINDING * b;
+    string buf[ 1 ];
 
     target = path_as_key( target );
 
@@ -172,19 +172,20 @@ void timestamp( OBJECT * target, time_t * time )
     }
 
     *time = b->progress == BIND_FOUND ? b->time : 0;
-        string_free( buf );
 
+    string_free( buf );
     object_free( target );
 
     PROFILE_EXIT( timestamp );
 }
 
 
-static void time_enter( void * closure, OBJECT * target, int found, time_t time )
+static void time_enter( void * closure, OBJECT * target, int const found,
+    time_t time )
 {
     int item_found;
     BINDING * b;
-    struct hash * bindhash = (struct hash *)closure;
+    struct hash * const bindhash = (struct hash *)closure;
 
     target = path_as_key( target );
 
@@ -199,15 +200,17 @@ static void time_enter( void * closure, OBJECT * target, int found, time_t time 
     b->progress = found ? BIND_FOUND : BIND_SPOTTED;
 
     if ( DEBUG_BINDSCAN )
-        printf( "time ( %s ) : %s\n", object_str( target ), time_progress[ b->progress ] );
+        printf( "time ( %s ) : %s\n", object_str( target ), time_progress[
+            b->progress ] );
 
     object_free( target );
 }
 
-static void free_timestamps ( void * xbinding, void * data )
+static void free_timestamps( void * xbinding, void * data )
 {
     object_free( ((BINDING *)xbinding)->name );
 }
+
 
 /*
  * stamps_done() - free timestamp tables.

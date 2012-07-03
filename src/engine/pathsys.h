@@ -11,18 +11,20 @@
 /*
  * PATHNAME - a name of a file, broken into <grist>dir/base/suffix(member)
  *
- * <grist> is salt to distinguish between targets that otherwise would
- * have the same name:  it never appears in the bound name of a target.
- * (member) is an archive member name: the syntax is arbitrary, but must
- * agree in path_parse(), path_build() and the Jambase.
+ * <grist> - salt to distinguish between targets that would otherwise have the
+ * same name - it never appears in the bound name of a target.
+ *
+ * (member) - archive member name: the syntax is arbitrary, but must agree in
+ * path_parse(), path_build() and the Jambase.
  */
 
 #ifndef PATHSYS_VP_20020211_H
-# define PATHSYS_VP_20020211_H
+#define PATHSYS_VP_20020211_H
 
 #include "jam.h"
-#include "strings.h"
 #include "object.h"
+#include "strings.h"
+
 
 typedef struct _pathname PATHNAME;
 typedef struct _pathpart PATHPART;
@@ -35,14 +37,14 @@ struct _pathpart
 
 struct _pathname
 {
-    PATHPART    part[6];
+    PATHPART part[ 6 ];
 
-#define f_grist    part[0]
-#define f_root     part[1]
-#define f_dir      part[2]
-#define f_base     part[3]
-#define f_suffix   part[4]
-#define f_member   part[5]
+#define f_grist   part[ 0 ]
+#define f_root    part[ 1 ]
+#define f_dir     part[ 2 ]
+#define f_base    part[ 3 ]
+#define f_suffix  part[ 4 ]
+#define f_member  part[ 5 ]
 };
 
 void path_build( PATHNAME * f, string * file, int binding );
@@ -53,42 +55,44 @@ void path_parent( PATHNAME * f );
 
 #ifdef NT
 
-/** Returns object_new-allocated string with long equivivalent of 'short_name'.
-    If none exists -- i.e. 'short_path' is already long path, it's returned
-    unaltered. */
+/* Returns object_new-allocated string with long equivivalent of 'short_name'.
+ * If none exists, i.e. 'short_path' is already long, it is returned unaltered.
+ */
 OBJECT * short_path_to_long_path( OBJECT * short_path );
 
 #endif
 
-/** Given a path, returns an object that can be
-    used as a unique key for that path.  Equivalent
-    paths such as a/b, A\B, and a\B on NT all yield the
-    same key.
+/* Given a path, returns an object that can be used as a unique key for that
+ * path. Equivalent paths such as a/b, A\B, and a\B on NT all yield the same
+ * key.
  */
 OBJECT * path_as_key( OBJECT * path );
-void path_add_key( OBJECT * path );
+
+/* Called as an optimization when we know we have a path that is already in its
+ * long form. Avoids the need for some subsequent path_as_key() call to do a
+ * potentially expensive short-->long path conversion.
+ */
+void path_add_key( OBJECT * long_path );
 
 #ifdef USE_PATHUNIX
-/** Returns a static pointer to the system dependent path to the temporary
-    directory. NOTE: *without* a trailing path separator.
-*/
+/* Returns a static pointer to the system dependent path to the temporary
+ * directory. NOTE: *without* a trailing path separator.
+ */
 string const * path_tmpdir( void );
 
-/** Returns a new temporary name.
-*/
+/* Returns a new temporary name. */
 OBJECT * path_tmpnam( void );
 
-/** Returns a new temporary path.
-*/
+/* Returns a new temporary path. */
 OBJECT * path_tmpfile( void );
 #endif
 
-/** Give the first argument to 'main', return a full path to our executable.
-    Returns null in the unlikely case it cannot be determined. Caller is
-    responsible for freeing the string.
-
-    Implemented in jam.c
-*/
+/* Give the first argument to 'main', return a full path to our executable.
+ * Returns null in the unlikely case it cannot be determined. Caller is
+ * responsible for freeing the string.
+ *
+ * Implemented in jam.c
+ */
 char * executable_path( char const * argv0 );
 
 void path_done( void );

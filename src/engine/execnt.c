@@ -698,8 +698,8 @@ static time_t filetime_dt( FILETIME t_utc )
         FILETIME f0_;
         SYSTEMTIME s0_;
         GetSystemTime( &s0_ );
-        t0_.tm_year = s0_.wYear-1900;
-        t0_.tm_mon = s0_.wMonth-1;
+        t0_.tm_year = s0_.wYear - 1900;
+        t0_.tm_mon = s0_.wMonth - 1;
         t0_.tm_wday = s0_.wDayOfWeek;
         t0_.tm_mday = s0_.wDay;
         t0_.tm_hour = s0_.wHour;
