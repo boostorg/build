@@ -102,14 +102,10 @@ http://www.boost.org/LICENSE_1_0.txt)
     #define BJAM_CALLOC(n,s) (profile_memory(n*s), bjam_calloc_x(n,s))
     #define BJAM_CALLOC_ATOMIC(n,s) (profile_memory(n*s), bjam_calloc_atomic_x(n,s))
     #define BJAM_REALLOC(p,s) (profile_memory(s), bjam_realloc_x(p,s))
-    #define BJAM_FREE(p) bjam_free_x(p)
-    #define BJAM_MEM_INIT() bjam_mem_init_x()
-    #define BJAM_MEM_CLOSE() bjam_mem_close_x()
 
     #define BJAM_MALLOC_RAW(s) (profile_memory(s), bjam_malloc_raw_x(s))
     #define BJAM_CALLOC_RAW(n,s) (profile_memory(n*s), bjam_calloc_raw_x(n,s))
     #define BJAM_REALLOC_RAW(p,s) (profile_memory(s), bjam_realloc_raw_x(p,s))
-    #define BJAM_FREE_RAW(p) bjam_free_raw_x(p)
 
 #else
 
@@ -119,16 +115,17 @@ http://www.boost.org/LICENSE_1_0.txt)
     #define BJAM_CALLOC(n,s) bjam_calloc_x(n,s)
     #define BJAM_CALLOC_ATOMIC(n,s) bjam_calloc_atomic_x(n,s)
     #define BJAM_REALLOC(p,s) bjam_realloc_x(p,s)
-    #define BJAM_FREE(p) bjam_free_x(p)
-    #define BJAM_MEM_INIT() bjam_mem_init_x()
-    #define BJAM_MEM_CLOSE() bjam_mem_close_x()
 
     #define BJAM_MALLOC_RAW(s) bjam_malloc_raw_x(s)
     #define BJAM_CALLOC_RAW(n,s) bjam_calloc_raw_x(n,s)
     #define BJAM_REALLOC_RAW(p,s) bjam_realloc_raw_x(p,s)
-    #define BJAM_FREE_RAW(p) bjam_free_raw_x(p)
 
 #endif
 
+    #define BJAM_MEM_INIT() bjam_mem_init_x()
+    #define BJAM_MEM_CLOSE() bjam_mem_close_x()
+
+    #define BJAM_FREE(p) bjam_free_x(p)
+    #define BJAM_FREE_RAW(p) bjam_free_raw_x(p)
 
 #endif
