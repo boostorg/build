@@ -67,7 +67,7 @@
  */
 
 static void debug_compile( int which, const char * s, FRAME * );
-int glob( const char * s, const char * c );
+
 /* Internal functions from builtins.c */
 void backtrace( FRAME * );
 void backtrace_line( FRAME * );
@@ -76,7 +76,6 @@ void unknown_rule( FRAME *, char const * key, module_t *, OBJECT * rule_name );
 
 struct frame * frame_before_python_call;
 
-static OBJECT * module_scope;
 
 void frame_init( FRAME * frame )
 {
