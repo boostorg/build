@@ -45,6 +45,8 @@
  * Parse tree node.
  */
 
+typedef struct _PARSE PARSE;
+
 struct _PARSE {
     int      type;
     PARSE  * left;

@@ -477,7 +477,7 @@ if --show-locate-target in $(ARGV)
 
 # We have some different files for UNIX, and NT.
 jam.source =
-    command.c compile.c constants.c debug.c execcmd.c function.c glob.c
+    command.c compile.c constants.c debug.c execcmd.c frames.c function.c glob.c
     hash.c hcache.c headers.c hdrmacro.c
     jam.c jambase.c jamgram.c
     lists.c make.c make1.c mem.c object.c

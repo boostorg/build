@@ -7,33 +7,34 @@
 #define FRAMES_DWA20011021_H
 
 #include "lists.h"
-#include "object.h"
 #include "modules.h"
+#include "object.h"
 
-typedef struct _PARSE PARSE;
+
 typedef struct frame FRAME;
 
 struct frame
 {
     FRAME      * prev;
-    /* The nearest enclosing frame for which module->user_module is true. */
-    FRAME      * prev_user;
+    FRAME      * prev_user;  /* The nearest enclosing frame for which
+                                module->user_module is true. */
     LOL          args[ 1 ];
     module_t   * module;
     OBJECT     * file;
     int          line;
-    const char * rulename;
+    char const * rulename;
 };
 
 
-/* When call into Python is in progress, this variable points to the bjam frame
- * that was current at the moment of call. When the call completes, the variable
- * is not defined. Further, if Jam calls Python which calls Jam and so on, this
- * variable only keeps the most recent Jam frame.
+/* When a call into Python is in progress, this variable points to the bjam
+ * frame that was current at the moment of the call. When the call completes,
+ * the variable is not defined. Furthermore, if Jam calls Python which calls Jam
+ * and so on, this variable only keeps the most recent Jam frame.
  */
-extern struct frame * frame_before_python_call;
+extern FRAME * frame_before_python_call;
 
-void frame_init( FRAME * );  /* implemented in compile.c */
-void frame_free( FRAME * );  /* implemented in compile.c */
+
+void frame_init( FRAME * );
+void frame_free( FRAME * );
 
 #endif

@@ -245,7 +245,7 @@ echo "###"
 YYACC_SOURCES="yyacc.c"
 MKJAMBASE_SOURCES="mkjambase.c"
 BJAM_SOURCES="\
- command.c compile.c constants.c debug.c execcmd.c function.c glob.c hash.c\
+ command.c compile.c constants.c debug.c execcmd.c frames.c function.c glob.c hash.c\
  hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c object.c\
  option.c output.c parse.c pathunix.c regexp.c rules.c scan.c search.c subst.c\
  timestamp.c variable.c modules.c strings.c filesys.c builtins.c pwd.c class.c\
