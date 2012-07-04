@@ -248,19 +248,22 @@ static void object_validate( OBJECT * obj )
 
 OBJECT * object_new( char const * string )
 {
-#ifdef BJAM_NO_MEM_CACHE
-    int const len = strlen( string ) + 1;
-    struct hash_item * const m = (struct hash_item *)BJAM_MALLOC( sizeof( struct
-        hash_header) + len );
+    ++strcount_in;
 
-    strtotal += len;
-    memcpy( m->data, string, len );
-    m->header.magic = OBJECT_MAGIC;
-    return (OBJECT *)m->data;
+#ifdef BJAM_NO_MEM_CACHE
+    {
+        int const len = strlen( string ) + 1;
+        struct hash_item * const m = (struct hash_item *)BJAM_MALLOC( sizeof(
+            struct hash_header ) + len );
+
+        strtotal += len;
+        memcpy( m->data, string, len );
+        m->header.magic = OBJECT_MAGIC;
+        return (OBJECT *)m->data;
+    }
 #else
     if ( !strhash.data )
         string_set_init( &strhash );
-    ++strcount_in;
     return (OBJECT *)string_set_insert( &strhash, string );
 #endif
 }
@@ -374,8 +377,8 @@ void object_done()
     if ( DEBUG_MEM )
     {
         printf( "%dK in strings\n", strtotal / 1024 );
-        /* if ( strcount_in != strcount_out )
+        if ( strcount_in != strcount_out )
             printf( "--- %d strings of %d dangling\n", strcount_in -
-                strcount_out, strcount_in ); */
+                strcount_out, strcount_in );
     }
 }
