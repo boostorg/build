@@ -1070,16 +1070,23 @@ LIST * builtin_delete_module( FRAME * frame, int flags )
 }
 
 
-static void unknown_rule( FRAME * frame, char const * key, module_t * module,
+/*
+ * unknown_rule() - reports an unknown rule occurrence to the user and exits.
+ */
+
+void unknown_rule( FRAME * frame, char const * key, module_t * module,
     OBJECT * rule_name )
 {
     backtrace_line( frame->prev );
-    if ( module->name )
-        printf( "%s error: rule \"%s\" unknown in module \"%s.\"\n", key,
-            object_str( rule_name ), object_str( module->name ) );
+    if ( key )
+        printf("%s error", key);
     else
-        printf( "%s error: rule \"%s\" unknown in module \"\"\n", key,
-            object_str( rule_name ) );
+        printf("ERROR");
+    printf( ": rule \"%s\" unknown in ", object_str( rule_name ) );
+    if ( module->name )
+        printf( "module \"%s\".\n", object_str( module->name ) );
+    else
+        printf( "root module.\n" );
     backtrace( frame->prev );
     exit( 1 );
 }
