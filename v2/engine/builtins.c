@@ -359,7 +359,7 @@ void load_builtins()
         bind_builtin( "W32_GETREG",
                       builtin_system_registry, 0, args );
     }
-  
+
     {
         char const * args[] = { "key_path", ":", "result-type", 0 };
         bind_builtin( "W32_GETREGNAMES",
@@ -476,11 +476,10 @@ LIST * builtin_calc( FRAME * frame, int flags )
 
 LIST * builtin_depends( FRAME * frame, int flags )
 {
-    LIST * targets = lol_get( frame->args, 0 );
-    LIST * sources = lol_get( frame->args, 1 );
-    LISTITER iter, end;
-
-    iter = list_begin( targets ), end = list_end( targets );
+    LIST * const targets = lol_get( frame->args, 0 );
+    LIST * const sources = lol_get( frame->args, 1 );
+    LISTITER iter = list_begin( targets );
+    LISTITER end = list_end( targets );
     for ( ; iter != end; iter = list_next( iter ) )
     {
         TARGET * t = bindtarget( list_item( iter ) );
@@ -489,7 +488,6 @@ LIST * builtin_depends( FRAME * frame, int flags )
          * if necessary. The internal include TARGET shares the name of its
          * parent.
          */
-
         if ( flags )
         {
             if ( !t->includes )
@@ -508,7 +506,7 @@ LIST * builtin_depends( FRAME * frame, int flags )
     end = list_end( sources );
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        TARGET * s = bindtarget( list_item( iter ) );
+        TARGET * const s = bindtarget( list_item( iter ) );
         if ( flags )
         {
             LISTITER t_iter = list_begin( targets );
@@ -1062,11 +1060,11 @@ LIST * builtin_varnames( FRAME * frame, int flags )
 
 LIST * builtin_delete_module( FRAME * frame, int flags )
 {
-    LIST     * arg0 = lol_get( frame->args, 0 );
-    LIST     * result = L0;
-    module_t * source_module = bindmodule( !list_empty(arg0) ? list_front(arg0) : 0 );
+    LIST * const arg0 = lol_get( frame->args, 0 );
+    module_t * source_module = bindmodule( list_empty( arg0 ) ? 0 : list_front(
+        arg0 ) );
     delete_module( source_module );
-    return result;
+    return L0;
 }
 
 
@@ -1177,18 +1175,19 @@ LIST * builtin_import( FRAME * frame, int flags )
 
 LIST * builtin_export( FRAME * frame, int flags )
 {
-    LIST     * module_list = lol_get( frame->args, 0 );
-    LIST     * rules       = lol_get( frame->args, 1 );
-    module_t * m           = bindmodule( !list_empty( module_list ) ? list_front( module_list ) : 0 );
+    LIST * const module_list = lol_get( frame->args, 0 );
+    LIST * const rules = lol_get( frame->args, 1 );
+    module_t * const m = bindmodule( list_empty( module_list ) ? 0 : list_front(
+        module_list ) );
 
-    LISTITER iter = list_begin( rules ), end = list_end( rules );
+    LISTITER iter = list_begin( rules );
+    LISTITER const end = list_end( rules );
     for ( ; iter != end; iter = list_next( iter ) )
     {
         RULE * r;
-
-        if ( !m->rules || !(r = (RULE *)hash_find( m->rules, list_item( iter ) ) ) )
+        if ( !m->rules || !( r = (RULE *)hash_find( m->rules, list_item( iter )
+            ) ) )
             unknown_rule( frame, "EXPORT", m, list_item( iter ) );
-
         r->exported = 1;
     }
     return L0;
