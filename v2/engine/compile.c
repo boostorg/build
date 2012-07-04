@@ -92,6 +92,7 @@ int glob( const char * s, const char * c );
 void backtrace( FRAME * frame );
 void backtrace_line( FRAME * frame );
 void print_source_line( FRAME * frame );
+void unknown_rule( FRAME *, char const * key, module_t *, OBJECT * rule_name );
 
 struct frame * frame_before_python_call;
 
@@ -172,16 +173,7 @@ evaluate_rule(
 
     /* Check traditional targets $(<) and sources $(>). */
     if ( !rule->actions && !rule->procedure )
-    {
-        backtrace_line( frame->prev );
-        if ( frame->module->name )
-            printf( "rule %s unknown in module %s\n", object_str( rule->name ),
-                object_str( frame->module->name ) );
-        else
-            printf( "rule %s unknown in module \n", object_str( rule->name ) );
-        backtrace( frame->prev );
-        exit( 1 );
-    }
+        unknown_rule( frame, NULL, frame->module, rule->name );
 
     /* If this rule will be executed for updating the targets then construct the
      * action for make().
