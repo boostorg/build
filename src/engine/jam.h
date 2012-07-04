@@ -291,7 +291,6 @@
 /* All the UNIX includes */
 
 #include <sys/types.h>
-#include <sys/stat.h>
 
 #ifndef OS_MPEIX
     #include <sys/file.h>
