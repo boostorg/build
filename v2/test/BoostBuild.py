@@ -204,6 +204,9 @@ class Tester(TestCmd.TestCmd):
                                     executable to ignore toolset requirements.
     `workdir`                     - Absolute directory where the test will be
                                     run from.
+    `pass_d0`                     - If set, when tests are not explicitly run
+                                    in verbose mode, they are run as silent
+                                    (-d0 & --quiet Boost Jam options).
 
     Optional arguments inherited from the base class:
 
