@@ -471,7 +471,7 @@ static path_key_entry * path_key( OBJECT * const path,
 }
 
 
-void path_add_key( OBJECT * long_path )
+void path_key__register_long_path( OBJECT * long_path )
 {
     path_key( long_path, 1 );
 }
@@ -503,7 +503,7 @@ void path_done( void )
 #else  /* NT */
 
 
-void path_add_key( OBJECT * path )
+void path_key__register_long_path( OBJECT * path )
 {
 }
 

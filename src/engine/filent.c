@@ -166,7 +166,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
             path_build( &f, filename, 0 );
 
             filename_obj = object_new( filename->value );
-            path_add_key( filename_obj );
+            path_key__register_long_path( filename_obj );
             files = list_push_back( files, filename_obj );
             ff = file_info( filename_obj );
             ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
