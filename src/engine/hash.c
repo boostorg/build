@@ -248,7 +248,7 @@ static void hashrehash( register struct hash * hp )
         BJAM_FREE( (char *)hp->tab.base );
 
     hp->tab.nel = hp->items.nel * hp->bloat;
-    hp->tab.base = (ITEM **)BJAM_MALLOC( hp->tab.nel * sizeof(ITEM **) );
+    hp->tab.base = (ITEM * *)BJAM_MALLOC( hp->tab.nel * sizeof( ITEM * * ) );
 
     memset( (char *)hp->tab.base, '\0', hp->tab.nel * sizeof( ITEM * ) );
 
@@ -280,14 +280,14 @@ void hashenumerate( struct hash * hp, void (* f)( void *, void * ), void * data
     int i;
     for ( i = 0; i <= hp->items.list; ++i )
     {
-        char * next = hp->items.lists[i].base;
-        int nel = hp->items.lists[i].nel;
+        char * next = hp->items.lists[ i ].base;
+        int nel = hp->items.lists[ i ].nel;
         if ( i == hp->items.list )
             nel -= hp->items.more;
 
         for ( ; nel--; next += hp->items.size )
         {
-            ITEM * i = (ITEM *)next;
+            ITEM * const i = (ITEM *)next;
             if ( hash_item_key( i ) != 0 )  /* Do not enumerate freed items. */
                 f( hash_item_data( i ), data );
         }
