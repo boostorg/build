@@ -609,7 +609,7 @@ void make0
         fate = T_FATE_ISTMP;
     }
     else if ( ( t->binding == T_BIND_EXISTS ) && p &&
-         ( p->binding != T_BIND_UNBOUND ) && ( t->time > p->time ) )
+        ( p->binding != T_BIND_UNBOUND ) && ( t->time > p->time ) )
     {
 #ifdef OPT_GRAPH_DEBUG_EXT
         oldTimeStamp = 1;

@@ -20,7 +20,6 @@
 #include "hash.h"
 
 #include "compile.h"
-#include "object.h"
 
 #include <assert.h>
 
