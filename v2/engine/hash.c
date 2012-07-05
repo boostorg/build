@@ -31,15 +31,15 @@
 
 struct hashhdr
 {
-    struct item  * next;
+    struct item * next;
 };
 
 typedef struct item
 {
-    struct hashhdr  hdr;
-} ITEM ;
+    struct hashhdr hdr;
+} ITEM;
 
-# define MAX_LISTS 32
+#define MAX_LISTS 32
 
 struct hash
 {
@@ -55,8 +55,8 @@ struct hash
     int inel;   /* initial number of elements */
 
     /*
-     * the array of records, maintained by these routines
-     * essentially a microallocator
+     * the array of records, maintained by these routines - essentially a
+     * microallocator
      */
     struct {
         int more;     /* how many more ITEMs fit in lists[ list ] */
@@ -67,8 +67,8 @@ struct hash
         int list;     /* index into lists[] */
 
         struct {
-            int nel;     /* total ITEMs held by this list */
-            char *base;  /* base of ITEMs array */
+            int nel;      /* total ITEMs held by this list */
+            char * base;  /* base of ITEMs array */
         } lists[ MAX_LISTS ];
     } items;
 
@@ -90,11 +90,39 @@ static unsigned int hash_keyval( OBJECT * key )
 #define hash_item_key(item) (hash_data_key(hash_item_data(item)))
 
 
-/* Find the hash item for the given data. Returns a pointer to a hashed item
- * with the given key. If given a 'previous' pointer, makes it point to the item
- * prior to the found item in the same bucket or to 0 if our item is the first
- * item in its bucket.
-*/
+#define ALIGNED(x) ((x + sizeof(ITEM) - 1) & ~(sizeof(ITEM) - 1))
+
+/*
+ * hashinit() - initialize a hash table, returning a handle
+ */
+
+struct hash * hashinit( int datalen, char const * name )
+{
+    struct hash * hp = (struct hash *)BJAM_MALLOC( sizeof( *hp ) );
+
+    hp->bloat = 3;
+    hp->tab.nel = 0;
+    hp->tab.base = (ITEM * *)0;
+    hp->items.more = 0;
+    hp->items.free = 0;
+    hp->items.size = sizeof( struct hashhdr ) + ALIGNED( datalen );
+    hp->items.list = -1;
+    hp->items.nel = 0;
+    hp->inel = 11;  /* 47 */
+    hp->name = name;
+
+    return hp;
+}
+
+
+/*
+ * hash_search() - Find the hash item for the given data.
+ *
+ * Returns a pointer to a hashed item with the given key. If given a 'previous'
+ * pointer, makes it point to the item prior to the found item in the same
+ * bucket or to 0 if our item is the first item in its bucket.
+ */
+ 
 static ITEM * hash_search( struct hash * hp, unsigned int keyval,
     OBJECT * keydata, ITEM * * previous )
 {
@@ -205,7 +233,7 @@ HASHDATA * hash_find( struct hash * hp, OBJECT * key )
  * hashrehash() - resize and rebuild hp->tab, the hash table
  */
 
-static void hashrehash( register struct hash *hp )
+static void hashrehash( register struct hash * hp )
 {
     int i = ++hp->items.list;
     hp->items.more = i ? 2 * hp->items.nel : hp->inel;
@@ -232,8 +260,11 @@ static void hashrehash( register struct hash *hp )
         for ( ; nel--; next += hp->items.size )
         {
             register ITEM * i = (ITEM *)next;
-            ITEM * * ip = hp->tab.base + object_hash( hash_item_key( i ) ) % hp->tab.nel;
-            /* code currently assumes rehashing only when there are no free items */
+            ITEM * * ip = hp->tab.base + object_hash( hash_item_key( i ) ) %
+                hp->tab.nel;
+            /* code currently assumes rehashing only when there are no free
+             * items
+             */
             assert( hash_item_key( i ) != 0 );
 
             i->hdr.next = *ip;
@@ -243,7 +274,8 @@ static void hashrehash( register struct hash *hp )
 }
 
 
-void hashenumerate( struct hash * hp, void (* f)( void *, void * ), void * data )
+void hashenumerate( struct hash * hp, void (* f)( void *, void * ), void * data
+    )
 {
     int i;
     for ( i = 0; i <= hp->items.list; ++i )
@@ -260,42 +292,6 @@ void hashenumerate( struct hash * hp, void (* f)( void *, void * ), void * data 
                 f( hash_item_data( i ), data );
         }
     }
-}
-
-/* --- */
-
-#define ALIGNED(x) ((x + sizeof(ITEM) - 1) & ~(sizeof(ITEM) - 1))
-
-/*
- * hashinit() - initialize a hash table, returning a handle
- */
-
-struct hash * hashinit( int datalen, char const * name )
-{
-    struct hash * hp = (struct hash *)BJAM_MALLOC( sizeof( *hp ) );
-
-    hp->bloat = 3;
-    hp->tab.nel = 0;
-    hp->tab.base = (ITEM * *)0;
-    hp->items.more = 0;
-    hp->items.free = 0;
-    hp->items.size = sizeof( struct hashhdr ) + ALIGNED( datalen );
-    hp->items.list = -1;
-    hp->items.nel = 0;
-    hp->inel = 11;  /* 47 */
-    hp->name = name;
-
-    return hp;
-}
-
-
-void hashdone( struct hash * hp )
-{
-    if ( !hp )
-        return;
-    if ( DEBUG_MEM || DEBUG_PROFILE )
-        hashstat( hp );
-    hash_free( hp );
 }
 
 
@@ -316,8 +312,6 @@ void hash_free( struct hash * hp )
 }
 
 
-/* ---- */
-
 static void hashstat( struct hash * hp )
 {
     struct hashstats stats[ 1 ];
@@ -325,6 +319,7 @@ static void hashstat( struct hash * hp )
     hashstats_add( stats, hp );
     hashstats_print( stats, hp->name );
 }
+
 
 void hashstats_init( struct hashstats * stats )
 {
@@ -334,6 +329,7 @@ void hashstats_init( struct hashstats * stats )
     stats->item_size = 0;
     stats->sets = 0;
 }
+
 
 void hashstats_add( struct hashstats * stats, struct hash * hp )
 {
@@ -365,6 +361,7 @@ void hashstats_add( struct hashstats * stats, struct hash * hp )
     }
 }
 
+
 void hashstats_print( struct hashstats * stats, char const * name )
 {
     printf( "%s table: %d+%d+%d (%dK+%luK) items+table+hash, %f density\n",
@@ -373,6 +370,16 @@ void hashstats_print( struct hashstats * stats, char const * name )
         stats->num_items,
         stats->tab_size,
         stats->num_items * stats->item_size / 1024,
-        (long unsigned)stats->tab_size * sizeof( ITEM ** ) / 1024,
+        (long unsigned)stats->tab_size * sizeof( ITEM * * ) / 1024,
         (float)stats->count / (float)stats->sets );
+}
+
+
+void hashdone( struct hash * hp )
+{
+    if ( !hp )
+        return;
+    if ( DEBUG_MEM || DEBUG_PROFILE )
+        hashstat( hp );
+    hash_free( hp );
 }
