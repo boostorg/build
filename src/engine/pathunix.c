@@ -385,13 +385,18 @@ static path_key_entry * path_key( OBJECT * const path,
     result = (path_key_entry *)hash_insert( path_key_cache, path, &found );
     if ( !found )
     {
-        string buf[ 1 ];
         OBJECT * normalized;
+        int normalized_size;
         path_key_entry * nresult;
         result->path = path;
-        string_copy( buf, object_str( path ) );
-        normalize_path( buf );
-        normalized = object_new( buf->value );
+        {
+            string buf[ 1 ];
+            string_copy( buf, object_str( path ) );
+            normalize_path( buf );
+            normalized = object_new( buf->value );
+            normalized_size = buf->size;
+            string_free( buf );
+        }
         nresult = (path_key_entry *)hash_insert( path_key_cache, normalized,
             &found );
         if ( !found || nresult == result )
@@ -403,14 +408,14 @@ static path_key_entry * path_key( OBJECT * const path,
             {
                 string long_path[ 1 ];
                 string_new( long_path );
-                ShortPathToLongPath( buf->value, buf->size, long_path );
+                ShortPathToLongPath( object_str( normalized ), normalized_size,
+                    long_path );
                 nresult->key = object_new( long_path->value );
                 string_free( long_path );
             }
         }
         else
             object_free( normalized );
-        string_free( buf );
         if ( nresult != result )
         {
             result->path = object_copy( path );
