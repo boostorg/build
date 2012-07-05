@@ -247,8 +247,14 @@ void path_parent( PATHNAME * f )
 #undef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
 
-static void path_write_key( char const * const path_, int const path_length,
-    string * const out );
+
+typedef struct path_key_entry
+{
+    OBJECT * path;
+    OBJECT * key;
+} path_key_entry;
+
+static struct hash * path_key_cache;
 
 
 /*
@@ -262,6 +268,9 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
     char const * new_element;
     unsigned long saved_size;
     char const * p;
+
+    /* This is only called via path_key(), which initializes the cache. */
+    assert( path_key_cache );
 
     if ( !path_length )
         return;
@@ -285,13 +294,32 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
     /* Find last '\\'. */
     for ( p = path + path_length - 1; p >= path && *p != '\\'; --p );
     new_element = p + 1;
+
+    /* Special case '\' && 'D:\' - include trailing '\'. */
+    if ( p == path ||
+        p == path + 2 && path[ 1 ] == ':' )
+        ++p;
+
     if ( p >= path )
     {
-        /* Special case '\' && 'D:\' - include trailing '\'. */
-        if ( p == path ||
-            p == path + 2 && path[ 1 ] == ':' )
-            ++p;
-        path_write_key( path, p - path, out );
+        char const * const dir = path;
+        int const dir_length = p - path;
+        OBJECT * const dir_obj = object_new_range( dir, dir_length );
+        int found;
+        path_key_entry * const result = (path_key_entry *)hash_insert(
+            path_key_cache, dir_obj, &found );
+        if ( !found )
+        {
+            /* dir is already normalized. */
+            result->path = dir_obj;
+            ShortPathToLongPath( dir, dir_length, out );
+            result->key = object_new( out->value );
+        }
+        else
+        {
+            object_free( dir_obj );
+            string_append( out, object_str( result->key ) );
+        }
     }
 
     if ( out->size && out->value[ out->size - 1 ] != '\\' )
@@ -323,41 +351,6 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
 OBJECT * short_path_to_long_path( OBJECT * short_path )
 {
     return path_as_key( short_path );
-}
-
-
-typedef struct path_key_entry
-{
-    OBJECT * path;
-    OBJECT * key;
-} path_key_entry;
-
-static struct hash * path_key_cache;
-
-
-static void path_write_key( char const * const path_, int const path_length,
-    string * const out )
-{
-    path_key_entry * result;
-    OBJECT * const path = object_new_range( path_, path_length );
-    int found;
-
-    /* This is only called via path_as_key(), which initializes the cache. */
-    assert( path_key_cache );
-
-    result = (path_key_entry *)hash_insert( path_key_cache, path, &found );
-    if ( !found )
-    {
-        /* path_ is already normalized. */
-        result->path = path;
-        ShortPathToLongPath( path_, path_length, out );
-        result->key = object_new( out->value );
-    }
-    else
-    {
-        object_free( path );
-        string_append( out, object_str( result->key ) );
-    }
 }
 
 
