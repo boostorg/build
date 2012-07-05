@@ -375,7 +375,8 @@ static void normalize_path( string * path )
 }
 
 
-void path_add_key( OBJECT * path )
+static path_key_entry * path_key( OBJECT * const path,
+    int const known_to_be_long )
 {
     path_key_entry * result;
     int found;
@@ -393,14 +394,23 @@ void path_add_key( OBJECT * path )
         string_copy( buf, object_str( path ) );
         normalize_path( buf );
         normalized = object_new( buf->value );
-        string_free( buf );
         nresult = (path_key_entry *)hash_insert( path_key_cache, normalized,
             &found );
         if ( !found || nresult == result )
         {
             nresult->path = object_copy( normalized );
-            nresult->key = object_copy( path );
+            if ( known_to_be_long )
+                nresult->key = object_copy( path );
+            else
+            {
+                string long_path[ 1 ];
+                string_new( long_path );
+                ShortPathToLongPath( buf->value, long_path );
+                nresult->key = object_new( long_path->value );
+                string_free( long_path );
+            }
         }
+        string_free( buf );
         object_free( normalized );
         if ( nresult != result )
         {
@@ -408,49 +418,20 @@ void path_add_key( OBJECT * path )
             result->key = object_copy( nresult->key );
         }
     }
+
+    return result;
+}
+
+
+void path_add_key( OBJECT * long_path )
+{
+    path_key( long_path, 1 );
 }
 
 
 OBJECT * path_as_key( OBJECT * path )
 {
-    path_key_entry * result;
-    int found;
-
-    if ( !path_key_cache )
-        path_key_cache = hashinit( sizeof( path_key_entry ), "path to key" );
-
-    result = (path_key_entry *)hash_insert( path_key_cache, path, &found );
-    if ( !found )
-    {
-        string buf[ 1 ];
-        OBJECT * normalized;
-        path_key_entry * nresult;
-        result->path = path;
-        string_copy( buf, object_str( path ) );
-        normalize_path( buf );
-        normalized = object_new( buf->value );
-        nresult = (path_key_entry *)hash_insert( path_key_cache, normalized,
-            &found );
-        if ( !found || nresult == result )
-        {
-            string long_path[ 1 ];
-            nresult->path = normalized;
-            string_new( long_path );
-            ShortPathToLongPath( buf->value, long_path );
-            nresult->path = object_copy( normalized );
-            nresult->key = object_new( long_path->value );
-            string_free( long_path );
-        }
-        string_free( buf );
-        object_free( normalized );
-        if ( nresult != result )
-        {
-            result->path = object_copy( path );
-            result->key = object_copy( nresult->key );
-        }
-    }
-
-    return object_copy( result->key );
+    return object_copy( path_key( path, 0 )->key );
 }
 
 
