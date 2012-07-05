@@ -247,68 +247,65 @@ void path_parent( PATHNAME * f )
 #undef INVALID_FILE_ATTRIBUTES
 #define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
 
-static void path_write_key( char const * const path_, string * const out );
+static void path_write_key( char const * const path_, int const path_length,
+    string * const out );
 
 
-static void ShortPathToLongPath( char const * const short_path,
+/*
+ * Expects the path to be already normalized, i.e. contain only '\\' path
+ * separators.
+ */
+
+static void ShortPathToLongPath( char const * const path, int const path_length,
     string * const out )
 {
     char const * new_element;
     unsigned long saved_size;
-    char * p;
+    char const * p;
 
-    if ( short_path[ 0 ] == '\0' )
+    if ( !path_length )
         return;
 
-    if ( short_path[ 0 ] == '\\' && short_path[ 1 ] == '\0' )
+    if ( path_length == 1 && path[ 0 ] == '\\' )
     {
         string_push_back( out, '\\' );
         return;
     }
 
-    if ( short_path[ 1 ] == ':' &&
-        ( short_path[ 2 ] == '\0' ||
-        ( short_path[ 2 ] == '\\' && short_path[ 3 ] == '\0' ) ) )
+    if ( path[ 1 ] == ':' &&
+        ( path_length == 2 ||
+        ( path_length == 3 && path[ 2 ] == '\\' ) ) )
     {
-        string_push_back( out, toupper( short_path[ 0 ] ) );
+        string_push_back( out, toupper( path[ 0 ] ) );
         string_push_back( out, ':' );
         string_push_back( out, '\\' );
         return;
     }
 
-    /* '/' already handled. */
-    if ( ( p = strrchr( short_path, '\\' ) ) )
+    /* Find last '\\'. */
+    for ( p = path + path_length - 1; p >= path && *p != '\\'; --p );
+    new_element = p + 1;
+    if ( p >= path )
     {
-        char saved;
-        new_element = p + 1;
-
-        /* special case '\' */
-        if ( p == short_path )
+        /* Special case '\' && 'D:\' - include trailing '\'. */
+        if ( p == path ||
+            p == path + 2 && path[ 1 ] == ':' )
             ++p;
-
-        /* special case 'D:\' */
-        if ( p == short_path + 2 && short_path[ 1 ] == ':' )
-            ++p;
-
-        saved = *p;
-        *p = '\0';
-        path_write_key( short_path, out );
-        *p = saved;
+        path_write_key( path, p - path, out );
     }
-    else
-        new_element = short_path;
 
     if ( out->size && out->value[ out->size - 1 ] != '\\' )
         string_push_back( out, '\\' );
 
     saved_size = out->size;
-    string_append( out, new_element );
+    string_append_range( out, new_element, path + path_length );
 
     /* If the file exists, replace its name with its long name variant. */
     {
         char const * const n = new_element;
-        if ( !( n[ 0 ] == '.' && n[ 1 ] == '\0' ||
-            n[ 0 ] == '.' && n[ 1 ] == '.' && n[ 2 ] == '\0' ) )
+        int const n_length = path + path_length - n;
+        if ( !( n_length == 1 && n[ 0 ] == '.' ||
+            n_length == 2 && n[ 0 ] == '.' && n[ 1 ] == '.' ) )
         {
             WIN32_FIND_DATA fd;
             HANDLE const hf = FindFirstFile( out->value, &fd );
@@ -338,10 +335,11 @@ typedef struct path_key_entry
 static struct hash * path_key_cache;
 
 
-static void path_write_key( char const * const path_, string * const out )
+static void path_write_key( char const * const path_, int const path_length,
+    string * const out )
 {
     path_key_entry * result;
-    OBJECT * const path = object_new( path_ );
+    OBJECT * const path = object_new_range( path_, path_length );
     int found;
 
     /* This is only called via path_as_key(), which initializes the cache. */
@@ -352,7 +350,7 @@ static void path_write_key( char const * const path_, string * const out )
     {
         /* path_ is already normalized. */
         result->path = path;
-        ShortPathToLongPath( path_, out );
+        ShortPathToLongPath( path_, path_length, out );
         result->key = object_new( out->value );
     }
     else
@@ -405,7 +403,7 @@ static path_key_entry * path_key( OBJECT * const path,
             {
                 string long_path[ 1 ];
                 string_new( long_path );
-                ShortPathToLongPath( buf->value, long_path );
+                ShortPathToLongPath( buf->value, buf->size, long_path );
                 nresult->key = object_new( long_path->value );
                 string_free( long_path );
             }
