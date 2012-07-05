@@ -398,7 +398,7 @@ static path_key_entry * path_key( OBJECT * const path,
             &found );
         if ( !found || nresult == result )
         {
-            nresult->path = object_copy( normalized );
+            nresult->path = normalized;
             if ( known_to_be_long )
                 nresult->key = object_copy( path );
             else
@@ -410,8 +410,9 @@ static path_key_entry * path_key( OBJECT * const path,
                 string_free( long_path );
             }
         }
+        else
+            object_free( normalized );
         string_free( buf );
-        object_free( normalized );
         if ( nresult != result )
         {
             result->path = object_copy( path );
