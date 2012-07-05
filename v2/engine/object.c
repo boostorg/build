@@ -202,7 +202,7 @@ static char const * string_set_insert( string_set * set, char const * string,
     struct hash_item * result;
 
     for ( result = set->data[ pos ]; result; result = result->header.next )
-        if ( !result->data[ size ] && !memcmp( result->data, string, size ) )
+        if ( !strncmp( result->data, string, size ) && !result->data[ size ] )
             return result->data;
 
     if ( set->size >= set->num )
