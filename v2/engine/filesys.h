@@ -34,8 +34,7 @@ void file_build1( PATHNAME * f, string * file ) ;
 int file_is_file( OBJECT * filename );
 int file_mkdir( char const * pathname );
 
-typedef struct file_info_t file_info_t ;
-struct file_info_t
+typedef struct file_info_t
 {
     OBJECT * name;
     short is_file;
@@ -43,15 +42,17 @@ struct file_info_t
     unsigned long size;
     time_t time;
     LIST * files;
-};
+} file_info_t;
 
 
-/* Creates a pointer to information about file 'filename', creating it as
+/* Returns a pointer to information about file 'filename', creating it as
  * necessary. If created, the structure will be default initialized.
  */
 file_info_t * file_info( OBJECT * filename );
 
-/* Returns information about a file, queries the OS if needed. */
+/* Returns information about a file, queries the OS if needed. Will return 0 if
+ * the file does not exist.
+ */
 file_info_t * file_query( OBJECT * filename );
 
 void file_done();

@@ -300,14 +300,21 @@ static int may_be_a_valid_short_name( char const * const n, int const n_length )
 
 
 /*
- * Expects the path to be already normalized, i.e. contain only '\\' path
- * separators.
+ * ShortPathToLongPath() - convert a given path into its long format
+ *
+ * In the process, automatically registers long paths for all of the parent
+ * folders on the path, if they have not already been registered.
+ *
+ * Prerequisites:
+ *  - Path to given in normalized form, i.e. all of its folder separators have
+ *    already been converted into '\\'.
+ *  - path_key_cache path/key mapping cache object has already been initialized.
  */
 
 static void ShortPathToLongPath( char const * const path, int const path_length,
     string * const out )
 {
-    char const * new_element;
+    char const * last_element;
     unsigned long saved_size;
     char const * p;
 
@@ -335,7 +342,7 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
 
     /* Find last '\\'. */
     for ( p = path + path_length - 1; p >= path && *p != '\\'; --p );
-    new_element = p + 1;
+    last_element = p + 1;
 
     /* Special case '\' && 'D:\' - include trailing '\'. */
     if ( p == path ||
@@ -368,7 +375,7 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
         string_push_back( out, '\\' );
 
     saved_size = out->size;
-    string_append_range( out, new_element, path + path_length );
+    string_append_range( out, last_element, path + path_length );
 
     /* If we have a name that can not be a valid short name then it must be a
      * valid long name and we are done. If there is a chance this is not the
@@ -380,7 +387,7 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
      * short name.
      */
     {
-        char const * const n = new_element;
+        char const * const n = last_element;
         int const n_length = path + path_length - n;
         if ( !( n_length == 1 && n[ 0 ] == '.' )
             && !( n_length == 2 && n[ 0 ] == '.' && n[ 1 ] == '.' )
