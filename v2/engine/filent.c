@@ -81,6 +81,8 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         int const d_length = strlen( object_str( long_dir ) );
 
         memset( (char *)&f, '\0', sizeof( f ) );
+        f.f_dir.ptr = object_str( long_dir );
+        f.f_dir.len = d_length;
 
         /* Now enter contents of directory */
 
@@ -103,12 +105,11 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         if ( DEBUG_BINDSCAN )
             printf( "scan directory %s\n", long_dir );
 
-        object_free( long_dir );
-
         #if defined(__BORLANDC__) && __BORLANDC__ < 0x550
         if ( findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
         {
             string_free( filespec );
+            object_free( long_dir );
             PROFILE_EXIT( FILE_DIRSCAN );
             return;
         }
@@ -137,6 +138,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
             if ( handle < 0L )
             {
                 string_free( filespec );
+                object_free( long_dir );
                 PROFILE_EXIT( FILE_DIRSCAN );
                 return;
             }
@@ -169,6 +171,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         #endif
         string_free( filename );
         string_free( filespec );
+        object_free( long_dir );
 
         d->files = files;
     }
