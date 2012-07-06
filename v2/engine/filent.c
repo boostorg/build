@@ -200,12 +200,9 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
              * $(p2). But, that seems rather fragile.
              */
             OBJECT * const dir1 = short_path_to_long_path( d->name );
-            OBJECT * dir2;
-            char buf[ 3 ];
-            buf[ 0 ] = object_str( dir1 )[ 0 ];
-            buf[ 1 ] = object_str( dir1 )[ 1 ];
-            buf[ 2 ] = 0;
-            dir2 = object_new( buf );
+            char const * const dir1_raw = object_str( dir1 );
+            char const dir2_raw[ 3 ] = { dir1_raw[ 0 ], dir1_raw[ 1 ], 0 };
+            OBJECT * const dir2 = object_new( dir2_raw );
             (*func)( closure, dir1, 1 /* stat()'ed */, d->time );
             (*func)( closure, dir2, 1 /* stat()'ed */, d->time );
             object_free( dir2 );
