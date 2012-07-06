@@ -70,7 +70,8 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         return;
     }
 
-    if ( !d->files )
+    /* If we do not have the directory's contents information - collect it. */
+    if ( list_empty( d->files ) )
     {
         PATHNAME f;
         string filespec[ 1 ];
@@ -83,8 +84,6 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         memset( (char *)&f, '\0', sizeof( f ) );
         f.f_dir.ptr = object_str( long_dir );
         f.f_dir.len = d_length;
-
-        /* Now enter contents of directory */
 
         /* Prepare file search specification for the findfirst() API. */
         if ( !d_length )
@@ -178,12 +177,10 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 
     /* Special case \ or d:\ : enter it */
     {
-        unsigned long len = strlen( object_str( d->name ) );
+        unsigned long const len = strlen( object_str( d->name ) );
         if ( len == 1 && object_str( d->name )[ 0 ] == '\\' )
         {
-            OBJECT * const long_dir = short_path_to_long_path( d->name );
-            (*func)( closure, long_dir, 1 /* stat()'ed */, d->time );
-            object_free( long_dir );
+            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
         }
         else if ( len == 3 && object_str( d->name )[ 1 ] == ':' )
         {
@@ -199,27 +196,23 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
              * There will be no trailing slash in $(p), but there will be one in
              * $(p2). But, that seems rather fragile.
              */
-            OBJECT * const dir1 = short_path_to_long_path( d->name );
-            char const * const dir1_raw = object_str( dir1 );
-            char const dir2_raw[ 3 ] = { dir1_raw[ 0 ], dir1_raw[ 1 ], 0 };
-            OBJECT * const dir2 = object_new( dir2_raw );
-            (*func)( closure, dir1, 1 /* stat()'ed */, d->time );
+            char const * const str = object_str( d->name );
+            char const dir2_str[] = { str[ 0 ], str[ 1 ], 0 };
+            OBJECT * const dir2 = object_new( dir2_str );
+            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
             (*func)( closure, dir2, 1 /* stat()'ed */, d->time );
             object_free( dir2 );
-            object_free( dir1 );
         }
     }
 
-    /* Now enter contents of directory */
-    if ( !list_empty( d->files ) )
+    /* Now enter the directory contents. */
     {
-        LIST * const files = d->files;
-        LISTITER iter = list_begin( files );
-        LISTITER const end = list_end( files );
+        LISTITER iter = list_begin( d->files );
+        LISTITER const end = list_end( d->files );
         for ( ; iter != end; iter = list_next( iter ) )
         {
             file_info_t const * const ff = file_info( list_item( iter ) );
-            (*func)( closure, list_item( iter ), 1 /* stat()'ed */, ff->time );
+            (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
         }
     }
 
