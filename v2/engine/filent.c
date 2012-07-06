@@ -66,7 +66,6 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
     file_info_t * const d = file_query( dir );
     if ( !d || !d->is_dir )
     {
-        object_free( dir );
         PROFILE_EXIT( FILE_DIRSCAN );
         return;
     }
