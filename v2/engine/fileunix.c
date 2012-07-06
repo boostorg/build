@@ -102,7 +102,6 @@ struct ar_hdr       /* archive file member header - printable ascii */
  * fileunix.c - manipulate file names and scan directories on UNIX/AmigaOS
  *
  * External routines:
- *
  *  file_dirscan() - scan a directory for files
  *  file_time() - get timestamp of file, if not done by file_dirscan()
  *  file_archscan() - scan an archive for files
@@ -123,36 +122,29 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 {
     PROFILE_ENTER( FILE_DIRSCAN );
 
-    file_info_t * d = 0;
-
-    d = file_query( dir );
-
+    file_info_t * const d = file_query( dir );
     if ( !d || !d->is_dir )
     {
         PROFILE_EXIT( FILE_DIRSCAN );
         return;
     }
 
+    /* If we do not have the directory's contents information - collect it. */
     if ( list_empty( d->files ) )
     {
-        LIST* files = L0;
+        LIST * files = L0;
         PATHNAME f;
-        DIR *dd;
-        STRUCT_DIRENT *dirent;
-        string filename[1];
-        const char * dirstr = object_str( dir );
+        DIR * dd;
+        STRUCT_DIRENT * dirent;
+        string filename[ 1 ];
+        char const * dirstr = object_str( dir );
 
         /* First enter directory itself */
-
         memset( (char *)&f, '\0', sizeof( f ) );
-
         f.f_dir.ptr = dirstr;
         f.f_dir.len = strlen( dirstr );
 
-        dirstr = *dirstr ? dirstr : ".";
-
-        /* Now enter contents of directory. */
-
+        if ( !*dirstr ) dirstr = ".";
         if ( !( dd = opendir( dirstr ) ) )
         {
             PROFILE_EXIT( FILE_DIRSCAN );
@@ -165,21 +157,17 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         string_new( filename );
         while ( ( dirent = readdir( dd ) ) )
         {
-            OBJECT * filename_obj;
-            # ifdef old_sinix
+            #ifdef old_sinix
             /* Broken structure definition on sinix. */
             f.f_base.ptr = dirent->d_name - 2;
-            # else
+            #else
             f.f_base.ptr = dirent->d_name;
-            # endif
+            #endif
             f.f_base.len = strlen( f.f_base.ptr );
 
             string_truncate( filename, 0 );
             path_build( &f, filename, 0 );
-
-            filename_obj = object_new( filename->value );
-            files = list_push_back( files, filename_obj );
-            file_query( filename_obj );
+            files = list_push_back( files, object_new( filename->value ) );
         }
         string_free( filename );
 
@@ -194,17 +182,14 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
     }
 
-    /* Now enter contents of directory */
-    if ( !list_empty( d->files ) )
+    /* Now enter the directory contents. */
     {
-        LIST * files = d->files;
-        LISTITER iter = list_begin( files );
-        LISTITER const end = list_end( files );
+        LISTITER iter = list_begin( d->files );
+        LISTITER const end = list_end( d->files );
         for ( ; iter != end; iter = list_next( iter ) )
         {
-            file_info_t * const ff = file_info( list_item( iter ) );
+            file_info_t const * const ff = file_query( list_item( iter ) );
             (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
-            files = list_next( files );
         }
     }
 
