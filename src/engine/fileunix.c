@@ -20,13 +20,13 @@
 # include <sys/stat.h>
 
 #if defined(sun) || defined(__sun) || defined(linux)
-# include <unistd.h> /* needed for read and close prototype */
+# include <unistd.h>  /* needed for read and close prototype */
 #endif
 
 # ifdef USE_FILEUNIX
 
 #if defined(sun) || defined(__sun)
-# include <unistd.h> /* needed for read and close prototype */
+# include <unistd.h>  /* needed for read and close prototype */
 #endif
 
 # if defined( OS_SEQUENT ) || \
