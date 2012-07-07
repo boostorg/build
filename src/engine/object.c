@@ -9,12 +9,11 @@
  * object.c - object manipulation routines
  *
  * External functions:
- *    object_new()       - create an object from a string
- *    object_new_range() - create an object from a string of given length
- *    object_copy()      - return a copy of an object
- *    object_free()      - free an object
- *    object_str()       - get the string value of an object
- *    object_done()      - free string tables
+ *    object_new()  - create an object from a string
+ *    object_copy() - return a copy of an object
+ *    object_free() - free an object
+ *    object_str()  - get the string value of an object
+ *    object_done() - free string tables
  *
  * This implementation builds a hash table of all strings, so that multiple
  * calls of object_new() on the same string allocate memory for the string once.
@@ -129,27 +128,28 @@ static char * allocate( size_t n )
 }
 
 
-static unsigned int hash_keyval( char const * key, int const size )
+static unsigned int hash_keyval( char const * key )
 {
-    unsigned int const magic = 2147059363;
     unsigned int hash = 0;
+    unsigned i;
+    unsigned int len = strlen( key );
 
-    unsigned int i;
-    for ( i = 0; i < size / sizeof( unsigned int ); ++i )
+    for ( i = 0; i < len / sizeof( unsigned int ); ++i )
     {
         unsigned int val;
         memcpy( &val, key, sizeof( unsigned int ) );
-        hash = hash * magic + val;
+        hash = hash * 2147059363 + val;
         key += sizeof( unsigned int );
     }
 
     {
         unsigned int val = 0;
-        memcpy( &val, key, size % sizeof( unsigned int ) );
-        hash = hash * magic + val;
+        memcpy( &val, key, len % sizeof( unsigned int ) );
+        hash = hash * 2147059363 + val;
     }
 
-    return hash + ( hash >> 17 );
+    hash += (hash >> 17);
+    return hash;
 }
 
 
@@ -193,16 +193,16 @@ static void string_set_resize( string_set * set )
 }
 
 
-static char const * string_set_insert( string_set * set, char const * string,
-    int const size )
+static char const * string_set_insert( string_set * set, char const * string )
 {
-    unsigned hash = hash_keyval( string, size );
+    unsigned hash = hash_keyval( string );
     unsigned pos = hash % set->num;
+    unsigned len;
 
     struct hash_item * result;
 
     for ( result = set->data[ pos ]; result; result = result->header.next )
-        if ( !strncmp( result->data, string, size ) && !result->data[ size ] )
+        if ( !strcmp( result->data, string ) )
             return result->data;
 
     if ( set->size >= set->num )
@@ -211,18 +211,17 @@ static char const * string_set_insert( string_set * set, char const * string,
         pos = hash % set->num;
     }
 
-    result = (struct hash_item *)allocate( sizeof( struct hash_header ) + size +
-        1 );
+    len = strlen( string ) + 1;
+    result = (struct hash_item *)allocate( sizeof( struct hash_header ) + len );
     result->header.hash = hash;
     result->header.next = set->data[ pos ];
 #ifndef NDEBUG
     result->header.magic = OBJECT_MAGIC;
 #endif
-    memcpy( result->data, string, size );
-    result->data[ size ] = '\0';
-    assert( hash_keyval( result->data, size ) == result->header.hash );
+    memcpy( result->data, string, len );
+    assert( hash_keyval( result->data ) == result->header.hash );
     set->data[ pos ] = result;
-    strtotal += size + 1;
+    strtotal += len;
     ++set->size;
 
     return result->data;
@@ -244,38 +243,29 @@ static void object_validate( OBJECT * obj )
 
 
 /*
- * object_new_range() - create an object from a string of given length
+ * object_new() - create an object from a string.
  */
 
-OBJECT * object_new_range( char const * const string, int const size )
+OBJECT * object_new( char const * string )
 {
     ++strcount_in;
 
 #ifdef BJAM_NO_MEM_CACHE
     {
+        int const len = strlen( string ) + 1;
         struct hash_item * const m = (struct hash_item *)BJAM_MALLOC( sizeof(
-            struct hash_header ) + size + 1 );
-        strtotal += size + 1;
-        memcpy( m->data, string, size );
-        m->data[ size ] = '\0';
+            struct hash_header ) + len );
+
+        strtotal += len;
+        memcpy( m->data, string, len );
         m->header.magic = OBJECT_MAGIC;
         return (OBJECT *)m->data;
     }
 #else
     if ( !strhash.data )
         string_set_init( &strhash );
-    return (OBJECT *)string_set_insert( &strhash, string, size );
+    return (OBJECT *)string_set_insert( &strhash, string );
 #endif
-}
-
-
-/*
- * object_new() - create an object from a string
- */
-
-OBJECT * object_new( char const * const string )
-{
-    return object_new_range( string, strlen( string ) );
 }
 
 
@@ -347,7 +337,7 @@ unsigned int object_hash( OBJECT * obj )
 {
     object_validate( obj );
 #ifdef BJAM_NO_MEM_CACHE
-    return hash_keyval( object_str( obj ), strlen( object_str( obj ) ) );
+    return hash_keyval( object_str( obj ) );
 #else
     return object_get_item( obj )->header.hash;
 #endif
