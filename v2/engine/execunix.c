@@ -339,8 +339,9 @@ static int read_descriptor( int i, int s )
      * contains the command status at beginning of it own line instead of
      * appended to end of the previous output.
      */
-    if ( globs.max_buf && cmdtab[ i ].buf_size[ s ] == globs.max_buf )
+    if ( globs.max_buf && globs.max_buf <= cmdtab[i].buf_size[s] ) {
         cmdtab[ i ].buffer[ s ][ cmdtab[ i ].buf_size[ s ] - 2 ] = '\n';
+    }
 
     return feof( cmdtab[ i ].stream[ s ] );
 }

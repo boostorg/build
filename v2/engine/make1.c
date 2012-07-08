@@ -822,7 +822,7 @@ static void call_action_rule
 static void make_closure
 (
     void * const closure,
-    int const status,
+    int status,
     timing_info const * const time,
     char const * const cmd_stdout,
     char const * const cmd_stderr,
@@ -830,7 +830,7 @@ static void make_closure
 )
 {
     TARGET * const t = (TARGET *)closure;
-    CMD const * const cmd = (CMD *)t->cmds;
+    CMD * cmd = (CMD *)t->cmds;
     char const * rule_name = 0;
     char const * target_name = 0;
 
@@ -857,25 +857,6 @@ static void make_closure
         /* Assume -p0 is in effect, i.e. cmd_stdout contains merged output. */
         call_action_rule( t, status, time, cmd->buf->value, cmd_stdout );
     }
-
-    push_state( &state_stack, t, NULL, T_STATE_MAKE1D )->status = status;
-}
-
-
-/*
- * make1d() - handle command execution completion and call back make1c().
- *
- * exec_cmd() has completed and now all we need to do is fiddle with the status
- * and call back to make1c() so it can run the next command scheduled for
- * building this target or close up the target's build process in case there are
- * no more commands scheduled for it. On interrupts, we bail heavily.
- */
-
-static void make1d( state * pState )
-{
-    TARGET * t = pState->t;
-    CMD * cmd = (CMD *)t->cmds;
-    int status = pState->status;
 
     if ( t->flags & T_FLAG_FAIL_EXPECTED && !globs.noexec )
     {
@@ -904,6 +885,25 @@ static void make1d( state * pState )
         list_print( lol_get( &cmd->args, 0 ) );
         printf( "...\n" );
     }
+
+    push_state( &state_stack, t, NULL, T_STATE_MAKE1D )->status = status;
+}
+
+
+/*
+ * make1d() - handle command execution completion and call back make1c().
+ *
+ * exec_cmd() has completed and now all we need to do is fiddle with the status
+ * and call back to make1c() so it can run the next command scheduled for
+ * building this target or close up the target's build process in case there are
+ * no more commands scheduled for it. On interrupts, we bail heavily.
+ */
+
+static void make1d( state * pState )
+{
+    TARGET * t = pState->t;
+    CMD * cmd = (CMD *)t->cmds;
+    int status = pState->status;
 
     /* Treat failed commands as interrupts in case we were asked to stop the
      * build in case of any errors.
