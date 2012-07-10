@@ -13,8 +13,9 @@
 
 typedef struct _object OBJECT;
 
-OBJECT * object_new ( char const * );
-void     object_done( void );
+OBJECT * object_new( char const * const );
+OBJECT * object_new_range( char const * const, int const size );
+void object_done( void );
 
 #if defined(NDEBUG) && !defined(BJAM_NO_MEM_CACHE)
 

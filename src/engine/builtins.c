@@ -627,7 +627,6 @@ static void builtin_glob_back( void * closure, OBJECT * file, int status,
     PROFILE_ENTER( BUILTIN_GLOB_BACK );
 
     struct globbing * const globbing = (struct globbing *)closure;
-    LIST * l;
     PATHNAME f;
     string buf[ 1 ];
     LISTITER iter;

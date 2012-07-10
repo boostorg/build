@@ -99,7 +99,7 @@ static void make1atail  ( state * );
 static void make1b      ( state * );
 static void make1c      ( state * );
 static void make1d      ( state * );
-static void make_closure( void * const closure, int const status,
+static void make_closure( void * const closure, int status,
     timing_info const * const, char const * const cmd_stdout,
     char const * const cmd_stderr, int const cmd_exit_reason );
 
@@ -830,7 +830,7 @@ static void make_closure
 )
 {
     TARGET * const t = (TARGET *)closure;
-    CMD * cmd = (CMD *)t->cmds;
+    CMD const * const cmd = (CMD *)t->cmds;
     char const * rule_name = 0;
     char const * target_name = 0;
 
@@ -882,7 +882,7 @@ static void make_closure
             printf( "%s\n", cmd->buf->value );
 
         printf( "...failed %s ", object_str( cmd->rule->name ) );
-        list_print( lol_get( &cmd->args, 0 ) );
+        list_print( lol_get( (LOL *)&cmd->args, 0 ) );
         printf( "...\n" );
     }
 
