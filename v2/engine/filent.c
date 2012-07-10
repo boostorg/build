@@ -15,7 +15,6 @@
  * filent.c - scan directories and archives on NT
  *
  * External routines:
- *
  *  file_dirscan() - scan a directory for files
  *  file_time() - get timestamp of file, if not done by file_dirscan()
  *  file_archscan() - scan an archive for files
@@ -67,7 +66,6 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
     file_info_t * const d = file_query( dir );
     if ( !d || !d->is_dir )
     {
-        object_free( dir );
         PROFILE_EXIT( FILE_DIRSCAN );
         return;
     }
@@ -77,25 +75,19 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         PATHNAME f;
         string filespec[ 1 ];
         string filename[ 1 ];
-        long handle;
-        int ret;
         struct _finddata_t finfo[ 1 ];
         LIST * files = L0;
-        int d_length;
-
-        dir = short_path_to_long_path( dir );
-
-        d_length = strlen( object_str( dir ) );
+        OBJECT * const long_dir = short_path_to_long_path( dir );
+        int const d_length = strlen( object_str( long_dir ) );
 
         memset( (char *)&f, '\0', sizeof( f ) );
-
-        f.f_dir.ptr = object_str( dir );
+        f.f_dir.ptr = object_str( long_dir );
         f.f_dir.len = d_length;
 
         /* Now enter contents of directory */
 
         /* Prepare file search specification for the findfirst() API. */
-        if ( d_length == 0 )
+        if ( !d_length )
             string_copy( filespec, ".\\*" );
         else
         {
@@ -103,85 +95,83 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
              * its trailing path separator or otherwise we would not support the
              * Windows root folder specified without its drive letter, i.e. '\'.
              */
-            char const trailingChar = object_str( dir )[ d_length - 1 ] ;
-            string_copy( filespec, object_str( dir ) );
+            char const trailingChar = object_str( long_dir )[ d_length - 1 ] ;
+            string_copy( filespec, object_str( long_dir ) );
             if ( ( trailingChar != '\\' ) && ( trailingChar != '/' ) )
                 string_append( filespec, "\\" );
             string_append( filespec, "*" );
         }
 
         if ( DEBUG_BINDSCAN )
-            printf( "scan directory %s\n", dir );
+            printf( "scan directory %s\n", long_dir );
 
         #if defined(__BORLANDC__) && __BORLANDC__ < 0x550
-        if ( ret = findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
+        if ( findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
         {
             string_free( filespec );
-            object_free( dir );
+            object_free( long_dir );
             PROFILE_EXIT( FILE_DIRSCAN );
             return;
         }
 
         string_new( filename );
-        while ( !ret )
+        do
         {
-            file_info_t * ff;
-
             f.f_base.ptr = finfo->ff_name;
             f.f_base.len = strlen( finfo->ff_name );
-
             string_truncate( filename, 0 );
             path_build( &f, filename );
 
             files = list_push_back( files, object_new( filename->value ) );
-            ff = file_info( filename->value );
-            ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
-            ff->is_dir = !ff->is_file;
-            ff->size = finfo->ff_fsize;
-            ff->time = ( finfo->ff_ftime << 16 ) | finfo->ff_ftime;
-
-            ret = findnext( finfo );
+            {
+                file_info_t * const ff = file_info( filename->value );
+                ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
+                ff->is_dir = !ff->is_file;
+                ff->size = finfo->ff_fsize;
+                ff->time = ( finfo->ff_ftime << 16 ) | finfo->ff_ftime;
+            }
         }
+        while ( !findnext( finfo ) );
         #else
-        handle = _findfirst( filespec->value, finfo );
-
-        if ( ret = ( handle < 0L ) )
         {
-            string_free( filespec );
-            object_free( dir );
-            PROFILE_EXIT( FILE_DIRSCAN );
-            return;
+            long const handle = _findfirst( filespec->value, finfo );
+            if ( handle < 0L )
+            {
+                string_free( filespec );
+                object_free( long_dir );
+                PROFILE_EXIT( FILE_DIRSCAN );
+                return;
+            }
+
+            string_new( filename );
+            do
+            {
+                OBJECT * filename_obj;
+
+                f.f_base.ptr = finfo->name;
+                f.f_base.len = strlen( finfo->name );
+                string_truncate( filename, 0 );
+                path_build( &f, filename, 0 );
+
+                filename_obj = object_new( filename->value );
+                path_key__register_long_path( filename_obj );
+                files = list_push_back( files, filename_obj );
+                {
+                    file_info_t * const ff = file_info( filename_obj );
+                    ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
+                    ff->is_dir = !ff->is_file;
+                    ff->size = finfo->size;
+                    ff->time = finfo->time_write;
+                }
+            }
+            while ( !_findnext( handle, finfo ) );
+
+            _findclose( handle );
         }
-
-        string_new( filename );
-        while ( !ret )
-        {
-            OBJECT * filename_obj;
-            file_info_t * ff;
-
-            f.f_base.ptr = finfo->name;
-            f.f_base.len = strlen( finfo->name );
-
-            string_truncate( filename, 0 );
-            path_build( &f, filename, 0 );
-
-            filename_obj = object_new( filename->value );
-            path_add_key( filename_obj );
-            files = list_push_back( files, filename_obj );
-            ff = file_info( filename_obj );
-            ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
-            ff->is_dir = !ff->is_file;
-            ff->size = finfo->size;
-            ff->time = finfo->time_write;
-
-            ret = _findnext( handle, finfo );
-        }
-
-        _findclose( handle );
         #endif
         string_free( filename );
         string_free( filespec );
-        object_free( dir );
+        object_free( long_dir );
 
         d->files = files;
     }
@@ -191,16 +181,12 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         unsigned long len = strlen( object_str( d->name ) );
         if ( len == 1 && object_str( d->name )[ 0 ] == '\\' )
         {
-            OBJECT * const dir = short_path_to_long_path( d->name );
-            (*func)( closure, dir, 1 /* stat()'ed */, d->time );
-            object_free( dir );
+            OBJECT * const long_dir = short_path_to_long_path( d->name );
+            (*func)( closure, long_dir, 1 /* stat()'ed */, d->time );
+            object_free( long_dir );
         }
         else if ( len == 3 && object_str( d->name )[ 1 ] == ':' )
         {
-            char buf[ 4 ];
-            OBJECT * const dir1 = short_path_to_long_path( d->name );
-            OBJECT * dir2;
-            (*func)( closure, dir1, 1 /* stat()'ed */, d->time );
             /* We have just entered a 3-letter drive name spelling (with a
              * trailing slash), into the hash table. Now enter its two-letter
              * variant, without the trailing slash, so that if we try to check
@@ -213,9 +199,11 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
              * There will be no trailing slash in $(p), but there will be one in
              * $(p2). But, that seems rather fragile.
              */
-            strcpy( buf, object_str( dir1 ) );
-            buf[ 2 ] = 0;
-            dir2 = object_new( buf );
+            OBJECT * const dir1 = short_path_to_long_path( d->name );
+            char const * const dir1_raw = object_str( dir1 );
+            char const dir2_raw[ 3 ] = { dir1_raw[ 0 ], dir1_raw[ 1 ], 0 };
+            OBJECT * const dir2 = object_new( dir2_raw );
+            (*func)( closure, dir1, 1 /* stat()'ed */, d->time );
             (*func)( closure, dir2, 1 /* stat()'ed */, d->time );
             object_free( dir2 );
             object_free( dir1 );

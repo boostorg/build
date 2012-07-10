@@ -72,7 +72,7 @@ OBJECT * path_as_key( OBJECT * path );
  * long form. Avoids the need for some subsequent path_as_key() call to do a
  * potentially expensive short-->long path conversion.
  */
-void path_add_key( OBJECT * long_path );
+void path_key__register_long_path( OBJECT * long_path );
 
 #ifdef USE_PATHUNIX
 /* Returns a static pointer to the system dependent path to the temporary
