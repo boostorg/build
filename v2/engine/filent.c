@@ -197,8 +197,7 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
              * $(p2). But, that seems rather fragile.
              */
             char const * const str = object_str( d->name );
-            char const dir_no_slash_raw[ 3 ] = { str[ 0 ], str[ 1 ], 0 };
-            OBJECT * const dir_no_slash = object_new( dir_no_slash_raw );
+            OBJECT * const dir_no_slash = object_new_range( str, 2 );
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
             (*func)( closure, dir_no_slash, 1 /* stat()'ed */, d->time );
             object_free( dir_no_slash );
