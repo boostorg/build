@@ -11,98 +11,10 @@
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
-# include "jam.h"
-# include "filesys.h"
-# include "strings.h"
-# include "pathsys.h"
-# include "object.h"
-# include <stdio.h>
-# include <sys/stat.h>
-
-#if defined(sun) || defined(__sun) || defined(linux)
-# include <unistd.h> /* needed for read and close prototype */
-#endif
-
-# ifdef USE_FILEUNIX
-
-#if defined(sun) || defined(__sun)
-# include <unistd.h> /* needed for read and close prototype */
-#endif
-
-# if defined( OS_SEQUENT ) || \
-     defined( OS_DGUX ) || \
-     defined( OS_SCO ) || \
-     defined( OS_ISC )
-# define PORTAR 1
-# endif
-
-# ifdef __EMX__
-# include <sys/types.h>
-# include <sys/stat.h>
-# endif
-
-# if defined( OS_RHAPSODY ) || \
-     defined( OS_MACOSX ) || \
-     defined( OS_NEXT )
-/* need unistd for rhapsody's proper lseek */
-# include <sys/dir.h>
-# include <unistd.h>
-# define STRUCT_DIRENT struct direct
-# else
-# include <dirent.h>
-# define STRUCT_DIRENT struct dirent
-# endif
-
-# ifdef OS_COHERENT
-# include <arcoff.h>
-# define HAVE_AR
-# endif
-
-# if defined( OS_MVS ) || \
-         defined( OS_INTERIX )
-
-#define ARMAG   "!<arch>\n"
-#define SARMAG  8
-#define ARFMAG  "`\n"
-
-struct ar_hdr       /* archive file member header - printable ascii */
-{
-    char    ar_name[16];    /* file member name - `/' terminated */
-    char    ar_date[12];    /* file member date - decimal */
-    char    ar_uid[6];  /* file member user id - decimal */
-    char    ar_gid[6];  /* file member group id - decimal */
-    char    ar_mode[8]; /* file member mode - octal */
-    char    ar_size[10];    /* file member size - decimal */
-    char    ar_fmag[2]; /* ARFMAG - string to end header */
-};
-
-# define HAVE_AR
-# endif
-
-# if defined( OS_QNX ) || \
-     defined( OS_BEOS ) || \
-     defined( OS_MPEIX )
-# define NO_AR
-# define HAVE_AR
-# endif
-
-# ifndef HAVE_AR
-
-# ifdef OS_AIX
-/* Define those for AIX to get the definitions for both the small and the
- * big variant of the archive file format. */
-#    define __AR_SMALL__
-#    define __AR_BIG__
-# endif
-
-# include <ar.h>
-# endif
-
 /*
  * fileunix.c - manipulate file names and scan directories on UNIX/AmigaOS
  *
  * External routines:
- *
  *  file_dirscan() - scan a directory for files
  *  file_time() - get timestamp of file, if not done by file_dirscan()
  *  file_archscan() - scan an archive for files
@@ -114,6 +26,81 @@ struct ar_hdr       /* archive file member header - printable ascii */
  * interested parties may later call file_time() for it.
  */
 
+#include "jam.h"
+#ifdef USE_FILEUNIX
+#include "filesys.h"
+
+#include "object.h"
+#include "pathsys.h"
+#include "strings.h"
+
+#include <stdio.h>
+#include <sys/stat.h>
+
+#if defined( sun ) || defined( __sun ) || defined( linux )
+# include <unistd.h>  /* needed for read and close prototype */
+#endif
+
+#if defined( OS_SEQUENT ) || \
+    defined( OS_DGUX ) || \
+    defined( OS_SCO ) || \
+    defined( OS_ISC )
+# define PORTAR 1
+#endif
+
+#ifdef __EMX__
+# include <sys/types.h>
+# include <sys/stat.h>
+#endif
+
+#if defined( OS_RHAPSODY ) || defined( OS_MACOSX ) || defined( OS_NEXT )
+# include <sys/dir.h>
+# include <unistd.h>  /* need unistd for rhapsody's proper lseek */
+# define STRUCT_DIRENT struct direct
+#else
+# include <dirent.h>
+# define STRUCT_DIRENT struct dirent
+#endif
+
+#ifdef OS_COHERENT
+# include <arcoff.h>
+# define HAVE_AR
+#endif
+
+#if defined( OS_MVS ) || defined( OS_INTERIX )
+#define ARMAG  "!<arch>\n"
+#define SARMAG  8
+#define ARFMAG  "`\n"
+#define HAVE_AR
+
+struct ar_hdr  /* archive file member header - printable ascii */
+{
+    char ar_name[ 16 ];  /* file member name - `/' terminated */
+    char ar_date[ 12 ];  /* file member date - decimal */
+    char ar_uid[ 6 ];    /* file member user id - decimal */
+    char ar_gid[ 6 ];    /* file member group id - decimal */
+    char ar_mode[ 8 ];   /* file member mode - octal */
+    char ar_size[ 10 ];  /* file member size - decimal */
+    char ar_fmag[ 2 ];   /* ARFMAG - string to end header */
+};
+#endif
+
+#if defined( OS_QNX ) || defined( OS_BEOS ) || defined( OS_MPEIX )
+# define NO_AR
+# define HAVE_AR
+#endif
+
+#ifndef HAVE_AR
+# ifdef OS_AIX
+/* Define those for AIX to get the definitions for both small and big archive
+ * file format variants.
+ */
+#  define __AR_SMALL__
+#  define __AR_BIG__
+# endif
+# include <ar.h>
+#endif
+
 
 /*
  * file_dirscan() - scan a directory for files.
@@ -123,33 +110,29 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 {
     PROFILE_ENTER( FILE_DIRSCAN );
 
-    file_info_t * d = 0;
-
-    d = file_query( dir );
-
+    file_info_t * const d = file_query( dir );
     if ( !d || !d->is_dir )
     {
         PROFILE_EXIT( FILE_DIRSCAN );
         return;
     }
 
+    /* If we do not have the directory's contents information - collect it. */
     if ( list_empty( d->files ) )
     {
-        LIST* files = L0;
+        LIST * files = L0;
         PATHNAME f;
-        DIR *dd;
-        STRUCT_DIRENT *dirent;
-        string filename[1];
-        const char * dirstr = object_str( dir );
+        DIR * dd;
+        STRUCT_DIRENT * dirent;
+        string filename[ 1 ];
+        char const * dirstr = object_str( dir );
 
-        /* First enter directory itself */
-
+        /* First enter the directory itself. */
         memset( (char *)&f, '\0', sizeof( f ) );
-
         f.f_dir.ptr = dirstr;
         f.f_dir.len = strlen( dirstr );
 
-        dirstr = *dirstr ? dirstr : ".";
+        if ( !*dirstr ) dirstr = ".";
 
         /* Now enter contents of directory. */
 
@@ -166,12 +149,11 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
         while ( ( dirent = readdir( dd ) ) )
         {
             OBJECT * filename_obj;
-            # ifdef old_sinix
-            /* Broken structure definition on sinix. */
-            f.f_base.ptr = dirent->d_name - 2;
-            # else
-            f.f_base.ptr = dirent->d_name;
-            # endif
+            f.f_base.ptr = dirent->d_name
+            #ifdef old_sinix
+                - 2  /* Broken structure definition on sinix. */
+            #endif
+                ;
             f.f_base.len = strlen( f.f_base.ptr );
 
             string_truncate( filename, 0 );
@@ -189,22 +171,17 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
     }
 
     /* Special case / : enter it */
-    {
-        if ( strcmp( object_str( d->name ), "/" ) == 0 )
-            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
-    }
+    if ( !strcmp( object_str( d->name ), "/" ) )
+        (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
 
-    /* Now enter contents of directory */
-    if ( !list_empty( d->files ) )
+    /* Now enter the directory contents. */
     {
-        LIST * files = d->files;
-        LISTITER iter = list_begin( files );
-        LISTITER const end = list_end( files );
+        LISTITER iter = list_begin( d->files );
+        LISTITER const end = list_end( d->files );
         for ( ; iter != end; iter = list_next( iter ) )
         {
-            file_info_t * const ff = file_info( list_item( iter ) );
+            file_info_t const * const ff = file_info( list_item( iter ) );
             (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
-            files = list_next( files );
         }
     }
 
@@ -234,6 +211,7 @@ file_info_t * file_query( OBJECT * filename )
     return ff;
 }
 
+
 /*
  * file_time() - get timestamp of file, if not done by file_dirscan()
  */
@@ -246,11 +224,11 @@ int file_time( OBJECT * filename, time_t * time )
     return 0;
 }
 
+
 int file_is_file( OBJECT * filename )
 {
     file_info_t const * const ff = file_query( filename );
-    if ( !ff ) return -1;
-    return ff->is_file;
+    return ff ? ff->is_file : -1;
 }
 
 
@@ -258,6 +236,7 @@ int file_mkdir( char const * pathname )
 {
     return mkdir( pathname, 0766 );
 }
+
 
 /*
  * file_archscan() - scan an archive for files
@@ -300,7 +279,7 @@ void file_archscan( char const * archive, scanback func, void * closure )
 #endif
         ) )
     {
-        char   lar_name_[257];
+        char   lar_name_[ 257 ];
         char * lar_name = lar_name_ + 1;
         long   lar_date;
         long   lar_size;
@@ -364,9 +343,7 @@ void file_archscan( char const * archive, scanback func, void * closure )
         BJAM_FREE( string_table );
 
     close( fd );
-
 #endif  /* NO_AR */
-
 }
 
 #else  /* AIAMAG - RS6000 AIX */
@@ -384,7 +361,7 @@ static void file_archscan_small( int fd, char const * archive, scanback func,
     char buf[ MAXJPATH ];
     long offset;
 
-    if ( read( fd, (char *)&fl_hdr, FL_HSZ ) != FL_HSZ)
+    if ( read( fd, (char *)&fl_hdr, FL_HSZ ) != FL_HSZ )
         return;
 
     sscanf( fl_hdr.fl_fstmoff, "%ld", &offset );
@@ -432,7 +409,7 @@ static void file_archscan_big( int fd, char const * archive, scanback func,
     char buf[ MAXJPATH ];
     long long offset;
 
-    if ( read( fd, (char *)&fl_hdr, FL_HSZ_BIG) != FL_HSZ_BIG)
+    if ( read( fd, (char *)&fl_hdr, FL_HSZ_BIG ) != FL_HSZ_BIG )
         return;
 
     sscanf( fl_hdr.fl_fstmoff, "%lld", &offset );
@@ -464,7 +441,7 @@ static void file_archscan_big( int fd, char const * archive, scanback func,
     }
 }
 
-#endif /* AR_HSZ_BIG */
+#endif  /* AR_HSZ_BIG */
 
 void file_archscan( char const * archive, scanback func, void * closure )
 {
@@ -497,6 +474,6 @@ void file_archscan( char const * archive, scanback func, void * closure )
     close( fd );
 }
 
-# endif /* AIAMAG - RS6000 AIX */
+#endif  /* AIAMAG - RS6000 AIX */
 
-# endif /* USE_FILEUNIX */
+#endif  /* USE_FILEUNIX */
