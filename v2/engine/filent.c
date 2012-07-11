@@ -15,21 +15,17 @@
  * filent.c - scan directories and archives on NT
  *
  * External routines:
- *  file_dirscan() - scan a directory for files
- *  file_time() - get timestamp of file, if not done by file_dirscan()
  *  file_archscan() - scan an archive for files
+ *  file_mkdir()    - create a directory
  *
- * File_dirscan() and file_archscan() call back a caller provided function for
- * each file found. A flag to this callback function lets file_dirscan() and
- * file_archscan() indicate whether a timestamp is being provided with the file.
- * If file_dirscan() or file_archscan() do not provide the file's timestamp,
- * interested parties may later call file_time() for it.
+ * External routines called only via routines in filesys.c:
+ *  file_collect_dir_content_() - collects directory content information
+ *  file_dirscan_()             - OS specific file_dirscan() implementation
+ *  file_query_()               - query information about a path from the OS
  */
 
 #include "jam.h"
-
 #ifdef OS_NT
-
 #include "filesys.h"
 
 #include "object.h"
@@ -45,144 +41,138 @@
 # define _finddata_t ffblk
 #endif
 
+#include <assert.h>
 #include <ctype.h>
 #include <direct.h>
 #include <io.h>
-#include <sys/stat.h>
 
 #include <windows.h>
 
 
 /*
- * file_dirscan() - scan a directory for files
+ * file_collect_dir_content_() - collects directory content information
  */
 
-void file_dirscan( OBJECT * dir, scanback func, void * closure )
+int file_collect_dir_content_( file_info_t * const d )
 {
-    PROFILE_ENTER( FILE_DIRSCAN );
+    PATHNAME f;
+    string filespec[ 1 ];
+    string filename[ 1 ];
+    struct _finddata_t finfo[ 1 ];
+    LIST * files = L0;
+    int d_length;
 
-    /* First enter the directory itself. */
+    assert( d );
+    assert( d->is_dir );
+    assert( list_empty( d->files ) );
 
-    file_info_t * const d = file_query( dir );
-    if ( !d || !d->is_dir )
+    d_length = strlen( object_str( d->name ) );
+
+    memset( (char *)&f, '\0', sizeof( f ) );
+    f.f_dir.ptr = object_str( d->name );
+    f.f_dir.len = d_length;
+
+    /* Prepare file search specification for the findfirst() API. */
+    if ( !d_length )
+        string_copy( filespec, ".\\*" );
+    else
     {
-        PROFILE_EXIT( FILE_DIRSCAN );
-        return;
+        /* We can not simply assume the given folder name will never include its
+         * trailing path separator or otherwise we would not support the Windows
+         * root folder specified without its drive letter, i.e. '\'.
+         */
+        char const trailingChar = object_str( d->name )[ d_length - 1 ] ;
+        string_copy( filespec, object_str( d->name ) );
+        if ( ( trailingChar != '\\' ) && ( trailingChar != '/' ) )
+            string_append( filespec, "\\" );
+        string_append( filespec, "*" );
     }
 
-    /* If we do not have the directory's contents information - collect it. */
-    if ( list_empty( d->files ) )
+    #if defined(__BORLANDC__) && __BORLANDC__ < 0x550
+    if ( findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
     {
-        PATHNAME f;
-        string filespec[ 1 ];
-        string filename[ 1 ];
-        struct _finddata_t finfo[ 1 ];
-        LIST * files = L0;
-        OBJECT * const long_dir = short_path_to_long_path( dir );
-        int const d_length = strlen( object_str( long_dir ) );
+        string_free( filespec );
+        return -1;
+    }
 
-        memset( (char *)&f, '\0', sizeof( f ) );
-        f.f_dir.ptr = object_str( long_dir );
-        f.f_dir.len = d_length;
+    string_new( filename );
+    do
+    {
+        f.f_base.ptr = finfo->ff_name;
+        f.f_base.len = strlen( finfo->ff_name );
+        string_truncate( filename, 0 );
+        path_build( &f, filename );
 
-        /* Prepare file search specification for the findfirst() API. */
-        if ( !d_length )
-            string_copy( filespec, ".\\*" );
-        else
+        files = list_push_back( files, object_new( filename->value ) );
         {
-            /* We can not simply assume the given folder name will never include
-             * its trailing path separator or otherwise we would not support the
-             * Windows root folder specified without its drive letter, i.e. '\'.
-             */
-            char const trailingChar = object_str( long_dir )[ d_length - 1 ] ;
-            string_copy( filespec, object_str( long_dir ) );
-            if ( ( trailingChar != '\\' ) && ( trailingChar != '/' ) )
-                string_append( filespec, "\\" );
-            string_append( filespec, "*" );
+            file_info_t * const ff = file_info( filename->value );
+            ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
+            ff->is_dir = !ff->is_file;
+            ff->size = finfo->ff_fsize;
+            ff->time = ( finfo->ff_ftime << 16 ) | finfo->ff_ftime;
         }
-
-        if ( DEBUG_BINDSCAN )
-            printf( "scan directory %s\n", long_dir );
-
-        #if defined(__BORLANDC__) && __BORLANDC__ < 0x550
-        if ( findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
+    }
+    while ( !findnext( finfo ) );
+    #else
+    {
+        long const handle = _findfirst( filespec->value, finfo );
+        if ( handle < 0L )
         {
             string_free( filespec );
-            object_free( long_dir );
-            PROFILE_EXIT( FILE_DIRSCAN );
-            return;
+            return -1;
         }
 
         string_new( filename );
         do
         {
-            f.f_base.ptr = finfo->ff_name;
-            f.f_base.len = strlen( finfo->ff_name );
+            OBJECT * filename_obj;
+
+            f.f_base.ptr = finfo->name;
+            f.f_base.len = strlen( finfo->name );
             string_truncate( filename, 0 );
-            path_build( &f, filename );
+            path_build( &f, filename, 0 );
 
-            files = list_push_back( files, object_new( filename->value ) );
+            filename_obj = object_new( filename->value );
+            path_key__register_long_path( filename_obj );
+            files = list_push_back( files, filename_obj );
             {
-                file_info_t * const ff = file_info( filename->value );
-                ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
+                file_info_t * const ff = file_info( filename_obj );
+                ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
                 ff->is_dir = !ff->is_file;
-                ff->size = finfo->ff_fsize;
-                ff->time = ( finfo->ff_ftime << 16 ) | finfo->ff_ftime;
+                ff->size = finfo->size;
+                ff->time = finfo->time_write;
             }
         }
-        while ( !findnext( finfo ) );
-        #else
-        {
-            long const handle = _findfirst( filespec->value, finfo );
-            if ( handle < 0L )
-            {
-                string_free( filespec );
-                object_free( long_dir );
-                PROFILE_EXIT( FILE_DIRSCAN );
-                return;
-            }
+        while ( !_findnext( handle, finfo ) );
 
-            string_new( filename );
-            do
-            {
-                OBJECT * filename_obj;
-
-                f.f_base.ptr = finfo->name;
-                f.f_base.len = strlen( finfo->name );
-                string_truncate( filename, 0 );
-                path_build( &f, filename, 0 );
-
-                filename_obj = object_new( filename->value );
-                path_key__register_long_path( filename_obj );
-                files = list_push_back( files, filename_obj );
-                {
-                    file_info_t * const ff = file_info( filename_obj );
-                    ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
-                    ff->is_dir = !ff->is_file;
-                    ff->size = finfo->size;
-                    ff->time = finfo->time_write;
-                }
-            }
-            while ( !_findnext( handle, finfo ) );
-
-            _findclose( handle );
-        }
-        #endif
-        string_free( filename );
-        string_free( filespec );
-        object_free( long_dir );
-
-        d->files = files;
+        _findclose( handle );
     }
+    #endif
+    string_free( filename );
+    string_free( filespec );
+
+    d->files = files;
+    return 0;
+}
+
+
+/*
+ * file_dirscan_() - OS specific file_dirscan() implementation
+ */
+
+void file_dirscan_( file_info_t * const d, scanback func, void * closure )
+{
+    assert( d );
+    assert( d->is_dir );
 
     /* Special case \ or d:\ : enter it */
     {
-        unsigned long const len = strlen( object_str( d->name ) );
-        if ( len == 1 && object_str( d->name )[ 0 ] == '\\' )
+        char const * const name = object_str( d->name );
+        if ( name[ 0 ] == '\\' && !name[ 1 ] )
         {
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
         }
-        else if ( len == 3 && object_str( d->name )[ 1 ] == ':' )
+        else if ( name[ 0 ] && name[ 1 ] == ':' && name[ 2 ] && !name[ 3 ] )
         {
             /* We have just entered a 3-letter drive name spelling (with a
              * trailing slash), into the hash table. Now enter its two-letter
@@ -196,90 +186,44 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
              * There will be no trailing slash in $(p), but there will be one in
              * $(p2). But, that seems rather fragile.
              */
-            char const * const str = object_str( d->name );
-            OBJECT * const dir_no_slash = object_new_range( str, 2 );
+            OBJECT * const dir_no_slash = object_new_range( name, 2 );
             (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
             (*func)( closure, dir_no_slash, 1 /* stat()'ed */, d->time );
             object_free( dir_no_slash );
         }
     }
-
-    /* Now enter the directory contents. */
-    {
-        LISTITER iter = list_begin( d->files );
-        LISTITER const end = list_end( d->files );
-        for ( ; iter != end; iter = list_next( iter ) )
-        {
-            file_info_t const * const ff = file_info( list_item( iter ) );
-            (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
-        }
-    }
-
-    PROFILE_EXIT( FILE_DIRSCAN );
-}
-
-
-file_info_t * file_query( OBJECT * filename )
-{
-    file_info_t * const ff = file_info( filename );
-    if ( !ff->time )
-    {
-        char const * const name = *object_str( filename )
-            ? object_str( filename )
-            : ".";
-
-        /* POSIX stat() function on Windows suffers from several issues:
-         *   * Does not support file timestamps with resolution finer than 1
-         *     second. This means it can not be used to detect file timestamp
-         *     changes of less than one second. One possible consequence is that
-         *     some fast-pased touch commands (such as those done by Boost
-         *     Build's internal testing system if it does not do extra waiting
-         *     before those touch operations) will not be detected correctly by
-         *     the build system.
-         *   * Returns file modification times automatically adjusted for
-         *     daylight savings time even though daylight savings time should
-         *     have nothing to do with internal time representation.
-         */
-        struct stat statbuf;
-
-        if ( stat( name, &statbuf ) < 0 )
-            return 0;
-
-        ff->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
-        ff->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
-        ff->size = statbuf.st_size;
-        /* Set the file's timestamp to 1 in case it is 0 or undetected to avoid
-         * confusion with non-existing files.
-         */
-        ff->time = statbuf.st_mtime ? statbuf.st_mtime : 1;
-    }
-    return ff;
 }
 
 
 /*
- * file_time() - get timestamp of file, if not done by file_dirscan()
+ * file_mkdir() - create a directory
  */
 
-int file_time( OBJECT * filename, time_t * time )
+int file_mkdir( char const * const path )
 {
-    file_info_t const * const ff = file_query( filename );
-    if ( !ff ) return -1;
-    *time = ff->time;
-    return 0;
+    return _mkdir( path );
 }
 
 
-int file_is_file( OBJECT * filename )
-{
-    file_info_t const * const ff = file_query( filename );
-    return ff ? ff->is_file : -1;
-}
+/*
+ * file_query_() - query information about a path from the OS
+ */
 
-
-int file_mkdir( char const * pathname )
+int file_query_( file_info_t * const info )
 {
-    return _mkdir( pathname );
+    /* Note that the POSIX stat() function implementation on Windows suffers
+     * from several issues:
+     *   * Does not support file timestamps with resolution finer than 1 second.
+     *     This means it can not be used to detect file timestamp changes of
+     *     less than one second. One possible consequence is that some
+     *     fast-paced touch commands (such as those done by Boost Build's
+     *     internal testing system if it does not do extra waiting before those
+     *     touch operations) will not be detected correctly by the build system.
+     *   * Returns file modification times automatically adjusted for daylight
+     *     savings time even though daylight savings time should have nothing to
+     *     do with internal time representation.
+     */
+    return file_query_posix_( info );
 }
 
 
@@ -289,7 +233,7 @@ int file_mkdir( char const * pathname )
 
 /* Straight from SunOS */
 
-#define ARMAG   "!<arch>\n"
+#define ARMAG  "!<arch>\n"
 #define SARMAG  8
 
 #define ARFMAG  "`\n"
@@ -304,8 +248,8 @@ struct ar_hdr {
     char ar_fmag[ 2 ];
 };
 
-#define SARFMAG 2
-#define SARHDR sizeof( struct ar_hdr )
+#define SARFMAG  2
+#define SARHDR  sizeof( struct ar_hdr )
 
 void file_archscan( char const * archive, scanback func, void * closure )
 {
@@ -336,8 +280,6 @@ void file_archscan( char const * archive, scanback func, void * closure )
         long lar_size;
         char * name = 0;
         char * endname;
-        char * c;
-        OBJECT * member;
 
         sscanf( ar_hdr.ar_date, "%ld", &lar_date );
         sscanf( ar_hdr.ar_size, "%ld", &lar_size );
@@ -382,16 +324,20 @@ void file_archscan( char const * archive, scanback func, void * closure )
         *++endname = 0;
 
         /* strip leading directory names, an NT specialty */
-
-        if ( c = strrchr( name, '/' ) )
-            name = c + 1;
-        if ( c = strrchr( name, '\\' ) )
-            name = c + 1;
+        {
+            char * c;
+            if ( c = strrchr( name, '/' ) )
+                name = c + 1;
+            if ( c = strrchr( name, '\\' ) )
+                name = c + 1;
+        }
 
         sprintf( buf, "%s(%.*s)", archive, endname - name, name );
-        member = object_new( buf );
-        (*func)( closure, member, 1 /* time valid */, (time_t)lar_date );
-        object_free( member );
+        {
+            OBJECT * const member = object_new( buf );
+            (*func)( closure, member, 1 /* time valid */, (time_t)lar_date );
+            object_free( member );
+        }
 
         offset += SARHDR + lar_size;
         lseek( fd, offset, 0 );
