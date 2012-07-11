@@ -216,12 +216,11 @@ void touch_target( OBJECT * t )
 TARGET * target_scc( TARGET * t )
 {
     TARGET * result = t;
-    TARGET * tmp;
     while ( result->scc_root )
         result = result->scc_root;
     while ( t->scc_root )
     {
-        tmp = t->scc_root;
+        TARGET * const tmp = t->scc_root;
         t->scc_root = result;
         t = tmp;
     }

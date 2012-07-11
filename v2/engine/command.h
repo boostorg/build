@@ -44,8 +44,8 @@
 #include "rules.h"
 #include "strings.h"
 
-typedef struct _cmd CMD;
 
+typedef struct _cmd CMD;
 struct _cmd
 {
     CMD  * next;
