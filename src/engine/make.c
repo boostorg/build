@@ -56,7 +56,7 @@ static TARGETS * make0sort( TARGETS * c );
     static void dependGraphOutput( TARGET * t, int depth );
 #endif
 
-static const char * target_fate[] =
+static char const * target_fate[] =
 {
     "init",     /* T_FATE_INIT     */
     "making",   /* T_FATE_MAKING   */
@@ -73,7 +73,7 @@ static const char * target_fate[] =
     "nomake"    /* T_FATE_CANTMAKE */
 };
 
-static const char * target_bind[] =
+static char const * target_bind[] =
 {
     "unbound",
     "missing",
@@ -228,20 +228,17 @@ int make0rescan( TARGET * t, TARGET * rescanning )
 {
     int result = 0;
     TARGETS * c;
-    /* Check whether we've already found a cycle. */
-    if( target_scc( t ) == rescanning )
-    {
+
+    /* Check whether we have already found a cycle. */
+    if ( target_scc( t ) == rescanning )
         return 1;
-    }
-    /* If we've already visited this node, ignore it. */
+
+    /* If we have already visited this node, ignore it. */
     if ( t->rescanning == rescanning )
         return 0;
 
     /* If t is already updated, ignore it. */
-    if ( t->scc_root == NULL &&
-        t->progress != T_MAKE_INIT &&
-        t->progress != T_MAKE_ONSTACK &&
-        t->progress != T_MAKE_ACTIVE )
+    if ( t->scc_root == NULL && t->progress > T_MAKE_ACTIVE )
         return 0;
 
     t->rescanning = rescanning;
@@ -302,7 +299,7 @@ void make0
         printf( "make\t--\t%s%s\n", spaces( depth ), object_str( t->name ) );
 
     /*
-     * Step 1: initialize
+     * Step 1: Initialize.
      */
 
     if ( DEBUG_MAKEPROG )
@@ -312,15 +309,15 @@ void make0
     t->depth = depth;
 
     /*
-     * Step 2: under the influence of "on target" variables, bind the target and
+     * Step 2: Under the influence of "on target" variables, bind the target and
      * search for headers.
      */
 
-    /* Step 2a: set "on target" variables. */
+    /* Step 2a: Set "on target" variables. */
     s = copysettings( t->settings );
     pushsettings( root_module(), s );
 
-    /* Step 2b: find and timestamp the target file (if it is a file). */
+    /* Step 2b: Find and timestamp the target file (if it is a file). */
     if ( ( t->binding == T_BIND_UNBOUND ) && !( t->flags & T_FLAG_NOTFILE ) )
     {
         OBJECT * another_target;
@@ -397,10 +394,10 @@ void make0
     }
 
     /*
-     * Step 3: recursively make0() dependencies & headers.
+     * Step 3: Recursively make0() dependencies & headers.
      */
 
-    /* Step 3a: recursively make0() dependencies. */
+    /* Step 3a: Recursively make0() dependencies. */
     for ( c = t->depends; c; c = c->next )
     {
         int const internal = t->flags & T_FLAG_INTERNAL;
@@ -429,11 +426,11 @@ void make0
             make0rescan( located_target, rescanning );
     }
 
-    /* Step 3b: recursively make0() internal includes node. */
+    /* Step 3b: Recursively make0() internal includes node. */
     if ( t->includes )
         make0( t->includes, p, depth + 1, counts, anyhow, rescanning );
 
-    /* Step 3c: add dependencies' includes to our direct dependencies. */
+    /* Step 3c: Add dependencies' includes to our direct dependencies. */
     {
         TARGETS * incs = 0;
         for ( c = t->depends; c; c = c->next )
@@ -445,7 +442,7 @@ void make0
     if ( located_target )
         t->depends = targetentry( t->depends, located_target );
 
-    /* Step 3d: detect cycles. */
+    /* Step 3d: Detect cycles. */
     {
         int cycle_depth = depth;
         for ( c = t->depends; c; c = c->next )
@@ -465,10 +462,10 @@ void make0
     }
 
     /*
-     * Step 4: compute time & fate
+     * Step 4: Compute time & fate.
      */
 
-    /* Step 4a: pick up dependencies' time and fate */
+    /* Step 4a: Pick up dependencies' time and fate. */
     last = 0;
     leaf = 0;
     fate = T_FATE_STABLE;
@@ -510,7 +507,7 @@ void make0
 #endif
     }
 
-    /* Step 4b: pick up included headers time */
+    /* Step 4b: Pick up included headers time. */
 
     /*
      * If a header is newer than a temp source that includes it, the temp source
@@ -542,7 +539,7 @@ void make0
         fate = T_FATE_STABLE;
     }
 
-    /* Step 4d: determine fate: rebuild target or what? */
+    /* Step 4d: Determine fate: rebuild target or what? */
 
     /*
         In English:
@@ -633,7 +630,7 @@ void make0
 	}
 #endif
 
-    /* Step 4e: handle missing files */
+    /* Step 4e: Handle missing files. */
     /* If it is missing and there are no actions to create it, boom. */
     /* If we can not make a target we do not care about it, okay. */
     /* We could insist that there are updating actions for all missing */
@@ -658,7 +655,7 @@ void make0
         }
     }
 
-    /* Step 4f: propagate dependencies' time & fate. */
+    /* Step 4f: Propagate dependencies' time & fate. */
     /* Set leaf time to be our time only if this is a leaf. */
 
     t->time = max( t->time, last );
@@ -672,21 +669,21 @@ void make0
     else
         fate = t->fate;
 
-    /* Step 4g: if this target needs to be built, force rebuild everything in
-     * this target's rebuilds list.
+    /* Step 4g: If this target needs to be built, force rebuild everything in
+     * its rebuilds list.
      */
     if ( ( fate >= T_FATE_BUILD ) && ( fate < T_FATE_BROKEN ) )
         force_rebuilds( t );
 
     /*
-     * Step 5: sort dependencies by their update time.
+     * Step 5: Sort dependencies by their update time.
      */
 
     if ( globs.newestfirst )
         t->depends = make0sort( t->depends );
 
     /*
-     * Step 6: a little harmless tabulating for tracing purposes
+     * Step 6: A little harmless tabulating for tracing purposes.
      */
 
     /* Do not count or report interal includes nodes. */
@@ -729,7 +726,7 @@ void make0
 
 #ifdef OPT_GRAPH_DEBUG_EXT
 
-static const char * target_name( TARGET * t )
+static char const * target_name( TARGET * t )
 {
     static char buf[ 1000 ];
     if ( t->flags & T_FLAG_INTERNAL )
@@ -756,19 +753,22 @@ static void dependGraphOutput( TARGET * t, int depth )
 
     switch ( t->fate )
     {
-    case T_FATE_TOUCHED:
-    case T_FATE_MISSING:
-    case T_FATE_OUTDATED:
-    case T_FATE_UPDATE:
-        printf( "->%s%2d Name: %s\n", spaces( depth ), depth, target_name( t ) );
-        break;
-    default:
-        printf( "  %s%2d Name: %s\n", spaces( depth ), depth, target_name( t ) );
-        break;
+        case T_FATE_TOUCHED:
+        case T_FATE_MISSING:
+        case T_FATE_OUTDATED:
+        case T_FATE_UPDATE:
+            printf( "->%s%2d Name: %s\n", spaces( depth ), depth, target_name( t
+                ) );
+            break;
+        default:
+            printf( "  %s%2d Name: %s\n", spaces( depth ), depth, target_name( t
+                ) );
+            break;
     }
 
-    if ( ! object_equal( t->name, t->boundname ) )
-        printf( "  %s    Loc: %s\n", spaces( depth ), object_str( t->boundname ) );
+    if ( !object_equal( t->name, t->boundname ) )
+        printf( "  %s    Loc: %s\n", spaces( depth ), object_str( t->boundname )
+            );
 
     switch ( t->fate )
     {
@@ -782,7 +782,8 @@ static void dependGraphOutput( TARGET * t, int depth )
         printf( "  %s       : Up to date temp file\n", spaces( depth ) );
         break;
     case T_FATE_NEEDTMP:
-        printf( "  %s       : Temporary file, to be updated\n", spaces( depth ) );
+        printf( "  %s       : Temporary file, to be updated\n", spaces( depth )
+            );
         break;
     case T_FATE_TOUCHED:
         printf( "  %s       : Been touched, updating it\n", spaces( depth ) );

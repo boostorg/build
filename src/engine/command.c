@@ -17,9 +17,10 @@
 #include "jam.h"
 #include "command.h"
 
-#include "assert.h"
 #include "lists.h"
 #include "rules.h"
+
+#include <assert.h>
 
 
 /*

@@ -71,14 +71,16 @@ static void string_reserve_internal( string * self, size_t capacity )
 {
     if ( self->value == self->opt )
     {
-        self->value = (char*)BJAM_MALLOC_ATOMIC( capacity + JAM_STRING_MAGIC_SIZE );
+        self->value = (char *)BJAM_MALLOC_ATOMIC( capacity +
+            JAM_STRING_MAGIC_SIZE );
         self->value[ 0 ] = 0;
         strncat( self->value, self->opt, sizeof(self->opt) );
-        assert( strlen( self->value ) <= self->capacity ); /* This is a regression test */
+        assert( strlen( self->value ) <= self->capacity && "Regression test" );
     }
     else
     {
-        self->value = (char*)BJAM_REALLOC( self->value, capacity + JAM_STRING_MAGIC_SIZE );
+        self->value = (char *)BJAM_REALLOC( self->value, capacity +
+            JAM_STRING_MAGIC_SIZE );
     }
 #ifndef NDEBUG
     memcpy( self->value + capacity, self->magic, JAM_STRING_MAGIC_SIZE );
@@ -97,7 +99,8 @@ void string_reserve( string * self, size_t capacity )
 }
 
 
-static void extend_full( string * self, char const * start, char const * finish )
+static void extend_full( string * self, char const * start, char const * finish
+    )
 {
     size_t new_size = self->capacity + ( finish - start );
     size_t new_capacity = self->capacity;
