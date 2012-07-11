@@ -15,15 +15,13 @@
  * fileunix.c - manipulate file names and scan directories on UNIX/AmigaOS
  *
  * External routines:
- *  file_dirscan() - scan a directory for files
- *  file_time() - get timestamp of file, if not done by file_dirscan()
  *  file_archscan() - scan an archive for files
+ *  file_mkdir()    - create a directory
  *
- * File_dirscan() and file_archscan() call back a caller provided function for
- * each file found. A flag to this callback function lets file_dirscan() and
- * file_archscan() indicate whether a timestamp is being provided with the file.
- * If file_dirscan() or file_archscan() do not provide the file's timestamp,
- * interested parties may later call file_time() for it.
+ * External routines called only via routines in filesys.c:
+ *  file_collect_dir_content_() - collects directory content information
+ *  file_dirscan_()             - OS specific file_dirscan() implementation
+ *  file_query_()               - query information about a path from the OS
  */
 
 #include "jam.h"
@@ -34,8 +32,8 @@
 #include "pathsys.h"
 #include "strings.h"
 
+#include <assert.h>
 #include <stdio.h>
-#include <sys/stat.h>
 
 #if defined( sun ) || defined( __sun ) || defined( linux )
 # include <unistd.h>  /* needed for read and close prototype */
@@ -46,11 +44,6 @@
     defined( OS_SCO ) || \
     defined( OS_ISC )
 # define PORTAR 1
-#endif
-
-#ifdef __EMX__
-# include <sys/types.h>
-# include <sys/stat.h>
 #endif
 
 #if defined( OS_RHAPSODY ) || defined( OS_MACOSX ) || defined( OS_NEXT )
@@ -103,136 +96,88 @@ struct ar_hdr  /* archive file member header - printable ascii */
 
 
 /*
- * file_dirscan() - scan a directory for files.
+ * file_collect_dir_content_() - collects directory content information
  */
 
-void file_dirscan( OBJECT * dir, scanback func, void * closure )
+int file_collect_dir_content_( file_info_t * const d )
 {
-    PROFILE_ENTER( FILE_DIRSCAN );
+    LIST * files = L0;
+    PATHNAME f;
+    DIR * dd;
+    STRUCT_DIRENT * dirent;
+    string filename[ 1 ];
+    char const * dirstr;
 
-    file_info_t * const d = file_query( dir );
-    if ( !d || !d->is_dir )
+    assert( d );
+    assert( d->is_dir );
+    assert( list_empty( d->files ) );
+
+    dirstr = object_str( d->name );
+
+    memset( (char *)&f, '\0', sizeof( f ) );
+    f.f_dir.ptr = dirstr;
+    f.f_dir.len = strlen( dirstr );
+
+    if ( !*dirstr ) dirstr = ".";
+
+    if ( !( dd = opendir( dirstr ) ) )
+        return -1;
+
+    string_new( filename );
+    while ( ( dirent = readdir( dd ) ) )
     {
-        PROFILE_EXIT( FILE_DIRSCAN );
-        return;
+        f.f_base.ptr = dirent->d_name
+        #ifdef old_sinix
+            - 2  /* Broken structure definition on sinix. */
+        #endif
+            ;
+        f.f_base.len = strlen( f.f_base.ptr );
+
+        string_truncate( filename, 0 );
+        path_build( &f, filename, 0 );
+        files = list_push_back( files, object_new( filename->value ) );
     }
+    string_free( filename );
 
-    /* If we do not have the directory's contents information - collect it. */
-    if ( list_empty( d->files ) )
-    {
-        LIST * files = L0;
-        PATHNAME f;
-        DIR * dd;
-        STRUCT_DIRENT * dirent;
-        string filename[ 1 ];
-        char const * dirstr = object_str( dir );
+    closedir( dd );
 
-        /* First enter the directory itself. */
-        memset( (char *)&f, '\0', sizeof( f ) );
-        f.f_dir.ptr = dirstr;
-        f.f_dir.len = strlen( dirstr );
-
-        if ( !*dirstr ) dirstr = ".";
-
-        if ( !( dd = opendir( dirstr ) ) )
-        {
-            PROFILE_EXIT( FILE_DIRSCAN );
-            return;
-        }
-
-        if ( DEBUG_BINDSCAN )
-            printf( "scan directory %s\n", dirstr );
-
-        string_new( filename );
-        while ( ( dirent = readdir( dd ) ) )
-        {
-            OBJECT * filename_obj;
-            f.f_base.ptr = dirent->d_name
-            #ifdef old_sinix
-                - 2  /* Broken structure definition on sinix. */
-            #endif
-                ;
-            f.f_base.len = strlen( f.f_base.ptr );
-
-            string_truncate( filename, 0 );
-            path_build( &f, filename, 0 );
-
-            filename_obj = object_new( filename->value );
-            files = list_push_back( files, filename_obj );
-            file_query( filename_obj );
-        }
-        string_free( filename );
-
-        closedir( dd );
-
-        d->files = files;
-    }
-
-    /* Special case / : enter it */
-    if ( !strcmp( object_str( d->name ), "/" ) )
-        (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
-
-    /* Now enter the directory contents. */
-    {
-        LISTITER iter = list_begin( d->files );
-        LISTITER const end = list_end( d->files );
-        for ( ; iter != end; iter = list_next( iter ) )
-        {
-            file_info_t const * const ff = file_info( list_item( iter ) );
-            (*func)( closure, ff->name, 1 /* stat()'ed */, ff->time );
-        }
-    }
-
-    PROFILE_EXIT( FILE_DIRSCAN );
-}
-
-
-file_info_t * file_query( OBJECT * filename )
-{
-    file_info_t * const ff = file_info( filename );
-    if ( !ff->time )
-    {
-        struct stat statbuf;
-
-        if ( stat( *object_str( filename ) ? object_str( filename ) : ".",
-            &statbuf ) < 0 )
-            return 0;
-
-        ff->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
-        ff->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
-        ff->size = statbuf.st_size;
-        /* Set the file's timestamp to 1 in case it is 0 or undetected to avoid
-         * confusion with non-existing files.
-         */
-        ff->time = statbuf.st_mtime ? statbuf.st_mtime : 1;
-    }
-    return ff;
-}
-
-
-/*
- * file_time() - get timestamp of file, if not done by file_dirscan()
- */
-
-int file_time( OBJECT * filename, time_t * time )
-{
-    file_info_t const * const ff = file_query( filename );
-    if ( !ff ) return -1;
-    *time = ff->time;
+    d->files = files;
     return 0;
 }
 
 
-int file_is_file( OBJECT * filename )
+/*
+ * file_dirscan_() - OS specific file_dirscan() implementation
+ */
+
+void file_dirscan_( file_info_t * const d, scanback func, void * closure )
 {
-    file_info_t const * const ff = file_query( filename );
-    return ff ? ff->is_file : -1;
+    assert( d );
+    assert( d->is_dir );
+
+    /* Special case / : enter it */
+    if ( !strcmp( object_str( d->name ), "/" ) )
+        (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
 }
 
 
-int file_mkdir( char const * pathname )
+/*
+ * file_mkdir() - create a directory
+ */
+
+int file_mkdir( char const * const pathname )
 {
     return mkdir( pathname, 0766 );
+}
+
+
+/*
+ * file_query_() - query information about a path from the OS
+ */
+
+int file_query_( file_info_t * const info )
+{
+    return file_query_posix_( info );
 }
 
 
@@ -446,7 +391,7 @@ void file_archscan( char const * archive, scanback func, void * closure )
     int fd;
     char fl_magic[ SAIAMAG ];
 
-    if ( ( fd = open( archive, O_RDONLY, 0)) < 0 )
+    if ( ( fd = open( archive, O_RDONLY, 0 ) ) < 0 )
         return;
 
     if ( read( fd, fl_magic, SAIAMAG ) != SAIAMAG ||

@@ -23,17 +23,6 @@
 #include "pathsys.h"
 
 
-typedef void (*scanback)( void *closure, OBJECT * file, int found, time_t t );
-
-void file_dirscan( OBJECT * dir, scanback func, void * closure );
-void file_archscan( char const * arch, scanback func, void * closure );
-
-int file_time( OBJECT * filename, time_t * time );
-
-void file_build1( PATHNAME * f, string * file ) ;
-int file_is_file( OBJECT * filename );
-int file_mkdir( char const * pathname );
-
 typedef struct file_info_t
 {
     OBJECT * name;
@@ -44,20 +33,22 @@ typedef struct file_info_t
     LIST * files;
 } file_info_t;
 
+typedef void (*scanback)( void * closure, OBJECT * path, int found, time_t t );
 
-/* Returns a pointer to information about file 'filename', creating it as
- * necessary. If created, the structure will be default initialized.
- */
-file_info_t * file_info( OBJECT * filename );
 
-/* Returns information about a file, queries the OS if needed. Will return 0 if
- * the file does not exist.
- */
-file_info_t * file_query( OBJECT * filename );
+void file_archscan( char const * arch, scanback func, void * closure );
+void file_build1( PATHNAME * f, string * file ) ;
+void file_dirscan( OBJECT * dir, scanback func, void * closure );
+file_info_t * file_info( OBJECT * path );
+int file_is_file( OBJECT * path );
+int file_mkdir( char const * const path );
+file_info_t * file_query( OBJECT * path );
+void file_remove_atexit( OBJECT * const path );
+int file_time( OBJECT * path, time_t * time );
+
+/* Internal utility worker functions. */
+int file_query_posix_( file_info_t * const info );
 
 void file_done();
-
-/* Marks a path/file to be removed when JAM exits. */
-void file_remove_atexit( OBJECT * const path );
 
 #endif
