@@ -886,6 +886,31 @@ static void make_closure
         printf( "...\n" );
     }
 
+    /* Treat failed commands as interrupts in case we were asked to stop the
+     * build in case of any errors.
+     */
+    if ( status == EXEC_CMD_FAIL && globs.quitquick )
+        ++intr;
+
+    /* If the command was interrupted or failed and the target is not
+     * "precious", remove the targets.
+     */
+    if ( status != EXEC_CMD_OK )
+    {
+        LIST * const targets = lol_get( (LOL *)&cmd->args, 0 );
+        LISTITER iter = list_begin( targets );
+        LISTITER const end = list_end( targets );
+        for ( ; iter != end; iter = list_next( iter ) )
+        {
+            int need_unlink = 1;
+            TARGET * const t = bindtarget( list_item( iter ) );
+            if ( t->flags & T_FLAG_PRECIOUS )
+                need_unlink = 0;
+            if ( need_unlink && !unlink( object_str( list_item( iter ) ) ) )
+                printf( "...removing %s\n", object_str( list_item( iter ) ) );
+        }
+    }
+
     push_state( &state_stack, t, NULL, T_STATE_MAKE1D )->status = status;
 }
 
@@ -903,37 +928,11 @@ static void make1d( state * pState )
 {
     TARGET * t = pState->t;
     CMD * cmd = (CMD *)t->cmds;
-    int status = pState->status;
-
-    /* Treat failed commands as interrupts in case we were asked to stop the
-     * build in case of any errors.
-     */
-    if ( status == EXEC_CMD_FAIL && globs.quitquick )
-        ++intr;
-
-    /* If the command was interrupted or failed and the target is not
-     * "precious", remove the targets.
-     */
-    if ( status != EXEC_CMD_OK )
-    {
-        LIST * targets = lol_get( &cmd->args, 0 );
-        LISTITER iter = list_begin( targets );
-        LISTITER const end = list_end( targets );
-        for ( ; iter != end; iter = list_next( iter ) )
-        {
-            int need_unlink = 1;
-            TARGET * const t = bindtarget( list_item( iter ) );
-            if ( t->flags & T_FLAG_PRECIOUS )
-                need_unlink = 0;
-            if ( need_unlink && !unlink( object_str( list_item( iter ) ) ) )
-                printf( "...removing %s\n", object_str( list_item( iter ) ) );
-        }
-    }
 
     /* Free this command and call make1c() to move onto the next one scheduled
      * for building this same target.
      */
-    t->status = status;
+    t->status = pState->status;
     t->cmds = (char *)cmd_next( cmd );
     cmd_free( cmd );
     pState->curstate = T_STATE_MAKE1C;
