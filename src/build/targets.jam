@@ -744,7 +744,7 @@ class main-target : abstract-target
 }
 
 
-# Abstract target refering to a source file. This is an artificial entity
+# Abstract target referring to a source file. This is an artificial entity
 # allowing sources to a target to be represented using a list of abstract target
 # instances.
 #
