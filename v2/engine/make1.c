@@ -53,7 +53,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-#if !defined(NT) || defined(__GNUC__)
+#if !defined( NT ) || defined( __GNUC__ )
     #include <unistd.h>  /* for unlink */
 #endif
 

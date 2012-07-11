@@ -134,8 +134,6 @@ void file_dirscan( OBJECT * dir, scanback func, void * closure )
 
         if ( !*dirstr ) dirstr = ".";
 
-        /* Now enter contents of directory. */
-
         if ( !( dd = opendir( dirstr ) ) )
         {
             PROFILE_EXIT( FILE_DIRSCAN );
