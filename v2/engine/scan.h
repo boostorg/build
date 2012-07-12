@@ -54,7 +54,7 @@ void yyfparse( OBJECT * s );
 int yyline();
 int yylex();
 int yyparse();
-void yyinput_stream( OBJECT * * name, int * line );
+void yyinput_last_read_token( OBJECT * * name, int * line );
 
 #define SCAN_NORMAL  0  /* normal parsing */
 #define SCAN_STRING  1  /* look only for matching } */
