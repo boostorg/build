@@ -35,7 +35,7 @@ void make0( TARGET * t, TARGET * p, int depth, COUNTS * counts, int anyhow,
 /* Specifies that the target should be updated. */
 void mark_target_for_updating( OBJECT * target );
 
-/* Returns targets previously passed to 'mark_target_for_updating'. */
+/* Returns targets previously passed to mark_target_for_updating(). */
 LIST * targets_to_update();
 
 /* Clears/unmarks all targets currently marked for update. */

@@ -820,6 +820,8 @@ static void make1c_closure
     char const * rule_name = 0;
     char const * target_name = 0;
 
+    assert( cmd );
+
     --cmdsrunning;
 
     /* Calculate the target's status from the cmd execution result. */
@@ -843,7 +845,6 @@ static void make1c_closure
             t->status = EXEC_CMD_OK;
     }
 
-    assert( cmd );
     if ( DEBUG_MAKEQ ||
         ( DEBUG_MAKE && !( cmd->rule->actions->flags & RULE_QUIETLY ) ) )
     {
@@ -1192,7 +1193,7 @@ static SETTINGS * make1settings( struct module_t * module, LIST * vars )
     LISTITER const vars_end = list_end( vars );
     for ( ; vars_iter != vars_end; vars_iter = list_next( vars_iter ) )
     {
-        LIST * l = var_get( module, list_item( vars_iter ) );
+        LIST * const l = var_get( module, list_item( vars_iter ) );
         LIST * nl = L0;
         LISTITER iter = list_begin( l );
         LISTITER const end = list_end( l );
