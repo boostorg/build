@@ -4,27 +4,18 @@
  * This file is part of Jam - see jam.c for Copyright information.
  */
 
-#include "jam.h"
-#include "lists.h"
-#include "parse.h"
-#include "scan.h"
-#include "jamgram.h"
-#include "jambase.h"
-#include "object.h"
-#include "constants.h"
-
 /*
  * scan.c - the jam yacc scanner
  *
- * 12/26/93 (seiwald) - bump buf in yylex to 10240 - yuk.
- * 09/16/94 (seiwald) - check for overflows, unmatched {}'s, etc.
- *          Also handle tokens abutting EOF by remembering
- *          to return EOF now matter how many times yylex()
- *          reinvokes yyline().
- * 02/11/95 (seiwald) - honor only punctuation keywords if SCAN_PUNCT.
- * 07/27/95 (seiwald) - Include jamgram.h after scan.h, so that YYSTYPE is
- *          defined before Linux's yacc tries to redefine it.
  */
+
+#include "jam.h"
+#include "scan.h"
+
+#include "constants.h"
+#include "jambase.h"
+#include "jamgram.h"
+
 
 struct keyword
 {
@@ -36,18 +27,19 @@ struct keyword
     { 0, 0 }
 };
 
+typedef struct include include;
 struct include
 {
-    struct include   * next;       /* next serial include file */
-    char             * string;     /* pointer into current line */
-    char           * * strings;    /* for yyfparse() -- text to parse */
-    FILE             * file;       /* for yyfparse() -- file being read */
-    OBJECT           * fname;      /* for yyfparse() -- file name */
-    int                line;       /* line counter for error messages */
-    char               buf[ 512 ]; /* for yyfparse() -- line buffer */
+    include   * next;        /* next serial include file */
+    char      * string;      /* pointer into current line */
+    char    * * strings;     /* for yyfparse() -- text to parse */
+    FILE      * file;        /* for yyfparse() -- file being read */
+    OBJECT    * fname;       /* for yyfparse() -- file name */
+    int         line;        /* line counter for error messages */
+    char        buf[ 512 ];  /* for yyfparse() -- line buffer */
 };
 
-static struct include * incp = 0; /* current file; head of chain */
+static include * incp = 0;  /* current file; head of chain */
 
 static int scanmode = SCAN_NORMAL;
 static int anyerrors = 0;
@@ -68,22 +60,23 @@ void yymode( int n )
 }
 
 
-void yyerror( const char * s )
+void yyerror( char const * s )
 {
     /* We use yylval instead of incp to access the error location information as
      * the incp pointer will already be reset to 0 in case the error occurred at
      * EOF.
      *
-     * The two may differ only if we get an error while reading a lexical token
-     * spanning muliple lines, e.g. a multi-line string literal or action body,
-     * in which case yylval location information will hold the information about
-     * where this token started while incp will hold the information about where
-     * reading it broke.
+     * The two may differ only if ran into an unexpected EOF or we get an error
+     * while reading a lexical token spanning multiple lines, e.g. a multi-line
+     * string literal or action body, in which case yylval location information
+     * will hold the information about where the token started while incp will
+     * hold the information about where reading it broke.
      *
      * TODO: Test the theory about when yylval and incp location information are
      * the same and when they differ.
      */
-    printf( "%s:%d: %s at %s\n", object_str( yylval.file ), yylval.line, s, symdump( &yylval ) );
+    printf( "%s:%d: %s at %s\n", object_str( yylval.file ), yylval.line, s,
+            symdump( &yylval ) );
     ++anyerrors;
 }
 
@@ -96,7 +89,7 @@ int yyanyerrors()
 
 void yyfparse( OBJECT * s )
 {
-    struct include * i = (struct include *)BJAM_MALLOC( sizeof( *i ) );
+    include * i = (include *)BJAM_MALLOC( sizeof( *i ) );
 
     /* Push this onto the incp chain. */
     i->string = "";
@@ -122,7 +115,7 @@ void yyfparse( OBJECT * s )
 
 int yyline()
 {
-    struct include * i = incp;
+    include * const i = incp;
 
     if ( !incp )
         return EOF;
@@ -265,7 +258,7 @@ int yylex()
         int notkeyword;
 
         /* Eat white space. */
-        for ( ;; )
+        for ( ; ; )
         {
             /* Skip past white space. */
             while ( ( c != EOF ) && isspace( c ) )
@@ -389,11 +382,11 @@ static char * symdump( YYSTYPE * s )
     static char buf[ BIGGEST_TOKEN + 20 ];
     switch ( s->type )
     {
-        case EOF   : sprintf( buf, "EOF"                       ); break;
+        case EOF   : sprintf( buf, "EOF"                                        ); break;
         case 0     : sprintf( buf, "unknown symbol %s", object_str( s->string ) ); break;
         case ARG   : sprintf( buf, "argument %s"      , object_str( s->string ) ); break;
         case STRING: sprintf( buf, "string \"%s\""    , object_str( s->string ) ); break;
-        default    : sprintf( buf, "keyword %s"       , s->keyword ); break;
+        default    : sprintf( buf, "keyword %s"       , s->keyword              ); break;
     }
     return buf;
 }
