@@ -336,7 +336,7 @@ static void file_archscan_small( int fd, char const * archive, scanback func,
     }
 }
 
-/* Check for OS version which supports the big variant. */
+/* Check for OS versions supporting the big variant. */
 #ifdef AR_HSZ_BIG
 
 static void file_archscan_big( int fd, char const * archive, scanback func,

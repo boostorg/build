@@ -439,7 +439,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* Load up variables set on command line. */
         for ( n = 0; ( s = getoptval( optv, 's', n ) ); ++n )
         {
-            char *symv[ 2 ];
+            char * symv[ 2 ];
             symv[ 0 ] = s;
             symv[ 1 ] = 0;
             var_defines( root_module(), symv, 1 );
