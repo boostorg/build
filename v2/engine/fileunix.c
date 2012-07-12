@@ -85,7 +85,7 @@ struct ar_hdr  /* archive file member header - printable ascii */
 
 #ifndef HAVE_AR
 # ifdef OS_AIX
-/* Define those for AIX to get the definitions for both small and big archive
+/* Define these for AIX to get the definitions for both small and big archive
  * file format variants.
  */
 #  define __AR_SMALL__
