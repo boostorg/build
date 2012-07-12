@@ -24,7 +24,7 @@ t.run_build_system()
 t.expect_addition("bin/$toolset/debug/link-static/a__helper.lib")
 t.rm("bin/$toolset/debug/link-static/a__helper.lib")
 
-t.run_build_system("a__helper")
+t.run_build_system(["a__helper"])
 t.expect_addition("bin/$toolset/debug/link-static/a__helper.lib")
 
 t.rm("bin")
@@ -56,7 +56,7 @@ t.rm("bin")
 t.run_build_system()
 t.expect_nothing_more()
 
-t.run_build_system("a")
+t.run_build_system(["a"])
 t.expect_addition("bin/$toolset/debug/link-static/helper.lib")
 
 t.cleanup()

@@ -33,6 +33,6 @@ DEPENDS all : xx ;
 NOTFILE xx ;
 """)
 
-t.run_build_system("-ffile.jam", status=0)
+t.run_build_system(["-ffile.jam"], status=0)
 
 t.cleanup()

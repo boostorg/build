@@ -223,7 +223,7 @@ def _collectDebugInfo_environ(t):
 
 
 def _getExternalValues(t, *args):
-    t.run_build_system(" ".join("---var-name=%s" % x for x in args))
+    t.run_build_system(["---var-name=%s" % x for x in args])
     result = dict()
     for x in args:
         m = re.search(r"^\*\*\*ENV\*\*\* %s: '(.*)' \*\*\*$" % x, t.stdout(),
@@ -239,7 +239,7 @@ def _getJamVersionInfo(t):
     result = []
 
     # JAM version variables.
-    t.run_build_system("---version")
+    t.run_build_system(["---version"])
     for m in re.finditer(r"^\*\*\*VAR\*\*\* ([^:]*): (.*)\*\*\*$", t.stdout(),
         re.MULTILINE):
         name = m.group(1)
@@ -254,12 +254,12 @@ def _getJamVersionInfo(t):
     result.append("")
 
     # bjam -v output.
-    t.run_build_system("-v")
+    t.run_build_system(["-v"])
     result.append("--- output for 'bjam -v' ---")
     result.append(t.stdout())
 
     # bjam --version output.
-    t.run_build_system("--version", status=1)
+    t.run_build_system(["--version"], status=1)
     result.append("--- output for 'bjam --version' ---")
     result.append(t.stdout())
 
@@ -269,7 +269,7 @@ def _getJamVersionInfo(t):
 def _init():
     toolsetName = "__myDummyToolset__"
 
-    t = BoostBuild.Tester("toolset=%s" % toolsetName, pass_toolset=False,
+    t = BoostBuild.Tester(["toolset=%s" % toolsetName], pass_toolset=False,
         use_test_config=False)
 
     #   Prepare a dummy toolset so we do not get errors in case the default one

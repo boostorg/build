@@ -24,7 +24,7 @@ t.write("a_empty.cpp", "")
 
 t.write("a.cpp", "int main() {}\n")
 
-t.run_build_system("release")
+t.run_build_system(["release"])
 
 t.expect_addition("bin/$toolset/release/a.exe")
 
@@ -45,7 +45,7 @@ t.rm("bin")
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/b.obj")
 
-t.run_build_system("X=on")
+t.run_build_system(["X=on"])
 t.expect_addition("bin/$toolset/debug/X-on/a.obj")
 
 t.rm("bin")
@@ -67,7 +67,7 @@ exe a : a_empty.cpp : <variant>debug ;
 exe a : a.cpp : <variant>release ;
 """)
 
-t.run_build_system("release")
+t.run_build_system(["release"])
 t.expect_addition("bin/$toolset/release/a.exe")
 
 # Test that free properties do not matter. We really do not want <cxxflags>
@@ -78,7 +78,7 @@ exe a : a.cpp : <variant>release ;
 """)
 
 t.rm("bin/$toolset/release/a.exe")
-t.run_build_system("release define=FOO")
+t.run_build_system(["release", "define=FOO"])
 t.expect_addition("bin/$toolset/release/a.exe")
 
 # Test that ambiguity is reported correctly.
@@ -86,7 +86,7 @@ t.write("jamfile.jam", """\
 exe a : a_empty.cpp ;
 exe a : a.cpp ;
 """)
-t.run_build_system("--no-error-backtrace", status=None)
+t.run_build_system(["--no-error-backtrace"], status=None)
 t.fail_test(string.find(t.stdout(), "No best alternative") == -1)
 
 # Another ambiguity test: two matches properties in one alternative are neither
@@ -96,7 +96,7 @@ exe a : a_empty.cpp : <optimization>off <profiling>off ;
 exe a : a.cpp : <debug-symbols>on ;
 """)
 
-t.run_build_system("--no-error-backtrace", status=None)
+t.run_build_system(["--no-error-backtrace"], status=None)
 t.fail_test(string.find(t.stdout(), "No best alternative") == -1)
 
 # Test that we can have alternative without sources.

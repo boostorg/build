@@ -54,7 +54,7 @@ DEPENDS g1.generated g2.generated : root ;
 DEPENDS all : u1.user u2.user ;
 """)
 
-t.run_build_system("-ffile.jam -j2", stdout="""\
+t.run_build_system(["-ffile.jam", "-j2"], stdout="""\
 ...found 6 targets...
 ...updating 4 targets...
 .gen. g1.generated

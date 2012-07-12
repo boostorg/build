@@ -34,7 +34,7 @@ make header3.h : header3.in : @common.copy ;
 obj test : test.cpp : <implicit-dependency>header3.h ;
 """)
 
-t.run_build_system("-j2")
+t.run_build_system(["-j2"])
 t.expect_addition("bin/$toolset/debug/header3.h")
 t.expect_addition("bin/$toolset/debug/test.obj")
 t.expect_nothing_more()
@@ -71,7 +71,7 @@ obj test : test.cpp :
     <implicit-dependency>header3.h ;
 """)
 
-t.run_build_system("-j2 test")
+t.run_build_system(["-j2", "test"])
 t.expect_addition("bin/$toolset/debug/header1.h")
 t.expect_addition("bin/$toolset/debug/header2.h")
 t.expect_addition("bin/$toolset/debug/header3.h")
@@ -121,7 +121,7 @@ obj test : test.cpp :
     <implicit-dependency>header3.h ;
 """)
 
-t.run_build_system("-j2 test")
+t.run_build_system(["-j2", "test"])
 t.expect_addition("bin/$toolset/debug/header1.h")
 t.expect_addition("bin/$toolset/debug/header2.h")
 t.expect_addition("bin/$toolset/debug/header3.h")
@@ -183,7 +183,7 @@ make header3.h : header3.in : @copy ;
 exe test : test2.cpp test1.cpp : <implicit-dependency>header3.h ;
 """)
 
-t.run_build_system("-j2 test")
+t.run_build_system(["-j2", "test"])
 t.expect_addition("bin/$toolset/debug/header3.h")
 t.expect_addition("bin/$toolset/debug/test1.obj")
 t.expect_addition("bin/$toolset/debug/test2.obj")
@@ -191,7 +191,7 @@ t.expect_addition("bin/$toolset/debug/test.exe")
 t.expect_nothing_more()
 
 t.touch("header3.in")
-t.run_build_system("-j2 test")
+t.run_build_system(["-j2", "test"])
 t.expect_touch("bin/$toolset/debug/header3.h")
 t.expect_touch("bin/$toolset/debug/test1.obj")
 t.expect_touch("bin/$toolset/debug/test2.obj")
@@ -255,7 +255,7 @@ make header2.h : header2.in : @copy ;
 exe test : test2.cpp test1.cpp : <implicit-dependency>header2.h <include>. ;
 """)
 
-t.run_build_system("-j2 test")
+t.run_build_system(["-j2", "test"])
 t.expect_addition("bin/$toolset/debug/header2.h")
 t.expect_addition("bin/$toolset/debug/test1.obj")
 t.expect_addition("bin/$toolset/debug/test2.obj")

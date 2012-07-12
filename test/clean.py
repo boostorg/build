@@ -48,7 +48,7 @@ void sub3() {}
 
 # 'clean' should not remove files under separate jamroot.jam.
 t.run_build_system()
-t.run_build_system("--clean")
+t.run_build_system(["--clean"])
 t.expect_removal("bin/$toolset/debug/a.obj")
 t.expect_removal("sub1/bin/$toolset/debug/sub1.obj")
 t.expect_removal("sub1/bin/$toolset/debug/sub1_2.obj")
@@ -57,7 +57,7 @@ t.expect_nothing("sub3/bin/$toolset/debug/sub3.obj")
 
 # 'clean-all' removes everything it can reach.
 t.run_build_system()
-t.run_build_system("--clean-all")
+t.run_build_system(["--clean-all"])
 t.expect_removal("bin/$toolset/debug/a.obj")
 t.expect_removal("sub1/bin/$toolset/debug/sub1.obj")
 t.expect_removal("sub1/bin/$toolset/debug/sub1_2.obj")
@@ -66,7 +66,7 @@ t.expect_nothing("sub3/bin/$toolset/debug/sub3.obj")
 
 # 'clean' together with project target removes only under that project.
 t.run_build_system()
-t.run_build_system("sub1 --clean")
+t.run_build_system(["sub1", "--clean"])
 t.expect_nothing("bin/$toolset/debug/a.obj")
 t.expect_removal("sub1/bin/$toolset/debug/sub1.obj")
 t.expect_removal("sub1/bin/$toolset/debug/sub1_2.obj")
@@ -75,7 +75,7 @@ t.expect_nothing("sub3/bin/$toolset/debug/sub3.obj")
 
 # 'clean-all' removes everything.
 t.run_build_system()
-t.run_build_system("sub1 --clean-all")
+t.run_build_system(["sub1", "--clean-all"])
 t.expect_nothing("bin/$toolset/debug/a.obj")
 t.expect_removal("sub1/bin/$toolset/debug/sub1.obj")
 t.expect_removal("sub1/bin/$toolset/debug/sub1_2.obj")
@@ -85,7 +85,7 @@ t.expect_nothing("sub3/bin/$toolset/debug/sub3.obj")
 # If main target is explicitly named, we should not remove files from other
 # targets.
 t.run_build_system()
-t.run_build_system("sub1//sub1 --clean")
+t.run_build_system(["sub1//sub1", "--clean"])
 t.expect_removal("sub1/bin/$toolset/debug/sub1.obj")
 t.expect_nothing("sub1/bin/$toolset/debug/sub1_2.obj")
 t.expect_nothing("sub2/bin/$toolset/debug/sub2.obj")
@@ -98,7 +98,7 @@ import cast ;
 cast a cpp : a.h ;
 """)
 t.write("a.h", "")
-t.run_build_system("--clean")
+t.run_build_system(["--clean"])
 t.expect_nothing("a.h")
 
 t.cleanup()

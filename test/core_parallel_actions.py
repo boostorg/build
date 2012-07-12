@@ -62,7 +62,7 @@ DEPENDS bottom : 1.b 2.b 3.b 4.b ;
 DEPENDS all : bottom ;
 """)
 
-t.run_build_system("-ffile.jam -j4", stdout="""\
+t.run_build_system(["-ffile.jam", "-j4"], stdout="""\
 ...found 12 targets...
 ...updating 8 targets...
 sleeper 1.a

@@ -28,6 +28,6 @@ void foo() {}
 
 # 'release' builds should get the NDEBUG define. We use static linking to avoid
 # messing with imports/exports on Windows.
-t.run_build_system("link=static release")
+t.run_build_system(["link=static", "release"])
 
 t.cleanup()

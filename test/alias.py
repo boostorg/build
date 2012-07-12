@@ -37,12 +37,12 @@ exe hello : hello.cpp src ;
     t.write("s.cpp", "")
 
     # Check that targets to which "bin1" refers are updated, and only those.
-    t.run_build_system("bin1")
+    t.run_build_system(["bin1"])
     t.expect_addition(BoostBuild.List("bin/$toolset/debug/") * "a.exe a.obj")
     t.expect_nothing_more()
 
     # Try again with "bin2"
-    t.run_build_system("bin2")
+    t.run_build_system(["bin2"])
     t.expect_addition(BoostBuild.List("bin/$toolset/debug/") * "b.exe b.obj")
     t.expect_nothing_more()
 

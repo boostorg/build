@@ -8,7 +8,7 @@
 import BoostBuild
 import os
 
-t = BoostBuild.Tester("-ffile.jam", pass_toolset=0)
+t = BoostBuild.Tester(["-ffile.jam"], pass_toolset=0)
 
 t.write("file.jam", """\
 name = n1 n2 ;
@@ -30,7 +30,7 @@ actions run { echo file: "@(o$(name) .txt:E= test -D$(contents))" }
 run all ;
 """)
 
-t.run_build_system("-d2")
+t.run_build_system(["-d2"])
 t.expect_output_line('echo file: "on1 on2 .txt"');
 t.expect_addition("on1 on2 .txt")
 t.expect_content("on1 on2 .txt", " test -DM1 -DM2", True)
@@ -45,7 +45,7 @@ actions run { $(file) }
 run all ;
 """)
 
-t.run_build_system("-d1")
+t.run_build_system(["-d1"])
 t.expect_output_line(" test -DM1 -DM2")
 
 t.rm(".")
@@ -57,7 +57,7 @@ actions run { @($(STDOUT):E= test -D$(contents)\n) }
 run all ;
 """)
 
-t.run_build_system("-d1")
+t.run_build_system(["-d1"])
 t.expect_output_line(" test -DM1 -DM2")
 
 t.cleanup()

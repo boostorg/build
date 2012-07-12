@@ -17,7 +17,7 @@ def test(t, type, input, output, status=0):
     if input: code.append(input)
     code.append(";")
     t.write("file.jam", " ".join(code))
-    t.run_build_system("-ffile.jam", status=status)
+    t.run_build_system(["-ffile.jam"], status=status)
     t.expect_output_line(output);
 
 

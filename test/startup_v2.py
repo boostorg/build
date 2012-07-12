@@ -84,7 +84,7 @@ r"""Unable to load Boost.Build
 However, it failed to call the "boost-build" rule""")
 
 # Test bootstrapping based on BOOST_BUILD_PATH.
-t.run_build_system("-sBOOST_BUILD_PATH=../boost-root/build",
+t.run_build_system(["-sBOOST_BUILD_PATH=../boost-root/build"],
     subdir="bootstrap-env", stdout="build system bootstrapped")
 
 # Test bootstrapping based on an explicit path in boost-build.jam.

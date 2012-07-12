@@ -21,7 +21,7 @@ int main() {}
 
 # Test conditionals in target requirements.
 t.write("jamroot.jam", "exe a : a.cpp : <link>static:<define>STATIC ;")
-t.run_build_system("link=static")
+t.run_build_system(["link=static"])
 t.expect_addition("bin/$toolset/debug/link-static/a.exe")
 t.rm("bin")
 
@@ -30,7 +30,7 @@ t.write("jamroot.jam", """
 project : requirements <link>static:<define>STATIC ;
 exe a : a.cpp ;
 """)
-t.run_build_system("link=static")
+t.run_build_system(["link=static"])
 t.expect_addition("bin/$toolset/debug/link-static/a.exe")
 t.rm("bin")
 
@@ -41,7 +41,7 @@ lib l : l.cpp : : : <link>static:<define>STATIC ;
 exe a : a.cpp l ;
 """)
 t.write("l.cpp", "int i;")
-t.run_build_system("link=static")
+t.run_build_system(["link=static"])
 t.expect_addition("bin/$toolset/debug/link-static/a.exe")
 
 t.cleanup()

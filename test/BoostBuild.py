@@ -157,26 +157,6 @@ def glob_remove(sequence, pattern):
         sequence.remove(r)
 
 
-#
-# FIXME: this is copy-pasted from TestSCons.py
-# Should be moved to TestCmd.py?
-#
-if os.name == 'posix':
-    def _failed(self, status=0):
-        if self.status is None:
-            return None
-        return _status(self) != status
-    def _status(self):
-        if os.WIFEXITED(self.status):
-            return os.WEXITSTATUS(self.status)
-        return -1
-elif os.name == 'nt':
-    def _failed(self, status=0):
-        return not self.status is None and self.status != status
-    def _status(self):
-        return self.status
-
-
 class Tester(TestCmd.TestCmd):
     """Main tester class for Boost Build.
 
@@ -222,11 +202,12 @@ class Tester(TestCmd.TestCmd):
                                     system output like the --verbose command
                                     line option does.
     """
-    def __init__(self, arguments="", executable="bjam",
+    def __init__(self, arguments=None, executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
         ignore_toolset_requirements=True, workdir="", pass_d0=True, **keywords):
 
+        assert arguments.__class__ is not str
         self.original_workdir = os.getcwd()
         if workdir and not os.path.isabs(workdir):
             raise ("Parameter workdir <%s> must point to an absolute "
@@ -315,7 +296,7 @@ class Tester(TestCmd.TestCmd):
         if verbosity:
             program_list += verbosity
         if arguments:
-            program_list += arguments.split(" ")
+            program_list += arguments
 
         TestCmd.TestCmd.__init__(self, program=program_list, match=match,
             workdir=workdir, inpath=use_default_bjam, **keywords)
@@ -439,11 +420,12 @@ class Tester(TestCmd.TestCmd):
     #
     #   FIXME: Large portion copied from TestSCons.py, should be moved?
     #
-    def run_build_system(self, extra_args="", subdir="", stdout=None,
+    def run_build_system(self, extra_args=None, subdir="", stdout=None,
         stderr="", status=0, match=None, pass_toolset=None,
         use_test_config=None, ignore_toolset_requirements=None,
         expected_duration=None, **kw):
 
+        assert extra_args.__class__ is not str
         build_time_start = time.time()
 
         try:
@@ -470,7 +452,7 @@ class Tester(TestCmd.TestCmd):
                 kw['program'] = []
                 kw['program'] += self.program
                 if extra_args:
-                    kw['program'] += extra_args.split(" ")
+                    kw['program'] += extra_args
                 if pass_toolset:
                     kw['program'].append("toolset=" + self.toolset)
                 if use_test_config:
@@ -490,13 +472,13 @@ class Tester(TestCmd.TestCmd):
             old_last_build_time_finish = self.last_build_time_finish
             self.last_build_time_finish = time.time()
 
-        if status is not None and _failed(self, status):
+        if (status and self.status) is not None and self.status != status:
             expect = ''
             if status != 0:
                 expect = " (expected %d)" % status
 
             annotation("failure", '"%s" returned %d%s' % (kw['program'],
-                _status(self), expect))
+                self.status, expect))
 
             annotation("reason", "unexpected status returned by bjam")
             self.fail_test(1)

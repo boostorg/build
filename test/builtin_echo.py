@@ -9,7 +9,7 @@
 import BoostBuild
 
 def test_echo(name):
-    t = BoostBuild.Tester("-ffile.jam", pass_toolset=0)
+    t = BoostBuild.Tester(["-ffile.jam"], pass_toolset=0)
 
     t.write("file.jam", """\
 %s ;

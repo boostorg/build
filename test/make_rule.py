@@ -48,7 +48,7 @@ make hello1.cpp : hello.cpp : common.copy ;
 t.write("dir/hello.cpp", "int main() {}\n")
 
 # Show only action names.
-t.run_build_system("-d1 -n")
+t.run_build_system(["-d1", "-n"])
 t.fail_test(t.stdout().count("copy") != 1)
 
 t.cleanup()

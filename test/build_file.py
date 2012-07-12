@@ -35,7 +35,7 @@ exe sub : hello.cpp ;
 """)
     t.write("sub/hello.cpp", "int main() {}\n")
 
-    t.run_build_system("sub " + t.adjust_suffix("hello.obj"))
+    t.run_build_system(["sub", t.adjust_suffix("hello.obj")])
     t.expect_output_line("*depends on itself*", False)
     t.expect_addition("sub/bin/$toolset/debug/hello.obj")
     t.expect_nothing_more()
@@ -62,7 +62,7 @@ exe hello3 : hello3.cpp ;
     t.write("hello2.cpp", "int main() {}\n")
     t.write("hello3.cpp", "int main() {}\n")
 
-    t.run_build_system("hello1 " + t.adjust_suffix("hello1.obj"))
+    t.run_build_system(["hello1", t.adjust_suffix("hello1.obj")])
     t.expect_addition("bin/$toolset/debug/hello1.obj")
     t.expect_nothing_more()
 
@@ -89,7 +89,7 @@ exe hello3 : hello3.cpp ;
     t.write("hello3.cpp", "int main() {}\n")
 
     obj = t.adjust_suffix("hello2.obj")
-    t.run_build_system("hello1 " + obj, status=1)
+    t.run_build_system(["hello1", obj], status=1)
     t.expect_output_line("don't know how to make*" + obj)
     t.expect_nothing_more()
 
@@ -115,8 +115,8 @@ exe hello3 : hello3.cpp ;
     t.write("hello2.cpp", "int main() {}\n")
     t.write("hello3.cpp", "int main() {}\n")
 
-    t.run_build_system(t.adjust_suffix("hello1.obj") + " " + t.adjust_suffix(
-        "hello2.obj"))
+    t.run_build_system([t.adjust_suffix("hello1.obj"), t.adjust_suffix(
+        "hello2.obj")])
     t.expect_addition("bin/$toolset/debug/hello1.obj")
     t.expect_addition("bin/$toolset/debug/hello2.obj")
     t.expect_nothing_more()
@@ -147,7 +147,7 @@ exe sub : hello.cpp ;
 """)
     t.write("sub/hello.cpp", "int main() {}\n")
 
-    t.run_build_system(t.adjust_suffix("hello.obj"))
+    t.run_build_system([t.adjust_suffix("hello.obj")])
     t.expect_output_line("*depends on itself*", False)
     t.expect_addition("bin/$toolset/debug/hello.obj")
     t.expect_addition("sub/bin/$toolset/debug/hello.obj")

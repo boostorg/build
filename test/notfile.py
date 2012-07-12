@@ -31,7 +31,7 @@ t.write("hello.cpp", """\
 int main() { std::cout << "Hello!\\n"; }
 """)
 
-t.run_build_system("-n -d+2")
+t.run_build_system(["-n", "-d+2"])
 
 t.fail_test(string.find(t.stdout(), "echo hi") == -1)
 

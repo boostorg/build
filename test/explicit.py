@@ -22,7 +22,7 @@ t.expect_addition(BoostBuild.List("bin/$toolset/debug/hello") * \
     [".exe", ".obj"])
 t.expect_nothing_more()
 
-t.run_build_system("hello2")
+t.run_build_system(["hello2"])
 t.expect_addition("bin/$toolset/debug/hello2.exe")
 
 t.rm(".")

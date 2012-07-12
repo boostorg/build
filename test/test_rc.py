@@ -31,9 +31,10 @@ def included_resource_newer_than_rc_script():
     #     Disable reading any external Boost Build configuration. This test is
     #   self sufficient so these options protect it from being adversly
     #   affected by any local (mis)configuration..
-    t = BoostBuild.Tester("-d4 --debug-configuration --ignore-site-config "
-        "--user-config= toolset=%s" % toolsetName, pass_d0=False,
-        pass_toolset=False, use_test_config=False, translate_suffixes=False)
+    t = BoostBuild.Tester(["-d4", "--debug-configuration",
+        "--ignore-site-config", "--user-config=", "toolset=%s" % toolsetName],
+        pass_d0=False, pass_toolset=False, use_test_config=False,
+        translate_suffixes=False)
 
     # Prepare a dummy toolset so we do not get errors in case the default one
     # is not found and that we can test rc.jam functionality without having to
@@ -84,7 +85,7 @@ obj xxx : xxx.rc ;
         if noexec:
             params.append("-n")
             params.append("-sNOEXEC=NOEXEC")
-        t.run_build_system(" ".join(params))
+        t.run_build_system(params)
         t.expect_output_line("*NOEXEC*", noexec)
         obj_file = "xxx_res.obj"
         t.expect_output_line("compile.resource.dummy *%s" % obj_file, expect)

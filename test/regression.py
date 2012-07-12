@@ -46,7 +46,7 @@ helper() {}
 """)
 
 # First test that when outcomes are expected, all .test files are created.
-t.run_build_system("hardcode-dll-paths=false", stderr=None, status=None)
+t.run_build_system(["hardcode-dll-paths=false"], stderr=None, status=None)
 t.expect_addition("bin/c.test/$toolset/debug/c.test")
 t.expect_addition("bin/c-f.test/$toolset/debug/c-f.test")
 t.expect_addition("bin/r.test/$toolset/debug/r.test")
@@ -83,7 +83,7 @@ time execution : r ;
 time compilation : c-obj ;
 """)
 
-t.run_build_system("hardcode-dll-paths=false")
+t.run_build_system(["hardcode-dll-paths=false"])
 t.expect_content("bin/r.test/$toolset/debug/r.output", """\
 test input
 EXIT STATUS: 0
@@ -104,7 +104,7 @@ run r-f.cpp ;
 
 t.touch(BoostBuild.List("c.cpp c-f.cpp r.cpp r-f.cpp"))
 
-t.run_build_system("hardcode-dll-paths=false", stderr=None, status=1)
+t.run_build_system(["hardcode-dll-paths=false"], stderr=None, status=1)
 t.expect_removal("bin/c.test/$toolset/debug/c.test")
 t.expect_removal("bin/c-f.test/$toolset/debug/c-f.test")
 t.expect_removal("bin/r.test/$toolset/debug/r.test")

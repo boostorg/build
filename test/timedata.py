@@ -83,8 +83,8 @@ bar +user: [0-9\.]+ +system: +[0-9\.]+ *
 \.\.\.updated 2 targets\.\.\.$
 """
 
-    t.run_build_system("-ffile.jam -d+1", stdout=expected_output, match=lambda
-        actual, expected: re.search(expected, actual, re.DOTALL))
+    t.run_build_system(["-ffile.jam", "-d+1"], stdout=expected_output,
+        match=lambda actual, expected: re.search(expected, actual, re.DOTALL))
     t.expect_addition("foo")
     t.expect_addition("bar")
     t.expect_nothing_more()

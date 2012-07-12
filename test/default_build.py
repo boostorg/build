@@ -21,13 +21,13 @@ t.expect_addition("bin/$toolset/release/a.exe")
 
 # Check that explictly-specified build variant supresses default-build.
 t.rm("bin")
-t.run_build_system("release")
+t.run_build_system(["release"])
 t.expect_addition(BoostBuild.List("bin/$toolset/release/") * "a.exe a.obj")
 t.expect_nothing_more()
 
 # Now check that we can specify explicit build request and default-build will be
 # combined with it.
-t.run_build_system("optimization=space")
+t.run_build_system(["optimization=space"])
 t.expect_addition("bin/$toolset/debug/optimization-space/a.exe")
 t.expect_addition("bin/$toolset/release/optimization-space/a.exe")
 
@@ -36,7 +36,7 @@ t.write("jamfile.jam", """\
 exe a : a.cpp : : debug ;
 exe a : b.cpp : : ;
 """)
-t.run_build_system("-n --no-error-backtrace", status=1)
+t.run_build_system(["-n", "--no-error-backtrace"], status=1)
 t.fail_test(t.stdout().find("default build must be identical in all alternatives") == -1)
 
 # Test that default-build must be identical in all alternatives. No Error case,
@@ -45,7 +45,7 @@ t.write("jamfile.jam", """\
 exe a : a.cpp : <variant>debug ;
 exe a : b.cpp : <variant>release ;
 """)
-t.run_build_system("-n --no-error-backtrace", status=0)
+t.run_build_system(["-n", "--no-error-backtrace"], status=0)
 
 # Now try a harder example: default build which contains <define> should cause
 # <define> to be present when "b" is compiled. This happens only if

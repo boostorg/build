@@ -29,7 +29,7 @@ FAIL_EXPECTED subtest_b ;
 DEPENDS all : subtest_a subtest_b ;
 """)
 
-t.run_build_system("-ffile.jam -n", stdout="""\
+t.run_build_system(["-ffile.jam", "-n"], stdout="""\
 ...found 4 targets...
 ...updating 2 targets...
 .a. subtest_a

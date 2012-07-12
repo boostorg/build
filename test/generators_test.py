@@ -21,7 +21,7 @@ def match_count_is(lines, pattern, expected):
 t = BoostBuild.Tester()
 t.set_tree("generators-test")
 
-t.run_build_system("-d1")
+t.run_build_system(["-d1"])
 t.expect_addition("bin/$toolset/debug/" * BoostBuild.List("a.my_exe a.my_obj "
     "b.my_obj c.tui_h c.cpp c.my_obj d_parser.whl d_lexer.dlp d_parser.cpp "
     " d_lexer.cpp d_lexer.my_obj d_parser.lr0 d_parser.h d_parser.my_obj "
