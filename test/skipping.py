@@ -11,19 +11,10 @@ import BoostBuild
 # Create a temporary working directory.
 t = BoostBuild.Tester()
 
-t.write("a.cpp", """
-int main() {}
-""")
-
-t.write("b.cpp", """
-int main() {}
-""")
-
-t.write("c.cpp", """
-int main() {}
-""")
-
-t.write("jamroot.jam", """
+t.write("a.cpp", "int main() {}\n")
+t.write("b.cpp", "int main() {}\n")
+t.write("c.cpp", "int main() {}\n")
+t.write("jamroot.jam", """\
 import feature ;
 feature.feature foo : 1 2 : link-incompatible ;
 exe a : a.cpp : <foo>1 ;

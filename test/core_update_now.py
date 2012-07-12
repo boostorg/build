@@ -1,19 +1,17 @@
 #!/usr/bin/python
 
 # Copyright 2011 Steven Watanabe
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
 import os
 
-def basic():
-    # Basic test
 
+def basic():
     t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
-    t.write("file.jam", """
-
+    t.write("file.jam", """\
 actions do-print
 {
     echo updating $(<)
@@ -28,7 +26,8 @@ UPDATE_NOW target1 ;
 DEPENDS all : target1 ;
 """)
 
-    t.run_build_system("-ffile.jam", stdout="""...found 1 target...
+    t.run_build_system("-ffile.jam", stdout="""\
+...found 1 target...
 ...updating 1 target...
 do-print target1
 updating target1
@@ -38,13 +37,11 @@ updating target1
 
     t.cleanup()
 
-def ignore_minus_n():
-    # ignore-minus-n
 
+def ignore_minus_n():
     t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
-    t.write("file.jam", """
-
+    t.write("file.jam", """\
 actions do-print
 {
     echo updating $(<)
@@ -59,7 +56,8 @@ UPDATE_NOW target1 : : ignore-minus-n ;
 DEPENDS all : target1 ;
 """)
 
-    t.run_build_system("-ffile.jam -n", stdout="""...found 1 target...
+    t.run_build_system("-ffile.jam -n", stdout="""\
+...found 1 target...
 ...updating 1 target...
 do-print target1
 
@@ -72,12 +70,11 @@ updating target1
 
     t.cleanup()
 
-def failed_target():
 
+def failed_target():
     t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
-    t.write("file.jam", """
-
+    t.write("file.jam", """\
 actions fail
 {
     exit 1
@@ -101,7 +98,8 @@ UPDATE_NOW target1 : : ignore-minus-n ;
 DEPENDS all : target1 target2 ;
 """)
 
-    t.run_build_system("-ffile.jam -n", stdout="""...found 1 target...
+    t.run_build_system("-ffile.jam -n", stdout="""\
+...found 1 target...
 ...updating 1 target...
 fail target1
 
@@ -120,11 +118,11 @@ do-print target2
 
     t.cleanup()
 
+
 def missing_target():
     t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
-    t.write("file.jam", """
-
+    t.write("file.jam", """\
 actions do-print
 {
     echo updating $(<)
@@ -139,7 +137,8 @@ UPDATE_NOW target1 : : ignore-minus-n ;
 DEPENDS all : target1 target2 ;
 """)
 
-    t.run_build_system("-ffile.jam -n", status=1, stdout="""don't know how to make target1
+    t.run_build_system("-ffile.jam -n", status=1, stdout="""\
+don't know how to make target1
 ...found 1 target...
 ...can't find 1 target...
 ...found 2 targets...
@@ -148,15 +147,17 @@ DEPENDS all : target1 target2 ;
 
     t.cleanup()
 
-# Make sure that if we call UPDATE_NOW with ignore-minus-n,
-# the target gets updated exactly once regardless of previous
-# calls to UPDATE_NOW with -n in effect.
 
 def build_once():
+    """
+      Make sure that if we call UPDATE_NOW with ignore-minus-n, the target gets
+    updated exactly once regardless of previous calls to UPDATE_NOW with -n in
+    effect.
+
+    """
     t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
-    t.write("file.jam", """
-
+    t.write("file.jam", """\
 actions do-print
 {
     echo updating $(<)
@@ -173,7 +174,8 @@ UPDATE_NOW target1 : : ignore-minus-n ;
 DEPENDS all : target1 ;
 """)
 
-    t.run_build_system("-ffile.jam -n", stdout="""...found 1 target...
+    t.run_build_system("-ffile.jam -n", stdout="""\
+...found 1 target...
 ...updating 1 target...
 do-print target1
 
@@ -190,6 +192,7 @@ updating target1
 """)
 
     t.cleanup()
+
 
 basic()
 ignore_minus_n()

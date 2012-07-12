@@ -10,46 +10,48 @@ import BoostBuild
 t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
 t.write("sleep.bat", """\
-@setlocal
-@REM timeout /T %1 /NOBREAK >nul
+::@timeout /T %1 /NOBREAK >nul
 @ping 127.0.0.1 -n 2 -w 1000 >nul
 @ping 127.0.0.1 -n %1 -w 1000 >nul
-@endlocal
 @exit /B 0
 """)
 
 t.write("file.jam", """\
-    if $(NT)
-    {
-        SLEEP = @call sleep.bat ;
-    }
-    else
-    {
-        SLEEP = sleep ;
-    }
-
-    actions .gen. {
-echo 001
-$(SLEEP) 4
-echo 002
+if $(NT)
+{
+    SLEEP = @call sleep.bat ;
 }
-    rule .use.1 { DEPENDS $(<) : $(>) ; }
-    actions .use.1 {
-echo 003
-}
-    rule .use.2 { DEPENDS $(<) : $(>) ; }
-    actions .use.2 {
-$(SLEEP) 1
-echo 004
+else
+{
+    SLEEP = sleep ;
 }
 
-    .gen. g1.generated g2.generated ;
-    .use.1 u1.user : g1.generated ;
-    .use.2 u2.user : g2.generated ;
+actions .gen.
+{
+    echo 001
+    $(SLEEP) 4
+    echo 002
+}
+rule .use.1 { DEPENDS $(<) : $(>) ; }
+actions .use.1
+{
+    echo 003
+}
 
-    NOTFILE root ;
-    DEPENDS g1.generated g2.generated : root ;
-    DEPENDS all : u1.user u2.user ;
+rule .use.2 { DEPENDS $(<) : $(>) ; }
+actions .use.2
+{
+    $(SLEEP) 1
+    echo 004
+}
+
+.gen. g1.generated g2.generated ;
+.use.1 u1.user : g1.generated ;
+.use.2 u2.user : g2.generated ;
+
+NOTFILE root ;
+DEPENDS g1.generated g2.generated : root ;
+DEPENDS all : u1.user u2.user ;
 """)
 
 t.run_build_system("-ffile.jam -j2", stdout="""\

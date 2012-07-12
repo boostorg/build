@@ -11,13 +11,8 @@ import BoostBuild
 
 t = BoostBuild.Tester()
 
-t.write("jamroot.jam", """
-exe hello : hello.cpp : <variant>debug:<build>no ;
-""")
-
-t.write("hello.cpp", """
-int main() {}
-""")
+t.write("jamroot.jam", "exe hello : hello.cpp : <variant>debug:<build>no ;")
+t.write("hello.cpp", "int main() {}\n")
 
 t.run_build_system()
 t.expect_nothing_more()

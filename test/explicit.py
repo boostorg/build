@@ -8,15 +8,13 @@ import BoostBuild
 
 t = BoostBuild.Tester()
 
-t.write("jamroot.jam", """
+t.write("jamroot.jam", """\
 exe hello : hello.cpp ;
 exe hello2 : hello.cpp ;
 explicit hello2 ;
 """)
 
-t.write("hello.cpp", """
-int main() {}
-""")
+t.write("hello.cpp", "int main() {}\n")
 
 t.run_build_system()
 t.ignore("*.tds")
@@ -32,7 +30,7 @@ t.rm(".")
 
 # Test that 'explicit' used in a helper rule applies to the current project, and
 # not to the Jamfile where the helper rule is defined.
-t.write("jamroot.jam", """
+t.write("jamroot.jam", """\
 rule myinstall ( name : target )
 {
     install $(name)-bin : $(target) ;
@@ -41,19 +39,15 @@ rule myinstall ( name : target )
 }
 """)
 
-t.write("sub/a.cpp", """
-""")
-
-t.write("sub/jamfile.jam", """
-myinstall dist : a.cpp ;
-""")
+t.write("sub/a.cpp", "\n")
+t.write("sub/jamfile.jam", "myinstall dist : a.cpp ;")
 
 t.run_build_system(subdir="sub")
 t.expect_addition("sub/dist-bin/a.cpp")
 
 t.rm("sub/dist-bin")
 
-t.write("sub/jamfile.jam", """
+t.write("sub/jamfile.jam", """\
 myinstall dist : a.cpp ;
 explicit dist ;
 """)

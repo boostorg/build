@@ -10,7 +10,7 @@ import BoostBuild
 
 t = BoostBuild.Tester(pass_toolset=0)
 
-t.write("file.jam", """
+t.write("file.jam", """\
 module foo
 {
     rule bar { }

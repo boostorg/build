@@ -50,8 +50,8 @@ t.expect_addition("bin/$toolset/debug/X-on/a.obj")
 
 t.rm("bin")
 
-# Test that everything works ok even with default build.
-t.write("jamfile.jam", """
+# Test that everything works ok even with the default build.
+t.write("jamfile.jam", """\
 exe a : a_empty.cpp : <variant>release ;
 exe a : a.cpp : <variant>debug ;
 """)
@@ -59,10 +59,10 @@ exe a : a.cpp : <variant>debug ;
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/a.exe")
 
-# Test that only properties which are in build request matter for alternative
-# selection. IOW, alternative with <variant>release is better than one with
-# <variant>debug when building release version.
-t.write("jamfile.jam", """
+# Test that only properties which are in the build request matter for
+# alternative selection. IOW, alternative with <variant>release is better than
+# one with <variant>debug when building the release variant.
+t.write("jamfile.jam", """\
 exe a : a_empty.cpp : <variant>debug ;
 exe a : a.cpp : <variant>release ;
 """)
@@ -82,7 +82,7 @@ t.run_build_system("release define=FOO")
 t.expect_addition("bin/$toolset/release/a.exe")
 
 # Test that ambiguity is reported correctly.
-t.write("jamfile.jam", """
+t.write("jamfile.jam", """\
 exe a : a_empty.cpp ;
 exe a : a.cpp ;
 """)
@@ -91,7 +91,7 @@ t.fail_test(string.find(t.stdout(), "No best alternative") == -1)
 
 # Another ambiguity test: two matches properties in one alternative are neither
 # better nor worse than a single one in another alternative.
-t.write("jamfile.jam", """
+t.write("jamfile.jam", """\
 exe a : a_empty.cpp : <optimization>off <profiling>off ;
 exe a : a.cpp : <debug-symbols>on ;
 """)
@@ -100,7 +100,7 @@ t.run_build_system("--no-error-backtrace", status=None)
 t.fail_test(string.find(t.stdout(), "No best alternative") == -1)
 
 # Test that we can have alternative without sources.
-t.write("jamfile.jam", """
+t.write("jamfile.jam", """\
 alias specific-sources ;
 import feature ;
 feature.extend os : MAGIC ;

@@ -343,7 +343,7 @@ class TestCmd:
         TestCmd environment to be preserved for one or more conditions. If no
         conditions are specified, arranges for the temporary working
         directories to be preserved for all conditions.
-        
+
         """
         if conditions is ():
             conditions = ('pass_test', 'fail_test', 'no_result')
@@ -362,7 +362,7 @@ class TestCmd:
         name may be a list, in which case the elements are concatenated with
         the os.path.join() method. The file is assumed to be under the
         temporary working directory unless it is an absolute path name. The I/O
-        mode for the file may be specified; it must begin with an 'r'. The
+        mode for the file may be specified and must begin with an 'r'. The
         default is 'rb' (binary read).
 
         """
@@ -513,8 +513,8 @@ class TestCmd:
             run = len(self._stderr)
         elif run < 0:
             run = len(self._stderr) + run
-        run = run - 1
-        if (run < 0):
+        run -= 1
+        if run < 0:
             return ''
         return self._stderr[run]
 
@@ -530,8 +530,8 @@ class TestCmd:
             run = len(self._stdout)
         elif run < 0:
             run = len(self._stdout) + run
-        run = run - 1
-        if (run < 0):
+        run -= 1
+        if run < 0:
             return ''
         return self._stdout[run]
 
@@ -563,7 +563,7 @@ class TestCmd:
                 count += 1
         return count
 
-    def unlink (self, file):
+    def unlink(self, file):
         """
           Unlinks the specified file name. The file name may be a list, in
         which case the elements are concatenated using the os.path.join()
@@ -578,8 +578,7 @@ class TestCmd:
         os.unlink(file)
 
     def verbose_set(self, verbose):
-        """Set the verbose level.
-        """
+        """Set the verbose level."""
         self.verbose = verbose
 
     def workdir_set(self, path):
@@ -618,8 +617,7 @@ class TestCmd:
         """
           Returns the absolute path name to a subdirectory or file within the
         current temporary working directory. Concatenates the temporary working
-        directory name with the specified arguments using the os.path.join()
-        method.
+        directory name with the specified arguments using os.path.join().
 
         """
         return apply(os.path.join, (self.workdir,) + tuple(args))
@@ -656,8 +654,8 @@ class TestCmd:
         file name (first argument). The file name may be a list, in which case
         the elements are concatenated using the os.path.join() method. The file
         is created under the temporary working directory. Any subdirectories in
-        the path must already exist. The I/O mode for the file may be specified;
-        it must begin with a 'w'. The default is 'wb' (binary write).
+        the path must already exist. The I/O mode for the file may be specified
+        and must begin with a 'w'. The default is 'wb' (binary write).
 
         """
         if type(file) is ListType:

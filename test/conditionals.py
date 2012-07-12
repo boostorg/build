@@ -13,7 +13,7 @@ t = BoostBuild.Tester()
 
 # Arrange a project which will build only if 'a.cpp' is compiled with "STATIC"
 # define.
-t.write("a.cpp", """
+t.write("a.cpp", """\
 #ifdef STATIC
 int main() {}
 #endif
@@ -34,8 +34,8 @@ t.run_build_system("link=static")
 t.expect_addition("bin/$toolset/debug/link-static/a.exe")
 t.rm("bin")
 
-# Regression test for a bug found by Ali Azarbayejani. Conditionals inside usage
-# requirement were not being evaluated.
+# Regression test for a bug found by Ali Azarbayejani. Conditionals inside
+# usage requirement were not being evaluated.
 t.write("jamroot.jam", """
 lib l : l.cpp : : : <link>static:<define>STATIC ;
 exe a : a.cpp l ;

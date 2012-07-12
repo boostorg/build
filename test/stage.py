@@ -11,7 +11,7 @@ import BoostBuild
 
 t = BoostBuild.Tester()
 
-t.write("jamroot.jam", "import gcc ;")
+t.write("jamroot.jam", "")
 t.write("jamfile.jam", """\
 lib a : a.cpp ;
 stage dist : a a.h auxilliary/1 ;

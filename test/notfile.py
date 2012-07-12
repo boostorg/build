@@ -13,7 +13,7 @@ import os
 
 t = BoostBuild.Tester()
 
-t.write("jamroot.jam", """ 
+t.write("jamroot.jam", """\
 import notfile ;
 notfile say : "echo hi" ;
 
@@ -22,23 +22,21 @@ notfile hello_valgrind : @valgrind : hello ;
 
 actions valgrind
 {
-   valgrind $(>[1]) 
+   valgrind $(>[1])
 }
 """)
 
-t.write("hello.cpp", """
+t.write("hello.cpp", """\
 #include <iostream>
 int main() { std::cout << "Hello!\\n"; }
 """)
-
 
 t.run_build_system("-n -d+2")
 
 t.fail_test(string.find(t.stdout(), "echo hi") == -1)
 
-name = t.adjust_names(["bin/$toolset/debug/hello.exe"])[0]
+name = t.adjust_names("bin/$toolset/debug/hello.exe")[0]
 name = apply(os.path.join, string.split(name, "/"));
-c = "valgrind *" + name
-t.expect_output_line(c)
+t.expect_output_line("valgrind *%s" % name)
 
 t.cleanup()

@@ -13,32 +13,26 @@ import BoostBuild
 t = BoostBuild.Tester()
 
 # The point of this test is to have exe "main" which uses library "b", which
-# uses library "a". When "main" is built with <hardcode-dll-paths>true, paths to
-# both libraries should be present as values of <dll-path> feature. We create a
-# special target type which reports <dll-path> values on its sources and compare
-# the list of found values with out expectations.
+# uses library "a". When "main" is built with <hardcode-dll-paths>true, paths
+# to both libraries should be present as values of <dll-path> feature. We
+# create a special target type which reports <dll-path> values on its sources
+# and compare the list of found values with out expectations.
 
-t.write("jamfile.jam", """
+t.write("jamroot.jam", "using dll_paths ;")
+t.write("jamfile.jam", """\
 exe main : main.cpp b//b ;
 explicit main ;
 path-list mp : main ;
 """)
 
-t.write("main.cpp", """
-int main() {}
-""")
-
-t.write("jamroot.jam", """
-using dll_paths ;
-""")
-
-t.write("dll_paths.jam", """
-import type ;
-import generators ;
-import feature ;
-import sequence ;
-import print ;
+t.write("main.cpp", "int main() {}\n")
+t.write("dll_paths.jam", """\
 import "class" : new ;
+import feature ;
+import generators ;
+import print ;
+import sequence ;
+import type ;
 
 rule init ( )
 {
@@ -81,7 +75,7 @@ rule list ( target : sources * : properties * )
 }
 """)
 
-t.write("dll_paths.py", """
+t.write("dll_paths.py", """\
 import bjam
 
 import b2.build.type as type
@@ -95,10 +89,10 @@ def init():
     class DllPathsListGenerator(generators.Generator):
 
         def __init__(self):
-            generators.Generator.__init__(self, "dll_paths.list", False, ["EXE"], ["PATH_LIST"])
+            generators.Generator.__init__(self, "dll_paths.list", False,
+                ["EXE"], ["PATH_LIST"])
 
         def generated_targets(self, sources, ps, project, name):
-
             dll_paths = []
             for s in sources:
                 a = s.action()
@@ -106,9 +100,9 @@ def init():
                     p = a.properties()
                     dll_paths += p.get('dll-path')
             dll_paths.sort()
-            return generators.Generator.generated_targets(self,
-                sources, ps.add_raw(["<dll-path>" + p for p in dll_paths]),
-                project, name)
+            return generators.Generator.generated_targets(self, sources,
+                ps.add_raw(["<dll-path>" + p for p in dll_paths]), project,
+                name)
 
     generators.register(DllPathsListGenerator())
 
@@ -117,11 +111,13 @@ echo $(PATHS) > $(<[1])
 \"\"\"
 def function(target, sources, ps):
     bjam.call('set-target-variable', target, "PATHS", ps.get('dll-path'))
-    
-get_manager().engine().register_action("dll_paths.list", command, function=function)
+
+get_manager().engine().register_action("dll_paths.list", command,
+    function=function)
 """)
 
-t.write("a/a.cpp", """
+t.write("a/jamfile.jam", "lib a : a.cpp ;")
+t.write("a/a.cpp", """\
 void
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -129,20 +125,13 @@ __declspec(dllexport)
 foo() {}
 """)
 
-t.write("a/jamfile.jam", """
-lib a : a.cpp ;
-""")
-
-t.write("b/b.cpp", """
+t.write("b/jamfile.jam", "lib b : b.cpp ../a//a ;")
+t.write("b/b.cpp", """\
 void
 #if defined(_WIN32)
 __declspec(dllexport)
 #endif
 bar() {}
-""")
-
-t.write("b/jamfile.jam", """
-lib b : b.cpp ../a//a ;
 """)
 
 t.run_build_system("hardcode-dll-paths=true")

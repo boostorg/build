@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-#  Copyright (C) Jurko Gospodnetic 2008.
+#  Copyright (C) 2008. Jurko Gospodnetic
 #  Distributed under the Boost Software License, Version 1.0. (See
 #  accompanying file LICENSE_1_0.txt or copy at
 #  http://www.boost.org/LICENSE_1_0.txt)
@@ -10,20 +10,19 @@
 import BoostBuild
 
 
-################################################################################
+###############################################################################
 #
 # testSORTCorrectness()
 # ---------------------
 #
-################################################################################
+###############################################################################
 
 def testSORTCorrectness():
-    """Testing that Boost Jam's SORT builtin rule actually sorts correctly.
-    """
-    t = BoostBuild.Tester("-f test.jam -d1", pass_toolset=False,
+    """Testing that Boost Jam's SORT builtin rule actually sorts correctly."""
+    t = BoostBuild.Tester("-ftest.jam -d1", pass_toolset=False,
         use_test_config=False)
 
-    t.write("test.jam", """
+    t.write("test.jam", """\
 NOCARE all ;
 source-data = 1 8 9 2 7 3 4 7 1 27 27 9 98 98 1 1 4 5 6 2 3 4 8 1 -2 -2 0 0 0 ;
 target-data = -2 -2 0 0 0 1 1 1 1 1 2 2 27 27 3 3 4 4 4 5 6 7 7 8 8 9 9 98 98 ;
@@ -47,18 +46,20 @@ if $(sorted-data) != $(target-data)
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # testSORTDuration()
 # ------------------
 #
-################################################################################
+###############################################################################
 
 def testSORTDuration():
-    """Regression test making sure Boost Jam's SORT builtin rule does not get
-    quadratic behaviour again in this use case.
     """
-    t = BoostBuild.Tester("-f test.jam -d1", pass_toolset=False,
+      Regression test making sure Boost Jam's SORT builtin rule does not get
+    quadratic behaviour again in this use case.
+
+    """
+    t = BoostBuild.Tester("-ftest.jam -d1", pass_toolset=False,
         use_test_config=False)
 
     f = open(t.workpath("test.jam"), "w")
@@ -84,12 +85,12 @@ NOCARE all ;
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # main()
 # ------
 #
-################################################################################
+###############################################################################
 
 testSORTCorrectness()
 testSORTDuration()

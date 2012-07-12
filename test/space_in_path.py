@@ -16,14 +16,11 @@ class unsplit(object):
 
 t = BoostBuild.Tester()
 
-t.write("has space/Jamroot.jam", """
+t.write("has space/jamroot.jam", """\
 import testing ;
 unit-test test : test.cpp ;
 """)
-
-t.write("has space/test.cpp", """
-int main() {}
-""")
+t.write("has space/test.cpp", "int main() {}\n")
 
 t.run_build_system(unsplit(["has space"]))
 

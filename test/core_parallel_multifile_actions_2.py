@@ -22,41 +22,39 @@ import BoostBuild
 t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
 
 t.write("sleep.bat", """\
-@setlocal
-@REM timeout /T %1 /NOBREAK >nul
+::@timeout /T %1 /NOBREAK >nul
 @ping 127.0.0.1 -n 2 -w 1000 >nul
 @ping 127.0.0.1 -n %1 -w 1000 >nul
-@endlocal
 @exit /B 0
 """)
 
 t.write("file.jam", """\
-    if $(NT)
-    {
-        SLEEP = @call sleep.bat ;
-    }
-    else
-    {
-        SLEEP = sleep ;
-    }
+if $(NT)
+{
+    SLEEP = @call sleep.bat ;
+}
+else
+{
+    SLEEP = sleep ;
+}
 
-    actions link
-    {
-        $(SLEEP) 1
-        echo 001 - linked
-    }
+actions link
+{
+    $(SLEEP) 1
+    echo 001 - linked
+}
 
-    link dll lib ;
+link dll lib ;
 
-    actions install
-    {
-        echo 002 - installed
-    }
+actions install
+{
+    echo 002 - installed
+}
 
-    install installed_dll : dll ;
-    DEPENDS installed_dll : dll ;
+install installed_dll : dll ;
+DEPENDS installed_dll : dll ;
 
-    DEPENDS all : lib installed_dll ;
+DEPENDS all : lib installed_dll ;
 """)
 
 t.run_build_system("-ffile.jam -j2", stdout="""\

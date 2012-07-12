@@ -8,7 +8,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(pass_toolset=0)
+t = BoostBuild.Tester("-ffile.jam", pass_toolset=0)
 
 t.write("file.jam", """
 actions a { }
@@ -18,13 +18,13 @@ a all ;
 b all ;
 """)
 
-t.run_build_system("-ffile.jam -d0", stdout="")
+t.run_build_system("-d0", stdout="")
 
-t.run_build_system("-ffile.jam -d1")
+t.run_build_system("-d1")
 t.expect_output_line("a all")
 t.expect_output_line("b all", False)
 
-t.run_build_system("-ffile.jam -d2")
+t.run_build_system("-d2")
 t.expect_output_line("a all")
 t.expect_output_line("b all")
 

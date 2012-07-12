@@ -9,13 +9,12 @@ import string
 
 t = BoostBuild.Tester()
 
-t.write("jamroot.jam", """
+t.write("jamroot.jam", """\
 lib main : main.cpp l ;
 lib l : l.cpp main ;
 """)
 
 t.write("main.cpp", "")
-
 t.write("l.cpp", "")
 
 t.run_build_system("--no-error-backtrace", status=1)
