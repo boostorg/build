@@ -32,7 +32,7 @@ actions dummy
 
 dummy all ;
 """)
-t.run_build_system("-ffile.jam -d1")
+t.run_build_system(["-ffile.jam", "-d1"])
 t.expect_output_line("From rule: 1 seconds 2 seconds 3 seconds")
 t.expect_output_line('*From action: 1" 2" 3" seconds"*')
 t.cleanup()

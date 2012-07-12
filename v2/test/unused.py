@@ -19,11 +19,11 @@ t.run_build_system()
 # easy to check if a warning was issued or not.
 t.run_build_system(stdout="")
 
-t.run_build_system("-sGENERATE_ONLY_UNUSABLE=1", stdout="")
+t.run_build_system(["-sGENERATE_ONLY_UNUSABLE=1"], stdout="")
 
 # Now check that even if main target generates nothing, its usage requirements
 # are still propagated to dependants.
 t.write("a.cpp", "int main() {}\n")
-t.run_build_system("-sGENERATE_NOTHING=1")
+t.run_build_system(["-sGENERATE_NOTHING=1"])
 
 t.cleanup()

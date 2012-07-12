@@ -8,12 +8,6 @@
 
 import BoostBuild
 
-class unsplit(object):
-    def __init__(self, value):
-        self.value = value
-    def split(self, ignored):
-        return self.value
-
 t = BoostBuild.Tester()
 
 t.write("has space/jamroot.jam", """\
@@ -22,6 +16,6 @@ unit-test test : test.cpp ;
 """)
 t.write("has space/test.cpp", "int main() {}\n")
 
-t.run_build_system(unsplit(["has space"]))
+t.run_build_system(["has space"])
 
 t.cleanup()

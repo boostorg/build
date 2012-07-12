@@ -57,7 +57,7 @@ DEPENDS installed_dll : dll ;
 DEPENDS all : lib installed_dll ;
 """)
 
-t.run_build_system("-ffile.jam -j2", stdout="""\
+t.run_build_system(["-ffile.jam", "-j2"], stdout="""\
 ...found 4 targets...
 ...updating 3 targets...
 link dll

@@ -134,12 +134,12 @@ __declspec(dllexport)
 bar() {}
 """)
 
-t.run_build_system("hardcode-dll-paths=true")
+t.run_build_system(["hardcode-dll-paths=true"])
 
 t.expect_addition("bin/$toolset/debug/mp.pathlist")
 
-es1 = t.adjust_names(["a/bin/$toolset/debug"])[0]
-es2 = t.adjust_names(["b/bin/$toolset/debug"])[0]
+es1 = t.adjust_names("a/bin/$toolset/debug")[0]
+es2 = t.adjust_names("b/bin/$toolset/debug")[0]
 
 t.expect_content_line("bin/$toolset/debug/mp.pathlist", "*" + es1);
 t.expect_content_line("bin/$toolset/debug/mp.pathlist", "*" + es2);

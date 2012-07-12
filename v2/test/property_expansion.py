@@ -23,6 +23,6 @@ int main() {}
 #endif
 """)
 
-t.run_build_system("debug-AA")
+t.run_build_system(["debug-AA"])
 
 t.cleanup()

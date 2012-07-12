@@ -22,6 +22,6 @@ NOTFILE subtest ;
 DEPENDS all : subtest_a ;
 """)
 
-t.run_build_system("-ffile.jam -sACTION=invalid", status=1)
+t.run_build_system(["-ffile.jam", "-sACTION=invalid"], status=1)
 
 t.cleanup()

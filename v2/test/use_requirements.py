@@ -51,7 +51,7 @@ int main() { foo(); }
 """)
 
 t.run_build_system()
-t.run_build_system("--clean")
+t.run_build_system(["--clean"])
 
 
 # Test that use requirements on main target work, when they are referred using
@@ -78,7 +78,7 @@ int main() {}
 """)
 
 t.run_build_system()
-t.run_build_system("--clean")
+t.run_build_system(["--clean"])
 
 
 # Test that usage requirements on a project work.
@@ -132,7 +132,7 @@ foo() {}
 """)
 
 t.run_build_system()
-t.run_build_system("--clean")
+t.run_build_system(["--clean"])
 
 
 # Test that we correctly handle dependency features in usage requirements on
@@ -170,7 +170,7 @@ must_export_something;
 """)
 
 t.run_build_system()
-t.run_build_system("--clean")
+t.run_build_system(["--clean"])
 
 
 # Test correct handling of dependency features in project requirements.
@@ -249,7 +249,7 @@ __declspec(dllexport)
 foo() {}
 """)
 
-t.run_build_system("link=static")
+t.run_build_system(["link=static"])
 t.expect_addition("libs/bin/$toolset/debug/link-static/a_d.obj")
 
 

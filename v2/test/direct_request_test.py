@@ -35,14 +35,14 @@ int __declspec(dllexport) force_implib_creation;
 # endif
 """)
 
-t.run_build_system("define=MACROS")
+t.run_build_system(["define=MACROS"])
 t.expect_addition("bin/$toolset/debug/"
                   * (BoostBuild.List("a.obj b.obj b.dll a.exe")))
 
 
 # When building a debug version, the 'define' still applies.
 t.rm("bin")
-t.run_build_system("debug define=MACROS")
+t.run_build_system(["debug", "define=MACROS"])
 t.expect_addition("bin/$toolset/debug/"
                   * (BoostBuild.List("a.obj b.obj b.dll a.exe")))
 
@@ -53,7 +53,7 @@ exe a : a.cpp b : <variant>debug ;
 lib b : b.cpp ;
 """)
 t.rm("bin")
-t.run_build_system("release define=MACROS")
+t.run_build_system(["release", "define=MACROS"])
 
 
 # Regression test: direct build request was not working when there was more
@@ -63,6 +63,6 @@ t.write("jamroot.jam", "")
 t.write("jamfile.jam", "build-project a ;")
 t.write("a/jamfile.jam", "build-project b ;")
 t.write("a/b/jamfile.jam", "")
-t.run_build_system("release")
+t.run_build_system(["release"])
 
 t.cleanup()

@@ -27,7 +27,7 @@ t.run_build_system()
 t.expect_addition("bin/$toolset/debug/hello.obj")
 
 t.touch("hello.cpp")
-t.run_build_system("s")
+t.run_build_system(["s"])
 # If 'hello' in the 's' target resolved to file in the current dir, nothing
 # will be rebuilt.
 t.expect_touch("bin/$toolset/debug/hello.obj")

@@ -37,7 +37,7 @@ echo 002
 DEPENDS all : sleeper ;
 """)
 
-t.run_build_system("-ffile.jam -d1 -l2", status=1)
+t.run_build_system(["-ffile.jam", "-d1", "-l2"], status=1)
 t.expect_output_line("2 second time limit exceeded")
 
 t.cleanup()

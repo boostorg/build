@@ -10,7 +10,7 @@
 import BoostBuild
 import sys
 
-t = BoostBuild.Tester('example.python.interpreter="%s"' % sys.executable)
+t = BoostBuild.Tester(['example.python.interpreter=%s' % sys.executable])
 t.set_tree("../example/make")
 t.run_build_system()
 t.expect_addition(["bin/$toolset/debug/main.cpp"])

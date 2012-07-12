@@ -17,7 +17,7 @@ t.write("hello.cpp", "int main() {}\n")
 t.run_build_system()
 t.expect_nothing_more()
 
-t.run_build_system("release")
+t.run_build_system(["release"])
 t.expect_addition("bin/$toolset/release/hello.exe")
 
 t.cleanup()

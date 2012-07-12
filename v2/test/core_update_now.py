@@ -26,7 +26,7 @@ UPDATE_NOW target1 ;
 DEPENDS all : target1 ;
 """)
 
-    t.run_build_system("-ffile.jam", stdout="""\
+    t.run_build_system(["-ffile.jam"], stdout="""\
 ...found 1 target...
 ...updating 1 target...
 do-print target1
@@ -56,7 +56,7 @@ UPDATE_NOW target1 : : ignore-minus-n ;
 DEPENDS all : target1 ;
 """)
 
-    t.run_build_system("-ffile.jam -n", stdout="""\
+    t.run_build_system(["-ffile.jam", "-n"], stdout="""\
 ...found 1 target...
 ...updating 1 target...
 do-print target1
@@ -98,7 +98,7 @@ UPDATE_NOW target1 : : ignore-minus-n ;
 DEPENDS all : target1 target2 ;
 """)
 
-    t.run_build_system("-ffile.jam -n", stdout="""\
+    t.run_build_system(["-ffile.jam", "-n"], stdout="""\
 ...found 1 target...
 ...updating 1 target...
 fail target1
@@ -137,7 +137,7 @@ UPDATE_NOW target1 : : ignore-minus-n ;
 DEPENDS all : target1 target2 ;
 """)
 
-    t.run_build_system("-ffile.jam -n", status=1, stdout="""\
+    t.run_build_system(["-ffile.jam", "-n"], status=1, stdout="""\
 don't know how to make target1
 ...found 1 target...
 ...can't find 1 target...
@@ -174,7 +174,7 @@ UPDATE_NOW target1 : : ignore-minus-n ;
 DEPENDS all : target1 ;
 """)
 
-    t.run_build_system("-ffile.jam -n", stdout="""\
+    t.run_build_system(["-ffile.jam", "-n"], stdout="""\
 ...found 1 target...
 ...updating 1 target...
 do-print target1

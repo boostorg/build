@@ -36,7 +36,7 @@ rule bind-rule ( target : path )
 DEPENDS all : fake-target ;
 """)
 
-t.run_build_system("-ffile.jam", stdout="""\
+t.run_build_system(["-ffile.jam"], stdout="""\
 found: all at all
 found: file-to-bind at subdir1%sfile-to-bind
 ...found 3 targets...

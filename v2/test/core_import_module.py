@@ -70,7 +70,7 @@ actions do-nothing { }
 do-nothing all ;
 """)
 
-t.run_build_system("-fcode", stdout="""\
+t.run_build_system(["-fcode"], stdout="""\
 R1
 R2
 L1

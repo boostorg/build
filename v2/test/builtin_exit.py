@@ -9,7 +9,7 @@
 import BoostBuild
 
 def test_exit(name):
-    t = BoostBuild.Tester("-ffile.jam", pass_toolset=0)
+    t = BoostBuild.Tester(["-ffile.jam"], pass_toolset=0)
 
     t.write("file.jam", "%s ;" % name)
     t.run_build_system(status=1, stdout="\n")

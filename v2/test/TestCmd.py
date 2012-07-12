@@ -58,10 +58,10 @@ from types import *
 
 import os
 import os.path
-import popen2
 import re
 import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 import traceback
@@ -374,20 +374,26 @@ class TestCmd:
             raise ValueError, "mode must begin with 'r'"
         return open(file, mode).read()
 
-    def run(self, program=None, arguments=None, chdir=None, stdin=None):
+    def run(self, program=None, arguments=None, chdir=None, stdin=None,
+        universal_newlines=True):
         """
           Runs a test of the program or script for the test environment.
         Standard output and error output are saved for future retrieval via the
         stdout() and stderr() methods.
 
+          'universal_newlines' parameter controls how the child process
+        input/output streams are opened as defined for the same named Python
+        subprocess.POpen constructor parameter.
+
         """
         if chdir:
-            oldcwd = os.getcwd()
             if not os.path.isabs(chdir):
                 chdir = os.path.join(self.workpath(chdir))
             if self.verbose:
                 sys.stderr.write("chdir(" + chdir + ")\n")
-            os.chdir(chdir)
+        else:
+            chdir = self.workdir
+
         cmd = []
         if program and program[0]:
             if program[0] != self.program[0] and not os.path.isabs(program[0]):
@@ -400,86 +406,9 @@ class TestCmd:
         if self.verbose:
             sys.stderr.write(join(cmd, " ") + "\n")
         try:
-            p = popen2.Popen3(cmd, 1)
-        except AttributeError:
-            # We end up here in case the popen2.Popen3 class is not available
-            # (e.g. on Windows). We will be using the os.popen3() Python API
-            # which takes a string parameter and so needs its executable quoted
-            # in case its name contains spaces.
-            for i in xrange(len(cmd)):
-                if not cmd[i] or '"' in cmd[i]:
-                    pass
-                elif cmd[i][-1] == '\\':
-                    cmd[i] = '"' + cmd[i] + '\\"'
-                else:
-                    cmd[i] = '"' + cmd[i] + '"'
-            command_string = join(cmd, " ")
-            if ( os.name == 'nt' ):
-                # This is a workaround for a longstanding Python bug on Windows
-                # when using os.popen(), os.system() and similar functions to
-                # execute a command containing quote characters. The bug seems
-                # to be related to the quote stripping functionality used by
-                # the Windows cmd.exe interpreter when its /S is not specified.
-                #
-                # Cleaned up quote from the cmd.exe help screen as displayed on
-                # Windows XP SP2:
-                #
-                #   1. If all of the following conditions are met, then quote
-                #      characters on the command line are preserved:
-                #
-                #       - no /S switch
-                #       - exactly two quote characters
-                #       - no special characters between the two quote
-                #         characters, where special is one of: &<>()@^|
-                #       - there are one or more whitespace characters between
-                #         the two quote characters
-                #       - the string between the two quote characters is the
-                #         name of an executable file.
-                #
-                #   2. Otherwise, old behavior is to see if the first character
-                #      is a quote character and if so, strip the leading
-                #      character and remove the last quote character on the
-                #      command line, preserving any text after the last quote
-                #      character.
-                #
-                # This causes some commands containing quotes not to be
-                # executed correctly. For example:
-                #
-                #   "\Long folder name\aaa.exe" --name="Foo" --no-surname
-                #
-                # would get its outermost quotes stripped and would be executed
-                # as:
-                #
-                #   \Long folder name\aaa.exe" --name="Foo --no-surname
-                #
-                # which would report an error about '\Long' not being a valid
-                # command.
-                #
-                # cmd.exe help seems to indicate it would be enough to add an
-                # extra space character in front of the command to avoid this
-                # but this does not work, most likely due to the shell first
-                # stripping all leading whitespace characters from the command.
-                #
-                # Solution implemented here is to quote the whole command in
-                # case it contains any quote characters. Note thought this will
-                # not work correctly should Python ever fix this bug.
-                #                                    (01.05.2008.) (Jurko)
-                if command_string.find('"') != -1:
-                    command_string = '"%s"' % command_string
-            tochild, fromchild, childerr = os.popen3(command_string)
-            if stdin:
-                if type(stdin) is ListType:
-                    for line in stdin:
-                        tochild.write(line)
-                else:
-                    tochild.write(stdin)
-            tochild.close()
-            self._stdout.append(fromchild.read())
-            self._stderr.append(childerr.read())
-            fromchild.close()
-            self.status = childerr.close()
-            if not self.status:
-                self.status = 0
+            p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=chdir,
+                universal_newlines=universal_newlines)
         except:
             raise
         else:
@@ -489,17 +418,14 @@ class TestCmd:
                         p.tochild.write(line)
                 else:
                     p.tochild.write(stdin)
-            p.tochild.close()
-            self._stdout.append(p.fromchild.read())
-            self._stderr.append(p.childerr.read())
-            self.status = p.wait()
+            out, err = p.communicate()
+            self._stdout.append(out)
+            self._stderr.append(err)
+            self.status = p.returncode
 
         if self.verbose:
             sys.stdout.write(self._stdout[-1])
             sys.stderr.write(self._stderr[-1])
-
-        if chdir:
-            os.chdir(oldcwd)
 
     def stderr(self, run=None):
         """

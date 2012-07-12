@@ -98,12 +98,12 @@ __declspec (dllexport) void x () {}
         BoostBuild.List("bin/$toolset/release/link-static/b_rt.lib") +
         BoostBuild.List("c/a_rt.exe"))
 
-    variants = "debug release link=static,shared"
+    variants = ["debug", "release", "link=static,shared"]
 
     t.run_build_system(variants)
     t.expect_addition(file_list)
 
-    t.run_build_system(variants + " clean")
+    t.run_build_system(variants + ["clean"])
     t.expect_removal(file_list)
 
 

@@ -19,7 +19,7 @@ import BoostBuild
 
 def testSORTCorrectness():
     """Testing that Boost Jam's SORT builtin rule actually sorts correctly."""
-    t = BoostBuild.Tester("-ftest.jam -d1", pass_toolset=False,
+    t = BoostBuild.Tester(["-ftest.jam", "-d1"], pass_toolset=False,
         use_test_config=False)
 
     t.write("test.jam", """\
@@ -59,7 +59,7 @@ def testSORTDuration():
     quadratic behaviour again in this use case.
 
     """
-    t = BoostBuild.Tester("-ftest.jam -d1", pass_toolset=False,
+    t = BoostBuild.Tester(["-ftest.jam", "-d1"], pass_toolset=False,
         use_test_config=False)
 
     f = open(t.workpath("test.jam"), "w")

@@ -36,8 +36,8 @@ def test_user_configuration():
     configFileNames = ["ups_lala_1.jam", "ups_lala_2.jam",
         os.path.join(subdirName, "ups_lala_3.jam")]
 
-    t = BoostBuild.Tester("toolset=%s --debug-configuration" % toolsetName,
-        pass_toolset=False, use_test_config=False)
+    t = BoostBuild.Tester(["toolset=%s" % toolsetName,
+        "--debug-configuration"], pass_toolset=False, use_test_config=False)
 
     for configFileName in configFileNames:
         message = "ECHO \"%s\" ;" % testMessage % configFileName
@@ -75,12 +75,14 @@ ECHO test-index: $(test-index:E=(unknown)) ;
                 "- %s" % message)
             self.__tester.fail_test(1)
 
-        def __call__(self, test_id, env, extra_args="", *args, **kwargs):
+        def __call__(self, test_id, env, extra_args=None, *args, **kwargs):
             if env == "" and not canSetEmptyEnvironmentVariable:
                 self.__assertionFailure("Can not set empty environment "
                     "variables on this platform.")
             self.__registerTestId(str(test_id))
-            extra_args += " ---test-id---=%s" % test_id
+            if extra_args is None:
+                extra_args = []
+            extra_args.append("---test-id---=%s" % test_id)
             env_name = "BOOST_BUILD_USER_CONFIG"
             previous_env = os.environ.get(env_name)
             _env_set(env_name, env)
@@ -104,7 +106,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(2, None, "--user-config=")
+    test(2, None, ["--user-config="])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
     t.expect_output_line(disabledConfigLoadMessage)
@@ -112,7 +114,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(3, None, '--user-config=""')
+    test(3, None, ['--user-config=""'])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
     t.expect_output_line(disabledConfigLoadMessage)
@@ -120,7 +122,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(4, None, '--user-config="%s"' % configFileNames[0])
+    test(4, None, ['--user-config="%s"' % configFileNames[0]])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -128,7 +130,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(5, None, '--user-config="%s"' % configFileNames[2])
+    test(5, None, ['--user-config="%s"' % configFileNames[2]])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -136,7 +138,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2])
 
-    test(6, None, '--user-config="%s"' % os.path.abspath(configFileNames[1]))
+    test(6, None, ['--user-config="%s"' % os.path.abspath(configFileNames[1])])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -144,7 +146,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1])
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(7, None, '--user-config="%s"' % os.path.abspath(configFileNames[2]))
+    test(7, None, ['--user-config="%s"' % os.path.abspath(configFileNames[2])])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -177,7 +179,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1])
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(11, configFileNames[1], '--user-config=""')
+    test(11, configFileNames[1], ['--user-config=""'])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage, False)
     t.expect_output_line(disabledConfigLoadMessage)
@@ -185,7 +187,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(12, configFileNames[1], '--user-config="%s"' % configFileNames[0])
+    test(12, configFileNames[1], ['--user-config="%s"' % configFileNames[0]])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -194,7 +196,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[2], False)
 
     if canSetEmptyEnvironmentVariable:
-        test(13, "", '--user-config="%s"' % configFileNames[0])
+        test(13, "", ['--user-config="%s"' % configFileNames[0]])
         t.expect_output_line(implicitConfigLoadMessage, False)
         t.expect_output_line(explicitConfigLoadMessage)
         t.expect_output_line(disabledConfigLoadMessage, False)
@@ -202,7 +204,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
         t.expect_output_line(testMessage % configFileNames[1], False)
         t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(14, '""', '--user-config="%s"' % configFileNames[0])
+    test(14, '""', ['--user-config="%s"' % configFileNames[0]])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -210,7 +212,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
     t.expect_output_line(testMessage % configFileNames[1], False)
     t.expect_output_line(testMessage % configFileNames[2], False)
 
-    test(15, "invalid", '--user-config="%s"' % configFileNames[0])
+    test(15, "invalid", ['--user-config="%s"' % configFileNames[0]])
     t.expect_output_line(implicitConfigLoadMessage, False)
     t.expect_output_line(explicitConfigLoadMessage)
     t.expect_output_line(disabledConfigLoadMessage, False)
@@ -274,7 +276,7 @@ def _env_set(name, value):
 def _getExternalEnv(name):
     toolsetName = "__myDummyToolset__"
 
-    t = BoostBuild.Tester("toolset=%s" % toolsetName, pass_toolset=False,
+    t = BoostBuild.Tester(["toolset=%s" % toolsetName], pass_toolset=False,
         use_test_config=False)
     try:
         #   Prepare a dummy toolset so we do not get errors in case the default
@@ -302,7 +304,7 @@ for x in $(names)
 }
 """)
 
-        t.run_build_system("---var-name---=%s" % name)
+        t.run_build_system(["---var-name---=%s" % name])
         m = re.search("^### %s: '(.*)' ###$" % name, t.stdout(), re.MULTILINE)
         if m:
             return m.group(1)

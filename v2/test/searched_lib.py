@@ -64,7 +64,7 @@ __declspec(dllexport)
 helper() { foo(); }
 """)
 
-t.run_build_system("-d2")
+t.run_build_system(["-d2"])
 t.expect_addition("bin/$toolset/debug/main.exe")
 t.rm("bin/$toolset/debug/main.exe")
 
@@ -142,7 +142,7 @@ lib l : : <name>l_d <variant>debug ;
 lib l : : <name>l_r <variant>release ;
 """)
 
-t.run_build_system("-n")
+t.run_build_system(["-n"])
 
 
 # A regression test. Two virtual target with the same properties were created
@@ -157,7 +157,7 @@ static-lib a : a.cpp l ;
 lib l : : <name>l_f ;
 """)
 
-t.run_build_system("-n")
+t.run_build_system(["-n"])
 
 
 # Make sure plain "lib foobar ; " works.
@@ -166,7 +166,7 @@ exe a : a.cpp foobar ;
 lib foobar ;
 """)
 
-t.run_build_system("-n -d2")
+t.run_build_system(["-n", "-d2"])
 t.fail_test(string.find(t.stdout(), "foobar") == -1)
 
 
@@ -176,7 +176,7 @@ exe a : a.cpp foo bar ;
 lib foo bar ;
 """)
 
-t.run_build_system("-n -d2")
+t.run_build_system(["-n", "-d2"])
 t.fail_test(string.find(t.stdout(), "foo") == -1)
 t.fail_test(string.find(t.stdout(), "bar") == -1)
 

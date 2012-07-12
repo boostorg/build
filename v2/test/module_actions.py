@@ -10,7 +10,7 @@ import BoostBuild
 import os
 import re
 
-t = BoostBuild.Tester("-d+1", pass_toolset=0)
+t = BoostBuild.Tester(["-d+1"], pass_toolset=0)
 
 t.set_tree('module-actions')
 

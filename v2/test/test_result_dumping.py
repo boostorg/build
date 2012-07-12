@@ -16,7 +16,7 @@ import BoostBuild
 #
 ###############################################################################
 
-t = BoostBuild.Tester("--dump-tests")
+t = BoostBuild.Tester(["--dump-tests"])
 
 t.write("TestBuild/jamroot.jam", """\
 import testing ;

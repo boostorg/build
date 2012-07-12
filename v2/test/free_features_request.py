@@ -35,7 +35,7 @@ void foo() {}
 
 # If FOO is not defined when compiling the 'foo' target, we will get a link
 # error at this point.
-t.run_build_system("hello define=FOO")
+t.run_build_system(["hello", "define=FOO"])
 
 t.expect_addition("bin/$toolset/debug/hello.exe")
 

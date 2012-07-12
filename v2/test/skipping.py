@@ -22,6 +22,6 @@ exe b : b.cpp : <foo>2 ;
 exe c : c.cpp ;
 """)
 
-t.run_build_system("foo=1")
+t.run_build_system(["foo=1"])
 
 t.cleanup()

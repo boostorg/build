@@ -59,7 +59,7 @@ t.rm(".")
 t.write("jamroot.jam", "")
 
 # Test that we get an error when no project id is specified.
-t.run_build_system("--build-dir=foo")
+t.run_build_system(["--build-dir=foo"])
 t.fail_test(string.find(t.stdout(),
                    "warning: the --build-dir option will be ignored") == -1)
 
@@ -72,7 +72,7 @@ t.write("a.cpp", "int main() {}\n")
 t.write("sub/jamfile.jam", "exe b : b.cpp ;\n")
 t.write("sub/b.cpp", "int main() {}\n")
 
-t.run_build_system("--build-dir=build")
+t.run_build_system(["--build-dir=build"])
 t.expect_addition(["build/foo/$toolset/debug/a.exe",
                    "build/foo/sub/$toolset/debug/b.exe"])
 
@@ -82,7 +82,7 @@ exe a : a.cpp ;
 build-project sub ;
 """)
 
-t.run_build_system("--build-dir=build")
+t.run_build_system(["--build-dir=build"])
 t.expect_addition(["build/foo/bin.v2/$toolset/debug/a.exe",
                    "build/foo/bin.v2/sub/$toolset/debug/b.exe"])
 
@@ -90,7 +90,7 @@ t.expect_addition(["build/foo/bin.v2/$toolset/debug/a.exe",
 # 'sub/build'. Today, I am not sure if this is what the user expects, but let
 # it be.
 t.rm('build')
-t.run_build_system("--build-dir=build", subdir="sub")
+t.run_build_system(["--build-dir=build"], subdir="sub")
 t.expect_addition(["sub/build/foo/bin.v2/sub/$toolset/debug/b.exe"])
 
 t.write("jamroot.jam", """\
@@ -99,7 +99,7 @@ exe a : a.cpp ;
 build-project sub ;
 """ % string.replace(os.getcwd(), '\\', '\\\\'))
 
-t.run_build_system("--build-dir=build", status=1)
+t.run_build_system(["--build-dir=build"], status=1)
 t.fail_test(string.find(t.stdout(),
     "Absolute directory specified via 'build-dir' project attribute") == -1)
 
