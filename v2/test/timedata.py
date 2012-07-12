@@ -11,7 +11,7 @@
 # 1. 'time' target with a source target representing more than one virtual
 #    target. This happens in practice, e.g. when using the time rule on a msvc
 #    exe target whose generator actually constructs an EXE and a PDB target.
-#    When this is done - only te main virtual target's constructing action
+#    When this is done - only the main virtual target's constructing action
 #    should be timed.
 # 2. 'time' target with a source target representing a virtual target that
 #    actually gets built by multiple actions run in sequence. In that case a
@@ -26,19 +26,19 @@ import BoostBuild
 import re
 
 
-################################################################################
+###############################################################################
 #
 # basic_jam_action_test()
 # -----------------------
 #
-################################################################################
+###############################################################################
 
 def basic_jam_action_test():
     """Tests basic Jam action timing support."""
 
     t = BoostBuild.Tester(pass_toolset=0)
 
-    t.write("file.jam", """
+    t.write("file.jam", """\
 rule time
 {
     DEPENDS $(<) : $(>) ;
@@ -72,9 +72,10 @@ time foo : bar ;
 make bar : baz ;
 """)
 
-    t.write("baz", "nothing\n")
+    t.write("baz", "nothing")
 
-    expected_output = """\.\.\.found 4 targets\.\.\.
+    expected_output = """\
+\.\.\.found 4 targets\.\.\.
 \.\.\.updating 2 targets\.\.\.
 make bar
 time foo
@@ -91,23 +92,24 @@ bar +user: [0-9\.]+ +system: +[0-9\.]+ *
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # boost_build_testing_support_timing_rule():
 # ------------------------------------------
 #
-################################################################################
+###############################################################################
 
 def boost_build_testing_support_timing_rule():
-    """Tests the target build timing rule provided by the Boost Build testing
-    support system.
     """
+      Tests the target build timing rule provided by the Boost Build testing
+    support system.
 
+    """
     t = BoostBuild.Tester()
 
     t.write("aaa.cpp", "int main() {}\n")
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 import testing ;
 exe my-exe : aaa.cpp ;
 time my-time : my-exe ;
@@ -126,23 +128,24 @@ time my-time : my-exe ;
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # boost_build_testing_support_timing_rule_with_spaces_in_names()
 # --------------------------------------------------------------
 #
-################################################################################
+###############################################################################
 
 def boost_build_testing_support_timing_rule_with_spaces_in_names():
-    """Tests the target build timing rule provided by the Boost Build testing
-    support system when used with targets contining spaces in their names.
     """
+      Tests the target build timing rule provided by the Boost Build testing
+    support system when used with targets contining spaces in their names.
 
+    """
     t = BoostBuild.Tester()
 
     t.write("aaa bbb.cpp", "int main() {}\n")
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 import testing ;
 exe "my exe" : "aaa bbb.cpp" ;
 time "my time" : "my exe" ;
@@ -159,12 +162,12 @@ time "my time" : "my exe" ;
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # main()
 # ------
 #
-################################################################################
+###############################################################################
 
 basic_jam_action_test()
 boost_build_testing_support_timing_rule()

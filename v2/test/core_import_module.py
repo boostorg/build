@@ -8,7 +8,7 @@ import BoostBuild
 
 t = BoostBuild.Tester(pass_toolset=0)
 
-t.write("code", """
+t.write("code", """\
 module a
 {
     rule r1 ( )
@@ -70,7 +70,8 @@ actions do-nothing { }
 do-nothing all ;
 """)
 
-t.run_build_system("-fcode", stdout="""R1
+t.run_build_system("-fcode", stdout="""\
+R1
 R2
 L1
 A.L1

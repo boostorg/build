@@ -80,10 +80,11 @@ obj xxx : xxx.rc ;
     t.write("xxx.bin", "foo")
 
     def test1(n, expect, noexec=False):
-        params = "-sXXX=%d" % n
+        params = ["-sXXX=%d" % n]
         if noexec:
-            params += " -n -sNOEXEC=NOEXEC"
-        t.run_build_system(params)
+            params.append("-n")
+            params.append("-sNOEXEC=NOEXEC")
+        t.run_build_system(" ".join(params))
         t.expect_output_line("*NOEXEC*", noexec)
         obj_file = "xxx_res.obj"
         t.expect_output_line("compile.resource.dummy *%s" % obj_file, expect)

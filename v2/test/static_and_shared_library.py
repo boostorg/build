@@ -6,8 +6,6 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
-import os.path
-import shutil
 
 t = BoostBuild.Tester()
 t.write("jamroot.jam", "")
@@ -18,7 +16,7 @@ lib auxilliary2 : c.cpp ;
 """)
 
 def reset():
-    shutil.rmtree(os.path.join(t.workdir, "lib", "bin"))
+    t.rm("lib/bin")
 
 t.run_build_system(subdir='lib')
 t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("c.obj "
@@ -26,13 +24,13 @@ t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("c.obj "
 t.expect_nothing_more()
 
 reset()
-t.run_build_system(subdir='lib', extra_args="link=shared")
+t.run_build_system("link=shared", subdir="lib")
 t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("c.obj "
     "auxilliary1.lib auxilliary2.dll"))
 t.expect_nothing_more()
 
 reset()
-t.run_build_system(subdir='lib', extra_args="link=static")
+t.run_build_system("link=static", subdir="lib")
 t.expect_addition("lib/bin/$toolset/debug/link-static/" * BoostBuild.List(
     "c.obj auxilliary1.lib auxilliary2.lib"))
 t.expect_nothing_more()

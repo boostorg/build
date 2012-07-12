@@ -18,26 +18,24 @@ import BoostBuild
 ################################################################################
 
 def test_multiple_conditions():
-    """Basic tests for properties conditioned on multiple other properties.
-    """
+    """Basic tests for properties conditioned on multiple other properties."""
 
-    t = BoostBuild.Tester("--user-config= --ignore-site-config toolset=testToolset",
-        pass_toolset=False, use_test_config=False)
+    t = BoostBuild.Tester("--user-config= --ignore-site-config "
+        "toolset=testToolset", pass_toolset=False, use_test_config=False)
 
-    t.write("testToolset.jam", """
+    t.write("testToolset.jam", """\
 import feature ;
 feature.extend toolset : testToolset ;
 rule init ( ) { }
 """)
 
-    t.write("testToolset.py", """
+    t.write("testToolset.py", """\
 from b2.build import feature
 feature.extend('toolset', ["testToolset"])
-def init ( ):
-     pass
+def init ( ): pass
 """)
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 import feature ;
 import notfile ;
 import toolset ;
@@ -127,30 +125,31 @@ notfile testTarget1 : @buildRule : :
 ################################################################################
 
 def test_multiple_conditions_with_toolset_version():
-    """Regression tests for properties conditioned on the toolset version
-    subfeature and some additional properties.
     """
+      Regression tests for properties conditioned on the toolset version
+    subfeature and some additional properties.
 
+    """
     toolset = "testToolset" ;
 
-    t = BoostBuild.Tester("--user-config= --ignore-site-config", pass_toolset=False, use_test_config=False)
+    t = BoostBuild.Tester("--user-config= --ignore-site-config",
+        pass_toolset=False, use_test_config=False)
 
-    t.write( toolset + ".jam", """
+    t.write(toolset + ".jam", """\
 import feature ;
 feature.extend toolset : %(toolset)s ;
 feature.subfeature toolset %(toolset)s : version : 0 1 ;
 rule init ( version ? ) { }
 """ % {"toolset": toolset})
 
-    t.write( "testToolset.py", """
+    t.write("testToolset.py", """\
 from b2.build import feature
-feature.extend('toolset', ["testToolset"])
-feature.subfeature('toolset',"testToolset","version",['0','1'])
-def init ( version ):
-     pass
-     """)
+feature.extend('toolset', ["%(toolset)s"])
+feature.subfeature('toolset', "%(toolset)s", "version", ['0','1'])
+def init ( version ): pass
+""" % {"toolset": toolset})
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 import feature ;
 import notfile ;
 import toolset ;

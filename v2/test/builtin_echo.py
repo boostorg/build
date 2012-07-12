@@ -9,19 +9,19 @@
 import BoostBuild
 
 def test_echo(name):
-    t = BoostBuild.Tester(pass_toolset=0)
+    t = BoostBuild.Tester("-ffile.jam", pass_toolset=0)
 
-    t.write("file.jam", """
-    %s ;
-    UPDATE ;
-    """ % name)
-    t.run_build_system("-ffile.jam", stdout="\n")
+    t.write("file.jam", """\
+%s ;
+UPDATE ;
+""" % name)
+    t.run_build_system(stdout="\n")
 
-    t.write("file.jam", """
-    %s a message ;
-    UPDATE ;
-    """ % name)
-    t.run_build_system("-ffile.jam", stdout="a message\n")
+    t.write("file.jam", """\
+%s a message ;
+UPDATE ;
+""" % name)
+    t.run_build_system(stdout="a message\n")
 
     t.cleanup()
 

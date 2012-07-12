@@ -210,17 +210,17 @@ class Tester(TestCmd.TestCmd):
 
     Optional arguments inherited from the base class:
 
-    `description`                 - Test description string displayed in case of
-                                    a failed test.
+    `description`                 - Test description string displayed in case
+                                    of a failed test.
     `subdir'                      - List of subdirectories to automatically
                                     create under the working directory. Each
                                     subdirectory needs to be specified
-                                    separately parent coming before its child.
-    `verbose`                     - Flag that may be used to enable more verbose
-                                    test system output. Note that it does not
-                                    also enable more verbose build system
-                                    output like the --verbose command line
-                                    option does.
+                                    separately, parent coming before its child.
+    `verbose`                     - Flag that may be used to enable more
+                                    verbose test system output. Note that it
+                                    does not also enable more verbose build
+                                    system output like the --verbose command
+                                    line option does.
     """
     def __init__(self, arguments="", executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,

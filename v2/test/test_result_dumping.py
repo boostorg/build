@@ -9,25 +9,24 @@
 import BoostBuild
 
 
-################################################################################
+###############################################################################
 #
 #   Test that dumping Boost Build based testing results works in case test code
 # is not located in a folder under the Jamroot folder.
 #
-################################################################################
+###############################################################################
 
 t = BoostBuild.Tester("--dump-tests")
 
-t.write("TestBuild/jamroot.jam", """
+t.write("TestBuild/jamroot.jam", """\
 import testing ;
 test-suite testit : [ run ../TestSource/test.cpp ] ;
 """)
 
-t.write("TestSource/test.cpp", """
-int main() {}
-""")
+t.write("TestSource/test.cpp", "int main() {}\n")
 
-t.run_build_system("", subdir="TestBuild")
-t.expect_output_line('boost-test(RUN) "*/TestBuild/test" : "../TestSource/test.cpp"')
+t.run_build_system(subdir="TestBuild")
+t.expect_output_line('boost-test(RUN) "*/TestBuild/test" : '
+    '"../TestSource/test.cpp"')
 
 t.cleanup()

@@ -16,11 +16,12 @@ import BoostBuild
 ################################################################################
 
 def test_folder_with_dot_in_name(t):
-    """ Regression test: the 'tag' feature did not work in directories that had
-    a dot in their name.
     """
+      Regression test: the 'tag' feature did not work in directories that had a
+    dot in their name.
 
-    t.write("version-1.32.0/jamroot.jam", """
+    """
+    t.write("version-1.32.0/jamroot.jam", """\
 project test : requirements <tag>@$(__name__).tag ;
 
 rule tag ( name : type ? : property-set )
@@ -45,10 +46,9 @@ exe a : a.cpp ;
 ################################################################################
 
 def test_tag_property(t):
-    """Basic tag property test.
-    """
+    """Basic tag property test."""
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 import virtual-target ;
 
 rule tag ( name : type ? : property-set )
@@ -77,26 +77,26 @@ lib b : a.cpp : <tag>@tag ;
 stage c : a ;
 """)
 
-    t.write("a.cpp", """
+    t.write("a.cpp", """\
 int main() {}
 #ifdef _MSC_VER
 __declspec (dllexport) void x () {}
 #endif
 """)
 
-    file_list = \
-        BoostBuild.List("bin/$toolset/debug/a_ds.exe") + \
-        BoostBuild.List("bin/$toolset/debug/b_ds.dll") + \
-        BoostBuild.List("c/a_ds.exe") + \
-        BoostBuild.List("bin/$toolset/release/a_rs.exe") + \
-        BoostBuild.List("bin/$toolset/release/b_rs.dll") + \
-        BoostBuild.List("c/a_rs.exe") + \
-        BoostBuild.List("bin/$toolset/debug/link-static/a_dt.exe") + \
-        BoostBuild.List("bin/$toolset/debug/link-static/b_dt.lib") + \
-        BoostBuild.List("c/a_dt.exe") + \
-        BoostBuild.List("bin/$toolset/release/link-static/a_rt.exe") + \
-        BoostBuild.List("bin/$toolset/release/link-static/b_rt.lib") + \
-        BoostBuild.List("c/a_rt.exe")
+    file_list = (
+        BoostBuild.List("bin/$toolset/debug/a_ds.exe") +
+        BoostBuild.List("bin/$toolset/debug/b_ds.dll") +
+        BoostBuild.List("c/a_ds.exe") +
+        BoostBuild.List("bin/$toolset/release/a_rs.exe") +
+        BoostBuild.List("bin/$toolset/release/b_rs.dll") +
+        BoostBuild.List("c/a_rs.exe") +
+        BoostBuild.List("bin/$toolset/debug/link-static/a_dt.exe") +
+        BoostBuild.List("bin/$toolset/debug/link-static/b_dt.lib") +
+        BoostBuild.List("c/a_dt.exe") +
+        BoostBuild.List("bin/$toolset/release/link-static/a_rt.exe") +
+        BoostBuild.List("bin/$toolset/release/link-static/b_rt.lib") +
+        BoostBuild.List("c/a_rt.exe"))
 
     variants = "debug release link=static,shared"
 
