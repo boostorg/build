@@ -71,9 +71,6 @@ void yyerror( char const * s )
      * string literal or action body, in which case yylval location information
      * will hold the information about where the token started while incp will
      * hold the information about where reading it broke.
-     *
-     * TODO: Test the theory about when yylval and incp location information are
-     * the same and when they differ.
      */
     printf( "%s:%d: %s at %s\n", object_str( yylval.file ), yylval.line, s,
             symdump( &yylval ) );
@@ -397,16 +394,11 @@ static char * symdump( YYSTYPE * s )
  * transitions that produce a parse.
  */
 
-void yyinput_stream( OBJECT * * name, int * line )
+void yyinput_last_read_token( OBJECT * * name, int * line )
 {
-    if ( incp )
-    {
-        *name = incp->fname;
-        *line = incp->line;
-    }
-    else
-    {
-        *name = constant_builtin;
-        *line = -1;
-    }
+    /* TODO: Consider whether and when we might want to report where the last
+     * read token ended, e.g. EOF errors inside string literals.
+     */
+    *name = yylval.file;
+    *line = yylval.line;
 }
