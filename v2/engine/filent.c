@@ -56,8 +56,8 @@
 int file_collect_dir_content_( file_info_t * const d )
 {
     PATHNAME f;
-    string filespec[ 1 ];
-    string filename[ 1 ];
+    string pathspec[ 1 ];
+    string pathname[ 1 ];
     struct _finddata_t finfo[ 1 ];
     LIST * files = L0;
     int d_length;
@@ -74,7 +74,7 @@ int file_collect_dir_content_( file_info_t * const d )
 
     /* Prepare file search specification for the findfirst() API. */
     if ( !d_length )
-        string_copy( filespec, ".\\*" );
+        string_copy( pathspec, ".\\*" );
     else
     {
         /* We can not simply assume the given folder name will never include its
@@ -82,30 +82,30 @@ int file_collect_dir_content_( file_info_t * const d )
          * root folder specified without its drive letter, i.e. '\'.
          */
         char const trailingChar = object_str( d->name )[ d_length - 1 ] ;
-        string_copy( filespec, object_str( d->name ) );
+        string_copy( pathspec, object_str( d->name ) );
         if ( ( trailingChar != '\\' ) && ( trailingChar != '/' ) )
-            string_append( filespec, "\\" );
-        string_append( filespec, "*" );
+            string_append( pathspec, "\\" );
+        string_append( pathspec, "*" );
     }
 
-    #if defined(__BORLANDC__) && __BORLANDC__ < 0x550
-    if ( findfirst( filespec->value, finfo, FA_NORMAL | FA_DIREC ) )
+#if defined(__BORLANDC__) && __BORLANDC__ < 0x550
+    if ( findfirst( pathspec->value, finfo, FA_NORMAL | FA_DIREC ) )
     {
-        string_free( filespec );
+        string_free( pathspec );
         return -1;
     }
 
-    string_new( filename );
+    string_new( pathname );
     do
     {
         f.f_base.ptr = finfo->ff_name;
         f.f_base.len = strlen( finfo->ff_name );
-        string_truncate( filename, 0 );
-        path_build( &f, filename );
+        string_truncate( pathname, 0 );
+        path_build( &f, pathname );
 
-        files = list_push_back( files, object_new( filename->value ) );
+        files = list_push_back( files, object_new( pathname->value ) );
         {
-            file_info_t * const ff = file_info( filename->value );
+            file_info_t * const ff = file_info( pathname->value );
             ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
             ff->is_dir = !ff->is_file;
             ff->size = finfo->ff_fsize;
@@ -113,30 +113,30 @@ int file_collect_dir_content_( file_info_t * const d )
         }
     }
     while ( !findnext( finfo ) );
-    #else
+#else  /* defined(__BORLANDC__) && __BORLANDC__ < 0x550 */
     {
-        long const handle = _findfirst( filespec->value, finfo );
+        long const handle = _findfirst( pathspec->value, finfo );
         if ( handle < 0L )
         {
-            string_free( filespec );
+            string_free( pathspec );
             return -1;
         }
 
-        string_new( filename );
+        string_new( pathname );
         do
         {
-            OBJECT * filename_obj;
+            OBJECT * pathname_obj;
 
             f.f_base.ptr = finfo->name;
             f.f_base.len = strlen( finfo->name );
-            string_truncate( filename, 0 );
-            path_build( &f, filename, 0 );
+            string_truncate( pathname, 0 );
+            path_build( &f, pathname, 0 );
 
-            filename_obj = object_new( filename->value );
-            path_key__register_long_path( filename_obj );
-            files = list_push_back( files, filename_obj );
+            pathname_obj = object_new( pathname->value );
+            path_key__register_long_path( pathname_obj );
+            files = list_push_back( files, pathname_obj );
             {
-                file_info_t * const ff = file_info( filename_obj );
+                file_info_t * const ff = file_info( pathname_obj );
                 ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
                 ff->is_dir = !ff->is_file;
                 ff->size = finfo->size;
@@ -147,9 +147,10 @@ int file_collect_dir_content_( file_info_t * const d )
 
         _findclose( handle );
     }
-    #endif
-    string_free( filename );
-    string_free( filespec );
+#endif  /* defined(__BORLANDC__) && __BORLANDC__ < 0x550 */
+
+    string_free( pathname );
+    string_free( pathspec );
 
     d->files = files;
     return 0;

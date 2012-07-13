@@ -13,7 +13,7 @@
  *  file_dirscan()       - scan a directory for files
  *  file_done()          - module cleanup called on shutdown
  *  file_info()          - return cached information about a path
- *  file_is_file()       - return whether a name identifies an existing file
+ *  file_is_file()       - return whether a path identifies an existing file
  *  file_query()         - get cached information about a path, query the OS if
  *                         needed
  *  file_remove_atexit() - schedule a path to be removed on program exit
@@ -123,9 +123,9 @@ void file_done()
  * referenced.
  */
 
-file_info_t * file_info( OBJECT * filename )
+file_info_t * file_info( OBJECT * path )
 {
-    OBJECT * const path_key = path_as_key( filename );
+    OBJECT * const path_key = path_as_key( path );
     file_info_t * finfo;
     int found;
 
@@ -150,12 +150,12 @@ file_info_t * file_info( OBJECT * filename )
 
 
 /*
- * file_is_file() - return whether a name identifies an existing file
+ * file_is_file() - return whether a path identifies an existing file
  */
 
-int file_is_file( OBJECT * filename )
+int file_is_file( OBJECT * path )
 {
-    file_info_t const * const ff = file_query( filename );
+    file_info_t const * const ff = file_query( path );
     return ff ? ff->is_file : -1;
 }
 
@@ -164,9 +164,9 @@ int file_is_file( OBJECT * filename )
  * file_time() - get a file timestamp
  */
 
-int file_time( OBJECT * filename, time_t * time )
+int file_time( OBJECT * path, time_t * time )
 {
-    file_info_t const * const ff = file_query( filename );
+    file_info_t const * const ff = file_query( path );
     if ( !ff ) return -1;
     *time = ff->time;
     return 0;
@@ -275,15 +275,15 @@ static void file_dirscan_impl( OBJECT * dir, scanback func, void * closure )
         LISTITER const end = list_end( d->files );
         for ( ; iter != end; iter = list_next( iter ) )
         {
-            OBJECT * const filename = list_item( iter );
-            file_info_t const * const ffq = file_query( filename );
+            OBJECT * const path = list_item( iter );
+            file_info_t const * const ffq = file_query( path );
             /* The only way a file_query() call can fail is if its internal OS
              * file information gathering API (e.g. stat()) failed. If that
              * happens we should treat the file as if it no longer exists. We
              * then request the raw cached file_info_t structure for that file
              * and use the file name from there.
              */
-            file_info_t const * const ff = ffq ? ffq : file_info( filename );
+            file_info_t const * const ff = ffq ? ffq : file_info( path );
             /* Using a file name read from a file_info_t structure allows OS
              * specific implementations to store some kind of a normalized file
              * name there. Using such a normalized file name then allows us to
