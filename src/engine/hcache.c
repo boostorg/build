@@ -249,7 +249,7 @@ void hcache_init()
         count = atoi( object_str( includes_count_str ) );
         for ( l = L0, i = 0; i < count; ++i )
         {
-            OBJECT * s = read_netstring( f );
+            OBJECT * const s = read_netstring( f );
             if ( !s )
             {
                 fprintf( stderr, "invalid %s\n", hcachename );
@@ -419,8 +419,6 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
 {
     HCACHEDATA * c;
 
-    LIST * l = 0;
-
     ++queries;
 
     if ( ( c = (HCACHEDATA *)hash_find( hcachehash, t->boundname ) ) )
@@ -468,8 +466,7 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
                         t->boundname ) );
                 c->age = 0;
                 ++hits;
-                l = list_copy( c->includes );
-                return l;
+                return list_copy( c->includes );
             }
         }
         else
@@ -496,15 +493,16 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
     }
 
     /* 'c' points at the cache entry. Its out of date. */
+    {
+        LIST * const l = headers1( L0, t->boundname, rec, re );
 
-    l = headers1( L0, t->boundname, rec, re );
+        c->time = t->time;
+        c->age = 0;
+        c->includes = list_copy( l );
+        c->hdrscan = list_copy( hdrscan );
 
-    c->time = t->time;
-    c->age = 0;
-    c->includes = list_copy( l );
-    c->hdrscan = list_copy( hdrscan );
-
-    return l;
+        return l;
+    }
 }
 
 #endif  /* OPT_HEADER_CACHE_EXT */
