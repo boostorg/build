@@ -508,9 +508,9 @@ class Tester(TestCmd.TestCmd):
         if expected_duration is not None:
             actual_duration = self.last_build_time_finish - build_time_start
             if actual_duration > expected_duration:
-                print "Test run lasted %f seconds while it was expected to " \
+                print("Test run lasted %f seconds while it was expected to "
                     "finish in under %f seconds." % (actual_duration,
-                    expected_duration)
+                    expected_duration))
                 self.fail_test(1, dump_stdio=False)
 
         self.tree = tree.build_tree(self.workdir)
@@ -889,7 +889,7 @@ class Tester(TestCmd.TestCmd):
     def wait_for_time_change_since_last_build(self):
         """
           Wait until newly assigned file system timestamps are larger than the
-        one assigned to files created by our previous build run. Used to make
+        ones assigned to files created by our previous build run. Used to make
         subsequent builds correctly recognize newly created or touched files.
 
         """
@@ -897,7 +897,8 @@ class Tester(TestCmd.TestCmd):
             # In fact, I'm not sure why "+ 2" as opposed to "+ 1" is needed but
             # empirically, "+ 1" sometimes causes 'touch' and other functions
             # not to bump the file time enough for a rebuild to happen.
-            if math.floor(time.time()) < math.floor(self.last_build_time_finish) + 2:
+            if (math.floor(time.time()) <
+                math.floor(self.last_build_time_finish) + 2):
                 time.sleep(0.1)
             else:
                 break
