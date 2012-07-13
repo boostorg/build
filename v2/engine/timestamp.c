@@ -12,6 +12,15 @@
 
 /*
  * timestamp.c - get the timestamp of a file or archive member
+ *
+ * External routines:
+ *  timestamp_from_target() - return timestamp on a file, if present
+ *  timestamp_done()        - free timestamp tables
+ *
+ * Internal routines:
+ *  time_enter()      - internal worker callback for scanning archives &
+ *                      directories
+ *  free_timestamps() - worker function for freeing timestamp table contents
  */
 
 #include "jam.h"
@@ -28,9 +37,7 @@
  * BINDING - all known files
  */
 
-typedef struct _binding BINDING;
-
-struct _binding {
+typedef struct _binding {
     OBJECT * name;
     short    flags;
 
@@ -46,7 +53,7 @@ struct _binding {
 
     /* update time - 0 if not exist */
     time_t   time;
-};
+} BINDING;
 
 static struct hash * bindhash = 0;
 static void time_enter( void *, OBJECT *, int const found, time_t );
@@ -62,10 +69,10 @@ static char * time_progress[] =
 
 
 /*
- * timestamp() - return timestamp on a file, if present.
+ * timestamp_from_target() - return timestamp on a file, if present
  */
 
-void timestamp( OBJECT * target, time_t * time )
+void timestamp_from_target( OBJECT * target, time_t * time )
 {
     PROFILE_ENTER( timestamp );
 
@@ -180,6 +187,10 @@ void timestamp( OBJECT * target, time_t * time )
 }
 
 
+/*
+ * time_enter() - internal worker callback for scanning archives & directories
+ */
+
 static void time_enter( void * closure, OBJECT * target, int const found,
     time_t time )
 {
@@ -206,6 +217,11 @@ static void time_enter( void * closure, OBJECT * target, int const found,
     object_free( target );
 }
 
+
+/*
+ * free_timestamps() - worker function for freeing timestamp table contents
+ */
+
 static void free_timestamps( void * xbinding, void * data )
 {
     object_free( ((BINDING *)xbinding)->name );
@@ -213,10 +229,10 @@ static void free_timestamps( void * xbinding, void * data )
 
 
 /*
- * stamps_done() - free timestamp tables.
+ * timestamp_done() - free timestamp tables
  */
 
-void stamps_done()
+void timestamp_done()
 {
     if ( bindhash )
     {

@@ -562,7 +562,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     /* Widely scattered cleanup. */
     file_done();
     rules_done();
-    stamps_done();
+    timestamp_done();
     search_done();
     class_done();
     modules_done();

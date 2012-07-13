@@ -10,7 +10,7 @@
 LIST * path_exists( FRAME * frame, int flags )
 {
     time_t time;
-    timestamp( list_front( lol_get( frame->args, 0 ) ), &time );
+    timestamp_from_target( list_front( lol_get( frame->args, 0 ) ), &time );
     return time ? list_new( object_new( "true" ) ) : L0;
 }
 

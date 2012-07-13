@@ -127,7 +127,7 @@ OBJECT * search( OBJECT * target, time_t * time, OBJECT * * another_target,
         explicitly_located = 1;
 
         key = object_new( buf->value );
-        timestamp( key, time );
+        timestamp_from_target( key, time );
         object_free( key );
         found = 1;
     }
@@ -156,7 +156,7 @@ OBJECT * search( OBJECT * target, time_t * time, OBJECT * * another_target,
             key = path_as_key( test_path );
             object_free( test_path );
             ff = file_query( key );
-            timestamp( key, time );
+            timestamp_from_target( key, time );
 
             if ( ( ba = (BINDING *)hash_find( explicit_bindings, key ) ) )
             {
@@ -200,7 +200,7 @@ OBJECT * search( OBJECT * target, time_t * time, OBJECT * * another_target,
             printf( "search %s: %s\n", object_str( target ), buf->value );
 
         key = object_new( buf->value );
-        timestamp( key, time );
+        timestamp_from_target( key, time );
         object_free( key );
     }
 
