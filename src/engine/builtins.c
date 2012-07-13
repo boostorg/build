@@ -755,7 +755,7 @@ static int has_wildcards( char const * const str )
 static LIST * append_if_exists( LIST * list, OBJECT * file )
 {
     time_t time;
-    timestamp( file, &time );
+    timestamp_from_target( file, &time );
     return time > 0
         ? list_push_back( list, object_copy( file ) )
         : list;

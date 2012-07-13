@@ -15,7 +15,7 @@
 
 #include <time.h>
 
-void timestamp( OBJECT * target, time_t * time );
-void stamps_done();
+void timestamp_from_target( OBJECT * target, time_t * time );
+void timestamp_done();
 
 #endif
