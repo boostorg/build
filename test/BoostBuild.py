@@ -213,7 +213,7 @@ class Tester(TestCmd.TestCmd):
             raise ("Parameter workdir <%s> must point to an absolute "
                 "directory: " % workdir)
 
-        self.last_build_time_finish = 0
+        self.last_build_timestamp = 0
         self.translate_suffixes = translate_suffixes
         self.use_test_config = use_test_config
 
@@ -383,7 +383,7 @@ class Tester(TestCmd.TestCmd):
         if names == ["."]:
             # If we are deleting the entire workspace, there is no need to wait
             # for a clock tick.
-            self.last_build_time_finish = 0
+            self.last_build_timestamp = 0
 
         # Avoid attempts to remove the current directory.
         os.chdir(self.original_workdir)
@@ -469,8 +469,9 @@ class Tester(TestCmd.TestCmd):
                 self.dump_stdio()
                 raise
         finally:
-            old_last_build_time_finish = self.last_build_time_finish
-            self.last_build_time_finish = time.time()
+            build_time_finish = time.time()
+            old_last_build_timestamp = self.last_build_timestamp
+            self.last_build_timestamp = self.__get_current_file_timestamp()
 
         if (status and self.status) is not None and self.status != status:
             expect = ''
@@ -506,7 +507,7 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1, dump_stdio=False)
 
         if expected_duration is not None:
-            actual_duration = self.last_build_time_finish - build_time_start
+            actual_duration = build_time_finish - build_time_start
             if actual_duration > expected_duration:
                 print("Test run lasted %f seconds while it was expected to "
                     "finish in under %f seconds." % (actual_duration,
@@ -520,7 +521,7 @@ class Tester(TestCmd.TestCmd):
             # passed since the last build that actually changed something,
             # there is no need to wait for touched or newly created files to
             # start getting newer timestamps than the currently existing ones.
-            self.last_build_time_finish = old_last_build_time_finish
+            self.last_build_timestamp = old_last_build_timestamp
 
         self.difference.ignore_directories()
         self.unexpected_difference = copy.deepcopy(self.difference)
@@ -897,11 +898,19 @@ class Tester(TestCmd.TestCmd):
             # In fact, I'm not sure why "+ 2" as opposed to "+ 1" is needed but
             # empirically, "+ 1" sometimes causes 'touch' and other functions
             # not to bump the file time enough for a rebuild to happen.
-            if (math.floor(time.time()) <
-                math.floor(self.last_build_time_finish) + 2):
+            if (math.floor(time.time()) < math.floor(self.last_build_timestamp)
+                + 2):
                 time.sleep(0.1)
             else:
                 break
+
+    def __get_current_file_timestamp(self):
+        fd, path = tempfile.mkstemp(prefix="__Boost_Build_timestamp_tester__")
+        try:
+            return os.fstat(fd).st_mtime
+        finally:
+            os.close(fd)
+            os.unlink(path)
 
 
 class List:
