@@ -6,7 +6,6 @@
 
 
 import BoostBuild
-import os
 
 t = BoostBuild.Tester(["-ffile.jam"], pass_toolset=0)
 
