@@ -446,16 +446,15 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
             if ( iter1 != end1 || iter2 != end2 )
             {
                 if ( DEBUG_HEADER )
+                {
                     printf( "HDRSCAN out of date in cache for %s\n",
                         object_str( t->boundname ) );
-
-                printf( "HDRSCAN out of date for %s\n", object_str(
-                    t->boundname ) );
-                printf(" real  : ");
-                list_print( hdrscan );
-                printf( "\n cached: " );
-                list_print( c->hdrscan );
-                printf( "\n" );
+                    printf(" real  : ");
+                    list_print( hdrscan );
+                    printf( "\n cached: " );
+                    list_print( c->hdrscan );
+                    printf( "\n" );
+                }
 
                 list_free( c->includes );
                 list_free( c->hdrscan );
