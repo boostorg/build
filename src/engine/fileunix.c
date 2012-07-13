@@ -105,7 +105,7 @@ int file_collect_dir_content_( file_info_t * const d )
     PATHNAME f;
     DIR * dd;
     STRUCT_DIRENT * dirent;
-    string filename[ 1 ];
+    string path[ 1 ];
     char const * dirstr;
 
     assert( d );
@@ -123,7 +123,7 @@ int file_collect_dir_content_( file_info_t * const d )
     if ( !( dd = opendir( dirstr ) ) )
         return -1;
 
-    string_new( filename );
+    string_new( path );
     while ( ( dirent = readdir( dd ) ) )
     {
         f.f_base.ptr = dirent->d_name
@@ -133,11 +133,11 @@ int file_collect_dir_content_( file_info_t * const d )
             ;
         f.f_base.len = strlen( f.f_base.ptr );
 
-        string_truncate( filename, 0 );
-        path_build( &f, filename, 0 );
-        files = list_push_back( files, object_new( filename->value ) );
+        string_truncate( path, 0 );
+        path_build( &f, path, 0 );
+        files = list_push_back( files, object_new( path->value ) );
     }
-    string_free( filename );
+    string_free( path );
 
     closedir( dd );
 
@@ -165,9 +165,9 @@ void file_dirscan_( file_info_t * const d, scanback func, void * closure )
  * file_mkdir() - create a directory
  */
 
-int file_mkdir( char const * const pathname )
+int file_mkdir( char const * const path )
 {
-    return mkdir( pathname, 0766 );
+    return mkdir( path, 0766 );
 }
 
 
