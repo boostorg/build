@@ -149,6 +149,14 @@ critical_tests = ["unit_tests", "module_actions", "startup_v2", "core_d12",
     "core_typecheck", "core_delete_module", "core_language", "core_arguments",
     "core_varnames", "core_import_module"]
 
+# We want to collect debug information about the test site before running any
+# of the tests, but only when not running the tests interactively. Then the
+# user can easily run this always-failing test directly to see what it would
+# have returned and there is no need to have it spoil a possible 'all tests
+# passed' result.
+if xml:
+    critical_tests.insert(0, "collect_debug_info")
+
 tests = ["absolute_sources",
          "alias",
          "alternatives",
@@ -185,7 +193,6 @@ tests = ["absolute_sources",
          "core_update_now",
          "core_variables_in_actions",
          "custom_generator",
-         "collect_debug_info",
          "default_build",
          "default_features",
 # This test is known to be broken itself.
