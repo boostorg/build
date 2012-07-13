@@ -10,7 +10,6 @@ import BoostBuild
 
 import os
 import os.path
-import string
 import sys
 
 xml = "--xml" in sys.argv
@@ -19,8 +18,8 @@ toolset = BoostBuild.get_toolset()
 
 # Clear environment for testing.
 #
-for s in ('BOOST_ROOT', 'BOOST_BUILD_PATH', 'JAM_TOOLSET', 'BCCROOT',
-    'MSVCDir', 'MSVC', 'MSVCNT', 'MINGW', 'watcom'):
+for s in ("BOOST_ROOT", "BOOST_BUILD_PATH", "JAM_TOOLSET", "BCCROOT",
+    "MSVCDir", "MSVC", "MSVCNT", "MINGW", "watcom"):
     try:
         del os.environ[s]
     except:
@@ -82,7 +81,7 @@ def run_tests(critical_tests, other_tests):
         else:
             failures_count += 1
             if failures_count == 1:
-                f = open(os.path.join(invocation_dir, 'test_results.txt'), 'w')
+                f = open(os.path.join(invocation_dir, "test_results.txt"), "w")
                 try:
                     f.write(test)
                 finally:
@@ -116,7 +115,7 @@ def run_tests(critical_tests, other_tests):
 
     # Erase the file on success.
     if failures_count == 0:
-        open('test_results.txt', 'w').close()
+        open("test_results.txt", "w").close()
 
     if not xml:
         print """
@@ -127,14 +126,13 @@ def run_tests(critical_tests, other_tests):
 
 
 def last_failed_test():
-    "Returns the name of last failed test or None."
+    "Returns the name of the last failed test or None."
     try:
         f = open("test_results.txt")
         try:
-            s = string.strip(f.read())
+            return f.read().strip()
         finally:
             f.close()
-        return s
     except Exception:
         return None
 
@@ -142,7 +140,7 @@ def last_failed_test():
 def reorder_tests(tests, first_test):
     try:
         n = tests.index(first_test)
-        return [first_test] + tests[:n] + tests[n+1:]
+        return [first_test] + tests[:n] + tests[n + 1:]
     except ValueError:
         return tests
 
@@ -261,20 +259,19 @@ tests = ["absolute_sources",
          "exit_status",
          ]
 
-if os.name == 'posix':
+if os.name == "posix":
     tests.append("symlink")
-    # On windows, library order is not important, so skip this test. Besides, it
-    # fails ;-). Further, the test relies on the fact that on Linux, one can
+    # On Windows, library order is not important, so skip this test. Besides,
+    # it fails ;-). Further, the test relies on the fact that on Linux, one can
     # build a shared library with unresolved symbols. This is not true on
-    # Windows (even with cygwin gcc).
-    if string.find(os.uname()[0], "CYGWIN") == -1:
+    # Windows, even with cygwin gcc.
+    if "CYGWIN" not in os.uname()[0]:
         tests.append("library_order")
 
-if string.find(BoostBuild.get_toolset(), 'gcc') == 0:
+if toolset.startswith("gcc"):
     tests.append("gcc_runtime")
 
-if (string.find(BoostBuild.get_toolset(), 'gcc') == 0) or  \
-    (string.find(BoostBuild.get_toolset(), 'msvc') == 0):
+if toolset.startswith("gcc") or toolset.startswith("msvc"):
     tests.append("pch")
 
 if "--extras" in sys.argv:
@@ -286,6 +283,6 @@ if "--extras" in sys.argv:
     # Requires gettext tools.
     tests.append("example_gettext")
 elif not xml:
-    print('Note: skipping extra tests')
+    print("Note: skipping extra tests")
 
 run_tests(critical_tests, tests)
