@@ -46,15 +46,30 @@
  * builtins.c - builtin jam rules
  *
  * External routines:
- *  load_builtin() - define builtin rules
+ *  load_builtins()               - define builtin rules
+ *  unknown_rule()                - reports an unknown rule occurrence to the
+ *                                  user and exits
  *
  * Internal routines:
- *  builtin_depends() - DEPENDS/INCLUDES rule.
- *  builtin_echo() - ECHO rule.
- *  builtin_exit() - EXIT rule.
- *  builtin_flags() - NOCARE, NOTFILE, TEMPORARY rule.
- *  builtin_glob() - GLOB rule.
- *  builtin_match() - MATCH rule.
+ *  append_if_exists()            - if file exists, append it to the list
+ *  builtin_calc()                - CALC rule
+ *  builtin_delete_module()       - DELETE_MODULE ( MODULE ? )
+ *  builtin_depends()             - DEPENDS/INCLUDES rule
+ *  builtin_echo()                - ECHO rule
+ *  builtin_exit()                - EXIT rule
+ *  builtin_export()              - EXPORT ( MODULE ? : RULES * )
+ *  builtin_flags()               - NOCARE, NOTFILE, TEMPORARY rule
+ *  builtin_glob()                - GLOB rule
+ *  builtin_glob_recursive()      - ???
+ *  builtin_hdrmacro()            - ???
+ *  builtin_import()              - IMPORT rule
+ *  builtin_match()               - MATCH rule, regexp matching
+ *  builtin_rebuilds()            - REBUILDS rule
+ *  builtin_rulenames()           - RULENAMES ( MODULE ? )
+ *  builtin_split_by_characters() - splits the given string into tokens
+ *  builtin_varnames()            - VARNAMES ( MODULE ? )
+ *  get_source_line()             - get a frame's file and line number
+ *                                  information
  */
 
 
@@ -104,6 +119,10 @@ RULE * duplicate_rule( char const * name_, RULE * other )
     return result;
 }
 
+
+/*
+ *  load_builtins() - define builtin rules
+ */
 
 void load_builtins()
 {
@@ -377,7 +396,7 @@ void load_builtins()
     {
         char const * args[] = { "string", 0 };
         bind_builtin( "MD5",
-                      builtin_md5, 0, args ) ;
+                      builtin_md5, 0, args );
     }
 
     {
@@ -419,9 +438,9 @@ void load_builtins()
 
 
 /*
- * builtin_calc() - CALC rule.
+ * builtin_calc() - CALC rule
  *
- * The CALC rule performs simple mathematical operations on two arguments.
+ * Performs simple mathematical operations on two arguments.
  */
 
 LIST * builtin_calc( FRAME * frame, int flags )
@@ -467,7 +486,7 @@ LIST * builtin_calc( FRAME * frame, int flags )
 
 
 /*
- * builtin_depends() - DEPENDS/INCLUDES rule.
+ * builtin_depends() - DEPENDS/INCLUDES rule
  *
  * The DEPENDS/INCLUDES builtin rule appends each of the listed sources on the
  * dependency/includes list of each of the listed targets. It binds both the
@@ -524,11 +543,10 @@ LIST * builtin_depends( FRAME * frame, int flags )
 
 
 /*
- * builtin_rebuilds() - REBUILDS rule.
+ * builtin_rebuilds() - REBUILDS rule
  *
- * The REBUILDS builtin rule appends each of the listed rebuild-targets in its
- * 2nd argument on the rebuilds list of each of the listed targets in its first
- * argument.
+ * Appends each of the rebuild-targets listed in its second argument to the
+ * rebuilds list for each of the targets listed in its first argument.
  */
 
 LIST * builtin_rebuilds( FRAME * frame, int flags )
@@ -537,22 +555,19 @@ LIST * builtin_rebuilds( FRAME * frame, int flags )
     LIST * rebuilds = lol_get( frame->args, 1 );
     LISTITER iter = list_begin( targets );
     LISTITER const end = list_end( targets );
-
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        TARGET * t = bindtarget( list_item( iter ) );
+        TARGET * const t = bindtarget( list_item( iter ) );
         t->rebuilds = targetlist( t->rebuilds, rebuilds );
     }
-
     return L0;
 }
 
 
 /*
- * builtin_echo() - ECHO rule.
+ * builtin_echo() - ECHO rule
  *
- * The ECHO builtin rule echoes the targets to the user. No other actions are
- * taken.
+ * Echoes the targets to the user. No other actions are taken.
  */
 
 LIST * builtin_echo( FRAME * frame, int flags )
@@ -565,10 +580,9 @@ LIST * builtin_echo( FRAME * frame, int flags )
 
 
 /*
- * builtin_exit() - EXIT rule.
+ * builtin_exit() - EXIT rule
  *
- * The EXIT builtin rule echoes the targets to the user and exits the program
- * with a failure status.
+ * Echoes the targets to the user and exits the program with a failure status.
  */
 
 LIST * builtin_exit( FRAME * frame, int flags )
@@ -585,10 +599,10 @@ LIST * builtin_exit( FRAME * frame, int flags )
 
 
 /*
- * builtin_flags() - NOCARE, NOTFILE, TEMPORARY rule.
+ * builtin_flags() - NOCARE, NOTFILE, TEMPORARY rule
  *
- * Builtin_flags() marks the target with the appropriate flag, for use by
- * make0(). It binds each target as a TARGET.
+ * Marks the target with the appropriate flag, for use by make0(). It binds each
+ * target as a TARGET.
  */
 
 LIST * builtin_flags( FRAME * frame, int flags )
@@ -603,7 +617,7 @@ LIST * builtin_flags( FRAME * frame, int flags )
 
 
 /*
- * builtin_globbing() - GLOB rule.
+ * builtin_glob() - GLOB rule
  */
 
 struct globbing
@@ -735,7 +749,7 @@ static int has_wildcards( char const * const str )
 
 
 /*
- * If 'file' exists, append 'file' to 'list'. Returns 'list'.
+ * append_if_exists() - if file exists, append it to the list
  */
 
 static LIST * append_if_exists( LIST * list, OBJECT * file )
@@ -870,6 +884,10 @@ LIST * glob_recursive( char const * pattern )
 }
 
 
+/*
+ * builtin_glob_recursive() - ???
+ */
+
 LIST * builtin_glob_recursive( FRAME * frame, int flags )
 {
     LIST * result = L0;
@@ -884,7 +902,7 @@ LIST * builtin_glob_recursive( FRAME * frame, int flags )
 
 
 /*
- * builtin_match() - MATCH rule, regexp matching.
+ * builtin_match() - MATCH rule, regexp matching
  */
 
 LIST * builtin_match( FRAME * frame, int flags )
@@ -943,6 +961,11 @@ LIST * builtin_match( FRAME * frame, int flags )
     return result;
 }
 
+
+/*
+ * builtin_split_by_characters() - splits the given string into tokens
+ */
+
 LIST * builtin_split_by_characters( FRAME * frame, int flags )
 {
     LIST * l1 = lol_get( frame->args, 0 );
@@ -957,7 +980,7 @@ LIST * builtin_split_by_characters( FRAME * frame, int flags )
 
     string_copy( buf, object_str( list_front( l1 ) ) );
 
-    t = strtok( buf->value, delimiters ) ;
+    t = strtok( buf->value, delimiters );
     while ( t )
     {
         result = list_push_back( result, object_new( t ) );
@@ -968,6 +991,11 @@ LIST * builtin_split_by_characters( FRAME * frame, int flags )
 
     return result;
 }
+
+
+/*
+ * builtin_hdrmacro() - ???
+ */
 
 LIST * builtin_hdrmacro( FRAME * frame, int flags )
 {
@@ -992,7 +1020,7 @@ LIST * builtin_hdrmacro( FRAME * frame, int flags )
 
 
 /*
- * builtin_rulenames() - RULENAMES ( MODULE ? ).
+ * builtin_rulenames() - RULENAMES ( MODULE ? )
  *
  * Returns a list of the non-local rule names in the given MODULE. If MODULE is
  * not supplied, returns the list of rule names in the global module.
@@ -1021,7 +1049,7 @@ LIST * builtin_rulenames( FRAME * frame, int flags )
 
 
 /*
- * builtin_varnames() - VARNAMES ( MODULE ? ).
+ * builtin_varnames() - VARNAMES ( MODULE ? )
  *
  * Returns a list of the variable names in the given MODULE. If MODULE is not
  * supplied, returns the list of variable names in the global module.
@@ -1052,7 +1080,7 @@ LIST * builtin_varnames( FRAME * frame, int flags )
 
 
 /*
- * builtin_delete_module() - MODULE ?.
+ * builtin_delete_module() - DELETE_MODULE ( MODULE ? )
  *
  * Clears all rules and variables from the given module.
  */
@@ -1060,15 +1088,15 @@ LIST * builtin_varnames( FRAME * frame, int flags )
 LIST * builtin_delete_module( FRAME * frame, int flags )
 {
     LIST * const arg0 = lol_get( frame->args, 0 );
-    module_t * source_module = bindmodule( list_empty( arg0 ) ? 0 : list_front(
-        arg0 ) );
+    module_t * const source_module = bindmodule( list_empty( arg0 ) ? 0 :
+        list_front( arg0 ) );
     delete_module( source_module );
     return L0;
 }
 
 
 /*
- * unknown_rule() - reports an unknown rule occurrence to the user and exits.
+ * unknown_rule() - reports an unknown rule occurrence to the user and exits
  */
 
 void unknown_rule( FRAME * frame, char const * key, module_t * module,
@@ -1090,7 +1118,9 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
 
 
 /*
- * builtin_import() - IMPORT
+ * builtin_import() - IMPORT rule
+ *
+ * IMPORT
  * (
  *     SOURCE_MODULE ? :
  *     SOURCE_RULES  * :
@@ -1099,11 +1129,11 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
  *     LOCALIZE      ?
  * )
  *
- * The IMPORT rule imports rules from the SOURCE_MODULE into the TARGET_MODULE
- * as local rules. If either SOURCE_MODULE or TARGET_MODULE is not supplied, it
- * refers to the global module. SOURCE_RULES specifies which rules from the
- * SOURCE_MODULE to import; TARGET_RULES specifies the names to give those rules
- * in TARGET_MODULE. If SOURCE_RULES contains a name which doesn't correspond to
+ * Imports rules from the SOURCE_MODULE into the TARGET_MODULE as local rules.
+ * If either SOURCE_MODULE or TARGET_MODULE is not supplied, it refers to the
+ * global module. SOURCE_RULES specifies which rules from the SOURCE_MODULE to
+ * import; TARGET_RULES specifies the names to give those rules in
+ * TARGET_MODULE. If SOURCE_RULES contains a name that does not correspond to
  * a rule in SOURCE_MODULE, or if it contains a different number of items than
  * TARGET_RULES, an error is issued. If LOCALIZE is specified, the rules will be
  * executed in TARGET_MODULE, with corresponding access to its module local
@@ -1165,7 +1195,7 @@ LIST * builtin_import( FRAME * frame, int flags )
 
 
 /*
- * builtin_export() - EXPORT ( MODULE ? : RULES * ).
+ * builtin_export() - EXPORT ( MODULE ? : RULES * )
  *
  * The EXPORT rule marks RULES from the SOURCE_MODULE as non-local (and thus
  * exportable). If an element of RULES does not name a rule in MODULE, an error
@@ -1194,8 +1224,10 @@ LIST * builtin_export( FRAME * frame, int flags )
 
 
 /*
- * get_source_line() - Retrieve the file and line number that should be
- * indicated for a given procedure in debug output or an error backtrace.
+ * get_source_line() - get a frame's file and line number information
+ *
+ * This is the execution traceback information to be indicated for in debug
+ * output or an error backtrace.
  */
 
 static void get_source_line( FRAME * frame, char const * * file, int * line )
@@ -1224,7 +1256,6 @@ void print_source_line( FRAME * frame )
 {
     char const * file;
     int line;
-
     get_source_line( frame, &file, &line );
     if ( line < 0 )
         printf( "(builtin):" );
@@ -1274,11 +1305,13 @@ void backtrace( FRAME * frame )
 
 LIST * builtin_backtrace( FRAME * frame, int flags )
 {
-    LIST * levels_arg = lol_get( frame->args, 0 );
-    int levels = !list_empty( levels_arg ) ? atoi( object_str( list_front( levels_arg ) ) ) : (int)( (unsigned int)(-1) >> 1 ) ;
+    LIST * const levels_arg = lol_get( frame->args, 0 );
+    int levels = list_empty( levels_arg )
+        ? (int)( (unsigned int)(-1) >> 1 )
+        : atoi( object_str( list_front( levels_arg ) ) );
 
     LIST * result = L0;
-    for ( ; ( frame = frame->prev ) && levels ; --levels )
+    for ( ; ( frame = frame->prev ) && levels; --levels )
     {
         char const * file;
         int line;
@@ -1316,17 +1349,18 @@ LIST * builtin_backtrace( FRAME * frame, int flags )
 
 LIST * builtin_caller_module( FRAME * frame, int flags )
 {
-    LIST * levels_arg = lol_get( frame->args, 0 );
-    int levels = !list_empty( levels_arg ) ? atoi( object_str( list_front( levels_arg ) ) ) : 0 ;
+    LIST * const levels_arg = lol_get( frame->args, 0 );
+    int const levels = list_empty( levels_arg )
+        ? 0
+        : atoi( object_str( list_front( levels_arg ) ) );
 
     int i;
     for ( i = 0; ( i < levels + 2 ) && frame->prev; ++i )
         frame = frame->prev;
 
-    if ( frame->module == root_module() )
-        return L0;
-    else
-        return list_new( object_copy( frame->module->name ) );
+    return frame->module == root_module()
+        ? L0
+        : list_new( object_copy( frame->module->name ) );
 }
 
 
@@ -1649,21 +1683,20 @@ LIST * builtin_has_native_rule( FRAME * frame, int flags )
 
 LIST * builtin_user_module( FRAME * frame, int flags )
 {
-    LIST * module_name = lol_get( frame->args, 0 );
-    LISTITER iter = list_begin( module_name ), end = list_end( module_name );
+    LIST * const module_name = lol_get( frame->args, 0 );
+    LISTITER iter = list_begin( module_name );
+    LISTITER const end = list_end( module_name );
     for ( ; iter != end; iter = list_next( iter ) )
-    {
-        module_t * m = bindmodule( list_item( iter ) );
-        m->user_module = 1;
-    }
+        bindmodule( list_item( iter ) )->user_module = 1;
     return L0;
 }
 
 
 LIST * builtin_nearest_user_location( FRAME * frame, int flags )
 {
-    FRAME * nearest_user_frame =
-        frame->module->user_module ? frame : frame->prev_user;
+    FRAME * const nearest_user_frame = frame->module->user_module
+        ? frame
+        : frame->prev_user;
     if ( !nearest_user_frame )
         return L0;
 
@@ -1684,10 +1717,10 @@ LIST * builtin_nearest_user_location( FRAME * frame, int flags )
 
 LIST * builtin_check_if_file( FRAME * frame, int flags )
 {
-    LIST * name = lol_get( frame->args, 0 );
+    LIST * const name = lol_get( frame->args, 0 );
     return file_is_file( list_front( name ) ) == 1
         ? list_new( object_copy( constant_true ) )
-        : L0 ;
+        : L0;
 }
 
 
@@ -1879,7 +1912,7 @@ void lol_build( LOL * lol, char const * * elements )
         if ( !strcmp( *elements, ":" ) )
         {
             lol_add( lol, l );
-            l = L0 ;
+            l = L0;
         }
         else
         {
@@ -1898,7 +1931,7 @@ void lol_build( LOL * lol, char const * * elements )
 /*
  * Calls the bjam rule specified by name passed in 'args'. The name is looked up
  * in the context of bjam's 'python_interface' module. Returns the list of
- * string retured by the rule.
+ * strings returned by the rule.
  */
 
 PyObject * bjam_call( PyObject * self, PyObject * args )
@@ -2082,7 +2115,8 @@ PyObject * bjam_variable( PyObject * self, PyObject * args )
     PyObject * result;
     int        i;
     OBJECT   * varname;
-    LISTITER   iter, end;
+    LISTITER   iter;
+    LISTITER   end;
 
     if ( !PyArg_ParseTuple( args, "s", &name ) )
         return NULL;
@@ -2090,7 +2124,8 @@ PyObject * bjam_variable( PyObject * self, PyObject * args )
     varname = object_new( name );
     value = var_get( root_module(), varname );
     object_free( varname );
-    iter = list_begin( value ), end = list_end( value );
+    iter = list_begin( value );
+    end = list_end( value );
 
     result = PyList_New( list_length( value ) );
     for ( i = 0; iter != end; iter = list_next( iter ), ++i )
