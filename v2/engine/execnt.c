@@ -11,27 +11,6 @@
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#include "jam.h"
-#include "execcmd.h"
-
-#include "lists.h"
-#include "output.h"
-#include "pathsys.h"
-#include "string.h"
-
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <math.h>
-#include <time.h>
-
-#ifdef USE_EXECNT
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <process.h>
-#include <tlhelp32.h>
-
 /*
  * execnt.c - execute a shell command on Windows NT
  *
@@ -48,10 +27,36 @@
  * Do not just set JAMSHELL to cmd.exe - it will not work!
  *
  * External routines:
- *  exec_check() - preprocess and validate the command.
- *  exec_cmd() - launch an async command execution.
- *  exec_wait() - wait for any of the async command processes to terminate.
+ *  exec_check()       - preprocess and validate the command
+ *  exec_cmd()         - launch an async command execution
+ *  exec_wait()        - wait for any of the async command processes to
+ *                       terminate
+ *
+ * Internal routines:
+ *  filetime_dt()      - Windows FILETIME --> POSIX time_t conversion
+ *  filetime_seconds() - Windows FILETIME --> number of seconds conversion
  */
+
+#include "jam.h"
+#ifdef USE_EXECNT
+#include "execcmd.h"
+
+#include "lists.h"
+#include "output.h"
+#include "pathsys.h"
+#include "string.h"
+
+#include <assert.h>
+#include <ctype.h>
+#include <errno.h>
+#include <math.h>
+#include <time.h>
+
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <process.h>
+#include <tlhelp32.h>
+
 
 /* get the maximum shell command line length according to the OS */
 static int maxline();
@@ -65,8 +70,6 @@ static FILETIME add_64(
 static FILETIME add_FILETIME( FILETIME t1, FILETIME t2 );
 /* */
 static FILETIME negate_FILETIME( FILETIME t );
-/* convert a FILETIME to a number of seconds */
-static double filetime_seconds( FILETIME t );
 /* record the timing info for the process */
 static void record_times( HANDLE, timing_info * );
 /* calc the current running time of an *active* process */
@@ -203,7 +206,7 @@ void execnt_unit_test()
 
 
 /*
- * exec_check() - preprocess and validate the command.
+ * exec_check() - preprocess and validate the command
  */
 
 int exec_check
@@ -264,7 +267,7 @@ int exec_check
 
 
 /*
- * exec_cmd() - launch an async command execution.
+ * exec_cmd() - launch an async command execution
  *
  * We assume exec_check() already verified that the given command can have its
  * command string constructed as requested.
@@ -351,10 +354,10 @@ void exec_cmd
 
 
 /*
- * exec_wait()
- *  * wait and drive at most one execution completion.
- *  * waits for one command to complete, while processing the i/o for all
- *    ongoing commands.
+ * exec_wait() - wait for any of the async command processes to terminate
+ *
+ * Wait and drive at most one execution completion, while processing the I/O for
+ * all ongoing commands.
  */
 
 void exec_wait()
@@ -672,10 +675,10 @@ static FILETIME negate_FILETIME( FILETIME t )
 
 
 /*
- * Convert a FILETIME to a number of seconds.
+ * filetime_seconds() - Windows FILETIME --> number of seconds conversion
  */
 
-static double filetime_seconds( FILETIME t )
+static double filetime_seconds( FILETIME const t )
 {
     return t.dwHighDateTime * ( (double)( 1UL << 31 ) * 2.0 * 1.0e-7 ) +
         t.dwLowDateTime * 1.0e-7;
@@ -683,11 +686,13 @@ static double filetime_seconds( FILETIME t )
 
 
 /*
+ * filetime_dt() - Windows FILETIME --> POSIX time_t conversion
+ *
  * What should be a simple conversion, turns out to be horribly complicated by
  * the defficiencies of MSVC and the Win32 API.
  */
 
-static time_t filetime_dt( FILETIME t_utc )
+static time_t filetime_dt( FILETIME const t_utc )
 {
     static int calc_time_diff = 1;
     static double time_diff;
