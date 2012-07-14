@@ -13,6 +13,11 @@
 
 #include "object.h"
 
+#ifdef OS_NT
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+#endif
+
 #include <time.h>
 
 typedef struct timestamp
@@ -21,17 +26,20 @@ typedef struct timestamp
     int nsecs;
 } timestamp;
 
-void timestamp_clear( timestamp * const time );
+void timestamp_clear( timestamp * const );
 int timestamp_cmp( timestamp const * const lhs, timestamp const * const rhs );
 void timestamp_copy( timestamp * const target, timestamp const * const source );
-void timestamp_current( timestamp * const time );
-int timestamp_empty( timestamp const * const time );
-void timestamp_from_path( timestamp * const time, OBJECT * const path );
-void timestamp_init( timestamp * const time, time_t const secs, int const nsecs
-    );
+void timestamp_current( timestamp * const );
+int timestamp_empty( timestamp const * const );
+void timestamp_from_path( timestamp * const, OBJECT * const path );
+void timestamp_init( timestamp * const, time_t const secs, int const nsecs );
 void timestamp_max( timestamp * const max, timestamp const * const lhs,
     timestamp const * const rhs );
-char const * timestamp_str( timestamp const * const time );
+char const * timestamp_str( timestamp const * const );
+
+#ifdef OS_NT
+void timestamp_from_filetime( timestamp * const, FILETIME const * const );
+#endif
 
 void timestamp_done();
 

@@ -69,6 +69,35 @@ static char * time_progress[] =
 };
 
 
+#ifdef OS_NT
+/*
+ * timestamp_from_filetime() - Windows FILETIME --> timestamp conversion
+ *
+ * Lifted shamelessly from the CPython implementation.
+ */
+
+void timestamp_from_filetime( timestamp * const t, FILETIME const * const ft )
+{
+    /* Seconds between 1.1.1601 and 1.1.1970 */
+    static __int64 const secs_between_epochs = 11644473600;
+
+    /* We can not simply cast and dereference a FILETIME, since it might not be
+     * aligned properly. __int64 type variables are expected to be aligned to an
+     * 8 byte boundary while FILETIME structures may be aligned to any 4 byte
+     * boundary. Using an incorrectly aligned __int64 variable may cause a
+     * performance penalty on some platforms or even exceptions on others
+     * (documented on MSDN).
+     */
+    __int64 in;
+    memcpy( &in, ft, sizeof( in ) );
+
+    /* FILETIME resolution: 100ns. */
+    timestamp_init( t, (time_t)( ( in / 10000000 ) - secs_between_epochs ),
+        (int)( in % 10000000 ) * 100 );
+}
+#endif  /* OS_NT */
+
+
 void timestamp_clear( timestamp * const time )
 {
     time->secs = time->nsecs = 0;
@@ -92,7 +121,16 @@ void timestamp_copy( timestamp * const target, timestamp const * const source )
 
 void timestamp_current( timestamp * const t )
 {
+#ifdef OS_NT
+    /* GetSystemTimeAsFileTime()'s resolution seems to be about 15 ms on Windows
+     * XP and under a millisecond on Windows 7.
+     */
+    FILETIME ft;
+    GetSystemTimeAsFileTime( &ft );
+    timestamp_from_filetime( t, &ft );
+#else  /* OS_NT */
     timestamp_init( t, time( 0 ), 0 );
+#endif  /* OS_NT */
 }
 
 
