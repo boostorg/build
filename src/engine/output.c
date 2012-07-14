@@ -7,8 +7,6 @@
 #include "jam.h"
 #include "output.h"
 
-#include "timestamp.h"
-
 #include <stdio.h>
 
 
@@ -96,7 +94,5 @@ OBJECT * outf_double( double const value )
 
 OBJECT * outf_time( timestamp const * const time )
 {
-    char buffer[ 50 ];
-    strftime( buffer, 49, "%Y-%m-%d %H:%M:%SZ", gmtime( &time->secs ) );
-    return object_new( buffer );
+    return object_new( timestamp_str( time ) );
 }
