@@ -90,6 +90,12 @@ void timestamp_copy( timestamp * const target, timestamp const * const source )
 }
 
 
+void timestamp_current( timestamp * const t )
+{
+    timestamp_init( t, time( 0 ), 0 );
+}
+
+
 int timestamp_empty( timestamp const * const time )
 {
     return !time->secs && !time->nsecs;
