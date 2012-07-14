@@ -31,16 +31,13 @@
  *  exec_cmd()         - launch an async command execution
  *  exec_wait()        - wait for any of the async command processes to
  *                       terminate
- *
- * Internal routines:
- *  filetime_dt()      - Windows FILETIME --> POSIX time_t conversion
- *  filetime_seconds() - Windows FILETIME --> number of seconds conversion
  */
 
 #include "jam.h"
 #ifdef USE_EXECNT
 #include "execcmd.h"
 
+#include "filent.h"
 #include "lists.h"
 #include "output.h"
 #include "pathsys.h"
@@ -51,8 +48,6 @@
 #include <errno.h>
 #include <time.h>
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
 #include <process.h>
 #include <tlhelp32.h>
 
@@ -669,46 +664,6 @@ static FILETIME negate_FILETIME( FILETIME t )
 }
 
 
-/*
- * filetime_seconds() - Windows FILETIME --> number of seconds conversion
- */
-
-static double filetime_seconds( FILETIME const t )
-{
-    return t.dwHighDateTime * ( (double)( 1UL << 31 ) * 2.0 * 1.0e-7 ) +
-        t.dwLowDateTime * 1.0e-7;
-}
-
-
-/*
- * filetime_dt() - Windows FILETIME --> POSIX time_t conversion
- *
- * Lifted shamelessly from the CPython implementation.
- */
-
-static time_t filetime_dt( FILETIME const ft )
-{
-    /* Seconds between 1.1.1601 and 1.1.1970 */
-    static __int64 const secs_between_epochs = 11644473600;
-
-    /* We can not simply cast and dereference a FILETIME, since it might not be
-     * aligned properly. __int64 type variables are expected to be aligned to an
-     * 8 byte boundary while FILETIME structures may be aligned to any 4 byte
-     * boundary. Using an incorrectly aligned __int64 variable may cause a
-     * performance penalty on some platforms or even exceptions on others
-     * (documented on MSDN).
-     */
-    __int64 in;
-    memcpy( &in, &ft, sizeof( in ) );
-
-    /* FILETIME resolution: 100ns. */
-    /* For resolutions finer than 1 second use the following:
-     *   nsec = (int)( in % 10000000 ) * 100;
-     */
-    return (time_t)( ( in / 10000000 ) - secs_between_epochs );
-}
-
-
 static void record_times( HANDLE const process, timing_info * const time )
 {
     FILETIME creation;
@@ -717,10 +672,10 @@ static void record_times( HANDLE const process, timing_info * const time )
     FILETIME user;
     if ( GetProcessTimes( process, &creation, &exit, &kernel, &user ) )
     {
-        time->system = filetime_seconds( kernel );
-        time->user = filetime_seconds( user );
-        time->start = filetime_dt( creation );
-        time->end = filetime_dt( exit );
+        time->system = filetime_to_seconds( kernel );
+        time->user = filetime_to_seconds( user );
+        time->start = filetime_to_timestamp( creation );
+        time->end = filetime_to_timestamp( exit );
     }
 }
 
@@ -901,7 +856,7 @@ static double running_time( HANDLE const process )
     {
         /* Compute the elapsed time. */
         GetSystemTimeAsFileTime( &current );
-        return filetime_seconds( add_FILETIME( current,
+        return filetime_to_seconds( add_FILETIME( current,
             negate_FILETIME( creation ) ) );
     }
     return 0.0;
@@ -955,7 +910,7 @@ static double creation_time( HANDLE const process )
     FILETIME user;
     FILETIME current;
     return GetProcessTimes( process, &creation, &exit, &kernel, &user )
-        ? filetime_seconds( creation )
+        ? filetime_to_seconds( creation )
         : 0.0;
 }
 

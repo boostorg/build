@@ -15,8 +15,10 @@
  * filent.c - scan directories and archives on NT
  *
  * External routines:
- *  file_archscan() - scan an archive for files
- *  file_mkdir()    - create a directory
+ *  file_archscan()         - scan an archive for files
+ *  file_mkdir()            - create a directory
+ *  filetime_to_seconds()   - Windows FILETIME --> number of seconds conversion
+ *  filetime_to_timestamp() - Windows FILETIME --> timestamp conversion
  *
  * External routines called only via routines in filesys.c:
  *  file_collect_dir_content_() - collects directory content information
@@ -26,6 +28,7 @@
 
 #include "jam.h"
 #ifdef OS_NT
+#include "filent.h"
 #include "filesys.h"
 
 #include "object.h"
@@ -45,8 +48,6 @@
 #include <ctype.h>
 #include <direct.h>
 #include <io.h>
-
-#include <windows.h>
 
 
 /*
@@ -345,6 +346,46 @@ void file_archscan( char const * archive, scanback func, void * closure )
     }
 
     close( fd );
+}
+
+
+/*
+ * filetime_to_seconds() - Windows FILETIME --> number of seconds conversion
+ */
+
+double filetime_to_seconds( FILETIME const t )
+{
+    return t.dwHighDateTime * ( (double)( 1UL << 31 ) * 2.0 * 1.0e-7 ) +
+        t.dwLowDateTime * 1.0e-7;
+}
+
+
+/*
+ * filetime_to_timestamp() - Windows FILETIME --> timestamp conversion
+ *
+ * Lifted shamelessly from the CPython implementation.
+ */
+
+time_t filetime_to_timestamp( FILETIME const ft )
+{
+    /* Seconds between 1.1.1601 and 1.1.1970 */
+    static __int64 const secs_between_epochs = 11644473600;
+
+    /* We can not simply cast and dereference a FILETIME, since it might not be
+     * aligned properly. __int64 type variables are expected to be aligned to an
+     * 8 byte boundary while FILETIME structures may be aligned to any 4 byte
+     * boundary. Using an incorrectly aligned __int64 variable may cause a
+     * performance penalty on some platforms or even exceptions on others
+     * (documented on MSDN).
+     */
+    __int64 in;
+    memcpy( &in, &ft, sizeof( in ) );
+
+    /* FILETIME resolution: 100ns. */
+    /* For resolutions finer than 1 second use the following:
+     *   nsec = (int)( in % 10000000 ) * 100;
+     */
+    return (time_t)( ( in / 10000000 ) - secs_between_epochs );
 }
 
 #endif  /* OS_NT */
