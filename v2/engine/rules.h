@@ -10,21 +10,11 @@
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#ifndef RULES_DWA_20011020_H
-#define RULES_DWA_20011020_H
-
-#include "jam.h"
-
-#include "function.h"
-#include "modules.h"
-
-
 /*
  * rules.h -  targets, rules, and related information
  *
- * This file describes the structures holding the targets, rules, and
- * related information accumulated by interpreting the statements
- * of the jam files.
+ * This file describes the structures holding the targets, rules, and related
+ * information accumulated by interpreting the statements of the jam files.
  *
  * The following are defined:
  *
@@ -35,6 +25,16 @@
  *  TARGETS - a chain of TARGETs.
  *  TARGET - an entity (e.g. a file) that can be built.
  */
+
+#ifndef RULES_DWA_20011020_H
+#define RULES_DWA_20011020_H
+
+#include "jam.h"
+
+#include "function.h"
+#include "modules.h"
+#include "timestamp.h"
+
 
 typedef struct _rule RULE;
 typedef struct _target TARGET;
@@ -170,8 +170,8 @@ struct _target
     TARGET   * original_target;       /* original_target->includes = this */
     char       rescanned;
 
-    time_t     time;                  /* update time */
-    time_t     leaf;                  /* update time of leaf sources */
+    timestamp  time;                  /* update time */
+    timestamp  leaf;                  /* update time of leaf sources */
 
     char       fate;                  /* make0()'s diagnosis */
 

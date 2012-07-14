@@ -14,8 +14,8 @@
  * timestamp.c - get the timestamp of a file or archive member
  *
  * External routines:
- *  timestamp_from_target() - return timestamp on a file, if present
- *  timestamp_done()        - free timestamp tables
+ *  timestamp_from_path() - return timestamp for a path, if present
+ *  timestamp_done()      - free timestamp tables
  *
  * Internal routines:
  *  time_enter()      - internal worker callback for scanning archives &
@@ -39,11 +39,11 @@
 
 typedef struct _binding {
     OBJECT * name;
-    short    flags;
+    short flags;
 
 #define BIND_SCANNED  0x01  /* if directory or arch, has been scanned */
 
-    short    progress;
+    short progress;
 
 #define BIND_INIT     0  /* never seen */
 #define BIND_NOENTRY  1  /* timestamp requested but file never found */
@@ -51,12 +51,13 @@ typedef struct _binding {
 #define BIND_MISSING  3  /* file found but can not get timestamp */
 #define BIND_FOUND    4  /* file found and time stamped */
 
-    /* update time - 0 if not exist */
-    time_t   time;
+    /* update time - cleared if the there is nothing to bind */
+    timestamp time;
 } BINDING;
 
 static struct hash * bindhash = 0;
-static void time_enter( void *, OBJECT *, int const found, time_t );
+static void time_enter( void *, OBJECT *, int const found,
+    timestamp const * const );
 
 static char * time_progress[] =
 {
@@ -68,11 +69,35 @@ static char * time_progress[] =
 };
 
 
+void timestamp_clear( timestamp * const time )
+{
+    time->secs = 0;
+}
+
+
+int timestamp_cmp( timestamp const * const lhs, timestamp const * const rhs )
+{
+    return lhs->secs - rhs->secs;
+}
+
+
+void timestamp_copy( timestamp * const target, timestamp const * const source )
+{
+    target->secs = source->secs;
+}
+
+
+int timestamp_empty( timestamp const * const time )
+{
+    return !time->secs;
+}
+
+
 /*
- * timestamp_from_target() - return timestamp on a file, if present
+ * timestamp_from_path() - return timestamp for a path, if present
  */
 
-void timestamp_from_target( OBJECT * target, time_t * time )
+void timestamp_from_path( timestamp * const time, OBJECT * path )
 {
     PROFILE_ENTER( timestamp );
 
@@ -82,7 +107,7 @@ void timestamp_from_target( OBJECT * target, time_t * time )
     BINDING * b;
     string buf[ 1 ];
 
-    target = path_as_key( target );
+    OBJECT * const normalized_path = path_as_key( path );
 
     string_new( buf );
 
@@ -91,12 +116,13 @@ void timestamp_from_target( OBJECT * target, time_t * time )
 
     /* Quick path - is it there? */
 
-    b = (BINDING *)hash_insert( bindhash, target, &found );
+    b = (BINDING *)hash_insert( bindhash, normalized_path, &found );
     if ( !found )
     {
-        b->name = object_copy( target );  /* never freed */
-        b->time = b->flags = 0;
+        b->name = object_copy( normalized_path );  /* never freed */
+        b->flags = 0;
         b->progress = BIND_INIT;
+        timestamp_clear( &b->time );
     }
 
     if ( b->progress != BIND_INIT )
@@ -105,7 +131,7 @@ void timestamp_from_target( OBJECT * target, time_t * time )
     b->progress = BIND_NOENTRY;
 
     /* Not found - have to scan for it. */
-    path_parse( object_str( target ), &f1 );
+    path_parse( object_str( normalized_path ), &f1 );
 
     /* Scan directory if not already done so. */
     {
@@ -124,8 +150,9 @@ void timestamp_from_target( OBJECT * target, time_t * time )
         if ( !found )
         {
             b->name = object_copy( name );
-            b->time = b->flags = 0;
+            b->flags = 0;
             b->progress = BIND_INIT;
+            timestamp_clear( &b->time );
         }
 
         if ( !( b->flags & BIND_SCANNED ) )
@@ -156,8 +183,9 @@ void timestamp_from_target( OBJECT * target, time_t * time )
         if ( !found )
         {
             b->name = object_copy( name );
-            b->time = b->flags = 0;
+            b->flags = 0;
             b->progress = BIND_INIT;
+            timestamp_clear( &b->time );
         }
 
         if ( !( b->flags & BIND_SCANNED ) )
@@ -178,12 +206,42 @@ void timestamp_from_target( OBJECT * target, time_t * time )
             : BIND_FOUND;
     }
 
-    *time = b->progress == BIND_FOUND ? b->time : 0;
+    if ( b->progress == BIND_FOUND )
+        timestamp_copy( time, &b->time );
+    else
+        timestamp_clear( time );
 
     string_free( buf );
-    object_free( target );
+    object_free( normalized_path );
 
     PROFILE_EXIT( timestamp );
+}
+
+
+void timestamp_init( timestamp * const time, time_t const secs )
+{
+    time->secs = secs;
+}
+
+
+void timestamp_max( timestamp * const max, timestamp const * const lhs,
+    timestamp const * const rhs )
+{
+    if ( timestamp_cmp( lhs, rhs ) > 0 )
+        timestamp_copy( max, lhs );
+    else
+        timestamp_copy( max, rhs );
+}
+
+
+char const * timestamp_str( timestamp const * const time )
+{
+    static char result[ 500 ];
+    char format[ 500 ];
+    strftime( format, sizeof( result ) / sizeof( *result ),
+        "%Y-%m-%d %H:%M:%S.%%09d +0000", gmtime( &time->secs ) );
+    sprintf( result, format, 0 );
+    return result;
 }
 
 
@@ -192,7 +250,7 @@ void timestamp_from_target( OBJECT * target, time_t * time )
  */
 
 static void time_enter( void * closure, OBJECT * target, int const found,
-    time_t time )
+    timestamp const * const time )
 {
     int item_found;
     BINDING * b;
@@ -207,7 +265,7 @@ static void time_enter( void * closure, OBJECT * target, int const found,
         b->flags = 0;
     }
 
-    b->time = time;
+    timestamp_copy( &b->time, time );
     b->progress = found ? BIND_FOUND : BIND_SPOTTED;
 
     if ( DEBUG_BINDSCAN )

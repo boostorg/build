@@ -386,7 +386,12 @@ int main( int argc, char * * argv, char * * arg_environ )
 #endif
 
         /* Set JAMDATE. */
-        var_set( root_module(), constant_JAMDATE, list_new( outf_time(time(0)) ), VAR_SET );
+        {
+            timestamp current;
+            timestamp_init( &current, time( 0 ) );
+            var_set( root_module(), constant_JAMDATE, list_new( outf_time(
+                &current ) ), VAR_SET );
+        }
 
         /* Set JAM_VERSION. */
         var_set( root_module(), constant_JAM_VERSION,

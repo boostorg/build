@@ -27,10 +27,9 @@
  * Do not just set JAMSHELL to cmd.exe - it will not work!
  *
  * External routines:
- *  exec_check()       - preprocess and validate the command
- *  exec_cmd()         - launch an async command execution
- *  exec_wait()        - wait for any of the async command processes to
- *                       terminate
+ *  exec_check() - preprocess and validate the command
+ *  exec_cmd()   - launch an async command execution
+ *  exec_wait()  - wait for any of the async command processes to terminate
  */
 
 #include "jam.h"
@@ -674,8 +673,8 @@ static void record_times( HANDLE const process, timing_info * const time )
     {
         time->system = filetime_to_seconds( kernel );
         time->user = filetime_to_seconds( user );
-        time->start = filetime_to_timestamp( creation );
-        time->end = filetime_to_timestamp( exit );
+        filetime_to_timestamp( creation, &time->start );
+        filetime_to_timestamp( exit, &time->end );
     }
 }
 

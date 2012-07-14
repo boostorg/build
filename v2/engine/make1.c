@@ -513,7 +513,8 @@ static void make1c( state const * const pState )
         if ( globs.noexec || cmd->noop )
         {
             timing_info time_info = { 0 };
-            time_info.start = time_info.end = time( 0 );
+            timestamp_init( &time_info.start, time( 0 ) );
+            timestamp_copy( &time_info.end, &time_info.start );
             make1c_closure( t, EXEC_CMD_OK, &time_info, "", "", EXIT_OK );
         }
         else
@@ -687,7 +688,7 @@ static void make1c( state const * const pState )
  * timing_info.
  */
 
-static void call_timing_rule( TARGET * target, timing_info const * time )
+static void call_timing_rule( TARGET * target, timing_info const * const time )
 {
     LIST * timing_rule;
 
@@ -712,9 +713,9 @@ static void call_timing_rule( TARGET * target, timing_info const * time )
 
         /* start end user system :: info about the action command */
         lol_add( frame->args, list_push_back( list_push_back( list_push_back( list_new(
-            outf_time  ( time->start  ) ),
-            outf_time  ( time->end    ) ),
-            outf_double( time->user   ) ),
+            outf_time( &time->start ) ),
+            outf_time( &time->end ) ),
+            outf_double( time->user ) ),
             outf_double( time->system ) ) );
 
         /* Call the rule. */
@@ -772,8 +773,8 @@ static void call_action_rule
             list_push_back( list_push_back( list_push_back( list_push_back( list_push_back( list_new(
                 object_new( executed_command ) ),
                 outf_int( status ) ),
-                outf_time( time->start ) ),
-                outf_time( time->end ) ),
+                outf_time( &time->start ) ),
+                outf_time( &time->end ) ),
                 outf_double( time->user ) ),
                 outf_double( time->system ) ) );
 
@@ -1233,6 +1234,6 @@ static void make1bind( TARGET * t )
     pushsettings( root_module(), t->settings );
     object_free( t->boundname );
     t->boundname = search( t->name, &t->time, 0, t->flags & T_FLAG_ISFILE );
-    t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
+    t->binding = timestamp_empty( &t->time ) ? T_BIND_MISSING : T_BIND_EXISTS;
     popsettings( root_module(), t->settings );
 }

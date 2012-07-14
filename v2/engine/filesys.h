@@ -21,6 +21,7 @@
 #include "lists.h"
 #include "object.h"
 #include "pathsys.h"
+#include "timestamp.h"
 
 
 typedef struct file_info_t
@@ -29,22 +30,23 @@ typedef struct file_info_t
     short is_file;
     short is_dir;
     unsigned long size;
-    time_t time;
+    timestamp time;
     LIST * files;
 } file_info_t;
 
-typedef void (*scanback)( void * closure, OBJECT * path, int found, time_t t );
+typedef void (*scanback)( void * closure, OBJECT * path, int found,
+    timestamp const * const t );
 
 
 void file_archscan( char const * arch, scanback func, void * closure );
-void file_build1( PATHNAME * f, string * file ) ;
+void file_build1( PATHNAME * const f, string * file ) ;
 void file_dirscan( OBJECT * dir, scanback func, void * closure );
-file_info_t * file_info( OBJECT * path );
-int file_is_file( OBJECT * path );
+file_info_t * file_info( OBJECT * const path );
+int file_is_file( OBJECT * const path );
 int file_mkdir( char const * const path );
-file_info_t * file_query( OBJECT * path );
+file_info_t * file_query( OBJECT * const path );
 void file_remove_atexit( OBJECT * const path );
-int file_time( OBJECT * path, time_t * time );
+int file_time( OBJECT * const path, timestamp * const time );
 
 /* Internal utility worker functions. */
 int file_query_posix_( file_info_t * const info );
