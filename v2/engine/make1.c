@@ -513,7 +513,7 @@ static void make1c( state const * const pState )
         if ( globs.noexec || cmd->noop )
         {
             timing_info time_info = { 0 };
-            timestamp_init( &time_info.start, time( 0 ), 0 );
+            timestamp_current( &time_info.start );
             timestamp_copy( &time_info.end, &time_info.start );
             make1c_closure( t, EXEC_CMD_OK, &time_info, "", "", EXIT_OK );
         }

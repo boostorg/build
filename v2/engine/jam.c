@@ -388,7 +388,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         /* Set JAMDATE. */
         {
             timestamp current;
-            timestamp_init( &current, time( 0 ), 0 );
+            timestamp_current( &current );
             var_set( root_module(), constant_JAMDATE, list_new( outf_time(
                 &current ) ), VAR_SET );
         }
