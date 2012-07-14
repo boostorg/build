@@ -70,25 +70,21 @@ static FILETIME add_FILETIME( FILETIME t1, FILETIME t2 );
 /* */
 static FILETIME negate_FILETIME( FILETIME t );
 /* record the timing info for the process */
-static void record_times( HANDLE, timing_info * );
+static void record_times( HANDLE const, timing_info * const );
 /* calc the current running time of an *active* process */
-static double running_time( HANDLE );
-/* */
-DWORD get_process_id( HANDLE );
+static double running_time( HANDLE const );
 /* terminate the given process, after terminating all its children first */
-static void kill_process_tree( DWORD, HANDLE );
+static void kill_process_tree( DWORD const procesdId, HANDLE const );
 /* waits for a command to complete or time out */
 static int try_wait( int const timeoutMillis );
 /* reads any pending output for running commands */
 static void read_output();
 /* checks if a command ran out of time, and kills it */
 static int try_kill_one();
-/* */
-static double creation_time( HANDLE );
 /* is the first process a parent (direct or indirect) to the second one */
-static int is_parent_child( DWORD, DWORD );
+static int is_parent_child( DWORD const parent, DWORD const child );
 /* */
-static void close_alert( HANDLE );
+static void close_alert( PROCESS_INFORMATION const * const );
 /* close any alerts hanging around */
 static void close_alerts();
 /* prepare a command file to be executed using an external shell */
@@ -713,7 +709,7 @@ static time_t filetime_dt( FILETIME const ft )
 }
 
 
-static void record_times( HANDLE process, timing_info * time )
+static void record_times( HANDLE const process, timing_info * const time )
 {
     FILETIME creation;
     FILETIME exit;
@@ -721,10 +717,10 @@ static void record_times( HANDLE process, timing_info * time )
     FILETIME user;
     if ( GetProcessTimes( process, &creation, &exit, &kernel, &user ) )
     {
-        time->system = filetime_seconds( kernel   );
-        time->user   = filetime_seconds( user     );
-        time->start  = filetime_dt     ( creation );
-        time->end    = filetime_dt     ( exit     );
+        time->system = filetime_seconds( kernel );
+        time->user = filetime_seconds( user );
+        time->start = filetime_dt( creation );
+        time->end = filetime_dt( exit );
     }
 }
 
@@ -793,17 +789,18 @@ static void read_pipe
 static void read_output()
 {
     int i;
-    for ( i = 0; i < globs.jobs && i < MAXJOBS; ++i )
-    {
-        /* Read stdout data. */
-        if ( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ] )
-            read_pipe( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ],
-                cmdtab[ i ].buffer_out );
-        /* Read stderr data. */
-        if ( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ] )
-            read_pipe( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ],
-                cmdtab[ i ].buffer_err );
-    }
+    for ( i = 0; i < globs.jobs; ++i )
+        if ( cmdtab[ i ].pi.hProcess )
+        {
+            /* Read stdout data. */
+            if ( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ] )
+                read_pipe( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ],
+                    cmdtab[ i ].buffer_out );
+            /* Read stderr data. */
+            if ( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ] )
+                read_pipe( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ],
+                    cmdtab[ i ].buffer_err );
+        }
 }
 
 
@@ -823,14 +820,12 @@ static int try_wait( int const timeoutMillis )
 
     /* Prepare a list of all active processes to wait for. */
     for ( num_active = 0, i = 0; i < globs.jobs; ++i )
-    {
         if ( cmdtab[ i ].pi.hProcess )
         {
             active_handles[ num_active ] = cmdtab[ i ].pi.hProcess;
             active_procs[ num_active ] = i;
             ++num_active;
         }
-    }
 
     /* Wait for a child to complete, or for our timeout window to expire. */
     wait_api_result = WaitForMultipleObjects( num_active, active_handles,
@@ -854,20 +849,22 @@ static int try_kill_one()
     {
         int i;
         for ( i = 0; i < globs.jobs; ++i )
-        {
-            double t = running_time( cmdtab[ i ].pi.hProcess );
-            if ( t > (double)globs.timeout )
+            if ( cmdtab[ i ].pi.hProcess )
             {
-                /* The job may have left an alert dialog around, try and get rid
-                 * of it before killing.
-                 */
-                close_alert( cmdtab[ i ].pi.hProcess );
-                /* We have a "runaway" job, kill it. */
-                kill_process_tree( 0, cmdtab[ i ].pi.hProcess );
-                /* And return its running commands table slot. */
-                return i;
+                double const t = running_time( cmdtab[ i ].pi.hProcess );
+                if ( t > (double)globs.timeout )
+                {
+                    /* The job may have left an alert dialog around, try and get
+                     * rid of it before killing the job itself.
+                     */
+                    close_alert( &cmdtab[ i ].pi );
+                    /* We have a "runaway" job, kill it. */
+                    kill_process_tree( cmdtab[ i ].pi.dwProcessId,
+                        cmdtab[ i ].pi.hProcess );
+                    /* And return its running commands table slot. */
+                    return i;
+                }
             }
-        }
     }
     return -1;
 }
@@ -875,7 +872,7 @@ static int try_kill_one()
 
 static void close_alerts()
 {
-    /* We only attempt this every 5 seconds, or so, because it is not a cheap
+    /* We only attempt this every 5 seconds or so, because it is not a cheap
      * operation, and we will catch the alerts eventually. This check uses
      * floats as some compilers define CLOCKS_PER_SEC as a float or double.
      */
@@ -883,7 +880,8 @@ static void close_alerts()
     {
         int i;
         for ( i = 0; i < globs.jobs; ++i )
-            close_alert( cmdtab[ i ].pi.hProcess );
+            if ( cmdtab[ i ].pi.hProcess )
+                close_alert( &cmdtab[ i ].pi );
     }
 }
 
@@ -892,7 +890,7 @@ static void close_alerts()
  * Calc the current running time of an *active* process.
  */
 
-static double running_time( HANDLE process )
+static double running_time( HANDLE const process )
 {
     FILETIME creation;
     FILETIME exit;
@@ -910,59 +908,15 @@ static double running_time( HANDLE process )
 }
 
 
-/* It is just stupidly silly that one has to do this. */
-typedef struct PROCESS_BASIC_INFORMATION__
-{
-    LONG  ExitStatus;
-    PVOID PebBaseAddress;
-    ULONG AffinityMask;
-    LONG  BasePriority;
-    ULONG UniqueProcessId;
-    ULONG InheritedFromUniqueProcessId;
-} PROCESS_BASIC_INFORMATION_;
-typedef LONG (__stdcall * NtQueryInformationProcess__)(
-    HANDLE ProcessHandle,
-    LONG ProcessInformationClass,
-    PVOID ProcessInformation,
-    ULONG ProcessInformationLength,
-    PULONG ReturnLength);
-static NtQueryInformationProcess__ NtQueryInformationProcess_;
-static HMODULE NTDLL_;
-DWORD get_process_id( HANDLE process )
-{
-    PROCESS_BASIC_INFORMATION_ pinfo;
-    if ( !NtQueryInformationProcess_ )
-    {
-        if ( !NTDLL_ )
-            NTDLL_ = GetModuleHandleA( "ntdll" );
-        if ( NTDLL_ )
-            NtQueryInformationProcess_ =
-                (NtQueryInformationProcess__)GetProcAddress( NTDLL_,
-                    "NtQueryInformationProcess" );
-    }
-    if ( NtQueryInformationProcess_ )
-    {
-        (*NtQueryInformationProcess_)( process,
-            /* ProcessBasicInformation == */ 0, &pinfo,
-            sizeof( PROCESS_BASIC_INFORMATION_ ), NULL );
-        return pinfo.UniqueProcessId;
-    }
-    return 0;
-}
-
-
 /*
  * Not really optimal, or efficient, but it is easier this way, and it is not
  * like we are going to be killing thousands, or even tens of processes.
  */
 
-static void kill_process_tree( DWORD pid, HANDLE process )
+static void kill_process_tree( DWORD const pid, HANDLE const process )
 {
-    HANDLE process_snapshot_h = INVALID_HANDLE_VALUE;
-    if ( !pid )
-        pid = get_process_id( process );
-    process_snapshot_h = CreateToolhelp32Snapshot( TH32CS_SNAPPROCESS, 0 );
-
+    HANDLE const process_snapshot_h = CreateToolhelp32Snapshot(
+        TH32CS_SNAPPROCESS, 0 );
     if ( INVALID_HANDLE_VALUE != process_snapshot_h )
     {
         BOOL ok = TRUE;
@@ -977,9 +931,9 @@ static void kill_process_tree( DWORD pid, HANDLE process )
             {
                 /* Found a child, recurse to kill it and anything else below it.
                  */
-                HANDLE ph = OpenProcess( PROCESS_ALL_ACCESS, FALSE,
+                HANDLE const ph = OpenProcess( PROCESS_ALL_ACCESS, FALSE,
                     pinfo.th32ProcessID );
-                if ( NULL != ph )
+                if ( ph )
                 {
                     kill_process_tree( pinfo.th32ProcessID, ph );
                     CloseHandle( ph );
@@ -993,7 +947,7 @@ static void kill_process_tree( DWORD pid, HANDLE process )
 }
 
 
-static double creation_time( HANDLE process )
+static double creation_time( HANDLE const process )
 {
     FILETIME creation;
     FILETIME exit;
@@ -1013,7 +967,7 @@ static double creation_time( HANDLE process )
  * process is System (first argument is ignored).
  */
 
-static int is_parent_child( DWORD parent, DWORD child )
+static int is_parent_child( DWORD const parent, DWORD const child )
 {
     HANDLE process_snapshot_h = INVALID_HANDLE_VALUE;
 
@@ -1043,9 +997,9 @@ static int is_parent_child( DWORD parent, DWORD child )
                  * reused by internals of the operating system when creating
                  * another process.
                  *
-                 * Thus additional check is needed - process creation time. This
-                 * check may fail (i.e. return 0) for system processes due to
-                 * insufficient privileges, and that is OK.
+                 * Thus an additional check is needed - process creation time.
+                 * This check may fail (i.e. return 0) for system processes due
+                 * to insufficient privileges, and that is OK.
                  */
                 double tchild = 0.0;
                 double tparent = 0.0;
@@ -1058,15 +1012,15 @@ static int is_parent_child( DWORD parent, DWORD child )
                  *   This application has failed to start because
                  *   boost_foo-bar.dll was not found. Re-installing the
                  *   application may fix the problem
-                 * This actually happens when starting test process that depends
-                 * on a dynamic library which failed to build. We want to
-                 * automatically close these message boxes even though csrss.exe
-                 * is not our child process. We may depend on the fact that (in
-                 * all current versions of Windows) csrss.exe is directly child
-                 * of the smss.exe process, which in turn is directly child of
-                 * the System process, which always has process id == 4. This
-                 * check must be performed before comparison of process creation
-                 * times.
+                 * This actually happens when starting a test process that
+                 * depends on a dynamic library which failed to build. We want
+                 * to automatically close these message boxes even though
+                 * csrss.exe is not our child process. We may depend on the fact
+                 * that (in all current versions of Windows) csrss.exe is a
+                 * direct child of the smss.exe process, which in turn is a
+                 * direct child of the System process, which always has process
+                 * id == 4. This check must be performed before comparing
+                 * process creation times.
                  */
                 if ( !stricmp( pinfo.szExeFile, "csrss.exe" ) &&
                     is_parent_child( parent, pinfo.th32ParentProcessID ) == 2 )
@@ -1106,72 +1060,57 @@ static int is_parent_child( DWORD parent, DWORD child )
     return 0;
 }
 
-typedef struct PROCESS_HANDLE_ID { HANDLE h; DWORD pid; } PROCESS_HANDLE_ID;
-
 
 /*
- * This function is called by the operating system for each topmost window.
+ * Called by the OS for each topmost window.
  */
 
 BOOL CALLBACK close_alert_window_enum( HWND hwnd, LPARAM lParam )
 {
     char buf[ 7 ] = { 0 };
-    PROCESS_HANDLE_ID p = *( (PROCESS_HANDLE_ID *)lParam );
-    DWORD pid = 0;
-    DWORD tid = 0;
+    PROCESS_INFORMATION const * const pi = (PROCESS_INFORMATION *)lParam;
+    DWORD pid;
+    DWORD tid;
 
     /* We want to find and close any window that:
      *  1. is visible and
      *  2. is a dialog and
      *  3. is displayed by any of our child processes
      */
-    if ( !IsWindowVisible( hwnd ) )
-        return TRUE;
-
-    if ( !GetClassNameA( hwnd, buf, sizeof( buf ) ) )
+    if (
+        /* We assume hidden windows do not require user interaction. */
+        !IsWindowVisible( hwnd )
         /* Failed to read class name; presume it is not a dialog. */
+        || !GetClassNameA( hwnd, buf, sizeof( buf ) )
+        /* All Windows system dialogs use the same Window class name. */
+        || strcmp( buf, "#32770" ) )
         return TRUE;
-
-    if ( strcmp( buf, "#32770" ) )
-        return TRUE;  /* Not a dialog */
 
     /* GetWindowThreadProcessId() returns 0 on error, otherwise thread id of
-     * window message pump thread.
+     * the window's message pump thread.
      */
     tid = GetWindowThreadProcessId( hwnd, &pid );
+    if ( !tid || !is_parent_child( pi->dwProcessId, pid ) )
+        return TRUE;
 
-    if ( tid && is_parent_child( p.pid, pid ) )
+    /* Ask real nice. */
+    PostMessageA( hwnd, WM_CLOSE, 0, 0 );
+
+    /* Wait and see if it worked. If not, insist. */
+    if ( WaitForSingleObject( pi->hProcess, 200 ) == WAIT_TIMEOUT )
     {
-        /* Ask really nice. */
-        PostMessageA( hwnd, WM_CLOSE, 0, 0 );
-        /* Now wait and see if it worked. If not, insist. */
-        if ( WaitForSingleObject( p.h, 200 ) == WAIT_TIMEOUT )
-        {
-            PostThreadMessageA( tid, WM_QUIT, 0, 0 );
-            WaitForSingleObject( p.h, 300 );
-        }
-
-        /* Done, we do not want to check any other window now. */
-        return FALSE;
+        PostThreadMessageA( tid, WM_QUIT, 0, 0 );
+        WaitForSingleObject( pi->hProcess, 300 );
     }
 
-    return TRUE;
+    /* Done, we do not want to check any other windows now. */
+    return FALSE;
 }
 
 
-static void close_alert( HANDLE process )
+static void close_alert( PROCESS_INFORMATION const * const pi )
 {
-    DWORD pid = get_process_id( process );
-    /* If process already exited or we just can not get its process id, do not
-     * go any further.
-     */
-    if ( pid )
-    {
-        PROCESS_HANDLE_ID p;
-        p.h = process;
-        p.pid = pid;
-        EnumWindows( &close_alert_window_enum, (LPARAM)&p );
-    }
+    EnumWindows( &close_alert_window_enum, (LPARAM)pi );
 }
 
 
