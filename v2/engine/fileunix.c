@@ -276,7 +276,7 @@ void file_archscan( char const * archive, scanback func, void * closure )
         {
             OBJECT * const member = object_new( buf );
             timestamp time;
-            timestamp_init( &time, (time_t)lar_date );
+            timestamp_init( &time, (time_t)lar_date, 0 );
             (*func)( closure, member, 1 /* time valid */, &time );
             object_free( member );
         }
@@ -335,7 +335,7 @@ static void file_archscan_small( int fd, char const * archive, scanback func,
         {
             OBJECT * const member = object_new( buf );
             timestamp time;
-            timestamp_init( &time, (time_t)lar_date );
+            timestamp_init( &time, (time_t)lar_date, 0 );
             (*func)( closure, member, 1 /* time valid */, &time );
             object_free( member );
         }
@@ -370,7 +370,7 @@ static void file_archscan_big( int fd, char const * archive, scanback func,
         read( fd, &ar_hdr, sizeof( ar_hdr ) ) >= sizeof( ar_hdr.hdr ) )
     {
         long lar_date;
-        int  lar_namlen;
+        int lar_namlen;
 
         sscanf( ar_hdr.hdr.ar_namlen, "%d"  , &lar_namlen );
         sscanf( ar_hdr.hdr.ar_date  , "%ld" , &lar_date   );
@@ -386,7 +386,7 @@ static void file_archscan_big( int fd, char const * archive, scanback func,
         {
             OBJECT * const member = object_new( buf );
             timestamp time;
-            timestamp_init( &time, (time_t)lar_date );
+            timestamp_init( &time, (time_t)lar_date, 0 );
             (*func)( closure, member, 1 /* time valid */, &time );
             object_free( member );
         }

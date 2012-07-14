@@ -205,7 +205,7 @@ file_info_t * file_query( OBJECT * const path )
          * confusion with non-existing paths.
          */
         if ( timestamp_empty( &ff->time ) )
-            timestamp_init( &ff->time, 1 );
+            timestamp_init( &ff->time, 1, 0 );
     }
     return ff;
 }
@@ -231,7 +231,7 @@ int file_query_posix_( file_info_t * const info )
     info->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
     info->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
     info->size = statbuf.st_size;
-    timestamp_init( &info->time, statbuf.st_mtime );
+    timestamp_init( &info->time, statbuf.st_mtime, 0 );
     return 0;
 }
 

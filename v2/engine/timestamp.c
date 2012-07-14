@@ -71,12 +71,14 @@ static char * time_progress[] =
 
 void timestamp_clear( timestamp * const time )
 {
-    time->secs = 0;
+    time->secs = time->nsecs = 0;
 }
 
 
 int timestamp_cmp( timestamp const * const lhs, timestamp const * const rhs )
 {
+    if ( lhs->secs == rhs->secs )
+        return lhs->nsecs - rhs->nsecs;
     return lhs->secs - rhs->secs;
 }
 
@@ -84,12 +86,13 @@ int timestamp_cmp( timestamp const * const lhs, timestamp const * const rhs )
 void timestamp_copy( timestamp * const target, timestamp const * const source )
 {
     target->secs = source->secs;
+    target->nsecs = source->nsecs;
 }
 
 
 int timestamp_empty( timestamp const * const time )
 {
-    return !time->secs;
+    return !time->secs && !time->nsecs;
 }
 
 
@@ -97,7 +100,7 @@ int timestamp_empty( timestamp const * const time )
  * timestamp_from_path() - return timestamp for a path, if present
  */
 
-void timestamp_from_path( timestamp * const time, OBJECT * path )
+void timestamp_from_path( timestamp * const time, OBJECT * const path )
 {
     PROFILE_ENTER( timestamp );
 
@@ -218,9 +221,11 @@ void timestamp_from_path( timestamp * const time, OBJECT * path )
 }
 
 
-void timestamp_init( timestamp * const time, time_t const secs )
+void timestamp_init( timestamp * const time, time_t const secs, int const nsecs
+    )
 {
     time->secs = secs;
+    time->nsecs = nsecs;
 }
 
 
@@ -240,7 +245,7 @@ char const * timestamp_str( timestamp const * const time )
     char format[ 500 ];
     strftime( format, sizeof( result ) / sizeof( *result ),
         "%Y-%m-%d %H:%M:%S.%%09d +0000", gmtime( &time->secs ) );
-    sprintf( result, format, 0 );
+    sprintf( result, format, time->nsecs );
     return result;
 }
 
