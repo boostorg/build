@@ -184,7 +184,7 @@ void exec_cmd
 
     /* Start the command */
 
-    timestamp_init( &cmdtab[ slot ].start_dt, time( 0 ) );
+    timestamp_init( &cmdtab[ slot ].start_dt, time( 0 ), 0 );
 
     if ( 0 < globs.timeout )
     {
@@ -506,7 +506,7 @@ void exec_wait()
                     time_info.user   = (double)( new_time.tms_cutime -
                         old_time.tms_cutime ) / CLOCKS_PER_SEC;
                     timestamp_copy( &time_info.start, &cmdtab[ i ].start_dt );
-                    timestamp_init( &time_info.end, time( 0 ) );
+                    timestamp_init( &time_info.end, time( 0 ), 0 );
                     old_time = new_time;
                 }
 

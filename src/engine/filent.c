@@ -111,7 +111,7 @@ int file_collect_dir_content_( file_info_t * const d )
             ff->is_dir = !ff->is_file;
             ff->size = finfo->ff_fsize;
             timestamp_init( &ff->time, ( finfo->ff_ftime << 16 ) |
-                finfo->ff_ftime );
+                finfo->ff_ftime, 0 );
         }
     }
     while ( !findnext( finfo ) );
@@ -142,7 +142,7 @@ int file_collect_dir_content_( file_info_t * const d )
                 ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
                 ff->is_dir = !ff->is_file;
                 ff->size = finfo->size;
-                timestamp_init( &ff->time, finfo->time_write );
+                timestamp_init( &ff->time, finfo->time_write, 0 );
             }
         }
         while ( !_findnext( handle, finfo ) );
@@ -339,7 +339,7 @@ void file_archscan( char const * archive, scanback func, void * closure )
         {
             OBJECT * const member = object_new( buf );
             timestamp time;
-            timestamp_init( &time, (time_t)lar_date );
+            timestamp_init( &time, (time_t)lar_date, 0 );
             (*func)( closure, member, 1 /* time valid */, &time );
             object_free( member );
         }
@@ -388,7 +388,8 @@ void filetime_to_timestamp( FILETIME const ft, timestamp * const time )
     /* For resolutions finer than 1 second use the following:
      *   nsec = (int)( in % 10000000 ) * 100;
      */
-    timestamp_init( time, (time_t)( ( in / 10000000 ) - secs_between_epochs ) );
+    timestamp_init( time, (time_t)( ( in / 10000000 ) - secs_between_epochs ), 0
+        );
 }
 
 #endif  /* OS_NT */

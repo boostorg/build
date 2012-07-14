@@ -22,7 +22,7 @@
  *
  * The dependency file format is an ASCII file with 1 line per target. Each line
  * has the following fields:
- * @boundname@ timestamp @file@ @file@ @file@ ...
+ * @boundname@ timestamp_sec timestamp_nsec @file@ @file@ @file@ ...
  */
 
 #ifdef OPT_HEADER_CACHE_EXT
@@ -61,7 +61,7 @@ static HCACHEDATA * hcachelist = 0;
 static int queries = 0;
 static int hits = 0;
 
-#define CACHE_FILE_VERSION "version 4"
+#define CACHE_FILE_VERSION "version 5"
 #define CACHE_RECORD_HEADER "header"
 #define CACHE_RECORD_END "end"
 
@@ -201,7 +201,8 @@ void hcache_init()
         HCACHEDATA   cachedata;
         HCACHEDATA * c;
         OBJECT * record_type = 0;
-        OBJECT * time_str = 0;
+        OBJECT * time_secs_str = 0;
+        OBJECT * time_nsecs_str = 0;
         OBJECT * age_str = 0;
         OBJECT * includes_count_str = 0;
         OBJECT * hdrscan_count_str = 0;
@@ -233,18 +234,20 @@ void hcache_init()
         }
 
         cachedata.boundname = read_netstring( f );
-        time_str            = read_netstring( f );
+        time_secs_str       = read_netstring( f );
+        time_nsecs_str      = read_netstring( f );
         age_str             = read_netstring( f );
         includes_count_str  = read_netstring( f );
 
-        if ( !cachedata.boundname || !time_str || !age_str ||
-            !includes_count_str )
+        if ( !cachedata.boundname || !time_secs_str || !time_nsecs_str ||
+            !age_str || !includes_count_str )
         {
             fprintf( stderr, "invalid %s\n", hcachename );
             goto cleanup;
         }
 
-        timestamp_init( &cachedata.time, atoi( object_str( time_str ) ) );
+        timestamp_init( &cachedata.time, atoi( object_str( time_secs_str ) ),
+            atoi( object_str( time_nsecs_str ) ) );
         cachedata.age = atoi( object_str( age_str ) ) + 1;
 
         count = atoi( object_str( includes_count_str ) );
@@ -305,7 +308,8 @@ void hcache_init()
         ++header_count;
 
         object_free( record_type );
-        object_free( time_str );
+        object_free( time_secs_str );
+        object_free( time_nsecs_str );
         object_free( age_str );
         object_free( includes_count_str );
         object_free( hdrscan_count_str );
@@ -314,7 +318,8 @@ void hcache_init()
 cleanup:
 
         if ( record_type ) object_free( record_type );
-        if ( time_str ) object_free( time_str );
+        if ( time_secs_str ) object_free( time_secs_str );
+        if ( time_nsecs_str ) object_free( time_nsecs_str );
         if ( age_str ) object_free( age_str );
         if ( includes_count_str ) object_free( includes_count_str );
         if ( hdrscan_count_str ) object_free( hdrscan_count_str );
@@ -363,7 +368,8 @@ void hcache_done()
     {
         LISTITER iter;
         LISTITER end;
-        char time_str[ 30 ];
+        char time_secs_str[ 30 ];
+        char time_nsecs_str[ 30 ];
         char age_str[ 30 ];
         char includes_count_str[ 30 ];
         char hdrscan_count_str[ 30 ];
@@ -377,12 +383,14 @@ void hcache_done()
             c->includes ) );
         sprintf( hdrscan_count_str, "%lu", (long unsigned)list_length(
             c->hdrscan ) );
-        sprintf( time_str, "%lu", (long unsigned)c->time.secs );
+        sprintf( time_secs_str, "%lu", (long unsigned)c->time.secs );
+        sprintf( time_nsecs_str, "%lu", (long unsigned)c->time.nsecs );
         sprintf( age_str, "%lu", (long unsigned)c->age );
 
         write_netstring( f, CACHE_RECORD_HEADER );
         write_netstring( f, object_str( c->boundname ) );
-        write_netstring( f, time_str );
+        write_netstring( f, time_secs_str );
+        write_netstring( f, time_nsecs_str );
         write_netstring( f, age_str );
         write_netstring( f, includes_count_str );
         for ( iter = list_begin( c->includes ), end = list_end( c->includes );
