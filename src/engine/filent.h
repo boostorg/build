@@ -11,12 +11,12 @@
 #ifndef FILENT_JG20120714_H
 #define FILENT_JG20120714_H
 
+#include "timestamp.h"
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include <time.h>
-
 double filetime_to_seconds( FILETIME const ft );
-time_t filetime_to_timestamp( FILETIME const ft );
+void filetime_to_timestamp( FILETIME const ft, timestamp * const time );
 
 #endif

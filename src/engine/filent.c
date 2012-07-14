@@ -110,7 +110,8 @@ int file_collect_dir_content_( file_info_t * const d )
             ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
             ff->is_dir = !ff->is_file;
             ff->size = finfo->ff_fsize;
-            ff->time = ( finfo->ff_ftime << 16 ) | finfo->ff_ftime;
+            timestamp_init( &ff->time, ( finfo->ff_ftime << 16 ) |
+                finfo->ff_ftime );
         }
     }
     while ( !findnext( finfo ) );
@@ -141,7 +142,7 @@ int file_collect_dir_content_( file_info_t * const d )
                 ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
                 ff->is_dir = !ff->is_file;
                 ff->size = finfo->size;
-                ff->time = finfo->time_write;
+                timestamp_init( &ff->time, finfo->time_write );
             }
         }
         while ( !_findnext( handle, finfo ) );
@@ -172,7 +173,7 @@ void file_dirscan_( file_info_t * const d, scanback func, void * closure )
         char const * const name = object_str( d->name );
         if ( name[ 0 ] == '\\' && !name[ 1 ] )
         {
-            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
+            (*func)( closure, d->name, 1 /* stat()'ed */, &d->time );
         }
         else if ( name[ 0 ] && name[ 1 ] == ':' && name[ 2 ] && !name[ 3 ] )
         {
@@ -189,8 +190,8 @@ void file_dirscan_( file_info_t * const d, scanback func, void * closure )
              * $(p2). But, that seems rather fragile.
              */
             OBJECT * const dir_no_slash = object_new_range( name, 2 );
-            (*func)( closure, d->name, 1 /* stat()'ed */, d->time );
-            (*func)( closure, dir_no_slash, 1 /* stat()'ed */, d->time );
+            (*func)( closure, d->name, 1 /* stat()'ed */, &d->time );
+            (*func)( closure, dir_no_slash, 1 /* stat()'ed */, &d->time );
             object_free( dir_no_slash );
         }
     }
@@ -337,7 +338,9 @@ void file_archscan( char const * archive, scanback func, void * closure )
         sprintf( buf, "%s(%.*s)", archive, endname - name, name );
         {
             OBJECT * const member = object_new( buf );
-            (*func)( closure, member, 1 /* time valid */, (time_t)lar_date );
+            timestamp time;
+            timestamp_init( &time, (time_t)lar_date );
+            (*func)( closure, member, 1 /* time valid */, &time );
             object_free( member );
         }
 
@@ -366,7 +369,7 @@ double filetime_to_seconds( FILETIME const t )
  * Lifted shamelessly from the CPython implementation.
  */
 
-time_t filetime_to_timestamp( FILETIME const ft )
+void filetime_to_timestamp( FILETIME const ft, timestamp * const time )
 {
     /* Seconds between 1.1.1601 and 1.1.1970 */
     static __int64 const secs_between_epochs = 11644473600;
@@ -385,7 +388,7 @@ time_t filetime_to_timestamp( FILETIME const ft )
     /* For resolutions finer than 1 second use the following:
      *   nsec = (int)( in % 10000000 ) * 100;
      */
-    return (time_t)( ( in / 10000000 ) - secs_between_epochs );
+    timestamp_init( time, (time_t)( ( in / 10000000 ) - secs_between_epochs ) );
 }
 
 #endif  /* OS_NT */

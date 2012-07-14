@@ -30,6 +30,7 @@
  */
 
 #include "jam.h"
+#include "make.h"
 
 #include "command.h"
 #ifdef OPT_HEADER_CACHE_EXT
@@ -37,11 +38,11 @@
 #endif
 #include "headers.h"
 #include "lists.h"
-#include "make.h"
 #include "object.h"
 #include "parse.h"
 #include "rules.h"
 #include "search.h"
+#include "timestamp.h"
 #include "variable.h"
 
 #include <assert.h>
@@ -283,9 +284,9 @@ void make0
     TARGETS    * c;
     TARGET     * ptime = t;
     TARGET     * located_target = 0;
-    time_t       last;
-    time_t       leaf;
-    time_t       hlast;
+    timestamp    last;
+    timestamp    leaf;
+    timestamp    hlast;
     int          fate;
     char const * flag = "";
     SETTINGS   * s;
@@ -331,7 +332,9 @@ void make0
         if ( another_target )
             located_target = bindtarget( another_target );
 
-        t->binding = t->time ? T_BIND_EXISTS : T_BIND_MISSING;
+        t->binding = timestamp_empty( &t->time )
+            ? T_BIND_MISSING
+            : T_BIND_EXISTS;
     }
 
     /* INTERNAL, NOTFILE header nodes have the time of their parents. */
@@ -387,8 +390,8 @@ void make0
             break;
 
         case T_BIND_EXISTS:
-            printf( "time\t--\t%s%s: %s", spaces( depth ),
-                object_str( t->name ), ctime( &t->time ) );
+            printf( "time\t--\t%s%s: %s\n", spaces( depth ),
+                object_str( t->name ), timestamp_str( &t->time ) );
             break;
         }
     }
@@ -466,8 +469,8 @@ void make0
      */
 
     /* Step 4a: Pick up dependencies' time and fate. */
-    last = 0;
-    leaf = 0;
+    timestamp_clear( &last );
+    timestamp_clear( &leaf );
     fate = T_FATE_STABLE;
     for ( c = t->depends; c; c = c->next )
     {
@@ -479,8 +482,10 @@ void make0
             TARGET * const scc_root = target_scc( c->target );
             if ( scc_root != t->scc_root )
             {
-                c->target->leaf = max( c->target->leaf, scc_root->leaf );
-                c->target->time = max( c->target->time, scc_root->time );
+                timestamp_max( &c->target->leaf, &c->target->leaf,
+                    &scc_root->leaf );
+                timestamp_max( &c->target->time, &c->target->time,
+                    &scc_root->time );
                 c->target->fate = max( c->target->fate, scc_root->fate );
             }
         }
@@ -488,13 +493,13 @@ void make0
         /* If LEAVES has been applied, we only heed the timestamps of the leaf
          * source nodes.
          */
-        leaf = max( leaf, c->target->leaf );
+        timestamp_max( &leaf, &leaf, &c->target->leaf );
         if ( t->flags & T_FLAG_LEAVES )
         {
-            last = leaf;
+            timestamp_copy( &last, &leaf );
             continue;
         }
-        last = max( last, c->target->time );
+        timestamp_max( &last, &last, &c->target->time );
         fate = max( fate, c->target->fate );
 
 #ifdef OPT_GRAPH_DEBUG_EXT
@@ -513,7 +518,10 @@ void make0
      * If a header is newer than a temp source that includes it, the temp source
      * will need building.
      */
-    hlast = t->includes ? t->includes->time : 0;
+    if ( t->includes )
+        timestamp_copy( &hlast, &t->includes->time );
+    else
+        timestamp_clear( &hlast );
 
     /* Step 4c: handle NOUPDATE oddity.
      *
@@ -530,8 +538,8 @@ void make0
                     object_str( t->name ) );
 #endif
 
-        last = 0;
-        t->time = 0;
+        timestamp_clear( &last );
+        timestamp_clear( &t->time );
 
         /* Do not inherit our fate from our dependencies. Decide fate based only
          * upon other flags and our binding (done later).
@@ -575,21 +583,24 @@ void make0
     {
         fate = T_FATE_MISSING;
     }
-    else if ( ( t->binding == T_BIND_EXISTS ) && ( last > t->time ) )
+    else if ( t->binding == T_BIND_EXISTS && timestamp_cmp( &last, &t->time ) >
+        0 )
     {
 #ifdef OPT_GRAPH_DEBUG_EXT
         oldTimeStamp = 1;
 #endif
         fate = T_FATE_OUTDATED;
     }
-    else if ( ( t->binding == T_BIND_PARENTS ) && ( last > p->time ) )
+    else if ( t->binding == T_BIND_PARENTS && timestamp_cmp( &last, &p->time ) >
+        0 )
     {
 #ifdef OPT_GRAPH_DEBUG_EXT
         oldTimeStamp = 1;
 #endif
         fate = T_FATE_NEEDTMP;
     }
-    else if ( ( t->binding == T_BIND_PARENTS ) && ( hlast > p->time ) )
+    else if ( t->binding == T_BIND_PARENTS && timestamp_cmp( &hlast, &p->time )
+        > 0 )
     {
         fate = T_FATE_NEEDTMP;
     }
@@ -601,12 +612,12 @@ void make0
     {
         fate = T_FATE_TOUCHED;
     }
-    else if ( ( t->binding == T_BIND_EXISTS ) && ( t->flags & T_FLAG_TEMP ) )
+    else if ( t->binding == T_BIND_EXISTS && ( t->flags & T_FLAG_TEMP ) )
     {
         fate = T_FATE_ISTMP;
     }
-    else if ( ( t->binding == T_BIND_EXISTS ) && p &&
-        ( p->binding != T_BIND_UNBOUND ) && ( t->time > p->time ) )
+    else if ( t->binding == T_BIND_EXISTS && p && p->binding != T_BIND_UNBOUND
+        && timestamp_cmp( &t->time, &p->time ) > 0 )
     {
 #ifdef OPT_GRAPH_DEBUG_EXT
         oldTimeStamp = 1;
@@ -658,8 +669,8 @@ void make0
     /* Step 4f: Propagate dependencies' time & fate. */
     /* Set leaf time to be our time only if this is a leaf. */
 
-    t->time = max( t->time, last );
-    t->leaf = leaf ? leaf : t->time ;
+    timestamp_max( &t->time, &t->time, &last );
+    timestamp_copy( &t->leaf, timestamp_empty( &leaf ) ? &t->time : &leaf );
     /* This target's fate may have been updated by virtue of following some
      * target's rebuilds list, so only allow it to be increased to the fate we
      * have calculated. Otherwise, grab its new fate.
@@ -715,7 +726,8 @@ void make0
 
     if ( !( t->flags & T_FLAG_NOTFILE ) && ( fate >= T_FATE_SPOIL ) )
         flag = "+";
-    else if ( ( t->binding == T_BIND_EXISTS ) && p && ( t->time > p->time ) )
+    else if ( t->binding == T_BIND_EXISTS && p && timestamp_cmp( &t->time,
+        &p->time ) > 0 )
         flag = "*";
 
     if ( DEBUG_MAKEPROG )
@@ -824,7 +836,7 @@ static void dependGraphOutput( TARGET * t, int depth )
     {
         printf( "  %s       : Depends on %s (%s)", spaces( depth ),
            target_name( c->target ), target_fate[ (int)c->target->fate ] );
-        if ( c->target->time == t->time )
+        if ( !timestamp_cmp( &c->target->time, &t->time ) )
             printf( " (max time)");
         printf( "\n" );
     }
@@ -860,7 +872,7 @@ static TARGETS * make0sort( TARGETS * chain )
         chain = chain->next;
 
         /* Find point s in result for c. */
-        while ( s && ( s->target->time > c->target->time ) )
+        while ( s && timestamp_cmp( &s->target->time, &c->target->time ) > 0 )
             s = s->next;
 
         /* Insert c in front of s (might be 0). */

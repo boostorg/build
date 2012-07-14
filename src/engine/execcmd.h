@@ -17,15 +17,15 @@
 
 #include "lists.h"
 #include "strings.h"
+#include "timestamp.h"
 
-#include <time.h>
 
 typedef struct timing_info
 {
     double system;
     double user;
-    time_t start;
-    time_t end;
+    timestamp start;
+    timestamp end;
 } timing_info;
 
 typedef void (* ExecCmdCallback)

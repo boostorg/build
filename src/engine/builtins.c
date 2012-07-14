@@ -636,7 +636,7 @@ static void downcase_inplace( char * p )
 
 
 static void builtin_glob_back( void * closure, OBJECT * file, int status,
-    time_t const time )
+    timestamp const * const time )
 {
     PROFILE_ENTER( BUILTIN_GLOB_BACK );
 
@@ -754,11 +754,11 @@ static int has_wildcards( char const * const str )
 
 static LIST * append_if_exists( LIST * list, OBJECT * file )
 {
-    time_t time;
-    timestamp_from_target( file, &time );
-    return time > 0
-        ? list_push_back( list, object_copy( file ) )
-        : list;
+    timestamp time;
+    timestamp_from_path( &time, file );
+    return timestamp_empty( &time )
+        ? list
+        : list_push_back( list, object_copy( file ) );
 }
 
 

@@ -39,6 +39,7 @@
 #include "regexp.h"
 #include "rules.h"
 #include "search.h"
+#include "timestamp.h"
 #include "variable.h"
 
 typedef struct hcachedata HCACHEDATA ;
@@ -46,7 +47,7 @@ typedef struct hcachedata HCACHEDATA ;
 struct hcachedata
 {
     OBJECT     * boundname;
-    time_t       time;
+    timestamp    time;
     LIST       * includes;
     LIST       * hdrscan;    /* the HDRSCAN value for this target */
     int          age;        /* if too old, we will remove it from cache */
@@ -243,7 +244,7 @@ void hcache_init()
             goto cleanup;
         }
 
-        cachedata.time = atoi( object_str( time_str ) );
+        timestamp_init( &cachedata.time, atoi( object_str( time_str ) ) );
         cachedata.age = atoi( object_str( age_str ) ) + 1;
 
         count = atoi( object_str( includes_count_str ) );
@@ -286,10 +287,10 @@ void hcache_init()
         if ( !found )
         {
             c->boundname = cachedata.boundname;
-            c->time      = cachedata.time;
             c->includes  = cachedata.includes;
             c->hdrscan   = cachedata.hdrscan;
             c->age       = cachedata.age;
+            timestamp_copy( &c->time, &cachedata.time );
         }
         else
         {
@@ -372,9 +373,11 @@ void hcache_done()
         else if ( c->age > maxage )
             continue;
 
-        sprintf( includes_count_str, "%lu", (long unsigned) list_length( c->includes ) );
-        sprintf( hdrscan_count_str, "%lu", (long unsigned) list_length( c->hdrscan ) );
-        sprintf( time_str, "%lu", (long unsigned)c->time );
+        sprintf( includes_count_str, "%lu", (long unsigned)list_length(
+            c->includes ) );
+        sprintf( hdrscan_count_str, "%lu", (long unsigned)list_length(
+            c->hdrscan ) );
+        sprintf( time_str, "%lu", (long unsigned)c->time.secs );
         sprintf( age_str, "%lu", (long unsigned)c->age );
 
         write_netstring( f, CACHE_RECORD_HEADER );
@@ -423,7 +426,7 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
 
     if ( ( c = (HCACHEDATA *)hash_find( hcachehash, t->boundname ) ) )
     {
-        if ( c->time == t->time )
+        if ( !timestamp_cmp( &c->time, &t->time ) )
         {
             LIST * const l1 = hdrscan;
             LIST * const l2 = c->hdrscan;
@@ -496,7 +499,7 @@ LIST * hcache( TARGET * t, int rec, regexp * re[], LIST * hdrscan )
     {
         LIST * const l = headers1( L0, t->boundname, rec, re );
 
-        c->time = t->time;
+        timestamp_copy( &c->time, &t->time );
         c->age = 0;
         c->includes = list_copy( l );
         c->hdrscan = list_copy( hdrscan );

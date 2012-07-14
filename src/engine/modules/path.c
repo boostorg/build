@@ -9,9 +9,9 @@
 
 LIST * path_exists( FRAME * frame, int flags )
 {
-    time_t time;
-    timestamp_from_target( list_front( lol_get( frame->args, 0 ) ), &time );
-    return time ? list_new( object_new( "true" ) ) : L0;
+    timestamp time;
+    timestamp_from_path( &time, list_front( lol_get( frame->args, 0 ) ) );
+    return timestamp_empty( &time ) ? L0 : list_new( object_new( "true" ) );
 }
 
 
