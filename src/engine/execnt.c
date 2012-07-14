@@ -688,35 +688,29 @@ static double filetime_seconds( FILETIME const t )
 /*
  * filetime_dt() - Windows FILETIME --> POSIX time_t conversion
  *
- * What should be a simple conversion, turns out to be horribly complicated by
- * the defficiencies of MSVC and the Win32 API.
+ * Lifted shamelessly from the CPython implementation.
  */
 
-static time_t filetime_dt( FILETIME const t_utc )
+static time_t filetime_dt( FILETIME const ft )
 {
-    static int calc_time_diff = 1;
-    static double time_diff;
-    if ( calc_time_diff )
-    {
-        struct tm t0_;
-        FILETIME f0_local;
-        FILETIME f0_;
-        SYSTEMTIME s0_;
-        GetSystemTime( &s0_ );
-        t0_.tm_year = s0_.wYear - 1900;
-        t0_.tm_mon = s0_.wMonth - 1;
-        t0_.tm_wday = s0_.wDayOfWeek;
-        t0_.tm_mday = s0_.wDay;
-        t0_.tm_hour = s0_.wHour;
-        t0_.tm_min = s0_.wMinute;
-        t0_.tm_sec = s0_.wSecond;
-        t0_.tm_isdst = 0;
-        SystemTimeToFileTime( &s0_, &f0_local );
-        LocalFileTimeToFileTime( &f0_local, &f0_ );
-        time_diff = filetime_seconds( f0_ ) - (double)mktime( &t0_ );
-        calc_time_diff = 0;
-    }
-    return ceil( filetime_seconds( t_utc ) - time_diff );
+    /* Seconds between 1.1.1601 and 1.1.1970 */
+    static __int64 const secs_between_epochs = 11644473600;
+
+    /* We can not simply cast and dereference a FILETIME, since it might not be
+     * aligned properly. __int64 type variables are expected to be aligned to an
+     * 8 byte boundary while FILETIME structures may be aligned to any 4 byte
+     * boundary. Using an incorrectly aligned __int64 variable may cause a
+     * performance penalty on some platforms or even exceptions on others
+     * (documented on MSDN).
+     */
+    __int64 in;
+    memcpy( &in, &ft, sizeof( in ) );
+
+    /* FILETIME resolution: 100ns. */
+    /* For resolutions finer than 1 second use the following:
+     *   nsec = (int)( in % 10000000 ) * 100;
+     */
+    return (time_t)( ( in / 10000000 ) - secs_between_epochs );
 }
 
 
