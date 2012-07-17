@@ -797,6 +797,17 @@ class Action:
 
         self.engine_.add_dependency (actual_targets, self.actual_sources_ + self.dependency_only_sources_)
 
+        # This works around a bug with -j and actions that
+        # produce multiple target, where:
+        # - dependency on the first output is found, and
+        #   the action is started
+        # - dependency on the second output is found, and
+        #   bjam noticed that command is already running
+        # - instead of waiting for the command, dependents
+        #   of the second targets are immediately updated.
+        if len(actual_targets) > 1:
+            bjam.call("INCLUDES", actual_targets, actual_targets)
+
         # FIXME: check the comment below. Was self.action_name_ [1]
         # Action name can include additional argument to rule, which should not
         # be passed to 'set-target-variables'
