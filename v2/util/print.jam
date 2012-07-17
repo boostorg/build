@@ -429,7 +429,7 @@ rule check-for-update ( target )
     ISFILE $(dependency-target) ;
     NOUPDATE $(dependency-target) ;
     base on $(dependency-target) = $(target) ;
-    scanner.install $(scanner) : $(dependency-target) none ;
+    scanner.install $(scanner) : $(dependency-target) ;
     return $(dependency-target) ;
 }
 

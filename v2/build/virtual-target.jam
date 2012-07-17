@@ -158,7 +158,7 @@ class virtual-target
 
                 actualize-location $(name) ;
 
-                scanner.install $(scanner) : $(name) $(__name__) ;
+                scanner.install $(scanner) : $(name) ;
             }
             return $(name) ;
         }

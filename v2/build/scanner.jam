@@ -124,9 +124,7 @@ rule get ( scanner-class : property-set )
 
 # Installs the specified scanner on the actual target 'target'.
 #
-rule install ( scanner : target 
-    vtarget  # virtual target from which 'target' was actualized
-)
+rule install ( scanner : target )
 {
     HDRSCAN on $(target) = [ $(scanner).pattern ] ;
     SCANNER on $(target) = $(scanner) ;
