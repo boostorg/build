@@ -134,7 +134,7 @@ int file_collect_dir_content_( file_info_t * const d )
         f.f_base.len = strlen( f.f_base.ptr );
 
         string_truncate( path, 0 );
-        path_build( &f, path, 0 );
+        path_build( &f, path );
         files = list_push_back( files, object_new( path->value ) );
     }
     string_free( path );

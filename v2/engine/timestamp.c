@@ -189,7 +189,7 @@ void timestamp_from_path( timestamp * const time, OBJECT * const path )
         f2 = f1;
         f2.f_grist.len = 0;
         path_parent( &f2 );
-        path_build( &f2, buf, 0 );
+        path_build( &f2, buf );
 
         name = object_new( buf->value );
 
@@ -222,7 +222,7 @@ void timestamp_from_path( timestamp * const time, OBJECT * const path )
         f2.f_grist.len = 0;
         f2.f_member.len = 0;
         string_truncate( buf, 0 );
-        path_build( &f2, buf, 0 );
+        path_build( &f2, buf );
 
         name = object_new( buf->value );
 

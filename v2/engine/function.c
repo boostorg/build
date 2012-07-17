@@ -631,7 +631,7 @@ static void var_edit_file( char const * in, string * out, VAR_EDITS * edits )
             path_parent( &pathname );
 
         /* Put filename back together. */
-        path_build( &pathname, out, 0 );
+        path_build( &pathname, out );
     }
     else
         string_append( out, in );

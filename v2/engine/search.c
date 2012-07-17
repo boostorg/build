@@ -119,7 +119,7 @@ OBJECT * search( OBJECT * target, timestamp * const time,
         f->f_root.ptr = object_str( list_front( varlist ) );
         f->f_root.len = strlen( object_str( list_front( varlist ) ) );
 
-        path_build( f, buf, 1 );
+        path_build( f, buf );
 
         if ( DEBUG_SEARCH )
             printf( "locate %s: %s\n", object_str( target ), buf->value );
@@ -147,7 +147,7 @@ OBJECT * search( OBJECT * target, timestamp * const time,
             f->f_root.len = strlen( object_str( list_item( iter ) ) );
 
             string_truncate( buf, 0 );
-            path_build( f, buf, 1 );
+            path_build( f, buf );
 
             if ( DEBUG_SEARCH )
                 printf( "search %s: %s\n", object_str( target ), buf->value );
@@ -194,7 +194,7 @@ OBJECT * search( OBJECT * target, timestamp * const time,
         f->f_root.len = 0;
 
         string_truncate( buf, 0 );
-        path_build( f, buf, 1 );
+        path_build( f, buf );
 
         if ( DEBUG_SEARCH )
             printf( "search %s: %s\n", object_str( target ), buf->value );

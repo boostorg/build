@@ -113,12 +113,12 @@ class virtual-target
     {
         return $(self.dependencies) ;
     }
-    
+
     rule always ( )
     {
         .always = 1 ;
     }
-    
+
     # Generates all the actual targets and sets up build actions for this
     # target.
     #
@@ -133,12 +133,12 @@ class virtual-target
     rule actualize ( scanner ? )
     {
         local actual-name = [ actualize-no-scanner ] ;
-        
+
         if $(.always)
         {
             ALWAYS $(actual-name) ;
         }
-        
+
         if ! $(scanner)
         {
             return $(actual-name) ;
@@ -203,7 +203,7 @@ class virtual-target
         # In fact, we just need to merge virtual-target with
         # abstract-file-target as the latter is the only class derived from the
         # former. But that has been left for later.
-	
+
         errors.error "method should be defined in derived classes" ;
     }
 }
@@ -760,20 +760,20 @@ class action
 
             DEPENDS $(actual-targets) : $(self.actual-sources)
                 $(self.dependency-only-sources) ;
-            
-            # This works around a bug with -j and actions that
-            # produce multiple target, where:
-            # - dependency on the first output is found, and
-            #   the action is started
-            # - dependency on the second output is found, and
-            #   bjam noticed that command is already running
-            # - instead of waiting for the command, dependents
-            #   of the second targets are immediately updated.
+
+            # This works around a bug with -j and actions that produce multiple
+            # target, where:
+            # - dependency on the first output is found, and the action is
+            #   started
+            # - dependency on the second output is found, and bjam noticed that
+            #   command is already running
+            # - instead of waiting for the command, dependents of the second
+            #   targets are immediately updated.
             if $(actual-targets[2])
-            {                
+            {
                 INCLUDES $(actual-targets) : $(actual-targets) ;
             }
-            
+
             # Action name can include additional argument to rule, which should
             # not be passed to 'set-target-variables'
             toolset.set-target-variables
@@ -1104,7 +1104,8 @@ rule traverse ( target : include-roots ? : include-sources ? )
         {
             if ! [ $(t).root ]
             {
-                result += [ traverse $(t) : $(include-roots) : $(include-sources) ] ;
+                result += [ traverse $(t) : $(include-roots) :
+                    $(include-sources) ] ;
             }
             else if $(include-roots)
             {
@@ -1125,7 +1126,8 @@ rule traverse ( target : include-roots ? : include-sources ? )
 # 'new-rule-name' and 'new-properties', if those are specified. Returns the
 # cloned action.
 #
-rule clone-action ( action : new-project : new-action-name ? : new-properties ? )
+rule clone-action ( action : new-project : new-action-name ? : new-properties ?
+    )
 {
     if ! $(new-action-name)
     {
@@ -1245,7 +1247,7 @@ class subvariant
             {
                 $(theset).add $(t) ;
                 r += [ $(t:G=).creating-subvariant ] ;
-            }            
+            }
         }
         r = [ sequence.unique $(r) ] ;
         for local s in $(r)
@@ -1259,7 +1261,7 @@ class subvariant
 
     # Returns the properties specifying implicit include paths to generated
     # headers. This traverses all targets in this subvariant and subvariants
-    # referred by <implcit-dependecy> properties. For all targets of type
+    # referred by <implicit-dependecy> properties. For all targets of type
     # 'target-type' (or for all targets, if 'target-type' is not specified), the
     # result will contain <$(feature)>path-to-that-target.
     #

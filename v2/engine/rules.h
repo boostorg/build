@@ -29,8 +29,6 @@
 #ifndef RULES_DWA_20011020_H
 #define RULES_DWA_20011020_H
 
-#include "jam.h"
-
 #include "function.h"
 #include "modules.h"
 #include "timestamp.h"
@@ -217,9 +215,14 @@ struct _target
 
     int        asynccnt;              /* child deps outstanding */
     TARGETS  * parents;               /* used by make1() for completion */
-    TARGET   * scc_root;              /* used by make to resolve cyclic includes */
-    TARGET   * rescanning;            /* used by make0 to mark visited targets when rescanning */
-    int        depth;                 /* The depth of the target in the make0 stack. */
+    TARGET   * scc_root;              /* used by make to resolve cyclic includes
+                                       */
+    TARGET   * rescanning;            /* used by make0 to mark visited targets
+                                       * when rescanning
+                                       */
+    int        depth;                 /* The depth of the target in the make0
+                                       * stack.
+                                       */
     char     * cmds;                  /* type-punned command list */
 
     char const * failed;
@@ -231,8 +234,8 @@ void       action_free  ( ACTION * );
 ACTIONS  * actionlist   ( ACTIONS *, ACTION * );
 void       freeactions  ( ACTIONS * );
 SETTINGS * addsettings  ( SETTINGS *, int flag, OBJECT * symbol, LIST * value );
-void       pushsettings ( struct module_t * module, SETTINGS * );
-void       popsettings  ( struct module_t * module, SETTINGS * );
+void       pushsettings ( module_t *, SETTINGS * );
+void       popsettings  ( module_t *, SETTINGS * );
 SETTINGS * copysettings ( SETTINGS * );
 void       freesettings ( SETTINGS * );
 void       actions_refer( rule_actions * );
@@ -248,16 +251,17 @@ void   rule_free       ( RULE * );
 
 /* Target related functions. */
 void      bind_explicitly_located_targets();
-TARGET  * bindtarget                     ( OBJECT * target_name );
+TARGET  * bindtarget                     ( OBJECT * const );
 TARGET  * copytarget                     ( TARGET const * t );
 void      freetargets                    ( TARGETS * );
-TARGETS * targetchain                    ( TARGETS * chain, TARGETS * );
-TARGETS * targetentry                    ( TARGETS * chain, TARGET * );
-void      target_include                 ( TARGET * including, TARGET * included );
-TARGETS * targetlist                     ( TARGETS * chain, LIST * target_names );
-void      touch_target                   ( OBJECT * t );
+TARGETS * targetchain                    ( TARGETS *, TARGETS * );
+TARGETS * targetentry                    ( TARGETS *, TARGET * );
+void      target_include                 ( TARGET * including,
+                                           TARGET * included );
+TARGETS * targetlist                     ( TARGETS *, LIST * target_names );
+void      touch_target                   ( OBJECT * const );
 void      clear_includes                 ( TARGET * );
-TARGET *  target_scc                     ( TARGET * t );
+TARGET  * target_scc                     ( TARGET * );
 
 /* Final module cleanup. */
 void rules_done();

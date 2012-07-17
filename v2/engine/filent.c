@@ -38,7 +38,6 @@
 #  include <dos.h>
 # endif
 # undef FILENAME  /* cpp namespace collision */
-# define _finddata_t ffblk
 #endif
 
 #define WIN32_LEAN_AND_MEAN
@@ -59,7 +58,6 @@ int file_collect_dir_content_( file_info_t * const d )
     PATHNAME f;
     string pathspec[ 1 ];
     string pathname[ 1 ];
-    struct _finddata_t finfo[ 1 ];
     LIST * files = L0;
     int d_length;
 
@@ -90,34 +88,38 @@ int file_collect_dir_content_( file_info_t * const d )
     }
 
 #if defined(__BORLANDC__) && __BORLANDC__ < 0x550
-    if ( findfirst( pathspec->value, finfo, FA_NORMAL | FA_DIREC ) )
     {
-        string_free( pathspec );
-        return -1;
-    }
-
-    string_new( pathname );
-    do
-    {
-        f.f_base.ptr = finfo->ff_name;
-        f.f_base.len = strlen( finfo->ff_name );
-        string_truncate( pathname, 0 );
-        path_build( &f, pathname );
-
-        files = list_push_back( files, object_new( pathname->value ) );
+        struct ffblk finfo;
+        if ( findfirst( pathspec->value, &finfo, FA_NORMAL | FA_DIREC ) )
         {
-            file_info_t * const ff = file_info( pathname->value );
-            ff->is_file = finfo->ff_attrib & FA_DIREC ? 0 : 1;
-            ff->is_dir = !ff->is_file;
-            ff->size = finfo->ff_fsize;
-            timestamp_init( &ff->time, ( finfo->ff_ftime << 16 ) |
-                finfo->ff_ftime, 0 );
+            string_free( pathspec );
+            return -1;
         }
+
+        string_new( pathname );
+        do
+        {
+            f.f_base.ptr = finfo.ff_name;
+            f.f_base.len = strlen( finfo.ff_name );
+            string_truncate( pathname, 0 );
+            path_build( &f, pathname );
+
+            {
+                file_info_t * const ff = file_info( pathname->value );
+                ff->is_dir = finfo.ff_attrib & FA_DIREC ? 1 : 0;
+                ff->is_file = !ff->is_dir;
+                ff->size = finfo.ff_fsize;
+                timestamp_init( &ff->time, ( finfo.ff_ftime << 16 ) |
+                    finfo.ff_ftime, 0 );
+                files = list_push_back( files, object_new( pathname->value ) );
+            }
+        }
+        while ( !findnext( &finfo ) );
     }
-    while ( !findnext( finfo ) );
 #else  /* defined(__BORLANDC__) && __BORLANDC__ < 0x550 */
     {
-        long const handle = _findfirst( pathspec->value, finfo );
+        struct _finddata_t finfo;
+        long const handle = _findfirst( pathspec->value, &finfo );
         if ( handle < 0L )
         {
             string_free( pathspec );
@@ -129,23 +131,23 @@ int file_collect_dir_content_( file_info_t * const d )
         {
             OBJECT * pathname_obj;
 
-            f.f_base.ptr = finfo->name;
-            f.f_base.len = strlen( finfo->name );
+            f.f_base.ptr = finfo.name;
+            f.f_base.len = strlen( finfo.name );
             string_truncate( pathname, 0 );
-            path_build( &f, pathname, 0 );
+            path_build( &f, pathname );
 
             pathname_obj = object_new( pathname->value );
             path_key__register_long_path( pathname_obj );
             files = list_push_back( files, pathname_obj );
             {
                 file_info_t * const ff = file_info( pathname_obj );
-                ff->is_file = finfo->attrib & _A_SUBDIR ? 0 : 1;
-                ff->is_dir = !ff->is_file;
-                ff->size = finfo->size;
-                timestamp_init( &ff->time, finfo->time_write, 0 );
+                ff->is_dir = finfo.attrib & _A_SUBDIR ? 1 : 0;
+                ff->is_file = !ff->is_dir;
+                ff->size = finfo.size;
+                timestamp_init( &ff->time, finfo.time_write, 0 );
             }
         }
-        while ( !_findnext( handle, finfo ) );
+        while ( !_findnext( handle, &finfo ) );
 
         _findclose( handle );
     }
