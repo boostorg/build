@@ -497,6 +497,7 @@ LIST * builtin_depends( FRAME * frame, int flags )
 {
     LIST * const targets = lol_get( frame->args, 0 );
     LIST * const sources = lol_get( frame->args, 1 );
+
     LISTITER iter = list_begin( targets );
     LISTITER end = list_end( targets );
     for ( ; iter != end; iter = list_next( iter ) )
@@ -664,7 +665,7 @@ static void builtin_glob_back( void * closure, OBJECT * file, int status,
     }
 
     string_new( buf );
-    path_build( &f, buf, 0 );
+    path_build( &f, buf );
 
     if ( globbing->case_insensitive )
         downcase_inplace( buf->value );
@@ -675,7 +676,8 @@ static void builtin_glob_back( void * closure, OBJECT * file, int status,
     {
         if ( !glob( object_str( list_item( iter ) ), buf->value ) )
         {
-            globbing->results = list_push_back( globbing->results, object_copy( file ) );
+            globbing->results = list_push_back( globbing->results, object_copy(
+                file ) );
             break;
         }
     }
@@ -824,7 +826,7 @@ LIST * glob_recursive( char const * pattern )
             path->f_grist.len = 0;
             path->f_dir.ptr = 0;
             path->f_dir.len = 0;
-            path_build( path, basename, 0 );
+            path_build( path, basename );
 
             dirs =  has_wildcards( dirname->value )
                 ? glob_recursive( dirname->value )
@@ -836,7 +838,8 @@ LIST * glob_recursive( char const * pattern )
                 LISTITER iter = list_begin( dirs );
                 LISTITER const end = list_end( dirs );
                 for ( ; iter != end; iter = list_next( iter ) )
-                    result = list_append( result, glob1( list_item( iter ), b ) );
+                    result = list_append( result, glob1( list_item( iter ), b )
+                        );
                 object_free( b );
             }
             else
@@ -852,7 +855,7 @@ LIST * glob_recursive( char const * pattern )
                     OBJECT * p;
                     path->f_dir.ptr = object_str( list_item( iter ) );
                     path->f_dir.len = strlen( object_str( list_item( iter ) ) );
-                    path_build( path, file_string, 0 );
+                    path_build( path, file_string );
 
                     p = object_new( file_string->value );
 
@@ -1028,8 +1031,8 @@ LIST * builtin_hdrmacro( FRAME * frame, int flags )
 
 static void add_rule_name( void * r_, void * result_ )
 {
-    RULE * r = (RULE *)r_;
-    LIST * * result = (LIST * *)result_;
+    RULE * const r = (RULE *)r_;
+    LIST * * const result = (LIST * *)result_;
     if ( r->exported )
         *result = list_push_back( *result, object_copy( r->name ) );
 }
@@ -1039,8 +1042,9 @@ LIST * builtin_rulenames( FRAME * frame, int flags )
 {
     LIST * arg0 = lol_get( frame->args, 0 );
     LIST * result = L0;
-    module_t * source_module = bindmodule( !list_empty( arg0 ) ?
-        list_front( arg0 ) : 0 );
+    module_t * const source_module = bindmodule( list_empty( arg0 )
+        ? 0
+        : list_front( arg0 ) );
 
     if ( source_module->rules )
         hashenumerate( source_module->rules, add_rule_name, &result );
@@ -1069,10 +1073,11 @@ LIST * builtin_varnames( FRAME * frame, int flags )
 {
     LIST * arg0 = lol_get( frame->args, 0 );
     LIST * result = L0;
-    module_t * source_module = bindmodule( !list_empty(arg0) ? list_front(arg0) : 0 );
+    module_t * source_module = bindmodule( list_empty( arg0 )
+        ? 0
+        : list_front( arg0 ) );
 
-    struct hash * vars = source_module->variables;
-
+    struct hash * const vars = source_module->variables;
     if ( vars )
         hashenumerate( vars, add_hash_key, &result );
     return result;
@@ -1148,13 +1153,17 @@ LIST * builtin_import( FRAME * frame, int flags )
     LIST * target_rules       = lol_get( frame->args, 3 );
     LIST * localize           = lol_get( frame->args, 4 );
 
-    module_t * target_module =
-        bindmodule( !list_empty( target_module_list ) ? list_front( target_module_list ) : 0 );
-    module_t * source_module =
-        bindmodule( !list_empty( source_module_list ) ? list_front( source_module_list ) : 0 );
+    module_t * target_module = bindmodule( list_empty( target_module_list )
+        ? 0
+        : list_front( target_module_list ) );
+    module_t * source_module = bindmodule( list_empty( source_module_list )
+        ? 0
+        : list_front( source_module_list ) );
 
-    LISTITER source_iter = list_begin( source_rules ), source_end = list_end( source_rules );
-    LISTITER target_iter = list_begin( target_rules ), target_end = list_end( target_rules );
+    LISTITER source_iter = list_begin( source_rules );
+    LISTITER const source_end = list_end( source_rules );
+    LISTITER target_iter = list_begin( target_rules );
+    LISTITER const target_end = list_end( target_rules );
 
     for ( ;
           source_iter != source_end && target_iter != target_end;
@@ -1164,9 +1173,10 @@ LIST * builtin_import( FRAME * frame, int flags )
         RULE * r;
         RULE * imported;
 
-        if ( !source_module->rules ||
-            !(r = (RULE *)hash_find( source_module->rules, list_item( source_iter ) ) ) )
-            unknown_rule( frame, "IMPORT", source_module, list_item( source_iter ) );
+        if ( !source_module->rules || !(r = (RULE *)hash_find(
+            source_module->rules, list_item( source_iter ) ) ) )
+            unknown_rule( frame, "IMPORT", source_module, list_item( source_iter
+                ) );
 
         imported = import_rule( r, target_module, list_item( target_iter ) );
         if ( !list_empty( localize ) )
@@ -1180,7 +1190,8 @@ LIST * builtin_import( FRAME * frame, int flags )
     if ( source_iter != source_end || target_iter != target_end )
     {
         backtrace_line( frame->prev );
-        printf( "import error: length of source and target rule name lists don't match!\n" );
+        printf( "import error: length of source and target rule name lists "
+            "don't match!\n" );
         printf( "    source: " );
         list_print( source_rules );
         printf( "\n    target: " );
@@ -1575,13 +1586,14 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
             /* Found a trailing or duplicate '/'. Remove it. */
             *current = '\1';
         }
-        else if ( ( end - current == 1 ) && ( *(current + 1) == '.' ) )
+        else if ( ( end - current == 1 ) && ( *( current + 1 ) == '.' ) )
         {
             /* Found '/.'. Remove them all. */
             *current = '\1';
             *(current + 1) = '\1';
         }
-        else if ( ( end - current == 2 ) && ( *(current + 1) == '.' ) && ( *(current + 2) == '.' ) )
+        else if ( ( end - current == 2 ) && ( *( current + 1 ) == '.' ) &&
+            ( *( current + 2 ) == '.' ) )
         {
             /* Found '/..'. Remove them all. */
             *current = '\1';
@@ -1629,7 +1641,9 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
      * the original path was rooted and we have an empty path we need to add
      * back the '/'.
      */
-    result = object_new( out->size ? out->value + !rooted : ( rooted ? "/" : "." ) );
+    result = object_new( out->size
+        ? out->value + !rooted
+        : ( rooted ? "/" : "." ) );
 
     string_free( out );
     string_free( in );
@@ -1646,7 +1660,8 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
     module_t * module = bindmodule( list_front( module_name ) );
 
     native_rule_t * np;
-    if ( module->native_rules && (np = (native_rule_t *)hash_find( module->native_rules, list_front( rule_name ) ) ) )
+    if ( module->native_rules && (np = (native_rule_t *)hash_find(
+        module->native_rules, list_front( rule_name ) ) ) )
     {
         new_rule_body( module, np->name, np->procedure, 1 );
     }
@@ -1654,7 +1669,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
     {
         backtrace_line( frame->prev );
         printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
-                object_str( list_front( rule_name ) ), object_str( module->name ) );
+            object_str( list_front( rule_name ) ), object_str( module->name ) );
         backtrace( frame->prev );
         exit( 1 );
     }
@@ -1671,7 +1686,8 @@ LIST * builtin_has_native_rule( FRAME * frame, int flags )
     module_t * module = bindmodule( list_front( module_name ) );
 
     native_rule_t * np;
-    if ( module->native_rules && (np = (native_rule_t *)hash_find( module->native_rules, list_front( rule_name ) ) ) )
+    if ( module->native_rules && (np = (native_rule_t *)hash_find(
+        module->native_rules, list_front( rule_name ) ) ) )
     {
         int expected_version = atoi( object_str( list_front( version ) ) );
         if ( np->version == expected_version )
@@ -1832,8 +1848,10 @@ LIST * builtin_makedir( FRAME * frame, int flags )
 LIST * builtin_python_import_rule( FRAME * frame, int flags )
 {
     static int first_time = 1;
-    char const * python_module   = object_str( list_front( lol_get( frame->args, 0 ) ) );
-    char const * python_function = object_str( list_front( lol_get( frame->args, 1 ) ) );
+    char const * python_module   = object_str( list_front( lol_get( frame->args,
+        0 ) ) );
+    char const * python_function = object_str( list_front( lol_get( frame->args,
+        1 ) ) );
     OBJECT     * jam_module      = list_front( lol_get( frame->args, 2 ) );
     OBJECT     * jam_rule        = list_front( lol_get( frame->args, 3 ) );
 
@@ -2014,8 +2032,8 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
  * - rule name,
  * - Python callable.
  * - (optional) bjam language function signature.
- * Creates a bjam rule with the specified name in the specified module, which will
- * invoke the Python callable.
+ * Creates a bjam rule with the specified name in the specified module, which
+ * will invoke the Python callable.
  */
 
 PyObject * bjam_import_rule( PyObject * self, PyObject * args )
@@ -2309,7 +2327,8 @@ LIST * builtin_shell( FRAME * frame, int flags )
 
     string_new( &s );
 
-    while ( ( ret = fread( buffer, sizeof( char ), sizeof( buffer ) - 1, p ) ) > 0 )
+    while ( ( ret = fread( buffer, sizeof( char ), sizeof( buffer ) - 1, p ) ) >
+        0 )
     {
         buffer[ ret ] = 0;
         if ( !no_output_opt )

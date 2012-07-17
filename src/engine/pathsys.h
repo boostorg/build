@@ -47,9 +47,7 @@ struct _pathname
 #define f_member  part[ 5 ]
 };
 
-void path_build( PATHNAME * f, string * file, int binding );
-void path_build1( PATHNAME * f, string * file );
-
+void path_build( PATHNAME * f, string * file );
 void path_parse( char const * file, PATHNAME * f );
 void path_parent( PATHNAME * f );
 

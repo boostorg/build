@@ -169,7 +169,7 @@ static char as_path_delim( char const c )
  * in 'timestamp.c'.
  */
 
-void path_build( PATHNAME * f, string * file, int binding )
+void path_build( PATHNAME * f, string * file )
 {
     file_build1( f, file );
 
@@ -185,8 +185,7 @@ void path_build( PATHNAME * f, string * file, int binding )
     {
         string_append_range( file, f->f_root.ptr, f->f_root.ptr + f->f_root.len
             );
-        /* If 'root' already ends with a path delimeter, do not add yet another
-         * one.
+        /* If 'root' already ends with a path delimeter, do not add another one.
          */
         if ( !is_path_delim( f->f_root.ptr[ f->f_root.len - 1 ] ) )
             string_push_back( file, as_path_delim( f->f_root.ptr[ f->f_root.len

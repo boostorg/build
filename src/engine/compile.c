@@ -10,33 +10,10 @@
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
 
-# include "jam.h"
-
-# include "lists.h"
-# include "parse.h"
-# include "compile.h"
-# include "variable.h"
-# include "rules.h"
-# include "object.h"
-# include "make.h"
-# include "search.h"
-# include "hdrmacro.h"
-# include "hash.h"
-# include "modules.h"
-# include "strings.h"
-# include "builtins.h"
-# include "class.h"
-# include "constants.h"
-
-# include <assert.h>
-# include <string.h>
-# include <stdarg.h>
-
 /*
  * compile.c - compile parsed jam statements
  *
  * External routines:
- *
  *  compile_append() - append list results of two statements
  *  compile_eval() - evaluate if to determine which leg to compile
  *  compile_foreach() - compile the "for x in y" statement
@@ -56,17 +33,34 @@
  *  compile_switch() - compile 'switch' rule
  *
  * Internal routines:
- *
- *  debug_compile() - printf with indent to show rule expansion.
+ *  debug_compile() - printf with indent to show rule expansion
  *  evaluate_rule() - execute a rule invocation
- *
- *  builtin_depends() - DEPENDS/INCLUDES rule
- *  builtin_echo() - ECHO rule
- *  builtin_exit() - EXIT rule
- *  builtin_flags() - NOCARE, NOTFILE, TEMPORARY rule
  */
 
-static void debug_compile( int which, const char * s, FRAME * );
+#include "jam.h"
+#include "compile.h"
+
+#include "builtins.h"
+#include "class.h"
+#include "constants.h"
+#include "hash.h"
+#include "hdrmacro.h"
+#include "lists.h"
+#include "make.h"
+#include "modules.h"
+#include "object.h"
+#include "parse.h"
+#include "rules.h"
+#include "search.h"
+#include "strings.h"
+#include "variable.h"
+
+#include <assert.h>
+#include <stdarg.h>
+#include <string.h>
+
+
+static void debug_compile( int which, char const * s, FRAME * );
 
 /* Internal functions from builtins.c */
 void backtrace( FRAME * );
@@ -76,7 +70,7 @@ void unknown_rule( FRAME *, char const * key, module_t *, OBJECT * rule_name );
 
 
 /*
- * evaluate_rule() - execute a rule invocation.
+ * evaluate_rule() - execute a rule invocation
  */
 
 LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
@@ -91,13 +85,14 @@ LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
     if ( DEBUG_COMPILE )
     {
         /* Try hard to indicate in which module the rule is going to execute. */
-        if ( rule->module != frame->module
-             && rule->procedure != 0 && !object_equal( rulename, function_rulename( rule->procedure ) ) )
+        if ( rule->module != frame->module && rule->procedure && !object_equal(
+            rulename, function_rulename( rule->procedure ) ) )
         {
-            char buf[256] = "";
+            char buf[ 256 ] = "";
             if ( rule->module->name )
             {
-                strncat( buf, object_str( rule->module->name ), sizeof( buf ) - 1 );
+                strncat( buf, object_str( rule->module->name ), sizeof( buf ) -
+                    1 );
                 strncat( buf, ".", sizeof( buf ) - 1 );
             }
             strncat( buf, object_str( rule->name ), sizeof( buf ) - 1 );
@@ -150,11 +145,12 @@ LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
 
         /* If we have a group of targets all being built using the same action
          * then we must not allow any of them to be used as sources unless they
-         * had all already been built in the first place or their joined action
-         * has had a chance to finish its work and build all of them anew.
+         * are all up to date and their action does not need to be run or their
+         * action has had a chance to finish its work and build all of them
+         * anew.
          *
          * Without this it might be possible, in case of a multi-process build,
-         * for their action, triggered by buiding one of the targets, to still
+         * for their action, triggered to building one of the targets, to still
          * be running when another target in the group reports as done in order
          * to avoid triggering the same action again and gets used prematurely.
          *
@@ -168,7 +164,7 @@ LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
          * dependency' issue.
          *
          * TODO: Although the current implementation solves the problem of one
-         * of the targets getting used before its action completes its work it
+         * of the targets getting used before its action completes its work, it
          * also forces the action to run whenever any of the targets in the
          * group is not up to date even though some of them might not actually
          * be used by the targets being built. We should see how we can
@@ -182,7 +178,7 @@ LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
          */
         if ( action->targets )
         {
-            TARGET * t0 = action->targets->target;
+            TARGET * const t0 = action->targets->target;
             for ( t = action->targets->next; t; t = t->next )
             {
                 target_include( t->target, t0 );
@@ -198,13 +194,12 @@ LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
     }
 
     /* Now recursively compile any parse tree associated with this rule.
-     * function_refer()/function_free() call pair added to ensure rule not freed
-     * during use.
+     * function_refer()/function_free() call pair added to ensure the rule does
+     * not get freed while in use.
      */
     if ( rule->procedure )
     {
-        FUNCTION * function = rule->procedure;
-
+        FUNCTION * const function = rule->procedure;
         function_refer( function );
         result = function_run( function, frame, stack_global() );
         function_free( function );
@@ -214,7 +209,7 @@ LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
         profile_exit( prof );
 
     if ( DEBUG_COMPILE )
-        debug_compile( -1, 0, frame);
+        debug_compile( -1, 0, frame );
 
     return result;
 }
@@ -234,17 +229,18 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, ... )
     va_list va;
     LIST * result;
 
-    FRAME       inner[1];
+    FRAME inner[ 1 ];
     frame_init( inner );
     inner->prev = caller_frame;
-    inner->prev_user = caller_frame->module->user_module ?
-        caller_frame : caller_frame->prev_user;
+    inner->prev_user = caller_frame->module->user_module
+        ? caller_frame
+        : caller_frame->prev_user;
     inner->module = caller_frame->module;
 
     va_start( va, caller_frame );
     for ( ; ; )
     {
-        LIST * l = va_arg( va, LIST* );
+        LIST * const l = va_arg( va, LIST * );
         if ( !l )
             break;
         lol_add( inner->args, l );
@@ -259,12 +255,11 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, ... )
 }
 
 
-
 /*
- * debug_compile() - printf with indent to show rule expansion.
+ * debug_compile() - printf with indent to show rule expansion
  */
 
-static void debug_compile( int which, const char * s, FRAME * frame )
+static void debug_compile( int which, char const * s, FRAME * frame )
 {
     static int level = 0;
     static char indent[36] = ">>>>|>>>>|>>>>|>>>>|>>>>|>>>>|>>>>|";

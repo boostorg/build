@@ -32,17 +32,15 @@
 
 #include "hash.h"
 #include "lists.h"
-#include "modules.h"
 #include "object.h"
 #include "parse.h"
 #include "pathsys.h"
 #include "search.h"
-#include "timestamp.h"
 #include "variable.h"
 
 
 static void set_rule_actions( RULE *, rule_actions * );
-static void set_rule_body   ( RULE *, FUNCTION * procedure );
+static void set_rule_body   ( RULE *, FUNCTION * );
 
 static struct hash * targethash = 0;
 
@@ -74,9 +72,8 @@ void target_include( TARGET * including, TARGET * included )
 static RULE * enter_rule( OBJECT * rulename, module_t * target_module )
 {
     int found;
-    RULE * r;
-
-    r = (RULE *)hash_insert( demand_rules(target_module), rulename, &found );
+    RULE * const r = (RULE *)hash_insert( demand_rules( target_module ),
+        rulename, &found );
     if ( !found )
     {
         r->name = object_copy( rulename );
@@ -129,7 +126,7 @@ void rule_free( RULE * r )
  * bindtarget() - return pointer to TARGET, creating it if necessary.
  */
 
-TARGET * bindtarget( OBJECT * target_name )
+TARGET * bindtarget( OBJECT * const target_name )
 {
     int found;
     TARGET * t;
@@ -187,9 +184,9 @@ void bind_explicitly_located_targets()
  * Not entered into the hash table -- for internal nodes.
  */
 
-TARGET * copytarget( const TARGET * ot )
+TARGET * copytarget( TARGET const * ot )
 {
-    TARGET * t = (TARGET *)BJAM_MALLOC( sizeof( *t ) );
+    TARGET * const t = (TARGET *)BJAM_MALLOC( sizeof( *t ) );
     memset( (char *)t, '\0', sizeof( *t ) );
     t->name = object_copy( ot->name );
     t->boundname = object_copy( t->name );
@@ -202,7 +199,7 @@ TARGET * copytarget( const TARGET * ot )
  * touch_target() - mark a target to simulate being new.
  */
 
-void touch_target( OBJECT * t )
+void touch_target( OBJECT * const t )
 {
     bindtarget( t )->flags |= T_FLAG_TOUCHED;
 }
