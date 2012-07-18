@@ -78,7 +78,7 @@ void file_build1( PATHNAME * const f, string * file )
      */
     if ( f->f_grist.len )
     {
-        if ( f->f_grist.ptr[0] != '<' )
+        if ( f->f_grist.ptr[ 0 ] != '<' )
             string_push_back( file, '<' );
         string_append_range(
             file, f->f_grist.ptr, f->f_grist.ptr + f->f_grist.len );

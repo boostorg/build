@@ -308,7 +308,7 @@ void exec_cmd
         char const * p = cmd_orig->value + cmd_orig->size;
         char const * end = p;
         while ( isspace( *start ) ) ++start;
-        while ( p > start && isspace( p[-1] ) )
+        while ( p > start && isspace( p[ -1 ] ) )
             if ( *--p == '\n' )
                 end = p;
         string_new( cmd_local );

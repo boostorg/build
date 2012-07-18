@@ -273,7 +273,7 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, ... )
 static void debug_compile( int which, char const * s, FRAME * frame )
 {
     static int level = 0;
-    static char indent[36] = ">>>>|>>>>|>>>>|>>>>|>>>>|>>>>|>>>>|";
+    static char indent[ 36 ] = ">>>>|>>>>|>>>>|>>>>|>>>>|>>>>|>>>>|";
 
     if ( which >= 0 )
     {

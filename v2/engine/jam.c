@@ -455,7 +455,7 @@ int main( int argc, char * * argv, char * * arg_environ )
          */
         for ( n = 0; n < arg_c; ++n )
             var_set( root_module(), constant_ARGV, list_new( object_new(
-                arg_v[n] ) ), VAR_APPEND );
+                arg_v[ n ] ) ), VAR_APPEND );
 
         /* Initialize built-in rules. */
         load_builtins();
