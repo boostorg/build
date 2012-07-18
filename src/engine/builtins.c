@@ -1789,8 +1789,8 @@ LIST * builtin_pad( FRAME * frame, int flags )
 
         strcpy( buffer, object_str( string ) );
         for ( i = current; i < desired; ++i )
-            buffer[i] = ' ';
-        buffer[desired] = '\0';
+            buffer[ i ] = ' ';
+        buffer[ desired ] = '\0';
         result = list_new( object_new( buffer ) );
         BJAM_FREE( buffer );
         return result;

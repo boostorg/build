@@ -667,7 +667,7 @@ RULE * lookup_rule( OBJECT * rulename, module_t * m, int local_only )
         char *p = strchr( object_str( rulename ), '.' ) ;
         if ( p )
         {
-            string buf[1];
+            string buf[ 1 ];
             OBJECT * module_part;
             OBJECT * rule_part;
             string_new( buf );
