@@ -172,9 +172,20 @@ LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
          * action if possible and not rebuild targets not actually depending on
          * targets that are not up to date.
          *
-         * TODO: Using the 'include' feature might have side-effects due to
-         * interaction with the actual 'inclusion scanning' system. This should
-         * be checked.
+         * TODO: Current solution using fake INCLUDES relations may cause
+         * actions to be run when the affected targets are built by multiple
+         * actions. E.g. if we have the following actions registered in the
+         * order specified:
+         *     (I) builds targets A & B
+         *     (II) builds target B
+         * and we want to build a target depending on target A, then both
+         * actions (I) & (II) will be run, even though the second one does not
+         * have any direct relationship to target A. Consider whether this is
+         * desired behaviour or not. It could be that Boost Build should (or
+         * possibly already does) run all actions registered for a given target
+         * if any of them needs to be run in which case our INCLUDES relations
+         * are not actually causing any actions to be run that would not have
+         * been run without them.
          */
         if ( action->targets )
         {
