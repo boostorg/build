@@ -809,12 +809,12 @@ class Action:
         # when an actual Boost Jam action is encountered while we do this even
         # if our Boost Build action is actually modeling a rule that will then
         # register one or more Boost Jam actions. In that case our INCLUDES
-        # relation added here will affect the build behaviour but it will not be
-        # solving any actual problem. The only thing it might seem like it is
-        # doing is forcing multiple separate actions to be run all together or
-        # none at all but it will not do that completely either - it would miss
-        # the case when one of the action targets depends on a target that needs
-        # to be updated and another does not.
+        # relation added here will affect the build behaviour but it will no
+        # be solving any actual problem. The only thing it might seem like it
+        # is doing is forcing multiple separate actions to be run all together
+        # or none at all but it will not do that completely either - it would
+        # miss the case when one of the action targets depends on a target that
+        # needs to be updated and another does not.
         if len(actual_targets) > 1:
             bjam.call("INCLUDES", actual_targets, actual_targets)
 
