@@ -502,23 +502,12 @@ LIST * builtin_depends( FRAME * frame, int flags )
     LISTITER end = list_end( targets );
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        TARGET * t = bindtarget( list_item( iter ) );
+        TARGET * const t = bindtarget( list_item( iter ) );
 
-        /* If doing INCLUDES, switch to the TARGET's include TARGET, creating it
-         * if necessary. The internal include TARGET shares the name of its
-         * parent.
-         */
         if ( flags )
-        {
-            if ( !t->includes )
-            {
-                t->includes = copytarget( t );
-                t->includes->original_target = t;
-            }
-            t = t->includes;
-        }
-
-        t->depends = targetlist( t->depends, sources );
+            target_include_many( t, sources );
+        else
+            t->depends = targetlist( t->depends, sources );
     }
 
     /* Enter reverse links */
