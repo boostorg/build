@@ -46,21 +46,49 @@ static struct hash * targethash = 0;
 
 
 /*
- * target_include() - adds the 'included' TARGET to the list of targets included
- * by the 'including' TARGET. Such targets are modeled as dependencies of the
- * internal include node belonging to the 'including' TARGET.
+ * get_target_includes() - lazy creates a target's internal includes node
+ *
+ * The newly created node is not entered into the hash table as there should
+ * never be a need to bind them directly from a target names. If you want to
+ * access an internal includes node by name, first access the actual target and
+ * then read the internal includes node from there.
  */
 
-void target_include( TARGET * including, TARGET * included )
+static TARGET * get_target_includes( TARGET * const t )
 {
-    TARGET * internal;
-    if ( !including->includes )
+    if ( !t->includes )
     {
-        including->includes = copytarget( including );
-        including->includes->original_target = including;
+        TARGET * const i = (TARGET *)BJAM_MALLOC( sizeof( *t ) );
+        memset( (char *)i, '\0', sizeof( *i ) );
+        i->name = object_copy( t->name );
+        i->boundname = object_copy( i->name );
+        i->flags |= T_FLAG_NOTFILE | T_FLAG_INTERNAL;
+        i->original_target = t;
+        t->includes = i;
     }
-    internal = including->includes;
+    return t->includes;
+}
+
+
+/*
+ * target_include() - adds a target to the given targe's 'included' list
+ * target_include_many() - adds targets to the given target's 'included' list
+ *
+ * Included targets are modeled as dependencies of the including target's
+ * internal include node.
+ */
+
+void target_include( TARGET * const including, TARGET * const included )
+{
+    TARGET * const internal = get_target_includes( including );
     internal->depends = targetentry( internal->depends, included );
+}
+
+void target_include_many( TARGET * const including, LIST * const included_names
+    )
+{
+    TARGET * const internal = get_target_includes( including );
+    internal->depends = targetlist( internal->depends, included_names );
 }
 
 
@@ -175,23 +203,6 @@ void bind_explicitly_located_targets()
 {
     if ( targethash )
         hashenumerate( targethash, bind_explicitly_located_target, (void *)0 );
-}
-
-
-/*
- * copytarget() - make a new target with the old target's name.
- *
- * Not entered into the hash table -- for internal nodes.
- */
-
-TARGET * copytarget( TARGET const * ot )
-{
-    TARGET * const t = (TARGET *)BJAM_MALLOC( sizeof( *t ) );
-    memset( (char *)t, '\0', sizeof( *t ) );
-    t->name = object_copy( ot->name );
-    t->boundname = object_copy( t->name );
-    t->flags |= T_FLAG_NOTFILE | T_FLAG_INTERNAL;
-    return t;
 }
 
 

@@ -252,12 +252,13 @@ void   rule_free       ( RULE * );
 /* Target related functions. */
 void      bind_explicitly_located_targets();
 TARGET  * bindtarget                     ( OBJECT * const );
-TARGET  * copytarget                     ( TARGET const * t );
 void      freetargets                    ( TARGETS * );
 TARGETS * targetchain                    ( TARGETS *, TARGETS * );
 TARGETS * targetentry                    ( TARGETS *, TARGET * );
-void      target_include                 ( TARGET * including,
-                                           TARGET * included );
+void      target_include                 ( TARGET * const including,
+                                           TARGET * const included );
+void      target_include_many            ( TARGET * const including,
+                                           LIST * const included_names );
 TARGETS * targetlist                     ( TARGETS *, LIST * target_names );
 void      touch_target                   ( OBJECT * const );
 void      clear_includes                 ( TARGET * );
