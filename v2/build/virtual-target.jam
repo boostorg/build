@@ -774,8 +774,8 @@ class action
                 INCLUDES $(actual-targets) : $(actual-targets) ;
             }
 
-            # Action name can include additional argument to rule, which should
-            # not be passed to 'set-target-variables'
+            # Action name can include additional rule arguments, which should
+            # not be passed to 'set-target-variables'.
             toolset.set-target-variables
                 [ indirect.get-rule $(self.action-name[1]) ] $(actual-targets)
                 : $(properties) ;
