@@ -761,31 +761,6 @@ class action
             DEPENDS $(actual-targets) : $(self.actual-sources)
                 $(self.dependency-only-sources) ;
 
-            # This used to work around a bug with -j and actions that produce
-            # multiple targets, where:
-            # - dependency on the first output is found, and the action is
-            #   started
-            # - dependency on the second output is found, and bjam noticed that
-            #   command is already running
-            # - instead of waiting for the command, dependents of the second
-            #   targets are immediately updated.
-            # Current Boost Jam implementation already works around the problem
-            # the same way internally. The only difference being that it does
-            # so only when an actual Boost Jam action is encountered while we
-            # do this even if our Boost Build action actually modeling a rule
-            # that will then register one or more Boost Jam actions. In that
-            # case our INCLUDES relation added here will affect the build
-            # behaviour but it will not be solving any actual problem. The only
-            # thing it might seem like it is doing is forcing multiple separate
-            # actions to be run all together or none at all but it will not do
-            # that completely either - it would miss the case when one of the
-            # action targets depends on a target that needs to be updated and
-            # another does not.
-            if $(actual-targets[2])
-            {
-                INCLUDES $(actual-targets) : $(actual-targets) ;
-            }
-
             # Action name can include additional rule arguments, which should
             # not be passed to 'set-target-variables'.
             toolset.set-target-variables
