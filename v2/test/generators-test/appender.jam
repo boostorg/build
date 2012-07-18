@@ -36,42 +36,49 @@ else
 
 local appender-runs ;
 
+# We set up separate actions for building each target in order to avoid having
+# to iterate over of them in action (i.e. shell) code. We have to be extra
+# careful though to achieve the exact same effect as if doing all the work in
+# just one action. Otherwise Boost Jam might, under some circumstances, run only
+# some of our actions. To achieve this we register a series of actions for all 
+# the targets (since they all have the same target list - either all or none of
+# them get run independent of which target actually needs to get built), each
+# building only a single target. Since all out actions use the same targets we
+# can not use 'on-target' parameters to pass data to a specific action so we
+# pass them using the second 'sources' parameter which our actions then know how
+# to interpret correctly. This works well since Boost Jam does not automatically
+# add dependency relations between specified action targets & sources and so the
+# second argument, even though most often used to pass in a list of sources, can
+# actually be used for passing in any type of information.
 rule appender ( targets + : sources + : properties * )
 {
     appender-runs = [ CALC $(appender-runs:E=0) + 1 ] ;
     local target-index = 0 ;
     local target-count = [ sequence.length $(targets) ] ;
     local original-targets ;
-    for x in $(targets)
+    for t in $(targets)
     {
         target-index = [ CALC $(target-index) + 1 ] ;
-        local x-path = [ MATCH ^<.(.*)>$ : $(x:G) ] ;
-        original-targets += $(x-path)//$(x:G=) ;
+        local appender-run = $(appender-runs) ;
         if $(targets[2])-defined
         {
-            local t = $(appender-runs) [$(target-index)/$(target-count)] ;
-            appender-run on $(x) = $(t:J=" ") ;
+            appender-run += [$(target-index)/$(target-count)] ;
         }
-        append1 $(x) : $(sources) : $(properties) ;
-    }
-    original-targets on $(targets) = '$(original-targets:J="' '")' ;
-    if ! $(targets[2])-defined
-    {
-        appender-run on $(targets) = $(appender-runs) ;
+        append $(targets) : $(appender-run:J=" ") $(t) $(sources) ;
     }
 }
 
-actions append1
+actions append
 {
-    $(ECHO_CMD)----------------------------------------------------$(X)
-    $(ECHO_CMD)Appender run: $(appender-run)$(X)
-    $(ECHO_CMD)Appender run: $(appender-run)$(X)>> "$(<)"
-    $(ECHO_CMD)Target group: $(original-targets)$(X)
-    $(ECHO_CMD)Target group: $(original-targets)$(X)>> "$(<)"
-    $(ECHO_CMD)      Target: '$(<)'$(X)
-    $(ECHO_CMD)      Target: '$(<)'$(X)>> "$(<)"
-    $(ECHO_CMD)     Sources: '$(>:J=' ')'$(X)
-    $(ECHO_CMD)     Sources: '$(>:J=' ')'$(X)>> "$(<)"
-    $(ECHO_CMD)====================================================$(X)
-    $(ECHO_CMD)----------------------------------------------------$(X)>> "$(<)"
+    $(ECHO_CMD)-------------------------------------------------$(X)
+    $(ECHO_CMD)Appender run: $(>[1])$(X)
+    $(ECHO_CMD)Appender run: $(>[1])$(X)>> "$(>[2])"
+    $(ECHO_CMD)Target group: $(<:J=' ')$(X)
+    $(ECHO_CMD)Target group: $(<:J=' ')$(X)>> "$(>[2])"
+    $(ECHO_CMD)      Target: '$(>[2])'$(X)
+    $(ECHO_CMD)      Target: '$(>[2])'$(X)>> "$(>[2])"
+    $(ECHO_CMD)     Sources: '$(>[3-]:J=' ')'$(X)
+    $(ECHO_CMD)     Sources: '$(>[3-]:J=' ')'$(X)>> "$(>[2])"
+    $(ECHO_CMD)=================================================$(X)
+    $(ECHO_CMD)-------------------------------------------------$(X)>> "$(>[2])"
 }
