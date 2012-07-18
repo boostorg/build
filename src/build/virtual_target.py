@@ -809,8 +809,8 @@ class Action:
             bjam.call("INCLUDES", actual_targets, actual_targets)
 
         # FIXME: check the comment below. Was self.action_name_ [1]
-        # Action name can include additional argument to rule, which should not
-        # be passed to 'set-target-variables'
+        # Action name can include additional rule arguments, which should not
+        # be passed to 'set-target-variables'.
         # FIXME: breaking circular dependency
         import toolset
         toolset.set_target_variables (self.manager_, self.action_name_, actual_targets, properties)
