@@ -105,13 +105,14 @@ int file_collect_dir_content_( file_info_t * const d )
             path_build( &f, pathname );
 
             {
-                file_info_t * const ff = file_info( pathname->value );
+                file_info_t * const ff = file_info( object_new( pathname->value
+                    ) );
                 ff->is_dir = finfo.ff_attrib & FA_DIREC ? 1 : 0;
                 ff->is_file = !ff->is_dir;
                 ff->size = finfo.ff_fsize;
                 timestamp_init( &ff->time, ( finfo.ff_ftime << 16 ) |
                     finfo.ff_ftime, 0 );
-                files = list_push_back( files, object_new( pathname->value ) );
+                files = list_push_back( files, object_copy( ff->name ) );
             }
         }
         while ( !findnext( &finfo ) );
