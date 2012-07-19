@@ -23,13 +23,11 @@ rule register ( id composing ? : source-types + : target-types + )
 
 if [ modules.peek : NT ]
 {
-    escape-char = ^ ;
     X = ")" ;
     ECHO_CMD = (echo. ;
 }
 else
 {
-    escape-char = \\ ;
     X = \" ;
     ECHO_CMD = "echo $(X)" ;
 }
