@@ -153,11 +153,7 @@ class virtual-target
             if ! $(self.made.$(name))
             {
                 self.made.$(name) = true ;
-
-                DEPENDS $(name) : $(actual-name) ;
-
                 actualize-location $(name) ;
-
                 scanner.install $(scanner) : $(name) ;
             }
             return $(name) ;
@@ -574,7 +570,31 @@ class file-target : abstract-file-target
 
     rule actualize-location ( target )
     {
-        if $(self.action)
+        # Scanner targets are always bound to already existing files in already
+        # existing folder. They need to be marked as depending on their base
+        # target (i.e. the target being scanned) but, unlike regular
+        # dependencies set up by the DEPENDS rule, they must not depend on any
+        # targets already marked as included by the base target. Otherwise such
+        # an included file being newer than the file being scanned would cause
+        # the scanner target to be updated, further causing any target depending
+        # on that scanner target to be rebuild. This is the exact relationship
+        # as set up by Boost Jam's SEARCH binding method (needed to support
+        # searching for generated targets) so we want to bind scanner targets
+        # using this methon instead of explicitly specifying their location
+        # using LOCATE.
+        #
+        # FIXME: We recognize scanner targets by their given name being
+        # different from this target's actual name. This is a hack and should be
+        # cleaned up by reorganizing who knows about scanners in the
+        # virtual-target/abstract-file-target/file-target/notfile-target/
+        # searched-lib-target/... class hierarchy.
+        local is-scanner-target ;
+        if $(target) != [ actual-name ]
+        {
+            is-scanner-target = true ;
+        }
+
+        if $(self.action) && ! $(is-scanner-target)
         {
             # This is a derived file.
             local path = [ path ] ;
