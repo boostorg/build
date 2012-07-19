@@ -146,8 +146,8 @@ class virtual-target
         else
         {
             # Add the scanner instance to the grist for name.
-            local g = [ sequence.join
-                [ utility.ungrist $(actual-name:G) ] $(scanner) : - ] ;
+            local g = [ sequence.join [ utility.ungrist $(actual-name:G) ]
+                $(scanner) : - ] ;
             local name = $(actual-name:G=$(g)) ;
 
             if ! $(self.made.$(name))
