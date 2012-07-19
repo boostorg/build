@@ -473,6 +473,18 @@ class Tester(TestCmd.TestCmd):
             old_last_build_timestamp = self.last_build_timestamp
             self.last_build_timestamp = self.__get_current_file_timestamp()
 
+        self.tree = tree.build_tree(self.workdir)
+        self.difference = tree.trees_difference(self.previous_tree, self.tree)
+        if self.difference.empty():
+            # If nothing has been changed by this build and sufficient time has
+            # passed since the last build that actually changed something,
+            # there is no need to wait for touched or newly created files to
+            # start getting newer timestamps than the currently existing ones.
+            self.last_build_timestamp = old_last_build_timestamp
+
+        self.difference.ignore_directories()
+        self.unexpected_difference = copy.deepcopy(self.difference)
+
         if (status and self.status) is not None and self.status != status:
             expect = ''
             if status != 0:
@@ -513,18 +525,6 @@ class Tester(TestCmd.TestCmd):
                     "finish in under %f seconds." % (actual_duration,
                     expected_duration))
                 self.fail_test(1, dump_stdio=False)
-
-        self.tree = tree.build_tree(self.workdir)
-        self.difference = tree.trees_difference(self.previous_tree, self.tree)
-        if self.difference.empty():
-            # If nothing has been changed by this build and sufficient time has
-            # passed since the last build that actually changed something,
-            # there is no need to wait for touched or newly created files to
-            # start getting newer timestamps than the currently existing ones.
-            self.last_build_timestamp = old_last_build_timestamp
-
-        self.difference.ignore_directories()
-        self.unexpected_difference = copy.deepcopy(self.difference)
 
     def glob_file(self, name):
         result = None
