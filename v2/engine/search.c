@@ -162,7 +162,7 @@ OBJECT * search( OBJECT * target, timestamp * const time,
             {
                 if ( DEBUG_SEARCH )
                     printf(" search %s: found explicitly located target %s\n",
-                           object_str( target ), object_str( ba->target ) );
+                        object_str( target ), object_str( ba->target ) );
                 if ( another_target )
                     *another_target = ba->target;
                 found = 1;
