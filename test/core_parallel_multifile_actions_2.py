@@ -7,15 +7,16 @@
 
 #   Added to guard against a bug causing targets to be used before they
 # themselves have finished building. This used to happen for targets built by a
-# multi-file action that got triggered by another target, except when the target
-# triggering the action was the first one in the list of targets produced by
-# that action.
+# multi-file action that got triggered by another target, except when the
+# target triggering the action was the first one in the list of targets
+# produced by that action.
 #
 # Example:
 #   When target A and target B were declared as created by a single action with
-# A being the first one listed, and target B triggered running that action then
-# while the action was still running, target A was already reporting as being
-# built causing other targets depending on target A to be built prematurely.
+# A being the first one listed, and target B triggered running that action
+# then, while the action was still running, target A was already reporting as
+# being built causing other targets depending on target A to be built
+# prematurely.
 
 import BoostBuild
 

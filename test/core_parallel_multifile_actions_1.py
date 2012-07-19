@@ -5,6 +5,16 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
+#   Added to guard against a bug causing targets to be used before they
+# themselves have finished building. This used to happen for targets built by a
+# multi-file action that got triggered by another target.
+#
+# Example:
+#   When target A and target B were declared as created by a single action and
+# target A triggered running that action then, while the action was still
+# running, target B was already reporting as being built causing other targets
+# depending on target A to be built prematurely.
+
 import BoostBuild
 
 t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
@@ -49,13 +59,11 @@ actions .use.2
 .use.1 u1.user : g1.generated ;
 .use.2 u2.user : g2.generated ;
 
-NOTFILE root ;
-DEPENDS g1.generated g2.generated : root ;
 DEPENDS all : u1.user u2.user ;
 """)
 
 t.run_build_system(["-ffile.jam", "-j2"], stdout="""\
-...found 6 targets...
+...found 5 targets...
 ...updating 4 targets...
 .gen. g1.generated
 001
