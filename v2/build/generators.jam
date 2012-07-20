@@ -502,18 +502,15 @@ class generator
         # second case -- not sure, but for now take the part up to the last dot
         # too.
         name = [ utility.basename [ $(sources[1]).name ] ] ;
-
         for local s in $(sources[2])
         {
-            local n2 = [ utility.basename [ $(s).name ] ] ;
-            if $(n2) != $(name)
+            if [ utility.basename [ $(s).name ] ] != $(name)
             {
                 import errors : error : errors.error ;
                 errors.error "$(self.id): source targets have different names: cannot determine target name" ;
             }
         }
-        name = [ determine-target-name [ $(sources[1]).name ] ] ;
-        return $(name) ;
+        return [ determine-target-name [ $(sources[1]).name ] ] ;
     }
 
     # Constructs targets that are created after consuming 'sources'. The result
