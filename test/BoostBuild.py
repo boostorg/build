@@ -333,8 +333,9 @@ class Tester(TestCmd.TestCmd):
                 os.chmod(name, os.stat(name)[0] | 0222)
         os.path.walk(".", make_writable, None)
 
-    def write(self, file, content):
-        self.wait_for_time_change_since_last_build()
+    def write(self, file, content, wait=True):
+        if wait:
+            self.wait_for_time_change_since_last_build()
         nfile = self.native_file_name(file)
         try:
             os.makedirs(os.path.dirname(nfile))
@@ -371,8 +372,9 @@ class Tester(TestCmd.TestCmd):
         self.write(dst, self.read(src, 1))
         os.utime(dst_name, (stats.st_atime, stats.st_mtime))
 
-    def touch(self, names):
-        self.wait_for_time_change_since_last_build()
+    def touch(self, names, wait=True):
+        if wait:
+            self.wait_for_time_change_since_last_build()
         for name in self.adjust_names(names):
             os.utime(self.native_file_name(name), None)
 
