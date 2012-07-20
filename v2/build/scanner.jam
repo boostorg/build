@@ -40,7 +40,7 @@ class scanner
     #
     rule pattern ( )
     {
-        import errors ;
+        import errors : error : errors.error ;
         errors.error "method must be overriden" ;
     }
 
@@ -49,7 +49,7 @@ class scanner
     #
     rule process ( target : matches * )
     {
-        import errors ;
+        import errors : error : errors.error ;
         errors.error "method must be overriden" ;
     }
 }

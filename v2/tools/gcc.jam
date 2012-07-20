@@ -326,7 +326,7 @@ class gcc-pch-generator : pch-generator
         if $(header-basename) != $(name)
         {
             local location = [ $(project).project-module ] ;
-            import errors ;
+            import errors : user-error : errors.user-error ;
             errors.user-error "in" $(location): pch target name '$(name)' should
                 be the same as the base name of header file '$(header-name)' ;
         }
