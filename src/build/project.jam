@@ -790,8 +790,7 @@ rule use ( id : location )
         {
             import errors ;
             errors.user-error Attempt to redeclare already existing project id
-                '$(id)'
-                location '$(location)' ;
+                '$(id)' location '$(location)' ;
         }
         $(id).jamfile-module = $(project-module) ;
     }
