@@ -66,7 +66,7 @@ appender.register ui-to-h : tUI : tUI_H ;
 ################################################################################
 
 type.register X1 : x1 ;
-type.register X2 : x2  ;
+type.register X2 : x2 ;
 type.register X_PRO : x_pro ;
 
 appender.register x1-x2-to-cpp : X1 X2 : CPP ;

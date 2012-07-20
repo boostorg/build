@@ -247,7 +247,6 @@ void load_builtins()
                        builtin_rulenames, 0, args );
     }
 
-
     {
         char const * args[] = { "module", "?", 0 };
         bind_builtin( "VARNAMES",
@@ -1473,11 +1472,11 @@ LIST * builtin_update_now( FRAME * frame, int flags )
 
 LIST * builtin_import_module( FRAME * frame, int flags )
 {
-    LIST * arg1 = lol_get( frame->args, 0 );
-    LIST * arg2 = lol_get( frame->args, 1 );
-    module_t * m = !list_empty( arg2 )
-        ? bindmodule( list_front( arg2 ) )
-        : root_module();
+    LIST * const arg1 = lol_get( frame->args, 0 );
+    LIST * const arg2 = lol_get( frame->args, 1 );
+    module_t * const m = list_empty( arg2 )
+        ? root_module()
+        : bindmodule( list_front( arg2 ) );
     import_module( arg1, m );
     return L0;
 }

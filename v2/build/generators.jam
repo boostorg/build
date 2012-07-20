@@ -44,7 +44,6 @@
 # converting between given target types.
 
 import "class" : new ;
-import errors ;
 import property-set ;
 import sequence ;
 import set ;
@@ -162,17 +161,16 @@ local rule decrease-indent ( )
 #
 class generator
 {
-    import generators : indent increase-indent decrease-indent generators.dout ;
-    import set ;
-    import utility ;
+    import "class" : new ;
     import feature ;
-    import errors ;
+    import generators : indent increase-indent decrease-indent generators.dout ;
+    import utility ;
+    import path ;
+    import property ;
     import sequence ;
+    import set ;
     import type ;
     import virtual-target ;
-    import "class" : new ;
-    import property ;
-    import path ;
 
     EXPORT class@generator : indent increase-indent decrease-indent
         generators.dout ;
@@ -262,17 +260,17 @@ class generator
     {
         return $(self.requirements) ;
     }
-    
+
     rule set-rule-name ( rule-name )
     {
         self.rule-name = $(rule-name) ;
     }
-    
+
     rule rule-name ( )
     {
         return $(self.rule-name) ;
     }
-        
+
     # Returns a true value if the generator can be run with the specified
     # properties.
     #
@@ -319,7 +317,7 @@ class generator
             # Note: this does not remove any subfeatures of <toolset> which
             # might cause problems.
             [ property.change $(self.requirements) : <toolset> ]
-            $(new-toolset-properties) ] ;       
+            $(new-toolset-properties) ] ;
         return $(g) ;
     }
 
@@ -346,10 +344,10 @@ class generator
         local g = [ new $(__class__) $(self.id) $(self.composing) :
             $(self.source-types) : $(target-types) : $(self.requirements) ] ;
         if $(self.rule-name)
-        {            
+        {
             $(g).set-rule-name $(self.rule-name) ;
-        }        
-        return $(g) ;        
+        }
+        return $(g) ;
     }
 
     # Tries to invoke this generator on the given sources. Returns a list of
@@ -372,6 +370,7 @@ class generator
 
         if ! $(self.composing) && $(sources[2]) && $(self.source-types[2])
         {
+            import errors : error : errors.error ;
             errors.error "Unsupported source/source-type combination" ;
         }
 
@@ -471,23 +470,22 @@ class generator
     rule determine-target-name ( fullname  : prefix ? : postfix ? )
     {
         # See if we need to add directory to the target name.
-        local dir  = $(fullname:D) ;            
-        local name = $(fullname:B) ; 
-        
+        local dir  = $(fullname:D) ;
+        local name = $(fullname:B) ;
+
         name = $(prefix:E=)$(name) ;
         name = $(name)$(postfix:E=) ;
 
-        if $(dir) && 
-          # Never append '..' to target path.
-          ! [ MATCH .*(\\.\\.).* : $(dir) ] 
-            && 
-          ! [ path.is-rooted $(dir) ]
+        if $(dir)
+            # Never append '..' to target path.
+            && ! [ MATCH .*(\\.\\.).* : $(dir) ]
+            && ! [ path.is-rooted $(dir) ]
         {
-            # Relative path is always relative to the source
-            # directory. Retain it, so that users can have files
-            # with the same name in two different subdirectories.
-            name = $(dir)/$(name) ;                
-        }            
+            # Relative path is always relative to the source directory. Retain
+            # it, so that users can have files with the same name in two
+            # different subdirectories.
+            name = $(dir)/$(name) ;
+        }
         return $(name) ;
     }
 
@@ -510,6 +508,7 @@ class generator
             local n2 = [ utility.basename [ $(s).name ] ] ;
             if $(n2) != $(name)
             {
+                import errors : error : errors.error ;
                 errors.error "$(self.id): source targets have different names: cannot determine target name" ;
             }
         }
@@ -697,7 +696,7 @@ class generator
 rule register ( g )
 {
     .all-generators += $(g) ;
-        
+
     # A generator can produce several targets of the same type. We want unique
     # occurrence of that generator in .generators.$(t) in that case, otherwise,
     # it will be tried twice and we will get a false ambiguity.
@@ -1082,6 +1081,7 @@ local rule ensure-type ( targets * )
     {
         if ! [ $(t).type ]
         {
+            import errors ;
             errors.error "target" [ $(t).str ] "has no type" ;
         }
     }
@@ -1194,7 +1194,7 @@ rule find-viable-generators ( target-type : property-set )
         else
         {
             generators.dout [ indent ] "   generator " [ $(g).id ] "is active, discaring" ;
-        }        
+        }
     }
 
     # Generators which override 'all'.
@@ -1313,7 +1313,7 @@ rule construct ( project name ? : target-type : property-set * : sources * : top
         saved-active = $(.active-generators) ;
         .active-generators = ;
     }
-        
+
     if (.construct-stack)
     {
         ensure-type $(sources) ;
@@ -1340,7 +1340,7 @@ rule construct ( project name ? : target-type : property-set * : sources * : top
     decrease-indent ;
 
     .construct-stack = $(.construct-stack[2-]) ;
-    
+
     if $(top-level)
     {
         .active-generators = $(saved-active) ;
@@ -1374,7 +1374,7 @@ rule dump ( )
 {
     for local g in $(.all-generators)
     {
-        ECHO [ $(g).id ] ":" [ $(g).source-types ] -> [ $(g).target-types ] ;            
-    }    
+        ECHO [ $(g).id ] ":" [ $(g).source-types ] -> [ $(g).target-types ] ;
+    }
 }
 
