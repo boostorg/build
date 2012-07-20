@@ -242,6 +242,94 @@ nm-exe e : e.cpp ;
     t.cleanup()
 
 
+def test_generated_target_names():
+    """
+      Test generator generated target names. Unless given explicitly, target
+    names should be determined based on their specified source names. All
+    sources for generating a target need to have matching names in order for
+    Boost Build to be able to implicitly determine the target's name.
+
+      We use the following target generation structure with differently named
+    BBX targets:
+                       /---> BB1 ---\
+                AAA --<----> BB2 ---->--> CCC --(composing)--> DDD
+                       \---> BB3 ---/
+
+      The extra generator at the end is needed because generating a top-level
+    CCC target directly would requires us to explicitly specify a name for it.
+    The extra generator needs to be composing in order not to explicitly
+    request a specific name for its CCC source target based on its own target
+    name.
+
+      We also check for a regression where only the first two sources were
+    checked to see if their names match. Note that we need to try out all file
+    renaming combinations as we do not know what ordering Boost Build is going
+    to use when passing in those files as generator sources.
+
+    """
+    jamfile_template = """\
+import type ;
+type.register AAA : _a ;
+type.register BB1 : _b1 ;
+type.register BB2 : _b2 ;
+type.register BB3 : _b3 ;
+type.register CCC : _c ;
+type.register DDD : _d ;
+
+import appender ;
+appender.register aaa-to-bbX           : AAA         : BB1%s BB2%s BB3%s ;
+appender.register bbX-to-ccc           : BB1 BB2 BB3 : CCC ;
+appender.register ccc-to-ddd composing : CCC         : DDD ;
+
+ddd _xxx : _xxx._a ;
+"""
+
+    t = BoostBuild.Tester(pass_d0=False)
+    __write_appender(t, "appender.jam")
+    t.write("_xxx._a", "")
+
+    def test_one(t, rename1, rename2, rename3, status):
+        def f(rename):
+            if rename: return "(%_x)"
+            return ""
+
+        jamfile = jamfile_template % (f(rename1), f(rename2), f(rename3))
+        t.write("jamroot.jam", jamfile, wait=False)
+
+        #   Remove any preexisting targets left over from a previous test run
+        # so we do not have to be careful about tracking which files have been
+        # newly added and which preexisting ones have only been modified.
+        t.rm("bin")
+
+        t.run_build_system(status=status)
+
+        if status:
+            t.expect_output_line("*.bbX-to-ccc: source targets have different "
+                "names: cannot determine target name")
+        else:
+            def suffix(rename):
+                if rename: return "_x"
+                return ""
+            name = "bin/$toolset/debug/_xxx"
+            e = t.expect_addition
+            e("%s%s._b1" % (name, suffix(rename1)))
+            e("%s%s._b2" % (name, suffix(rename2)))
+            e("%s%s._b3" % (name, suffix(rename3)))
+            e("%s%s._c" % (name, suffix(rename1 and rename2 and rename3)))
+            e("%s._d" % name)
+        t.expect_nothing_more()
+
+    test_one(t, False, False, False, status=0)
+    test_one(t, True , False, False, status=1)
+    test_one(t, False, True , False, status=1)
+    test_one(t, False, False, True , status=1)
+    test_one(t, True , True , False, status=1)
+    test_one(t, True , False, True , status=1)
+    test_one(t, False, True , True , status=1)
+    test_one(t, True , True , True , status=0)
+    t.cleanup()
+
+
 def __match_count_is(lines, pattern, expected):
     count = 0
     for x in lines:
@@ -340,3 +428,4 @@ actions append
 
 
 test_basic()
+test_generated_target_names()
