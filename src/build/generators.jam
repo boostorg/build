@@ -502,7 +502,7 @@ class generator
         # second case -- not sure, but for now take the part up to the last dot
         # too.
         name = [ utility.basename [ $(sources[1]).name ] ] ;
-        for local s in $(sources[2])
+        for local s in $(sources[2-])
         {
             if [ utility.basename [ $(s).name ] ] != $(name)
             {
