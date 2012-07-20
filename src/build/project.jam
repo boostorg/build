@@ -35,7 +35,6 @@
 # their project id.
 
 import "class" : new ;
-import errors ;
 import modules ;
 import path ;
 import print ;
@@ -124,6 +123,7 @@ rule act-as-jamfile ( module : location )
 {
     if [ module-name $(location) ] in $(.jamfile-modules)
     {
+        import errors ;
         errors.error "Jamfile was already loaded for '$(location)'" ;
     }
     # Set up non-default mapping from location to module.
@@ -207,8 +207,8 @@ JAMFILE ?= [Bb]uild.jam [Jj]amfile.v2 [Jj]amfile [Jj]amfile.jam ;
 # directory given in it.
 #
 rule find-jamfile (
-    dir # The directory(s) to look for a Jamfile.
-    parent-root ? # Optional flag indicating to search for the parent Jamfile.
+    dir            # The directory(s) to look for a Jamfile.
+    parent-root ?  # Optional flag indicating to search for the parent Jamfile.
     : no-errors ?
     )
 {
@@ -261,6 +261,7 @@ rule find-jamfile (
     #
     if ! $(no-errors) && ! $(jamfile-to-load)
     {
+        import errors ;
         errors.error Unable to load Jamfile.
             : Could not find a Jamfile in directory '$(dir)'.
             : Attempted to find it with pattern '$(JAMFILE:J=" ")'.
@@ -290,8 +291,9 @@ local rule load-jamfile (
 
     if $(jamfile-to-load[2])
     {
-        errors.error "Multiple Jamfiles found at '$(dir)'"
-          :  "Filenames are: " $(jamfile-to-load:D=) ;
+        import errors ;
+        errors.error "Multiple Jamfiles found at '$(dir)'" :
+            "Filenames are: " $(jamfile-to-load:D=) ;
     }
 
     # Now load the Jamfile in it's own context.
@@ -327,12 +329,14 @@ local rule load-jamfile (
             # Now do some checks.
             if $(.current-project) != $(saved-project)
             {
-                errors.error "The value of the .current-project variable has magically"
-                    : "changed after loading a Jamfile. This means some of the targets"
-                    : "might be defined in the wrong project."
-                    : "after loading" $(jamfile-module)
-                    : "expected value" $(saved-project)
-                    : "actual value" $(.current-project) ;
+                import errors ;
+                errors.error
+                    The value of the .current-project variable has magically
+                    : changed after loading a Jamfile. This means some of the
+                    : targets might be defined in the wrong project.
+                    : after loading $(jamfile-module)
+                    : expected value $(saved-project)
+                    : actual value $(.current-project) ;
             }
 
             if $(.global-build-dir)
@@ -479,6 +483,7 @@ rule initialize (
             local s = [ modules.binding $(module-name) ] ;
             if ! $(s)
             {
+                import errors ;
                 errors.error "Could not determine project location $(module-name)" ;
             }
             $(attributes).set source-location : $(s:D) : exact ;
@@ -584,7 +589,6 @@ class project-attributes
 {
     import property ;
     import property-set ;
-    import errors ;
     import path ;
     import print ;
     import sequence ;
@@ -615,13 +619,12 @@ class project-attributes
 
             if $(result[1]) = "@error"
             {
+                import errors : error : errors.error ;
                 errors.error Requirements for project at '$(self.location)'
                     conflict with parent's. : Explanation: $(result[2-]) ;
             }
-            else
-            {
-                self.requirements = $(result) ;
-            }
+
+            self.requirements = $(result) ;
         }
         else if $(attribute) = "usage-requirements"
         {
@@ -636,6 +639,7 @@ class project-attributes
             local non-free = [ property.remove free : $(unconditional) ] ;
             if $(non-free)
             {
+                import errors : error : errors.error ;
                 errors.error usage-requirements $(specification) have non-free
                     properties $(non-free) ;
             }
@@ -678,6 +682,7 @@ class project-attributes
         else if ! $(attribute) in "default-build" "location" "parent"
             "projects-to-build" "project-root" "source-location"
         {
+            import errors : error : errors.error ;
             errors.error Invalid project attribute '$(attribute)' specified for
                 project at '$(self.location)' ;
         }
@@ -783,6 +788,7 @@ rule use ( id : location )
         if $($(id).jamfile-module) && ( $($(id).jamfile-module) !=
             $(project-module) )
         {
+            import errors ;
             errors.user-error Attempt to redeclare already existing project id
                 '$(id)'
                 location '$(location)' ;
@@ -921,7 +927,6 @@ module project-rules
 
     rule project ( id ? : options * : * )
     {
-        import errors ;
         import path ;
         import project ;
 
@@ -969,6 +974,7 @@ module project-rules
                     if $(explicit-build-dir) &&
                         [ path.is-rooted $(explicit-build-dir) ]
                     {
+                        import errors ;
                         errors.user-error Absolute directory specified via
                             'build-dir' project attribute : Do not know how to
                             combine that with the --build-dir option. ;
@@ -986,6 +992,7 @@ module project-rules
                 # Not Jamroot.
                 if $(explicit-build-dir)
                 {
+                    import errors ;
                     errors.user-error When --build-dir is specified, the
                         'build-dir' project : attribute is allowed only for
                         top-level 'project' invocations ;
@@ -1080,6 +1087,7 @@ module project-rules
 
         if $(wildcards:D) || $(excludes:D)
         {
+            import errors ;
             errors.user-error The patterns to 'glob-tree' may not include
                 directory ;
         }

@@ -46,7 +46,8 @@ local rule run-module-test ( m )
             }
 
             local test-module = __test-$(m)__ ;
-            IMPORT $(m) : [ RULENAMES $(m) ] : $(test-module) : [ RULENAMES $(m) ] ;
+            IMPORT $(m) : [ RULENAMES $(m) ] : $(test-module) : [ RULENAMES $(m)
+                ] ;
             IMPORT $(m) : __test__ : $(test-module) : __test__ : LOCALIZE ;
             module $(test-module)
             {
@@ -260,8 +261,8 @@ rule import ( module-names + : rules-opt * : rename-opt * )
     {
         if ! $(m) in $(.loaded)
         {
-            # If the importing module isn't already in the BOOST_BUILD_PATH,
-            # prepend it to the path.  We don't want to invert the search order
+            # If the importing module is not already in the BOOST_BUILD_PATH,
+            # prepend it to the path.  We do not want to invert the search order
             # of modules that are already there.
 
             local caller-location ;
@@ -269,7 +270,8 @@ rule import ( module-names + : rules-opt * : rename-opt * )
             {
                 caller-location = [ binding $(caller) ] ;
                 caller-location = $(caller-location:D) ;
-                caller-location = [ normalize-raw-paths $(caller-location:R=$(.cwd)) ] ;
+                caller-location = [ normalize-raw-paths
+                    $(caller-location:R=$(.cwd)) ] ;
             }
 
             local search = [ peek : BOOST_BUILD_PATH ] ;
@@ -312,11 +314,10 @@ rule import ( module-names + : rules-opt * : rename-opt * )
 #
 rule clone-rules ( source-module target-module )
 {
-    local rules = [ RULENAMES $(source-module) ] ;
-
-    IMPORT $(source-module) : $(rules) : $(target-module) : $(rules) : LOCALIZE ;
-    EXPORT $(target-module) : $(rules) ;
-    IMPORT $(target-module) : $(rules) : : $(target-module).$(rules) ;
+    local r = [ RULENAMES $(source-module) ] ;
+    IMPORT $(source-module) : $(r) : $(target-module) : $(r) : LOCALIZE ;
+    EXPORT $(target-module) : $(r) ;
+    IMPORT $(target-module) : $(r) : : $(target-module).$(r) ;
 }
 
 

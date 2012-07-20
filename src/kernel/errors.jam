@@ -13,8 +13,8 @@ rule backtrace ( skip-frames prefix messages * : * )
     local drop-elements = $(frame-skips[$(skip-frames)]) ;
     if ! ( $(skip-frames) in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 )
     {
-        ECHO "warning: backtrace doesn't support skipping $(skip-frames) frames;"
-            "using 1 instead." ;
+        ECHO "warning: backtrace doesn't support skipping $(skip-frames) "
+            "frames; using 1 instead." ;
         drop-elements = 5 ;
     }
 
@@ -25,7 +25,7 @@ rule backtrace ( skip-frames prefix messages * : * )
         ECHO "$(prefix) at $(bt) " ;
         for local n in $(args)
         {
-            if $($(n))-is-not-empty
+            if $($(n))-is-defined
             {
                 ECHO $(prefix) $($(n)) ;
             }
@@ -46,7 +46,7 @@ rule backtrace ( skip-frames prefix messages * : * )
             # The first time through, print each argument on a separate line.
             for local n in $(args)
             {
-                if $($(n))-is-not-empty
+                if $($(n))-is-defined
                 {
                     ECHO $(prefix) $($(n)) ;
                 }
@@ -89,7 +89,7 @@ rule catch ( messages * : * )
 
     import sequence ;
 
-    if ! $(.last-error-$(.args))-is-not-empty
+    if ! $(.last-error-$(.args))-is-defined
     {
         error-skip-frames 3 expected an error, but none occurred ;
     }
@@ -123,8 +123,8 @@ rule error-skip-frames ( skip-frames messages * : * )
     {
         for local n in $(.args)
         {
-            # Add an extra empty string so that we always have
-            # something in the event of an error
+            # Add an extra empty string so that we always have something in the
+            # event of an error.
             .last-error-$(n) = $($(n)) "" ;
         }
     }
@@ -142,10 +142,11 @@ rule error ( messages * : * )
 {
     if $(.no-error-backtrace)
     {
+        local first-printed ;
         # Print each argument on a separate line.
         for local n in $(.args)
         {
-            if $($(n))-is-not-empty
+            if $($(n))-is-defined
             {
                 if ! $(first-printed)
                 {
@@ -162,7 +163,8 @@ rule error ( messages * : * )
     }
     else
     {
-        error-skip-frames 3 $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        error-skip-frames 3 $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) :
+            $(8) : $(9) ;
     }
 }
 
@@ -172,7 +174,8 @@ rule error ( messages * : * )
 rule user-error ( messages * : * )
 {
     .user-modules-only = 1 ;
-    error-skip-frames 3 $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    error-skip-frames 3 $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
+        $(9) ;
 }
 
 
@@ -180,7 +183,8 @@ rule user-error ( messages * : * )
 #
 rule warning
 {
-    backtrace 2 warning: $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    backtrace 2 warning: $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
+        $(9) ;
 }
 
 
