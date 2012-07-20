@@ -48,7 +48,7 @@ rule register ( type : suffixes * : base-type ? )
         import errors ;
         errors.error "Type $(type) is already registered." ;
     }
-    else
+
     {
         .types += $(type) ;
         .base.$(type) = $(base-type) ;
