@@ -33,10 +33,6 @@
 #include "strings.h"
 
 #ifdef __BORLANDC__
-# if __BORLANDC__ < 0x550
-#  include <dir.h>
-#  include <dos.h>
-# endif
 # undef FILENAME  /* cpp namespace collision */
 #endif
 
@@ -87,37 +83,6 @@ int file_collect_dir_content_( file_info_t * const d )
         string_append( pathspec, "*" );
     }
 
-#if defined(__BORLANDC__) && __BORLANDC__ < 0x550
-    {
-        struct ffblk finfo;
-        if ( findfirst( pathspec->value, &finfo, FA_NORMAL | FA_DIREC ) )
-        {
-            string_free( pathspec );
-            return -1;
-        }
-
-        string_new( pathname );
-        do
-        {
-            f.f_base.ptr = finfo.ff_name;
-            f.f_base.len = strlen( finfo.ff_name );
-            string_truncate( pathname, 0 );
-            path_build( &f, pathname );
-
-            {
-                file_info_t * const ff = file_info( object_new( pathname->value
-                    ) );
-                ff->is_dir = finfo.ff_attrib & FA_DIREC ? 1 : 0;
-                ff->is_file = !ff->is_dir;
-                ff->size = finfo.ff_fsize;
-                timestamp_init( &ff->time, ( finfo.ff_ftime << 16 ) |
-                    finfo.ff_ftime, 0 );
-                files = list_push_back( files, object_copy( ff->name ) );
-            }
-        }
-        while ( !findnext( &finfo ) );
-    }
-#else  /* defined(__BORLANDC__) && __BORLANDC__ < 0x550 */
     {
         struct _finddata_t finfo;
         long const handle = _findfirst( pathspec->value, &finfo );
@@ -152,7 +117,6 @@ int file_collect_dir_content_( file_info_t * const d )
 
         _findclose( handle );
     }
-#endif  /* defined(__BORLANDC__) && __BORLANDC__ < 0x550 */
 
     string_free( pathname );
     string_free( pathspec );
