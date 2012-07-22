@@ -45,10 +45,8 @@
 #include "constants.h"
 #include "hash.h"
 #include "hdrmacro.h"
-#include "lists.h"
 #include "make.h"
 #include "modules.h"
-#include "object.h"
 #include "parse.h"
 #include "rules.h"
 #include "search.h"
@@ -132,10 +130,9 @@ LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
     if ( rule->actions )
     {
         TARGETS * t;
-        ACTION  * action;
 
         /* The action is associated with this instance of this rule. */
-        action = (ACTION *)BJAM_MALLOC( sizeof( ACTION ) );
+        ACTION * const action = (ACTION *)BJAM_MALLOC( sizeof( ACTION ) );
         memset( (char *)action, '\0', sizeof( *action ) );
 
         action->rule = rule;

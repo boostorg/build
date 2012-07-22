@@ -1,22 +1,19 @@
 #include "jam.h"
+#include "subst.h"
 
 #include "builtins.h"
-#include "compile.h"
 #include "frames.h"
 #include "hash.h"
 #include "lists.h"
-#include "object.h"
-#include "regexp.h"
 
 #include <stddef.h>
 
 
-struct regex_entry
+typedef struct regex_entry
 {
     OBJECT * pattern;
     regexp * regex;
-};
-typedef struct regex_entry regex_entry;
+} regex_entry;
 
 static struct hash * regex_hash;
 
@@ -103,7 +100,7 @@ LIST * builtin_subst( FRAME * frame, int flags )
 
 static void free_regex( void * xregex, void * data )
 {
-    regex_entry * regex = (regex_entry *)xregex;
+    regex_entry * const regex = (regex_entry *)xregex;
     object_free( regex->pattern );
     BJAM_FREE( regex->regex );
 }

@@ -19,11 +19,11 @@
 #include "native.h"
 #include "object.h"
 #include "parse.h"
-#include "regexp.h"
 #include "rules.h"
 #include "pathsys.h"
 #include "pwd.h"
 #include "strings.h"
+#include "subst.h"
 #include "timestamp.h"
 #include "variable.h"
 

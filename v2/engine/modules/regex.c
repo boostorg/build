@@ -2,12 +2,10 @@
 /* Software License, Version 1.0. (See accompanying */
 /* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
 
-#include "../compile.h"
 #include "../mem.h"
 #include "../native.h"
-#include "../object.h"
-#include "../regexp.h"
 #include "../strings.h"
+#include "../subst.h"
 
 
 /*
@@ -35,7 +33,7 @@ LIST * regex_transform( FRAME * frame, int flags )
     int * indices = 0;
     int size;
     int * p;
-    LIST* result = L0;
+    LIST * result = L0;
 
     string buf[ 1 ];
     string_new( buf );
@@ -58,7 +56,7 @@ LIST * regex_transform( FRAME * frame, int flags )
 
     {
         /* Result is cached and intentionally never freed */
-        regexp * re = regex_compile( list_front( pattern ) );
+        regexp * const re = regex_compile( list_front( pattern ) );
 
         LISTITER iter = list_begin( l );
         LISTITER const end = list_end( l );
@@ -69,7 +67,7 @@ LIST * regex_transform( FRAME * frame, int flags )
                 int i = 0;
                 for ( ; i < size; ++i )
                 {
-                    int index = indices[ i ];
+                    int const index = indices[ i ];
                     /* Skip empty submatches. Not sure it is right in all cases,
                      * but surely is right for the case for which this routine
                      * is optimized -- header scanning.
@@ -89,7 +87,6 @@ LIST * regex_transform( FRAME * frame, int flags )
     }
 
     BJAM_FREE( indices );
-
     return result;
 }
 
