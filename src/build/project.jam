@@ -1104,10 +1104,12 @@ module project-rules
     rule option ( name : value )
     {
         local m = [ CALLER_MODULE ] ;
-        if $(m) != site-config && $(m) != user-config && $(m) != project-config
+        local cfgs = project site test user ;
+        if ! $(m) in $(cfgs)-config
         {
             import errors ;
-            errors.error "The 'option' rule may be used only in site-config or user-config" ;
+            errors.error The 'option' rule may only be used "in" Boost Build
+                configuration files. ;
         }
         import option ;
         option.set $(name) : $(value) ;
