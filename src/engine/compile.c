@@ -14,27 +14,10 @@
  * compile.c - compile parsed jam statements
  *
  * External routines:
- *  compile_append() - append list results of two statements
- *  compile_eval() - evaluate if to determine which leg to compile
- *  compile_foreach() - compile the "for x in y" statement
- *  compile_if() - compile 'if' rule
- *  compile_while() - compile 'while' rule
- *  compile_include() - support for 'include' - call include() on file
- *  compile_list() - expand and return a list
- *  compile_local() - declare (and set) local variables
- *  compile_null() - do nothing -- a stub for parsing
- *  compile_on() - run rule under influence of on-target variables
- *  compile_rule() - compile a single user defined rule
- *  compile_rules() - compile a chain of rules
- *  compile_set() - compile the "set variable" statement
- *  compile_setcomp() - support for `rule` - save parse tree
- *  compile_setexec() - support for `actions` - save execution string
- *  compile_settings() - compile the "on =" (set variable on exec) statement
- *  compile_switch() - compile 'switch' rule
+ *  evaluate_rule() - execute a rule invocation
  *
  * Internal routines:
  *  debug_compile() - printf with indent to show rule expansion
- *  evaluate_rule() - execute a rule invocation
  */
 
 #include "jam.h"
