@@ -34,8 +34,8 @@
 #endif
 
 int glob( char const * s, char const * c );
-void backtrace( FRAME * frame );
-void backtrace_line( FRAME * frame );
+void backtrace( FRAME * );
+void backtrace_line( FRAME * );
 
 #define INSTR_PUSH_EMPTY                    0
 #define INSTR_PUSH_CONSTANT                 1
@@ -1280,7 +1280,7 @@ static int compile_emit_actions( compiler * c, PARSE * parse )
 
 static JAM_FUNCTION * compile_to_function( compiler * c )
 {
-    JAM_FUNCTION * result = BJAM_MALLOC( sizeof(JAM_FUNCTION) );
+    JAM_FUNCTION * const result = BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
     int i;
     result->base.type = FUNCTION_JAM;
     result->base.reference_count = 1;
@@ -1290,16 +1290,16 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
     result->base.rulename = 0;
 
     result->code_size = c->code->size;
-    result->code = BJAM_MALLOC( c->code->size * sizeof(instruction) );
-    memcpy( result->code, c->code->data, c->code->size * sizeof(instruction) );
+    result->code = BJAM_MALLOC( c->code->size * sizeof( instruction ) );
+    memcpy( result->code, c->code->data, c->code->size * sizeof( instruction ) );
 
-    result->constants = BJAM_MALLOC( c->constants->size * sizeof(OBJECT *) );
+    result->constants = BJAM_MALLOC( c->constants->size * sizeof( OBJECT * ) );
     memcpy( result->constants, c->constants->data, c->constants->size * sizeof(
-        OBJECT *) );
+        OBJECT * ) );
     result->num_constants = c->constants->size;
 
     result->num_subfunctions = c->rules->size;
-    result->functions = BJAM_MALLOC( c->rules->size * sizeof(SUBFUNCTION) );
+    result->functions = BJAM_MALLOC( c->rules->size * sizeof( SUBFUNCTION ) );
     for ( i = 0; i < c->rules->size; ++i )
     {
         struct stored_rule * const rule = &dynamic_array_at( struct stored_rule,
@@ -1311,9 +1311,9 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
         result->functions[ i ].local = rule->local;
     }
 
-    result->actions = BJAM_MALLOC( c->actions->size * sizeof(SUBACTION) );
+    result->actions = BJAM_MALLOC( c->actions->size * sizeof( SUBACTION ) );
     memcpy( result->actions, c->actions->data, c->actions->size * sizeof(
-        SUBACTION) );
+        SUBACTION ) );
     result->num_subactions = c->actions->size;
 
     result->generic = 0;
@@ -2508,7 +2508,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
 
         adjust_result( c, RESULT_STACK, result_location );
     }
-    else if ( parse->type  == PARSE_SWITCH )
+    else if ( parse->type == PARSE_SWITCH )
     {
         int const switch_end = compile_new_label( c );
         compile_parse( parse->left, c, RESULT_STACK );
@@ -3369,7 +3369,8 @@ static char check_align_expansion_item[ sizeof(struct align_expansion_item) <= s
 static char check_ptr_size1[ sizeof(LIST *) <= sizeof(void *) ? 1 : -1 ];
 static char check_ptr_size2[ sizeof(char *) <= sizeof(void *) ? 1 : -1 ];
 
-void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string * out )
+void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s,
+    string * out )
 {
     *(string * *)stack_allocate( s, sizeof( string * ) ) = out;
     list_free( function_run( function, frame, s ) );
@@ -3377,9 +3378,8 @@ void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string
 }
 
 /*
- * WARNING: The instruction set is tuned for Jam and
- * is not really generic.  Be especially careful about
- * stack push/pop.
+ * WARNING: The instruction set is tuned for Jam and is not really generic. Be
+ * especially careful about stack push/pop.
  */
 
 LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
@@ -3393,7 +3393,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
     if ( function_->type == FUNCTION_BUILTIN )
     {
-        BUILTIN_FUNCTION * f = (BUILTIN_FUNCTION *)function_;
+        BUILTIN_FUNCTION const * const f = (BUILTIN_FUNCTION *)function_;
         if ( function_->formal_arguments )
             argument_list_check( function_->formal_arguments,
                 function_->num_formal_arguments, function_, frame );
@@ -3401,13 +3401,11 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
     }
 
 #ifdef HAVE_PYTHON
-
     else if ( function_->type == FUNCTION_PYTHON )
     {
         PYTHON_FUNCTION * f = (PYTHON_FUNCTION *)function_;
         return call_python_function( f, frame );
     }
-
 #endif
 
     assert( function_->type == FUNCTION_JAM );
@@ -3636,7 +3634,6 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 argument_list_pop( function_->formal_arguments,
                     function_->num_formal_arguments, frame, s );
 #ifndef NDEBUG
-
             if ( !( saved_stack == s->data ) )
             {
                 frame->file = function->file;

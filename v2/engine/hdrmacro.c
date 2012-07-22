@@ -14,8 +14,8 @@
  * hdrmacro.c - handle header files that define macros used in #include
  *              statements.
  *
- *  we look for lines like "#define MACRO  <....>" or '#define MACRO  "    "'
- *  in the target file. When found, we then phony up a rule invocation like:
+ *  we look for lines like "#define MACRO  <....>" or '#define MACRO  "    "' in
+ *  the target file. When found, we then phony up a rule invocation like:
  *
  *  $(HDRRULE) <target> : <resolved included files> ;
  *
