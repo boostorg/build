@@ -7,7 +7,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(["-d3"], pass_d0=False)
 
 t.set_tree("dependency-test")
 
@@ -53,7 +53,7 @@ t.ignore("*.tds")
 t.expect_nothing_more()
 
 # Included by "src/b.h". We had a bug: file included via "", like "b.h" is in
-# this case was not scanned at all.
+# this case, was not scanned at all.
 t.touch("src1/c.h")
 t.run_build_system()
 t.expect_touch("bin/$toolset/debug/a.exe")
