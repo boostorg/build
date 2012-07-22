@@ -132,7 +132,7 @@ LIST * headers1( LIST * l, OBJECT * file, int rec, regexp * re[] )
 #endif
 
     /* The following regexp is used to detect cases where a file is included
-     * through a line line "#include MACRO".
+     * through a line like "#include MACRO".
      */
     if ( re_macros == 0 )
     {
@@ -156,7 +156,7 @@ LIST * headers1( LIST * l, OBJECT * file, int rec, regexp * re[] )
                 l = list_push_back( l, object_new( re[ i ]->startp[ 1 ] ) );
             }
 
-        /* special treatment for #include MACRO */
+        /* Special treatment for #include MACRO. */
         if ( regexec( re_macros, buf ) && re_macros->startp[ 1 ] )
         {
             OBJECT * header_filename;
