@@ -27,49 +27,48 @@
 # 'basic-target' class, which will provide some default behaviour. There will be
 # different classes derived from it such as 'make-target', created by the 'make'
 # rule, and 'typed-target', created by rules such as 'exe' and 'lib'.
-
 #
-#                         +------------------------+
-#                         |abstract-target         |
-#                         +========================+
-#                         |name                    |
-#                         |project                 |
-#                         |                        |
-#                         |generate(properties) = 0|
-#                         +-----------+------------+
-#                                     |
-#                                     ^
-#                                    / \
-#                                   +-+-+
-#                                     |
-#                                     |
-#            +------------------------+------+------------------------------+
-#            |                               |                              |
-#            |                               |                              |
-# +----------+-----------+            +------+------+                +------+-------+
-# | project-target       |            | main-target |                | basic-target |
-# +======================+ 1        * +=============+  alternatives  +==============+
-# | generate(properties) |o-----------+ generate    |<>------------->| generate     |
-# | main-target          |            +-------------+                | construct = 0|
-# +----------------------+                                           +--------------+
-#                                                                           |
-#                                                                           ^
-#                                                                          / \
-#                                                                         +-+-+
-#                                                                           |
-#                                                                           |
-#                 ...--+----------------+------------------+----------------+---+
-#                      |                |                  |                    |
-#                      |                |                  |                    |
-#               ... ---+-----+   +------+-------+   +------+------+    +--------+-----+
-#                            |   | typed-target |   | make-target |    | stage-target |
-#                            .   +==============+   +=============+    +==============+
-#                            .   | construct    |   | construct   |    | construct    |
-#                                +--------------+   +-------------+    +--------------+
+#                  +--------------------------+
+#                  | abstract-target          |
+#                  +==========================+
+#                  | name                     |
+#                  | project                  |
+#                  |                          |
+#                  | generate(properties) = 0 |
+#                  +-------------+------------+
+#                                |
+#                                ^
+#                               / \
+#                              +-+-+
+#                                |
+#                                |
+#             +------------------+-----+-------------------------------+
+#             |                        |                               |
+#             |                        |                               |
+# +-----------+----------+      +------+------+                +-------+------+
+# | project-target       |      | main-target |                | basic-target |
+# +======================+ 1  * +=============+  alternatives  +==============+
+# | generate(properties) |o-----+ generate    |<>------------->| generate     |
+# | main-target          |      +-------------+                | construct = 0|
+# +----------------------+                                     +-------+------+
+#                                                                      |
+#                                                                      ^
+#                                                                     / \
+#                                                                    +-+-+
+#                                                                      |
+#                                                                      |
+#          ...--+-----------------+-----------------+------------------+
+#               |                 |                 |                  |
+#               |                 |                 |                  |
+#        ... ---+-----+   +-------+------+   +------+------+   +-------+------+
+#                     |   | typed-target |   | make-target |   | stage-target |
+#                     .   +==============+   +=============+   +==============+
+#                     .   | construct    |   | construct   |   | construct    |
+#                         +--------------+   +-------------+   +--------------+
 
 import assert ;
+import build-request ;
 import "class" : new ;
-import errors ;
 import feature ;
 import indirect ;
 import path ;
@@ -78,17 +77,16 @@ import property-set ;
 import sequence ;
 import set ;
 import toolset ;
-import build-request ;
 
 
 # Base class for all abstract targets.
 #
 class abstract-target
 {
-    import project ;
     import assert ;
     import "class" ;
     import errors ;
+    import project ;
 
     rule __init__ ( name  # Name of the target in Jamfile.
         : project-target  # The project target to which this one belongs.
@@ -195,7 +193,6 @@ class project-target : abstract-target
     import set ;
     import sequence ;
     import "class" : new ;
-    import errors ;
 
     rule __init__ ( name : project-module parent-project ?
         : requirements * : default-build * )
@@ -246,7 +243,8 @@ class project-target : abstract-target
     {
         if [ modules.peek : .debug-building ]
         {
-            ECHO [ targets.indent ] "building project" [ name ] " ('$(__name__)') with" [ $(property-set).raw ] ;
+            ECHO [ targets.indent ] "building project" [ name ]
+                " ('$(__name__)') with" [ $(property-set).raw ] ;
             targets.increase-indent ;
         }
 
@@ -303,7 +301,7 @@ class project-target : abstract-target
         # before main target instances are created.
         self.explicit-targets += $(target-name) ;
     }
-    
+
     rule mark-target-as-always ( target-name * )
     {
         # Record the name of the target, not instance, since this rule is called
@@ -317,6 +315,7 @@ class project-target : abstract-target
     {
         if $(self.built-main-targets)
         {
+            import errors : error : errors.error ;
             errors.error add-alternative called when main targets are already
                 created. : in project [ full-name ] ;
         }
@@ -395,7 +394,7 @@ class project-target : abstract-target
             # Jamfile and a file named 'test' on the disk. We need the target to
             # override the file.
             result = [ main-target $(id) ] ;
-            
+
             # Interpret id as an existing file reference.
             if ! $(result)
             {
@@ -473,11 +472,11 @@ class project-target : abstract-target
                 self.main-targets += $(t) ;
                 target = $(self.main-target.$(name)) ;
             }
-            
+
             if $(name) in $(self.always-targets)
             {
                 $(a).always ;
-            }                
+            }
 
             $(target).add-alternative $(a) ;
         }
@@ -500,13 +499,13 @@ class project-target : abstract-target
                 local l = $(self.location) ;
                 if ! $(l)
                 {
-                    # Project corresponding to config files do not have 
-                    # 'location' attribute, but do have source location.
-                    # It might be more reasonable to make every project have
-                    # a location and use some other approach to prevent buildable
-                    # targets in config files, but that's for later.
+                    # Project corresponding to config files do not have
+                    # 'location' attribute, but do have source location. It
+                    # might be more reasonable to make every project have a
+                    # location and use some other approach to prevent buildable
+                    # targets in config files, but that has been left for later.
                     l = [ get source-location ] ;
-                }                
+                }
                 v = [ path.root [ path.make $(v) ] $(l) ] ;
                 # Now make the value absolute path.
                 v = [ path.root $(v) [ path.pwd ] ] ;
@@ -531,8 +530,8 @@ class project-target : abstract-target
         {
             # No need to pass the type. Path constants were converted to
             # absolute paths already by parent.
-            add-constant $(c)
-              : [ modules.peek $(parent) : self.constant.$(c) ] ;
+            add-constant $(c) : [ modules.peek $(parent) : self.constant.$(c) ]
+                ;
         }
 
         # Import rules from parent.
@@ -543,7 +542,8 @@ class project-target : abstract-target
         local user-rules = [ set.difference
             [ RULENAMES $(parent-module) ] :
             [ RULENAMES project-rules ] ] ;
-        IMPORT $(parent-module) : $(user-rules) : $(this-module) : $(user-rules) ;
+        IMPORT $(parent-module) : $(user-rules) : $(this-module) : $(user-rules)
+            ;
         EXPORT $(this-module) : $(user-rules) ;
     }
 }
@@ -561,6 +561,7 @@ local rule start-building ( main-target-instance )
             names += [ $(t).full-name ] ;
         }
 
+        import errors ;
         errors.error "Recursion in main target references"
           : "the following target are being built currently:"
           : $(names) ;
@@ -580,7 +581,6 @@ local rule end-building ( main-target-instance )
 class main-target : abstract-target
 {
     import assert ;
-    import errors ;
     import feature ;
     import print ;
     import property-set ;
@@ -598,10 +598,12 @@ class main-target : abstract-target
         local d = [ $(target).default-build ] ;
         if $(self.alternatives) && ( $(self.default-build) != $(d) )
         {
+            import errors : error : errors.error ;
             errors.error "default build must be identical in all alternatives"
-              : "main target is" [ full-name ]
-              : "with" [ $(d).raw ]
-              : "differing from previous default build" [ $(self.default-build).raw ] ;
+                : "main target is" [ full-name ]
+                : "with" [ $(d).raw ]
+                : "differing from previous default build"
+                    [ $(self.default-build).raw ] ;
         }
         else
         {
@@ -679,8 +681,8 @@ class main-target : abstract-target
 
     rule apply-default-build ( property-set )
     {
-        return [ targets.apply-default-build $(property-set) 
-          : $(self.default-build) ] ;
+        return [ targets.apply-default-build $(property-set) :
+            $(self.default-build) ] ;
     }
 
     # Select an alternative for this main target, by finding all alternatives
@@ -840,6 +842,7 @@ rule generate-from-reference (
     local rproperties = [ $(propagated).refine $(sproperties) ] ;
     if $(rproperties[1]) = "@error"
     {
+        import errors ;
         errors.error
             "When building" [ full-name ] " with properties " $(properties) :
             "Invalid properties specified for " $(source) ":"
@@ -848,10 +851,11 @@ rule generate-from-reference (
     return [ $(target).generate $(rproperties) ] ;
 }
 
+
 rule apply-default-build ( property-set : default-build )
 {
-    # 1. First, see what properties from default-build are already present
-    # in property-set.
+    # 1. First, see what properties from default-build are already present in
+    # property-set.
 
     local raw = [ $(property-set).raw ] ;
     local specified-features = $(raw:G) ;
@@ -865,31 +869,23 @@ rule apply-default-build ( property-set : default-build )
         }
     }
 
-    # 2. If there are any defaults to be applied, form a new build request.
-    # Pass it through to 'expand-no-defaults' since default-build might
-    # contain "release debug" resulting in two property-sets.
+    # 2. If there are any defaults to be applied, form a new build request. Pass
+    # it through to 'expand-no-defaults' since default-build might contain
+    # "release debug" resulting in two property-sets.
     local result ;
     if $(defaults-to-apply)
     {
-        properties = [
-          build-request.expand-no-defaults
-
-            # We have to compress subproperties here to prevent property
-            # lists like:
-            #
-            #    <toolset>msvc <toolset-msvc:version>7.1 <threading>multi
-            #
-            # from being expanded into:
-            #
-            #    <toolset-msvc:version>7.1/<threading>multi
-            #    <toolset>msvc/<toolset-msvc:version>7.1/<threading>multi
-            #
-            # due to a cross-product property combination. That may be an
-            # indication that build-request.expand-no-defaults is the wrong
-            # rule to use here.
-            [ feature.compress-subproperties $(raw) ]
-              $(defaults-to-apply)
-        ] ;
+        # We have to compress subproperties here to prevent property lists like:
+        #    <toolset>msvc <toolset-msvc:version>7.1 <threading>multi
+        #
+        # from being expanded into:
+        #    <toolset-msvc:version>7.1/<threading>multi
+        #    <toolset>msvc/<toolset-msvc:version>7.1/<threading>multi
+        #
+        # due to a cross-product property combination. That may be an indication
+        # that build-request.expand-no-defaults is the wrong rule to use here.
+        properties = [ build-request.expand-no-defaults
+            [ feature.compress-subproperties $(raw) ] $(defaults-to-apply) ] ;
 
         if $(properties)
         {
@@ -967,8 +963,9 @@ rule evaluate-requirements ( requirements : context : what )
     #
     # might come from project's requirements.
 
-    local unconditional = [ feature.expand [ $(requirements).non-conditional ] ] ;
- 
+    local unconditional = [ feature.expand [ $(requirements).non-conditional ] ]
+        ;
+
     local raw = [ $(context).raw ] ;
     raw = [ property.refine $(raw) : $(unconditional) ] ;
 
@@ -983,9 +980,8 @@ rule evaluate-requirements ( requirements : context : what )
     # the property set should stabilize before we are done. It is assumed that
     # #conditionals iterations should be enough for properties to propagate
     # along conditions in any direction.
-    local count = $(conditionals)
-                  [ $(requirements).get <conditional> ]
-                  and-once-more ;
+    local count = $(conditionals) [ $(requirements).get <conditional> ]
+        and-once-more ;
 
     local added-requirements ;
 
@@ -1030,7 +1026,8 @@ rule evaluate-requirements ( requirements : context : what )
     }
     if ! $(ok)
     {
-        errors.error "Can not evaluate conditional properties " $(conditionals) ;
+        import errors ;
+        errors.error Can not evaluate conditional properties $(conditionals) ;
     }
 
     if $(what) = added
@@ -1043,6 +1040,7 @@ rule evaluate-requirements ( requirements : context : what )
     }
     else
     {
+        import errors ;
         errors.error "Invalid value of the 'what' parameter." ;
     }
 }
@@ -1051,7 +1049,7 @@ rule evaluate-requirements ( requirements : context : what )
 rule common-properties2 ( build-request requirements )
 {
     # This guarantees that default properties are present in the result, unless
-    # they are overriden by some requirement. FIXME: There is possibility that
+    # they are overriden by some requirement. FIXME: There is a possibility that
     # we have added <foo>bar, which is composite and expands to <foo2>bar2, but
     # default value of <foo2> is not bar2, in which case it is not clear what to
     # do.
@@ -1092,7 +1090,6 @@ class basic-target : abstract-target
     import build-request ;
     import build-system ;
     import "class" : new ;
-    import errors ;
     import feature ;
     import property ;
     import property-set ;
@@ -1124,16 +1121,17 @@ class basic-target : abstract-target
 
         if $(sources:G)
         {
+            import errors : user-error : errors.user-error ;
             errors.user-error properties found in the 'sources' parameter for
                 [ full-name ] ;
         }
     }
-    
+
     rule always ( )
     {
         self.always = 1 ;
     }
-    
+
     # Returns the list of abstract-targets which are used as sources. The extra
     # properties specified for sources are not represented. The only user for
     # this rule at the moment is the "--dump-tests" feature of the test system.
@@ -1178,7 +1176,8 @@ class basic-target : abstract-target
         local condition = [ set.difference $(bcondition) : $(ccondition) ] ;
         if $(debug)
         {
-            ECHO "    next alternative: required properties:" $(condition:E=(empty)) ;
+            ECHO "    next alternative: required properties:"
+                $(condition:E=(empty)) ;
         }
 
         if $(condition) in [ $(property-set).raw ]
@@ -1212,7 +1211,6 @@ class basic-target : abstract-target
         {
             local grist = $(dependency:G) ;
             local id = $(dependency:G=) ;
-
             local result = [ targets.generate-from-reference $(id) :
                 $(self.project) : $(property-set) ] ;
 
@@ -1232,10 +1230,12 @@ class basic-target : abstract-target
             local fn = [ full-name ] ;
             ECHO [ targets.indent ] "Building target '$(fn)'" ;
             targets.increase-indent ;
-            ECHO [ targets.indent ] "Build request: " $(property-set) [ $(property-set).raw ] ;
+            ECHO [ targets.indent ] Build request: $(property-set)
+                [ $(property-set).raw ] ;
             local cf = [ build-system.command-line-free-features ] ;
-            ECHO [ targets.indent ] "Command line free features: " [ $(cf).raw ] ;
-            ECHO [ targets.indent ] "Target requirements: " [ $(self.requirements).raw ] ;
+            ECHO [ targets.indent ] Command line free features: [ $(cf).raw ] ;
+            ECHO [ targets.indent ] Target requirements:
+                [ $(self.requirements).raw ] ;
         }
         targets.push-target $(__name__) ;
 
@@ -1252,7 +1252,8 @@ class basic-target : abstract-target
             if [ modules.peek : .debug-building ]
             {
                 ECHO ;
-                ECHO [ targets.indent ] "Common properties: " [ $(rproperties).raw ] ;
+                ECHO [ targets.indent ] "Common properties: "
+                    [ $(rproperties).raw ] ;
             }
 
             if ( $(rproperties[1]) != "@error" ) && ( [ $(rproperties).get
@@ -1277,7 +1278,8 @@ class basic-target : abstract-target
 
                 rproperties = [ property-set.create $(properties)
                     $(usage-requirements) ] ;
-                usage-requirements = [ property-set.create $(usage-requirements) ] ;
+                usage-requirements = [ property-set.create $(usage-requirements)
+                    ] ;
 
                 if [ modules.peek : .debug-building ]
                 {
@@ -1288,11 +1290,11 @@ class basic-target : abstract-target
                 local extra = [ $(rproperties).get <source> ] ;
                 source-targets += $(extra:G=) ;
                 # We might get duplicate sources, for example if we link to two
-                # libraries having the same <library> usage requirement.
-                # Use stable sort, since for some targets the order is
-                # important. E.g. RUN_PY target need python source to come
-                # first.
-                source-targets = [ sequence.unique $(source-targets) : stable ] ;
+                # libraries having the same <library> usage requirement. Use
+                # stable sort, since for some targets the order is important,
+                # e.g. RUN_PY target need a python source to come first.
+                source-targets = [ sequence.unique $(source-targets) : stable ]
+                    ;
 
                 local result = [ construct $(self.name) : $(source-targets) :
                     $(rproperties) ] ;
@@ -1301,15 +1303,15 @@ class basic-target : abstract-target
                 {
                     local gur = $(result[1]) ;
                     result = $(result[2-]) ;
-                    
+
                     if $(self.always)
                     {
                         for local t in $(result)
                         {
                             $(t).always ;
-                        }                        
+                        }
                     }
-                    
+
                     local s = [ create-subvariant $(result)
                         : [ virtual-target.recent-targets ]
                         : $(property-set) : $(source-targets)
@@ -1464,6 +1466,7 @@ class basic-target : abstract-target
     #
     rule construct ( name : source-targets * : properties * )
     {
+        import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
     }
 }
@@ -1563,6 +1566,7 @@ rule main-target-requirements (
         [ $(project).project-module ] : [ $(project).get location ] ] ;
     if $(requirements[1]) = "@error"
     {
+        import errors ;
         errors.error "Conflicting requirements for target:" $(requirements) ;
     }
     return $(requirements) ;
@@ -1623,6 +1627,7 @@ rule main-target-alternative ( target )
     return $(target) ;
 }
 
+
 # Creates a new metargets with the specified properties, using 'klass' as
 # the class. The 'name', 'sources',
 # 'requirements', 'default-build' and 'usage-requirements' are assumed to be in
@@ -1640,6 +1645,7 @@ rule create-metatarget ( klass : project : name : sources * : requirements * :
             : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
         ] ] ;
 }
+
 
 # Creates a typed-target with the specified properties. The 'name', 'sources',
 # 'requirements', 'default-build' and 'usage-requirements' are assumed to be in

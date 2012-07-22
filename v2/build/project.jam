@@ -84,7 +84,6 @@ rule load-used-projects ( module-name )
     {
         local id = $(used[1]) ;
         local where = $(used[2]) ;
-
         project.use $(id) : [ path.root [ path.make $(where) ] $(location) ] ;
         used = $(used[3-]) ;
     }
@@ -103,14 +102,12 @@ JAMROOT ?= project-root.jam [Jj]amroot [Jj]amroot.jam ;
 rule load-parent ( location )
 {
     local found = [ path.glob-in-parents $(location) : $(JAMROOT) $(JAMFILE) ] ;
-
     if ! $(found)
     {
         ECHO error: Could not find parent for project at '$(location)' ;
         EXIT error: Did not find Jamfile.jam or Jamroot.jam in any parent
             directory. ;
     }
-
     return [ load $(found[1]:D) ] ;
 }
 
@@ -643,8 +640,8 @@ class project-attributes
                 errors.error usage-requirements $(specification) have non-free
                     properties $(non-free) ;
             }
-            local t = [ property.translate-paths $(specification)
-                                      : $(self.location) ] ;
+            local t = [ property.translate-paths $(specification) :
+                $(self.location) ] ;
             if $(self.usage-requirements)
             {
                 self.usage-requirements = [ property-set.create
@@ -670,14 +667,13 @@ class project-attributes
         }
         else if $(attribute) = "build-dir"
         {
-            self.build-dir = [ path.root
-                [ path.make $(specification) ] $(self.location) ] ;
+            self.build-dir = [ path.root [ path.make $(specification) ]
+                $(self.location) ] ;
         }
         else if $(attribute) = "id"
         {
-            id = [ path.root $(specification) / ] ;
-            project.register-id $(id) : $(self.project-module) ;
-            self.id = $(id) ;
+            self.id = [ path.root $(specification) / ] ;
+            project.register-id $(self.id) : $(self.project-module) ;
         }
         else if ! $(attribute) in "default-build" "location" "parent"
             "projects-to-build" "project-root" "source-location"
@@ -703,16 +699,16 @@ class project-attributes
     #
     rule print ( )
     {
-        local id = $(self.id) ; id ?= (none) ;
-        local parent = $(self.parent) ; parent ?= (none) ;
+        local id = $(self.id:E=(none)) ;
+        local parent = $(self.parent:E=(none)) ;
         print.section "'"$(id)"'" ;
         print.list-start ;
         print.list-item "Parent project:" $(parent) ;
         print.list-item "Requirements:" [ $(self.requirements).raw ] ;
         print.list-item "Default build:" $(self.default-build) ;
         print.list-item "Source location:" $(self.source-location) ;
-        print.list-item "Projects to build:"
-                        [ sequence.insertion-sort $(self.projects-to-build) ] ;
+        print.list-item "Projects to build:" [ sequence.insertion-sort
+            $(self.projects-to-build) ] ;
         print.list-end ;
     }
 }
@@ -1004,10 +1000,7 @@ module project-rules
     # normal variables but should not be changed. They are applied to every
     # child Jamfile.
     #
-    rule constant (
-        name  # Variable name of the constant.
-        : value +  # Value of the constant.
-    )
+    rule constant ( name : value + )
     {
         import project ;
         local caller = [ CALLER_MODULE ] ;
@@ -1019,10 +1012,7 @@ module project-rules
     # is adjusted to be relative to the invocation directory. The given value
     # path is taken to be either absolute, or relative to this project root.
     #
-    rule path-constant (
-        name  # Variable name of the constant.
-        : value +  # Value of the constant.
-        )
+    rule path-constant ( name : value + )
     {
         import project ;
         local caller = [ CALLER_MODULE ] ;
@@ -1035,9 +1025,8 @@ module project-rules
         import modules ;
         # See comment in 'load' for explanation.
         local caller = [ CALLER_MODULE ] ;
-        modules.poke $(caller) : .used-projects :
-            [ modules.peek $(caller) : .used-projects ]
-            $(id) $(where) ;
+        modules.poke $(caller) : .used-projects : [ modules.peek $(caller) :
+            .used-projects ] $(id) $(where) ;
     }
 
     rule build-project ( dir )
@@ -1045,7 +1034,6 @@ module project-rules
         import project ;
         local caller = [ CALLER_MODULE ] ;
         local attributes = [ project.attributes $(caller) ] ;
-
         local now = [ $(attributes).get projects-to-build ] ;
         $(attributes).set projects-to-build : $(now) $(dir) ;
     }
@@ -1083,7 +1071,6 @@ module project-rules
     rule glob-tree ( wildcards + : excludes * )
     {
         import project ;
-
         if $(wildcards:D) || $(excludes:D)
         {
             import errors ;

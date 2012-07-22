@@ -37,7 +37,7 @@ class property-set
     import property ;
     import property-set ;
     import set ;
-    
+
     rule __init__ ( raw-properties * )
     {
         self.raw = $(raw-properties) ;
@@ -155,7 +155,8 @@ class property-set
     {
         if ! $(self.expanded)
         {
-            self.expanded = [ property-set.create [ feature.expand $(self.raw) ] ] ;
+            self.expanded = [ property-set.create [ feature.expand $(self.raw) ]
+                ] ;
         }
         return $(self.expanded) ;
     }
@@ -176,7 +177,8 @@ class property-set
         if ! $(self.evaluated.$(context))
         {
             self.evaluated.$(context) = [ property-set.create
-                [ property.evaluate-conditionals-in-context $(self.raw) : [ $(context).raw ] ] ] ;
+                [ property.evaluate-conditionals-in-context $(self.raw) : [
+                $(context).raw ] ] ] ;
         }
         return $(self.evaluated.$(context)) ;
     }
@@ -237,7 +239,7 @@ class property-set
             {
                 local p = [ as-path ] ;
                 p = [ property-set.hash-maybe $(p) ] ;
-                
+
                 # A real ugly hack. Boost regression test system requires
                 # specific target paths, and it seems that changing it to handle
                 # other directory layout is really hard. For that reason, we
@@ -267,7 +269,8 @@ class property-set
     {
         if ! $(self.added.$(ps))
         {
-            self.added.$(ps) = [ property-set.create $(self.raw) [ $(ps).raw ] ] ;
+            self.added.$(ps) = [ property-set.create $(self.raw) [ $(ps).raw ] ]
+                ;
         }
         return $(self.added.$(ps)) ;
     }
@@ -294,7 +297,7 @@ class property-set
         }
         return $($(feature)) ;
     }
-    
+
     # private
 
     rule init-base ( )
@@ -324,9 +327,7 @@ class property-set
     {
         for local p in $(self.raw)
         {
-            local att = [ feature.attributes $(p:G) ] ;
-
-            if dependency in $(att)
+            if dependency in [ feature.attributes $(p:G) ]
             {
                 self.dependency += $(p) ;
             }
@@ -390,16 +391,16 @@ rule create-with-validation ( raw-properties * )
 #
 rule create-from-user-input ( raw-properties * : jamfile-module location )
 {
-    local specification = [ property.translate-paths $(raw-properties)
-        : $(location) ] ;
-    specification = [ property.translate-indirect $(specification)
-        : $(jamfile-module) ] ;
+    local specification = [ property.translate-paths $(raw-properties) :
+        $(location) ] ;
+    specification = [ property.translate-indirect $(specification) :
+        $(jamfile-module) ] ;
     local project-id = [ project.attribute $(jamfile-module) id ] ;
     project-id ?= [ path.root $(location) [ path.pwd ] ] ;
-    specification = [ property.translate-dependencies
-                      $(specification) : $(project-id) : $(location) ] ;
-    specification =
-        [ property.expand-subfeatures-in-conditions $(specification) ] ;
+    specification = [ property.translate-dependencies $(specification) :
+        $(project-id) : $(location) ] ;
+    specification = [ property.expand-subfeatures-in-conditions $(specification)
+        ] ;
     specification = [ property.make $(specification) ] ;
     return [ property-set.create $(specification) ] ;
 }
@@ -471,8 +472,9 @@ rule empty ( )
     return $(.empty) ;
 }
 
+
 if [ option.get hash : : yes ] = yes
-{    
+{
     rule hash-maybe ( path ? )
     {
         path ?= "" ;
@@ -484,6 +486,6 @@ else
     rule hash-maybe ( path ? )
     {
         return $(path) ;
-    }    
+    }
 }
 
