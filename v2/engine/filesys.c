@@ -138,7 +138,6 @@ file_info_t * file_info( OBJECT * const path )
         finfo->name = path_key;
         finfo->is_file = 0;
         finfo->is_dir = 0;
-        finfo->size = 0;
         timestamp_clear( &finfo->time );
         finfo->files = L0;
     }
@@ -230,7 +229,6 @@ int file_query_posix_( file_info_t * const info )
 
     info->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
     info->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
-    info->size = statbuf.st_size;
     timestamp_init( &info->time, statbuf.st_mtime, 0 );
     return 0;
 }

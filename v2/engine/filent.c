@@ -109,7 +109,6 @@ int file_collect_dir_content_( file_info_t * const d )
                 file_info_t * const ff = file_info( pathname_obj );
                 ff->is_dir = finfo.attrib & _A_SUBDIR ? 1 : 0;
                 ff->is_file = !ff->is_dir;
-                ff->size = finfo.size;
                 timestamp_init( &ff->time, finfo.time_write, 0 );
             }
         }

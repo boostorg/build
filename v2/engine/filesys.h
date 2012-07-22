@@ -29,7 +29,6 @@ typedef struct file_info_t
     OBJECT * name;
     short is_file;
     short is_dir;
-    unsigned long size;
     timestamp time;
     LIST * files;
 } file_info_t;
