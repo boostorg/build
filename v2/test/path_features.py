@@ -94,6 +94,59 @@ def test_ordered_paths():
     t.cleanup()
 
 
+def test_paths_set_by_indirect_conditionals():
+    t = BoostBuild.Tester(pass_d0=False)
+
+    header = "child_dir/folder_to_include/some_header.h"
+
+    t.write("jamroot.jam", "build-project child_dir ;")
+    t.write("child_dir/jamfile.jam", """\
+import remote/remote ;
+
+# If we set the <include>folder_to_include property directly, it will work
+obj x1 : x.cpp : <conditional>@attach-include-local ;
+obj x2 : x.cpp : <conditional>@remote/remote.attach-include-remote ;
+
+rule attach-include-local ( properties * )
+{
+    return <include>folder_to_include ;
+}
+""")
+    t.write("child_dir/remote/remote.jam", """\
+rule attach-include-remote ( properties * )
+{
+    return <include>folder_to_include ;
+}
+""")
+    t.write("child_dir/x.cpp", """\
+#include <some_header.h>
+int main() {}
+""")
+    t.write(header, "int some_func();\n")
+    t.write("child_dir/folder_to_include/jamfile.jam", "")
+
+    expected_x1 = "child_dir/bin/$toolset/debug/x1.obj"
+    expected_x2 = "child_dir/bin/$toolset/debug/x2.obj"
+
+    t.run_build_system()
+    t.expect_addition(expected_x1)
+    t.expect_addition(expected_x2)
+
+    t.touch(header)
+    t.run_build_system(subdir="child_dir")
+    t.expect_modification(expected_x1)
+    t.expect_modification(expected_x2)
+
+    t.touch(header)
+    t.run_build_system(["..", "-d2"], subdir="child_dir/folder_to_include")
+    t.expect_modification(expected_x1)
+    t.expect_modification(expected_x2)
+
+    t.cleanup()
+
+
+
 test_basic()
 test_absolute_paths()
 test_ordered_paths()
+test_paths_set_by_indirect_conditionals()

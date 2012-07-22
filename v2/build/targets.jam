@@ -1005,7 +1005,10 @@ rule evaluate-requirements ( requirements : context : what )
         # Evaluate indirect conditionals.
         for local i in $(indirect)
         {
-            e += [ indirect.call $(i) $(current) ] ;
+            local t = [ current ] ;
+            local p = [ $(t).project ] ;
+            local new = [ indirect.call $(i) $(current) ] ;
+            e += [ property.translate-paths $(new) : [ $(p).location ] ] ;
         }
 
         if $(e) = $(added-requirements)
