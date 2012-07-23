@@ -4,7 +4,8 @@
 # Copyright 2002, 2003, 2004, 2005 Vladimir Prus
 # Copyright 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
 import re
@@ -225,9 +226,9 @@ nm-exe e : e.cpp ;
     t.expect_nothing_more()
 
     folder = "bin/$toolset/debug"
-    t.expect_content_line("%s/obj_1.my_obj" % folder, "Sources: 'z.cpp'")
-    t.expect_content_line("%s/obj_2.my_obj" % folder, "Sources: 'z.cpp'")
-    t.expect_content_line("%s/a.my_obj" % folder, "Sources: 'a.cpp'")
+    t.expect_content_line("%s/obj_1.my_obj" % folder, "     Sources: 'z.cpp'")
+    t.expect_content_line("%s/obj_2.my_obj" % folder, "     Sources: 'z.cpp'")
+    t.expect_content_line("%s/a.my_obj" % folder, "     Sources: 'a.cpp'")
 
     lines = t.stdout().splitlines()
     source_lines = [x for x in lines if re.match("^     Sources: '", x)]
@@ -344,7 +345,8 @@ def __write_appender(t, name):
     t.write(name,
 r"""# Copyright 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 #   Support for registering test generators that construct their targets by
 # simply appending their given input data, e.g. list of sources & targets.

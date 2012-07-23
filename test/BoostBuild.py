@@ -2,8 +2,8 @@
 # Copyright 2002-2003 Dave Abrahams.
 # Copyright 2006 Rene Rivera.
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#         http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import TestCmd
 
@@ -79,14 +79,14 @@ def annotation(name, value):
 def get_toolset():
     toolset = None
     for arg in sys.argv[1:]:
-        if not arg.startswith('-'):
+        if not arg.startswith("-"):
             toolset = arg
-    return toolset or 'gcc'
+    return toolset or "gcc"
 
 
 # Detect the host OS.
-cygwin = hasattr(os, 'uname') and os.uname()[0].lower().startswith('cygwin')
-windows = cygwin or os.environ.get('OS', '').lower().startswith('windows')
+cygwin = hasattr(os, "uname") and os.uname()[0].lower().startswith("cygwin")
+windows = cygwin or os.environ.get("OS", "").lower().startswith("windows")
 
 
 def prepare_prefixes_and_suffixes(toolset):
@@ -105,21 +105,21 @@ def prepare_suffix_map(toolset):
     suffixes = {}
     if windows:
         if toolset == "gcc":
-            suffixes['.lib'] = '.a'  # mingw static libs use suffix '.a'.
-            suffixes['.obj'] = '.o'
+            suffixes[".lib"] = ".a"  # mingw static libs use suffix ".a".
+            suffixes[".obj"] = ".o"
         if cygwin:
-            suffixes['.implib'] = '.lib.a'
+            suffixes[".implib"] = ".lib.a"
         else:
-            suffixes['.implib'] = '.lib'
+            suffixes[".implib"] = ".lib"
     else:
-        suffixes['.exe'] = ''
-        suffixes['.dll'] = '.so'
-        suffixes['.lib'] = '.a'
-        suffixes['.obj'] = '.o'
-        suffixes['.implib'] = '.no_implib_files_on_this_platform'
+        suffixes[".exe"] = ""
+        suffixes[".dll"] = ".so"
+        suffixes[".lib"] = ".a"
+        suffixes[".obj"] = ".o"
+        suffixes[".implib"] = ".no_implib_files_on_this_platform"
 
-        if hasattr(os, 'uname') and os.uname()[0] == 'Darwin':
-            suffixes['.dll'] = '.dylib'
+        if hasattr(os, "uname") and os.uname()[0] == "Darwin":
+            suffixes[".dll"] = ".dylib"
 
 
 def prepare_library_prefix(toolset):
@@ -173,7 +173,7 @@ class Tester(TestCmd.TestCmd):
                                     match those actually created by the current
                                     toolset. For example, static library files
                                     are specified by using the .lib suffix but
-                                    when the 'gcc' toolset is used it actually
+                                    when the "gcc" toolset is used it actually
                                     creates them using the .a suffix.
     `pass_toolset`                - Whether the test system should pass the
                                     specified toolset to the run executable.
@@ -192,7 +192,7 @@ class Tester(TestCmd.TestCmd):
 
     `description`                 - Test description string displayed in case
                                     of a failed test.
-    `subdir'                      - List of subdirectories to automatically
+    `subdir`                      - List of subdirectories to automatically
                                     create under the working directory. Each
                                     subdirectory needs to be specified
                                     separately, parent coming before its child.
@@ -221,32 +221,32 @@ class Tester(TestCmd.TestCmd):
         self.pass_toolset = pass_toolset
         self.ignore_toolset_requirements = ignore_toolset_requirements
 
-        prepare_prefixes_and_suffixes(pass_toolset and self.toolset or 'gcc')
+        prepare_prefixes_and_suffixes(pass_toolset and self.toolset or "gcc")
 
-        use_default_bjam = '--default-bjam' in sys.argv
+        use_default_bjam = "--default-bjam" in sys.argv
 
         if not use_default_bjam:
             jam_build_dir = ""
-            if os.name == 'nt':
+            if os.name == "nt":
                 jam_build_dir = "bin.ntx86"
-            elif (os.name == 'posix') and os.__dict__.has_key('uname'):
-                if os.uname()[0].lower().startswith('cygwin'):
+            elif (os.name == "posix") and os.__dict__.has_key("uname"):
+                if os.uname()[0].lower().startswith("cygwin"):
                     jam_build_dir = "bin.cygwinx86"
-                    if ('TMP' in os.environ and
-                        os.environ['TMP'].find('~') != -1):
-                        print('Setting $TMP to /tmp to get around problem '
-                            'with short path names')
-                        os.environ['TMP'] = '/tmp'
-                elif os.uname()[0] == 'Linux':
+                    if ("TMP" in os.environ and
+                        os.environ["TMP"].find("~") != -1):
+                        print("Setting $TMP to /tmp to get around problem "
+                            "with short path names")
+                        os.environ["TMP"] = "/tmp"
+                elif os.uname()[0] == "Linux":
                     cpu = os.uname()[4]
                     if re.match("i.86", cpu):
                         jam_build_dir = "bin.linuxx86"
                     else:
                         jam_build_dir = "bin.linux" + os.uname()[4]
-                elif os.uname()[0] == 'SunOS':
+                elif os.uname()[0] == "SunOS":
                     jam_build_dir = "bin.solaris"
-                elif os.uname()[0] == 'Darwin':
-                    if os.uname()[4] == 'i386':
+                elif os.uname()[0] == "Darwin":
+                    if os.uname()[4] == "i386":
                         jam_build_dir = "bin.macosxx86"
                     else:
                         jam_build_dir = "bin.macosxppc"
@@ -267,8 +267,8 @@ class Tester(TestCmd.TestCmd):
 
             # Find where jam_src is located. Try for the debug version if it is
             # lying around.
-            dirs = [os.path.join('../engine', jam_build_dir + '.debug'),
-                    os.path.join('../engine', jam_build_dir)]
+            dirs = [os.path.join("../engine", jam_build_dir + ".debug"),
+                    os.path.join("../engine", jam_build_dir)]
             for d in dirs:
                 if os.path.exists(d):
                     jam_build_dir = d
@@ -277,12 +277,12 @@ class Tester(TestCmd.TestCmd):
                 print("Cannot find built Boost.Jam")
                 sys.exit(1)
 
-        verbosity = ['-d0', '--quiet']
+        verbosity = ["-d0", "--quiet"]
         if not pass_d0:
             verbosity = []
-        if '--verbose' in sys.argv:
-            keywords['verbose'] = True
-            verbosity = ['-d+2']
+        if "--verbose" in sys.argv:
+            keywords["verbose"] = True
+            verbosity = ["-d+2"]
 
         if boost_build_path is None:
             boost_build_path = self.original_workdir + "/.."
@@ -451,21 +451,21 @@ class Tester(TestCmd.TestCmd):
                 ignore_toolset_requirements = self.ignore_toolset_requirements
 
             try:
-                kw['program'] = []
-                kw['program'] += self.program
+                kw["program"] = []
+                kw["program"] += self.program
                 if extra_args:
-                    kw['program'] += extra_args
+                    kw["program"] += extra_args
                 if pass_toolset:
-                    kw['program'].append("toolset=" + self.toolset)
+                    kw["program"].append("toolset=" + self.toolset)
                 if use_test_config:
-                    kw['program'].append('--test-config="%s"' % os.path.join(
+                    kw["program"].append('--test-config="%s"' % os.path.join(
                         self.original_workdir, "test-config.jam"))
                 if ignore_toolset_requirements:
-                    kw['program'].append("--ignore-toolset-requirements")
+                    kw["program"].append("--ignore-toolset-requirements")
                 if "--python" in sys.argv:
-                    kw['program'].append("--python")
-                kw['chdir'] = subdir
-                self.last_program_invocation = kw['program']
+                    kw["program"].append("--python")
+                kw["chdir"] = subdir
+                self.last_program_invocation = kw["program"]
                 apply(TestCmd.TestCmd.run, [self], kw)
             except:
                 self.dump_stdio()
@@ -488,11 +488,11 @@ class Tester(TestCmd.TestCmd):
         self.unexpected_difference = copy.deepcopy(self.difference)
 
         if (status and self.status) is not None and self.status != status:
-            expect = ''
+            expect = ""
             if status != 0:
                 expect = " (expected %d)" % status
 
-            annotation("failure", '"%s" returned %d%s' % (kw['program'],
+            annotation("failure", '"%s" returned %d%s' % (kw["program"],
                 self.status, expect))
 
             annotation("reason", "unexpected status returned by bjam")
@@ -530,7 +530,7 @@ class Tester(TestCmd.TestCmd):
 
     def glob_file(self, name):
         result = None
-        if hasattr(self, 'difference'):
+        if hasattr(self, "difference"):
             for f in (self.difference.added_files +
                 self.difference.modified_files +
                 self.difference.touched_files):
@@ -560,17 +560,17 @@ class Tester(TestCmd.TestCmd):
         except:
             annotation("failure", "Could not open '%s'" % name)
             self.fail_test(1)
-            return ''
+            return ""
 
     def read_and_strip(self, name):
         if not self.glob_file(name):
-            return ''
+            return ""
         f = open(self.glob_file(name), "rb")
         lines = f.readlines()
         f.close()
         result = string.join(map(string.rstrip, lines), "\n")
-        if lines and lines[-1][-1] != '\n':
-            return result + '\n'
+        if lines and lines[-1][-1] != "\n":
+            return result + "\n"
         return result
 
     def fail_test(self, condition, dump_difference=True, dump_stdio=True,
@@ -578,7 +578,7 @@ class Tester(TestCmd.TestCmd):
         if not condition:
             return
 
-        if dump_difference and hasattr(self, 'difference'):
+        if dump_difference and hasattr(self, "difference"):
             f = StringIO.StringIO()
             self.difference.pprint(f)
             annotation("changes caused by the last build command", f.getvalue())
@@ -586,7 +586,7 @@ class Tester(TestCmd.TestCmd):
         if dump_stdio:
             self.dump_stdio()
 
-        if '--preserve' in sys.argv:
+        if "--preserve" in sys.argv:
             print
             print "*** Copying the state of working dir into 'failed_test' ***"
             print
@@ -597,7 +597,7 @@ class Tester(TestCmd.TestCmd):
                 raise "Path " + path + " already exists and is not a directory"
             shutil.copytree(self.workdir, path)
             print "The failed command was:"
-            print ' '.join(self.last_program_invocation)
+            print " ".join(self.last_program_invocation)
 
         if dump_stack:
             annotate_stack_trace()
@@ -698,15 +698,15 @@ class Tester(TestCmd.TestCmd):
         # Not totally sure about this change, but I do not see a good
         # alternative.
         if windows:
-            self.ignore('*.ilk')       # MSVC incremental linking files.
-            self.ignore('*.pdb')       # MSVC program database files.
-            self.ignore('*.rsp')       # Response files.
-            self.ignore('*.tds')       # Borland debug symbols.
-            self.ignore('*.manifest')  # MSVC DLL manifests.
+            self.ignore("*.ilk")       # MSVC incremental linking files.
+            self.ignore("*.pdb")       # MSVC program database files.
+            self.ignore("*.rsp")       # Response files.
+            self.ignore("*.tds")       # Borland debug symbols.
+            self.ignore("*.manifest")  # MSVC DLL manifests.
 
         # Debug builds of bjam built with gcc produce this profiling data.
-        self.ignore('gmon.out')
-        self.ignore('*/gmon.out')
+        self.ignore("gmon.out")
+        self.ignore("*/gmon.out")
 
         # Boost Build's 'configure' functionality (unfinished at the time)
         # produces this file.
@@ -716,7 +716,7 @@ class Tester(TestCmd.TestCmd):
         self.ignore("*.pyc")
 
         if not self.unexpected_difference.empty():
-            annotation('failure', 'Unexpected changes found')
+            annotation("failure", "Unexpected changes found")
             output = StringIO.StringIO()
             self.unexpected_difference.pprint(output)
             annotation("unexpected changes", output.getvalue())
@@ -743,12 +743,11 @@ class Tester(TestCmd.TestCmd):
                 (expected, content))
             self.fail_test(1)
 
-    def expect_output_line(self, line, expected_to_exist=True):
-        self.__expect_line(self.stdout(), line, expected_to_exist)
+    def expect_output_line(self, line, expected=True):
+        self.__expect_line(self.stdout(), line, expected)
 
-    def expect_content_line(self, name, line, expected_to_exist=True):
-        content = self.__read_file(name)
-        self.__expect_line(content, line, expected_to_exist)
+    def expect_content_line(self, filename, line, expected=True):
+        self.__expect_line(self.__read_file(filename), line, expected)
 
     def __read_file(self, name, exact=False):
         name = self.adjust_names(name)[0]
@@ -809,8 +808,8 @@ class Tester(TestCmd.TestCmd):
             # exact Python/OS platform version, os.system() call may gobble up
             # the external process's return code and return 0 itself.
             if os.system('diff -u "%s" "%s"' % (e, a)) not in [0, 1]:
-                print('Unable to compute difference: diff -u "%s" "%s"' % (e,
-                    a))
+                print('Unable to compute difference: diff -u "%s" "%s"' % (e, a
+                    ))
             os.unlink(e)
             os.unlink(a)
         else:
@@ -823,7 +822,7 @@ class Tester(TestCmd.TestCmd):
             return None
 
         here = arguments[0]
-        if type(here) == type(''):
+        if type(here) == type(""):
             here = [here]
 
         if len(arguments) > 1:
@@ -921,11 +920,11 @@ class List:
         elements = []
         if isinstance(s, type("")):
             # Have to handle escaped spaces correctly.
-            s = string.replace(s, "\ ", '\001')
+            s = string.replace(s, "\ ", "\001")
             elements = string.split(s)
         else:
             elements = s
-        self.l = [string.replace(e, '\001', ' ') for e in elements]
+        self.l = [string.replace(e, "\001", " ") for e in elements]
 
     def __len__(self):
         return len(self.l)
@@ -943,9 +942,7 @@ class List:
         return str(self.l)
 
     def __repr__(self):
-        return (self.__module__ + '.List('
-                 + repr(string.join(self.l, ' '))
-                 + ')')
+        return "%s.List(%r)" % (self.__module__, " ".join(self.l))
 
     def __mul__(self, other):
         result = List()
@@ -968,7 +965,7 @@ class List:
 
 
 # Quickie tests. Should use doctest instead.
-if __name__ == '__main__':
+if __name__ == "__main__":
     assert str(List("foo bar") * "/baz") == "['foo/baz', 'bar/baz']"
     assert repr("foo/" * List("bar baz")) == "__main__.List('foo/bar foo/baz')"
-    print('tests passed')
+    print("tests passed")

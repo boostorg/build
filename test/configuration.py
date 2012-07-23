@@ -2,7 +2,8 @@
 
 # Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Test Boost Build configuration file handling.
 
@@ -27,9 +28,12 @@ def test_user_configuration():
 
     """
 
-    implicitConfigLoadMessage = "notice: Loading user-config configuration file: *"
-    explicitConfigLoadMessage = "notice: Loading explicitly specified user configuration file:"
-    disabledConfigLoadMessage = "notice: User configuration file loading explicitly disabled."
+    implicitConfigLoadMessage =  \
+        "notice: Loading user-config configuration file: *"
+    explicitConfigLoadMessage =  \
+        "notice: Loading explicitly specified user configuration file:"
+    disabledConfigLoadMessage =  \
+        "notice: User configuration file loading explicitly disabled."
     testMessage = "_!_!_!_!_!_!_!_!_ %s _!_!_!_!_!_!_!_!_"
     toolsetName = "__myDummyToolset__"
     subdirName = "ASubDirectory"
@@ -250,9 +254,9 @@ def _env_del(name):
     """
       Unsets the given environment variable if it is currently set.
 
-        Note that we can not use os.environ.pop() or os.environ.clear() here
-      since prior to Python 2.6 these functions did not remove the actual
-      environment variable by calling os.unsetenv().
+      Note that we can not use os.environ.pop() or os.environ.clear() here
+    since prior to Python 2.6 these functions did not remove the actual
+    environment variable by calling os.unsetenv().
 
     """
     try:

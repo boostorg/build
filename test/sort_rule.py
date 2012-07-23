@@ -1,9 +1,9 @@
 #!/usr/bin/python
 
-#  Copyright (C) 2008. Jurko Gospodnetic
-#  Distributed under the Boost Software License, Version 1.0. (See
-#  accompanying file LICENSE_1_0.txt or copy at
-#  http://www.boost.org/LICENSE_1_0.txt)
+# Copyright (C) 2008. Jurko Gospodnetic
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Tests for the Boost Jam builtin SORT rule.
 
@@ -65,7 +65,7 @@ def testSORTDuration():
     f = open(t.workpath("test.jam"), "w")
     print >> f, "data = "
     for i in range(0, 20000):
-        if i % 2 != 0:
+        if i % 2:
             print >> f, '"aaa"'
         else:
             print >> f, '"bbb"'

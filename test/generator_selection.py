@@ -2,15 +2,16 @@
 
 # Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Tests that generators get selected correctly.
 #
 # We do not use the internal C++-compiler CPP --> OBJ generator to avoid
 # problems with specific compilers or their configurations, e.g. IBM's AIX test
-# runner 'AIX Version 5.3 TL7 SP5 (5300-07-05-0831)' using the 'IBM XL C/C++ for
-# AIX, V12.1 (Version: 12.01.0000.0000)' reporting errors when run with a source
-# file whose suffix is not '.cpp'.
+# runner 'AIX Version 5.3 TL7 SP5 (5300-07-05-0831)' using the 'IBM XL C/C++
+# for AIX, V12.1 (Version: 12.01.0000.0000)' reporting errors when run with a
+# source file whose suffix is not '.cpp'.
 
 import BoostBuild
 
@@ -112,7 +113,7 @@ def test_using_a_derived_source_type_created_after_generator_already_used():
 
     t.write("dummy.xxx", "Hello. My name is Peter Pan.\n")
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 import common ;
 import generators ;
 import type ;
@@ -128,7 +129,7 @@ alias the-test-output : Other//other ;
 
     t.write("Other/source.xxx2", "Hello. My name is Tinkerbell.\n")
 
-    t.write("Other/jamfile.jam", """
+    t.write("Other/jamfile.jam", """\
 import type ;
 type.register XXX2 : xxx2 : XXX ;
 # We are careful not to do anything between defining our new XXX2 target type

@@ -2,13 +2,14 @@
 
 # Copyright 2008 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Test that the expected default toolset is used when no toolset is explicitly
 # specified on the command line or used from code via the using rule. Test that
 # the default toolset is correctly used just like any other explicitly used
-# toolset (e.g. toolset prerequisites, properties conditioned on toolset related
-# features, etc.).
+# toolset (e.g. toolset prerequisites, properties conditioned on toolset
+# related features, etc.).
 #
 # Note that we need to ignore regular site/user/test configuration files to
 # avoid them marking any toolsets not under our control as used.
@@ -21,12 +22,12 @@ configuring_default_toolset_message = \
     'warning: Configuring default toolset "%s".'
 
 
-################################################################################
+###############################################################################
 #
 # test_conditions_on_default_toolset()
 # ------------------------------------
 #
-################################################################################
+###############################################################################
 
 def test_conditions_on_default_toolset():
     """Test that toolset and toolset subfeature conditioned properties get
@@ -96,19 +97,20 @@ notfile testTarget
     t.expect_output_line(configuring_default_toolset_message % toolset_name)
     t.expect_output_line(message_loaded)
     t.expect_output_line(message_initialized)
-    t.expect_output_line("descriptions: /stand-alone/ /toolset/ /toolset-version/")
+    t.expect_output_line("descriptions: /stand-alone/ /toolset/ "
+        "/toolset-version/")
     t.expect_output_line("toolset: /%s/" % toolset_name)
     t.expect_output_line("toolset-version: /%s/" % toolset_version)
 
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # test_default_toolset_on_os()
 # ----------------------------
 #
-################################################################################
+###############################################################################
 
 def test_default_toolset_on_os( os, expected_toolset ):
     """Test that the given toolset is used as the default toolset on the given
@@ -127,17 +129,18 @@ def test_default_toolset_on_os( os, expected_toolset ):
     # load missing toolsets might cause random failures with which we are not
     # concerned in this test.
     t.run_build_system(stderr=None)
-    t.expect_output_line(configuring_default_toolset_message % expected_toolset)
+    t.expect_output_line(configuring_default_toolset_message %
+        expected_toolset)
 
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # test_default_toolset_requirements()
 # -----------------------------------
 #
-################################################################################
+###############################################################################
 
 def test_default_toolset_requirements():
     """Test that default toolset's requirements get applied correctly.
@@ -190,18 +193,19 @@ notfile testTarget
 
     t.run_build_system()
     t.expect_output_line(configuring_default_toolset_message % toolset_name)
-    t.expect_output_line("descriptions: /conditioned-requirement/ /target-requirement/ /toolset-requirement/")
+    t.expect_output_line("descriptions: /conditioned-requirement/ "
+        "/target-requirement/ /toolset-requirement/")
     t.expect_output_line("toolset: /%s/" % toolset_name)
 
     t.cleanup()
 
 
-################################################################################
+###############################################################################
 #
 # main()
 # ------
 #
-################################################################################
+###############################################################################
 
 test_default_toolset_on_os("NT"         , "msvc")
 test_default_toolset_on_os("LINUX"      , "gcc" )
