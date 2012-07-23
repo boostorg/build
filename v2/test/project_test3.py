@@ -14,10 +14,10 @@ t = BoostBuild.Tester(translate_suffixes=0)
 # First check some startup.
 t.set_tree("project-test3")
 os.remove("jamroot.jam")
-t.run_build_system(status=1, stdout="""\
-error: Could not find parent for project at '.'
-error: Did not find Jamfile.jam or Jamroot.jam in any parent directory.
-""")
+t.run_build_system(status=1)
+
+t.expect_output_lines("error: Could not find parent for project at '.'\n"
+    "error: Did not find Jamfile.jam or Jamroot.jam in any parent directory.")
 
 t.set_tree("project-test3")
 t.run_build_system()
