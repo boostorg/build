@@ -35,7 +35,7 @@ exe a : a.cpp ;
 
     t.run_build_system(subdir="version-1.32.0")
     t.expect_addition("version-1.32.0/bin/$toolset/debug/a.exe")
-    t.expect_output_line("The tag rule has been invoked.")
+    t.expect_output_lines("The tag rule has been invoked.")
 
 
 ###############################################################################

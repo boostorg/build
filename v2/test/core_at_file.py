@@ -17,7 +17,7 @@ EXIT file: "@(o$(name) .txt:E= test -D$(contents))" : 0 ;
 """)
 
 t.run_build_system()
-t.expect_output_line("file: on1 on2 .txt");
+t.expect_output_lines("file: on1 on2 .txt");
 t.expect_addition("on1 on2 .txt")
 t.expect_content("on1 on2 .txt", " test -DM1 -DM2", True)
 
@@ -31,7 +31,7 @@ run all ;
 """)
 
 t.run_build_system(["-d2"])
-t.expect_output_line(' echo file: "on1 on2 .txt" ');
+t.expect_output_lines(' echo file: "on1 on2 .txt" ');
 t.expect_addition("on1 on2 .txt")
 t.expect_content("on1 on2 .txt", " test -DM1 -DM2", True)
 
@@ -46,7 +46,7 @@ run all ;
 """)
 
 t.run_build_system(["-d1"])
-t.expect_output_line(" test -DM1 -DM2")
+t.expect_output_lines(" test -DM1 -DM2")
 
 t.rm(".")
 
@@ -58,6 +58,6 @@ run all ;
 """)
 
 t.run_build_system(["-d1"])
-t.expect_output_line(" test -DM1 -DM2")
+t.expect_output_lines(" test -DM1 -DM2")
 
 t.cleanup()

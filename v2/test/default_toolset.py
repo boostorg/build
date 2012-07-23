@@ -94,13 +94,13 @@ notfile testTarget
     'toolset_version_unused': toolset_version_unused})
 
     t.run_build_system()
-    t.expect_output_line(configuring_default_toolset_message % toolset_name)
-    t.expect_output_line(message_loaded)
-    t.expect_output_line(message_initialized)
-    t.expect_output_line("descriptions: /stand-alone/ /toolset/ "
+    t.expect_output_lines(configuring_default_toolset_message % toolset_name)
+    t.expect_output_lines(message_loaded)
+    t.expect_output_lines(message_initialized)
+    t.expect_output_lines("descriptions: /stand-alone/ /toolset/ "
         "/toolset-version/")
-    t.expect_output_line("toolset: /%s/" % toolset_name)
-    t.expect_output_line("toolset-version: /%s/" % toolset_version)
+    t.expect_output_lines("toolset: /%s/" % toolset_name)
+    t.expect_output_lines("toolset-version: /%s/" % toolset_version)
 
     t.cleanup()
 
@@ -129,7 +129,7 @@ def test_default_toolset_on_os( os, expected_toolset ):
     # load missing toolsets might cause random failures with which we are not
     # concerned in this test.
     t.run_build_system(stderr=None)
-    t.expect_output_line(configuring_default_toolset_message %
+    t.expect_output_lines(configuring_default_toolset_message %
         expected_toolset)
 
     t.cleanup()
@@ -192,10 +192,10 @@ notfile testTarget
 """ % {'toolset_name': toolset_name})
 
     t.run_build_system()
-    t.expect_output_line(configuring_default_toolset_message % toolset_name)
-    t.expect_output_line("descriptions: /conditioned-requirement/ "
+    t.expect_output_lines(configuring_default_toolset_message % toolset_name)
+    t.expect_output_lines("descriptions: /conditioned-requirement/ "
         "/target-requirement/ /toolset-requirement/")
-    t.expect_output_line("toolset: /%s/" % toolset_name)
+    t.expect_output_lines("toolset: /%s/" % toolset_name)
 
     t.cleanup()
 

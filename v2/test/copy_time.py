@@ -63,7 +63,7 @@ if test2src != test2dest:
     tester.fail_test(1)
 
 tester.run_build_system(["-d1"])
-tester.expect_output_line("common.copy*", False)
+tester.expect_output_lines("common.copy*", False)
 tester.expect_nothing_more()
 
 tester.cleanup()

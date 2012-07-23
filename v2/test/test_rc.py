@@ -87,9 +87,9 @@ obj xxx : xxx.rc ;
             params.append("-n")
             params.append("-sNOEXEC=NOEXEC")
         t.run_build_system(params)
-        t.expect_output_line("*NOEXEC*", noexec)
+        t.expect_output_lines("*NOEXEC*", noexec)
         obj_file = "xxx_res.obj"
-        t.expect_output_line("compile.resource.dummy *%s" % obj_file, expect)
+        t.expect_output_lines("compile.resource.dummy *%s" % obj_file, expect)
         if expect and not noexec:
             expect("bin/%s/debug/%s" % (toolsetName, obj_file))
         t.expect_nothing_more()
