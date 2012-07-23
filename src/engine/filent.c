@@ -83,10 +83,17 @@ int file_collect_dir_content_( file_info_t * const d )
         string_append( pathspec, "*" );
     }
 
+    /* The following code for collecting information about all files in a folder
+     * needs to be synchronized with how the file_query() operation is
+     * implemented (collects information about a single file).
+     */
     {
-        struct _finddata_t finfo;
-        long const handle = _findfirst( pathspec->value, &finfo );
-        if ( handle < 0L )
+        /* FIXME: Avoid duplicate FindXXX Windows API calls here and in the code
+         * determining a normalized path.
+         */
+        WIN32_FIND_DATA finfo;
+        HANDLE const findHandle = FindFirstFileA( pathspec->value, &finfo );
+        if ( findHandle == INVALID_HANDLE_VALUE )
         {
             string_free( pathspec );
             return -1;
@@ -97,8 +104,8 @@ int file_collect_dir_content_( file_info_t * const d )
         {
             OBJECT * pathname_obj;
 
-            f.f_base.ptr = finfo.name;
-            f.f_base.len = strlen( finfo.name );
+            f.f_base.ptr = finfo.cFileName;
+            f.f_base.len = strlen( finfo.cFileName );
             string_truncate( pathname, 0 );
             path_build( &f, pathname );
 
@@ -107,14 +114,14 @@ int file_collect_dir_content_( file_info_t * const d )
             files = list_push_back( files, pathname_obj );
             {
                 file_info_t * const ff = file_info( pathname_obj );
-                ff->is_dir = finfo.attrib & _A_SUBDIR ? 1 : 0;
+                ff->is_dir = finfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
                 ff->is_file = !ff->is_dir;
-                timestamp_init( &ff->time, finfo.time_write, 0 );
+                timestamp_from_filetime( &ff->time, &finfo.ftLastWriteTime );
             }
         }
-        while ( !_findnext( handle, &finfo ) );
+        while ( FindNextFile( findHandle, &finfo ) );
 
-        _findclose( handle );
+        FindClose( findHandle );
     }
 
     string_free( pathname );
@@ -176,23 +183,25 @@ int file_mkdir( char const * const path )
 
 /*
  * file_query_() - query information about a path from the OS
+ * 
+ * The following code for collecting information about a single file needs to be
+ * synchronized with how the file_collect_dir_content_() operation is
+ * implemented (collects information about all files in a folder).
  */
 
 int file_query_( file_info_t * const info )
 {
-    /* Note that the POSIX stat() function implementation on Windows suffers
-     * from several issues:
-     *   * Does not support file timestamps with resolution finer than 1 second.
-     *     This means it can not be used to detect file timestamp changes of
-     *     less than one second. One possible consequence is that some
-     *     fast-paced touch commands (such as those done by Boost Build's
-     *     internal testing system if it does not do extra waiting before those
-     *     touch operations) will not be detected correctly by the build system.
-     *   * Returns file modification times automatically adjusted for daylight
-     *     savings time even though daylight savings time should have nothing to
-     *     do with internal time representation.
-     */
-    return file_query_posix_( info );
+    WIN32_FILE_ATTRIBUTE_DATA fileData;
+    char const * const pathstr = object_str( info->name );
+    char const * const pathspec = *pathstr ? pathstr : ".";
+
+    if ( !GetFileAttributesExA( pathspec, GetFileExInfoStandard, &fileData ) )
+        return -1;
+
+    info->is_dir = fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+    info->is_file = !info->is_dir;
+    timestamp_from_filetime( &info->time, &fileData.ftLastWriteTime );
+    return 0;
 }
 
 
