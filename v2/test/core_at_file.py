@@ -1,8 +1,9 @@
 #!/usr/bin/python
 
 # Copyright 2011 Steven Watanabe
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 
 import BoostBuild
@@ -30,7 +31,7 @@ run all ;
 """)
 
 t.run_build_system(["-d2"])
-t.expect_output_line('echo file: "on1 on2 .txt"');
+t.expect_output_line(' echo file: "on1 on2 .txt" ');
 t.expect_addition("on1 on2 .txt")
 t.expect_content("on1 on2 .txt", " test -DM1 -DM2", True)
 

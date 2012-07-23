@@ -3,7 +3,8 @@
 # Copyright 2001 Dave Abrahams
 # Copyright 2011 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
 
@@ -88,7 +89,7 @@ test_varargs(t, "1 : 2 : 3 4 5 : 6 7 : 8 : 9 : 10 : 11 : 12 : 13 : 14 : 15 : "
 test_varargs(t, "1 : 2 : 3 4 5 : 6 7 : 8 : 9 : 10 : 11 : 12 : 13 : 14 : 15 : "
     "16 : 17 : 18 : 19a 19b 19c : 20", "a= 1 b= c= : d= 2 : e= 3 4 5 : rest= "
     "6 7 : 8 : 9 : 10 : 11 : 12 : 13 : 14 : 15 : 16 : 17 : 18 : 19a 19b 19c : "
-    "20 ")
+    "20")
 
 # Check varargs upper limit
 expected = "a= 1 b= c= : d= 2 : e= 3 : rest= " + simple_args(4, 19)

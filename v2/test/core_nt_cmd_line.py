@@ -3,7 +3,8 @@
 # Copyright 2001 Dave Abrahams
 # Copyright 2011 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Tests Windows command line construction.
 #
@@ -172,13 +173,16 @@ do_redirect all ;
     t.expect_addition("two.txt")
 
     t.write("file_pipe.jam", """\
-actions do_pipe { echo one | echo two }
+actions do_pipe
+{
+    echo one | echo two
+}
 JAMSHELL = % ;
 do_pipe all ;
 """)
     t.run_build_system(["-ffile_pipe.jam"])
     t.expect_output_line("do_pipe all")
-    t.expect_output_line("one", False)
+    t.expect_output_line("one*", False)
     t.expect_output_line("two")
     t.expect_output_line("Executing raw command directly", False)
     t.expect_output_line("Executing using a command file and the shell: "

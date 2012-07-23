@@ -3,7 +3,8 @@
 # Copyright 2002, 2003 Dave Abrahams
 # Copyright 2002, 2003, 2004, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
 import os
@@ -122,12 +123,14 @@ t.expect_nothing_more()
 # Test project ids in command line work as well.
 t.set_tree("project-test3")
 t.run_build_system(["/lib2"])
-t.expect_addition("lib2/bin/$toolset/debug/" * BoostBuild.List("c.obj d.obj l.exe"))
+t.expect_addition("lib2/bin/$toolset/debug/" *
+    BoostBuild.List("c.obj d.obj l.exe"))
 t.expect_addition("bin/$toolset/debug/a.obj")
 t.expect_nothing_more()
 
 t.run_build_system(["lib"])
-t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("b.obj m.exe"))
+t.expect_addition("lib/bin/$toolset/debug/" *
+    BoostBuild.List("b.obj m.exe"))
 t.expect_nothing_more()
 
 t.cleanup()
