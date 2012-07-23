@@ -214,6 +214,18 @@ file_info_t * file_query( OBJECT * const path )
  * file_query_posix_() - query information about a path using POSIX stat()
  *
  * Fallback file_query_() implementation for OS specific modules.
+ *
+ * Note that the Windows POSIX stat() function implementation suffers from
+ * several issues:
+ *   * Does not support file timestamps with resolution finer than 1 second,
+ *     meaning it can not be used to detect file timestamp changes of less than
+ *     1 second. One possible consequence is that some fast-paced touch commands
+ *     (such as those done by Boost Build's internal testing system if it does
+ *     not do some extra waiting) will not be detected correctly by the build
+ *     system.
+ *   * Returns file modification times automatically adjusted for daylight
+ *     savings time even though daylight savings time should have nothing to do
+ *     with internal time representation.
  */
 
 int file_query_posix_( file_info_t * const info )
