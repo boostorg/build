@@ -22,11 +22,11 @@ b all ;
 t.run_build_system(["-d0"], stdout="")
 
 t.run_build_system(["-d1"])
-t.expect_output_line("a all")
-t.expect_output_line("b all", False)
+t.expect_output_lines("a all")
+t.expect_output_lines("b all", False)
 
 t.run_build_system(["-d2"])
-t.expect_output_line("a all")
-t.expect_output_line("b all")
+t.expect_output_lines("a all")
+t.expect_output_lines("b all")
 
 t.cleanup()

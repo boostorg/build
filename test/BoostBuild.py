@@ -722,32 +722,52 @@ class Tester(TestCmd.TestCmd):
             annotation("unexpected changes", output.getvalue())
             self.fail_test(1)
 
-    def __expect_line(self, content, expected, expected_to_exist):
-        expected = expected.strip()
-        lines = content.splitlines()
-        found = False
-        for line in lines:
-            line = line.strip()
-            if fnmatch.fnmatch(line, expected):
-                found = True
-                break
+    def __expect_lines(self, data, lines, expected):
+        # str.splitlines() trims at most one trailing newline while we want the
+        # trailing newline to indicate that there should be an extra empty line
+        # at the end.
+        splitlines = lambda x : (x + "\n").splitlines()
 
-        if expected_to_exist and not found:
-            annotation("failure",
-                "Did not find expected line:\n%s\nin output:\n%s" %
-                (expected, content))
+        if data is None:
+            data = []
+        elif data.__class__ is str:
+            data = splitlines(data)
+
+        if lines.__class__ is str:
+            lines = [splitlines(lines)]
+        else:
+            expanded = []
+            for x in lines:
+                if x.__class__ is str:
+                    expanded.extend(splitlines(x))
+                else:
+                    expanded.append(x)
+            lines = expanded
+
+        if _contains_lines(data, lines) != bool(expected):
+            output = []
+            if expected:
+                output = ["Did not find expected lines:"]
+            else:
+                output = ["Found unexpected lines:"]
+            first = True
+            for line_sequence in lines:
+                if line_sequence:
+                    if first:
+                        first = False
+                    else:
+                        output.append("...")
+                    output.extend("  > " + line for line in line_sequence)
+            output.append("in output:")
+            output.extend("  > " + line for line in data)
+            annotation("failure", "\n".join(output))
             self.fail_test(1)
-        if not expected_to_exist and found:
-            annotation("failure",
-                "Found an unexpected line:\n%s\nin output:\n%s" %
-                (expected, content))
-            self.fail_test(1)
 
-    def expect_output_line(self, line, expected=True):
-        self.__expect_line(self.stdout(), line, expected)
+    def expect_output_lines(self, lines, expected=True):
+        self.__expect_lines(self.stdout(), lines, expected)
 
-    def expect_content_line(self, filename, line, expected=True):
-        self.__expect_line(self.__read_file(filename), line, expected)
+    def expect_content_lines(self, filename, line, expected=True):
+        self.__expect_lines(self.__read_file(filename), line, expected)
 
     def __read_file(self, name, exact=False):
         name = self.adjust_names(name)[0]
@@ -974,8 +994,80 @@ class List:
         return result
 
 
+def _contains_lines(data, lines):
+    data_line_count = len(data)
+    expected_line_count = reduce(lambda x, y: x + len(y), lines, 0)
+    index = 0
+    for expected in lines:
+        if expected_line_count > data_line_count - index:
+            return False
+        expected_line_count -= len(expected)
+        index = __match_line_sequence(data, index, data_line_count -
+            expected_line_count, expected)
+        if index < 0:
+            return False
+    return True
+
+
+def __match_line_sequence(data, start, end, lines):
+    if not lines:
+        return start
+    for index in xrange(start, end - len(lines) + 1):
+        data_index = index
+        for expected in lines:
+            if not fnmatch.fnmatch(data[data_index], expected):
+                break;
+            data_index += 1
+        else:
+            return data_index
+    return -1
+
+
 # Quickie tests. Should use doctest instead.
 if __name__ == "__main__":
     assert str(List("foo bar") * "/baz") == "['foo/baz', 'bar/baz']"
     assert repr("foo/" * List("bar baz")) == "__main__.List('foo/bar foo/baz')"
+
+    assert _contains_lines([], [])
+    assert _contains_lines([], [[]])
+    assert _contains_lines([], [[], []])
+    assert _contains_lines([], [[], [], []])
+    assert not _contains_lines([], [[""]])
+    assert not _contains_lines([], [["a"]])
+
+    assert _contains_lines([""], [])
+    assert _contains_lines(["a"], [])
+    assert _contains_lines(["a", "b"], [])
+    assert _contains_lines(["a", "b"], [[], [], []])
+
+    assert _contains_lines([""], [[""]])
+    assert not _contains_lines([""], [["a"]])
+    assert not _contains_lines(["a"], [[""]])
+    assert _contains_lines(["a", "", "b", ""], [["a"]])
+    assert _contains_lines(["a", "", "b", ""], [[""]])
+    assert _contains_lines(["a", "", "b"], [["b"]])
+    assert not _contains_lines(["a", "b"], [[""]])
+    assert not _contains_lines(["a", "", "b", ""], [["c"]])
+    assert _contains_lines(["a", "", "b", "x"], [["x"]])
+
+    data = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+    assert _contains_lines(data, [["1", "2"]])
+    assert not _contains_lines(data, [["2", "1"]])
+    assert not _contains_lines(data, [["1", "3"]])
+    assert not _contains_lines(data, [["1", "3"]])
+    assert _contains_lines(data, [["1"], ["2"]])
+    assert _contains_lines(data, [["1"], [], [], [], ["2"]])
+    assert _contains_lines(data, [["1"], ["3"]])
+    assert not _contains_lines(data, [["3"], ["1"]])
+    assert _contains_lines(data, [["3"], ["7"], ["8"]])
+    assert not _contains_lines(data, [["1"], ["3", "5"]])
+    assert not _contains_lines(data, [["1"], [""], ["5"]])
+    assert not _contains_lines(data, [["1"], ["5"], ["3"]])
+    assert not _contains_lines(data, [["1"], ["5", "3"]])
+
+    assert not _contains_lines(data, [[" 3"]])
+    assert not _contains_lines(data, [["3 "]])
+    assert not _contains_lines(data, [["3", ""]])
+    assert not _contains_lines(data, [["", "3"]])
+
     print("tests passed")

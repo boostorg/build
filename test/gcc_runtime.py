@@ -15,7 +15,7 @@ t.write("jamroot.jam", "lib hello : hello.cpp ;")
 t.write("hello.cpp", "int main() {}\n")
 
 t.run_build_system(["runtime-link=static"])
-t.expect_output_line("warning: On gcc, DLLs can not be built with "
+t.expect_output_lines("warning: On gcc, DLLs can not be built with "
     "'<runtime-link>static'.")
 t.expect_nothing_more()
 

@@ -15,7 +15,7 @@ t.write("jamfile.jam", "build-project subdir ;")
 t.write("subdir/jamfile.jam", 'ECHO "Loaded subdir" ;')
 
 t.run_build_system(subdir="subdir")
-t.expect_output_line("Loaded subdir")
+t.expect_output_lines("Loaded subdir")
 
 
 # Regression test for a more contrived case. The top-level Jamfile refers to

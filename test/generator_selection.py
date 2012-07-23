@@ -86,7 +86,7 @@ my-obj other-obj : source.extension ;
 """)
 
     t.run_build_system()
-    t.expect_output_line("Generating a CPP file...")
+    t.expect_output_lines("Generating a CPP file...")
     t.expect_addition("bin/$toolset/debug/dummy.my_obj")
     t.expect_addition("Other/bin/$toolset/debug/other-obj.cpp")
     t.expect_addition("Other/bin/$toolset/debug/other-obj.my_obj")

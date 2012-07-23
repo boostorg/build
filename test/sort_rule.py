@@ -39,9 +39,9 @@ if $(sorted-data) != $(target-data)
 """)
 
     t.run_build_system()
-    t.expect_output_line("starting up")
-    t.expect_output_line("done")
-    t.expect_output_line("SORT error", False)
+    t.expect_output_lines("starting up")
+    t.expect_output_lines("done")
+    t.expect_output_lines("SORT error", False)
 
     t.cleanup()
 
@@ -79,8 +79,8 @@ NOCARE all ;
     f.close()
 
     t.run_build_system(expected_duration=1)
-    t.expect_output_line("starting up")
-    t.expect_output_line("done")
+    t.expect_output_lines("starting up")
+    t.expect_output_lines("done")
 
     t.cleanup()
 

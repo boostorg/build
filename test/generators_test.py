@@ -226,9 +226,9 @@ nm-exe e : e.cpp ;
     t.expect_nothing_more()
 
     folder = "bin/$toolset/debug"
-    t.expect_content_line("%s/obj_1.my_obj" % folder, "     Sources: 'z.cpp'")
-    t.expect_content_line("%s/obj_2.my_obj" % folder, "     Sources: 'z.cpp'")
-    t.expect_content_line("%s/a.my_obj" % folder, "     Sources: 'a.cpp'")
+    t.expect_content_lines("%s/obj_1.my_obj" % folder, "     Sources: 'z.cpp'")
+    t.expect_content_lines("%s/obj_2.my_obj" % folder, "     Sources: 'z.cpp'")
+    t.expect_content_lines("%s/a.my_obj" % folder, "     Sources: 'a.cpp'")
 
     lines = t.stdout().splitlines()
     source_lines = [x for x in lines if re.match("^     Sources: '", x)]
@@ -305,8 +305,8 @@ ddd _xxx : _xxx._a ;
         t.run_build_system(status=status)
 
         if status:
-            t.expect_output_line("*.bbX-to-ccc: source targets have different "
-                "names: cannot determine target name")
+            t.expect_output_lines("*.bbX-to-ccc: source targets have "
+                "different names: cannot determine target name")
         else:
             def suffix(rename):
                 if rename: return "_x"

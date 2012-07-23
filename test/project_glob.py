@@ -87,7 +87,7 @@ exe a : [ glob-tree foo/*.cpp bar/*.cpp : bad* ] ../d2/d//l ;
 """)
 
 t.run_build_system(subdir="d1", status=1)
-t.expect_output_line("error: The patterns * may not include directory")
+t.expect_output_lines("error: The patterns * may not include directory")
 
 
 # Test that 'glob' works with absolute names.

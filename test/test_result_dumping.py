@@ -27,7 +27,7 @@ test-suite testit : [ run ../TestSource/test.cpp ] ;
 t.write("TestSource/test.cpp", "int main() {}\n")
 
 t.run_build_system(subdir="TestBuild")
-t.expect_output_line('boost-test(RUN) "*/TestBuild/test" : '
+t.expect_output_lines('boost-test(RUN) "*/TestBuild/test" : '
     '"../TestSource/test.cpp"')
 
 t.cleanup()

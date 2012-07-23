@@ -19,7 +19,7 @@ def test(t, type, input, output, status=0):
     code.append(";")
     t.write("file.jam", " ".join(code))
     t.run_build_system(["-ffile.jam"], status=status)
-    t.expect_output_line(output);
+    t.expect_output_lines(output);
 
 
 def test_args(t, *args, **kwargs):
