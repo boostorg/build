@@ -575,8 +575,8 @@ static RULE * global_rule( RULE * r )
         return r;
 
     {
-        OBJECT * name = global_rule_name( r );
-        RULE * result = define_rule( r->module, name, root_module() );
+        OBJECT * const name = global_rule_name( r );
+        RULE * const result = define_rule( r->module, name, root_module() );
         object_free( name );
         return result;
     }
@@ -592,7 +592,7 @@ static RULE * global_rule( RULE * r )
 RULE * new_rule_body( module_t * m, OBJECT * rulename, FUNCTION * procedure,
     int exported )
 {
-    RULE * local = define_rule( m, rulename, m );
+    RULE * const local = define_rule( m, rulename, m );
     local->exported = exported;
     set_rule_body( local, procedure );
 
@@ -601,7 +601,7 @@ RULE * new_rule_body( module_t * m, OBJECT * rulename, FUNCTION * procedure,
      * can use, e.g. in profiling output. Only do this once, since this could be
      * called multiple times with the same procedure.
      */
-    if ( function_rulename( procedure ) == 0 )
+    if ( !function_rulename( procedure ) )
         function_set_rulename( procedure, global_rule_name( local ) );
 
     return local;
@@ -664,23 +664,25 @@ RULE * lookup_rule( OBJECT * rulename, module_t * m, int local_only )
     else if ( !local_only && m->imported_modules )
     {
         /* Try splitting the name into module and rule. */
-        char *p = strchr( object_str( rulename ), '.' ) ;
+        char * p = strchr( object_str( rulename ), '.' ) ;
         if ( p )
         {
-            string buf[ 1 ];
-            OBJECT * module_part;
-            OBJECT * rule_part;
-            string_new( buf );
-            string_append_range( buf, object_str( rulename ), p );
-            module_part = object_new( buf->value );
-            rule_part = object_new( p + 1 );
-            /* Now, r->name keeps the module name, and p+1 keeps the rule name.
+            /* Now, r->name keeps the module name, and p + 1 keeps the rule
+             * name.
              */
+            OBJECT * rule_part = object_new( p + 1 );
+            OBJECT * module_part;
+            {
+                string buf[ 1 ];
+                string_new( buf );
+                string_append_range( buf, object_str( rulename ), p );
+                module_part = object_new( buf->value );
+                string_free( buf );
+            }
             if ( hash_find( m->imported_modules, module_part ) )
                 result = lookup_rule( rule_part, bindmodule( module_part ), 1 );
-            object_free( rule_part );
             object_free( module_part );
-            string_free( buf );
+            object_free( rule_part );
         }
     }
 
@@ -692,7 +694,7 @@ RULE * lookup_rule( OBJECT * rulename, module_t * m, int local_only )
         {
             /* Lookup started in class module. We have found a rule in class
              * module, which is marked for execution in that module, or in some
-             * instances. Mark it for execution in the instance where we started
+             * instance. Mark it for execution in the instance where we started
              * the lookup.
              */
             int const execute_in_class = result->module == m;
@@ -724,7 +726,7 @@ RULE * bindrule( OBJECT * rulename, module_t * m )
 
 RULE * import_rule( RULE * source, module_t * m, OBJECT * name )
 {
-    RULE * dest = define_rule( source->module, name, m );
+    RULE * const dest = define_rule( source->module, name, m );
     set_rule_body( dest, source->procedure );
     set_rule_actions( dest, source->actions );
     return dest;
@@ -742,4 +744,3 @@ void rule_localize( RULE * rule, module_t * m )
         rule->procedure = procedure;
     }
 }
-
