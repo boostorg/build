@@ -894,16 +894,26 @@ class Tester(TestCmd.TestCmd):
         ones assigned to files created by our previous build run. Used to make
         subsequent builds correctly recognize newly created or touched files.
 
+          Note: This code assumes that the file system uses a file modification
+        timestamp resolution no coarser than 1 second. This for example does
+        not hold on old FAT file systems that used a 2 second file modification
+        timestamp resolution.
+
         """
-        while True:
-            # In fact, I'm not sure why "+ 2" as opposed to "+ 1" is needed but
-            # empirically, "+ 1" sometimes causes 'touch' and other functions
-            # not to bump the file time enough for a rebuild to happen.
-            if (math.floor(time.time()) < math.floor(self.last_build_timestamp)
-                + 2):
-                time.sleep(0.1)
-            else:
-                break
+        # In theory waiting until for self.last_build_timestamp + 1 should be
+        # enough here but due to rounding errors in Python's floating point
+        # timestamp representation, file system's file modification timestamp
+        # caching and possibly some other OS/Python/file-system layers as well
+        # it occasionally happens that with just "+ 1" our 'touch' and other
+        # commands still do not bump the file time enough to trigger a rebuild.
+        # To work around this we add an extra tiny wait at the end in case
+        # there is a chance we are too close to the problematic "+ 1" boundary.
+        wait_check = lambda x : time.time() < self.last_build_timestamp + x
+        extra_wait_needed = wait_check(2)
+        while wait_check(1):
+            time.sleep(0.1)
+        if extra_wait_needed:
+            time.sleep(0.1)
 
     def __get_current_file_timestamp(self):
         fd, path = tempfile.mkstemp(prefix="__Boost_Build_timestamp_tester__")
