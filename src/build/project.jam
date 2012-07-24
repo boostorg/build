@@ -827,7 +827,8 @@ rule extension ( id : options * : * )
         # Create the project itself, i.e. the attributes. All extensions are
         # created in the "/ext" project space.
         project /ext/$(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
-            $(9) ;
+            $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17)
+            : $(18) : $(19) ;
         local attributes = [ project.attributes $(__name__) ] ;
 
         # Inherit from the root project of whomever is defining us.
@@ -896,13 +897,14 @@ module project-rules
         local caller = [ CALLER_MODULE ] ;
         local caller-location = [ modules.binding $(caller) ] ;
         modules.poke : BOOST_BUILD_PATH : $(caller-location:D) $(x) ;
-        toolset.using $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        toolset.using $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
+            $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17)
+            : $(18) : $(19) ;
         modules.poke : BOOST_BUILD_PATH : $(x) ;
 
         # The above might have clobbered .current-project. Restore the correct
         # value.
-        modules.poke project : .current-project
-            : [ project.target $(caller) ] ;
+        modules.poke project : .current-project : [ project.target $(caller) ] ;
     }
 
     import modules ;
