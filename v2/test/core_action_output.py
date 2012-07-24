@@ -56,7 +56,7 @@ t.expect_nothing_more()
 t.run_build_system(["-ffile.jam", "-sXXX=5", "-p3"], stderr="stderr\n")
 t.expect_output_lines("{{{ 5 }}}")
 t.expect_output_lines("stdout")
-t.expect_output_lines("stderr", False)
+t.expect_output_lines("stderr*", False)
 t.expect_nothing_more()
 
 t.cleanup()
