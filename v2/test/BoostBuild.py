@@ -908,32 +908,48 @@ class Tester(TestCmd.TestCmd):
         elements = string.split(name, "/")
         return os.path.normpath(apply(os.path.join, [self.workdir]+elements))
 
-    def wait_for_time_change_since_last_build(self):
+    def wait_for_time_change(self, original_timestamp=None):
         """
-          Wait until newly assigned file system timestamps are larger than the
-        ones assigned to files created by our previous build run. Used to make
-        subsequent builds correctly recognize newly created or touched files.
+          Wait until newly assigned file system timestamps are large enough to
+        be correctly recognized as newer than the given original timestamp.
+        This must be recognizable by both this Python based testing framework
+        and the Boost Jam executable we are testing.
 
-          Note: This code assumes that the file system uses a file modification
-        timestamp resolution no coarser than 1 second. This for example does
-        not hold on old FAT file systems that used a 2 second file modification
-        timestamp resolution.
+          Note: This code assumes that both the file system and the Boost Jam
+        executable being tested use file modification timestamp resolution no
+        coarser than 1 second. This for example does not hold on old FAT file
+        systems that used a 2 second file modification timestamp resolution.
 
         """
-        # In theory waiting until for self.last_build_timestamp + 1 should be
-        # enough here but due to rounding errors in Python's floating point
-        # timestamp representation, file system's file modification timestamp
-        # caching and possibly some other OS/Python/file-system layers as well
-        # it occasionally happens that with just "+ 1" our 'touch' and other
+        # In theory waiting until original_timestamp + 1 should be enough here
+        # but due to rounding errors in Python's floating point timestamp
+        # representation, file system's file modification timestamp caching and
+        # possibly some other OS/Python/file-system layers as well it
+        # occasionally happens that with just "+ 1" our 'touch' and other
         # commands still do not bump the file time enough to trigger a rebuild.
         # To work around this we add an extra tiny wait at the end in case
         # there is a chance we are too close to the problematic "+ 1" boundary.
-        wait_check = lambda x : time.time() < self.last_build_timestamp + x
+        if original_timestamp is None:
+            time.sleep(1.1)
+            return
+        wait_check = lambda x : time.time() < original_timestamp + x
         extra_wait_needed = wait_check(2)
         while wait_check(1):
             time.sleep(0.1)
         if extra_wait_needed:
             time.sleep(0.1)
+
+    def wait_for_time_change_since_last_build(self):
+        """
+          Wait until newly assigned file system timestamps are large enough to
+        be correctly recognized as newer than the ones assigned to files
+        created by our previous build run. This must be recognizable by both
+        this Python based testing framework and the Boost Jam executable we are
+        testing. Used to make subsequent builds correctly recognize newly
+        created or touched files.
+
+        """
+        self.wait_for_time_change(self.last_build_timestamp)
 
     def __get_current_file_timestamp(self):
         fd, path = tempfile.mkstemp(prefix="__Boost_Build_timestamp_tester__")
