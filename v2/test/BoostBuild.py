@@ -1039,6 +1039,35 @@ def __match_line_sequence(data, start, end, lines):
     return -1
 
 
+###############################################################################
+#
+# Initialization.
+#
+###############################################################################
+
+# Make os.stat() return file modification times as floats instead of integers
+# to get the best possible file timestamp resolution available. The exact
+# resolution depends on the underlying file system and the Python os.stat()
+# implementation. The better the resolution we achieve, the shorter we need to
+# wait for files we create to start getting new timestamps.
+#
+# Additional notes:
+#  * os.stat_float_times() function first introduced in Python 2.3. and
+#    suggested for deprecation in Python 3.3.
+#  * On Python versions 2.5+ we do not need to do this as there os.stat()
+#    returns floating point file modification times by default.
+#  * Windows CPython implementations prior to version 2.5 do not support file
+#    modification timestamp resolutions of less than 1 second no matter whether
+#    these timestamps are returned as integer or floating point values.
+#  * Python documentation states that this should be set in a program's
+#    __main__ module to avoid affecting other libraries that might not be ready
+#    to support floating point timestamps. Since we use no such external
+#    libraries, we ignore this warning to make it easier to enable this feature
+#    in both our single & multiple-test scripts.
+if (2, 3) <= sys.version_info < (2, 5) and not os.stat_float_times():
+    os.stat_float_times(True)
+
+
 # Quickie tests. Should use doctest instead.
 if __name__ == "__main__":
     assert str(List("foo bar") * "/baz") == "['foo/baz', 'bar/baz']"
