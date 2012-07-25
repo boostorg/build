@@ -357,7 +357,7 @@ def handle_dir(path, current_parent, load_props, ignore_svn):
       fprops = {}
     c = SVNTreeNode(os.path.basename(f), None,
                                          fcontents, fprops)
-    c.mtime = os.stat(f)[stat.ST_MTIME]
+    c.mtime = os.stat(f).st_mtime
     current_parent.add_child(c)
 
   # for each subdir, create a node, walk its tree, add it as a child
@@ -368,7 +368,7 @@ def handle_dir(path, current_parent, load_props, ignore_svn):
       dprops = {}
     new_dir_node = SVNTreeNode(os.path.basename(d), [], None, dprops)
     handle_dir(d, new_dir_node, load_props, ignore_svn)
-    new_dir_node.mtime = os.stat(f)[stat.ST_MTIME]
+    new_dir_node.mtime = os.stat(f).st_mtime
     current_parent.add_child(new_dir_node)
 
 def get_child(node, name):
