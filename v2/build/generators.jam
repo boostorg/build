@@ -1,9 +1,9 @@
-# Copyright Vladimir Prus 2002.
-# Copyright Rene Rivera 2006.
+# Copyright 2002. Vladimir Prus
+# Copyright 2006. Rene Rivera
 #
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Manages 'generators' --- objects which can do transformation between different
 # target types and contain algorithm for finding transformation from sources to
@@ -446,7 +446,7 @@ class generator
     )
     {
         local result ;
-        # If this is 1->1 transformation, apply it to all consumed targets in
+        # If this is a 1->1 transformation, apply it to all consumed targets in
         # order.
         if ! $(self.source-types[2]) && ! $(self.composing)
         {
@@ -520,10 +520,10 @@ class generator
     # When 'name' is empty, all source targets must have the same 'name'
     # attribute value, which will be used instead of the 'name' argument.
     #
-    # The 'name' attribute value for each generated target will be equal to
-    # the 'name' parameter if there is no name pattern for this type. Otherwise,
-    # the '%' symbol in the name pattern will be replaced with the 'name'
-    # parameter to obtain the 'name' attribute.
+    # The 'name' attribute value for each generated target will be equal to the
+    # 'name' parameter if there is no name pattern for this type. Otherwise, the
+    # '%' symbol in the name pattern will be replaced with the 'name' parameter
+    # to obtain the 'name' attribute.
     #
     # For example, if targets types are T1 and T2 (with name pattern "%_x"),
     # suffixes for T1 and T2 are .t1 and .t2, and source is foo.z, then created

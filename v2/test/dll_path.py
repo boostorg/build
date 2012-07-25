@@ -60,7 +60,6 @@ rule init ( )
             return [ generator.generated-targets $(sources) :
                 [ $(property-set).add-raw $(dll-paths:G=<dll-path>) ] :
                 $(project) $(name) ] ;
-
         }
     }
     generators.register [ new dll-paths-list-generator ] ;

@@ -620,11 +620,12 @@ class main-target : abstract-target
         # When selecting alternatives we have to consider defaults, for example:
         #    lib l : l.cpp : <variant>debug ;
         #    lib l : l_opt.cpp : <variant>release ;
-        # won't work unless we add default value <variant>debug.
+        # will not work unless we add default value <variant>debug.
         property-set = [ $(p).add-defaults ] ;
 
-        # The algorithm: we keep the current best viable alternative. When we've
-        # got a new best viable alternative, we compare it with the current one.
+        # The algorithm: we keep the current best viable alternative. When we
+        # encounter a new best viable alternative, we compare it with the
+        # current one.
 
         local best ;
         local best-properties ;
@@ -694,8 +695,8 @@ class main-target : abstract-target
     {
         start-building $(__name__) ;
 
-        # We want composite properties in build request act as if all the
-        # properties it expands too are explicitly specified.
+        # We want composite properties in the build request to act as if all the
+        # properties they expand to have been explicitly specified.
         property-set = [ $(property-set).expand ] ;
 
         local all-property-sets = [ apply-default-build $(property-set) ] ;
@@ -999,8 +1000,8 @@ rule evaluate-requirements ( requirements : context : what )
     while $(count)
     {
         # Evaluate conditionals in context of current properties.
-        local e = [ property.evaluate-conditionals-in-context $(conditionals)
-            : $(current) ] ;
+        local e = [ property.evaluate-conditionals-in-context $(conditionals) :
+            $(current) ] ;
 
         # Evaluate indirect conditionals.
         for local i in $(indirect)

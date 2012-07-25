@@ -387,7 +387,7 @@ local appender-runs ;
 # our actions. To achieve this we register a series of actions for all the
 # targets (since they all have the same target list - either all or none of them
 # get run independent of which target actually needs to get built), each
-# building only a single target. Since all out actions use the same targets we
+# building only a single target. Since all our actions use the same targets, we
 # can not use 'on-target' parameters to pass data to a specific action so we
 # pass them using the second 'sources' parameter which our actions then know how
 # to interpret correctly. This works well since Boost Jam does not automatically
