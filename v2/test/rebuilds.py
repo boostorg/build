@@ -6,7 +6,8 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(["-ffile.jam"], pass_toolset=0)
+t = BoostBuild.Tester(["-ffile.jam", "-d+3", "-d+12", "-d+13"], pass_d0=False,
+    pass_toolset=0)
 
 t.write("file.jam", """\
 rule make
