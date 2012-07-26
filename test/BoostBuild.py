@@ -933,7 +933,8 @@ class Tester(TestCmd.TestCmd):
         if original_timestamp is None:
             time.sleep(1.1)
             return
-        wait_check = lambda x : time.time() < original_timestamp + x
+        wait_check = lambda x : (self.__get_current_file_timestamp() <
+            original_timestamp + x)
         extra_wait_needed = wait_check(2)
         while wait_check(1):
             time.sleep(0.1)
