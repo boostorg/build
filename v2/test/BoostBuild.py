@@ -912,8 +912,9 @@ class Tester(TestCmd.TestCmd):
         """
           Wait until newly assigned file system timestamps are large enough to
         be correctly recognized as newer than the given original timestamp.
-        This must be recognizable by both this Python based testing framework
-        and the Boost Jam executable we are testing.
+        They need to be large enough for this to be recognizable by both this
+        Python based testing framework and the Boost Jam executable being
+        tested.
 
           Note: This code assumes that both the file system and the Boost Jam
         executable being tested use file modification timestamp resolution no
@@ -943,13 +944,14 @@ class Tester(TestCmd.TestCmd):
         """
           Wait until newly assigned file system timestamps are large enough to
         be correctly recognized as newer than the ones assigned to files
-        created by our previous build run. This must be recognizable by both
-        this Python based testing framework and the Boost Jam executable we are
-        testing. Used to make subsequent builds correctly recognize newly
-        created or touched files.
+        created by our previous build run. They need to be large enough for
+        this to be recognizable by both this Python based testing framework and
+        the Boost Jam executable being tested. Used to make subsequent builds
+        correctly recognize newly created or touched files.
 
         """
-        self.wait_for_time_change(self.last_build_timestamp)
+        if self.last_build_timestamp:
+            self.wait_for_time_change(self.last_build_timestamp)
 
     def __get_current_file_timestamp(self):
         fd, path = tempfile.mkstemp(prefix="__Boost_Build_timestamp_tester__")
