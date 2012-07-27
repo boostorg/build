@@ -120,13 +120,11 @@ def build_tree(path):
     """
       Takes PATH as the folder path, walks the file system below that path, and
     creates a tree structure based on any files and folders found there.
+    Returns the prepared tree structure plus the maximum file modification
+    timestamp under the given folder.
 
-      All root nodes have an empty name to avoid being displayed when listing
-    differences between two
     """
-    root = TreeNode("__ROOT_TREE_NODE__", children=[])
-    _handle_dir(os.path.normpath(path), root)
-    return root
+    return _handle_dir(os.path.normpath(path))
 
 
 def tree_difference(a, b):
@@ -208,10 +206,17 @@ def _get_text(path):
         fp.close()
 
 
-def _handle_dir(path, current_parent):
-    """Main recursive worker function for build_tree()."""
+def _handle_dir(path):
+    """
+      Main recursive worker function for build_tree(). Returns a newly created
+    tree node representing the given normalized folder path as well as the
+    maximum file/folder modification time detected under the same path.
+
+    """
     files = []
     dirs = []
+    node = TreeNode(os.path.basename(path), children=[])
+    max_mtime = node.mtime = os.stat(path).st_mtime
 
     # List files & folders.
     for f in os.listdir(path):
@@ -221,16 +226,18 @@ def _handle_dir(path, current_parent):
         elif os.path.isfile(f):
             files.append(f)
 
-    # Add each file as a child of CURRENT_PARENT.
+    # Add a child node for each file.
     for f in files:
         fcontents = _get_text(f)
-        c = TreeNode(os.path.basename(f), contents=fcontents)
-        c.mtime = os.stat(f).st_mtime
-        current_parent.add_child(c)
+        new_file_node = TreeNode(os.path.basename(f), contents=fcontents)
+        new_file_node.mtime = os.stat(f).st_mtime
+        max_mtime = max(max_mtime, new_file_node.mtime)
+        node.add_child(new_file_node)
 
     # For each subdir, create a node, walk its tree, add it as a child.
     for d in dirs:
-        new_dir_node = TreeNode(os.path.basename(d), children=[])
-        _handle_dir(d, new_dir_node)
-        new_dir_node.mtime = os.stat(f).st_mtime
-        current_parent.add_child(new_dir_node)
+        new_dir_node, new_max_mtime = _handle_dir(d)
+        max_mtime = max(max_mtime, new_max_mtime)
+        node.add_child(new_dir_node)
+
+    return node, max_mtime
