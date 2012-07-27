@@ -419,63 +419,57 @@ class Tester(TestCmd.TestCmd):
         annotation("STDOUT", self.stdout())
         annotation("STDERR", self.stderr())
 
-    #
-    #   FIXME: Large portion copied from TestSCons.py, should be moved?
-    #
     def run_build_system(self, extra_args=None, subdir="", stdout=None,
         stderr="", status=0, match=None, pass_toolset=None,
         use_test_config=None, ignore_toolset_requirements=None,
         expected_duration=None, **kw):
 
         assert extra_args.__class__ is not str
-        build_time_start = time.time()
+
+        if os.path.isabs(subdir):
+            print("You must pass a relative directory to subdir <%s>." % subdir
+                )
+            return
+
+        self.previous_tree, dummy = tree.build_tree(self.workdir)
+
+        if match is None:
+            match = self.match
+
+        if pass_toolset is None:
+            pass_toolset = self.pass_toolset
+
+        if use_test_config is None:
+            use_test_config = self.use_test_config
+
+        if ignore_toolset_requirements is None:
+            ignore_toolset_requirements = self.ignore_toolset_requirements
 
         try:
-            if os.path.isabs(subdir):
-                print("You must pass a relative directory to subdir <%s>." %
-                    subdir)
-                return
-
-            self.previous_tree = tree.build_tree(self.workdir)
-
-            if match is None:
-                match = self.match
-
-            if pass_toolset is None:
-                pass_toolset = self.pass_toolset
-
-            if use_test_config is None:
-                use_test_config = self.use_test_config
-
-            if ignore_toolset_requirements is None:
-                ignore_toolset_requirements = self.ignore_toolset_requirements
-
-            try:
-                kw["program"] = []
-                kw["program"] += self.program
-                if extra_args:
-                    kw["program"] += extra_args
-                if pass_toolset:
-                    kw["program"].append("toolset=" + self.toolset)
-                if use_test_config:
-                    kw["program"].append('--test-config="%s"' % os.path.join(
-                        self.original_workdir, "test-config.jam"))
-                if ignore_toolset_requirements:
-                    kw["program"].append("--ignore-toolset-requirements")
-                if "--python" in sys.argv:
-                    kw["program"].append("--python")
-                kw["chdir"] = subdir
-                self.last_program_invocation = kw["program"]
-                apply(TestCmd.TestCmd.run, [self], kw)
-            except:
-                self.dump_stdio()
-                raise
-        finally:
+            kw["program"] = []
+            kw["program"] += self.program
+            if extra_args:
+                kw["program"] += extra_args
+            if pass_toolset:
+                kw["program"].append("toolset=" + self.toolset)
+            if use_test_config:
+                kw["program"].append('--test-config="%s"' % os.path.join(
+                    self.original_workdir, "test-config.jam"))
+            if ignore_toolset_requirements:
+                kw["program"].append("--ignore-toolset-requirements")
+            if "--python" in sys.argv:
+                kw["program"].append("--python")
+            kw["chdir"] = subdir
+            self.last_program_invocation = kw["program"]
+            build_time_start = time.time()
+            apply(TestCmd.TestCmd.run, [self], kw)
             build_time_finish = time.time()
-            old_last_build_timestamp = self.last_build_timestamp
-            self.last_build_timestamp = self.__get_current_file_timestamp()
+        except:
+            self.dump_stdio()
+            raise
 
-        self.tree = tree.build_tree(self.workdir)
+        old_last_build_timestamp = self.last_build_timestamp
+        self.tree, self.last_build_timestamp = tree.build_tree(self.workdir)
         self.difference = tree.tree_difference(self.previous_tree, self.tree)
         if self.difference.empty():
             # If nothing has been changed by this build and sufficient time has
