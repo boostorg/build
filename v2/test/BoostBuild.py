@@ -476,7 +476,7 @@ class Tester(TestCmd.TestCmd):
             self.last_build_timestamp = self.__get_current_file_timestamp()
 
         self.tree = tree.build_tree(self.workdir)
-        self.difference = tree.trees_difference(self.previous_tree, self.tree)
+        self.difference = tree.tree_difference(self.previous_tree, self.tree)
         if self.difference.empty():
             # If nothing has been changed by this build and sufficient time has
             # passed since the last build that actually changed something,
