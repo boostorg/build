@@ -261,8 +261,14 @@ int main( int argc, char * * argv, char * * arg_environ )
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
+        timestamp fmt_resolution[ 1 ];
+        file_supported_fmt_resolution( fmt_resolution );
+
         printf( "Boost.Jam  " );
         printf( "Version %s. %s.\n", VERSION, OSMINOR );
+        printf( "\n" );
+        printf( "Minimum supported file modification timestamp resolution:\n" );
+        printf( "   %s seconds\n", timestamp_timestr( fmt_resolution ) );
         printf( "\n" );
         printf( "Copyright information:\n" );
         printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce "
