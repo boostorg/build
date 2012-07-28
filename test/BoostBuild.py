@@ -345,20 +345,6 @@ class Tester(TestCmd.TestCmd):
         f.write(content)
         f.close()
 
-    def rename(self, old, new):
-        try:
-            os.makedirs(os.path.dirname(new))
-        except:
-            pass
-
-        try:
-            os.remove(new)
-        except:
-            pass
-
-        os.rename(old, new)
-        self.touch(new)
-
     def copy(self, src, dst):
         try:
             self.write(dst, self.read(src, 1))
