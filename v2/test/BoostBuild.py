@@ -540,7 +540,7 @@ class Tester(TestCmd.TestCmd):
     def read(self, name, binary=False):
         try:
             if self.toolset:
-                name = string.replace(name, "$toolset", self.toolset+"*")
+                name = string.replace(name, "$toolset", self.toolset + "*")
             name = self.glob_file(name)
             openMode = "r"
             if binary:
@@ -778,7 +778,7 @@ class Tester(TestCmd.TestCmd):
 
     def expect_content(self, name, content, exact=False):
         actual = self.__read_file(name, exact)
-        content = string.replace(content, "$toolset", self.toolset+"*")
+        content = string.replace(content, "$toolset", self.toolset + "*")
 
         matched = False
         if exact:
@@ -893,14 +893,14 @@ class Tester(TestCmd.TestCmd):
             names = [names]
         r = map(self.adjust_lib_name, names)
         r = map(self.adjust_suffix, r)
-        r = map(lambda x, t=self.toolset: string.replace(x, "$toolset", t+"*"),
-            r)
+        r = map(lambda x, t=self.toolset: string.replace(x, "$toolset", t + "*"
+            ), r)
         return r
 
     def native_file_name(self, name):
         name = self.adjust_names(name)[0]
         elements = string.split(name, "/")
-        return os.path.normpath(apply(os.path.join, [self.workdir]+elements))
+        return os.path.normpath(apply(os.path.join, [self.workdir] + elements))
 
     def wait_for_time_change(self, original_timestamp=None):
         """
