@@ -330,7 +330,7 @@ class Tester(TestCmd.TestCmd):
         def make_writable(unused, dir, entries):
             for e in entries:
                 name = os.path.join(dir, e)
-                os.chmod(name, os.stat(name)[0] | 0222)
+                os.chmod(name, os.stat(name).st_mode | 0222)
         os.path.walk(".", make_writable, None)
 
     def write(self, file, content, wait=True):
