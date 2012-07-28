@@ -45,6 +45,7 @@ int file_is_file( OBJECT * const path );
 int file_mkdir( char const * const path );
 file_info_t * file_query( OBJECT * const path );
 void file_remove_atexit( OBJECT * const path );
+void file_supported_fmt_resolution( timestamp * const );
 int file_time( OBJECT * const path, timestamp * const );
 
 /* Internal utility worker functions. */

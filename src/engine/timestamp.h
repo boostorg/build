@@ -36,6 +36,7 @@ void timestamp_init( timestamp * const, time_t const secs, int const nsecs );
 void timestamp_max( timestamp * const max, timestamp const * const lhs,
     timestamp const * const rhs );
 char const * timestamp_str( timestamp const * const );
+char const * timestamp_timestr( timestamp const * const );
 
 #ifdef OS_NT
 void timestamp_from_filetime( timestamp * const, FILETIME const * const );

@@ -283,14 +283,27 @@ void timestamp_max( timestamp * const max, timestamp const * const lhs,
 }
 
 
+static char const * timestamp_formatstr( timestamp const * const time,
+    char const * const format )
+{
+    static char result1[ 500 ];
+    static char result2[ 500 ];
+    strftime( result1, sizeof( result1 ) / sizeof( *result1 ), format, gmtime(
+        &time->secs ) );
+    sprintf( result2, result1, time->nsecs );
+    return result2;
+}
+
+
 char const * timestamp_str( timestamp const * const time )
 {
-    static char result[ 500 ];
-    char format[ 500 ];
-    strftime( format, sizeof( result ) / sizeof( *result ),
-        "%Y-%m-%d %H:%M:%S.%%09d +0000", gmtime( &time->secs ) );
-    sprintf( result, format, time->nsecs );
-    return result;
+    return timestamp_formatstr( time, "%Y-%m-%d %H:%M:%S.%%09d +0000" );
+}
+
+
+char const * timestamp_timestr( timestamp const * const time )
+{
+    return timestamp_formatstr( time, "%H:%M:%S.%%09d" );
 }
 
 
