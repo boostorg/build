@@ -263,6 +263,8 @@ int main( int argc, char * * argv, char * * arg_environ )
     {
         printf( "Boost.Jam  " );
         printf( "Version %s. %s.\n", VERSION, OSMINOR );
+        printf( "\n" );
+        printf( "Copyright information:\n" );
         printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce "
             "Software, Inc.\n" );
         printf( "   Copyright 2001 David Turner.\n" );
