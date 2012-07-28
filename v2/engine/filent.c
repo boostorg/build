@@ -183,7 +183,7 @@ int file_mkdir( char const * const path )
 
 /*
  * file_query_() - query information about a path from the OS
- * 
+ *
  * The following code for collecting information about a single file needs to be
  * synchronized with how the file_collect_dir_content_() operation is
  * implemented (collects information about all files in a folder).

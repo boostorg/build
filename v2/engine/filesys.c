@@ -45,7 +45,7 @@
  */
 void file_dirscan_( file_info_t * const dir, scanback func, void * closure );
 int file_collect_dir_content_( file_info_t * const dir );
-int file_query_( file_info_t * const info );
+int file_query_( file_info_t * const );
 
 static void file_dirscan_impl( OBJECT * dir, scanback func, void * closure );
 static void free_file_info( void * xfile, void * data );

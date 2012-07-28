@@ -34,7 +34,7 @@ typedef struct file_info_t
 } file_info_t;
 
 typedef void (*scanback)( void * closure, OBJECT * path, int found,
-    timestamp const * const t );
+    timestamp const * const );
 
 
 void file_archscan( char const * arch, scanback func, void * closure );
@@ -45,10 +45,10 @@ int file_is_file( OBJECT * const path );
 int file_mkdir( char const * const path );
 file_info_t * file_query( OBJECT * const path );
 void file_remove_atexit( OBJECT * const path );
-int file_time( OBJECT * const path, timestamp * const time );
+int file_time( OBJECT * const path, timestamp * const );
 
 /* Internal utility worker functions. */
-int file_query_posix_( file_info_t * const info );
+int file_query_posix_( file_info_t * const );
 
 void file_done();
 

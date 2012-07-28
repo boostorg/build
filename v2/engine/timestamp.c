@@ -331,7 +331,7 @@ static void time_enter( void * closure, OBJECT * target, int const found,
 
 static void free_timestamps( void * xbinding, void * data )
 {
-    object_free( ((BINDING *)xbinding)->name );
+    object_free( ( (BINDING *)xbinding )->name );
 }
 
 
