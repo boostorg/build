@@ -343,6 +343,10 @@ class property-set
     {
         for local p in $(self.raw)
         {
+            # TODO: Note that non-conditional properties may contain colon (':')
+            # characters as well, e.g. free or indirect properties. Indirect
+            # properties for example contain a full Jamfile path in their value
+            # which on Windows file systems contains ':' as the drive separator.
             if [ MATCH (:) : $(p:G=) ]
             {
                 self.conditional += $(p) ;
@@ -377,7 +381,7 @@ NATIVE_RULE property-set : create ;
 
 
 # Creates a new 'property-set' instance after checking that all properties are
-# valid and converting incidental properties into gristed form.
+# valid and converting implicit properties into gristed form.
 #
 rule create-with-validation ( raw-properties * )
 {
@@ -488,4 +492,3 @@ else
         return $(path) ;
     }
 }
-
