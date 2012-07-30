@@ -962,8 +962,8 @@ rule from-file ( file : file-loc : project )
 #
 rule register ( target )
 {
-    local signature = [ sequence.join
-        [ $(target).path ] [ $(target).name ] : - ] ;
+    local signature = [ sequence.join [ $(target).path ] [ $(target).name ] : -
+        ] ;
 
     local result ;
     for local t in $(.cache.$(signature))
