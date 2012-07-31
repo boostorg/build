@@ -212,7 +212,6 @@ def match_re(lines=None, res=None):
 
 
 class TestCmd:
-
     def __init__(self, description=None, program=None, workdir=None,
         subdir=None, verbose=False, match=None, inpath=None):
 
@@ -405,23 +404,20 @@ class TestCmd:
             cmd += arguments.split(" ")
         if self.verbose:
             sys.stderr.write(join(cmd, " ") + "\n")
-        try:
-            p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=chdir,
-                universal_newlines=universal_newlines)
-        except:
-            raise
-        else:
-            if stdin:
-                if type(stdin) is ListType:
-                    for line in stdin:
-                        p.tochild.write(line)
-                else:
-                    p.tochild.write(stdin)
-            out, err = p.communicate()
-            self._stdout.append(out)
-            self._stderr.append(err)
-            self.status = p.returncode
+        p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=chdir,
+            universal_newlines=universal_newlines)
+
+        if stdin:
+            if type(stdin) is ListType:
+                for line in stdin:
+                    p.tochild.write(line)
+            else:
+                p.tochild.write(stdin)
+        out, err = p.communicate()
+        self._stdout.append(out)
+        self._stderr.append(err)
+        self.status = p.returncode
 
         if self.verbose:
             sys.stdout.write(self._stdout[-1])
