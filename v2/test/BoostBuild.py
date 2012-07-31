@@ -15,7 +15,6 @@ import os
 import os.path
 import re
 import shutil
-import string
 import StringIO
 import sys
 import tempfile
@@ -205,7 +204,8 @@ class Tester(TestCmd.TestCmd):
     def __init__(self, arguments=None, executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
-        ignore_toolset_requirements=True, workdir="", pass_d0=True, **keywords):
+        ignore_toolset_requirements=True, workdir="", pass_d0=True,
+        **keywords):
 
         assert arguments.__class__ is not str
         self.original_workdir = os.getcwd()
@@ -342,8 +342,10 @@ class Tester(TestCmd.TestCmd):
         except Exception, e:
             pass
         f = open(nfile, "wb")
-        f.write(content)
-        f.close()
+        try:
+            f.write(content)
+        finally:
+            f.close()
 
     def copy(self, src, dst):
         try:
@@ -379,8 +381,8 @@ class Tester(TestCmd.TestCmd):
             n = glob.glob(self.native_file_name(name))
             if n: n = n[0]
             if not n:
-                n = self.glob_file(string.replace(name, "$toolset",
-                    self.toolset + "*"))
+                n = self.glob_file(name.replace("$toolset", self.toolset + "*")
+                    )
             if n:
                 if os.path.isdir(n):
                     shutil.rmtree(n, ignore_errors=False)
@@ -398,8 +400,7 @@ class Tester(TestCmd.TestCmd):
         toolset currently being tested.
 
         """
-        self.write(name, string.replace(self.read(name), "$toolset",
-            self.toolset))
+        self.write(name, self.read(name).replace("$toolset", self.toolset))
 
     def dump_stdio(self):
         annotation("STDOUT", self.stdout())
@@ -526,7 +527,7 @@ class Tester(TestCmd.TestCmd):
     def read(self, name, binary=False):
         try:
             if self.toolset:
-                name = string.replace(name, "$toolset", self.toolset + "*")
+                name = name.replace("$toolset", self.toolset + "*")
             name = self.glob_file(name)
             openMode = "r"
             if binary:
@@ -548,7 +549,7 @@ class Tester(TestCmd.TestCmd):
         f = open(self.glob_file(name), "rb")
         lines = f.readlines()
         f.close()
-        result = string.join(map(string.rstrip, lines), "\n")
+        result = "\n".join(x.rstrip() for x in lines)
         if lines and lines[-1][-1] != "\n":
             return result + "\n"
         return result
@@ -561,7 +562,8 @@ class Tester(TestCmd.TestCmd):
         if dump_difference and hasattr(self, "difference"):
             f = StringIO.StringIO()
             self.difference.pprint(f)
-            annotation("changes caused by the last build command", f.getvalue())
+            annotation("changes caused by the last build command",
+                f.getvalue())
 
         if dump_stdio:
             self.dump_stdio()
@@ -598,7 +600,8 @@ class Tester(TestCmd.TestCmd):
                 self.fail_test(1)
 
     def ignore_addition(self, wildcard):
-        self.ignore_elements(self.unexpected_difference.added_files, wildcard)
+        self.__ignore_elements(self.unexpected_difference.added_files,
+            wildcard)
 
     def expect_removal(self, names):
         for name in self.adjust_names(names):
@@ -609,18 +612,20 @@ class Tester(TestCmd.TestCmd):
                 self.fail_test(1)
 
     def ignore_removal(self, wildcard):
-        self.ignore_elements(self.unexpected_difference.removed_files, wildcard)
+        self.__ignore_elements(self.unexpected_difference.removed_files,
+            wildcard)
 
     def expect_modification(self, names):
         for name in self.adjust_names(names):
             try:
                 glob_remove(self.unexpected_difference.modified_files, name)
             except:
-                annotation("failure", "File %s not modified as expected" % name)
+                annotation("failure", "File %s not modified as expected" %
+                    name)
                 self.fail_test(1)
 
     def ignore_modification(self, wildcard):
-        self.ignore_elements(self.unexpected_difference.modified_files, \
+        self.__ignore_elements(self.unexpected_difference.modified_files,
             wildcard)
 
     def expect_touch(self, names):
@@ -646,13 +651,14 @@ class Tester(TestCmd.TestCmd):
                 self.fail_test(1)
 
     def ignore_touch(self, wildcard):
-        self.ignore_elements(self.unexpected_difference.touched_files, wildcard)
+        self.__ignore_elements(self.unexpected_difference.touched_files,
+            wildcard)
 
     def ignore(self, wildcard):
-        self.ignore_elements(self.unexpected_difference.added_files, wildcard)
-        self.ignore_elements(self.unexpected_difference.removed_files, wildcard)
-        self.ignore_elements(self.unexpected_difference.modified_files, wildcard)
-        self.ignore_elements(self.unexpected_difference.touched_files, wildcard)
+        self.ignore_addition(wildcard)
+        self.ignore_removal(wildcard)
+        self.ignore_modification(wildcard)
+        self.ignore_touch(wildcard)
 
     def expect_nothing(self, names):
         for name in self.adjust_names(names):
@@ -702,69 +708,15 @@ class Tester(TestCmd.TestCmd):
             annotation("unexpected changes", output.getvalue())
             self.fail_test(1)
 
-    def __expect_lines(self, data, lines, expected):
-        # str.splitlines() trims at most one trailing newline while we want the
-        # trailing newline to indicate that there should be an extra empty line
-        # at the end.
-        splitlines = lambda x : (x + "\n").splitlines()
-
-        if data is None:
-            data = []
-        elif data.__class__ is str:
-            data = splitlines(data)
-
-        if lines.__class__ is str:
-            lines = [splitlines(lines)]
-        else:
-            expanded = []
-            for x in lines:
-                if x.__class__ is str:
-                    expanded.extend(splitlines(x))
-                else:
-                    expanded.append(x)
-            lines = expanded
-
-        if _contains_lines(data, lines) != bool(expected):
-            output = []
-            if expected:
-                output = ["Did not find expected lines:"]
-            else:
-                output = ["Found unexpected lines:"]
-            first = True
-            for line_sequence in lines:
-                if line_sequence:
-                    if first:
-                        first = False
-                    else:
-                        output.append("...")
-                    output.extend("  > " + line for line in line_sequence)
-            output.append("in output:")
-            output.extend("  > " + line for line in data)
-            annotation("failure", "\n".join(output))
-            self.fail_test(1)
-
     def expect_output_lines(self, lines, expected=True):
         self.__expect_lines(self.stdout(), lines, expected)
 
     def expect_content_lines(self, filename, line, expected=True):
         self.__expect_lines(self.__read_file(filename), line, expected)
 
-    def __read_file(self, name, exact=False):
-        name = self.adjust_names(name)[0]
-        result = ""
-        try:
-            if exact:
-                result = self.read(name)
-            else:
-                result = string.replace(self.read_and_strip(name), "\\", "/")
-        except (IOError, IndexError):
-            print "Note: could not open file", name
-            self.fail_test(1)
-        return result
-
     def expect_content(self, name, content, exact=False):
         actual = self.__read_file(name, exact)
-        content = string.replace(content, "$toolset", self.toolset + "*")
+        content = content.replace("$toolset", self.toolset + "*")
 
         matched = False
         if exact:
@@ -813,7 +765,7 @@ class Tester(TestCmd.TestCmd):
             os.unlink(e)
             os.unlink(a)
         else:
-            print("Set environmental variable 'DO_DIFF' to examine "
+            print("Set environmental variable 'DO_DIFF' to examine the "
                 "difference.")
 
     # Helpers.
@@ -836,16 +788,12 @@ class Tester(TestCmd.TestCmd):
         return here
 
     # Internal methods.
-    def ignore_elements(self, list, wildcard):
-        """Removes in-place 'list' elements matching the given 'wildcard'."""
-        list[:] = filter(lambda x, w=wildcard: not fnmatch.fnmatch(x, w), list)
-
     def adjust_lib_name(self, name):
         global lib_prefix
         global dll_prefix
         result = name
 
-        pos = string.rfind(name, ".")
+        pos = name.rfind(".")
         if pos != -1:
             suffix = name[pos:]
             if suffix == ".lib":
@@ -860,13 +808,13 @@ class Tester(TestCmd.TestCmd):
                     result = os.path.join(head, tail)
         # If we want to use this name in a Jamfile, we better convert \ to /,
         # as otherwise we would have to quote \.
-        result = string.replace(result, "\\", "/")
+        result = result.replace("\\", "/")
         return result
 
     def adjust_suffix(self, name):
         if not self.translate_suffixes:
             return name
-        pos = string.rfind(name, ".")
+        pos = name.rfind(".")
         if pos == -1:
             return name
         suffix = name[pos:]
@@ -875,18 +823,16 @@ class Tester(TestCmd.TestCmd):
     # Acceps either a string or a list of strings and returns a list of
     # strings. Adjusts suffixes on all names.
     def adjust_names(self, names):
-        if type(names) == types.StringType:
+        if names.__class__ is str:
             names = [names]
         r = map(self.adjust_lib_name, names)
         r = map(self.adjust_suffix, r)
-        r = map(lambda x, t=self.toolset: string.replace(x, "$toolset", t + "*"
-            ), r)
+        r = map(lambda x, t=self.toolset: x.replace("$toolset", t + "*"), r)
         return r
 
     def native_file_name(self, name):
         name = self.adjust_names(name)[0]
-        elements = string.split(name, "/")
-        return os.path.normpath(apply(os.path.join, [self.workdir] + elements))
+        return os.path.normpath(os.path.join(self.workdir, *name.split("/")))
 
     def wait_for_time_change(self, original_timestamp=None):
         """
@@ -934,6 +880,47 @@ class Tester(TestCmd.TestCmd):
         if self.last_build_timestamp:
             self.wait_for_time_change(self.last_build_timestamp)
 
+    def __expect_lines(self, data, lines, expected):
+        # str.splitlines() trims at most one trailing newline while we want the
+        # trailing newline to indicate that there should be an extra empty line
+        # at the end.
+        splitlines = lambda x : (x + "\n").splitlines()
+
+        if data is None:
+            data = []
+        elif data.__class__ is str:
+            data = splitlines(data)
+
+        if lines.__class__ is str:
+            lines = [splitlines(lines)]
+        else:
+            expanded = []
+            for x in lines:
+                if x.__class__ is str:
+                    expanded.extend(splitlines(x))
+                else:
+                    expanded.append(x)
+            lines = expanded
+
+        if _contains_lines(data, lines) != bool(expected):
+            output = []
+            if expected:
+                output = ["Did not find expected lines:"]
+            else:
+                output = ["Found unexpected lines:"]
+            first = True
+            for line_sequence in lines:
+                if line_sequence:
+                    if first:
+                        first = False
+                    else:
+                        output.append("...")
+                    output.extend("  > " + line for line in line_sequence)
+            output.append("in output:")
+            output.extend("  > " + line for line in data)
+            annotation("failure", "\n".join(output))
+            self.fail_test(1)
+
     def __get_current_file_timestamp(self):
         fd, path = tempfile.mkstemp(prefix="__Boost_Build_timestamp_tester__")
         try:
@@ -942,18 +929,33 @@ class Tester(TestCmd.TestCmd):
             os.close(fd)
             os.unlink(path)
 
+    def __ignore_elements(self, list, wildcard):
+        """Removes in-place 'list' elements matching the given 'wildcard'."""
+        list[:] = filter(lambda x, w=wildcard: not fnmatch.fnmatch(x, w), list)
+
+    def __read_file(self, name, exact=False):
+        name = self.adjust_names(name)[0]
+        result = ""
+        try:
+            if exact:
+                result = self.read(name)
+            else:
+                result = self.read_and_strip(name).replace("\\", "/")
+        except (IOError, IndexError):
+            print "Note: could not open file", name
+            self.fail_test(1)
+        return result
+
 
 class List:
-
     def __init__(self, s=""):
         elements = []
-        if isinstance(s, type("")):
+        if s.__class__ is str:
             # Have to handle escaped spaces correctly.
-            s = string.replace(s, "\ ", "\001")
-            elements = string.split(s)
+            elements = s.replace("\ ", "\001").split()
         else:
             elements = s
-        self.l = [string.replace(e, "\001", " ") for e in elements]
+        self.l = [e.replace("\001", " ") for e in elements]
 
     def __len__(self):
         return len(self.l)
@@ -1001,14 +1003,14 @@ def _contains_lines(data, lines):
         if expected_line_count > data_line_count - index:
             return False
         expected_line_count -= len(expected)
-        index = __match_line_sequence(data, index, data_line_count -
+        index = _match_line_sequence(data, index, data_line_count -
             expected_line_count, expected)
         if index < 0:
             return False
     return True
 
 
-def __match_line_sequence(data, start, end, lines):
+def _match_line_sequence(data, start, end, lines):
     if not lines:
         return start
     for index in xrange(start, end - len(lines) + 1):
