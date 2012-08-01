@@ -851,9 +851,11 @@ class Tester(TestCmd.TestCmd):
             "resolution:\n\\s+([0-9]{2}):([0-9]{2}):([0-9]{2}\\.[0-9]{9}) "
             "seconds$", out, re.MULTILINE)
         if not r:
-            raise TestEnvironmentError("Could not find minimum supported file "
-                "modification timestamp resolution in Boost Jam version "
-                "information output.")
+            # Older Boost Jam versions did not report their minimum supported
+            # file modification timestamp resolution and did not actually
+            # support file modification timestamp resolutions finer than 1
+            # second.
+            return 1
         if r.group(1) != "00" or r.group(2) != "00":  # hours, minutes
             raise TestEnvironmentError("Boost Jam with too coarse minimum "
                 "supported file modification timestamp resolution (%s:%s:%s)."
