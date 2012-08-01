@@ -54,7 +54,6 @@ import numbers ;
 import project ;
 import property-set ;
 import regex ;
-import string ;
 import toolset ;
 
 .boost.auto_config = [ property-set.create <layout>system ] ;
