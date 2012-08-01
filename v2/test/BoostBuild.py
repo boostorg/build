@@ -16,6 +16,7 @@ import os.path
 import re
 import shutil
 import StringIO
+import subprocess
 import sys
 import tempfile
 import time
@@ -24,6 +25,10 @@ import tree
 import types
 
 from xml.sax.saxutils import escape
+
+
+class TestEnvironmentError(Exception):
+    pass
 
 
 annotations = []
@@ -334,18 +339,14 @@ class Tester(TestCmd.TestCmd):
         os.path.walk(".", make_writable, None)
 
     def write(self, file, content, wait=True):
-        if wait:
-            self.wait_for_time_change_since_last_build()
         nfile = self.native_file_name(file)
-        try:
-            os.makedirs(os.path.dirname(nfile))
-        except Exception, e:
-            pass
+        self.__makedirs(os.path.dirname(nfile), wait)
         f = open(nfile, "wb")
         try:
             f.write(content)
         finally:
             f.close()
+        self.__ensure_newer_than_last_build(nfile)
 
     def copy(self, src, dst):
         try:
@@ -361,10 +362,14 @@ class Tester(TestCmd.TestCmd):
         os.utime(dst_name, (stats.st_atime, stats.st_mtime))
 
     def touch(self, names, wait=True):
-        if wait:
-            self.wait_for_time_change_since_last_build()
-        for name in self.adjust_names(names):
-            os.utime(self.native_file_name(name), None)
+        if names.__class__ is str:
+            names = [names]
+        for name in names:
+            path = self.native_file_name(name)
+            if wait:
+                self.__ensure_newer_than_last_build(path)
+            else:
+                os.utime(path, None)
 
     def rm(self, names):
         if not type(names) == types.ListType:
@@ -815,51 +820,58 @@ class Tester(TestCmd.TestCmd):
         name = self.adjust_names(name)[0]
         return os.path.normpath(os.path.join(self.workdir, *name.split("/")))
 
-    def wait_for_time_change(self, original_timestamp=None):
+    def wait_for_time_change(self, path, touch):
         """
-          Wait until newly assigned file system timestamps are large enough to
-        be correctly recognized as newer than the given original timestamp.
-        They need to be large enough for this to be recognizable by both this
-        Python based testing framework and the Boost Jam executable being
-        tested.
-
-          Note: This code assumes that both the file system and the Boost Jam
-        executable being tested use file modification timestamp resolution no
-        coarser than 1 second. This for example does not hold on old FAT file
-        systems that used a 2 second file modification timestamp resolution.
+          Wait for newly assigned file system modification timestamps for the
+        given path to become large enough for the timestamp difference to be
+        correctly recognized by both this Python based testing framework and
+        the Boost Jam executable being tested. May optionally touch the given
+        path to set its modification timestamp to the new value.
 
         """
-        # In theory waiting until original_timestamp + 1 should be enough here
-        # but due to rounding errors in Python's floating point timestamp
-        # representation, file system's file modification timestamp caching and
-        # possibly some other OS/Python/file-system layers as well it
-        # occasionally happens that with just "+ 1" our 'touch' and other
-        # commands still do not bump the file time enough to trigger a rebuild.
-        # To work around this we add an extra tiny wait at the end in case
-        # there is a chance we are too close to the problematic "+ 1" boundary.
-        if original_timestamp is None:
-            time.sleep(1.1)
-            return
-        wait_check = lambda x : (self.__get_current_file_timestamp() <
-            original_timestamp + x)
-        extra_wait_needed = wait_check(2)
-        while wait_check(1):
-            time.sleep(0.1)
-        if extra_wait_needed:
-            time.sleep(0.1)
+        self.__wait_for_time_change(path, touch, last_build_time=False)
 
-    def wait_for_time_change_since_last_build(self):
+    def __build_timestamp_resolution(self):
         """
-          Wait until newly assigned file system timestamps are large enough to
-        be correctly recognized as newer than the ones assigned to files
-        created by our previous build run. They need to be large enough for
-        this to be recognizable by both this Python based testing framework and
-        the Boost Jam executable being tested. Used to make subsequent builds
-        correctly recognize newly created or touched files.
+          Returns the minimum path modification timestamp resolution supported
+        by the used Boost Jam executable.
+
+        """
+        p = subprocess.Popen([self.program[0], "-v"], stdout=subprocess.PIPE,
+            universal_newlines=True)
+        out, err = p.communicate()
+        if p.returncode != 0:
+            raise TestEnvironmentError("Unexpected return code (%s) when "
+                "detecting Boost Jam version information." % p.returncode)
+        if err:
+            raise TestEnvironmentError("Unexpected error output (%s) when "
+                "detecting Boost Jam version information." % err)
+
+        r = re.search("^Minimum supported file modification timestamp "
+            "resolution:\n\\s+([0-9]{2}):([0-9]{2}):([0-9]{2}\\.[0-9]{9}) "
+            "seconds$", out, re.MULTILINE)
+        if not r:
+            raise TestEnvironmentError("Could not find minimum supported file "
+                "modification timestamp resolution in Boost Jam version "
+                "information output.")
+        if r.group(1) != "00" or r.group(2) != "00":  # hours, minutes
+            raise TestEnvironmentError("Boost Jam with too coarse minimum "
+                "supported file modification timestamp resolution (%s:%s:%s)."
+                % (r.group(1), r.group(2), r.group(3)))
+        return float(r.group(3))   # seconds.nanoseconds
+
+    def __ensure_newer_than_last_build(self, path):
+        """
+          Updates the given path's modification timestamp after waiting for the
+        newly assigned file system modification timestamp to become large
+        enough for the timestamp difference between it and the last build
+        timestamp to be correctly recognized by both this Python based testing
+        framework and the Boost Jam executable being tested. Does nothing if
+        there is no 'last build' information available.
 
         """
         if self.last_build_timestamp:
-            self.wait_for_time_change(self.last_build_timestamp)
+            self.__wait_for_time_change(path, touch=True, last_build_time=True)
 
     def __expect_lines(self, data, lines, expected):
         # str.splitlines() trims at most one trailing newline while we want the
@@ -902,17 +914,104 @@ class Tester(TestCmd.TestCmd):
             annotation("failure", "\n".join(output))
             self.fail_test(1)
 
-    def __get_current_file_timestamp(self):
-        fd, path = tempfile.mkstemp(prefix="__Boost_Build_timestamp_tester__")
-        try:
-            return os.fstat(fd).st_mtime
-        finally:
-            os.close(fd)
-            os.unlink(path)
-
     def __ignore_elements(self, list, wildcard):
         """Removes in-place 'list' elements matching the given 'wildcard'."""
         list[:] = filter(lambda x, w=wildcard: not fnmatch.fnmatch(x, w), list)
+
+    def __makedirs(self, path, wait):
+        """
+          Creates a folder with the given path, together with any missing
+        parent folders. If WAIT is set, makes sure any newly created folders
+        have modification timestamps newer than the ones left behind by the
+        last build run.
+
+        """
+        try:
+            if wait:
+                stack = []
+                while path and path not in stack and not os.path.isdir(path):
+                    stack.append(path)
+                    path = os.path.dirname(path)
+                while stack:
+                    path = stack.pop()
+                    os.mkdir(path)
+                    self.__ensure_newer_than_last_build(path)
+            else:
+                os.makedirs(path)
+        except Exception:
+            pass
+
+    def __python_timestamp_resolution(self, path, minimum_resolution):
+        """
+          Returns the modification timestamp resolution for the given path
+        supported by the used Python interpreter/OS/filesystem combination.
+        Will not check for resolutions less than the given minimum value. Will
+        change the path's modification timestamp in the process.
+
+          Return values:
+            0                - nanosecond resolution supported
+            positive decimal - timestamp resolution in seconds
+
+        """
+        # Note on Python's floating point timestamp support:
+        #   Python interpreter versions prior to Python 2.3 did not support
+        # floating point timestamps. Versions 2.3 through 3.3 may or may not
+        # support it depending on the configuration (may be toggled by calling
+        # os.stat_float_times(True/False) at program startup, disabled by
+        # default prior to Python 2.5 and enabled by default since). Python 3.3
+        # deprecated this configuration and 3.4 removed support for it after
+        # which floating point timestamps are always supported.
+        ver = sys.version_info[0:2]
+        python_nanosecond_support = ver >= (3, 4) or (ver >= (2, 3) and
+            os.stat_float_times())
+
+        # Minimal expected floating point difference used to account for
+        # possible imprecise floating point number representations. We want
+        # this number to be small (at least smaller than 0.0001) but still
+        # large enough that we can be sure that increasing a floating point
+        # value by 2 * eta guarantees the value read back will be increased by
+        # at least eta.
+        eta = 0.00005
+
+        stats_orig = os.stat(path)
+        def test_time(diff):
+            """Returns whether a timestamp difference is detectable."""
+            os.utime(path, (stats_orig.st_atime, stats_orig.st_mtime + diff))
+            return os.stat(path).st_mtime > stats_orig.st_mtime + eta
+
+        # Test for nanosecond timestamp resolution support.
+        if not minimum_resolution and python_nanosecond_support:
+            if test_time(2 * eta):
+                return 0
+
+        # Detect the filesystem timestamp resolution. Note that there is no
+        # need to make this code 'as fast as possible' as, this function gets
+        # called before having to sleep until the next detectable modification
+        # timestamp value and that, since we already know nanosecond resolution
+        # is not supported, will surely take longer than whatever we do here to
+        # detect this minimal detectable modification timestamp resolution.
+        step = 0.1
+        if not python_nanosecond_support:
+            # If Python does not support nanosecond timestamp resolution we
+            # know the minimum possible supported timestamp resolution is 1
+            # second.
+            minimum_resolution = max(1, minimum_resolution)
+        index = max(1, int(minimum_resolution / step))
+        while step * index < minimum_resolution:
+            # Floating point number representation errors may cause our
+            # initially calculated start index to be too small if calculated
+            # directly.
+            index += 1
+        while True:
+            # Do not simply add up the steps to avoid cumulative floating point
+            # number representation errors.
+            next = step * index
+            if next > 10:
+                raise TestEnvironmentError("File systems with too coarse "
+                    "modification timestamp resolutions not supported.")
+            if test_time(next):
+                return next
+            index += 1
 
     def __read_file(self, name, exact=False):
         name = self.adjust_names(name)[0]
@@ -926,6 +1025,95 @@ class Tester(TestCmd.TestCmd):
             print "Note: could not open file", name
             self.fail_test(1)
         return result
+
+    def __wait_for_time_change(self, path, touch, last_build_time):
+        """
+          Wait until a newly assigned file system modification timestamp for
+        the given path is large enough for the timestamp difference between it
+        and the last build timestamp or the path's original file system
+        modification timestamp (depending on the last_build_time flag) to be
+        correctly recognized by both this Python based testing framework and
+        the Boost Jam executable being tested. May optionally touch the given
+        path to set its modification timestamp to the new value.
+
+        """
+        assert self.last_build_timestamp or not last_build_time
+        stats_orig = os.stat(path)
+
+        if last_build_time:
+            start_time = self.last_build_timestamp
+        else:
+            start_time = stats_orig.st_mtime
+
+        build_resolution = self.__build_timestamp_resolution()
+        assert build_resolution >= 0
+
+        # Check whether the current timestamp is already new enough.
+        if stats_orig.st_mtime > start_time and (not build_resolution or
+            stats_orig.st_mtime >= start_time + build_resolution):
+            return
+
+        resolution = self.__python_timestamp_resolution(path, build_resolution)
+        assert resolution >= build_resolution
+
+        # Implementation notes:
+        #  * Theoretically time.sleep() API might get interrupted too soon
+        #    (never actually encountered).
+        #  * We encountered cases where we sleep just long enough for the
+        #    filesystem's modifiction timestamp to change to the desired value,
+        #    but after waking up, the read timestamp is still just a tiny bit
+        #    too small (encountered on Windows). This is most likely caused by
+        #    imprecise floating point timestamp & sleep interval representation
+        #    used by Python. Note though that we never encountered a case where
+        #    more than one additional tiny sleep() call was needed to remedy
+        #    the situation.
+        #  * We try to wait long enough for the timestamp to change, but do not
+        #    want to waste processing time by waiting too long. The main
+        #    problem is that when we have a coarse resolution, the actual times
+        #    get rounded and we do not know the exact sleep time needed for the
+        #    difference between two such times to pass. E.g. if we have a 1
+        #    second resolution and the original and the current file timestamps
+        #    are both 10 seconds then it could be that the current time is
+        #    10.99 seconds and that we can wait for just one hundredth of a
+        #    second for the current file timestamp to reach its next value, and
+        #    using a longer sleep interval than that would just be wasting
+        #    time.
+        while True:
+            os.utime(path, None)
+            c = os.stat(path).st_mtime
+            if resolution:
+                if c > start_time and (not build_resolution or c >= start_time
+                    + build_resolution):
+                    break
+                if c <= start_time - resolution:
+                    # Move close to the desired timestamp in one sleep, but not
+                    # close enough for timestamp rounding to potentially cause
+                    # us to wait too long.
+                    if start_time - c > 5:
+                        if last_build_time:
+                            error_message = ("Last build time recorded as "
+                                "being a future event, causing a too long "
+                                "wait period. Something must have played "
+                                "around with the system clock.")
+                        else:
+                            error_message = ("Original path modification "
+                                "timestamp set to far into the future or "
+                                "something must have played around with the "
+                                "system clock, causing a too long wait "
+                                "period.\nPath: '%s'" % path)
+                        raise TestEnvironmentError(message)
+                    _sleep(start_time - c)
+                else:
+                    # We are close to the desired timestamp so take baby sleeps
+                    # to avoid sleeping too long.
+                    _sleep(max(0.01, resolution / 10))
+            else:
+                if c > start_time:
+                    break
+                _sleep(max(0.01, start_time - c))
+
+        if not touch:
+            os.utime(path, (stats_orig.st_atime, stats_orig.st_mtime))
 
 
 class List:
@@ -1003,6 +1191,14 @@ def _match_line_sequence(data, start, end, lines):
         else:
             return data_index
     return -1
+
+
+def _sleep(delay):
+    if delay > 5:
+        raise TestEnvironmentError("Test environment error: sleep period of "
+            "more than 5 seconds requested. Most likely caused by a file with "
+            "its modification timestamp set to sometime in the future.")
+    time.sleep(delay)
 
 
 ###############################################################################

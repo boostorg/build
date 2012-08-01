@@ -7,6 +7,20 @@
 
 import BoostBuild
 
+
+def wait_for_bar(t):
+    """
+      Wait to make the test system correctly recognize the 'bar' file as
+    touched after the next build run. Without the wait, the next build run may
+    rebuild the 'bar' file with the new and the old file modification timestamp
+    too close to each other - which could, depending on the currently supported
+    file modification timestamp resolution, be detected as 'no change' by the
+    testing system.
+
+    """
+    t.wait_for_time_change("bar", touch=False)
+
+
 t = BoostBuild.Tester(["-ffile.jam", "-d+3", "-d+12", "-d+13"], pass_d0=False,
     pass_toolset=0)
 
@@ -35,7 +49,7 @@ t.run_build_system(["bar"])
 t.expect_addition("bar")
 t.expect_nothing_more()
 
-t.wait_for_time_change_since_last_build()
+wait_for_bar(t)
 t.run_build_system(["foo"])
 t.expect_touch("bar")
 t.expect_addition("foo")
@@ -46,12 +60,7 @@ t.expect_addition(["aux1", "aux2"])
 t.expect_nothing_more()
 
 t.touch("bar")
-# Wait to make the test system correctly recognize the 'bar' file as touched by
-# the next build run, even if it uses 1 second file modification timestamp
-# resolution and the build system does the rebuild fast enough that the
-# original and the touched files have their file modification timestamps within
-# the same second.
-t.wait_for_time_change()
+wait_for_bar(t)
 t.run_build_system()
 t.expect_touch(["foo", "bar", "aux1", "aux2"])
 t.expect_nothing_more()
