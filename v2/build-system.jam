@@ -307,6 +307,10 @@ local rule load-config ( module-name : filename : path + : must-find ? )
 # specified. If the file name has been given explicitly then the file must
 # exist.
 #
+#   -- project-config --
+#   Always named project-config.jam. Looked up in the current working folder and
+# then upwards through its parents up to the root folder.
+#
 # Test configurations have been added primarily for use by Boost Build's
 # internal unit testing system but may be used freely in other places as well.
 #
@@ -411,13 +415,12 @@ local rule load-configuration-files
         }
     }
 
-    # We look for project-config.jam from "." upward.
-    # I am not sure this is 100% right decision, we might as well check for
-    # it only alonside the Jamroot file. However:
-    #
+    # We look for project-config.jam from "." upward. I am not sure this is 100%
+    # right decision, we might as well check for it only alongside the Jamroot
+    # file. However:
     # - We need to load project-root.jam before Jamroot
-    # - We probably would need to load project-root.jam even if there's no
-    #   Jamroot - e.g. to implement automake-style out-of-tree builds.
+    # - We probably need to load project-root.jam even if there is no Jamroot -
+    #   e.g. to implement automake-style out-of-tree builds.
     local file = [ path.glob "." : project-config.jam ] ;
     if ! $(file)
     {
