@@ -194,7 +194,7 @@ rule use-project
 
 local rule boost_lib_std ( id : shared-lib-define )
 {
-    lib $(name) : : : : <link>shared:<define>$(shared-lib-define) ;
+    lib $(id) : : : : <link>shared:<define>$(shared-lib-define) ;
 }
 
 rule boost_std ( inc ? lib ? )
