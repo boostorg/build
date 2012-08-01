@@ -768,25 +768,6 @@ class Tester(TestCmd.TestCmd):
             print("Set environmental variable 'DO_DIFF' to examine the "
                 "difference.")
 
-    # Helpers.
-    def mul(self, *arguments):
-        if len(arguments) == 0:
-            return None
-
-        here = arguments[0]
-        if type(here) == type(""):
-            here = [here]
-
-        if len(arguments) > 1:
-            there = apply(self.mul, arguments[1:])
-            result = []
-            for i in here:
-                for j in there:
-                    result.append(i + j)
-            return result
-
-        return here
-
     # Internal methods.
     def adjust_lib_name(self, name):
         global lib_prefix
