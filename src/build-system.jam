@@ -342,6 +342,12 @@ local rule load-configuration-files
         site-path = [ modules.peek : SystemRoot ] $(user-path) ;
     }
 
+    if $(.debug-config) && ! $(test-config) && $(ignore-site-config)
+    {
+        ECHO "notice: Site configuration files will be ignored due to the" ;
+        ECHO "notice: --ignore-site-config command-line option." ;
+    }
+
     initialize-config-module site-config ;
     if ! $(test-config) && ! $(ignore-site-config)
     {
