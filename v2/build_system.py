@@ -2,12 +2,12 @@
 # and some FIXME.
 # Base revision: 64351
 
-# Copyright 2003, 2005 Dave Abrahams 
-# Copyright 2006 Rene Rivera 
-# Copyright 2003, 2004, 2005, 2006, 2007 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
-
+# Copyright 2003, 2005 Dave Abrahams
+# Copyright 2006 Rene Rivera
+# Copyright 2003, 2004, 2005, 2006, 2007 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt) 
 
 
 from b2.build.engine import Engine
@@ -94,7 +94,7 @@ def set_default_toolset(toolset, version=None):
     default_toolset = toolset
     default_toolset_version = version
 
-    
+
 pre_build_hook = []
 
 def add_pre_build_hook(callable):
@@ -188,7 +188,7 @@ def load_config(module_name, filename, paths, must_find=False):
 
     if where:
         where = os.path.realpath(where)
-        
+
         if debug_config:
             print "notice: Loading '%s' configuration file '%s' from '%s'." \
                   % (module_name, filename, where)
@@ -200,7 +200,7 @@ def load_config(module_name, filename, paths, must_find=False):
         attributes = get_manager().projects().attributes(module_name) ;
         attributes.set('source-location', os.path.dirname(where), True)
         get_manager().projects().load_standalone(module_name, where)
-        
+
     else:
         msg = "Configuration file '%s' not found in '%s'." % (filename, path)
         if must_find:
@@ -215,16 +215,16 @@ def load_config(module_name, filename, paths, must_find=False):
 #
 #   -- test-config --
 #   Loaded only if specified on the command-line using the --test-config
-# command-line parameter. It is ok for this file not to exist even if specified.
-# If this configuration file is loaded, regular site and user configuration
-# files will not be. If a relative path is specified, file is searched for in
-# the current folder.
+# command-line parameter. It is ok for this file not to exist even if
+# specified. If this configuration file is loaded, regular site and user
+# configuration files will not be. If a relative path is specified, file is
+# searched for in the current folder.
 #
 #   -- site-config --
 #   Always named site-config.jam. Will only be found if located on the system
-# root path (Windows), /etc (non-Windows), user's home folder or the Boost Build
-# path, in that order. Not loaded in case the test-config configuration file is
-# loaded or the --ignore-site-config command-line option is specified.
+# root path (Windows), /etc (non-Windows), user's home folder or the Boost
+# Build path, in that order. Not loaded in case the test-config configuration
+# file is loaded or the --ignore-site-config command-line option is specified.
 #
 #   -- user-config --
 #   Named user-config.jam by default or may be named explicitly using the
@@ -240,7 +240,7 @@ def load_config(module_name, filename, paths, must_find=False):
 # internal unit testing system but may be used freely in other places as well.
 #
 def load_configuration_files():
-    
+
     # Flag indicating that site configuration should not be loaded.
     ignore_site_config = "--ignore-site-config" in sys.argv
 
@@ -287,12 +287,12 @@ def load_configuration_files():
 
         if user_config is None:
             user_config = os.getenv("BOOST_BUILD_USER_CONFIG")
-            
+
         # Special handling for the case when the OS does not strip the quotes
         # around the file name, as is the case when using Cygwin bash.
         user_config = b2.util.unquote(user_config)
         explicitly_requested = user_config
-        
+
         if user_config is None:
             user_config = "user-config.jam"
 
@@ -300,18 +300,18 @@ def load_configuration_files():
             if explicitly_requested:
 
                 user_config = os.path.abspath(user_config)
-            
+
                 if debug_config:
                     print "notice: Loading explicitly specified user configuration file:"
                     print "    " + user_config
-            
+
                     load_config('user-config', os.path.basename(user_config), [os.path.dirname(user_config)], True)
             else:
                 load_config('user-config', os.path.basename(user_config), user_path)
         else:
             if debug_config:
                 print "notice: User configuration file loading explicitly disabled."
-        
+
     # We look for project-config.jam from "." upward.
     # I am not sure this is 100% right decision, we might as well check for
     # it only alonside the Jamroot file. However:
@@ -343,7 +343,7 @@ def process_explicit_toolset_requests():
                        for e in option.split(',')]
 
     for t in option_toolsets + feature_toolsets:
-        
+
         # Parse toolset-version/properties.
         (toolset_version, toolset, version) = re.match("(([^-/]+)-?([^/]+)?)/?.*", t).groups()
 
@@ -447,7 +447,7 @@ def main_real():
 
     debug_config = "--debug-configuration" in sys.argv
     out_xml = any(re.match("^--out-xml=(.*)$", a) for a in sys.argv)
-        
+
     engine = Engine()
 
     global_build_dir = option.get("build-dir")
@@ -490,11 +490,11 @@ def main_real():
             dt = "gcc"
             if os.name == 'nt':
                 dt = "msvc"
-            # FIXME:    
+            # FIXME:
             #else if [ os.name ] = MACOSX
             #{
             #    default-toolset = darwin ;
-            #}                        
+            #}
 
         print "warning: No toolsets are configured."
         print "warning: Configuring default toolset '%s'." % dt
@@ -573,13 +573,13 @@ def main_real():
         targets = [projects.target(projects.module_name("."))]
 
     # FIXME: put this BACK.
-    
-    ## if [ option.get dump-generators : : true ] 
+
+    ## if [ option.get dump-generators : : true ]
     ## {
     ##     generators.dump ;
     ## }
 
-    
+
     # We wish to put config.log in the build directory corresponding
     # to Jamroot, so that the location does not differ depending on
     # directory where we do build.  The amount of indirection necessary
@@ -601,7 +601,7 @@ def main_real():
     # and any of their dependants.
     for p in expanded:
         manager.set_command_line_free_features(property_set.create(p.free()))
-        
+
         for t in targets:
             try:
                 g = t.generate(p)
@@ -610,7 +610,7 @@ def main_real():
                 virtual_targets.extend(g.targets())
             except ExceptionWithUserContext, e:
                 e.report()
-            except Exception:                
+            except Exception:
                 raise
 
     # Convert collected virtual targets into actual raw Jam targets.
@@ -791,7 +791,7 @@ def main_real():
 ##             __ACTION_RULE__ = build-system.out-xml.collect
 ##                 [ modules.peek build-system : .out-xml ] ;
 ##         }
-        
+
 ##         IMPORT
 ##             build-system :
 ##             out-xml.collect
@@ -805,7 +805,7 @@ def main_real():
     j = option.get("jobs")
     if j:
         bjam.call("set-variable", PARALLELISM, j)
-        
+
     k = option.get("keep-going", "true", "true")
     if k in ["on", "yes", "true"]:
         bjam.call("set-variable", "KEEP_GOING", "1")
@@ -814,7 +814,7 @@ def main_real():
     else:
         print "error: Invalid value for the --keep-going option"
         sys.exit()
-                
+
     # The 'all' pseudo target is not strictly needed expect in the case when we
     # use it below but people often assume they always have this target
     # available and do not declare it themselves before use which may cause
@@ -851,7 +851,7 @@ def main_real():
         if post_build_hook:
             post_build_hook(ok)
         # Prevent automatic update of the 'all' target, now that
-        # we have explicitly updated what we wanted.            
+        # we have explicitly updated what we wanted.
         bjam.call("UPDATE")
 
     if manager.errors().count() == 0:
