@@ -264,7 +264,7 @@ def load_configuration_files():
     if os.name in ["nt"]:
         site_path = [os.getenv("SystemRoot")] + user_path
 
-    if ignore_site_config:
+    if debug_config and not test_config and ignore_site_config:
         print "notice: Site configuration files will be ignored due to the"
         print "notice: --ignore-site-config command-line option."
 
