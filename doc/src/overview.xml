@@ -21,7 +21,7 @@
       <orderedlist>
         <listitem>
           <para>
-            The Boost.Build executable tries to find Boost.Build modules and 
+            The Boost.Build executable tries to find Boost.Build modules and
             loads the top-level module. The exact process is described in <xref linkend=
             "bbv2.reference.init"/>
           </para>
@@ -98,11 +98,11 @@ a.o: a.c
     g++ -o a.o -g a.c
 </programlisting>
         This is a rather low-level description mechanism and it's hard to adjust commands, options,
-        and sets of created targets depending on the compiler and operating system used.        
+        and sets of created targets depending on the compiler and operating system used.
       </para>
 
       <para>
-        To improve portability, most modern build system provide a set of higher-level 
+        To improve portability, most modern build system provide a set of higher-level
         functions that can be used in build description files. Consider this example:
 <programlisting>
 add_program ("a", "a.c")
@@ -112,7 +112,7 @@ add_program ("a", "a.c")
         different command lines may be used. However, <code>add_program</code> is higher-level,
         but rather thin level. All targets are created immediately when the build description
         is parsed, which makes it impossible to perform multi-variant builds. Often, change
-        in any build property requires a complete reconfiguration of the build tree.        
+        in any build property requires a complete reconfiguration of the build tree.
       </para>
 
       <para>
@@ -121,7 +121,7 @@ add_program ("a", "a.c")
         <indexterm> <primary>main target</primary> <see>metataget</see> </indexterm>
         <firstterm>metatarget</firstterm>&mdash;an object that is created when the build description
         is parsed and can be called later with specific build properties to generate
-        actual targets. 
+        actual targets.
       </para>
 
       <para>
@@ -154,7 +154,7 @@ b2 toolset=gcc toolset=msvc
       <para>
         The final concept is <indexterm><primary>property</primary><secondary>propagation</secondary></indexterm>
         <firstterm>property propagation</firstterm>. Boost.Build does not require that every
-        metatarget is called with the same properties. Instead, the 
+        metatarget is called with the same properties. Instead, the
         "top-level" metatargets are called with the properties specified on the command line.
         Each metatarget can elect to augment or override some properties (in particular,
         using the requirements mechanism, see <xref linkend="bbv2.overview.targets.requirements"/>).
@@ -163,10 +163,10 @@ b2 toolset=gcc toolset=msvc
         maybe in turn modify build properties and have dependencies of their own.
       </para>
 
-      <para>For a more in-depth treatment of the requirements and concepts, you may refer 
+      <para>For a more in-depth treatment of the requirements and concepts, you may refer
       to <ulink url="http://syrcose.ispras.ru/2009/files/04_paper.pdf">SYRCoSE 2009 Boost.Build article</ulink>.
       </para>
-           
+
     </section>
 
     <section id="bbv2.overview.jam_language">
@@ -384,7 +384,7 @@ actions create-file-from-another
     <title>Configuration</title>
 
     <para>
-      On startup, Boost.Build searches and reads two configuration files: 
+      On startup, Boost.Build searches and reads two configuration files:
       <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.
       The first one is usually installed and maintained by a system administrator, and
       the second is for the user to modify.  You can edit the one in the top-level
@@ -392,49 +392,49 @@ actions create-file-from-another
       directory and edit the copy.  The following table explains where both files
       are searched.
     </para>
-    
+
     <table id="bbv2.reference.init.config">
       <title>Search paths for configuration files</title>
-      
+
       <tgroup cols="3">
         <thead>
-          
+
           <row>
             <entry></entry>
-            
+
             <entry>site-config.jam</entry>
-            
+
             <entry>user-config.jam</entry>
           </row>
-          
+
         </thead>
         <tbody>
-          
+
           <row>
             <entry>Linux</entry>
-            
+
             <entry>
               <simpara><code>/etc</code></simpara>
               <simpara><code>$HOME</code></simpara>
               <simpara><code>$BOOST_BUILD_PATH</code></simpara>
             </entry>
-            
+
             <entry>
               <simpara><code>$HOME</code></simpara>
               <simpara><code>$BOOST_BUILD_PATH</code></simpara>
             </entry>
           </row>
-          
+
           <row>
             <entry>Windows</entry>
-            
+
             <entry>
               <simpara><code>%SystemRoot%</code></simpara>
               <simpara><code>%HOMEDRIVE%%HOMEPATH%</code></simpara>
               <simpara><code>%HOME%</code></simpara>
               <simpara><code>%BOOST_BUILD_PATH%</code></simpara>
             </entry>
-            
+
             <entry>
               <simpara><code>%HOMEDRIVE%%HOMEPATH%</code></simpara>
               <simpara><code>%HOME%</code></simpara>
@@ -444,8 +444,8 @@ actions create-file-from-another
         </tbody>
       </tgroup>
     </table>
-    
-    <tip>    
+
+    <tip>
       <para>
         You can use the <command>--debug-configuration</command> option to
         find which configuration files are actually loaded.
@@ -552,7 +552,7 @@ using gcc : 3.4 : g++-3.4 ;
       Many of toolsets have an <parameter class="function">options</parameter>
       parameter to fine-tune the configuration. All of
       Boost.Build's standard compiler toolsets accept four options
-      <varname>cflags</varname>, <varname>cxxflags</varname>, 
+      <varname>cflags</varname>, <varname>cxxflags</varname>,
       <varname>compileflags</varname> and <varname>linkflags</varname> as <parameter
       class="function">options</parameter> specifying flags that will be
       always passed to the corresponding tools. Values of the
@@ -604,7 +604,7 @@ using gcc : 3.4 : g++-3.4 ;
         <varlistentry>
           <term>target</term>
 
-          <listitem><para>All tokens that are neither options nor properties specify 
+          <listitem><para>All tokens that are neither options nor properties specify
           what targets to build.  The available targets entirely depend on the project
           you are building.</para></listitem>
         </varlistentry>
@@ -612,7 +612,7 @@ using gcc : 3.4 : g++-3.4 ;
 
       <section id="bbv2.overview.invocation.examples">
         <title>Examples</title>
-       
+
         <para>To build all targets defined in the Jamfile in the current directory with the default properties, run:
 <screen>
 b2
@@ -635,7 +635,7 @@ b2 toolset=gcc variant=debug optimization=space
 
       <section id="bbv2.overview.invocation.options">
         <title>Options</title>
-      
+
         <para>Boost.Build recognizes the following command line options.</para>
 
         <variablelist>
@@ -649,7 +649,7 @@ b2 toolset=gcc variant=debug optimization=space
               </para>
             </listitem>
           </varlistentry>
-          
+
           <varlistentry>
             <term><option>--clean</option></term>
             <listitem>
@@ -659,7 +659,7 @@ b2 toolset=gcc variant=debug optimization=space
               together with target names to clean specific targets.</para>
             </listitem>
           </varlistentry>
-          
+
           <varlistentry>
             <term><option>--clean-all</option></term>
             <listitem>
@@ -669,7 +669,7 @@ b2 toolset=gcc variant=debug optimization=space
               </para>
             </listitem>
           </varlistentry>
-          
+
           <varlistentry>
             <term><option>--build-dir</option></term>
             <listitem>
@@ -680,13 +680,13 @@ b2 toolset=gcc variant=debug optimization=space
               specified in Jamroot, and the build dir specified in Jamroot
               (or <literal>bin</literal>, if none is specified).
               </para>
-              
+
               <para>The option is primarily useful when building from read-only
               media, when you can't modify Jamroot.
               </para>
             </listitem>
           </varlistentry>
-          
+
           <varlistentry>
             <term><option>--version</option></term>
             <listitem>
@@ -724,7 +724,7 @@ b2 toolset=gcc variant=debug optimization=space
               <para>Run up to <replaceable>N</replaceable> commands in parallel.</para>
             </listitem>
           </varlistentry>
-         
+
           <varlistentry>
             <term><option>--debug-configuration</option></term>
             <listitem>
@@ -732,7 +732,7 @@ b2 toolset=gcc variant=debug optimization=space
               and toolset files.</para>
             </listitem>
           </varlistentry>
-          
+
           <varlistentry>
             <term><option>--debug-building</option></term>
             <listitem>
@@ -740,7 +740,7 @@ b2 toolset=gcc variant=debug optimization=space
               </para>
             </listitem>
           </varlistentry>
-          
+
           <varlistentry>
             <term><option>--debug-generators</option></term>
             <listitem>
@@ -749,7 +749,7 @@ b2 toolset=gcc variant=debug optimization=space
               </para>
             </listitem>
           </varlistentry>
-          
+
           <varlistentry>
             <term><option>-d0</option></term>
             <listitem>
@@ -760,7 +760,7 @@ b2 toolset=gcc variant=debug optimization=space
           <varlistentry>
             <term><option>-d <replaceable>N</replaceable></option></term>
             <listitem>
-              <para>Enable cummulative debugging levels from 1 to n. Values are: 
+              <para>Enable cummulative debugging levels from 1 to n. Values are:
               <orderedlist>
                 <listitem>Show the actions taken for building targets, as they are executed (the default).</listitem>
                 <listitem>Show "quiet" actions and display all action text, as they are executed.</listitem>
@@ -814,53 +814,53 @@ b2 toolset=gcc variant=debug optimization=space
         <para>In the simplest case, the build is performed with a single set of properties,
         that you specify on the command line with elements in the form
         <command><replaceable>feature</replaceable>=<replaceable>value</replaceable></command>.
-        The complete list of features can be found in <xref linkend="bbv2.overview.builtins.features"/>. 
+        The complete list of features can be found in <xref linkend="bbv2.overview.builtins.features"/>.
         The most common features are summarized below.</para>
 
         <table>
           <tgroup cols="3">
             <thead>
-              
+
               <row>
                 <entry>Feature</entry>
-                
+
                 <entry>Allowed values</entry>
-                
+
                 <entry>Notes</entry>
               </row>
-              
+
             </thead>
             <tbody>
-              
+
               <row>
                 <entry>variant</entry>
-                
+
                 <entry>debug,release</entry>
-                
+
                 <entry></entry>
               </row>
 
               <row>
                 <entry>link</entry>
-                
+
                 <entry>shared,static</entry>
-                
+
                 <entry>Determines if Boost.Build creates shared or static libraries</entry>
               </row>
 
               <row>
                 <entry>threading</entry>
-                
+
                 <entry>single,multi</entry>
-                
+
                 <entry>Cause the produced binaries to be thread-safe.  This requires proper support in the source code itself.</entry>
               </row>
 
               <row>
                 <entry>address-model</entry>
-                
+
                 <entry>32,64</entry>
-                
+
                 <entry>Explicitly request either 32-bit or 64-bit code generation. This typically
                 requires that your compiler is appropriately configured. Please refer to
                 <xref linkend="bbv2.reference.tools.compilers"/> and your compiler documentation
@@ -869,75 +869,75 @@ b2 toolset=gcc variant=debug optimization=space
 
               <row>
                 <entry>toolset</entry>
-                
+
                 <entry>(Depends on configuration)</entry>
-                
+
                 <entry>The C++ compiler to use. See <xref linkend="bbv2.reference.tools.compilers"/> for a detailed list.</entry>
               </row>
 
               <row>
                 <entry>include</entry>
-                
+
                 <entry>(Arbitrary string)</entry>
-                
+
                 <entry>Additional include paths for C and C++ compilers.</entry>
               </row>
 
               <row>
                 <entry>define</entry>
-                
+
                 <entry>(Arbitrary string)</entry>
-                
+
                 <entry>Additional macro definitions for C and C++ compilers. The string should be either
                 <code>SYMBOL</code> or <code>SYMBOL=VALUE</code></entry>
               </row>
 
               <row>
                 <entry>cxxflags</entry>
-                
+
                 <entry>(Arbitrary string)</entry>
-                
+
                 <entry>Custom options to pass to the C++ compiler.</entry>
               </row>
 
               <row>
                 <entry>cflags</entry>
-                
+
                 <entry>(Arbitrary string)</entry>
-                
+
                 <entry>Custom options to pass to the C compiler.</entry>
               </row>
 
               <row>
                 <entry>linkflags</entry>
-                
+
                 <entry>(Arbitrary string)</entry>
-                
+
                 <entry>Custom options to pass to the C++ linker.</entry>
               </row>
 
               <row>
                 <entry>runtime-link</entry>
-                
+
                 <entry>shared,static</entry>
-                
+
                 <entry>Determines if shared or static version of C and C++ runtimes should be used.</entry>
               </row>
-              
+
             </tbody>
-          </tgroup>          
+          </tgroup>
         </table>
 
         <para>If you have more than one version of a given C++ toolset (e.g. configured in
         <filename>user-config.jam</filename>, or autodetected, as happens with msvc), you can
-        request the specific version by passing 
+        request the specific version by passing
         <code><replaceable>toolset</replaceable>-<replaceable>version</replaceable></code> as
         the value of the <code>toolset</code> feature, for example <code>toolset=msvc-8.0</code>.
         </para>
 
 
         <para>
-          If a feature has a fixed set of values it can be specified more than 
+          If a feature has a fixed set of values it can be specified more than
           once on the command line. <!-- define 'base' and link to it -->
           In which case, everything will be built several times --
           once for each specified value of a feature.  For example, if you use
@@ -946,7 +946,7 @@ b2 toolset=gcc variant=debug optimization=space
 b2 link=static link=shared threading=single threading=multi
 </screen>
         <para>
-          Then a total of 4 builds will be performed.  For convenience, 
+          Then a total of 4 builds will be performed.  For convenience,
           instead of specifying all requested values of a feature in separate command line elements,
           you can separate the values with commas, for example:
         </para>
@@ -960,7 +960,7 @@ b2 link=static,shared threading=single,multi
 b2 include=static,shared
 </screen>
         <para>is not treated specially.</para>
-                
+
       </section>
 
       <section id="bbv2.overview.invocation.targets">
