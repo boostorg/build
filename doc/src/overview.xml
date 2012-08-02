@@ -751,15 +751,6 @@ b2 toolset=gcc variant=debug optimization=space
           </varlistentry>
           
           <varlistentry>
-            <term><option>--ignore-config</option></term>
-            <listitem>
-              <para>Do not load <literal>site-config.jam</literal> or
-              <literal>user-config.jam</literal>.
-              </para>
-            </listitem>
-          </varlistentry>
-
-          <varlistentry>
             <term><option>-d0</option></term>
             <listitem>
               <para>Supress all informational messages.</para>

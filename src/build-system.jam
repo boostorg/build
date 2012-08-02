@@ -41,16 +41,6 @@ import configure ;
 # locating and loading Boost Build configuration files.
 .debug-config = [ MATCH ^(--debug-configuration)$ : $(.argv) ] ;
 
-# Legacy option doing too many things, some of which are not even documented.
-# Should be phased out.
-#   * Disables loading site and user configuration files.
-#   * Disables auto-configuration for toolsets specified explicitly on the
-#     command-line.
-#   * Causes --toolset command-line options to be ignored.
-#   * Prevents the default toolset from being used even if no toolset has been
-#     configured at all.
-.legacy-ignore-config = [ MATCH ^(--ignore-config)$ : $(.argv) ] ;
-
 # The cleaning is tricky. Say, if user says 'bjam --clean foo' where 'foo' is a
 # directory, then we want to clean targets which are in 'foo' as well as those
 # in any children Jamfiles under foo but not in any unrelated Jamfiles. To
@@ -293,8 +283,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
 #   Always named site-config.jam. Will only be found if located on the system
 # root path (Windows), /etc (non-Windows), user's home folder or the Boost Build
 # path, in that order. Not loaded in case the test-config configuration file is
-# loaded or either the --ignore-site-config or the --ignore-config command-line
-# option is specified.
+# loaded or the --ignore-site-config command-line option is specified.
 #
 #   -- user-config --
 #   Named user-config.jam by default or may be named explicitly using the
@@ -302,10 +291,9 @@ local rule load-config ( module-name : filename : path + : must-find ? )
 # variable. If named explicitly the file is looked for from the current working
 # directory and if the default one is used then it is searched for in the
 # user's home directory and the Boost Build path, in that order. Not loaded in
-# case either the test-config configuration file is loaded, --ignore-config
-# command-line option is specified or an empty file name is explicitly
-# specified. If the file name has been given explicitly then the file must
-# exist.
+# case either the test-config configuration file is loaded or an empty file name
+# is explicitly specified. If the file name has been given explicitly then the
+# file must exist.
 #
 #   -- project-config --
 #   Always named project-config.jam. Looked up in the current working folder and
@@ -320,12 +308,6 @@ local rule load-configuration-files
     local ignore-site-config =
         [ MATCH ^(--ignore-site-config)$ : $(.argv) ] ;
 
-    if $(.legacy-ignore-config) && $(.debug-config)
-    {
-        ECHO "notice: Regular site and user configuration files will be ignored" ;
-        ECHO "notice: due to the --ignore-config command-line option." ;
-    }
-
     initialize-config-module test-config ;
     local test-config = [ MATCH ^--test-config=(.*)$ : $(.argv) ] ;
     local uq = [ MATCH \"(.*)\" : $(test-config) ] ;
@@ -339,7 +321,7 @@ local rule load-configuration-files
             [ load-config test-config : $(test-config:BS) : $(test-config:D) ] ;
         if $(where)
         {
-            if $(.debug-config) && ! $(.legacy-ignore-config)
+            if $(.debug-config)
             {
                 ECHO "notice: Regular site and user configuration files will" ;
                 ECHO "notice: be ignored due to the test configuration being"
@@ -359,20 +341,14 @@ local rule load-configuration-files
         site-path = [ modules.peek : SystemRoot ] $(user-path) ;
     }
 
-    if $(ignore-site-config) && !$(.legacy-ignore-config)
-    {
-        ECHO "notice: Site configuration files will be ignored due to the" ;
-        ECHO "notice: --ignore-site-config command-line option." ;
-    }
-
     initialize-config-module site-config ;
-    if ! $(test-config) && ! $(ignore-site-config) && ! $(.legacy-ignore-config)
+    if ! $(test-config) && ! $(ignore-site-config)
     {
         load-config site-config : site-config.jam : $(site-path) ;
     }
 
     initialize-config-module user-config ;
-    if ! $(test-config) && ! $(.legacy-ignore-config)
+    if ! $(test-config)
     {
         local user-config = [ MATCH ^--user-config=(.*)$ : $(.argv) ] ;
         user-config = $(user-config[-1]) ;
@@ -563,14 +539,7 @@ local rule should-clean-project ( project )
 
     load-configuration-files ;
 
-    local extra-properties ;
-    # Note that this causes --toolset options to be ignored if --ignore-config
-    # is specified.
-    if ! $(.legacy-ignore-config)
-    {
-        extra-properties = [ process-explicit-toolset-requests ] ;
-    }
-
+    local extra-properties = [ process-explicit-toolset-requests ] ;
 
     # We always load project in "." so that 'use-project' directives have any
     # chance of being seen. Otherwise, we would not be able to refer to
@@ -584,7 +553,7 @@ local rule should-clean-project ( project )
 
     # In case there are no toolsets currently defined makes the build run using
     # the default toolset.
-    if ! $(.legacy-ignore-config) && ! [ feature.values <toolset> ]
+    if ! [ feature.values <toolset> ]
     {
         local default-toolset = $(.default-toolset) ;
         local default-toolset-version = ;

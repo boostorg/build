@@ -49,16 +49,6 @@ import re
 # locating and loading Boost Build configuration files.
 debug_config = False
 
-# Legacy option doing too many things, some of which are not even documented.
-# Should be phased out.
-#   * Disables loading site and user configuration files.
-#   * Disables auto-configuration for toolsets specified explicitly on the
-#     command-line.
-#   * Causes --toolset command-line options to be ignored.
-#   * Prevents the default toolset from being used even if no toolset has been
-#     configured at all.
-legacy_ignore_config = False
-
 # The cleaning is tricky. Say, if user says 'bjam --clean foo' where 'foo' is a
 # directory, then we want to clean targets which are in 'foo' as well as those
 # in any children Jamfiles under foo but not in any unrelated Jamfiles. To
@@ -234,8 +224,7 @@ def load_config(module_name, filename, paths, must_find=False):
 #   Always named site-config.jam. Will only be found if located on the system
 # root path (Windows), /etc (non-Windows), user's home folder or the Boost Build
 # path, in that order. Not loaded in case the test-config configuration file is
-# loaded or either the --ignore-site-config or the --ignore-config command-line
-# option is specified.
+# loaded or the --ignore-site-config command-line option is specified.
 #
 #   -- user-config --
 #   Named user-config.jam by default or may be named explicitly using the
@@ -243,10 +232,9 @@ def load_config(module_name, filename, paths, must_find=False):
 # variable. If named explicitly the file is looked for from the current working
 # directory and if the default one is used then it is searched for in the
 # user's home directory and the Boost Build path, in that order. Not loaded in
-# case either the test-config configuration file is loaded, --ignore-config
-# command-line option is specified or an empty file name is explicitly
-# specified. If the file name has been given explicitly then the file must
-# exist.
+# case either the test-config configuration file is loaded or an empty file
+# name is explicitly specified. If the file name has been given explicitly then
+# the file must exist.
 #
 # Test configurations have been added primarily for use by Boost Build's
 # internal unit testing system but may be used freely in other places as well.
@@ -255,10 +243,6 @@ def load_configuration_files():
     
     # Flag indicating that site configuration should not be loaded.
     ignore_site_config = "--ignore-site-config" in sys.argv
-
-    if legacy_ignore_config and debug_config:
-        print "notice: Regular site and user configuration files will be ignored"
-        print "notice: due to the --ignore-config command-line option."
 
     initialize_config_module("test-config")
     test_config = None
@@ -271,7 +255,7 @@ def load_configuration_files():
     if test_config:
         where = load_config("test-config", os.path.basename(test_config), [os.path.dirname(test_config)])
         if where:
-            if debug_config and not legacy_ignore_config:
+            if debug_config:
                 print "notice: Regular site and user configuration files will"
                 print "notice: be ignored due to the test configuration being loaded."
 
@@ -280,16 +264,16 @@ def load_configuration_files():
     if os.name in ["nt"]:
         site_path = [os.getenv("SystemRoot")] + user_path
 
-    if ignore_site_config and not legacy_ignore_config:
+    if ignore_site_config:
         print "notice: Site configuration files will be ignored due to the"
         print "notice: --ignore-site-config command-line option."
 
     initialize_config_module("site-config")
-    if not test_config and not ignore_site_config and not legacy_ignore_config:
+    if not test_config and not ignore_site_config:
         load_config('site-config', 'site-config.jam', site_path)
 
     initialize_config_module('user-config')
-    if not test_config and not legacy_ignore_config:
+    if not test_config:
 
         # Here, user_config has value of None if nothing is explicitly
         # specified, and value of '' if user explicitly does not want
@@ -459,10 +443,9 @@ def main():
 
 def main_real():
 
-    global debug_config, legacy_ignore_config, out_xml
+    global debug_config, out_xml
 
     debug_config = "--debug-configuration" in sys.argv
-    legacy_ignore_config = "--ignore_config" in sys.argv
     out_xml = any(re.match("^--out-xml=(.*)$", a) for a in sys.argv)
         
     engine = Engine()
@@ -485,11 +468,7 @@ def main_real():
 
     load_configuration_files()
 
-    extra_properties = []
-    # Note that this causes --toolset options to be ignored if --ignore-config
-    # is specified.
-    if not legacy_ignore_config:
-        extra_properties = process_explicit_toolset_requests()
+    extra_properties = process_explicit_toolset_requests()
 
     # We always load project in "." so that 'use-project' directives have any
     # chance of being seen. Otherwise, we would not be able to refer to
@@ -501,7 +480,7 @@ def main_real():
 
     # In case there are no toolsets currently defined makes the build run using
     # the default toolset.
-    if not legacy_ignore_config and not feature.values("toolset"):
+    if not feature.values("toolset"):
 
         dt = default_toolset
         dtv = None
