@@ -168,7 +168,7 @@ void file_dirscan_( file_info_t * const d, scanback func, void * closure )
 
 int file_mkdir( char const * const path )
 {
-    return mkdir( path, 0766 );
+    return mkdir( path, 0777 );
 }
 
 
