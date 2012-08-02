@@ -2297,7 +2297,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_MODULE )
     {
-        int nested_result = result_location == RESULT_NONE
+        int const nested_result = result_location == RESULT_NONE
             ? RESULT_NONE
             : RESULT_RETURN;
         compile_parse( parse->left, c, RESULT_STACK );
@@ -2324,7 +2324,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_LIST )
     {
-        OBJECT * o = parse->string;
+        OBJECT * const o = parse->string;
         char const * s = object_str( o );
         VAR_PARSE_GROUP * group;
         current_file = object_str( parse->file );
