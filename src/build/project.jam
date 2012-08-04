@@ -953,8 +953,7 @@ module project-rules
         }
 
         # If '--build-dir' is specified, change the build dir for the project.
-        local global-build-dir =
-            [ modules.peek project : .global-build-dir ] ;
+        local global-build-dir = [ modules.peek project : .global-build-dir ] ;
 
         if $(global-build-dir)
         {

@@ -559,7 +559,6 @@ local rule should-clean-project ( project )
         current-project = [ project.target [ project.load "." ] ] ;
     }
 
-
     # Load the default toolset module if no other has already been specified.
     if ! [ feature.values <toolset> ]
     {
