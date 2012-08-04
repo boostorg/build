@@ -50,15 +50,15 @@ import sequence ;
 #
 rule load ( jamfile-location )
 {
-    if --debug-loading in [ modules.peek : ARGV ]
-    {
-        ECHO "Loading Jamfile at" '$(jamfile-location)' ;
-    }
-
     local module-name = [ module-name $(jamfile-location) ] ;
     # If Jamfile is already loaded, do not try again.
     if ! $(module-name) in $(.jamfile-modules)
     {
+        if --debug-loading in [ modules.peek : ARGV ]
+        {
+            ECHO "[$(fufu)] Loading Jamfile at" '$(jamfile-location)' ;
+        }
+
         load-jamfile $(jamfile-location) : $(module-name) ;
 
         # We want to make sure that child project are loaded only after parent
