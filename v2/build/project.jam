@@ -28,7 +28,7 @@
 # 'initialize' on an arbitrary module and not specifying their location. After
 # the call, the module can call the 'project' rule, declare main targets and
 # behave as a regular project except that, since it is not associated with any
-# location, it should not declare targets that are not prebuilt.
+# location, it should only declare prebuilt targets.
 #
 # The list of all loaded Jamfile is stored in the .project-locations variable.
 # It is possible to obtain a module name for a location using the 'module-name'
@@ -127,7 +127,7 @@ rule act-as-jamfile ( module : location )
     # Set up non-default mapping from location to module.
     .module.$(location) = $(module) ;
 
-    # Add the location to the list of project locations so that we don't try to
+    # Add the location to the list of project locations so that we do not try to
     # reload the same Jamfile in the future.
     .jamfile-modules += [ module-name $(location) ] ;
 

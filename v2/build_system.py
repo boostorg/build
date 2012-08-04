@@ -7,7 +7,7 @@
 # Copyright 2003, 2004, 2005, 2006, 2007 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt) 
+# http://www.boost.org/LICENSE_1_0.txt)
 
 
 from b2.build.engine import Engine
@@ -312,13 +312,12 @@ def load_configuration_files():
             if debug_config:
                 print "notice: User configuration file loading explicitly disabled."
 
-    # We look for project-config.jam from "." upward.
-    # I am not sure this is 100% right decision, we might as well check for
-    # it only alonside the Jamroot file. However:
-    #
-    # - We need to load project-root.jam before Jamroot
-    # - We probably would need to load project-root.jam even if there's no
-    #   Jamroot - e.g. to implement automake-style out-of-tree builds.
+    # We look for project-config.jam from "." upward. I am not sure this is
+    # 100% right decision, we might as well check for it only alongside the
+    # Jamroot file. However:
+    # - We need to load project-config.jam before Jamroot
+    # - We probably need to load project-config.jam even if there is no Jamroot
+    #   - e.g. to implement automake-style out-of-tree builds.
     if os.path.exists("project-config.jam"):
         file = ["project-config.jam"]
     else:
@@ -468,18 +467,19 @@ def main_real():
 
     load_configuration_files()
 
+    # Load explicitly specified toolset modules.
     extra_properties = process_explicit_toolset_requests()
 
-    # We always load project in "." so that 'use-project' directives have any
-    # chance of being seen. Otherwise, we would not be able to refer to
-    # subprojects using target ids.
+    # Load the actual project build script modules. We always load the project
+    # in the current folder so 'use-project' directives have any chance of
+    # being seen. Otherwise, we would not be able to refer to subprojects using
+    # target ids.
     current_project = None
     projects = get_manager().projects()
     if projects.find(".", "."):
         current_project = projects.target(projects.load("."))
 
-    # In case there are no toolsets currently defined makes the build run using
-    # the default toolset.
+    # Load the default toolset module if no other has already been specified.
     if not feature.values("toolset"):
 
         dt = default_toolset

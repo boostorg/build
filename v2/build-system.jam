@@ -318,8 +318,8 @@ local rule load-configuration-files
     }
     if $(test-config)
     {
-        local where =
-            [ load-config test-config : $(test-config:BS) : $(test-config:D) ] ;
+        local where = [ load-config test-config : $(test-config:BS) :
+            $(test-config:D) ] ;
         if $(where)
         {
             if $(.debug-config)
@@ -401,9 +401,9 @@ local rule load-configuration-files
     # We look for project-config.jam from "." upward. I am not sure this is 100%
     # right decision, we might as well check for it only alongside the Jamroot
     # file. However:
-    # - We need to load project-root.jam before Jamroot
-    # - We probably need to load project-root.jam even if there is no Jamroot -
-    #   e.g. to implement automake-style out-of-tree builds.
+    # - We need to load project-config.jam before Jamroot
+    # - We probably need to load project-config.jam even if there is no Jamroot
+    #   - e.g. to implement automake-style out-of-tree builds.
     local file = [ path.glob "." : project-config.jam ] ;
     if ! $(file)
     {
@@ -484,7 +484,7 @@ local rule process-explicit-toolset-requests
         # Make sure we get an appropriate property into the build request in
         # case toolset has been specified using the "--toolset=..." command-line
         # option form.
-        if ! $(t) in $(.argv) && ! $(t) in $(feature-toolsets)
+        if ! $(t) in $(.argv) $(feature-toolsets)
         {
             if $(.debug-config)
             {
@@ -546,11 +546,13 @@ local rule should-clean-project ( project )
 
     load-configuration-files ;
 
+    # Load explicitly specified toolset modules.
     local extra-properties = [ process-explicit-toolset-requests ] ;
 
-    # We always load project in "." so that 'use-project' directives have any
-    # chance of being seen. Otherwise, we would not be able to refer to
-    # subprojects using target ids.
+    # Load the actual project build script modules. We always load the project
+    # in the current folder so 'use-project' directives have any chance of being
+    # seen. Otherwise, we would not be able to refer to subprojects using target
+    # ids.
     local current-project ;
     if [ project.find "." : "." ]
     {
@@ -558,8 +560,7 @@ local rule should-clean-project ( project )
     }
 
 
-    # In case there are no toolsets currently defined makes the build run using
-    # the default toolset.
+    # Load the default toolset module if no other has already been specified.
     if ! [ feature.values <toolset> ]
     {
         local default-toolset = $(.default-toolset) ;
