@@ -2,7 +2,8 @@
 # Copyright 2005 Rene Rivera
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 #  Support for toolset definition.
 
@@ -36,7 +37,8 @@ if --ignore-toolset-requirements in [ modules.peek : ARGV ]
 rule using ( toolset-module : * )
 {
     import $(toolset-module) ;
-    $(toolset-module).init $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+    $(toolset-module).init $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9)
+        ;
 }
 
 
@@ -497,8 +499,8 @@ rule inherit-flags ( toolset : base : prohibited-properties * : prohibited-vars 
         local rule-or-module = $(.rule-or-module.$(f)) ;
         if ( [ set.difference
             $(.$(rule-or-module).condition.$(f)) :
-                  $(prohibited-properties) ] 
-                  || ! $(.$(rule-or-module).condition.$(f)) 
+                  $(prohibited-properties) ]
+                  || ! $(.$(rule-or-module).condition.$(f))
         ) && ( ! $(.$(rule-or-module).variable.$(f)) in $(prohibited-vars) )
         {
             local rule_ = [ MATCH "[^.]*\.(.*)" : $(rule-or-module) ] ;
