@@ -131,13 +131,12 @@ class ProjectRegistry:
         absolute = os.path.normpath(absolute)
         jamfile_location = b2.util.path.relpath(os.getcwd(), absolute)
 
-        if "--debug-loading" in self.manager.argv():
-            print "Loading Jamfile at '%s'" % jamfile_location
-
-
         mname = self.module_name(jamfile_location)
         # If Jamfile is already loaded, do not try again.
         if not mname in self.jamfile_modules:
+
+            if "--debug-loading" in self.manager.argv():
+                print "Loading Jamfile at '%s'" % jamfile_location
 
             self.load_jamfile(jamfile_location, mname)
 
