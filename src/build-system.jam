@@ -594,6 +594,11 @@ local rule should-clean-project ( project )
 
     # Parse command line for targets and properties. Note that this requires
     # that all project files already be loaded.
+    # FIXME: This is not entirely true. Additional project files may be loaded
+    # only later via the project.find() rule when dereferencing encountered
+    # target ids containing absolute project references. See what to do about
+    # those as such 'lazy loading' may cause problems that are then extremely
+    # difficult to debug.
     local build-request = [ build-request.from-command-line $(.argv)
         $(extra-properties) ] ;
     local target-ids = [ $(build-request).get-at 1 ] ;
