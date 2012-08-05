@@ -134,13 +134,13 @@ int main() {}
 
     t.touch(header)
     t.run_build_system(subdir="child_dir")
-    t.expect_modification(expected_x1)
-    t.expect_modification(expected_x2)
+    t.expect_touch(expected_x1)
+    t.expect_touch(expected_x2)
 
     t.touch(header)
     t.run_build_system(["..", "-d2"], subdir="child_dir/folder_to_include")
-    t.expect_modification(expected_x1)
-    t.expect_modification(expected_x2)
+    t.expect_touch(expected_x1)
+    t.expect_touch(expected_x2)
 
     t.cleanup()
 
