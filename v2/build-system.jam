@@ -414,6 +414,8 @@ local rule load-configuration-files
         initialize-config-module project-config : $(file:D) ;
         load-config project-config : project-config.jam : $(file:D) ;
     }
+
+    project.end-load ;
 }
 
 

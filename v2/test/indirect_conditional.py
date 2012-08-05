@@ -64,8 +64,10 @@ rule a3-rule-2 ( properties * )
 
 def test_glob_in_indirect_conditional():
     """
-      Regression test: glob run inside an indirect conditional should work in
-    the correct project context, i.e. in the correct folder.
+      Regression test: project-rules.glob rule run from inside an indirect
+    conditional should report an error as it depends on the 'currently loaded
+    project' concept and indirect conditional rules get called only after all
+    the project modules have already finished loading.
 
     """
     t = BoostBuild.Tester()
@@ -91,8 +93,10 @@ rule print-my-sources ( properties * )
 lib bar : bar.cpp : <conditional>@print-my-sources ;
 """)
 
-    t.run_build_system()
-    t.expect_output_lines("My sources:\nbar.cpp")
+    t.run_build_system(status=1)
+    t.expect_output_lines(["My sources:", "bar.cpp"], False)
+    t.expect_output_lines("error: Reference to the project currently being "
+        "loaded requested when there was no project module being loaded.")
 
     t.cleanup()
 

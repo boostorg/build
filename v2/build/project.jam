@@ -280,6 +280,8 @@ local rule load-jamfile ( dir : jamfile-module )
     # second attempt from messing things up.
     if ! $(jamfile-module) in $(.jamfile-modules)
     {
+        local previous-project = $(.current-project) ;
+
         # Initialize the Jamfile module before loading.
         initialize $(jamfile-module) : [ path.parent $(jamfile-to-load) ] :
             $(jamfile-to-load:BS) ;
@@ -315,6 +317,8 @@ local rule load-jamfile ( dir : jamfile-module )
                     : actual value $(.current-project) ;
             }
 
+            end-load $(previous-project) ;
+
             if $(.global-build-dir)
             {
                 if [ attribute $(jamfile-module) location ] && ! [ attribute
@@ -333,6 +337,31 @@ local rule load-jamfile ( dir : jamfile-module )
             }
         }
     }
+}
+
+
+# Called when done loading a project module. Restores the current project to its
+# previous value and does some additional checking to make sure our 'currently
+# loaded project' identifier does not get left with an invalid value.
+#
+rule end-load ( previous-project ? )
+{
+    if ! $(.current-project)
+    {
+        import errors ;
+        errors.error Ending project loading requested when there was no project
+            currently being loaded. ;
+    }
+
+    if ! $(previous-project) && $(.saved-current-project)
+    {
+        import errors ;
+        errors.error Ending project loading requested with no 'previous project'
+            when there were other projects still marked as being loaded
+            recursively. ;
+    }
+
+    .current-project = $(previous-project) ;
 }
 
 
@@ -702,6 +731,12 @@ class project-attributes
 #
 rule current ( )
 {
+    if ! $(.current-project)
+    {
+        import errors ;
+        errors.error Reference to the project currently being loaded requested
+            when there was no project module being loaded. ;
+    }
     return $(.current-project) ;
 }
 
@@ -757,7 +792,6 @@ rule target ( project-module )
 #
 rule use ( id : location )
 {
-    local saved-project = $(.current-project) ;
     local project-module = [ project.load $(location) ] ;
     local declared-id = [ project.attribute $(project-module) id ] ;
 
@@ -774,7 +808,6 @@ rule use ( id : location )
         }
         $(id).jamfile-module = $(project-module) ;
     }
-    .current-project = $(saved-project) ;
 }
 
 
