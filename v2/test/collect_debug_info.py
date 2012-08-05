@@ -298,7 +298,7 @@ for x in $(names)
 }
 if ---version in $(.argv)
 {
-    for x in JAMVERSION JAM_VERSION JAMUNAME
+    for x in JAMVERSION JAM_VERSION JAMUNAME JAM_TIMESTAMP_RESOLUTION OS
     {
         v = [ modules.peek : $(x) ] ;
         ECHO ***VAR*** $(x): "$(v:J=%s)" *** ;
