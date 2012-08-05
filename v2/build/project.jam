@@ -904,7 +904,6 @@ module project-rules
 
     rule using ( toolset-module : * )
     {
-        import project ;
         import toolset ;
 
         local saved-project = [ modules.peek project : .current-project ] ;
@@ -932,8 +931,6 @@ module project-rules
 
     rule import ( * : * : * )
     {
-        modules.import project ;
-
         local caller = [ CALLER_MODULE ] ;
         local saved-project = [ modules.peek project : .current-project ] ;
         module $(caller)
@@ -1050,7 +1047,6 @@ module project-rules
 
     rule use-project ( id : where )
     {
-        import modules ;
         # See comment in 'load' for explanation.
         local caller = [ CALLER_MODULE ] ;
         modules.poke $(caller) : .used-projects : [ modules.peek $(caller) :
