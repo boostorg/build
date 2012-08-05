@@ -837,30 +837,43 @@ class Tester(TestCmd.TestCmd):
         by the used Boost Jam executable.
 
         """
-        p = subprocess.Popen([self.program[0], "-v"], stdout=subprocess.PIPE,
-            universal_newlines=True)
-        out, err = p.communicate()
+        dir = tempfile.mkdtemp("bjam_version_info")
+        try:
+            jam_script = "timestamp_resolution.jam"
+            f = open(os.path.join(dir, jam_script), "w")
+            try:
+                f.write("EXIT $(JAM_TIMESTAMP_RESOLUTION) : 0 ;")
+            finally:
+                f.close()
+            p = subprocess.Popen([self.program[0], "-d0", "-f%s" % jam_script],
+                stdout=subprocess.PIPE, cwd=dir, universal_newlines=True)
+            out, err = p.communicate()
+        finally:
+            shutil.rmtree(dir, ignore_errors=False)
+
         if p.returncode != 0:
             raise TestEnvironmentError("Unexpected return code (%s) when "
-                "detecting Boost Jam version information." % p.returncode)
+                "detecting Boost Jam's minimum supported path modification "
+                "timestamp resolution version information." % p.returncode)
         if err:
             raise TestEnvironmentError("Unexpected error output (%s) when "
-                "detecting Boost Jam version information." % err)
+                "detecting Boost Jam's minimum supported path modification "
+                "timestamp resolution version information." % err)
 
-        r = re.search("^Minimum supported file modification timestamp "
-            "resolution:\n\\s+([0-9]{2}):([0-9]{2}):([0-9]{2}\\.[0-9]{9}) "
-            "seconds$", out, re.MULTILINE)
+        r = re.match("([0-9]{2}):([0-9]{2}):([0-9]{2}\\.[0-9]{9})$", out)
         if not r:
             # Older Boost Jam versions did not report their minimum supported
-            # file modification timestamp resolution and did not actually
-            # support file modification timestamp resolutions finer than 1
+            # path modification timestamp resolution and did not actually
+            # support path modification timestamp resolutions finer than 1
             # second.
+            # TODO: Phase this support out to avoid such fallback code from
+            # possibly covering up other problems.
             return 1
         if r.group(1) != "00" or r.group(2) != "00":  # hours, minutes
             raise TestEnvironmentError("Boost Jam with too coarse minimum "
-                "supported file modification timestamp resolution (%s:%s:%s)."
+                "supported path modification timestamp resolution (%s:%s:%s)."
                 % (r.group(1), r.group(2), r.group(3)))
-        return float(r.group(3))   # seconds.nanoseconds
+        return float(r.group(3))  # seconds.nanoseconds
 
     def __ensure_newer_than_last_build(self, path):
         """
