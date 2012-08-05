@@ -148,7 +148,7 @@ rule use-project
             .version_tag = [ regex.replace $(version) "[*\\/:.\"\' ]" "_" ] ;
             .initialized = $(version) ;
 
-            if  ( $(root) && $(inc) )
+            if ( $(root) && $(inc) )
                 || ( $(root) && $(lib) )
                 || ( $(lib) && ! $(inc) )
                 || ( ! $(lib) && $(inc) )
