@@ -117,24 +117,6 @@ rule load-parent ( location )
 # 'location'. Reports an error if a Jamfile has already been loaded for that
 # location.
 #
-rule act-as-jamfile ( module : location )
-{
-    if [ module-name $(location) ] in $(.jamfile-modules)
-    {
-        import errors ;
-        errors.error "Jamfile was already loaded for '$(location)'" ;
-    }
-    # Set up non-default mapping from location to module.
-    .module.$(location) = $(module) ;
-
-    # Add the location to the list of project locations so that we do not try to
-    # reload the same Jamfile in the future.
-    .jamfile-modules += [ module-name $(location) ] ;
-
-    initialize $(module) : $(location) ;
-}
-
-
 # Returns the project module corresponding to the given project-id or plain
 # directory name. Returns nothing if such a project can not be found.
 #
