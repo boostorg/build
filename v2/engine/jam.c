@@ -261,23 +261,13 @@ int main( int argc, char * * argv, char * * arg_environ )
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
-        timestamp fmt_resolution[ 1 ];
-        file_supported_fmt_resolution( fmt_resolution );
-
-        printf( "Boost.Jam  " );
-        printf( "Version %s. %s.\n", VERSION, OSMINOR );
-        printf( "\n" );
-        printf( "Minimum supported file modification timestamp resolution:\n" );
-        printf( "   %s seconds\n", timestamp_timestr( fmt_resolution ) );
-        printf( "\n" );
-        printf( "Copyright information:\n" );
+        printf( "Boost.Jam  Version %s. %s.\n", VERSION, OSMINOR );
         printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce "
             "Software, Inc.\n" );
         printf( "   Copyright 2001 David Turner.\n" );
         printf( "   Copyright 2001-2004 David Abrahams.\n" );
         printf( "   Copyright 2002-2008 Rene Rivera.\n" );
         printf( "   Copyright 2003-2008 Vladimir Prus.\n" );
-
         return EXITOK;
     }
 
@@ -430,7 +420,15 @@ int main( int argc, char * * argv, char * * arg_environ )
                              object_new( u.machine ) ), VAR_SET );
             }
         }
-#endif /* unix */
+#endif  /* unix */
+
+        /* Set JAM_TIMESTAMP_RESOLUTION. */
+        {
+            timestamp fmt_resolution[ 1 ];
+            file_supported_fmt_resolution( fmt_resolution );
+            var_set( root_module(), constant_JAM_TIMESTAMP_RESOLUTION, list_new(
+                object_new( timestamp_timestr( fmt_resolution ) ) ), VAR_SET );
+        }
 
         /* Load up environment variables. */
 
