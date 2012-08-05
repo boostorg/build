@@ -56,7 +56,7 @@ rule load ( jamfile-location )
     {
         if --debug-loading in [ modules.peek : ARGV ]
         {
-            ECHO "[$(fufu)] Loading Jamfile at" '$(jamfile-location)' ;
+            ECHO "Loading Jamfile at" '$(jamfile-location)' ;
         }
 
         load-jamfile $(jamfile-location) : $(module-name) ;
