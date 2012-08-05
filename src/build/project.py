@@ -179,24 +179,6 @@ class ProjectRegistry:
 
         return self.load(os.path.dirname(found[0]))
 
-    def act_as_jamfile(self, module, location):
-        """Makes the specified 'module' act as if it were a regularly loaded Jamfile
-        at 'location'. If Jamfile is already located for that location, it's an
-        error."""
-
-        if self.module_name(location) in self.jamfile_modules:
-            self.manager.errors()(
-                "Jamfile was already loaded for '%s'" % location)
-
-        # Set up non-default mapping from location to module.
-        self.location2module[location] = module
-
-        # Add the location to the list of project locations so that we do not
-        # try to reload the same Jamfile in the future.
-        self.jamfile_modules.append(location)
-
-        self.initialize(module, location)
-
     def find(self, name, current_location):
         """Given 'name' which can be project-id or plain directory name,
         return project module corresponding to that id or directory.
