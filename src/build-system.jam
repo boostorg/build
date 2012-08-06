@@ -556,9 +556,12 @@ local rule should-clean-project ( project )
     # seen. Otherwise, we would not be able to refer to subprojects using target
     # ids.
     local current-project ;
-    if [ project.find "." : "." ]
     {
-        current-project = [ project.target [ project.load "." ] ] ;
+        local current-module = [ project.find "." : "." ] ;
+        if $(current-module)
+        {
+            current-project = [ project.target $(current-module) ] ;
+        }
     }
 
     # Load the default toolset module if no other has already been specified.
