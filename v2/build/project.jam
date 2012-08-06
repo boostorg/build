@@ -43,6 +43,9 @@ import property-set ;
 import sequence ;
 
 
+.debug-loading = [ MATCH ^(--debug-loading)$ : [ modules.peek : ARGV ] ] ;
+
+
 # Loads the Jamfile at the given location. After loading, project global file
 # and Jamfiles needed by the requested one will be loaded recursively. If the
 # Jamfile at that location is loaded already, does nothing. Returns the project
@@ -54,7 +57,7 @@ rule load ( jamfile-location )
     # If Jamfile is already loaded, do not try again.
     if ! $(module-name) in $(.jamfile-modules)
     {
-        if --debug-loading in [ modules.peek : ARGV ]
+        if $(.debug-loading)
         {
             ECHO "Loading Jamfile at" '$(jamfile-location)' ;
         }
@@ -105,9 +108,9 @@ rule load-parent ( location )
     local found = [ path.glob-in-parents $(location) : $(JAMROOT) $(JAMFILE) ] ;
     if ! $(found)
     {
-        ECHO error: Could not find parent for project at '$(location)' ;
-        EXIT error: Did not find Jamfile.jam or Jamroot.jam in any parent
-            directory. ;
+        import errors ;
+        errors.error Could not find parent "for" project at '$(location)' :
+            Did not find Jamfile.jam or Jamroot.jam "in" any parent directory. ;
     }
     return [ load $(found[1]:D) ] ;
 }
@@ -404,7 +407,7 @@ rule initialize (
     : basename ?
     )
 {
-    if --debug-loading in [ modules.peek : ARGV ]
+    if $(.debug-loading)
     {
         ECHO "Initializing project '$(module-name)'" ;
     }
@@ -428,32 +431,25 @@ rule initialize (
     {
         parent-module = user-config ;
     }
-    else
+    else if $(location) && ! [ MATCH ($(JAMROOT)) : $(basename) ]
     {
-        # We search for parent/project-root only if Jamfile was specified, i.e.
-        # if the project is not standalone.
-        if $(location) && ! [ MATCH ($(JAMROOT)) : $(basename) ]
+        # We search for parent/jamroot only if this is a jamfile project, i.e.
+        # if is not a standalone or a jamroot project.
+        parent-module = [ load-parent $(location) ] ;
+    }
+    else if $(location)
+    {
+        # We have a jamroot project. Inherit from user-config (or project-config
+        # if it exists).
+        if $(project-config.attributes)
         {
-            parent-module = [ load-parent $(location) ] ;
+            parent-module = project-config ;
         }
         else
         {
-            # We have either jamroot or a standalone project. If it is jamroot,
-            # inherit from user-config (or project-config if it exists).
-            if $(location)
-            {
-                # If project-config module exist, inherit from it.
-                if $(project-config.attributes)
-                {
-                    parent-module = project-config ;
-                }
-                else
-                {
-                    parent-module = user-config ;
-                }
-                jamroot = true ;
-            }
+            parent-module = user-config ;
         }
+        jamroot = true ;
     }
 
     # TODO: need to consider if standalone projects can do anything but define
@@ -526,14 +522,14 @@ rule initialize (
 
         if ! $(.target.$(module-name))
         {
-            .target.$(module-name) = [ new project-target $(module-name)
-                : $(module-name) $(parent)
-                : [ attribute $(module-name) requirements ] ] ;
+            local requirements = [ attribute $(module-name) requirements ] ;
+            .target.$(module-name) = [ new project-target $(module-name) :
+                $(module-name) $(parent) : $(requirements) ] ;
 
-            if --debug-loading in [ modules.peek : ARGV ]
+            if $(.debug-loading)
             {
-                ECHO "Assigned project target" $(.target.$(module-name))
-                    "to '$(module-name)'" ;
+                ECHO Assigned project target $(.target.$(module-name)) to
+                    '$(module-name)' ;
             }
         }
     }
@@ -780,9 +776,8 @@ rule target ( project-module )
 {
     if ! $(.target.$(project-module))
     {
-        .target.$(project-module) = [ new project-target $(project-module)
-            : $(project-module)
-            : [ attribute $(project-module) requirements ] ] ;
+        .target.$(project-module) = [ new project-target $(project-module) :
+            $(project-module) : [ attribute $(project-module) requirements ] ] ;
     }
     return $(.target.$(project-module)) ;
 }
