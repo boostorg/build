@@ -531,31 +531,21 @@ rule generate-xml-catalog ( target : sources * : properties * )
   print.text "</catalog>" ;
 }
 
-rule xml-catalog ( )
+# Returns information about the global XML catalog virtual target, creating it
+# lazily if needed. To get this global catalog generated only once we do not
+# create it in every project that requests it but instead only create it in the
+# first one and reuse it from there for servicing any later requests.
+#
+# FIXME: Ideally the catalog target should be created as part of the boostbook
+# project, however this is not currently possible as such standalong projects do
+# not inherit things like the build directory.
+#
+rule xml-catalog ( project )
 {
     if ! $(.xml-catalog)
     {
-        # The target is created as part of the root project. But ideally
-        # it would be created as part of the boostbook project. This is not
-        # current possible as such global projects don't inherit things like
-        # the build directory.
-        
-        # Find the root project.
-        local root-project = [ project.current ] ;
-        root-project = [ $(root-project).project-module ] ;
-        while
-            [ project.attribute $(root-project) parent-module ] &&
-            [ project.attribute $(root-project) parent-module ] != user-config &&
-            [ project.attribute $(root-project) parent-module ] != project-config
-        {
-            root-project = [ project.attribute $(root-project) parent-module ] ;
-        }
-        .xml-catalog = [ new file-target boostbook_catalog
-            : XML
-            : [ project.target $(root-project) ]
-            : [ new action : boostbook.generate-xml-catalog ]
-            :
-            ] ;
+        .xml-catalog = [ new file-target boostbook_catalog : XML : $(project) :
+            [ new action : boostbook.generate-xml-catalog ] ] ;
         .xml-catalog-file = [ $(.xml-catalog).path ] [ $(.xml-catalog).name ] ;
         .xml-catalog-file = $(.xml-catalog-file:J=/) ;
     }
@@ -578,7 +568,7 @@ class boostbook-generator : generator
     rule run ( project name ? : property-set : sources * )
     {
         # Generate the catalog, but only once...
-        local global-catalog = [ boostbook.xml-catalog ] ;
+        local global-catalog = [ boostbook.xml-catalog $(project) ] ;
         local catalog = $(global-catalog[1]) ;
         local catalog-file = $(global-catalog[2]) ;
         local targets ;
