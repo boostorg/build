@@ -778,6 +778,12 @@ rule target ( project-module )
     {
         .target.$(project-module) = [ new project-target $(project-module) :
             $(project-module) : [ attribute $(project-module) requirements ] ] ;
+
+        if $(.debug-loading)
+        {
+            ECHO Assigned parentless project target $(.target.$(project-module))
+                to referenced '$(project-module)' ;
+        }
     }
     return $(.target.$(project-module)) ;
 }
