@@ -83,12 +83,11 @@ rule load-used-projects ( module-name )
 {
     local used = [ modules.peek $(module-name) : .used-projects ] ;
     local location = [ attribute $(module-name) location ] ;
-    import project ;
     while $(used)
     {
         local id = $(used[1]) ;
         local where = $(used[2]) ;
-        project.use $(id) : [ path.root [ path.make $(where) ] $(location) ] ;
+        use $(id) : [ path.root [ path.make $(where) ] $(location) ] ;
         used = $(used[3-]) ;
     }
 }
@@ -787,7 +786,7 @@ rule target ( project-module )
 
 # Use/load a project.
 #
-rule use ( id : location )
+local rule use ( id : location )
 {
     local project-module = [ project.load $(location) ] ;
     local declared-id = [ project.attribute $(project-module) id ] ;
