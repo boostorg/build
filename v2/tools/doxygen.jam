@@ -547,36 +547,37 @@ else
    }
 }
 
-rule check-tools ( )
+rule check-tools ( project )
 {
     if ! $(.check-tools-targets)
     {
         # Find the root project.
-        local root-project = [ project.current ] ;
-        root-project = [ $(root-project).project-module ] ;
-        while
-            [ project.attribute $(root-project) parent-module ] &&
-            [ project.attribute $(root-project) parent-module ] != user-config
+        local project-module = [ $(project).project-module ] ;
+        local parent-module = [ project.attribute $(project-module)
+            parent-module ] ;
+        while $(parent-module) && $(parent-module) != user-config
         {
-            root-project =
-                [ project.attribute $(root-project) parent-module ] ;
+            project-module = $(parent-module) ;
+            parent-module = [ project.attribute $(project-module) parent-module
+                ] ;
         }
+        project = [ project.target $(project-module) ] ;
 
         .latex.check = [ new file-target latex.check
             :
-            : [ project.target $(root-project) ]
+            : $(project)
             : [ new action : doxygen.check-latex ]
             :
             ] ;
         .dvips.check = [ new file-target dvips.check
             :
-            : [ project.target $(root-project) ]
+            : $(project)
             : [ new action : doxygen.check-dvips ]
             :
             ] ;
         .gs.check = [ new file-target gs.check
             :
-            : [ project.target $(root-project) ]
+            : $(project)
             : [ new action : doxygen.check-gs ]
             :
             ] ;
@@ -593,7 +594,7 @@ class doxygen-check-tools-target-class : basic-target
     import doxygen ;
     rule construct ( name : sources * : property-set )
     {
-        return [ property-set.empty ] [ doxygen.check-tools ] ;
+        return [ property-set.empty ] [ doxygen.check-tools [ project ] ] ;
     }
 }
 
