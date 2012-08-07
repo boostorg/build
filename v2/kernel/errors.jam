@@ -25,7 +25,7 @@ rule backtrace ( skip-frames prefix messages * : * )
         local bt = [ nearest-user-location ] ;
         if $(bt)
         {
-            ECHO "$(prefix) at $(bt) " ;
+            ECHO $(prefix) at $(bt) ;
         }
         for local n in $(args)
         {
