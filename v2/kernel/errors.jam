@@ -23,7 +23,10 @@ rule backtrace ( skip-frames prefix messages * : * )
     if $(.user-modules-only)
     {
         local bt = [ nearest-user-location ] ;
-        ECHO "$(prefix) at $(bt) " ;
+        if $(bt)
+        {
+            ECHO "$(prefix) at $(bt) " ;
+        }
         for local n in $(args)
         {
             if $($(n))-is-defined
