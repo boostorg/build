@@ -2,7 +2,8 @@
 # Copyright 2003, 2004, 2005 Vladimir Prus
 # Copyright 2006 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # This module defines rules to handle generation of various outputs from source
 # files documented with doxygen comments. The supported transformations are:
@@ -17,28 +18,26 @@
 # <target> with the Doxygen html files, and a <target>.html file redirecting to
 # that directory.
 
-import "class" : new ;
-import targets ;
-import feature ;
-import property ;
-import generators ;
+import alias ;
 import boostbook ;
+import "class" : new ;
+import common ;
+import feature ;
+import make ;
+import modules ;
+import generators ;
+import property ;
+import targets ;
 import type ;
+import os ;
 import path ;
 import print ;
+import project ;
 import regex ;
 import stage ;
-import project ;
-import xsltproc ;
-import make ;
-import os ;
-import toolset : flags ;
-import alias ;
-import common ;
-import modules ;
-import project ;
+import toolset ;
 import utility ;
-import errors ;
+import xsltproc ;
 
 
 # Use to specify extra configuration paramters. These get translated
@@ -132,10 +131,11 @@ rule init ( name ? )
     }
 }
 
-rule freeze-config ( )
+local rule freeze-config ( )
 {
     if ! $(.initialized)
     {
+        import errors ;
         errors.user-error "doxygen must be initialized before it can be used." ;
     }
     if ! $(.config-frozen)
@@ -149,15 +149,16 @@ rule freeze-config ( )
     }
 }
 
-rule modify-config ( )
+local rule modify-config ( )
 {
     if $(.config-frozen)
     {
+        import errors ;
         errors.user-error "Cannot change doxygen after it has been used." ;
     }
 }
 
-rule check-doxygen ( )
+local rule check-doxygen ( )
 {
     if --debug-configuration in [ modules.peek : ARGV ]
     {
@@ -176,8 +177,8 @@ rule check-doxygen ( )
             extra-paths = "C:\\Program Files" ;
         }
     }
-    .doxygen = [ common.get-invocation-command doxygen :
-                 doxygen : $(.doxygen) : $(extra-paths) ] ;
+    .doxygen = [ common.get-invocation-command doxygen : doxygen : $(.doxygen) :
+        $(extra-paths) ] ;
 }
 
 rule name ( )
@@ -186,15 +187,16 @@ rule name ( )
     return $(.doxygen) ;
 }
 
-rule .is-cygwin ( )
+local rule .is-cygwin ( )
 {
     if [ os.on-windows ]
     {
         local file = [ path.make [ modules.binding $(__name__) ] ] ;
-        local dir = [ path.native
-                      [ path.join [ path.parent $(file) ] doxygen ] ] ;
-        local command =
-         "cd \"$(dir)\" && \"$(.doxygen)\" windows-paths-check.doxyfile 2>&1" ;
+        local dir = [ path.native [ path.join [ path.parent $(file) ] doxygen ]
+            ] ;
+        local command = cd \"$(dir)\" "&&" \"$(.doxygen)\"
+            windows-paths-check.doxyfile 2>&1 ;
+        command = $(command:J=" ") ;
         result = [ SHELL $(command) ] ;
         if [ MATCH "(Parsing file /)" : $(result) ]
         {
@@ -282,8 +284,8 @@ rule headers-to-doxyfile ( target : sources * : properties * )
         local namevalue = [ regex.match ([^=]*)=(.*) : $(param) ] ;
         if $(namevalue[1]) = OUTPUT_DIRECTORY
         {
-            output-dir = [ translate-path
-                           [ utility.unquote $(namevalue[2]) ] ] ;
+            output-dir = [ translate-path [ utility.unquote $(namevalue[2]) ] ]
+                ;
             text += "OUTPUT_DIRECTORY = \"$(output-dir)\"" ;
         }
         else
@@ -298,7 +300,7 @@ rule headers-to-doxyfile ( target : sources * : properties * )
         text += "OUTPUT_DIRECTORY = \"$(output-dir)\"" ;
     }
 
-    local headers = ;
+    local headers ;
     for local header in $(sources:G=)
     {
         header = [ translate-path $(header) ] ;
@@ -322,31 +324,23 @@ rule run ( target : source : properties * )
     freeze-config ;
     if <doxygen.rmdir>on in $(properties)
     {
-        local output-dir =
-            [ path.make
-                [ MATCH <doxygen:param>OUTPUT_DIRECTORY=\"?([^\"]*) :
-                  $(properties) ] ] ;
-        local html-dir =
-            [ path.make
-                [ MATCH <doxygen:param>HTML_OUTPUT=(.*) :
-                  $(properties) ] ] ;
+        local output-dir = [ path.make [ MATCH
+            <doxygen:param>OUTPUT_DIRECTORY=\"?([^\"]*) : $(properties) ] ] ;
+        local html-dir = [ path.make [ MATCH <doxygen:param>HTML_OUTPUT=(.*) :
+            $(properties) ] ] ;
         if $(output-dir) && $(html-dir) &&
             [ path.glob $(output-dir) : $(html-dir) ]
         {
-            HTMLDIR on $(target) =
-                [ path.native [ path.join $(output-dir) $(html-dir) ] ] ;
+            HTMLDIR on $(target) = [ path.native [ path.join $(output-dir)
+                $(html-dir) ] ] ;
             rm-htmldir $(target) ;
         }
     }
     doxygen-action $(target) : $(source) ;
     NAME on $(target) = $(.doxygen) ;
     RM on $(target) = [ modules.peek common : RM ] ;
-    *.XML on $(target) =
-        [ path.native
-            [ path.join
-                [ path.make [ on $(target) return $(LOCATE) ] ]
-                $(target:B:S=)
-                *.xml ] ] ;
+    *.XML on $(target) = [ path.native [ path.join [ path.make [ on $(target)
+        return $(LOCATE) ] ] $(target:B:S=) *.xml ] ] ;
 }
 
 if [ os.name ] = NT
@@ -427,17 +421,16 @@ rule xml-to-boostbook ( target : source : properties * )
 }
 
 
-flags doxygen.xml-dir-to-boostbook OPTIONS <doxygen.doxproc.index>yes : --enable-index ;
-flags doxygen.xml-dir-to-boostbook ID <doxygen.doxproc.id> ;
-flags doxygen.xml-dir-to-boostbook TITLE <doxygen.doxproc.title> ;
+toolset.flags doxygen.xml-dir-to-boostbook OPTIONS <doxygen.doxproc.index>yes :
+    --enable-index ;
+toolset.flags doxygen.xml-dir-to-boostbook ID <doxygen.doxproc.id> ;
+toolset.flags doxygen.xml-dir-to-boostbook TITLE <doxygen.doxproc.title> ;
 
 
 rule xml-dir-to-boostbook ( target : source : properties * )
 {
     DOXPROC on $(target) = $(.doxproc) ;
-
     LOCATE on $(source:S=) = [ on $(source) return $(LOCATE) ] ;
-
     doxygen.doxproc $(target) : $(source:S=) ;
 }
 
@@ -469,23 +462,14 @@ rule html-redirect ( target : source : properties * )
 
 rule copy-latex-pngs ( target : source : requirements * )
 {
-    local directory = [ path.native
-                        [ feature.get-values <doxygen:xml-imagedir> :
-                          $(requirements) ] ] ;
-
+    local directory = [ path.native [ feature.get-values <doxygen:xml-imagedir>
+        : $(requirements) ] ] ;
     local location = [ on $(target) return $(LOCATE) ] ;
 
-    local pdf-location =
-        [ path.native
-            [ path.join
-                [ path.make $(location) ]
-                [ path.make $(directory) ] ] ] ;
-    local html-location =
-        [ path.native
-            [ path.join
-                .
-                html
-                [ path.make $(directory) ] ] ] ;
+    local pdf-location = [ path.native [ path.join [ path.make $(location) ]
+        [ path.make $(directory) ] ] ] ;
+    local html-location = [ path.native [ path.join . html [ path.make
+        $(directory) ] ] ] ;
 
     common.MkDir $(pdf-location) ;
     common.MkDir $(html-location) ;
@@ -515,12 +499,9 @@ actions copy-latex-pngs
     echo "Stamped" > "$(<)"
 }
 
-# building latex images for doxygen XML depends
-# on latex, dvips, and ps being in your PATH.
-# This is true for most Unix installs, but
-# not on Win32, where you will need to install
-# MkTex and Ghostscript and add these tools
-# to your path.
+# Building latex images for doxygen XML depends on latex, dvips, and ps being in
+# your PATH. This is true for most Unix installs, but not on Win32, where you
+# will need to install MkTex and Ghostscript and add these tools to your path.
 
 actions check-latex
 {
@@ -534,17 +515,17 @@ actions check-dvips
 
 if [ os.name ] = "NT"
 {
-   actions check-gs
-   {
-       gswin32c -version >$(<)
-   }
+    actions check-gs
+    {
+        gswin32c -version >$(<)
+    }
 }
 else
 {
-   actions check-gs
-   {
-       gs -version >$(<)
-   }
+    actions check-gs
+    {
+        gs -version >$(<)
+    }
 }
 
 rule check-tools ( project )
@@ -563,25 +544,13 @@ rule check-tools ( project )
         }
         project = [ project.target $(project-module) ] ;
 
-        .latex.check = [ new file-target latex.check
-            :
-            : $(project)
-            : [ new action : doxygen.check-latex ]
-            :
-            ] ;
-        .dvips.check = [ new file-target dvips.check
-            :
-            : $(project)
-            : [ new action : doxygen.check-dvips ]
-            :
-            ] ;
-        .gs.check = [ new file-target gs.check
-            :
-            : $(project)
-            : [ new action : doxygen.check-gs ]
-            :
-            ] ;
-        .check-tools-targets = $(.latex.check) $(.dvips.check) $(.gs.check) ;
+        local latex.check = [ new file-target latex.check : : $(project) : [ new
+            action : doxygen.check-latex ] ] ;
+        local dvips.check = [ new file-target dvips.check : : $(project) : [ new
+            action : doxygen.check-dvips ] ] ;
+        local gs.check = [ new file-target gs.check : : $(project) : [ new
+            action : doxygen.check-gs ] ] ;
+        .check-tools-targets = $(latex.check) $(dvips.check) $(gs.check) ;
     }
     return $(.check-tools-targets) ;
 }
@@ -598,19 +567,20 @@ class doxygen-check-tools-target-class : basic-target
     }
 }
 
-local project = [ project.current ] ;
-
-targets.main-target-alternative
-    [ new doxygen-check-tools-target-class check-tools : $(project)
-        : [ targets.main-target-sources : check-tools : no-renaming ]
-        : [ targets.main-target-requirements : $(project) ]
-        : [ targets.main-target-default-build : $(project) ]
-        : [ targets.main-target-usage-requirements : $(project) ]
-    ] ;
+{
+    local project = [ project.current ] ;
+    targets.main-target-alternative
+        [ new doxygen-check-tools-target-class check-tools : $(project)
+            : [ targets.main-target-sources : check-tools : no-renaming ]
+            : [ targets.main-target-requirements : $(project) ]
+            : [ targets.main-target-default-build : $(project) ]
+            : [ targets.main-target-usage-requirements : $(project) ] ] ;
+}
 
 # User-level rule to generate BoostBook XML from a set of headers via Doxygen.
 #
-rule doxygen ( target : sources * : requirements * : default-build * : usage-requirements * )
+rule doxygen ( target : sources * : requirements * : default-build * :
+    usage-requirements * )
 {
     freeze-config ;
     local project = [ project.current ] ;
@@ -618,21 +588,23 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
     if $(target:S) = .html
     {
         # Build an HTML directory from the sources.
-        local html-location = [ feature.get-values <location> : $(requirements) ] ;
+        local html-location = [ feature.get-values <location> : $(requirements)
+            ] ;
         local output-dir ;
-        if [ $(project).get build-dir ] 
+        if [ $(project).get build-dir ]
         {
             # Explicitly specified build dir. Add html at the end.
-            output-dir = [ path.join [ $(project).build-dir ] $(html-location:E=html) ] ;
+            output-dir = [ path.join [ $(project).build-dir ]
+                $(html-location:E=html) ] ;
         }
         else
         {
-            # Trim 'bin' from implicit build dir, for no other reason that backward
-            # compatibility.
-            output-dir = [ path.join [ path.parent [ $(project).build-dir ] ] 
-              $(html-location:E=html) ] ;
+            # Trim 'bin' from implicit build dir, for no other reason than
+            # backward compatibility.
+            output-dir = [ path.join [ path.parent [ $(project).build-dir ] ]
+                $(html-location:E=html) ] ;
         }
-        output-dir = [ path.root $(output-dir) [ path.pwd ] ] ;        
+        output-dir = [ path.root $(output-dir) [ path.pwd ] ] ;
         local output-dir-native = [ path.native $(output-dir) ] ;
         requirements = [ property.change $(requirements) : <location> ] ;
 
@@ -646,20 +618,21 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
                     <doxygen:param>"OUTPUT_DIRECTORY=\"$(output-dir-native)\""
                     <doxygen:param>HTML_OUTPUT=$(target:B)
                     : $(project) ]
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
-            ] ;
+                : [ targets.main-target-default-build $(default-build) :
+                    $(project) ] ] ;
         $(project).mark-target-as-explicit $(target:S=.tag) ;
 
         ## The html directory to generate by running doxygen.
         targets.main-target-alternative
-            [ new typed-target $(target:S=.dir) : $(project) : DOXYGEN_HTML_MULTIFILE
+            [ new typed-target $(target:S=.dir) : $(project)
+                : DOXYGEN_HTML_MULTIFILE
                 : $(target:S=.tag)
                 : [ targets.main-target-requirements $(requirements)
                     <doxygen:param>"OUTPUT_DIRECTORY=\"$(output-dir-native)\""
                     <doxygen:param>HTML_OUTPUT=$(target:B)
                     : $(project) ]
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
-                ] ;
+                : [ targets.main-target-default-build $(default-build) :
+                    $(project) ] ] ;
         $(project).mark-target-as-explicit $(target:S=.dir) ;
 
         ## The redirect html file into the generated html.
@@ -669,17 +642,18 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
                 : [ targets.main-target-requirements $(requirements)
                     <location>$(output-dir)
                     : $(project) ]
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
-                ] ;
+                : [ targets.main-target-default-build $(default-build) :
+                    $(project) ] ] ;
     }
     else
     {
         # Build a BoostBook XML file from the sources.
-        local location-xml = [ feature.get-values <location> : $(requirements) ] ;
+        local location-xml = [ feature.get-values <location> : $(requirements) ]
+            ;
         requirements = [ property.change $(requirements) : <location> ] ;
         local target-xml = $(target:B=$(target:B)-xml) ;
 
-        # Check whether we need to build images
+        # Check whether we need to build images.
         local images-location =
             [ feature.get-values <doxygen:xml-imagedir> : $(requirements) ] ;
         if $(images-location)
@@ -720,24 +694,26 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
         ## The doxygen configuration file.
         targets.main-target-alternative
             [ new typed-target $(target-xml:S=.tag) : $(project) : DOXYFILE
-                : [ targets.main-target-sources $(sources) : $(target-xml:S=.tag) ]
+                : [ targets.main-target-sources $(sources) :
+                    $(target-xml:S=.tag) ]
                 : [ targets.main-target-requirements $(requirements)
                     <doxygen:param>GENERATE_HTML=NO
                     <doxygen:param>GENERATE_XML=YES
                     <doxygen:param>XML_OUTPUT=$(target-xml)
                     : $(project) ]
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
-            ] ;
+                : [ targets.main-target-default-build $(default-build) :
+                    $(project) ] ] ;
         $(project).mark-target-as-explicit $(target-xml:S=.tag) ;
 
         ## The Doxygen XML directory of the processed source files.
         targets.main-target-alternative
-            [ new typed-target $(target-xml:S=.dir) : $(project) : DOXYGEN_XML_MULTIFILE
+            [ new typed-target $(target-xml:S=.dir) : $(project)
+                : DOXYGEN_XML_MULTIFILE
                 : $(target-xml:S=.tag)
                 : [ targets.main-target-requirements $(requirements)
                     : $(project) ]
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
-            ] ;
+                : [ targets.main-target-default-build $(default-build) :
+                    $(project) ] ] ;
         $(project).mark-target-as-explicit $(target-xml:S=.dir) ;
 
         ## The resulting BoostBook file is generated by the processor tool. The
@@ -748,8 +724,8 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
                 :  $(target-xml:S=.dir)
                 : [ targets.main-target-requirements $(requirements)
                     : $(project) ]
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
-            ] ;
+                : [ targets.main-target-default-build $(default-build) :
+                    $(project) ] ] ;
         $(project).mark-target-as-explicit $(target-xml) ;
 
         targets.main-target-alternative
@@ -759,19 +735,17 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
                     <location>$(location-xml:E=.)
                     <name>$(target:S=.xml)
                     : $(project) ]
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
-            ] ;
+                : [ targets.main-target-default-build $(default-build) :
+                    $(project) ] ] ;
         $(project).mark-target-as-explicit $(target:S=.xml) ;
 
         targets.main-target-alternative
-            [ new alias-target-class $(target) : $(project)
-                :
+            [ new alias-target-class $(target) : $(project) :
                 : [ targets.main-target-requirements $(requirements)
                     : $(project) ]
-                : [ targets.main-target-default-build $(default-build) : $(project) ]
+                : [ targets.main-target-default-build $(default-build) :
+                    $(project) ]
                 : [ targets.main-target-usage-requirements $(usage-requirements)
-                    <dependency>$(target:S=.xml)
-                    : $(project) ]
-            ] ;
+                    <dependency>$(target:S=.xml) : $(project) ] ] ;
     }
 }
