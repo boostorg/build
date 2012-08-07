@@ -1,9 +1,8 @@
 # Copyright Vladimir Prus 2002.
 # Copyright Rene Rivera 2006.
-#
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Supports 'abstract' targets, which are targets explicitly defined in a
 # Jamfile.
@@ -1059,14 +1058,16 @@ rule common-properties2 ( build-request requirements )
     # do.
     #
     build-request = [ $(build-request).add-defaults ] ;
-    # Features added by 'add-default' can be composite and expand to features
-    # without default values -- so they are not added yet. It could be clearer/
-    # /faster to expand only newly added properties but that is not critical.
+    # Features added by 'add-defaults' can be composite and expand to features
+    # without default values -- which therefore have not been added yet. It
+    # could be clearer/faster to expand only newly added properties but that is
+    # not critical.
     build-request = [ $(build-request).expand ] ;
 
     return [ evaluate-requirements $(requirements) : $(build-request) :
         refined ] ;
 }
+
 
 rule push-target ( target )
 {
