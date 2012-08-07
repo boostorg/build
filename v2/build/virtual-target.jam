@@ -2,7 +2,8 @@
 # Copyright 2005, 2006 Rene Rivera
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Implements virtual targets, which correspond to actual files created during a
 # build, but are not yet targets in Jam sense. They are needed, for example,
@@ -977,22 +978,19 @@ rule register ( target )
             {
                 result = $(t) ;
             }
-            else
+            else if $(a1) && $(a2) &&
+                ( [ $(a1).action-name ] = [ $(a2).action-name ] ) &&
+                ( [ $(a1).sources     ] = [ $(a2).sources     ] )
             {
-                if $(a1) && $(a2) &&
-                    ( [ $(a1).action-name ] = [ $(a2).action-name ] ) &&
-                    ( [ $(a1).sources     ] = [ $(a2).sources     ] )
+                local ps1 = [ $(a1).properties ] ;
+                local ps2 = [ $(a2).properties ] ;
+                local p1 = [ $(ps1).base ] [ $(ps1).free ] [ set.difference
+                    [ $(ps1).dependency ] : [ $(ps1).incidental ] ] ;
+                local p2 = [ $(ps2).base ] [ $(ps2).free ] [ set.difference
+                    [ $(ps2).dependency ] : [ $(ps2).incidental ] ] ;
+                if $(p1) = $(p2)
                 {
-                    local ps1 = [ $(a1).properties ] ;
-                    local ps2 = [ $(a2).properties ] ;
-                    local p1 = [ $(ps1).base ] [ $(ps1).free ] [ set.difference
-                        [ $(ps1).dependency ] : [ $(ps1).incidental ] ] ;
-                    local p2 = [ $(ps2).base ] [ $(ps2).free ] [ set.difference
-                        [ $(ps2).dependency ] : [ $(ps2).incidental ] ] ;
-                    if $(p1) = $(p2)
-                    {
-                        result = $(t) ;
-                    }
+                    result = $(t) ;
                 }
             }
         }

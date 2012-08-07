@@ -2,9 +2,9 @@
 # Copyright 2006 Rene Rivera
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
-import errors ;
 import feature ;
 import indirect ;
 import path ;
@@ -137,23 +137,23 @@ rule evaluate-conditionals-in-context ( properties * : context * )
                     {
                         fail = true ;
                         c = ;
-                    }                    
-                }    
+                    }
+                }
                 else
                 {
                     if ! $(c) in $(context)
                     {
                         fail = true ;
                         c = ;
-                    }                    
+                    }
                 }
                 condition = $(condition[2-]) ;
             }
             if ! $(fail)
             {
                 result += $(s[2]) ;
-            }            
-        }                
+            }
+        }
     }
     return $(result) ;
 }
@@ -325,6 +325,7 @@ local rule validate1 ( property )
     }
     if $(msg)
     {
+        import errors ;
         errors.error "Invalid property "'$(property:J=" ")'": "$(msg:J=" "). ;
     }
 }
@@ -367,6 +368,7 @@ rule make ( specification * )
         }
         else
         {
+            import errors ;
             errors.error "'$(e)' is not a valid property specification" ;
         }
     }
@@ -597,7 +599,6 @@ rule translate-dependencies ( specification * : project-id : location )
 #
 class property-map
 {
-    import errors ;
     import numbers ;
     import sequence ;
 
@@ -645,7 +646,8 @@ class property-map
         local best = [ sequence.select-highest-ranked $(matches)
             : $(match-ranks) ] ;
         if $(best[2])
-        {            
+        {
+            import errors : error : errors.error ;
             errors.error "Ambiguous key $(properties:J= :E=)" ;
         }
         local original = $(self.value.$(best)) ;
@@ -744,7 +746,7 @@ rule __test__ ( )
 
     try ;
         validate value : $(test-space) ;
-    catch "value" is not a value of an implicit feature ;
+    catch \"value\" is not an implicit feature value ;
 
     assert.result-set-equal <rtti>on
         : remove free implicit : <toolset>gcc <define>foo <rtti>on : $(test-space) ;
