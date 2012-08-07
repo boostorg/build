@@ -372,11 +372,7 @@ class project-target : abstract-target
             }
             else
             {
-                # TODO: This extra error message will not get displayed most
-                # likely due to some buggy refactoring. Refactor the code so the
-                # message gets diplayed again.
-                extra-error-message = error: could not find project
-                    '$(project-part)' ;
+                extra-error-message = could not find project '$(project-part)' ;
             }
         }
         else
@@ -417,7 +413,7 @@ class project-target : abstract-target
             }
         }
 
-        return $(result) ;
+        return $(result:E="") $(extra-error-message) ;
     }
 
     # Find and return the target with the specified id, treated relative to
@@ -428,9 +424,12 @@ class project-target : abstract-target
     rule find ( id : no-error ? )
     {
         local v = $(.id.$(id)) ;
+        local extra-error-message ;
         if ! $(v)
         {
-            v = [ find-really $(id) ] ;
+            local r = [ find-really $(id) ] ;
+            v = $(r[1]) ;
+            extra-error-message = $(r[2-]) ;
             if ! $(v)
             {
                 v = none ;
@@ -442,18 +441,15 @@ class project-target : abstract-target
         {
             return $(v) ;
         }
-        else
+        else if ! $(no-error)
         {
-            if ! $(no-error)
-            {
-                local current-location = [ get location ] ;
-                ECHO "error: Unable to find file or target named" ;
-                ECHO "error:     '$(id)'" ;
-                ECHO "error: referred from project at" ;
-                ECHO "error:     '$(current-location)'" ;
-                ECHO $(extra-error-message) ;
-                EXIT ;
-            }
+            local current-location = [ get location ] ;
+            import errors : user-error : errors.user-error ;
+            errors.user-error Unable to find file or target named
+                : "   " '$(id)'
+                : referred from project at
+                : "   " '$(current-location)'
+                : $(extra-error-message) ;
         }
     }
 
