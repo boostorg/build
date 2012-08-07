@@ -116,10 +116,6 @@ rule load-parent ( location )
 }
 
 
-# Makes the specified 'module' act as if it were a regularly loaded Jamfile at
-# 'location'. Reports an error if a Jamfile has already been loaded for that
-# location.
-#
 # Returns the project module corresponding to the given project-id or plain
 # directory name. Returns nothing if such a project can not be found.
 #
