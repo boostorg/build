@@ -63,7 +63,7 @@ rule backtrace ( skip-frames prefix messages * : * )
     }
 }
 
-.args ?= messages 2 3 4 5 6 7 8 9 ;
+.args ?= messages 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ;
 .disabled ?= ;
 .last-error-$(.args) ?= ;
 
@@ -170,7 +170,8 @@ rule error ( messages * : * )
     else
     {
         error-skip-frames 3 $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) :
-            $(8) : $(9) ;
+            $(8) : $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16)
+            : $(17) : $(18) : $(19) ;
     }
 }
 
@@ -181,7 +182,8 @@ rule user-error ( messages * : * )
 {
     .user-modules-only = 1 ;
     error-skip-frames 3 $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
-        $(9) ;
+        $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17) :
+        $(18) : $(19) ;
 }
 
 
@@ -190,7 +192,8 @@ rule user-error ( messages * : * )
 rule warning
 {
     backtrace 2 warning: $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
-        $(9) ;
+        $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17) :
+        $(18) : $(19) ;
 }
 
 
@@ -202,7 +205,7 @@ rule warning
 rule lol->list ( * )
 {
     local result ;
-    local remaining = 1 2 3 4 5 6 7 8 9 ;
+    local remaining = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ;
     while $($(remaining))
     {
         local n = $(remaining[1]) ;
