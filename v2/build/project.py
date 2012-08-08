@@ -34,7 +34,7 @@
 # behave as a regular project except that, since it is not associated with any
 # location, it should only declare prebuilt targets.
 #
-# The list of all loaded Jamfile is stored in the .project-locations variable.
+# The list of all loaded Jamfiles is stored in the .project-locations variable.
 # It is possible to obtain a module name for a location using the 'module-name'
 # rule. Standalone projects are not recorded and can only be references using
 # their project id.
