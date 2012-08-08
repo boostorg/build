@@ -6,29 +6,28 @@
 # http://www.boost.org/LICENSE_1_0.txt)
 
 # Implements project representation and loading. Each project is represented by:
-#  - a module where all the Jamfile content live.
+#  - a module where all the Jamfile content lives.
 #  - an instance of 'project-attributes' class.
 #    (given a module name, can be obtained using the 'attributes' rule)
 #  - an instance of 'project-target' class (from targets.jam)
 #    (given a module name, can be obtained using the 'target' rule)
 #
 # Typically, projects are created as result of loading a Jamfile, which is done
-# by rules 'load' and 'initialize', below. First, module for Jamfile is loaded
-# and new project-attributes instance is created. Some rules necessary for
-# project are added to the module (see 'project-rules' module) at the bottom of
-# this file. Default project attributes are set (inheriting attributes of parent
-# project, if it exists). After that the Jamfile is read. It can declare its own
-# attributes using the 'project' rule which will be combined with any already
-# set attributes.
+# by rules 'load' and 'initialize', below. First, a module is prepared and a new
+# project-attributes instance is created. Some rules necessary for all projects
+# are added to the module (see the 'project-rules' module). Default project
+# attributes are set (inheriting parent project attributes, if it exists). After
+# that the Jamfile is read. It can declare its own attributes using the
+# 'project' rule which will be combined with any already set.
 #
 # The 'project' rule can also declare a project id which will be associated with
 # the project module.
 #
-# There can also be 'standalone' projects. They are created by calling
-# 'initialize' on an arbitrary module and not specifying their location. After
-# the call, the module can call the 'project' rule, declare main targets and
-# behave as a regular project except that, since it is not associated with any
-# location, it should only declare prebuilt targets.
+# Besides Jamfile projects, we also support 'standalone' projects created by
+# calling 'initialize' in an arbitrary module and not specifying the project's
+# location. After the call, the module can call the 'project' rule, declare main
+# targets and behave as a regular project except that, since it is not
+# associated with any location, it should only declare prebuilt targets.
 #
 # The list of all loaded Jamfiles is stored in the .project-locations variable.
 # It is possible to obtain a module name for a location using the 'module-name'
@@ -1007,8 +1006,9 @@ module project-rules
             # weird or wrong consequences.
             if $(location) && $(location) = [ $(attributes).get project-root ]
             {
-                # Re-read the project id, since it might have been changed in
-                # the project's attributes.
+                # Re-read the project id, since it might have been modified a
+                # bit when setting the project's id attribute, e.g. might have
+                # been prefixed by a slash if it was not already.
                 id = [ $(attributes).get id ] ;
                 # This is Jamroot.
                 if $(id)
@@ -1023,8 +1023,8 @@ module project-rules
                     }
                     # Strip the leading slash from id.
                     local rid = [ MATCH /(.*) : $(id) ] ;
-                    local p = [ path.join
-                        $(global-build-dir) $(rid) $(explicit-build-dir) ] ;
+                    local p = [ path.join $(global-build-dir) $(rid)
+                        $(explicit-build-dir) ] ;
 
                     $(attributes).set build-dir : $(p) : exact ;
                 }
