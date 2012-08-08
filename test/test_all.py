@@ -206,6 +206,7 @@ tests = ["absolute_sources",
          "duplicate",
          "example_libraries",
          "example_make",
+         "exit_status",
          "expansion",
          "explicit",
          "free_features_request",
@@ -264,7 +265,6 @@ tests = ["absolute_sources",
          "using",
          "wrapper",
          "wrong_project",
-         "exit_status",
          ]
 
 if os.name == "posix":
