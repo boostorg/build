@@ -86,8 +86,9 @@ rule load-used-projects ( module-name )
     while $(used)
     {
         local id = $(used[1]) ;
-        local where = $(used[2]) ;
-        use $(id) : [ path.root [ path.make $(where) ] $(root-location) ] ;
+        local where = [ path.make $(used[2]) ] ;
+        local location = [ path.root $(where) $(root-location) ] ;
+        register-id $(id) : [ load $(location) ] ;
         used = $(used[3-]) ;
     }
 }
@@ -574,11 +575,47 @@ rule inherit-attributes ( project-module : parent-module )
 }
 
 
-# Associate the given id with the given project module.
+# Associate the given id with the given project module. Returns the possibly
+# corrected project id.
 #
 local rule register-id ( id : module )
 {
+    id = [ path.root $(id) / ] ;
+
+    if [ MATCH (//) : $(id) ]
+    {
+        import errors ;
+        errors.user-error Project id may not contain multiple successive slash
+            characters (project id: '$(id)'). ;
+    }
+
+    local orig-module = $($(id).jamfile-module) ;
+    if $(orig-module) && $(orig-module) != $(module)
+    {
+        local new-file = [ modules.peek $(module) : __file__ ] ;
+        local new-location = [ project.attribute $(module) location ] ;
+
+        local orig-file = [ modules.peek $(orig-module) : __file__ ] ;
+        local orig-main-id = [ project.attribute $(orig-module) id ] ;
+        local orig-location = [ project.attribute $(orig-module) location ] ;
+        local orig-p = [ target $(orig-module) ] ;
+        local orig-name = [ $(orig-p).name ] ;
+
+        import errors ;
+        errors.user-error Attempt to redeclare already existing project id
+            '$(id)'.
+            : Original project:
+            : "   " Name: $(orig-name:E=---)
+            : "   " Main id: $(orig-main-id:E=---)
+            : "   " File: $(orig-file:E=---)
+            : "   " Location: $(orig-location:E=---)
+            : New project:
+            : "   " File: $(new-file:E=---)
+            : "   " Location: $(new-location:E=---) ;
+    }
+
     $(id).jamfile-module = $(module) ;
+    return $(id) ;
 }
 
 
@@ -680,8 +717,8 @@ class project-attributes
             # project.register-id() is a local rule so we need to import it
             # explicitly.
             IMPORT project : register-id : $(__name__) : project.register-id ;
-            self.id = [ path.root $(specification) / ] ;
-            project.register-id $(self.id) : $(self.project-module) ;
+            self.id = [ project.register-id $(specification) :
+                $(self.project-module) ] ;
         }
         else if ! $(attribute) in "default-build" "location" "parent"
             "projects-to-build" "project-root" "source-location"
@@ -785,29 +822,6 @@ rule target ( project-module )
         }
     }
     return $(.target.$(project-module)) ;
-}
-
-
-# Use/load a project.
-#
-local rule use ( id : location )
-{
-    local project-module = [ project.load $(location) ] ;
-    local declared-id = [ project.attribute $(project-module) id ] ;
-
-    if ! $(declared-id) || $(declared-id) != $(id)
-    {
-        # The project at 'location' either has no id or that id is not equal to
-        # the 'id' parameter.
-        if $($(id).jamfile-module) && ( $($(id).jamfile-module) !=
-            $(project-module) )
-        {
-            import errors ;
-            errors.user-error Attempt to redeclare already existing project id
-                '$(id)' location '$(location)' ;
-        }
-        $(id).jamfile-module = $(project-module) ;
-    }
 }
 
 
