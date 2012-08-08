@@ -575,6 +575,14 @@ rule inherit-attributes ( project-module : parent-module )
 }
 
 
+# Returns whether the given string is a valid registered project id.
+#
+rule is-registered-id ( id )
+{
+    return $($(id).jamfile-module) ;
+}
+
+
 # Associate the given id with the given project module. Returns the possibly
 # corrected project id.
 #

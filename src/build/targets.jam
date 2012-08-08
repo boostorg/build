@@ -374,6 +374,15 @@ class project-target : abstract-target
             {
                 extra-error-message = could not resolve project reference
                     '$(project-part)' ;
+                if ! [ path.is-rooted $(project-part) ]
+                {
+                    local rooted = [ path.root $(project-part) / ] ;
+                    if [ project.is-registered-id $(rooted) ]
+                    {
+                        extra-error-message += - possibly missing a leading
+                            slash ('/') character. ;
+                    }
+                }
             }
         }
         else
