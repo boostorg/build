@@ -601,7 +601,7 @@ local rule should-clean-project ( project )
     # that all project files already be loaded.
     # FIXME: This is not entirely true. Additional project files may be loaded
     # only later via the project.find() rule when dereferencing encountered
-    # target ids containing absolute project references. See what to do about
+    # target ids containing explicit project references. See what to do about
     # those as such 'lazy loading' may cause problems that are then extremely
     # difficult to debug.
     local build-request = [ build-request.from-command-line $(.argv)
