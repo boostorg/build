@@ -585,7 +585,7 @@ local rule register-id ( id : module )
     if [ MATCH (//) : $(id) ]
     {
         import errors ;
-        errors.user-error Project id may not contain multiple successive slash
+        errors.user-error Project id may not contain two consecutive slash
             characters (project id: '$(id)'). ;
     }
 
@@ -602,7 +602,7 @@ local rule register-id ( id : module )
         local orig-name = [ $(orig-p).name ] ;
 
         import errors ;
-        errors.user-error Attempt to redeclare already existing project id
+        errors.user-error Attempt to redeclare already registered project id
             '$(id)'.
             : Original project:
             : "   " Name: $(orig-name:E=---)
