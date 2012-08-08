@@ -37,7 +37,7 @@ project ""   ; assert-project-id /foo ;
 use-project id1 : a ;
 # We need to load the 'a' Jamfile module manually as the use-project rule will
 # only schedule the load to be done after the current module load finishes.
-a-module = [ project.load "a" ] ;
+a-module = [ project.load a ] ;
 assert-project-id : $(a-module) ;
 use-project id2 : a ;
 assert-project-id : $(a-module) ;
@@ -70,36 +70,34 @@ def test_assigning_using_project_ids_in_target_references():
 import type ;
 type.register AAA : _a ;
 type.register BBB : _b ;
-type.register CCC : _c ;
 
 import appender ;
 appender.register aaa-to-bbb : AAA : BBB ;
-appender.register bbb-to-ccc : BBB : CCC ;
 
-use-project id1 : b ;
-use-project /id2 : b ;
+use-project id1 : a ;
+use-project /id2 : a ;
 
-ccc c1 : /id1//target ;
-ccc c2 : /id2//target ;
-ccc c3 : /id3//target ;
-ccc c4 : b//target ;
-ccc c5 : /project-a1//target ;
-ccc c6 : /project-a2//target ;
-ccc c7 : /project-a3//target ;
+bbb b1 : /id1//target ;
+bbb b2 : /id2//target ;
+bbb b3 : /id3//target ;
+bbb b4 : a//target ;
+bbb b5 : /project-a1//target ;
+bbb b6 : /project-a2//target ;
+bbb b7 : /project-a3//target ;
 
-use-project id3 : b ;
+use-project id3 : a ;
 """)
-    t.write("b/source._a", "")
-    t.write("b/jamfile.jam", """\
+    t.write("a/source._a", "")
+    t.write("a/jamfile.jam", """\
 project project-a1 ;
 project /project-a2 ;
-bbb target : source._a ;
+import alias ;
+alias target : source._a ;
 project /project-a3 ;
 """)
 
     t.run_build_system()
-    t.expect_addition("b/bin/$toolset/target._b")
-    t.expect_addition("bin/$toolset/c%d._c" % x for x in range(1, 8))
+    t.expect_addition("bin/$toolset/b%d._b" % x for x in range(1, 8))
     t.expect_nothing_more()
 
     t.cleanup()
@@ -163,34 +161,31 @@ def test_unresolved_project_references():
     t = BoostBuild.Tester()
 
     __write_appender(t, "appender.jam")
-    t.write("b/source._a", "")
-    t.write("b/jamfile.jam", "bbb target : source._a ;")
+    t.write("a/source._a", "")
+    t.write("a/jamfile.jam", "import alias ; alias target : source._a ;")
     t.write("jamroot.jam", """\
 import type ;
 type.register AAA : _a ;
 type.register BBB : _b ;
-type.register CCC : _c ;
 
 import appender ;
 appender.register aaa-to-bbb : AAA : BBB ;
-appender.register bbb-to-ccc : BBB : CCC ;
 
-use-project foo : b ;
+use-project foo : a ;
 
-ccc c1 : b//target ;
-ccc c2 : /foo//target ;
-ccc c-invalid : invalid//target ;
-ccc c-root-invalid : /invalid//target ;
-ccc c-missing-root : foo//target ;
-ccc c-invalid-target : /foo//invalid ;
+bbb b1 : a//target ;
+bbb b2 : /foo//target ;
+bbb b-invalid : invalid//target ;
+bbb b-root-invalid : /invalid//target ;
+bbb b-missing-root : foo//target ;
+bbb b-invalid-target : /foo//invalid ;
 """)
 
-    t.run_build_system(["c1", "c2"])
-    t.expect_addition("b/bin/$toolset/debug/target._b")
-    t.expect_addition("bin/$toolset/debug/c%s._c" % x for x in range(1, 3))
+    t.run_build_system(["b1", "b2"])
+    t.expect_addition("bin/$toolset/debug/b%d._b" % x for x in range(1, 3))
     t.expect_nothing_more()
 
-    t.run_build_system(["c-invalid"], status=1)
+    t.run_build_system(["b-invalid"], status=1)
     t.expect_output_lines("""\
 error: Unable to find file or target named
 error:     'invalid//target'
@@ -198,7 +193,7 @@ error: referred to from project at
 error:     '.'
 error: could not resolve project reference 'invalid'""")
 
-    t.run_build_system(["c-root-invalid"], status=1)
+    t.run_build_system(["b-root-invalid"], status=1)
     t.expect_output_lines("""\
 error: Unable to find file or target named
 error:     '/invalid//target'
@@ -206,7 +201,7 @@ error: referred to from project at
 error:     '.'
 error: could not resolve project reference '/invalid'""")
 
-    t.run_build_system(["c-missing-root"], status=1)
+    t.run_build_system(["b-missing-root"], status=1)
     t.expect_output_lines("""\
 error: Unable to find file or target named
 error:     'foo//target'
@@ -215,7 +210,7 @@ error:     '.'
 error: could not resolve project reference 'foo' - possibly missing a """
     "leading slash ('/') character.")
 
-    t.run_build_system(["c-invalid-target"], status=1)
+    t.run_build_system(["b-invalid-target"], status=1)
     t.expect_output_lines("""\
 error: Unable to find file or target named
 error:     '/foo//invalid'
