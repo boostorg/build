@@ -30,7 +30,7 @@
 # behave as a regular project except that, since it is not associated with any
 # location, it should only declare prebuilt targets.
 #
-# The list of all loaded Jamfile is stored in the .project-locations variable.
+# The list of all loaded Jamfiles is stored in the .project-locations variable.
 # It is possible to obtain a module name for a location using the 'module-name'
 # rule. Standalone projects are not recorded and can only be referenced using
 # their project id.
@@ -59,7 +59,7 @@ rule load ( jamfile-location )
     {
         if $(.debug-loading)
         {
-            ECHO "Loading Jamfile at" '$(jamfile-location)' ;
+            ECHO Loading Jamfile at '$(jamfile-location)' ;
         }
 
         load-jamfile $(jamfile-location) : $(module-name) ;
@@ -82,12 +82,12 @@ rule load ( jamfile-location )
 rule load-used-projects ( module-name )
 {
     local used = [ modules.peek $(module-name) : .used-projects ] ;
-    local location = [ attribute $(module-name) location ] ;
+    local root-location = [ attribute $(module-name) location ] ;
     while $(used)
     {
         local id = $(used[1]) ;
         local where = $(used[2]) ;
-        use $(id) : [ path.root [ path.make $(where) ] $(location) ] ;
+        use $(id) : [ path.root [ path.make $(where) ] $(root-location) ] ;
         used = $(used[3-]) ;
     }
 }
@@ -219,7 +219,8 @@ rule find-jamfile (
     #
     if $(jamfile-to-load[2-])
     {
-        local v2-jamfiles = [ MATCH (.*[Jj]amfile\\.v2)|(.*[Bb]uild\\.jam) : $(jamfile-to-load) ] ;
+        local v2-jamfiles = [ MATCH (.*[Jj]amfile\\.v2)|(.*[Bb]uild\\.jam) :
+            $(jamfile-to-load) ] ;
 
         if $(v2-jamfiles) && ! $(v2-jamfiles[2])
         {
@@ -575,7 +576,7 @@ rule inherit-attributes ( project-module : parent-module )
 
 # Associate the given id with the given project module.
 #
-rule register-id ( id : module )
+local rule register-id ( id : module )
 {
     $(id).jamfile-module = $(module) ;
 }
@@ -588,12 +589,12 @@ rule register-id ( id : module )
 #
 class project-attributes
 {
-    import property ;
-    import property-set ;
     import path ;
     import print ;
-    import sequence ;
     import project ;
+    import property ;
+    import property-set ;
+    import sequence ;
 
     rule __init__ ( location project-module )
     {
@@ -676,6 +677,9 @@ class project-attributes
         }
         else if $(attribute) = "id"
         {
+            # project.register-id() is a local rule so we need to import it
+            # explicitly.
+            IMPORT project : register-id : $(__name__) : project.register-id ;
             self.id = [ path.root $(specification) / ] ;
             project.register-id $(self.id) : $(self.project-module) ;
         }
