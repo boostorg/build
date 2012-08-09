@@ -81,13 +81,12 @@ rule load ( jamfile-location )
 rule load-used-projects ( module-name )
 {
     local used = [ modules.peek $(module-name) : .used-projects ] ;
-    local root-location = [ attribute $(module-name) location ] ;
+    local location = [ attribute $(module-name) location ] ;
     while $(used)
     {
         local id = $(used[1]) ;
         local where = [ path.make $(used[2]) ] ;
-        local location = [ path.root $(where) $(root-location) ] ;
-        register-id $(id) : [ load $(location) ] ;
+        register-id $(id) : [ load [ path.root $(where) $(location) ] ] ;
         used = $(used[3-]) ;
     }
 }
