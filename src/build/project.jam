@@ -819,14 +819,9 @@ rule target ( project-module )
 {
     if ! $(.target.$(project-module))
     {
-        .target.$(project-module) = [ new project-target $(project-module) :
-            $(project-module) : [ attribute $(project-module) requirements ] ] ;
-
-        if $(.debug-loading)
-        {
-            ECHO Assigned parentless project target $(.target.$(project-module))
-                to referenced '$(project-module)' ;
-        }
+        import errors ;
+        errors.user-error Project target requested but not yet assigned for
+            module '$(project-module)'. ;
     }
     return $(.target.$(project-module)) ;
 }
