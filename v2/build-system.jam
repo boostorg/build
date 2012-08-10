@@ -42,12 +42,6 @@ import virtual-target ;
 # locating and loading Boost Build configuration files.
 .debug-config = [ MATCH ^(--debug-configuration)$ : $(.argv) ] ;
 
-# The cleaning is tricky. Say, if user says 'bjam --clean foo' where 'foo' is a
-# directory, then we want to clean targets which are in 'foo' as well as those
-# in any children Jamfiles under foo but not in any unrelated Jamfiles. To
-# achieve this we collect a list of projects under which cleaning is allowed.
-.project-targets = ;
-
 # Virtual targets obtained when building main targets references on the command
 # line. When running 'bjam --clean main_target' we want to clean only files
 # belonging to that main target so we need to record which targets are produced
@@ -125,13 +119,18 @@ rule set-post-build-hook ( function )
 #
 local rule actual-clean-targets ( )
 {
-    # Construct a list of projects explicitly detected as targets on this build
-    # system run. These are the projects under which cleaning is allowed.
+    # The cleaning is tricky. Say, if user says 'bjam --clean foo' where 'foo'
+    # is a directory, then we want to clean targets which are in 'foo' as well
+    # as those in any children Jamfiles under foo but not in any unrelated
+    # Jamfiles. To achieve this we collect a list of projects under which
+    # cleaning is allowed - those explicitly detected as targets for this build
+    # system run.
+    local project-modules ;
     for local t in $(targets)
     {
         if [ class.is-a $(t) : project-target ]
         {
-            .project-targets += [ $(t).project-module ] ;
+            project-modules += [ $(t).project-module ] ;
         }
     }
 
@@ -148,11 +147,12 @@ local rule actual-clean-targets ( )
     local to-clean ;
     for local t in [ virtual-target.all-targets ]
     {
+        # Remove only derived targets and only those asked to be cleaned,
+        # whether directly or by belonging to one of the removed projects.
         local p = [ $(t).project ] ;
-
-        # Remove only derived targets.
         if [ $(t).action ] && ( $(t) in $(targets-to-clean) ||
-            [ should-clean-project [ $(p).project-module ] ] )
+            [ should-clean-project [ $(p).project-module ] : $(project-modules)
+            ] )
         {
             to-clean += $(t) ;
         }
@@ -498,18 +498,18 @@ local rule process-explicit-toolset-requests
 }
 
 
-# Returns whether the given project should be cleaned because it or any of its
-# parent projects have been detected as a target for the curent build system
-# run. Expects the .project-targets list to have already been constructed and
-# not change between invocations (or else the implemented result caching might
-# not work correctly).
+# Returns whether the given project (identifed by its project module) should be
+# cleaned because it or any of its parent projects have been detected as a
+# target for the current build system run. Expects the given list of detected
+# projects not to change between invocations or else the implemented result
+# caching might not work correctly.
 #
-local rule should-clean-project ( project )
+local rule should-clean-project ( project : detected-projects * )
 {
     if ! $(.should-clean-project.$(project))
     {
         local r ;
-        if $(project) in $(.project-targets)
+        if $(project) in $(detected-projects)
         {
             r = true ;
         }
@@ -518,7 +518,7 @@ local rule should-clean-project ( project )
             local parent = [ project.attribute $(project) parent-module ] ;
             if $(parent) && $(parent) != user-config
             {
-                r = [ should-clean-project $(parent) ] ;
+                r = [ should-clean-project $(parent) : $(detected-projects) ] ;
             }
         }
         .should-clean-project.$(project) = $(r) ;
