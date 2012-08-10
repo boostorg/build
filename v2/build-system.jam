@@ -11,7 +11,9 @@
 import build-request ;
 import builtin ;
 import "class" : new ;
+import configure ;
 import feature ;
+import generators ;
 import make ;
 import modules ;
 import os ;
@@ -25,8 +27,6 @@ import toolset ;
 import utility ;
 import version ;
 import virtual-target ;
-import generators ;
-import configure ;
 
 
 ################################################################################
@@ -151,13 +151,10 @@ local rule actual-clean-targets ( )
         local p = [ $(t).project ] ;
 
         # Remove only derived targets.
-        if [ $(t).action ]
+        if [ $(t).action ] && ( $(t) in $(targets-to-clean) ||
+            [ should-clean-project [ $(p).project-module ] ] )
         {
-            if $(t) in $(targets-to-clean) ||
-                [ should-clean-project [ $(p).project-module ] ] = true
-            {
-                to-clean += $(t) ;
-            }
+            to-clean += $(t) ;
         }
     }
 
@@ -501,16 +498,17 @@ local rule process-explicit-toolset-requests
 }
 
 
-# Returns 'true' if the given 'project' is equal to or is a (possibly indirect)
-# child to any of the projects requested to be cleaned in this build system run.
-# Returns 'false' otherwise. Expects the .project-targets list to have already
-# been constructed.
+# Returns whether the given project should be cleaned because it or any of its
+# parent projects have been detected as a target for the curent build system
+# run. Expects the .project-targets list to have already been constructed and
+# not change between invocations (or else the implemented result caching might
+# not work correctly).
 #
 local rule should-clean-project ( project )
 {
     if ! $(.should-clean-project.$(project))
     {
-        local r = false ;
+        local r ;
         if $(project) in $(.project-targets)
         {
             r = true ;
