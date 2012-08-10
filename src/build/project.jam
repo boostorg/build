@@ -135,7 +135,7 @@ rule find ( name : current-location )
         # If no project is registered for the given location, try to load it.
         # First see if we have a Jamfile. If not, then see if we might have a
         # project root willing to act as a Jamfile. In that case, project root
-        # must be placed in the directory referred by id.
+        # must be placed in the directory referred to by id.
 
         project-module = [ module-name $(location) ] ;
         if ! $(project-module) in $(.jamfile-modules)
@@ -164,7 +164,7 @@ rule module-name ( jamfile-location )
     if ! $(.module.$(jamfile-location))
     {
         # Root the path, so that locations are always unambiguous. Without this,
-        # we can't decide if '../../exe/program1' and '.' are the same paths.
+        # we can not decide if '../../exe/program1' and '.' are the same paths.
         jamfile-location = [ path.root $(jamfile-location) [ path.pwd ] ] ;
         .module.$(jamfile-location) = Jamfile<$(jamfile-location)> ;
     }
@@ -181,7 +181,7 @@ JAMFILE ?= [Bb]uild.jam [Jj]amfile.v2 [Jj]amfile [Jj]amfile.jam ;
 # Find the Jamfile at the given location. This returns the exact names of all
 # the Jamfiles in the given directory. The optional parent-root argument causes
 # this to search not the given directory but the ones above it up to the
-# directory given in it.
+# parent-root directory.
 #
 rule find-jamfile (
     dir            # The directory(s) to look for a Jamfile.
@@ -273,9 +273,9 @@ local rule load-jamfile ( dir : jamfile-module )
 
     # Now load the Jamfile in its own context.
     # The call to 'initialize' may load the parent Jamfile, which might contain
-    # a 'use-project' statement, causing a second attempt to load the same
-    # project we are loading now. Checking inside .jamfile-modules prevents that
-    # second attempt from messing things up.
+    # a 'use-project' or a 'project.load' call, causing a second attempt to load
+    # the same project we are loading now. Checking inside .jamfile-modules
+    # prevents that second attempt from messing things up.
     if ! $(jamfile-module) in $(.jamfile-modules)
     {
         local previous-project = $(.current-project) ;
@@ -750,11 +750,10 @@ class project-attributes
     #
     rule print ( )
     {
-        local id = $(self.id:E=(none)) ;
-        local parent = $(self.parent:E=(none)) ;
-        print.section "'"$(id)"'" ;
+        local id = '$(self.id)' ;
+        print.section $(id:E=(none)) ;
         print.list-start ;
-        print.list-item "Parent project:" $(parent) ;
+        print.list-item "Parent project:" $(self.parent:E=(none)) ;
         print.list-item "Requirements:" [ $(self.requirements).raw ] ;
         print.list-item "Default build:" $(self.default-build) ;
         print.list-item "Source location:" $(self.source-location) ;
