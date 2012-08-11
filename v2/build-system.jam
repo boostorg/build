@@ -513,10 +513,10 @@ local rule should-clean-project ( project : detected-projects * )
         {
             r = true ;
         }
-        else
+        else if ! [ project.is-jamroot-module $(project) ]
         {
             local parent = [ project.attribute $(project) parent-module ] ;
-            if $(parent) && $(parent) != user-config
+            if $(parent)
             {
                 r = [ should-clean-project $(parent) : $(detected-projects) ] ;
             }
