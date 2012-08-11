@@ -87,8 +87,8 @@ rule .is-cygwin ( xsltproc )
     if [ os.on-windows ]
     {
         local file = [ path.make [ modules.binding $(__name__) ] ] ;
-        local dir = [ path.native
-                      [ path.join [ path.parent $(file) ] xsltproc ] ] ;
+        local dir = [ path.native [ path.join [ path.parent $(file) ] xsltproc ]
+            ] ;
         if [ os.name ] = CYGWIN
         {
             dir = $(dir:W) ;

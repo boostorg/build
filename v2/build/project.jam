@@ -471,7 +471,7 @@ rule initialize (
         }
         else
         {
-            local cfgs = test site user project ;
+            local cfgs = project site test user ;
             if ! $(module-name) in $(cfgs)-config
             {
                 # This is a standalone project with known location. Set its
@@ -542,17 +542,17 @@ rule inherit-attributes ( project-module : parent-module )
     # Parent module might be locationless configuration module.
     if [ modules.binding $(parent-module) ]
     {
-        $(attributes).set parent : [ path.parent
-            [ path.make [ modules.binding $(parent-module) ] ] ] ;
+        $(attributes).set parent :
+            [ path.parent [ path.make [ modules.binding $(parent-module) ] ] ] ;
     }
-    local v = [ $(pattributes).get project-root ] ;
-    $(attributes).set project-root : $(v) : exact ;
-    $(attributes).set default-build
-        : [ $(pattributes).get default-build ] ;
-    $(attributes).set requirements
-        : [ $(pattributes).get requirements ] : exact ;
-    $(attributes).set usage-requirements
-        : [ $(pattributes).get usage-requirements ] : exact ;
+    $(attributes).set project-root :
+        [ $(pattributes).get project-root ] : exact ;
+    $(attributes).set default-build :
+        [ $(pattributes).get default-build ] ;
+    $(attributes).set requirements :
+        [ $(pattributes).get requirements ] : exact ;
+    $(attributes).set usage-requirements :
+        [ $(pattributes).get usage-requirements ] : exact ;
 
     local parent-build-dir = [ $(pattributes).get build-dir ] ;
     if $(parent-build-dir)
