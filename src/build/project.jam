@@ -821,11 +821,38 @@ rule attribute ( project attribute )
 }
 
 
+# Returns whether a project module is one of Boost Build's configuration
+# modules.
+#
+rule is-config-module ( project )
+{
+    local cfgs = project site test user ;
+    if $(project) in $(cfgs)-config
+    {
+        return true ;
+    }
+}
+
+
 # Returns whether a project module is a Jamroot project module.
 #
 rule is-jamroot-module ( project )
 {
     return [ $($(project).attributes).is-jamroot ] ;
+}
+
+
+# Returns a project's parent jamroot module. Returns nothing if there is no such
+# module, i.e. if this is a standalone project or one of the internal Boost
+# Build configuration projects.
+#
+rule get-jamroot-module ( project )
+{
+    local jamroot-location = [ attribute $(project) project-root ] ;
+    if $(jamroot-location)
+    {
+        return [ module-name $(jamroot-location) ] ;
+    }
 }
 
 
