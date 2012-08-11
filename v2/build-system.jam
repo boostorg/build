@@ -122,15 +122,14 @@ local rule actual-clean-targets ( )
     # The cleaning is tricky. Say, if user says 'bjam --clean foo' where 'foo'
     # is a directory, then we want to clean targets which are in 'foo' as well
     # as those in any children Jamfiles under foo but not in any unrelated
-    # Jamfiles. To achieve this we collect a list of projects under which
-    # cleaning is allowed - those explicitly detected as targets for this build
-    # system run.
-    local project-modules ;
+    # Jamfiles. To achieve this we first mark all projects explicitly detected
+    # as targets for this build system run as needing to be cleaned.
     for local t in $(targets)
     {
         if [ class.is-a $(t) : project-target ]
         {
-            project-modules += [ $(t).project-module ] ;
+            local project = [ $(t).project-module ] ;
+            .should-clean-project.$(project) = true ;
         }
     }
 
@@ -151,8 +150,7 @@ local rule actual-clean-targets ( )
         # whether directly or by belonging to one of the removed projects.
         local p = [ $(t).project ] ;
         if [ $(t).action ] && ( $(t) in $(targets-to-clean) ||
-            [ should-clean-project [ $(p).project-module ] : $(project-modules)
-            ] )
+            [ should-clean-project [ $(p).project-module ] ] )
         {
             to-clean += $(t) ;
         }
@@ -499,26 +497,22 @@ local rule process-explicit-toolset-requests
 
 
 # Returns whether the given project (identifed by its project module) should be
-# cleaned because it or any of its parent projects have been detected as a
-# target for the current build system run. Expects the given list of detected
-# projects not to change between invocations or else the implemented result
-# caching might not work correctly.
+# cleaned because it or any of its parent projects have already been marked as
+# needing to be cleaned in this build. As an optimization, will explicitly mark
+# all encountered project needing to be cleaned in case thay have not already
+# been marked so.
 #
-local rule should-clean-project ( project : detected-projects * )
+local rule should-clean-project ( project )
 {
     if ! $(.should-clean-project.$(project))
     {
         local r ;
-        if $(project) in $(detected-projects)
-        {
-            r = true ;
-        }
-        else if ! [ project.is-jamroot-module $(project) ]
+        if ! [ project.is-jamroot-module $(project) ]
         {
             local parent = [ project.attribute $(project) parent-module ] ;
             if $(parent)
             {
-                r = [ should-clean-project $(parent) : $(detected-projects) ] ;
+                r = [ should-clean-project $(parent) ] ;
             }
         }
         .should-clean-project.$(project) = $(r) ;
