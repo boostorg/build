@@ -746,6 +746,16 @@ class project-attributes
         return $(self.$(attribute)) ;
     }
 
+    # Returns whether these attributes belong to a Jamroot project module.
+    #
+    rule is-jamroot ( )
+    {
+        if $(self.location) && $(self.project-root) = $(self.location)
+        {
+            return true ;
+        }
+    }
+
     # Prints the project attributes.
     #
     rule print ( )
@@ -808,6 +818,14 @@ rule attributes ( project )
 rule attribute ( project attribute )
 {
     return [ $($(project).attributes).get $(attribute) ] ;
+}
+
+
+# Returns whether a project module is a Jamroot project module.
+#
+rule is-jamroot-module ( project )
+{
+    return [ $($(project).attributes).is-jamroot ] ;
 }
 
 
