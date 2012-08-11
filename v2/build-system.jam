@@ -504,9 +504,9 @@ local rule process-explicit-toolset-requests
 #
 local rule should-clean-project ( project )
 {
-    if ! $(.should-clean-project.$(project))
+    if ! $(.should-clean-project.$(project))-is-defined
     {
-        local r ;
+        local r = "" ;
         if ! [ project.is-jamroot-module $(project) ]
         {
             local parent = [ project.attribute $(project) parent-module ] ;
