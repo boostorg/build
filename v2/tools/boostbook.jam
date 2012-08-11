@@ -579,6 +579,15 @@ rule generate-xml-catalog ( target : sources * : properties * )
 # every project that requests it but instead only create it based on the first
 # project requesting it and then reuse it from there for any later requests.
 #
+# To get 'as close as possible' to having the global catalog stored in the same
+# location independent of which folder our build was run from, we assign its
+# target to the given project's base Jamroot project. This works correctly as
+# long as we know the passed project is not standalone or one of Boost Build's
+# configuration module projects, as those to not have a Jamroot project in their
+# parent chain. Note also that we can still get our targets generated in
+# different folders in case when one build project references a target from
+# another build project with its own separate Jamroot.
+#
 # FIXME: Ideally the catalog target should be created as part of the boostbook
 # project and stored in some central location for all used standalone pojects,
 # shared between all builds made on that system. This however would require much
@@ -588,8 +597,28 @@ rule xml-catalog ( project )
 {
     if ! $(.xml-catalog)
     {
-        .xml-catalog = [ new file-target boostbook_catalog : XML : $(project) :
-            [ new action : boostbook.generate-xml-catalog ] ] ;
+        local project-module = [ $(project).project-module ] ;
+        local root-module = [ project.get-jamroot-module $(project-module) ] ;
+        if ! $(root-module)
+        {
+            import errors ;
+            if [ project.is-config-module $(project-module) ]
+            {
+                errors.user-error boostbook targets can not be declared in Boost
+                    Build's configuration modules. ;
+            }
+            else
+            {
+                errors.user-error boostbook targets can not be declared in
+                    standalone projects. : use a Jamfile/Jamroot project
+                    instead. ;
+            }
+        }
+        local root-project = [ project.target $(root-module) ] ;
+
+        .xml-catalog = [ new file-target boostbook_catalog : XML :
+            $(root-project) : [ new action : boostbook.generate-xml-catalog ] ]
+            ;
         .xml-catalog-file = [ $(.xml-catalog).path ] [ $(.xml-catalog).name ] ;
         .xml-catalog-file = $(.xml-catalog-file:J=/) ;
     }
