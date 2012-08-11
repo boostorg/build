@@ -533,6 +533,12 @@ rule check-tools ( project )
     if ! $(.check-tools-targets)
     {
         # Find the root project.
+        # FIXME: This is a feeble attempt to avoid using different locations for
+        # storing our *.check files depending on which project imported the
+        # doxygen toolset first. It does not work though as the passed project
+        # is always 'doxygen' which is a standalone project and so does not have
+        # a parent. We should modify this code to do the same as the
+        # boostbook.jam module does for its built xml-catalog target.
         local project-module = [ $(project).project-module ] ;
         local parent-module = [ project.attribute $(project-module)
             parent-module ] ;
@@ -542,15 +548,15 @@ rule check-tools ( project )
             parent-module = [ project.attribute $(project-module) parent-module
                 ] ;
         }
-        project = [ project.target $(project-module) ] ;
+        local root-project = [ project.target $(project-module) ] ;
 
-        local latex.check = [ new file-target latex.check : : $(project) : [ new
-            action : doxygen.check-latex ] ] ;
-        local dvips.check = [ new file-target dvips.check : : $(project) : [ new
-            action : doxygen.check-dvips ] ] ;
-        local gs.check = [ new file-target gs.check : : $(project) : [ new
-            action : doxygen.check-gs ] ] ;
-        .check-tools-targets = $(latex.check) $(dvips.check) $(gs.check) ;
+        .check-tools-targets =
+            [ new file-target latex.check : : $(root-project) : [ new action :
+                doxygen.check-latex ] ]
+            [ new file-target dvips.check : : $(root-project) : [ new action :
+                doxygen.check-dvips ] ]
+            [ new file-target gs.check : : $(root-project) : [ new action :
+                doxygen.check-gs ] ] ;
     }
     return $(.check-tools-targets) ;
 }
