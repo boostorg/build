@@ -43,8 +43,7 @@ import scanner ;
 import sequence ;
 import targets ;
 import type ;
-
-import xsltproc : xslt xslt-dir ;
+import xsltproc ;
 
 # Make this module into a project.
 project.initialize $(__name__) ;
@@ -432,8 +431,8 @@ rule docbook-dtd-dir
 rule dtdxml-to-boostbook ( target : source : properties * )
 {
     lock-config ;
-    xslt $(target) : $(source) "$(.boostbook-xsl-dir)/dtd/dtd2boostbook.xsl" :
-        $(properties) ;
+    xsltproc.xslt $(target) : $(source)
+        "$(.boostbook-xsl-dir)/dtd/dtd2boostbook.xsl" : $(properties) ;
 }
 
 
@@ -441,7 +440,7 @@ rule boostbook-to-docbook ( target : source : properties * )
 {
     lock-config ;
     local stylesheet = [ path.native $(.boostbook-xsl-dir)/docbook.xsl ] ;
-    xslt $(target) : $(source) $(stylesheet) : $(properties) ;
+    xsltproc.xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
 
@@ -449,7 +448,7 @@ rule docbook-to-onehtml ( target : source : properties * )
 {
     lock-config ;
     local stylesheet = [ path.native $(.boostbook-xsl-dir)/html-single.xsl ] ;
-    xslt $(target) : $(source) $(stylesheet) : $(properties) ;
+    xsltproc.xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
 
@@ -457,7 +456,8 @@ rule docbook-to-htmldir ( target : source : properties * )
 {
     lock-config ;
     local stylesheet = [ path.native $(.boostbook-xsl-dir)/html.xsl ] ;
-    xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : html ;
+    xsltproc.xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : html
+        ;
 }
 
 
@@ -465,7 +465,8 @@ rule docbook-to-xhtmldir ( target : source : properties * )
 {
     lock-config ;
     local stylesheet = [ path.native $(.boostbook-xsl-dir)/xhtml.xsl ] ;
-    xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : xhtml ;
+    xsltproc.xslt-dir $(target) : $(source) $(stylesheet) : $(properties) :
+        xhtml ;
 }
 
 
@@ -473,7 +474,8 @@ rule docbook-to-htmlhelp ( target : source : properties * )
 {
     lock-config ;
     local stylesheet = [ path.native $(.boostbook-xsl-dir)/html-help.xsl ] ;
-    xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : htmlhelp ;
+    xsltproc.xslt-dir $(target) : $(source) $(stylesheet) : $(properties) :
+        htmlhelp ;
 }
 
 
@@ -481,7 +483,8 @@ rule docbook-to-manpages ( target : source : properties * )
 {
     lock-config ;
     local stylesheet = [ path.native $(.boostbook-xsl-dir)/manpages.xsl ] ;
-    xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : man ;
+    xsltproc.xslt-dir $(target) : $(source) $(stylesheet) : $(properties) : man
+        ;
 }
 
 
@@ -489,7 +492,7 @@ rule docbook-to-fo ( target : source : properties * )
 {
     lock-config ;
     local stylesheet = [ path.native $(.boostbook-xsl-dir)/fo.xsl ] ;
-    xslt $(target) : $(source) $(stylesheet) : $(properties) ;
+    xsltproc.xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
 
@@ -733,7 +736,7 @@ rule boostbook-to-tests ( target : source : properties * )
     local native-path = [ path.native [ path.join $(.boostbook-xsl-dir) testing
         Jamfile ] ] ;
     local stylesheet = $(native-path:S=.xsl) ;
-    xslt $(target) : $(source) $(stylesheet) : $(properties)
+    xsltproc.xslt $(target) : $(source) $(stylesheet) : $(properties)
         <xsl:param>boost.root=$(boost_root) ;
 }
 
@@ -741,7 +744,7 @@ rule boostbook-to-tests ( target : source : properties * )
 #############################################################################
 # Dependency scanners
 #############################################################################
-# XInclude scanner. Mostly stolen from c-scanner :)
+# XInclude scanner. Mostly stolen from c-scanner. :)
 # Note that this assumes an "xi" prefix for XIncludes. This is not always the
 # case for XML documents, but we assume it is true for anything we encounter.
 #
