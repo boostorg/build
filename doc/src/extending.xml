@@ -181,8 +181,9 @@ local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
         once with the same properties. Returning to different instance of <classname>file-target</classname>
         that correspond to the same file clearly will result in problems. Therefore, whenever
         returning targets you should pass them via the <code>virtual-target.register</code>
-        function, that will replace targets with previously created identical ones, as
-        necessary.<footnote><para>This create-then-register pattern is caused by limitations 
+        function, besides allowing Boost Build to track which virtual targets
+        got created for each metatarget, this will also replace targets with previously created identical
+        ones, as necessary.<footnote><para>This create-then-register pattern is caused by limitations 
         of the Boost.Jam language. Python port is likely to never create duplicate targets.</para></footnote>
         Here are a couple of examples:
 <programlisting>
