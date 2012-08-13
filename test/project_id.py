@@ -115,10 +115,12 @@ def test_repeated_ids():
 error: Attempt to redeclare already registered project id '/foo'.
 error: Original project:
 error:     Name: Jamfile<*>
+error:     Module: Jamfile<*>
 error:     Main id: /foo
 error:     File: jamroot.jam
 error:     Location: .
 error: New project:
+error:     Module: Jamfile<*>
 error:     File: a*jamfile.jam
 error:     Location: a""")
 
@@ -128,10 +130,12 @@ error:     Location: a""")
 error: Attempt to redeclare already registered project id '/foo'.
 error: Original project:
 error:     Name: Jamfile<*>
+error:     Module: Jamfile<*>
 error:     Main id: /foo
 error:     File: jamroot.jam
 error:     Location: .
 error: New project:
+error:     Module: Jamfile<*>
 error:     File: a*jamfile.jam
 error:     Location: a""")
 
@@ -147,10 +151,12 @@ error: at jamroot.jam:4
 error: Attempt to redeclare already registered project id '/foo'.
 error: Original project:
 error:     Name: Jamfile<*>
+error:     Module: Jamfile<*>
 error:     Main id: /foo
 error:     File: a*jamfile.jam
 error:     Location: a
 error: New project:
+error:     Module: Jamfile<*>
 error:     File: jamroot.jam
 error:     Location: .""")
 
