@@ -169,7 +169,7 @@
 local a = [ new action $(source) : common.copy : $(property-set) ] ;
 local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
 </programlisting>
-        <para>The first line creates an instance of the <classname>action></classname> class.
+        <para>The first line creates an instance of the <classname>action</classname> class.
         The first parameter is the list of sources. The second parameter is the name
         a jam-level <link linkend="bbv2.overview.jam_language.actions">action</link>.
         The third parameter is the property-set applying to this action. The second line
