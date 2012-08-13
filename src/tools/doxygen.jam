@@ -26,15 +26,15 @@ import feature ;
 import make ;
 import modules ;
 import generators ;
-import property ;
-import targets ;
-import type ;
 import os ;
 import path ;
 import print ;
 import project ;
+import property ;
 import stage ;
+import targets ;
 import toolset ;
+import type ;
 import utility ;
 import xsltproc ;
 
@@ -371,19 +371,20 @@ rule check-boostbook ( )
 {
     if ! [ modules.peek boostbook : .initialized ]
     {
-        ECHO "error: the boostbook module is not initialized" ;
-        ECHO "error: you've attempted to use the 'doxygen' toolset, " ;
-        ECHO "error: which requires Boost.Book," ;
-        ECHO "error: but never initialized Boost.Book." ;
-        EXIT "error: Hint: add 'using boostbook ;' to your user-config.jam" ;
+        import errors ;
+        errors.user-error
+            : The boostbook module is not initialized you have attempted to use
+            : the 'doxygen' toolset, which requires Boost.Book, but never
+            : initialized Boost.Book.
+            : Hint: add 'using boostbook ;' to your user-config.jam.
     }
 }
 
 
 # Collect the set of Doxygen XML files into a single XML source file that can be
 # handled by an XSLT processor. The source is completely ignored (see
-# doxygen-action), because this action picks up the Doxygen XML index file
-# xml/index.xml. This is because we can not teach Doxygen to act like a NORMAL
+# doxygen-action), because this action picks up the Doxygen XML index file xml/
+# index.xml. This is because we can not teach Doxygen to act like a NORMAL
 # program and take a "-o output.xml" argument (grrrr). The target of the
 # collection will be a single Doxygen XML file.
 #
@@ -507,7 +508,7 @@ actions copy-latex-pngs
 }
 
 
-# Building latex images for doxygen XML depends on latex, dvips, and ps being in
+# Building latex images for doxygen XML depends on latex, dvips, and gs being in
 # your PATH. This is true for most Unix installs, but not on Win32, where you
 # will need to install MkTex and Ghostscript and add these tools to your path.
 
