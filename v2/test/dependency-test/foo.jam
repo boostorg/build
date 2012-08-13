@@ -1,7 +1,8 @@
-# Copyright 2003 Dave Abrahams 
-# Copyright 2002, 2003, 2005 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Copyright 2002, 2003, 2005 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import generators ;
 import modules ;
@@ -21,10 +22,10 @@ rule foo ( targets * : sources * : properties * )
     # On NT, you need an exported symbol in order to have an import library
     # generated. We will not really use the symbol defined here, just force the
     # import library creation.
-    if ( [ os.name ] = NT || [ modules.peek : OS ] in CYGWIN )
-        && <main-target-type>LIB in $(properties)
+    if ( [ os.name ] = NT || [ modules.peek : OS ] in CYGWIN ) &&
+        <main-target-type>LIB in $(properties)
     {
-        .decl =  "void __declspec(dllexport) foo(){}" ;
+        .decl = "void __declspec(dllexport) foo() {}" ;
     }
     print.output $(<[1]) ;
     print.text $(.decl:E="//")$(nl) ;

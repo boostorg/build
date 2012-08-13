@@ -31,20 +31,15 @@ def test_basic():
     t.expect_touch("bin/$toolset/debug/a_c.obj")
     t.expect_touch("bin/$toolset/debug/b.exe")
     t.expect_touch("bin/$toolset/debug/b.obj")
-    # Now, <dependency> does not add a dependency. It sound weird, but is
-    # intentional. Need to rename <dependency> eventually.
-    #t.expect_touch("bin/$toolset/debug/main-target-c/c.exe")
-    t.ignore("*.tds")
     t.expect_nothing_more()
 
-    # Only 'a' include <a.h> and should be updated.
+    # Only source files using include <a.h> should be compiled.
     t.touch("src1/a.h")
     t.run_build_system()
 
     t.expect_touch("bin/$toolset/debug/a.exe")
     t.expect_touch("bin/$toolset/debug/a.obj")
     t.expect_touch("bin/$toolset/debug/a_c.obj")
-    t.ignore("*.tds")
     t.expect_nothing_more()
 
     # "src/a.h" includes "b.h" (in the same dir).
@@ -53,7 +48,6 @@ def test_basic():
     t.expect_touch("bin/$toolset/debug/a.exe")
     t.expect_touch("bin/$toolset/debug/a.obj")
     t.expect_touch("bin/$toolset/debug/a_c.obj")
-    t.ignore("*.tds")
     t.expect_nothing_more()
 
     # Included by "src/b.h". We had a bug: file included using double quotes
@@ -94,14 +88,14 @@ def test_scanned_includes_with_absolute_paths():
     t = BoostBuild.Tester(["-d3", "-d+12"], pass_d0=False)
 
     t.write("jamroot.jam", """\
-    path-constant TOP : . ;
-    exe app : main.cpp : <include>$(TOP)/include ;
-    """);
+path-constant TOP : . ;
+exe app : main.cpp : <include>$(TOP)/include ;
+""");
 
     t.write("main.cpp", """\
-    #include <dir/header.h>
-    int main() {}
-    """)
+#include <dir/header.h>
+int main() {}
+""")
 
     t.write("include/dir/header.h", "\n")
 
