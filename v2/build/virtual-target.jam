@@ -1059,9 +1059,26 @@ rule register-actual-name ( actual-name : virtual-target )
     if $(.actual.$(actual-name))
     {
         local cs1 = [ $(.actual.$(actual-name)).creating-subvariant ] ;
+        local cmt1-name ;
+        if $(cs1)-is-defined
+        {
+            local cmt1 = [ $(cs1).main-target ] ;
+            cmt1-name = [ $(cmt1).full-name ] ;
+        }
         local cs2 = [ $(virtual-target).creating-subvariant ] ;
-        local cmt1 = [ $(cs1).main-target ] ;
-        local cmt2 = [ $(cs2).main-target ] ;
+        local cmt2-name ;
+        if $(cs2)-is-defined
+        {
+            local cmt2 = [ $(cs2).main-target ] ;
+            cmt2-name = [ $(cmt2).full-name ] ;
+        }
+        local extra-error-information ;
+        if ! $(cs1)-is-defined || ! $(cs2)-is-defined
+        {
+            extra-error-information = Encountered a virtual-target without a
+                creating subvariant. It could be the virtual target has not been
+                registered via the virtual-target.register rule. ;
+        }
 
         local action1 = [ $(.actual.$(actual-name)).action ] ;
         local action2 = [ $(virtual-target).action ] ;
@@ -1081,11 +1098,12 @@ rule register-actual-name ( actual-name : virtual-target )
         import errors : error : errors.error ;
         errors.error "Duplicate name of actual target:" $(actual-name)
             : "previous virtual target" [ $(.actual.$(actual-name)).str ]
-            : "created from"            [ $(cmt1).full-name ]
+            : "created from"            $(cmt1-name)
             : "another virtual target"  [ $(virtual-target).str ]
-            : "created from"            [ $(cmt2).full-name ]
+            : "created from"            $(cmt2-name)
             : "added properties:"       $(properties-added)
-            : "removed properties:"     $(properties-removed) ;
+            : "removed properties:"     $(properties-removed)
+            : $(extra-error-information) ;
     }
     else
     {
