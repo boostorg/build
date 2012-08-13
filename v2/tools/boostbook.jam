@@ -43,6 +43,7 @@ import scanner ;
 import sequence ;
 import targets ;
 import type ;
+import virtual-target ;
 import xsltproc ;
 
 # Make this module into a project.
@@ -619,9 +620,9 @@ rule xml-catalog ( project )
         }
         local root-project = [ project.target $(root-module) ] ;
 
-        .xml-catalog = [ new file-target boostbook_catalog : XML :
-            $(root-project) : [ new action : boostbook.generate-xml-catalog ] ]
-            ;
+        .xml-catalog = [ virtual-target.register [ new file-target
+            boostbook_catalog : XML : $(root-project) : [ new action :
+            boostbook.generate-xml-catalog ] ] ] ;
         .xml-catalog-file = [ $(.xml-catalog).path ] [ $(.xml-catalog).name ] ;
         .xml-catalog-file = $(.xml-catalog-file:J=/) ;
     }
