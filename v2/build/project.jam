@@ -604,18 +604,20 @@ local rule register-id ( id : module )
         local orig-file = [ modules.peek $(orig-module) : __file__ ] ;
         local orig-main-id = [ project.attribute $(orig-module) id ] ;
         local orig-location = [ project.attribute $(orig-module) location ] ;
-        local orig-p = [ target $(orig-module) ] ;
-        local orig-name = [ $(orig-p).name ] ;
+        local orig-project = [ target $(orig-module) ] ;
+        local orig-name = [ $(orig-project).name ] ;
 
         import errors ;
         errors.user-error Attempt to redeclare already registered project id
             '$(id)'.
             : Original project:
             : "   " Name: $(orig-name:E=---)
+            : "   " Module: $(orig-module)
             : "   " Main id: $(orig-main-id:E=---)
             : "   " File: $(orig-file:E=---)
             : "   " Location: $(orig-location:E=---)
             : New project:
+            : "   " Module: $(module)
             : "   " File: $(new-file:E=---)
             : "   " Location: $(new-location:E=---) ;
     }
