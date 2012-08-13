@@ -584,7 +584,7 @@ rule is-registered-id ( id )
 # Associate the given id with the given project module. Returns the possibly
 # corrected project id.
 #
-local rule register-id ( id : module )
+rule register-id ( id : module )
 {
     id = [ path.root $(id) / ] ;
 
@@ -722,9 +722,6 @@ class project-attributes
         }
         else if $(attribute) = "id"
         {
-            # project.register-id() is a local rule so we need to import it
-            # explicitly.
-            IMPORT project : register-id : $(__name__) : project.register-id ;
             self.id = [ project.register-id $(specification) :
                 $(self.project-module) ] ;
         }
