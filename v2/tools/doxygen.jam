@@ -586,7 +586,6 @@ class doxygen-check-tools-target-class : basic-target
 
 targets.create-metatarget doxygen-check-tools-target-class : [ project.current ]
     : check-tools ;
-}
 
 
 # User-level rule to generate HTML files or BoostBook XML from a set of headers
