@@ -333,8 +333,9 @@ rule copy-file ( project name ? : source : properties )
 rule symlink ( name : project : source : properties )
 {
     local a = [ new action $(source) : symlink.ln : $(properties) ] ;
-    return [ new file-target $(name) exact : [ $(source).type ] : $(project) :
-        $(a) ] ;
+    local t = [ new file-target $(name) exact : [ $(source).type ] : $(project)
+        : $(a) ] ;
+    return [ virtual-target.register $(t) ] ;
 }
 
 
