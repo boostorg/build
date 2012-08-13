@@ -9,16 +9,7 @@
 # build, but are not yet targets in Jam sense. They are needed, for example,
 # when searching for possible transformation sequences, when it is not yet known
 # whether a particular target should be created at all.
-
-import "class" : new ;
-import errors ;
-import path ;
-import sequence ;
-import set ;
-import type ;
-import utility ;
-
-
+#
 #                       +--------------------------+
 #                       | virtual-target           |
 #                       +==========================+
@@ -65,6 +56,13 @@ import utility ;
 #
 # The 'compile-action' and 'link-action' classes are not defined here but in
 # builtin.jam modules. They are shown in the diagram to give the big picture.
+
+import "class" : new ;
+import path ;
+import sequence ;
+import set ;
+import type ;
+import utility ;
 
 
 # Models a potential target. It can be converted into a Jam target and used in
@@ -168,6 +166,7 @@ class virtual-target
     #
     rule actualize-action ( target )
     {
+        import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
     }
 
@@ -175,6 +174,7 @@ class virtual-target
     #
     rule actualize-location ( target )
     {
+        import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
     }
 
@@ -183,6 +183,7 @@ class virtual-target
     #
     rule path ( )
     {
+        import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
     }
 
@@ -191,6 +192,7 @@ class virtual-target
     #
     rule actual-name ( )
     {
+        import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
     }
 
@@ -201,6 +203,7 @@ class virtual-target
         # abstract-file-target as the latter is the only class derived from the
         # former. But that has been left for later.
 
+        import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
     }
 }
@@ -286,8 +289,8 @@ class abstract-file-target : virtual-target
 
     # Gets or sets the subvariant which created this target. Subvariant is set
     # when target is brought into existance and is never changed after that. In
-    # particular, if a target is shared by a subvariant, only the first is
-    # stored.
+    # particular, if a target is shared by multiple subvariants, only the first
+    # one is stored.
     #
     rule creating-subvariant ( s ?  # If specified, specifies the value to set,
                                     # which should be a 'subvariant' class
@@ -446,8 +449,9 @@ class abstract-file-target : virtual-target
             {
                 if $(tag[2])
                 {
-                    errors.error "<tag>@rulename is present but is not the only"
-                        "<tag> feature" ;
+                    import errors : error : errors.error ;
+                    errors.error <tag>@rulename is present but is not the only
+                        <tag> feature. ;
                 }
 
                 self.name = [ indirect.call $(rule-name) $(specified-name)
@@ -455,8 +459,8 @@ class abstract-file-target : virtual-target
             }
             else
             {
-                errors.error
-                    "The value of the <tag> feature must be '@rule-name'" ;
+                import errors : error : errors.error ;
+                errors.error <tag> property value must be '@rule-name'. ;
             }
         }
 
@@ -547,7 +551,6 @@ class file-target : abstract-file-target
 {
     import "class" : new ;
     import common ;
-    import errors ;
 
     rule __init__ (
         name exact ?
@@ -702,13 +705,12 @@ class notfile-target : abstract-file-target
 class action
 {
     import "class" ;
-    import errors ;
-    import type ;
-    import toolset ;
-    import property-set ;
     import indirect ;
     import path ;
+    import property-set ;
     import set : difference ;
+    import toolset ;
+    import type ;
 
     rule __init__ ( sources * : action-name + : property-set ? )
     {
@@ -723,6 +725,7 @@ class action
 
         if ! [ class.is-instance $(property-set) ]
         {
+            import errors : error : errors.error ;
             errors.error "Property set instance required" ;
         }
 
@@ -1075,6 +1078,7 @@ rule register-actual-name ( actual-name : virtual-target )
             properties-added = [ set.difference $(p2) : $(p1) ] ;
             properties-added ?= "none" ;
         }
+        import errors : error : errors.error ;
         errors.error "Duplicate name of actual target:" $(actual-name)
             : "previous virtual target" [ $(.actual.$(actual-name)).str ]
             : "created from"            [ $(cmt1).full-name ]

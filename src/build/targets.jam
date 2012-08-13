@@ -22,7 +22,7 @@
 # create an instance of that class and add it to the list of alternatives for
 # the main target.
 #
-# Rules supplied by the build system will use only targets derived from
+# Rules supplied by the build system will use only targets derived from the
 # 'basic-target' class, which will provide some default behaviour. There will be
 # different classes derived from it such as 'make-target', created by the 'make'
 # rule, and 'typed-target', created by rules such as 'exe' and 'lib'.
@@ -1115,7 +1115,8 @@ class basic-target : abstract-target
         abstract-target.__init__ $(name) : $(project) ;
 
         self.sources = $(sources) ;
-        if ! $(requirements) {
+        if ! $(requirements)
+        {
             requirements = [ property-set.empty ] ;
         }
         self.requirements = $(requirements) ;
@@ -1153,8 +1154,8 @@ class basic-target : abstract-target
         {
             for local s in $(self.sources)
             {
-                self.source-targets +=
-                  [ targets.resolve-reference $(s) : $(self.project) ] ;
+                self.source-targets += [ targets.resolve-reference $(s) :
+                    $(self.project) ] ;
             }
         }
         return $(self.source-targets) ;
@@ -1210,7 +1211,8 @@ class basic-target : abstract-target
     }
 
     # Takes a target reference, which might be either target id or a dependency
-    # property, and generates that target using 'property-set' as build request.
+    # property, and generates that target using 'property-set' as a build
+    # request.
     #
     # The results are added to the variable called 'result-var'. Usage
     # requirements are added to the variable called 'usage-requirements-var'.
@@ -1303,7 +1305,7 @@ class basic-target : abstract-target
                 # We might get duplicate sources, for example if we link to two
                 # libraries having the same <library> usage requirement. Use
                 # stable sort, since for some targets the order is important,
-                # e.g. RUN_PY target need a python source to come first.
+                # e.g. RUN_PY targets need a python source to come first.
                 source-targets = [ sequence.unique $(source-targets) : stable ]
                     ;
 
@@ -1640,38 +1642,35 @@ rule main-target-alternative ( target )
 }
 
 
-# Creates a new metargets with the specified properties, using 'klass' as
-# the class. The 'name', 'sources',
-# 'requirements', 'default-build' and 'usage-requirements' are assumed to be in
-# the form specified by the user in Jamfile corresponding to 'project'.
+# Creates a metatarget with the specified properties, using 'klass' as the
+# class. The 'name', 'sources', 'requirements', 'default-build' and
+# 'usage-requirements' are assumed to be in the form specified by the user in
+# the Jamfile corresponding to 'project'.
 #
 rule create-metatarget ( klass : project : name : sources * : requirements * :
     default-build * : usage-requirements * )
 {
-    return [
-        targets.main-target-alternative
-        [ new $(klass) $(name) : $(project)
-            : [ targets.main-target-sources $(sources) : $(name) ]
-            : [ targets.main-target-requirements $(requirements) : $(project) ]
-            : [ targets.main-target-default-build $(default-build) : $(project) ]
-            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-        ] ] ;
+    return [ targets.main-target-alternative [ new $(klass) $(name) : $(project)
+        : [ targets.main-target-sources $(sources) : $(name) ]
+        : [ targets.main-target-requirements $(requirements) : $(project) ]
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
+        : [ targets.main-target-usage-requirements $(usage-requirements) :
+            $(project) ] ] ] ;
 }
 
 
 # Creates a typed-target with the specified properties. The 'name', 'sources',
 # 'requirements', 'default-build' and 'usage-requirements' are assumed to be in
-# the form specified by the user in Jamfile corresponding to 'project'.
+# the form specified by the user in the Jamfile corresponding to 'project'.
 #
 rule create-typed-target ( type : project : name : sources * : requirements * :
     default-build * : usage-requirements * )
 {
-    return [
-        targets.main-target-alternative
-        [ new typed-target $(name) : $(project) : $(type)
-            : [ targets.main-target-sources $(sources) : $(name) ]
-            : [ targets.main-target-requirements $(requirements) : $(project) ]
-            : [ targets.main-target-default-build $(default-build) : $(project) ]
-            : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-        ] ] ;
+    return [ targets.main-target-alternative [ new typed-target $(name) :
+        $(project) : $(type)
+        : [ targets.main-target-sources $(sources) : $(name) ]
+        : [ targets.main-target-requirements $(requirements) : $(project) ]
+        : [ targets.main-target-default-build $(default-build) : $(project) ]
+        : [ targets.main-target-usage-requirements $(usage-requirements) :
+            $(project) ] ] ] ;
 }
