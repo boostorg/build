@@ -1134,8 +1134,8 @@ class basic-target : abstract-target
         if $(sources:G)
         {
             import errors : user-error : errors.user-error ;
-            errors.user-error properties found in the 'sources' parameter for
-                [ full-name ] ;
+            errors.user-error properties found "in" the 'sources' parameter
+                "for" [ full-name ] ;
         }
     }
 
