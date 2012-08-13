@@ -594,7 +594,7 @@ rule generate-xml-catalog ( target : sources * : properties * )
 # shared between all builds made on that system. This however would require much
 # more though to add the necessary changes to Boost Build's internal design.
 #
-rule xml-catalog ( project )
+local rule xml-catalog ( project )
 {
     if ! $(.xml-catalog)
     {
