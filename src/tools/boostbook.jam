@@ -71,9 +71,6 @@ type.register HTMLHELP ;
 type.register MANPAGES ;
 type.register TESTS : tests ;
 
-# Artificial target type used to invoke the top-level BoostBook generator.
-type.register BOOSTBOOK_MAIN ;
-
 
 # Initialize BoostBook support.
 #
@@ -630,24 +627,17 @@ rule xml-catalog ( project )
 }
 
 
-class boostbook-generator : generator
+class boostbook-target-class : basic-target
 {
-    import boostbook ;
-    import feature ;
     import generators ;
+    import property-set ;
     import virtual-target ;
 
-    rule __init__ ( * : * )
-    {
-        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8)
-            : $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) :
-            $(17) : $(18) : $(19) ;
-    }
-
-    rule run ( project name ? : property-set : sources * )
+    rule construct ( name : sources * : property-set )
     {
         # Generate the catalog, but only once.
-        local global-catalog = [ boostbook.xml-catalog $(project) ] ;
+        IMPORT boostbook : xml-catalog : $(__name__) : boostbook.xml-catalog ;
+        local global-catalog = [ boostbook.xml-catalog [ project ] ] ;
         local catalog = $(global-catalog[1]) ;
         local catalog-file = $(global-catalog[2]) ;
         local targets ;
@@ -672,61 +662,51 @@ class boostbook-generator : generator
             case tests    : type = TESTS ;
         }
 
+        local target ;
         if $(manifest)
         {
-            # Create DOCBOOK file from BOOSTBOOK sources.
-            local base-target = [ generators.construct $(project) : DOCBOOK :
-                $(property-set) : $(sources) ] ;
-            base-target = $(base-target[2]) ;
-            $(base-target).depends $(catalog) ;
+            # Sources --> DOCBOOK.
+            local docbook-target = [ generators.construct [ project ] : DOCBOOK
+                : $(property-set) : $(sources) ] ;
+            docbook-target = $(docbook-target[2]) ;
+            $(docbook-target).depends $(catalog) ;
 
-            # Generate HTML/PDF/PS from DOCBOOK.
-            local target = [ generators.construct $(project) $(name)_$(manifest)
-                : $(type) : [ $(property-set).add-raw
-                <xsl:param>manifest=$(name)_$(manifest) ] : $(base-target) ] ;
+            # DOCBOOK --> type.
+            target = [ generators.construct [ project ] $(name)_$(manifest) :
+                $(type) : [ $(property-set).add-raw
+                <xsl:param>manifest=$(name)_$(manifest) ] : $(docbook-target) ]
+                ;
+            target = $(target[2]) ;
             local name = [ $(property-set).get <name> ] ;
             name ?= $(format) ;
-            $(target[2]).set-path $(name) ;
-            $(target[2]).depends $(catalog) ;
-
-            targets += $(target[2]) ;
+            $(target).set-path $(name) ;
         }
         else
         {
-            local target = [ generators.construct $(project) : $(type) :
+            # Sources --> type.
+            local target = [ generators.construct [ project ] : $(type) :
                 $(property-set) : $(sources) ] ;
-
+            target = $(target[2]) ;
             if ! $(target)
             {
                 import errors ;
-                errors.error Cannot build documentation type '$(format)' ;
-            }
-            else
-            {
-                $(target[2]).depends $(catalog) ;
-                targets += $(target[2]) ;
+                errors.error Cannot build documentation type '$(format)'. ;
             }
         }
+        $(target).depends $(catalog) ;
 
-        return $(targets) ;
+        return [ property-set.empty ] $(target) ;
     }
 }
-
-generators.register [ new boostbook-generator boostbook.main : : BOOSTBOOK_MAIN
-    ] ;
 
 
 # Declare a boostbook target.
 #
 rule boostbook ( target-name : sources * : requirements * : default-build * )
 {
-    local project = [ project.current ] ;
-    targets.main-target-alternative [ new typed-target $(target-name) :
-        $(project) : BOOSTBOOK_MAIN
-        : [ targets.main-target-sources $(sources) : $(target-name) ]
-        : [ targets.main-target-requirements $(requirements) : $(project) ]
-        : [ targets.main-target-default-build $(default-build) : $(project) ] ]
-        ;
+    return [ targets.create-metatarget boostbook-target-class :
+        [ project.current ] : $(target-name) : $(sources) : $(requirements) :
+        $(default-build) ] ;
 }
 
 
