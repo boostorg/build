@@ -376,7 +376,7 @@ rule check-boostbook ( )
             : The boostbook module is not initialized you have attempted to use
             : the 'doxygen' toolset, which requires Boost.Book, but never
             : initialized Boost.Book.
-            : Hint: add 'using boostbook ;' to your user-config.jam.
+            : Hint: add 'using boostbook ;' to your user-config.jam. ;
     }
 }
 
