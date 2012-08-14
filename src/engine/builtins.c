@@ -1504,8 +1504,7 @@ LIST * builtin_instance( FRAME * frame, int flags )
 
 LIST * builtin_sort( FRAME * frame, int flags )
 {
-    LIST * arg1 = lol_get( frame->args, 0 );
-    return list_sort( arg1 );
+    return list_sort( lol_get( frame->args, 0 ) );
 }
 
 
@@ -1514,10 +1513,10 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
     LIST * arg = lol_get( frame->args, 0 );
 
     /* First, we iterate over all '/'-separated elements, starting from the end
-     * of string. If we see a '..', we remove a previous path elements. If we
-     * see '.', we remove it. The removal is done by overwriting data using '\1'
-     * in the string. After the whole string has been processed, we do a second
-     * pass, removing all the entered '\1' characters.
+     * of string. If we see a '..', we remove a preceeding path element. If we
+     * see '.', we remove it. Removal is done by overwriting data using '\1'
+     * characters. After the whole string has been processed, we do a second
+     * pass, removing any entered '\1' characters.
      */
 
     string   in[ 1 ];
@@ -1530,7 +1529,8 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
     int      dotdots = 0;
     int      rooted  = 0;
     OBJECT * result  = 0;
-    LISTITER arg_iter = list_begin( arg ), arg_end = list_end( arg );
+    LISTITER arg_iter = list_begin( arg );
+    LISTITER arg_end = list_end( arg );
 
     /* Make a copy of input: we should not change it. Prepend a '/' before it as
      * a guard for the algorithm later on and remember whether it was originally
