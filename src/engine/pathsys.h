@@ -51,30 +51,21 @@ void path_build( PATHNAME * f, string * file );
 void path_parse( char const * file, PATHNAME * f );
 void path_parent( PATHNAME * f );
 
-#ifdef NT
-
-/* Returns object_new-allocated string with long equivivalent of 'short_name'.
- * If none exists, i.e. 'short_path' is already long, it is returned unaltered.
- */
-OBJECT * short_path_to_long_path( OBJECT * short_path );
-
-#endif
-
-/* Given a path, returns an object that can be used as a unique key for that
- * path. Equivalent paths such as a/b, A\B, and a\B on NT all yield the same
- * key.
+/* Given a path, returns an object containing an equivalent path in canonical
+ * format that can be used as a unique key for that path. Equivalent paths such
+ * as a/b, A\B, and a\B on NT all yield the same key.
  */
 OBJECT * path_as_key( OBJECT * path );
 
 /* Called as an optimization when we know we have a path that is already in its
- * long form. Avoids the need for some subsequent path_as_key() call to do a
+ * long/key form. Avoids the need for some subsequent path_as_key() call to do a
  * potentially expensive short-->long path conversion.
  */
 void path_key__register_long_path( OBJECT * long_path );
 
 #ifdef USE_PATHUNIX
 /* Returns a static pointer to the system dependent path to the temporary
- * directory. NOTE: *without* a trailing path separator.
+ * directory. NOTE: Does *not* include a trailing path separator.
  */
 string const * path_tmpdir( void );
 

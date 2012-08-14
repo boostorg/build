@@ -406,12 +406,6 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
 }
 
 
-OBJECT * short_path_to_long_path( OBJECT * short_path )
-{
-    return path_as_key( short_path );
-}
-
-
 static void normalize_path( string * path )
 {
     char * s;

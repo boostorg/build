@@ -46,13 +46,10 @@ LIST * pwd( void )
             result_buffer = getcwd( buffer, buffer_size );
             if ( result_buffer )
             {
-                #ifdef NT
+                /* We return the path using its canonical/long/key format. */
                 OBJECT * const result = object_new( result_buffer );
-                pwd_result = short_path_to_long_path( result );
+                pwd_result = path_as_key( result );
                 object_free( result );
-                #else
-                pwd_result = object_new( result_buffer );
-                #endif
             }
             buffer_size *= 2;
             BJAM_FREE_RAW( buffer );
