@@ -20,7 +20,6 @@ import modules ;
 import regex ;
 import sequence ;
 import set ;
-import version ;
 
 
 os = [ modules.peek : OS ] ;
@@ -169,27 +168,7 @@ rule join ( elements + )
                 errors.error only the first element may be rooted ;
             }
         }
-        if [ version.check-jam-version 3 1 17 ]
-        {
-            return [ NORMALIZE_PATH "$(elements)" ] ;
-        }
-        else
-        {
-            # Boost Jam prior to version 3.1.17 had problems with its
-            # NORMALIZE_PATH rule in case you passed it a leading backslash
-            # instead of a slash, in some cases when you sent it an empty
-            # initial path element and possibly some others. At least some of
-            # those cases were being hit and relied upon when calling this rule
-            # from the path.make-NT rule.
-            if ! $(elements[1]) && $(elements[2])
-            {
-                return [ NORMALIZE_PATH / "$(elements[2-])" ] ;
-            }
-            else
-            {
-                return [ NORMALIZE_PATH "$(elements)" ] ;
-            }
-        }
+        return [ NORMALIZE_PATH "$(elements)" ] ;
     }
 }
 
@@ -497,21 +476,7 @@ rule makedirs ( path )
 #
 rule make-NT ( native )
 {
-    local result ;
-
-    if [ version.check-jam-version 3 1 17 ]
-    {
-        result = [ NORMALIZE_PATH $(native) ] ;
-    }
-    else
-    {
-        # This old implementation is really fragile due to a not so clear way
-        # NORMALIZE_PATH rule worked in Boost.Jam versions prior to 3.1.17. E.g.
-        # path.join would mostly ignore empty path elements but would root the
-        # joined path in case the initial two path elements were empty or some
-        # similar accidental wierdness.
-        result = [ path.join [ regex.split $(native) "[/\\]" ] ] ;
-    }
+    local result = [ NORMALIZE_PATH $(native) ] ;
 
     # We need to add an extra '/' in front in case this is a rooted Windows path
     # starting with a drive letter and not a path separator character since the
