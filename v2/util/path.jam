@@ -16,7 +16,6 @@
 # beginning, and it never ends in slash, except for path consisting of slash
 # only.
 
-import errors ;
 import modules ;
 import regex ;
 import sequence ;
@@ -123,6 +122,7 @@ rule parent ( path )
     }
     else
     {
+        import errors ;
         errors.error "Path '$(path)' has no parent" ;
     }
 }
@@ -165,6 +165,7 @@ rule join ( elements + )
         {
             if [ is-rooted $(e) ]
             {
+                import errors ;
                 errors.error only the first element may be rooted ;
             }
         }
@@ -337,6 +338,7 @@ rule all-parents ( path : upper_limit ? : cwd ? )
     # Have all upper elements been removed ?
     if $(upper_ele)
     {
+        import errors ;
         errors.error "$(upper_limit) is not prefix of $(path)" ;
     }
 
@@ -406,6 +408,7 @@ rule relative ( child parent : no-error ? )
                 }
                 else
                 {
+                    import errors ;
                     errors.error $(child) is not a subdir of $(parent) ;
                 }
             }
@@ -475,6 +478,7 @@ rule makedirs ( path )
         {
             if ! [ MAKEDIR $(native) ]
             {
+                import errors ;
                 errors.error "Could not create directory '$(path)'" ;
                 result = ;
             }
@@ -543,6 +547,7 @@ rule make-UNIX ( native )
     # VP: I have no idea now 'native' can be empty here! But it can!
     if ! $(native)
     {
+        import errors ;
         errors.error "Empty path passed to 'make-UNIX'" ;
     }
     else
@@ -606,6 +611,7 @@ rule make-VMS ( native )
 {
     if [ MATCH ^(\\[[a-zA-Z0-9]) : $(native) ]
     {
+        import errors ;
         errors.error "Can't handle default-device absolute paths: " $(native) ;
     }
 
