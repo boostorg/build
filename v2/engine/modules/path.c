@@ -5,8 +5,9 @@
  */
 
 #include "../constants.h"
+#include "../frames.h"
+#include "../lists.h"
 #include "../native.h"
-#include "../object.h"
 #include "../timestamp.h"
 
 
