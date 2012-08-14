@@ -58,10 +58,11 @@ void path_parent( PATHNAME * f );
 OBJECT * path_as_key( OBJECT * path );
 
 /* Called as an optimization when we know we have a path that is already in its
- * long/key form. Avoids the need for some subsequent path_as_key() call to do a
- * potentially expensive short-->long path conversion.
+ * canonical/long/key form. Avoids the need for some subsequent path_as_key()
+ * call to do a potentially expensive path conversion requiring access to the
+ * actual underlying file system.
  */
-void path_key__register_long_path( OBJECT * long_path );
+void path_register_key( OBJECT * long_path );
 
 #ifdef USE_PATHUNIX
 /* Returns a static pointer to the system dependent path to the temporary
