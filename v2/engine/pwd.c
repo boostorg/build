@@ -40,10 +40,12 @@ LIST * pwd( void )
     {
         int buffer_size = PATH_MAX;
         char * result_buffer = 0;
+        int error;
         do
         {
             char * const buffer = BJAM_MALLOC_RAW( buffer_size );
             result_buffer = getcwd( buffer, buffer_size );
+            error = errno ;
             if ( result_buffer )
             {
                 /* We return the path using its canonical/long/key format. */
@@ -54,7 +56,7 @@ LIST * pwd( void )
             buffer_size *= 2;
             BJAM_FREE_RAW( buffer );
         }
-        while ( !pwd_result && errno == ERANGE );
+        while ( !pwd_result && error == ERANGE );
 
         if ( !pwd_result )
         {
