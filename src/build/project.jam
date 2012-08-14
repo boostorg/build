@@ -165,8 +165,8 @@ rule module-name ( jamfile-location )
     {
         # Root the path, so that locations are always unambiguous. Without this,
         # we can not decide if '../../exe/program1' and '.' are the same paths.
-        jamfile-location = [ path.root $(jamfile-location) [ path.pwd ] ] ;
-        .module.$(jamfile-location) = Jamfile<$(jamfile-location)> ;
+        local normalized = [ path.root $(jamfile-location) [ path.pwd ] ] ;
+        .module.$(jamfile-location) = Jamfile<$(normalized)> ;
     }
     return $(.module.$(jamfile-location)) ;
 }
