@@ -166,6 +166,22 @@ rule module-name ( jamfile-location )
         # Root the path, so that locations are always unambiguous. Without this,
         # we can not decide if '../../exe/program1' and '.' are the same paths.
         local normalized = [ path.root $(jamfile-location) [ path.pwd ] ] ;
+
+        # Quick & dirty fix to get the same module name when we supply two
+        # equivalent location paths, e.g. 'd:\Foo' & 'D:\fOo\bar\..' on Windows.
+        # Note that our current implementation will not work correctly if the
+        # given location references an empty folder, but in that case any later
+        # attempt to load a Jamfile from this location will fail anyway.
+        # FIXME: Implement this cleanly. Support for this type of path
+        # normalization already exists internally in Boost Jam and the current
+        # fix relies on the GLOB builtin rule using that support. Most likely we
+        # just need to add a new builtin rule to do this explicitly.
+        normalized = [ NORMALIZE_PATH $(normalized) ] ;
+        local glob-result = [ GLOB [ path.native $(normalized) ] : * ] ;
+        if $(glob-result)
+        {
+            normalized = $(glob-result[1]:D) ;
+        }
         .module.$(jamfile-location) = Jamfile<$(normalized)> ;
     }
     return $(.module.$(jamfile-location)) ;
