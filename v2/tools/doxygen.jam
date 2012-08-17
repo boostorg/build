@@ -37,6 +37,7 @@ import toolset ;
 import type ;
 import utility ;
 import xsltproc ;
+import virtual-target ;
 
 
 # Use to specify extra configuration paramters. These get translated into a
@@ -364,7 +365,7 @@ actions quietly rm-htmldir
 }
 
 
-# The rules below require Boost.Book stylesheets, so we need some code to check
+# The rules below require BoostBook stylesheets, so we need some code to check
 # that the boostbook module has actualy been initialized.
 #
 rule check-boostbook ( )
@@ -374,8 +375,8 @@ rule check-boostbook ( )
         import errors ;
         errors.user-error
             : The boostbook module is not initialized you have attempted to use
-            : the 'doxygen' toolset, which requires Boost.Book, but never
-            : initialized Boost.Book.
+            : the 'doxygen' toolset, which requires BoostBook, but never
+            : initialized BoostBook.
             : Hint: add 'using boostbook ;' to your user-config.jam. ;
     }
 }
@@ -538,35 +539,49 @@ else
 }
 
 
-rule check-tools ( project )
+local rule check-tools-targets ( project )
 {
     if ! $(.check-tools-targets)
     {
         # Find the root project.
-        # FIXME: This is a feeble attempt to avoid using different locations for
-        # storing our *.check files depending on which project imported the
-        # doxygen toolset first. It does not work though as the passed project
-        # is always 'doxygen' which is a standalone project and so does not have
-        # a parent. We should modify this code to do the same as the
-        # boostbook.jam module does for its built xml-catalog target.
+        #
+        # This is a best effort attempt to avoid using different locations for
+        # storing *.check files depending on which project imported the doxygen
+        # toolset first. The files are stored in a location related to the
+        # project's root project. Note that this location may change depending
+        # on the folder the build was run from in case the build uses multiple
+        # related projects with their own Jamroot separate modules.
         local project-module = [ $(project).project-module ] ;
-        local parent-module = [ project.attribute $(project-module)
-            parent-module ] ;
-        while $(parent-module) && $(parent-module) != user-config
+        local root-module = [ project.get-jamroot-module $(project-module) ] ;
+        if ! $(root-module)
         {
-            project-module = $(parent-module) ;
-            parent-module = [ project.attribute $(project-module) parent-module
-                ] ;
+            import errors ;
+            if [ project.is-config-module $(project-module) ]
+            {
+                errors.user-error doxygen targets can not be declared in Boost
+                    Build's configuration modules. ;
+            }
+            else
+            {
+                errors.user-error doxygen targets can not be declared in
+                    standalone projects. : use a Jamfile/Jamroot project
+                    instead. ;
+            }
         }
-        local root-project = [ project.target $(project-module) ] ;
+        local root-project = [ project.target $(root-module) ] ;
 
-        .check-tools-targets =
+        local targets =
             [ new file-target latex.check : : $(root-project) : [ new action :
                 doxygen.check-latex ] ]
             [ new file-target dvips.check : : $(root-project) : [ new action :
                 doxygen.check-dvips ] ]
             [ new file-target gs.check : : $(root-project) : [ new action :
                 doxygen.check-gs ] ] ;
+
+        for local target in $(targets)
+        {
+            .check-tools-targets += [ virtual-target.register $(target) ] ;
+        }
     }
     return $(.check-tools-targets) ;
 }
@@ -577,16 +592,25 @@ project doxygen ;
 
 class doxygen-check-tools-target-class : basic-target
 {
-    import doxygen ;
     rule construct ( name : sources * : property-set )
     {
-        return [ property-set.empty ] [ doxygen.check-tools [ project ] ] ;
+        IMPORT doxygen : check-tools-targets : $(__name__) :
+            doxygen.check-tools-targets ;
+        return [ property-set.empty ] [ doxygen.check-tools-targets [ project ]
+            ] ;
     }
 }
 
 
-targets.create-metatarget doxygen-check-tools-target-class : [ project.current ]
-    : check-tools ;
+# Declares a metatarget for collecting version information on different external
+# tools used in this module.
+#
+rule check-tools ( target )
+{
+    freeze-config ;
+    targets.create-metatarget doxygen-check-tools-target-class :
+        [ project.current ] : $(target) ;
+}
 
 
 # User-level rule to generate HTML files or BoostBook XML from a set of headers
@@ -661,13 +685,32 @@ rule doxygen ( target : sources * : requirements * : default-build * :
             $(requirements) ] ;
         if $(images-location)
         {
+            # Prepare a metatarget for collecting used external tool version
+            # information. We use only one such metatarget as they always
+            # produce the same files and we do not want to deal with multiple
+            # metatargets having matching names, causing 'ambiguous variants'
+            # errors.
+            if ! $(.check-tools)
+            {
+                # FIXME: Since we have the check-tools target object reference,
+                # see how we can use that instead of having to construct a valid
+                # target reference string for use in <dependency> property
+                # values.
+                local project-id = --doxygen.check-tools-project-- ;
+                local target-id = --doxygen.check-tools-- ;
+                local pm = [ $(project).project-module ] ;
+                project.register-id $(project-id) : $(pm) ;
+                check-tools $(target-id) ;
+                .check-tools = /$(project-id)//$(target-id) ;
+            }
+
             doxygen $(target).doxygen-xml-images.html : $(sources) :
                 $(requirements)
                 <doxygen.rmdir>on
                 <doxygen:param>QUIET=YES
                 <doxygen:param>WARNINGS=NO
                 <doxygen:param>WARN_IF_UNDOCUMENTED=NO
-                <dependency>/doxygen//check-tools ;
+                <dependency>$(.check-tools) ;
             $(project).mark-target-as-explicit $(target).doxygen-xml-images.html
                 ;
 
