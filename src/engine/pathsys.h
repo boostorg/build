@@ -62,7 +62,7 @@ OBJECT * path_as_key( OBJECT * path );
  * call to do a potentially expensive path conversion requiring access to the
  * actual underlying file system.
  */
-void path_register_key( OBJECT * long_path );
+void path_register_key( OBJECT * path );
 
 #ifdef USE_PATHUNIX
 /* Returns a static pointer to the system dependent path to the temporary

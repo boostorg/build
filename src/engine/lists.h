@@ -51,14 +51,12 @@
  * LIST - list of strings
  */
 
-typedef struct _list LIST;
-
-struct _list {
+typedef struct _list {
     union {
         int size;
         OBJECT * align;
     } impl;
-};
+} LIST;
 
 typedef OBJECT * * LISTITER;
 
@@ -66,19 +64,16 @@ typedef OBJECT * * LISTITER;
  * LOL - list of LISTs
  */
 
-typedef struct _lol LOL;
-
 #define LOL_MAX 19
-
-struct _lol {
+typedef struct _lol {
     int count;
     LIST * list[ LOL_MAX ];
-};
+} LOL;
 
 LIST * list_new( OBJECT * value );
 LIST * list_append( LIST * destination, LIST * source );
 LIST * list_copy( LIST * );
-LIST * list_copy_range( LIST * destination , LISTITER first, LISTITER last );
+LIST * list_copy_range( LIST * destination, LISTITER first, LISTITER last );
 void   list_free( LIST * head );
 LIST * list_push_back( LIST * head, OBJECT * value );
 void   list_print( LIST * );
@@ -87,7 +82,7 @@ LIST * list_sublist( LIST *, int start, int count );
 LIST * list_pop_front( LIST * );
 LIST * list_sort( LIST * );
 LIST * list_unique( LIST * sorted_list );
-int    list_in( LIST * l, OBJECT * value );
+int    list_in( LIST *, OBJECT * value );
 LIST * list_reverse( LIST * );
 int    list_cmp( LIST * lhs, LIST * rhs );
 int    list_is_sublist( LIST * sub, LIST * l );
