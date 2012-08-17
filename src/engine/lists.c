@@ -100,18 +100,7 @@ LISTITER list_end( LIST * l )
 
 LIST * list_new( OBJECT * value )
 {
-    LIST * head;
-    if ( freelist[ 0 ] )
-    {
-        struct freelist_node * result = freelist[ 0 ];
-        freelist[ 0 ] = result->next;
-        head = (LIST *)result;
-    }
-    else
-    {
-        head = BJAM_MALLOC( sizeof( LIST * ) + sizeof( OBJECT * ) );
-    }
-
+    LIST * const head = list_alloc( 1 ) ;
     head->impl.size = 1;
     list_begin( head )[ 0 ] = value;
     return head;
