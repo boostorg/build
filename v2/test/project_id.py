@@ -8,6 +8,7 @@
 # Tests Boost Build's project-id handling.
 
 import BoostBuild
+import sys
 
 
 def test_assigning_project_ids():
@@ -103,10 +104,8 @@ project /project-a3 ;
     t.cleanup()
 
 
-def test_repeated_ids():
+def test_repeated_ids_for_different_projects():
     t = BoostBuild.Tester()
-    t.write("jamroot.jam", "project foo ; project foo ;")
-    t.run_build_system()
 
     t.write("a/jamfile.jam", "")
     t.write("jamroot.jam", "project foo ; use-project foo : a ;")
@@ -159,6 +158,83 @@ error: New project:
 error:     Module: Jamfile<*>
 error:     File: jamroot.jam
 error:     Location: .""")
+
+    t.cleanup()
+
+
+def test_repeated_ids_for_same_project():
+    t = BoostBuild.Tester()
+    t.write("jamroot.jam", "project foo ; project foo ;")
+    t.run_build_system()
+
+    t.write("jamroot.jam", "project foo ; use-project foo : . ;")
+    t.run_build_system()
+
+    t.write("jamroot.jam", "project foo ; use-project foo : ./. ;")
+    t.run_build_system()
+
+    t.write("jamroot.jam", """\
+project foo ;
+use-project foo : . ;
+use-project foo : ./aaa/.. ;
+use-project foo : ./. ;
+""")
+    t.run_build_system()
+
+    t.write("bar/jamfile.jam", "")
+    t.write("jamroot.jam", """\
+use-project bar : bar ;
+use-project bar : bar/ ;
+use-project bar : bar// ;
+use-project bar : bar/// ;
+use-project bar : bar//// ;
+use-project bar : bar/. ;
+use-project bar : bar/./ ;
+use-project bar : bar/////./ ;
+use-project bar : bar/../bar/xxx/.. ;
+use-project bar : bar/..///bar/xxx///////.. ;
+use-project bar : bar/./../bar/xxx/.. ;
+use-project bar : bar/.////../bar/xxx/.. ;
+use-project bar : bar/././../bar/xxx/.. ;
+use-project bar : bar/././//////////../bar/xxx/.. ;
+use-project bar : bar/.///.////../bar/xxx/.. ;
+use-project bar : bar/./././xxx/.. ;
+use-project bar : bar/xxx////.. ;
+use-project bar : bar/xxx/.. ;
+use-project bar : bar///////xxx/.. ;
+""")
+    t.run_build_system()
+    t.rm("bar")
+
+    # On Windows we have a case-insensitive file system and we can use
+    # backslashes as path separators.
+    if sys.platform in ['cygwin', 'win32']:
+        t.write("baR/jamfile.jam", "")
+        t.write("jamroot.jam", r"""
+use-project bar : bar ;
+use-project bar : BAR ;
+use-project bar : bAr ;
+use-project bar : bAr/ ;
+use-project bar : bAr\\ ;
+use-project bar : bAr\\\\ ;
+use-project bar : bAr\\\\///// ;
+use-project bar : bAr/. ;
+use-project bar : bAr/./././ ;
+use-project bar : bAr\\.\\.\\.\\ ;
+use-project bar : bAr\\./\\/.\\.\\ ;
+use-project bar : bAr/.\\././ ;
+use-project bar : Bar ;
+use-project bar : BaR ;
+use-project bar : BaR/./../bAr/xxx/.. ;
+use-project bar : BaR/./..\\bAr\\xxx/.. ;
+use-project bar : BaR/xxx/.. ;
+use-project bar : BaR///\\\\\\//xxx/.. ;
+use-project bar : Bar\\xxx/.. ;
+use-project bar : BAR/xXx/.. ;
+use-project bar : BAR/xXx\\\\/\\/\\//\\.. ;
+""")
+        t.run_build_system()
+        t.rm("baR")
 
     t.cleanup()
 
@@ -317,5 +393,6 @@ actions append
 
 test_assigning_project_ids()
 test_using_project_ids_in_target_references()
-test_repeated_ids()
+test_repeated_ids_for_same_project()
+test_repeated_ids_for_different_projects()
 test_unresolved_project_references()
