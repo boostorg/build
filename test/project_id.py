@@ -63,7 +63,7 @@ assert-project-id ;
     t.cleanup()
 
 
-def test_assigning_using_project_ids_in_target_references():
+def test_using_project_ids_in_target_references():
     t = BoostBuild.Tester()
     __write_appender(t, "appender.jam")
     t.write("jamroot.jam", """\
@@ -316,6 +316,6 @@ actions append
 
 
 test_assigning_project_ids()
-test_assigning_using_project_ids_in_target_references()
+test_using_project_ids_in_target_references()
 test_repeated_ids()
 test_unresolved_project_references()
