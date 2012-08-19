@@ -164,6 +164,7 @@ error:     Location: .""")
 
 def test_repeated_ids_for_same_project():
     t = BoostBuild.Tester()
+
     t.write("jamroot.jam", "project foo ; project foo ;")
     t.run_build_system()
 
@@ -180,6 +181,16 @@ use-project foo : ./aaa/.. ;
 use-project foo : ./. ;
 """)
     t.run_build_system()
+
+    t.write("a/fOo bAr/b/jamfile.jam", "")
+    t.write("jamroot.jam", r"""
+use-project bar : "a/foo bar/b" ;
+use-project bar : "a/foO Bar/b" ;
+use-project bar : "a/foo BAR/b/" ;
+use-project bar : "a\\.\\FOO bar\\b\\" ;
+""")
+    t.run_build_system()
+    t.rm("a")
 
     t.write("bar/jamfile.jam", "")
     t.write("jamroot.jam", """\
