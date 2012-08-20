@@ -258,18 +258,25 @@ static struct hash * path_key_cache;
 
 
 /*
- * ShortPathToLongPath() - convert a given path into its long format
+ * canonicWindowsPath() - convert a given path into its canonic/long format
  *
- * In the process, automatically registers long paths for all of the parent
- * folders on the path, if they have not already been registered.
+ * Appends the canonic path to the end of the given 'string' object.
+ *
+ * FIXME: This function is still work-in-progress as it originally did not
+ * necessarily return the canonic path format (could return slightly different 
+ * results for certain equivalent path strings) and could accept paths pointing
+ * to non-existing file system entities as well.
+ *
+ * Caches results internally, automatically caching any parent paths it has to
+ * convert to their canonic format in the process.
  *
  * Prerequisites:
- *  - Path to given in normalized form, i.e. all of its folder separators have
- *    already been converted into '\\'.
- *  - path_key_cache path/key mapping cache object has already been initialized.
+ *  - path given in normalized form, i.e. all of its folder separators have
+ *    already been converted into '\\'
+ *  - path_key_cache path/key mapping cache object already initialized
  */
 
-static void ShortPathToLongPath( char const * const path, int const path_length,
+static void canonicWindowsPath( char const * const path, int const path_length,
     string * const out )
 {
     char const * last_element;
@@ -317,9 +324,8 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
             path_key_cache, dir_obj, &found );
         if ( !found )
         {
-            /* dir is already normalized. */
             result->path = dir_obj;
-            ShortPathToLongPath( dir, dir_length, out );
+            canonicWindowsPath( dir, dir_length, out );
             result->key = object_new( out->value );
         }
         else
@@ -354,6 +360,27 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
 }
 
 
+/*
+ * normalize_path() - 'normalizes' the given path for the path-key mapping
+ *
+ * The resulting string has nothing to do with 'normalized paths' as used in
+ * Boost Jam build scripts and the built-in NORMALIZE_PATH rule. It is intended
+ * to be used solely as an intermediate step when mapping an arbitrary path to
+ * its canonical representation.
+ *
+ * When choosing the intermediate string the important things are for it to be
+ * inexpensive to calculate and any two paths having different canonical
+ * representations also need to have different calculated intermediate string
+ * representations. Any implemented additional rules serve only to simplify
+ * constructing the canonical path representation from the calculated
+ * intermediate string.
+ *
+ * Implemented returned path rules:
+ *  - use backslashes as path separators
+ *  - lowercase only (since all Windows file systems are case insensitive)
+ *  - trim trailing path separator except in case of a root path, i.e. 'X:\'
+ */
+
 static void normalize_path( string * path )
 {
     char * s;
@@ -367,7 +394,7 @@ static void normalize_path( string * path )
 
 
 static path_key_entry * path_key( OBJECT * const path,
-    int const known_to_be_long )
+    int const known_to_be_canonic )
 {
     path_key_entry * result;
     int found;
@@ -395,16 +422,16 @@ static path_key_entry * path_key( OBJECT * const path,
         if ( !found || nresult == result )
         {
             nresult->path = normalized;
-            if ( known_to_be_long )
+            if ( known_to_be_canonic )
                 nresult->key = object_copy( path );
             else
             {
-                string long_path[ 1 ];
-                string_new( long_path );
-                ShortPathToLongPath( object_str( normalized ), normalized_size,
-                    long_path );
-                nresult->key = object_new( long_path->value );
-                string_free( long_path );
+                string canonic_path[ 1 ];
+                string_new( canonic_path );
+                canonicWindowsPath( object_str( normalized ), normalized_size,
+                    canonic_path );
+                nresult->key = object_new( canonic_path->value );
+                string_free( canonic_path );
             }
         }
         else
@@ -420,9 +447,9 @@ static path_key_entry * path_key( OBJECT * const path,
 }
 
 
-void path_register_key( OBJECT * long_path )
+void path_register_key( OBJECT * canonic_path )
 {
-    path_key( long_path, 1 );
+    path_key( canonic_path, 1 );
 }
 
 
