@@ -889,6 +889,28 @@ class Tester(TestCmd.TestCmd):
             self.__wait_for_time_change(path, touch=True, last_build_time=True)
 
     def __expect_lines(self, data, lines, expected):
+        """
+          Checks whether the given data contains the given lines.
+
+          Data may be specified as a single string containing text lines
+        separated by newline characters.
+
+          Lines may be specified in any of the following forms:
+            * Single string containing text lines separated by newlines - the
+              given lines are searched for in the given data without any extra
+              data lines between them.
+            * Container of strings containing text lines separated by newlines
+              - the given lines are searched for in the given data with extra
+              data lines allowed between lines belonging to different strings.
+            * Container of strings containing text lines separated by newlines
+              and containers containing strings - the same as above with the
+              internal containers containing strings being interpreted as if
+              all their content was joined together into a single string
+              separated by newlines.
+
+          A newline at the end of any multi-line lines string is interpreted as
+        an expected extra trailig empty line.
+        """
         # str.splitlines() trims at most one trailing newline while we want the
         # trailing newline to indicate that there should be an extra empty line
         # at the end.
@@ -905,9 +927,8 @@ class Tester(TestCmd.TestCmd):
             expanded = []
             for x in lines:
                 if x.__class__ is str:
-                    expanded.extend(splitlines(x))
-                else:
-                    expanded.append(x)
+                    x = splitlines(x)
+                expanded.append(x)
             lines = expanded
 
         if _contains_lines(data, lines) != bool(expected):
