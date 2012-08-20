@@ -65,6 +65,8 @@ http://www.boost.org/LICENSE_1_0.txt)
 #else
 
     /* Standard C memory allocation. */
+    #include <stdlib.h>
+
     #define bjam_malloc_x(s) malloc(s)
     #define bjam_calloc_x(n,s) calloc(n,s)
     #define bjam_realloc_x(p,s) realloc(p,s)
