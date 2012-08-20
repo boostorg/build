@@ -91,16 +91,15 @@ expected_lines = [
     "B.act t3:  X2-B X3-t3 ",
     "act t3",
     "act t3: X1-global X2-global X3-t3 ",
-    "...updated 3 targets..."]
-expected_lines.append("")  # To add the trailing newline.
-expected_output = "\n".join(expected_lines)
+    "...updated 3 targets...",
+    ""]
 
-# On Unixes, call to 'echo 1   2     3  ' produces '1 2 3' (note the spacing)
-# Accomodate for that fact.
+# Accommodate for the fact that on Unixes, a call to 'echo 1   2     3  '
+# produces '1 2 3' (note the spacing).
 if os.name != 'nt':
-    expected_output = re.sub("  +", " ", expected_output)
-    expected_output = re.sub(" +\n", "\n", expected_output)
+    expected_lines = [re.sub("  +", " ", x.rstrip()) for x in expected_lines]
 
-t.run_build_system(stdout=expected_output)
+t.run_build_system()
+t.expect_output_lines(expected_lines)
 t.expect_nothing_more()
 t.cleanup()
