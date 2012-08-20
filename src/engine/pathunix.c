@@ -258,48 +258,6 @@ static struct hash * path_key_cache;
 
 
 /*
- * may_be_a_valid_short_name() - returns whether the given file name may be a
- * valid Windows short name, i.e. whether it might have a different long name.
- */
-
-static int may_be_a_valid_short_name( char const * const n, int const n_length )
-{
-    char const * p;
-    char const * const n_end = n + n_length;
-    char const * dot = 0;
-
-    /* Short names have at most 12 characters (8 + dot + 3). */
-    if ( n_length > 12 )
-        return 0;
-
-    for ( p = n; p != n_end; ++p )
-        switch ( *p )
-        {
-            case ' ':
-                /* Short names may not contain spaces. */
-                return 0;
-
-            case '.':
-                /* Short name may contain at most one dot. */
-                if ( dot )
-                    return 0;
-                dot = p;
-                /* Short name base must have at least one character. */
-                if ( dot == n )
-                    return 0;
-                /* Short name base may not be longer than 8 characters. */
-                if ( dot - n > 8 )
-                    return 0;
-                /* Short name extension may not be longer than 3 characters. */
-                if ( n_end - dot - 1 > 3 )
-                    return 0;
-        }
-
-    return 1;
-}
-
-
-/*
  * ShortPathToLongPath() - convert a given path into its long format
  *
  * In the process, automatically registers long paths for all of the parent
@@ -377,21 +335,11 @@ static void ShortPathToLongPath( char const * const path, int const path_length,
     saved_size = out->size;
     string_append_range( out, last_element, path + path_length );
 
-    /* If we have a name that can not be a valid short name then it must be a
-     * valid long name and we are done. If there is a chance this is not the
-     * file's long name, ask the OS for the file's actual long name. We try to
-     * avoid this file system access as it could be unnecessarily expensive.
-     * Note that there is no way to detect the file's 'long name' in case it
-     * does not already exist, in which case in theory a file could later be
-     * created that has a different long name and the name given here as its
-     * short name.
-     */
     {
         char const * const n = last_element;
         int const n_length = path + path_length - n;
         if ( !( n_length == 1 && n[ 0 ] == '.' )
-            && !( n_length == 2 && n[ 0 ] == '.' && n[ 1 ] == '.' )
-            && may_be_a_valid_short_name( n, n_length ) )
+            && !( n_length == 2 && n[ 0 ] == '.' && n[ 1 ] == '.' ) )
         {
             WIN32_FIND_DATA fd;
             HANDLE const hf = FindFirstFile( out->value, &fd );
