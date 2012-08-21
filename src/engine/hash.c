@@ -27,17 +27,13 @@
 #define HASH_DEBUG_PROFILE 1
 /* */
 
-/* Header attached to all data items entered into a hash table. */
+/* Header attached to all hash table data items. */
 
-struct hashhdr
+typedef struct item ITEM;
+struct item
 {
-    struct item * next;
+    ITEM * next;
 };
-
-typedef struct item
-{
-    struct hashhdr hdr;
-} ITEM;
 
 #define MAX_LISTS 32
 
@@ -46,7 +42,8 @@ struct hash
     /*
      * the hash table, just an array of item pointers
      */
-    struct {
+    struct
+    {
         int nel;
         ITEM * * base;
     } tab;
@@ -58,7 +55,8 @@ struct hash
      * the array of records, maintained by these routines - essentially a
      * microallocator
      */
-    struct {
+    struct
+    {
         int more;     /* how many more ITEMs fit in lists[ list ] */
         ITEM * free;  /* free list of items */
         char * next;  /* where to put more ITEMs in lists[ list ] */
@@ -66,7 +64,8 @@ struct hash
         int nel;      /* total ITEMs held by all lists[] */
         int list;     /* index into lists[] */
 
-        struct {
+        struct
+        {
             int nel;      /* total ITEMs held by this list */
             char * base;  /* base of ITEMs array */
         } lists[ MAX_LISTS ];
@@ -86,7 +85,7 @@ static unsigned int hash_keyval( OBJECT * key )
 #define hash_bucket(hp, keyval) ((hp)->tab.base + ((keyval) % (hp)->tab.nel))
 
 #define hash_data_key(data) (*(OBJECT * *)(data))
-#define hash_item_data(item) ((HASHDATA *)((char *)item + sizeof(struct hashhdr)))
+#define hash_item_data(item) ((HASHDATA *)((char *)item + sizeof(ITEM)))
 #define hash_item_key(item) (hash_data_key(hash_item_data(item)))
 
 
@@ -102,10 +101,10 @@ struct hash * hashinit( int datalen, char const * name )
 
     hp->bloat = 3;
     hp->tab.nel = 0;
-    hp->tab.base = (ITEM * *)0;
+    hp->tab.base = 0;
     hp->items.more = 0;
     hp->items.free = 0;
-    hp->items.size = sizeof( struct hashhdr ) + ALIGNED( datalen );
+    hp->items.size = sizeof( ITEM ) + ALIGNED( datalen );
     hp->items.list = -1;
     hp->items.nel = 0;
     hp->inel = 11;  /* 47 */
@@ -122,13 +121,13 @@ struct hash * hashinit( int datalen, char const * name )
  * pointer, makes it point to the item prior to the found item in the same
  * bucket or to 0 if our item is the first item in its bucket.
  */
- 
+
 static ITEM * hash_search( struct hash * hp, unsigned int keyval,
     OBJECT * keydata, ITEM * * previous )
 {
     ITEM * i = *hash_bucket( hp, keyval );
     ITEM * p = 0;
-    for ( ; i; i = i->hdr.next )
+    for ( ; i; i = i->next )
     {
         if ( object_equal( hash_item_key( i ), keydata ) )
         {
@@ -171,8 +170,8 @@ HASHDATA * hash_insert( struct hash * hp, OBJECT * key, int * found )
         if ( hp->items.free )
         {
             i = hp->items.free;
-            hp->items.free = i->hdr.next;
-            assert( hash_item_key( i ) == 0 );
+            hp->items.free = i->next;
+            assert( !hash_item_key( i ) );
         }
         else
         {
@@ -180,7 +179,7 @@ HASHDATA * hash_insert( struct hash * hp, OBJECT * key, int * found )
             hp->items.next += hp->items.size;
         }
         --hp->items.more;
-        i->hdr.next = *base;
+        i->next = *base;
         *base = i;
         *found = 0;
     }
@@ -233,7 +232,7 @@ HASHDATA * hash_find( struct hash * hp, OBJECT * key )
  * hashrehash() - resize and rebuild hp->tab, the hash table
  */
 
-static void hashrehash( register struct hash * hp )
+static void hashrehash( struct hash * hp )
 {
     int i = ++hp->items.list;
     hp->items.more = i ? 2 * hp->items.nel : hp->inel;
@@ -259,15 +258,15 @@ static void hashrehash( register struct hash * hp )
 
         for ( ; nel--; next += hp->items.size )
         {
-            register ITEM * i = (ITEM *)next;
+            ITEM * i = (ITEM *)next;
             ITEM * * ip = hp->tab.base + object_hash( hash_item_key( i ) ) %
                 hp->tab.nel;
             /* code currently assumes rehashing only when there are no free
              * items
              */
-            assert( hash_item_key( i ) != 0 );
+            assert( hash_item_key( i ) );
 
-            i->hdr.next = *ip;
+            i->next = *ip;
             *ip = i;
         }
     }
@@ -345,7 +344,7 @@ void hashstats_add( struct hashstats * stats, struct hash * hp )
         {
             ITEM * item;
             int here = 0;
-            for ( item = tab[ i ]; item; item = item->hdr.next )
+            for ( item = tab[ i ]; item; item = item->next )
                 ++here;
 
             count += here;
