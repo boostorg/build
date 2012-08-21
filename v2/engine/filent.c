@@ -69,7 +69,7 @@ int file_collect_dir_content_( file_info_t * const d )
     f.f_dir.ptr = object_str( d->name );
     f.f_dir.len = d_length;
 
-    /* Prepare file search specification for the findfirst() API. */
+    /* Prepare file search specification for the FindXXX() Windows API. */
     if ( !d_length )
         string_copy( pathspec, ".\\*" );
     else
@@ -108,6 +108,7 @@ int file_collect_dir_content_( file_info_t * const d )
 
             f.f_base.ptr = finfo.cFileName;
             f.f_base.len = strlen( finfo.cFileName );
+
             string_truncate( pathname, 0 );
             path_build( &f, pathname );
 

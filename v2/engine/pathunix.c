@@ -263,7 +263,7 @@ static struct hash * path_key_cache;
  * Appends the canonic path to the end of the given 'string' object.
  *
  * FIXME: This function is still work-in-progress as it originally did not
- * necessarily return the canonic path format (could return slightly different 
+ * necessarily return the canonic path format (could return slightly different
  * results for certain equivalent path strings) and could accept paths pointing
  * to non-existing file system entities as well.
  *
@@ -348,7 +348,7 @@ static void canonicWindowsPath( char const * const path, int const path_length,
             && !( n_length == 2 && n[ 0 ] == '.' && n[ 1 ] == '.' ) )
         {
             WIN32_FIND_DATA fd;
-            HANDLE const hf = FindFirstFile( out->value, &fd );
+            HANDLE const hf = FindFirstFileA( out->value, &fd );
             if ( hf != INVALID_HANDLE_VALUE )
             {
                 string_truncate( out, saved_size );
