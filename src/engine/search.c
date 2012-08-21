@@ -4,10 +4,11 @@
  * This file is part of Jam - see jam.c for Copyright information.
  */
 
-/*  This file is ALSO:
- *  Copyright 2001-2004 David Abrahams.
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+/* This file is ALSO:
+ * Copyright 2001-2004 David Abrahams.
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
  */
 
 #include "jam.h"
@@ -235,8 +236,7 @@ OBJECT * search( OBJECT * target, timestamp * const time,
 
 static void free_binding( void * xbinding, void * data )
 {
-    BINDING * const binding = (BINDING *)xbinding;
-    object_free( binding->binding );
+    object_free( ( (BINDING *)xbinding )->binding );
 }
 
 
@@ -244,7 +244,7 @@ void search_done( void )
 {
     if ( explicit_bindings )
     {
-        hashenumerate( explicit_bindings, free_binding, (void *)0 );
+        hashenumerate( explicit_bindings, free_binding, 0 );
         hashdone( explicit_bindings );
     }
 }
