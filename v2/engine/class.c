@@ -1,12 +1,16 @@
-/* Copyright Vladimir Prus 2003. Distributed under the Boost */
-/* Software License, Version 1.0. (See accompanying */
-/* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
+/*
+ * Copyright Vladimir Prus 2003.
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ */
 
 #include "class.h"
 
 #include "constants.h"
 #include "frames.h"
 #include "hash.h"
+#include "lists.h"
 #include "object.h"
 #include "rules.h"
 #include "strings.h"
@@ -123,7 +127,6 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     module_t   * class_module = 0;
     module_t   * outer_module = frame->module;
     int found;
-    LISTITER iter, end;
 
     if ( !classes )
         classes = hashinit( sizeof( OBJECT * ), "classes" );
@@ -135,7 +138,8 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     }
     else
     {
-        printf( "Class %s already defined\n", object_str( list_front( xname ) ) );
+        printf( "Class %s already defined\n", object_str( list_front( xname ) )
+            );
         abort();
     }
     check_defined( bases );
@@ -145,10 +149,12 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     var_set( class_module, constant_name, xname, VAR_SET );
     var_set( class_module, constant_bases, bases, VAR_SET );
 
-    iter = list_begin( bases );
-    end = list_end( bases );
-    for ( ; iter != end; iter = list_next( iter ) )
-        import_base_rules( class_module, list_item( iter ) );
+    {
+        LISTITER iter = list_begin( bases );
+        LISTITER const end = list_end( bases );
+        for ( ; iter != end; iter = list_next( iter ) )
+            import_base_rules( class_module, list_item( iter ) );
+    }
 
     return name;
 }

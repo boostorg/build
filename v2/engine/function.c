@@ -1,7 +1,8 @@
 /*
- *  Copyright 2011 Steven Watanabe
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ * Copyright 2011 Steven Watanabe
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
  */
 
 #include "jam.h"
@@ -37,83 +38,83 @@ int glob( char const * s, char const * c );
 void backtrace( FRAME * );
 void backtrace_line( FRAME * );
 
-#define INSTR_PUSH_EMPTY                    0
-#define INSTR_PUSH_CONSTANT                 1
-#define INSTR_PUSH_ARG                      2
-#define INSTR_PUSH_VAR                      3
-#define INSTR_PUSH_VAR_FIXED                57
-#define INSTR_PUSH_GROUP                    4
-#define INSTR_PUSH_RESULT                   5
-#define INSTR_PUSH_APPEND                   6
-#define INSTR_SWAP                          7
+#define INSTR_PUSH_EMPTY                   0
+#define INSTR_PUSH_CONSTANT                1
+#define INSTR_PUSH_ARG                     2
+#define INSTR_PUSH_VAR                     3
+#define INSTR_PUSH_VAR_FIXED               57
+#define INSTR_PUSH_GROUP                   4
+#define INSTR_PUSH_RESULT                  5
+#define INSTR_PUSH_APPEND                  6
+#define INSTR_SWAP                         7
 
-#define INSTR_JUMP_EMPTY                    8
-#define INSTR_JUMP_NOT_EMPTY                9
+#define INSTR_JUMP_EMPTY                   8
+#define INSTR_JUMP_NOT_EMPTY               9
 
-#define INSTR_JUMP                          10
-#define INSTR_JUMP_LT                       11
-#define INSTR_JUMP_LE                       12
-#define INSTR_JUMP_GT                       13
-#define INSTR_JUMP_GE                       14
-#define INSTR_JUMP_EQ                       15
-#define INSTR_JUMP_NE                       16
-#define INSTR_JUMP_IN                       17
-#define INSTR_JUMP_NOT_IN                   18
+#define INSTR_JUMP                         10
+#define INSTR_JUMP_LT                      11
+#define INSTR_JUMP_LE                      12
+#define INSTR_JUMP_GT                      13
+#define INSTR_JUMP_GE                      14
+#define INSTR_JUMP_EQ                      15
+#define INSTR_JUMP_NE                      16
+#define INSTR_JUMP_IN                      17
+#define INSTR_JUMP_NOT_IN                  18
 
-#define INSTR_JUMP_NOT_GLOB                 19
+#define INSTR_JUMP_NOT_GLOB                19
 
-#define INSTR_FOR_INIT                      56
-#define INSTR_FOR_LOOP                      20
+#define INSTR_FOR_INIT                     56
+#define INSTR_FOR_LOOP                     20
 
-#define INSTR_SET_RESULT                    21
-#define INSTR_RETURN                        22
-#define INSTR_POP                           23
+#define INSTR_SET_RESULT                   21
+#define INSTR_RETURN                       22
+#define INSTR_POP                          23
 
-#define INSTR_PUSH_LOCAL                    24
-#define INSTR_POP_LOCAL                     25
-#define INSTR_SET                           26
-#define INSTR_APPEND                        27
-#define INSTR_DEFAULT                       28
+#define INSTR_PUSH_LOCAL                   24
+#define INSTR_POP_LOCAL                    25
+#define INSTR_SET                          26
+#define INSTR_APPEND                       27
+#define INSTR_DEFAULT                      28
 
-#define INSTR_PUSH_LOCAL_FIXED              58
-#define INSTR_POP_LOCAL_FIXED               59
-#define INSTR_SET_FIXED                     60
-#define INSTR_APPEND_FIXED                  61
-#define INSTR_DEFAULT_FIXED                 62
+#define INSTR_PUSH_LOCAL_FIXED             58
+#define INSTR_POP_LOCAL_FIXED              59
+#define INSTR_SET_FIXED                    60
+#define INSTR_APPEND_FIXED                 61
+#define INSTR_DEFAULT_FIXED                62
 
-#define INSTR_PUSH_LOCAL_GROUP              29
-#define INSTR_POP_LOCAL_GROUP               30
-#define INSTR_SET_GROUP                     31
-#define INSTR_APPEND_GROUP                  32
-#define INSTR_DEFAULT_GROUP                 33
+#define INSTR_PUSH_LOCAL_GROUP             29
+#define INSTR_POP_LOCAL_GROUP              30
+#define INSTR_SET_GROUP                    31
+#define INSTR_APPEND_GROUP                 32
+#define INSTR_DEFAULT_GROUP                33
 
-#define INSTR_PUSH_ON                       34
-#define INSTR_POP_ON                        35
-#define INSTR_SET_ON                        36
-#define INSTR_APPEND_ON                     37
-#define INSTR_DEFAULT_ON                    38
+#define INSTR_PUSH_ON                      34
+#define INSTR_POP_ON                       35
+#define INSTR_SET_ON                       36
+#define INSTR_APPEND_ON                    37
+#define INSTR_DEFAULT_ON                   38
 
-#define INSTR_CALL_RULE                     39
+#define INSTR_CALL_RULE                    39
 
-#define INSTR_APPLY_MODIFIERS               40
-#define INSTR_APPLY_INDEX                   41
-#define INSTR_APPLY_INDEX_MODIFIERS         42
-#define INSTR_APPLY_MODIFIERS_GROUP         43
-#define INSTR_APPLY_INDEX_GROUP             44
-#define INSTR_APPLY_INDEX_MODIFIERS_GROUP   45
-#define INSTR_COMBINE_STRINGS               46
+#define INSTR_APPLY_MODIFIERS              40
+#define INSTR_APPLY_INDEX                  41
+#define INSTR_APPLY_INDEX_MODIFIERS        42
+#define INSTR_APPLY_MODIFIERS_GROUP        43
+#define INSTR_APPLY_INDEX_GROUP            44
+#define INSTR_APPLY_INDEX_MODIFIERS_GROUP  45
+#define INSTR_COMBINE_STRINGS              46
 
-#define INSTR_INCLUDE                       47
-#define INSTR_RULE                          48
-#define INSTR_ACTIONS                       49
-#define INSTR_PUSH_MODULE                   50
-#define INSTR_POP_MODULE                    51
-#define INSTR_CLASS                         52
-#define INSTR_BIND_MODULE_VARIABLES         63
+#define INSTR_INCLUDE                      47
+#define INSTR_RULE                         48
+#define INSTR_ACTIONS                      49
+#define INSTR_PUSH_MODULE                  50
+#define INSTR_POP_MODULE                   51
+#define INSTR_CLASS                        52
+#define INSTR_BIND_MODULE_VARIABLES        63
 
-#define INSTR_APPEND_STRINGS                53
-#define INSTR_WRITE_FILE                    54
-#define INSTR_OUTPUT_STRINGS                55
+#define INSTR_APPEND_STRINGS               53
+#define INSTR_WRITE_FILE                   54
+#define INSTR_OUTPUT_STRINGS               55
 
 typedef struct instruction
 {
@@ -138,7 +139,8 @@ typedef struct _subaction
 #define FUNCTION_BUILTIN    0
 #define FUNCTION_JAM        1
 
-struct argument {
+struct argument
+{
     int flags;
 #define ARG_ONE 0
 #define ARG_OPTIONAL 1
@@ -150,7 +152,8 @@ struct argument {
     int index;
 };
 
-struct arg_list {
+struct arg_list
+{
     int size;
     struct argument * args;
 };
@@ -198,7 +201,7 @@ typedef struct _python_function
     PyObject * python_function;
 } PYTHON_FUNCTION;
 
-static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame );
+static LIST * call_python_function( PYTHON_FUNCTION *, FRAME * );
 
 #endif
 
@@ -275,7 +278,7 @@ void stack_set( STACK * s, int n, LIST * value )
 void * stack_get( STACK * s )
 {
     check_alignment( s );
-    return (LIST * *)s->data;
+    return s->data;
 }
 
 LIST * frame_get_local( FRAME * frame, int idx )
