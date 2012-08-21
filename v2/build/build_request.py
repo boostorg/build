@@ -114,7 +114,7 @@ def from_command_line(command_line):
             # consists of implicit feature values.
             if e.find("=") != -1 or looks_like_implicit_value(e.split("/")[0]):                
                 properties += convert_command_line_element(e)
-            else if e:
+            elif e:
                 targets.append(e)
 
     return [targets, properties]
