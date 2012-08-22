@@ -684,7 +684,7 @@ class boostbook-target-class : basic-target
         else
         {
             # Sources --> type.
-            local target = [ generators.construct [ project ] : $(type) :
+            target = [ generators.construct [ project ] : $(type) :
                 $(property-set) : $(sources) ] ;
             target = $(target[2]) ;
             if ! $(target)
