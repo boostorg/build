@@ -559,5 +559,4 @@ OBJECT * path_tmpfile( void )
     return result;
 }
 
-
 #endif  /* USE_PATHUNIX */
