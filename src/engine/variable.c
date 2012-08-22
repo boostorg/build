@@ -4,50 +4,47 @@
  * This file is part of Jam - see jam.c for Copyright information.
  */
 
-/*  This file is ALSO:
- *  Copyright 2001-2004 David Abrahams.
- *  Copyright 2005 Reece H. Dunn.
- *  Copyright 2005 Rene Rivera.
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+/* This file is ALSO:
+ * Copyright 2001-2004 David Abrahams.
+ * Copyright 2005 Reece H. Dunn.
+ * Copyright 2005 Rene Rivera.
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
  */
-
-#include "jam.h"
-#include "lists.h"
-#include "parse.h"
-#include "variable.h"
-#include "hash.h"
-#include "filesys.h"
-#include "object.h"
-#include "strings.h"
-#include "pathsys.h"
-#include "modules.h"
-#include <stdlib.h>
-#include <stdio.h>
 
 /*
  * variable.c - handle Jam multi-element variables.
  *
  * External routines:
  *
- *  var_defines() - load a bunch of variable=value settings.
- *  var_string()  - expand a string with variables in it.
- *  var_get()     - get value of a user defined symbol.
+ *  var_defines() - load a bunch of variable=value settings
+ *  var_string()  - expand a string with variables in it
+ *  var_get()     - get value of a user defined symbol
  *  var_set()     - set a variable in jam's user defined symbol table.
- *  var_swap()    - swap a variable's value with the given one.
- *  var_done()    - free variable tables.
+ *  var_swap()    - swap a variable's value with the given one
+ *  var_done()    - free variable tables
  *
  * Internal routines:
  *
- *  var_enter() - make new var symbol table entry, returning var ptr.
- *  var_dump()  - dump a variable to stdout.
- *
- * 04/13/94 (seiwald) - added shorthand L0 for null list pointer
- * 08/23/94 (seiwald) - Support for '+=' (append to variable)
- * 01/22/95 (seiwald) - split environment variables at blanks or :'s
- * 05/10/95 (seiwald) - split path variables at SPLITPATH (not :)
- * 09/11/00 (seiwald) - defunct var_list() removed
+ *  var_enter() - make new var symbol table entry, returning var ptr
+ *  var_dump()  - dump a variable to stdout
  */
+
+#include "jam.h"
+#include "jam.h"
+#include "variable.h"
+
+#include "filesys.h"
+#include "hash.h"
+#include "modules.h"
+#include "parse.h"
+#include "pathsys.h"
+#include "strings.h"
+
+#include <stdlib.h>
+#include <stdio.h>
+
 
 /*
  * VARIABLE - a user defined multi-value variable
@@ -160,10 +157,12 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
 }
 
 
+/* Last returned variable value saved so we may clear it in var_done(). */
 static LIST * saved_var = L0;
 
+
 /*
- * var_get() - get value of a user defined symbol.
+ * var_get() - get value of a user defined symbol
  *
  * Returns NULL if symbol unset.
  */
@@ -236,7 +235,7 @@ LIST * var_get_and_clear_raw( module_t * module, OBJECT * symbol )
 }
 
 /*
- * var_set() - set a variable in Jam's user defined symbol table.
+ * var_set() - set a variable in Jam's user defined symbol table
  *
  * 'flag' controls the relationship between new and old values of the variable:
  * SET replaces the old with the new; APPEND appends the new to the old; DEFAULT
@@ -277,7 +276,7 @@ void var_set( struct module_t * module, OBJECT * symbol, LIST * value, int flag 
 
 
 /*
- * var_swap() - swap a variable's value with the given one.
+ * var_swap() - swap a variable's value with the given one
  */
 
 LIST * var_swap( struct module_t * module, OBJECT * symbol, LIST * value )
@@ -292,7 +291,7 @@ LIST * var_swap( struct module_t * module, OBJECT * symbol, LIST * value )
 
 
 /*
- * var_enter() - make new var symbol table entry, returning var ptr.
+ * var_enter() - make new var symbol table entry, returning var ptr
  */
 
 static LIST * * var_enter( struct module_t * module, OBJECT * symbol )
@@ -321,7 +320,7 @@ static LIST * * var_enter( struct module_t * module, OBJECT * symbol )
 
 
 /*
- * var_dump() - dump a variable to stdout.
+ * var_dump() - dump a variable to stdout
  */
 
 static void var_dump( OBJECT * symbol, LIST * value, char * what )
@@ -333,21 +332,20 @@ static void var_dump( OBJECT * symbol, LIST * value, char * what )
 
 
 /*
- * var_done() - free variable tables.
+ * var_done() - free variable tables
  */
 
 static void delete_var_( void * xvar, void * data )
 {
-    VARIABLE * v = (VARIABLE *)xvar;
+    VARIABLE * const v = (VARIABLE *)xvar;
     object_free( v->symbol );
-    list_free( v-> value );
+    list_free( v->value );
 }
-
 
 void var_done( struct module_t * module )
 {
     list_free( saved_var );
     saved_var = L0;
-    hashenumerate( module->variables, delete_var_, (void *)0 );
+    hashenumerate( module->variables, delete_var_, 0 );
     hash_free( module->variables );
 }
