@@ -169,7 +169,7 @@ void timestamp_from_path( timestamp * const time, OBJECT * const path )
     b = (BINDING *)hash_insert( bindhash, normalized_path, &found );
     if ( !found )
     {
-        b->name = object_copy( normalized_path );  /* never freed */
+        b->name = object_copy( normalized_path );
         b->flags = 0;
         b->progress = BIND_INIT;
         timestamp_clear( &b->time );
