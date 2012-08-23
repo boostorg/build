@@ -27,8 +27,8 @@ void   var_done( struct module_t * );
  * Defines for var_set().
  */
 
-#define VAR_SET    0   /* override previous value */
-#define VAR_APPEND 1   /* append to previous value */
-#define VAR_DEFAULT    2   /* set only if no previous value */
+#define VAR_SET      0   /* override previous value */
+#define VAR_APPEND   1   /* append to previous value */
+#define VAR_DEFAULT  2   /* set only if no previous value */
 
 #endif

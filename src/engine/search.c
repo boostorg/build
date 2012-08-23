@@ -38,7 +38,7 @@ static struct hash * explicit_bindings = 0;
 
 void call_bind_rule( OBJECT * target_, OBJECT * boundname_ )
 {
-    LIST * bind_rule = var_get( root_module(), constant_BINDRULE );
+    LIST * const bind_rule = var_get( root_module(), constant_BINDRULE );
     if ( !list_empty( bind_rule ) )
     {
         OBJECT * target = object_copy( target_ );
@@ -81,8 +81,9 @@ void call_bind_rule( OBJECT * target_, OBJECT * boundname_ )
  * LOCATE setting, stop and return the location. In case of a previous target,
  * return its name via the 'another_target' argument.
  *
- * This bevahiour allows handling dependencies on generated files. If caller
- * does not expect that the target is generated, 0 can be passed as
+ * This behaviour allows handling dependencies on generated files.
+ *
+ * If caller does not expect that the target is generated, 0 can be passed as
  * 'another_target'.
  */
 

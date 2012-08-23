@@ -1,11 +1,14 @@
-/* Copyright Vladimir Prus 2002, Rene Rivera 2005.
+/*
+ * Copyright 2002. Vladimir Prus
+ * Copyright 2005. Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
  */
 
 #include "jam.h"
-#include "lists.h"
+#include "pwd.h"
+
 #include "mem.h"
 #include "object.h"
 #include "pathsys.h"
@@ -13,8 +16,8 @@
 #include <errno.h>
 #include <limits.h>
 
-/* MinGW on windows declares PATH_MAX in limits.h */
-#if defined(NT) && ! defined(__GNUC__)
+/* MinGW on Windows declares PATH_MAX in limits.h */
+#if defined(NT) && !defined(__GNUC__)
 # include <direct.h>
 # define PATH_MAX _MAX_PATH
 #else
@@ -45,7 +48,7 @@ LIST * pwd( void )
         {
             char * const buffer = BJAM_MALLOC_RAW( buffer_size );
             result_buffer = getcwd( buffer, buffer_size );
-            error = errno ;
+            error = errno;
             if ( result_buffer )
             {
                 /* We return the path using its canonical/long/key format. */
