@@ -241,7 +241,8 @@ void file_supported_fmt_resolution( timestamp * const t )
 
 #define ARFMAG  "`\n"
 
-struct ar_hdr {
+struct ar_hdr
+{
     char ar_name[ 16 ];
     char ar_date[ 12 ];
     char ar_uid[ 6 ];
