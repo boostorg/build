@@ -471,7 +471,7 @@ void path_done( void )
 {
     if ( path_key_cache )
     {
-        hashenumerate( path_key_cache, &free_path_key_entry, (void *)0 );
+        hashenumerate( path_key_cache, &free_path_key_entry, 0 );
         hashdone( path_key_cache );
     }
 }
