@@ -2,13 +2,14 @@
 
 #~ Copyright 2002-2005 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
-#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
 
 # Reset the toolset.
 BOOST_JAM_TOOLSET=
 
-# Run a command, and echo before doing so. Also checks the exit
-# status and quits if there was an error.
+# Run a command, and echo before doing so. Also checks the exit status and quits
+# if there was an error.
 echo_run ()
 {
     echo "$@"
@@ -153,11 +154,10 @@ case $BOOST_JAM_TOOLSET in
         BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
     fi
     if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh ; then
-        # iccvars doesn't change LD_RUN_PATH. We adjust LD_RUN_PATH
-        # here in order not to have to rely on ld.so.conf knowing the
-        # icc library directory. We do this before running iccvars.sh
-        # in order to allow a user to add modifications to LD_RUN_PATH
-        # in iccvars.sh.
+        # iccvars does not change LD_RUN_PATH. We adjust LD_RUN_PATH here in
+        # order not to have to rely on ld.so.conf knowing the icc library
+        # directory. We do this before running iccvars.sh in order to allow a
+        # user to add modifications to LD_RUN_PATH in iccvars.sh.
         if test -z "${LD_RUN_PATH}"; then
             LD_RUN_PATH="${BOOST_JAM_TOOLSET_ROOT}lib"
         else
@@ -262,7 +262,7 @@ case $BOOST_JAM_TOOLSET in
 esac
 
 BJAM_UPDATE=
-if test "$1" = "--update" -o "$2" = "--update" -o "$3" = "--update" -o "$4" = "--update"  ; then
+if test "$1" = "--update" -o "$2" = "--update" -o "$3" = "--update" -o "$4" = "--update" ; then
     BJAM_UPDATE="update"
 fi
 if test "${BJAM_UPDATE}" = "update" -a ! -x "./bootstrap/jam0" ; then

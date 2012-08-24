@@ -621,7 +621,7 @@ char *executable_path( char const * argv0 )
     uint32_t size = sizeof( buf );
     return _NSGetExecutablePath( buf, &size ) ? NULL : strdup( buf );
 }
-#elif defined(sun) || defined(__sun) /* Not tested */
+#elif defined(sun) || defined(__sun)  /* Not tested */
 # include <stdlib.h>
 char * executable_path( char const * argv0 )
 {
