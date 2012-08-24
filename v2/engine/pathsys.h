@@ -21,21 +21,17 @@
 #ifndef PATHSYS_VP_20020211_H
 #define PATHSYS_VP_20020211_H
 
-#include "jam.h"
 #include "object.h"
 #include "strings.h"
 
 
-typedef struct _pathname PATHNAME;
-typedef struct _pathpart PATHPART;
-
-struct _pathpart
+typedef struct _pathpart
 {
     char const * ptr;
-    int          len;
-};
+    int len;
+} PATHPART;
 
-struct _pathname
+typedef struct _pathname
 {
     PATHPART part[ 6 ];
 
@@ -45,11 +41,11 @@ struct _pathname
 #define f_base    part[ 3 ]
 #define f_suffix  part[ 4 ]
 #define f_member  part[ 5 ]
-};
+} PATHNAME;
 
-void path_build( PATHNAME * f, string * file );
-void path_parse( char const * file, PATHNAME * f );
-void path_parent( PATHNAME * f );
+void path_build( PATHNAME *, string * file );
+void path_parse( char const * file, PATHNAME * );
+void path_parent( PATHNAME * );
 
 /* Given a path, returns an object containing an equivalent path in canonical
  * format that can be used as a unique key for that path. Equivalent paths such
@@ -64,7 +60,6 @@ OBJECT * path_as_key( OBJECT * path );
  */
 void path_register_key( OBJECT * canonic_path );
 
-#ifdef USE_PATHUNIX
 /* Returns a static pointer to the system dependent path to the temporary
  * directory. NOTE: Does *not* include a trailing path separator.
  */
@@ -75,7 +70,6 @@ OBJECT * path_tmpnam( void );
 
 /* Returns a new temporary path. */
 OBJECT * path_tmpfile( void );
-#endif
 
 /* Give the first argument to 'main', return a full path to our executable.
  * Returns null in the unlikely case it cannot be determined. Caller is

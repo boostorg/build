@@ -25,14 +25,11 @@
  */
 
 #include "jam.h"
-
 #ifdef USE_PATHUNIX
 
 #include "pathsys.h"
 
 #include "filesys.h"
-#include "object.h"
-#include "strings.h"
 
 #include <assert.h>
 #include <stdlib.h>
