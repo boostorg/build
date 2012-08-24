@@ -1,6 +1,7 @@
 #~ Copyright 2002-2007 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
-#~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
 
 # Clean env vars of any "extra" empty values.
 for local v in ARGV CC CFLAGS LIBS
@@ -472,7 +473,7 @@ else
 
 if --show-locate-target in $(ARGV)
 {
-  ECHO $(locate-target) ;
+    ECHO $(locate-target) ;
 }
 
 # We have some different files for UNIX, and NT.
@@ -786,11 +787,10 @@ rule .jam
 
 
 # Scan sources for header dependencies.
-#	WARNING: Yes those are *REAL TABS* below. DO NOT CHANGE,
-#	under any circumstances, to spaces!! And the tabs
-#	indenting this are so that if someone is in the mood to
-#	replace tabs they hit this comment, and hopefully notice
-#	their error.
+#	WARNING: Yes those are *REAL TABS* below. DO NOT CHANGE, under any 
+#	circumstances, to spaces!! And the tabs indenting this are here so that if
+#	someone is in the mood to replace tabs they hit this comment, and hopefully
+#	notice their error.
 rule .scan
 {
     HDRRULE on $(<:D=) = .hdr.scan ;
@@ -805,10 +805,9 @@ rule .hdr.scan
 }
 .scan [ GLOB . : *.c ] ;
 
-# Distribution making from here on out. Assumes that
-# the docs are already built as html at ../doc/html. If
-# they aren't, then the docs are not included in the dist
-# archive.
+# Distribution making from here on out. Assumes that the docs are already built
+# as HTML at ../doc/html. If they are not, then the docs are not included in the
+# dist archive.
 dist.license =
     [ GLOB . : $(LICENSE).txt ]
     ;
@@ -996,8 +995,8 @@ actions [RPM] {
     rm -f rpm.out
 }
 
-# The distribution targets. Don't bother with the targets if
-# distribution build not requested.
+# The distribution targets. Do not bother with them unless this is a
+# distribution build.
 if dist in $(ARGV)
 {
     #~ .binary bjam ;
