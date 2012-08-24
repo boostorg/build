@@ -32,7 +32,6 @@
  */
 
 #include "jam.h"
-#include "jam.h"
 #include "variable.h"
 
 #include "filesys.h"
@@ -58,7 +57,7 @@ struct _variable
     LIST   * value;
 };
 
-static LIST * * var_enter( struct module_t * module, OBJECT * symbol );
+static LIST * * var_enter( struct module_t *, OBJECT * symbol );
 static void var_dump( OBJECT * symbol, LIST * value, char * what );
 
 
@@ -67,49 +66,32 @@ static void var_dump( OBJECT * symbol, LIST * value, char * what );
  *
  * If preprocess is false, take the value verbatim.
  *
- * Otherwise, if the variable value is enclosed in quotes, strip the
- * quotes.
- *
+ * Otherwise, if the variable value is enclosed in quotes, strip the quotes.
  * Otherwise, if variable name ends in PATH, split value at :'s.
- *
  * Otherwise, split the value at blanks.
  */
 
 void var_defines( struct module_t * module, char * const * e, int preprocess )
 {
-    string buf[1];
+    string buf[ 1 ];
 
     string_new( buf );
 
     for ( ; *e; ++e )
     {
         char * val;
-        OBJECT * varname;
 
-# ifdef OS_MAC
-        /* On the mac (MPW), the var=val is actually var\0val */
-        /* Think different. */
-
-        if ( ( val = strchr( *e, '=' ) ) || ( val = *e + strlen( *e ) ) )
-# else
-        if ( ( val = strchr( *e, '=' ) ) )
-# endif
+        if ( ( val = strchr( *e, '=' ) )
+#if defined( OS_MAC )
+            /* On the mac (MPW), the var=val is actually var\0val */
+            /* Think different. */
+            || ( val = *e + strlen( *e ) )
+#endif
+        )
         {
             LIST * l = L0;
-            char * pp;
-            char * p;
-# ifdef OPT_NO_EXTERNAL_VARIABLE_SPLIT
-            char split = '\0';
-# else
-    # ifdef OS_MAC
-            char split = ',';
-    # else
-            char split = ' ';
-    # endif
-# endif
-            size_t len = strlen( val + 1 );
-
-            int quoted = ( val[1] == '"' ) && ( val[len] == '"' ) &&
+            size_t const len = strlen( val + 1 );
+            int const quoted = ( val[ 1 ] == '"' ) && ( val[ len ] == '"' ) &&
                 ( len > 1 );
 
             if ( quoted && preprocess )
@@ -120,6 +102,18 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
             }
             else
             {
+                char * p;
+                char * pp;
+                char split =
+#if defined( OPT_NO_EXTERNAL_VARIABLE_SPLIT )
+                    '\0'
+#elif defined( OS_MAC )
+                    ','
+#else
+                    ' '
+#endif
+                    ;
+
                 /* Split *PATH at :'s, not spaces. */
                 if ( val - 4 >= *e )
                 {
@@ -147,9 +141,11 @@ void var_defines( struct module_t * module, char * const * e, int preprocess )
 
             /* Get name. */
             string_append_range( buf, *e, val );
-            varname = object_new( buf->value );
-            var_set( module, varname, l, VAR_SET );
-            object_free( varname );
+            {
+                OBJECT * const varname = object_new( buf->value );
+                var_set( module, varname, l, VAR_SET );
+                object_free( varname );
+            }
             string_truncate( buf, 0 );
         }
     }
@@ -209,7 +205,8 @@ LIST * var_get( struct module_t * module, OBJECT * symbol )
                 var_dump( symbol, module->fixed_variables[ n ], "get" );
             result = module->fixed_variables[ n ];
         }
-        else if ( module->variables && ( v = (VARIABLE *)hash_find( module->variables, symbol ) ) )
+        else if ( module->variables && ( v = (VARIABLE *)hash_find(
+            module->variables, symbol ) ) )
         {
             if ( DEBUG_VARGET )
                 var_dump( v->symbol, v->value, "get" );
@@ -225,7 +222,8 @@ LIST * var_get_and_clear_raw( module_t * module, OBJECT * symbol )
     LIST * result = L0;
     VARIABLE * v;
 
-    if ( module->variables && ( v = (VARIABLE *)hash_find( module->variables, symbol ) ) )
+    if ( module->variables && ( v = (VARIABLE *)hash_find( module->variables,
+        symbol ) ) )
     {
         result = v->value;
         v->value = L0;
@@ -244,7 +242,8 @@ LIST * var_get_and_clear_raw( module_t * module, OBJECT * symbol )
  * Copies symbol. Takes ownership of value.
  */
 
-void var_set( struct module_t * module, OBJECT * symbol, LIST * value, int flag )
+void var_set( struct module_t * module, OBJECT * symbol, LIST * value, int flag
+    )
 {
     LIST * * v = var_enter( module, symbol );
 
@@ -253,19 +252,16 @@ void var_set( struct module_t * module, OBJECT * symbol, LIST * value, int flag 
 
     switch ( flag )
     {
-    case VAR_SET:
-        /* Replace value */
+    case VAR_SET:  /* Replace value */
         list_free( *v );
         *v = value;
         break;
 
-    case VAR_APPEND:
-        /* Append value */
+    case VAR_APPEND:  /* Append value */
         *v = list_append( *v, value );
         break;
 
-    case VAR_DEFAULT:
-        /* Set only if unset */
+    case VAR_DEFAULT:  /* Set only if unset */
         if ( list_empty( *v ) )
             *v = value;
         else
@@ -282,7 +278,7 @@ void var_set( struct module_t * module, OBJECT * symbol, LIST * value, int flag 
 LIST * var_swap( struct module_t * module, OBJECT * symbol, LIST * value )
 {
     LIST * * v = var_enter( module, symbol );
-    LIST     * oldvalue = *v;
+    LIST * oldvalue = *v;
     if ( DEBUG_VARSET )
         var_dump( symbol, value, "set" );
     *v = value;
@@ -301,9 +297,7 @@ static LIST * * var_enter( struct module_t * module, OBJECT * symbol )
     int n;
 
     if ( ( n = module_get_fixed_var( module, symbol ) ) != -1 )
-    {
         return &module->fixed_variables[ n ];
-    }
 
     if ( !module->variables )
         module->variables = hashinit( sizeof( VARIABLE ), "variables" );
