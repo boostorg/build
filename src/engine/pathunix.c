@@ -238,6 +238,7 @@ void path_parent( PATHNAME * f )
 }
 
 #ifdef NT
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 /* The definition of this in winnt.h is not ANSI-C compatible. */
