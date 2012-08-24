@@ -605,6 +605,7 @@ int main( int argc, char * * argv, char * * arg_environ )
  */
 
 #if defined(_WIN32)
+# define WIN32_LEAN_AND_MEAN
 # include <windows.h>
 char * executable_path( char const * argv0 )
 {
@@ -622,7 +623,6 @@ char *executable_path( char const * argv0 )
 }
 #elif defined(sun) || defined(__sun) /* Not tested */
 # include <stdlib.h>
-
 char * executable_path( char const * argv0 )
 {
     return strdup( getexecname() );
