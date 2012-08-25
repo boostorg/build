@@ -7,7 +7,7 @@
     [id jam]
     [dirname jam]
     [purpose
-        Jam is a make(1) replacement that makes building simple things simple 
+        Jam is a make(1) replacement that makes building simple things simple
         and building complicated things manageable.
     ]
     [license
@@ -192,7 +192,7 @@ The supported toolsets, and whether they are auto-detected, are:
             [li Common install location: "=%ProgramFiles%\Microsoft Visual Studio 8="]
             [li =CL.EXE= in =PATH=]
             ]
-    
+
     Notes:
         [list
             [li If =VCVARSALL.BAT= is called to set up the toolset, it is passed all the extra arguments, see below for what those arguments are. This can be used to build, for example, a Win64 specific version of =bjam=. Consult the VisualStudio documentation for what the possible argument values to the =VCVARSALL.BAT= are.]
@@ -391,7 +391,7 @@ The arguments starting with the "=--option=" forms are passed to the =build.jam=
 
 =BJam= keywords (an mentioned in this document) are reserved and generally
 must be quoted with double quotes (") to be used as arbitrary tokens, such as
-variable or target names. 
+variable or target names.
 
 Comments start with the [^#] character and extend until the end of line.
 
@@ -399,7 +399,7 @@ Comments start with the [^#] character and extend until the end of line.
 
 [section:target Targets]
 
-The essential =bjam= data entity is a target. Build targets are files to be updated. Source targets are the files used in updating built targets. Built targets and source targets are collectively referred to as file targets, and frequently built targets are source targets for other built targets. Pseudotargets are symbols which represent dependencies on other targets, but which are not themselves associated with any real file.
+The essential =bjam= data entity is a target. Build targets are files to be updated. Source targets are the files used in updating built targets. Built targets and source targets are collectively referred to as file targets, and frequently built targets are source targets for other built targets. Pseudotargets are symbols representing dependencies on other targets, but which are not themselves associated with any real file.
 
 A file target's identifier is generally the file's name, which can be absolutely rooted, relative to the directory of =bjam='s invocation, or simply local (no directory). Most often it is the last case, and the actual file path is bound using the =$(SEARCH)= and =$(LOCATE)= special variables. See [link jam.language.variables.builtins.search SEARCH and LOCATE Variables] below. A local filename is optionally qualified with grist, a string value used to assure uniqueness. A file target with an identifier of the form /file(member)/ is a library member (usually an =ar=(1) archive on Unix).
 
@@ -713,7 +713,7 @@ rule EXIT ( /message/ * : /result-value/ ? )
 
 Blurts out the /message/ to stdout and then exits with a failure status if no /result-value/ is given, otherwise it exits with the given /result-value/.
 
-"=Echo=", "=echo=", "=Exit=", and "=exit=" are accepted as aliases for =ECHO= and =EXIT=, since it is hard to tell that these are built-in rules and not part of the language, like "=include=". 
+"=Echo=", "=echo=", "=Exit=", and "=exit=" are accepted as aliases for =ECHO= and =EXIT=, since it is hard to tell that these are built-in rules and not part of the language, like "=include=".
 
 [endsect]
 
@@ -727,7 +727,7 @@ rule GLOB ( /directories/ * : /patterns/ * : /downcase-opt/ ? )
 
 Using the same wildcards as for the patterns in the switch statement. It is invoked by being used as an argument to a rule invocation inside of "=[ ]=". For example: "[^FILES = \[ GLOB dir1 dir2 : *.c *.h \]]" sets =FILES= to the list of C source and header files in =dir1= and =dir2=. The resulting filenames are the full pathnames, including the directory, but the pattern is applied only to the file name without the directory.
 
-If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, filenames are always downcased before matching. 
+If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, filenames are always downcased before matching.
 
 [endsect]
 
@@ -814,7 +814,7 @@ Depending on '/result-type/', the rule returns one of the following:
 If '/result-type/' is not recognized, or requested data cannot be retrieved, the rule returns an empty list.
 Example:
 
-[pre 
+[pre
 local key = "HKEY_LOCAL_MACHINE\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths" ;
 local subkeys = \[ W32_GETREGNAMES "$(key)" : subkeys \] ;
 for local subkey in $(subkeys)
@@ -1036,7 +1036,7 @@ The switch statement executes zero or one of the enclosed /statements/, dependin
 while /cond/ { /statements/ }
 ]
 
-Repeatedly execute /statements/ while /cond/ remains true upon entry. (See the description of /cond/ expression syntax under if, above). 
+Repeatedly execute /statements/ while /cond/ remains true upon entry. (See the description of /cond/ expression syntax under if, above).
 
 [endsect]
 
@@ -1061,7 +1061,7 @@ The first two forms set /variable/ globally. The third and forth forms set a tar
 
 Variables referenced in updating commands will be replaced with their values; target-specific values take precedence over global values. Variables passed as arguments (=$(1)= and =$(2)=) to actions are replaced with their bound values; the "=bind=" modifier can be used on actions to cause other variables to be replaced with bound values. See Action Modifiers above.
 
-=BJam= variables are not re-exported to the environment of the shell that executes the updating actions, but the updating actions can reference =bjam= variables with [^$(/variable/)]. 
+=BJam= variables are not re-exported to the environment of the shell that executes the updating actions, but the updating actions can reference =bjam= variables with [^$(/variable/)].
 
 [section:expansion Variable Expansion]
 
@@ -1138,20 +1138,20 @@ A variable element's string value can be parsed into grist and filename-related 
 
 [[[^:T]]
  [Converts all back-slashes ("\\") to forward slashes ("/"). For example
-`` 
+``
  x = "C:\\Program Files\\Borland" ; ECHO $(x:T) ;
 ``
 prints [^"C:/Program Files/Borland"]
 ]]
 
 [[[^:W]]
- [When invoking Windows-based tools from [@http://www.cygwin.com/ Cygwin] 
-  it can be important to pass them true windows-style paths. The =:W= 
+ [When invoking Windows-based tools from [@http://www.cygwin.com/ Cygwin]
+  it can be important to pass them true windows-style paths. The =:W=
   modifier, *under Cygwin only*, turns a cygwin path into a Win32 path using
  the  [@http://www.cygwin.com/cygwin-api/func-cygwin-conv-to-win32-path.html
  =cygwin_conv_to_win32_path=] function. On other platforms, the string is
  unchanged. For example
-`` 
+``
  x = "/cygdrive/c/Program Files/Borland" ; ECHO $(x:W) ;
 ``
 prints [^"C:\\Program Files\\Borland"] on Cygwin
@@ -1234,7 +1234,7 @@ Rooted (absolute path) file targets are bound as is. Unrooted file target names 
 
 * If =$(LOCATE)= is set then the target is bound relative to the first directory in =$(LOCATE)=. Only the first element is used for binding.
 * If =$(SEARCH)= is set then the target is bound to the first directory in =$(SEARCH)= where the target file already exists.
-* If the =$(SEARCH)= search fails, the target is bound relative to the current directory anyhow. 
+* If the =$(SEARCH)= search fails, the target is bound relative to the current directory anyhow.
 
 Both =$(SEARCH)= and =$(LOCATE)= should be set target-specific and not globally. If they were set globally, =bjam= would use the same paths for all file binding, which is not likely to produce sane results. When writing your own rules, especially ones not built upon those in Jambase, you may need to set =$(SEARCH)= or =$(LOCATE)= directly. Almost all of the rules defined in Jambase set =$(SEARCH)= and =$(LOCATE)= to sensible values for sources they are looking for and targets they create, respectively.
 
@@ -1254,7 +1254,7 @@ Both =$(HDRSCAN)= and =$(HDRRULE)= must be set for header file scanning to take 
 
 The scanning for header file inclusions is not exact, but it is at least dynamic, so there is no need to run something like =makedepend(GNU)= to create a static dependency file. The scanning mechanism errs on the side of inclusion (i.e., it is more likely to return filenames that are not actually used by the compiler than to miss include files) because it can't tell if `#include` lines are inside `#ifdefs` or other conditional logic. In =Jambase=, =HdrRule= applies the =NOCARE= rule to each header file found during scanning so that if the file isn't present yet doesn't cause the compilation to fail, =bjam= won't care.
 
-Also, scanning for regular expressions only works where the included file name is literally in the source file. It can't handle languages that allow including files using variable names (as the =Jam= language itself does). 
+Also, scanning for regular expressions only works where the included file name is literally in the source file. It can't handle languages that allow including files using variable names (as the =Jam= language itself does).
 
 [endsect]
 
@@ -1634,7 +1634,7 @@ A target that is not a dependency of any other target is being referenced with =
 
 For parallel building to be successful, the dependencies among files must be properly spelled out, as targets tend to get built in a quickest-first ordering. Also, beware of un-parallelizable commands that drop fixed-named files into the current directory, like =yacc(1)= does.
 
-A poorly set =$(JAMSHELL)= is likely to result in silent failure. 
+A poorly set =$(JAMSHELL)= is likely to result in silent failure.
 
 [endsect]
 
@@ -1674,7 +1674,7 @@ This section is derived from the official Jam documentation and from experience 
 * A variable whose value is an empty list or which consists entirely of empty
  strings has a negative logical value. Thus, for example, code like the
  following allows a sensible non-empty default which can easily be overridden
- by the user: 
+ by the user:
  ``
 MESSAGE ?\= starting jam... ;
 if $(MESSAGE) { ECHO The message is: $(MESSAGE) ; }
