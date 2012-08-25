@@ -800,11 +800,14 @@ rule .scan ( targets + )
 rule .hdr.scan ( target : includes * : binding )
 {
     local target-path = [ NORMALIZE_PATH $(binding:D) ] ;
-    NOCARE $(includes) ;
-    INCLUDES $(target) : $(includes) ;
-    SEARCH on $(includes) = $(target-path) ;
-    ISFILE $(includes) ;
-    .scan $(includes) ;
+    # Extra grist provides target name uniqueness when referencing same name
+    # header files from different folders.
+    local include-targets = <$(target-path)>$(includes) ;
+    NOCARE $(include-targets) ;
+    INCLUDES $(target) : $(include-targets) ;
+    SEARCH on $(include-targets) = $(target-path) ;
+    ISFILE $(include-targets) ;
+    .scan $(include-targets) ;
 }
 .scan $(jam.source) ;
 
