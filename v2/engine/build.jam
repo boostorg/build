@@ -746,7 +746,8 @@ if $(UNIX) = true { actions [YACC] {
 } }
 if $(grammar) && ! $(yacc)
 {
-    EXIT "Could not find the 'yacc' tool, and therefore can not build the grammar." ;
+    EXIT Could not find the 'yacc' tool, and therefore can not build the
+        grammar. ;
 }
 if $(grammar) && $(yacc)
 {
