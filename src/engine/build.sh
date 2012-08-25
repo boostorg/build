@@ -36,7 +36,7 @@ error_exit ()
     echo "### A special toolset; cc, is available which is used as a fallback"
     echo "### when a more specific toolset is not found and the cc command is"
     echo "### detected. The 'cc' toolset will use the CC, CFLAGS, and LIBS"
-    echo "### envrironment variables, if present."
+    echo "### environment variables, if present."
     echo "###"
     exit 1
 }
