@@ -787,23 +787,27 @@ rule .jam
 
 
 # Scan sources for header dependencies.
-#	WARNING: Yes those are *REAL TABS* below. DO NOT CHANGE, under any 
-#	circumstances, to spaces!! And the tabs indenting this are here so that if
-#	someone is in the mood to replace tabs they hit this comment, and hopefully
-#	notice their error.
-rule .scan
+#
+# In order to keep things simple, we do not support include paths here. This
+# means our build will only detect changes in headers included relative to the
+# current folder as opposed to those included from somewhere on the include
+# path.
+rule .scan ( targets + )
 {
-    HDRRULE on $(<:D=) = .hdr.scan ;
-    HDRSCAN on $(<:D=) = "^[ 	]*#[ 	]*include[ 	]*([<\"][^\">]*[\">]).*$" ;
+    HDRRULE on $(targets) = .hdr.scan ;
+    HDRSCAN on $(targets) = "^[ \t]*#[ \t]*include[ \t]*\"([^\"]*)\".*$" ;
 }
-rule .hdr.scan
+rule .hdr.scan ( target : includes * : binding )
 {
-    local hdrs = [ GLOB . : $(>:D=) ] ;
-    INCLUDES $(<:D=) : $(hdrs:D=) ;
-    HDRRULE on $(>:D=) = .hdr.scan ;
-    HDRSCAN on $(>:D=) = "^[ 	]*#[ 	]*include[ 	]*([<\"][^\">]*[\">]).*$" ;
+    local target-path = [ NORMALIZE_PATH $(binding:D) ] ;
+    NOCARE $(includes) ;
+    INCLUDES $(target) : $(includes) ;
+    SEARCH on $(includes) = $(target-path) ;
+    ISFILE $(includes) ;
+    .scan $(includes) ;
 }
-.scan [ GLOB . : *.c ] ;
+.scan $(jam.source) ;
+
 
 # Distribution making from here on out. Assumes that the docs are already built
 # as HTML at ../doc/html. Otherwise they will not be included in the built
