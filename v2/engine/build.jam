@@ -806,8 +806,8 @@ rule .hdr.scan
 .scan [ GLOB . : *.c ] ;
 
 # Distribution making from here on out. Assumes that the docs are already built
-# as HTML at ../doc/html. If they are not, then the docs are not included in the
-# dist archive.
+# as HTML at ../doc/html. Otherwise they will not be included in the built
+# distribution archive.
 dist.license =
     [ GLOB . : $(LICENSE).txt ]
     ;
