@@ -1,8 +1,9 @@
-# Copyright David Abrahams 2004.
+# Copyright 2004 David Abrahams
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Copyright 2010 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import scanner ;
 import type ;
@@ -22,8 +23,8 @@ class c-scanner : scanner
 
         for local i in $(includes)
         {
-            self.includes += [ sequence.transform path.native
-                                : [ regex.split $(i:G=) "&&" ] ] ;
+            self.includes += [ sequence.transform path.native : [ regex.split
+                $(i:G=) "&&" ] ] ;
         }
     }
 
@@ -34,7 +35,7 @@ class c-scanner : scanner
 
     rule process ( target : matches * : binding )
     {
-        local angle  = [ regex.transform $(matches) : "<(.*)>"   ] ;
+        local angle = [ regex.transform $(matches) : "<(.*)>" ] ;
         angle = [ sequence.transform path.native : $(angle) ] ;
         local quoted = [ regex.transform $(matches) : "\"(.*)\"" ] ;
         quoted = [ sequence.transform path.native : $(quoted) ] ;

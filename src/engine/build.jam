@@ -6,15 +6,15 @@
 # Clean env vars of any "extra" empty values.
 for local v in ARGV CC CFLAGS LIBS
 {
-	local values ;
-	for local x in $($(v))
-	{
-		if $(x) != ""
-		{
-			values += $(x) ;
-		}
-	}
-	$(v) = $(values) ;
+    local values ;
+    for local x in $($(v))
+    {
+        if $(x) != ""
+        {
+            values += $(x) ;
+        }
+    }
+    $(v) = $(values) ;
 }
 
 # Platform related specifics.

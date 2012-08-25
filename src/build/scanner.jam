@@ -1,7 +1,8 @@
 # Copyright 2003 Dave Abrahams
 # Copyright 2002, 2003, 2004, 2005 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Implements scanners: objects computing implicit dependencies for files, such
 # as includes in C++.
@@ -160,7 +161,3 @@ rule hdrrule ( target : matches * : binding )
 # scanning.
 #
 IMPORT scanner : hdrrule : : scanner.hdrrule ;
-
-
-
-
