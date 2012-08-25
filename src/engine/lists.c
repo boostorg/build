@@ -11,7 +11,8 @@
 #include "jam.h"
 #include "lists.h"
 
-#include "assert.h"
+#include <assert.h>
+
 
 struct freelist_node { struct freelist_node * next; };
 
@@ -239,7 +240,7 @@ void list_free( LIST * head )
 LIST * list_pop_front( LIST * l )
 {
     unsigned size = list_length( l );
-    assert( size != 0 );
+    assert( size );
     --size;
     object_free( list_front( l ) );
 
