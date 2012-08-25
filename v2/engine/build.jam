@@ -260,7 +260,7 @@ toolset kylix bc++ : -o : -D
 {
     # Even though CW can compile all files at once, it crashes if it tries in
     # the bjam case.
-    local mwcc = ; if $(OS) = NT { mwcc = mwcc ; } else { mwcc = mwc$(OSPLAT:L) ; }
+    local mwcc ; if $(OS) != NT { mwcc = mwc$(OSPLAT:L) ; }
     mwcc ?= mwcc ;
     toolset metrowerks $(mwcc) : "-o " : -D
         : -c -lang c -subsystem console -cwd include
@@ -590,7 +590,7 @@ rule .exe
     .mkdir $(locate-target) ;
     if $(--link)
     {
-        local objs = ;
+        local objs ;
         for local s in $(>)
         {
             # Translate any subdir elements into a simple file name.
@@ -789,10 +789,9 @@ rule .jam
 
 # Scan sources for header dependencies.
 #
-# In order to keep things simple, we do not support include paths here. This
-# means our build will only detect changes in headers included relative to the
-# current folder as opposed to those included from somewhere on the include
-# path.
+# In order to keep things simple, we made a slight compromise here - we only
+# detect changes in headers included relative to the current folder as opposed
+# to those included from somewhere on the include path.
 rule .scan ( targets + )
 {
     HDRRULE on $(targets) = .hdr.scan ;
@@ -867,16 +866,16 @@ if $(OS) = NT
     switch $(zip:D=:S=)
     {
         case 7z* : zip += a -r -tzip -mx=9 ;
-        case zip  : zip += -9r ;
+        case zip : zip += -9r ;
     }
     actions piecemeal [PACK] {
-    "$(zip)" "$(<)" "$(>)"
+        "$(zip)" "$(<)" "$(>)"
     }
     actions piecemeal [ZIP] {
-    "$(zip)" "$(<)" "$(>)"
+        "$(zip)" "$(<)" "$(>)"
     }
     actions piecemeal [COPY] {
-    copy /Y "$(>)" "$(<)" >NUL:
+        copy /Y "$(>)" "$(<)" >NUL:
     }
 }
 if $(UNIX) = true
@@ -889,23 +888,23 @@ if $(UNIX) = true
         case * : tar += -c -f - ;
     }
     actions [PACK] {
-    "$(tar)" "$(>)" | gzip -c9 > "$(<)"
+        "$(tar)" "$(>)" | gzip -c9 > "$(<)"
     }
     #~ actions [PACK] {
-    #~ tar cf "$(<:S=.tar)" "$(>)"
+    #~     tar cf "$(<:S=.tar)" "$(>)"
     #~ }
     actions [ZIP] {
     gzip -c9 "$(>)" > "$(<)"
     }
     actions [COPY] {
-    cp -Rpf "$(>)" "$(<)"
+        cp -Rpf "$(>)" "$(<)"
     }
 }
 
 # The single binary, compressed.
 rule .binary
 {
-    local zip = ;
+    local zip ;
     if $(OS) = NT { zip = $($(<).exe:S=.zip) ; }
     if $(UNIX) = true { zip = $($(<).exe:S=.tgz) ; }
     zip = $(zip:S=)-$(VERSION)-$(RELEASE)-$(platform)$(zip:S) ;
@@ -938,7 +937,7 @@ rule .package ( dst-dir : src-files + )
         }
     }
 
-    local pack = ;
+    local pack ;
     if $(OS) = NT { pack = $(dst-dir).zip ; }
     if $(UNIX) = true { pack = $(dst-dir).tgz ; }
 
@@ -967,7 +966,7 @@ rpm-tool ?= [ GLOB $(PATH) : "rpm" ] ;
 rpm-tool = $(rpm-tool[1]) ;
 rule .rpm ( name : source )
 {
-    local rpm-arch = ;
+    local rpm-arch ;
     switch $(OSPLAT)
     {
         case X86       : rpm-arch ?= i386 ;
