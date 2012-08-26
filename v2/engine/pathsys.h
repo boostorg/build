@@ -43,6 +43,7 @@ typedef struct _pathname
 #define f_member  part[ 5 ]
 } PATHNAME;
 
+
 void path_build( PATHNAME *, string * file );
 void path_parse( char const * file, PATHNAME * );
 void path_parent( PATHNAME * );
