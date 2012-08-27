@@ -227,7 +227,7 @@ STACK * stack_global()
 
 static void check_alignment( STACK * s )
 {
-    assert( (unsigned long)s->data % sizeof( LIST * ) == 0 );
+    assert( (size_t)s->data % sizeof( LIST * ) == 0 );
 }
 
 void * stack_allocate( STACK * s, int size )
