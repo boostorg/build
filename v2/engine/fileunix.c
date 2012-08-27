@@ -169,7 +169,10 @@ void file_dirscan_( file_info_t * const d, scanback func, void * closure )
 
 int file_mkdir( char const * const path )
 {
-    return mkdir( path, 0777 );
+    /* Explicit cast to remove const modifiers and avoid related compiler
+     * warnings displayed when using the intel compiler.
+     */
+    return mkdir( (char *)path, 0777 );
 }
 
 
