@@ -1,13 +1,12 @@
 /*
-Copyright Rene Rivera 2006.
-Distributed under the Boost Software License, Version 1.0.
-(See accompanying file LICENSE_1_0.txt or copy at
-http://www.boost.org/LICENSE_1_0.txt)
-*/
+ * Copyright 2006. Rene Rivera
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ */
 
 #ifndef BJAM_MEM_H
 #define BJAM_MEM_H
-
 
 #ifdef OPT_BOEHM_GC
 
@@ -31,7 +30,7 @@ http://www.boost.org/LICENSE_1_0.txt)
     # define BJAM_NEWSTR_NO_ALLOCATE
     #endif
 
-#elif defined(OPT_DUMA)
+#elif defined( OPT_DUMA )
 
     /* Use Duma memory debugging library. */
     #include <stdlib.h>
