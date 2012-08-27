@@ -3126,7 +3126,7 @@ static void argument_list_print( struct arg_list * args, int num_args )
                 if ( j ) printf( " " );
                 if ( formal_arg->type_name )
                     printf( "%s ", object_str( formal_arg->type_name ) );
-                printf( "%s", formal_arg->arg_name );
+                printf( "%s", object_str( formal_arg->arg_name ) );
                 switch ( formal_arg->flags )
                 {
                 case ARG_OPTIONAL: printf( " ?" ); break;
