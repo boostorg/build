@@ -218,7 +218,7 @@ STACK * stack_global()
     static STACK result;
     if ( !stack )
     {
-        int size = 1 << 21;
+        int const size = 1 << 21;
         stack = BJAM_MALLOC( size );
         result.data = (char *)stack + size;
     }
@@ -252,7 +252,7 @@ void stack_push( STACK * s, LIST * l )
 
 LIST * stack_pop( STACK * s )
 {
-    LIST * result = *(LIST * *)s->data;
+    LIST * const result = *(LIST * *)s->data;
     stack_deallocate( s, sizeof( LIST * ) );
     return result;
 }
