@@ -35,6 +35,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <sys/stat.h>  /* needed for mkdir() */
 
 #if defined( sun ) || defined( __sun ) || defined( linux )
 # include <unistd.h>  /* needed for read and close prototype */
