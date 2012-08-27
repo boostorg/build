@@ -100,6 +100,8 @@
 
 #ifdef OPT_DEBUG_PROFILE
     /* Profile tracing of memory allocations. */
+    #include "debug.h"
+
     #define BJAM_MALLOC(s) (profile_memory(s), bjam_malloc_x(s))
     #define BJAM_MALLOC_ATOMIC(s) (profile_memory(s), bjam_malloc_atomic_x(s))
     #define BJAM_CALLOC(n,s) (profile_memory(n*s), bjam_calloc_x(n,s))
