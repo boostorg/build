@@ -16,6 +16,9 @@
 #include "strings.h"
 #include "variable.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+
 
 static struct hash * classes = 0;
 
