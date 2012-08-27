@@ -882,7 +882,7 @@ static void make1c_closure
      * commands if we were asked to stop the build in case of any errors.
      */
     if ( t->status == EXEC_CMD_INTR ||
-        t->status == EXEC_CMD_FAIL && globs.quitquick )
+        ( t->status == EXEC_CMD_FAIL && globs.quitquick ) )
         ++intr;
 
     /* If the command was not successful remove all of its targets not marked as
