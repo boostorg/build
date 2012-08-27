@@ -1,6 +1,9 @@
-/* Copyright Vladimir Prus 2003. Distributed under the Boost */
-/* Software License, Version 1.0. (See accompanying */
-/* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
+/*
+ * Copyright 2003. Vladimir Prus
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ */
 
 #include "../mem.h"
 #include "../native.h"
@@ -27,30 +30,27 @@ rule transform ( list * : pattern : indices * )
 
 LIST * regex_transform( FRAME * frame, int flags )
 {
-    LIST * l = lol_get( frame->args, 0 );
-    LIST * pattern = lol_get( frame->args, 1 );
-    LIST * indices_list = lol_get( frame->args, 2 );
+    LIST * const l = lol_get( frame->args, 0 );
+    LIST * const pattern = lol_get( frame->args, 1 );
+    LIST * const indices_list = lol_get( frame->args, 2 );
     int * indices = 0;
     int size;
-    int * p;
     LIST * result = L0;
-
-    string buf[ 1 ];
-    string_new( buf );
 
     if ( !list_empty( indices_list ) )
     {
+        int * p;
         LISTITER iter = list_begin( indices_list );
         LISTITER const end = list_end( indices_list );
         size = list_length( indices_list );
-        indices = ( int * )BJAM_MALLOC( size * sizeof( int ) );
+        indices = (int *)BJAM_MALLOC( size * sizeof( int ) );
         for ( p = indices; iter != end; iter = list_next( iter ) )
             *p++ = atoi( object_str( list_item( iter ) ) );
     }
     else
     {
         size = 1;
-        indices = ( int * )BJAM_MALLOC( sizeof( int ) );
+        indices = (int *)BJAM_MALLOC( sizeof( int ) );
         *indices = 1;
     }
 
@@ -60,6 +60,10 @@ LIST * regex_transform( FRAME * frame, int flags )
 
         LISTITER iter = list_begin( l );
         LISTITER const end = list_end( l );
+
+        string buf[ 1 ];
+        string_new( buf );
+
         for ( ; iter != end; iter = list_next( iter ) )
         {
             if ( regexec( re, object_str( list_item( iter ) ) ) )
