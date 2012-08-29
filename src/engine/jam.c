@@ -12,10 +12,11 @@
  * ALL WARRANTIES ARE HEREBY DISCLAIMED.
  */
 
-/*  This file is ALSO:
- *  Copyright 2001-2004 David Abrahams.
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+/* This file is ALSO:
+ * Copyright 2001-2004 David Abrahams.
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
  */
 
 /*
@@ -97,29 +98,28 @@
 
 
 #include "jam.h"
-#include "option.h"
 #include "patchlevel.h"
 
-/* These get various function declarations. */
-#include "lists.h"
-#include "parse.h"
-#include "variable.h"
-#include "compile.h"
 #include "builtins.h"
-#include "rules.h"
-#include "object.h"
-#include "scan.h"
-#include "timestamp.h"
-#include "make.h"
-#include "strings.h"
-#include "filesys.h"
-#include "output.h"
-#include "search.h"
 #include "class.h"
+#include "compile.h"
 #include "constants.h"
+#include "filesys.h"
 #include "function.h"
-#include "pwd.h"
 #include "hcache.h"
+#include "lists.h"
+#include "make.h"
+#include "object.h"
+#include "option.h"
+#include "output.h"
+#include "parse.h"
+#include "pwd.h"
+#include "rules.h"
+#include "scan.h"
+#include "search.h"
+#include "strings.h"
+#include "timestamp.h"
+#include "variable.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC
