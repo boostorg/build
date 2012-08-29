@@ -19,7 +19,6 @@
  * External routines:
  *
  *  var_defines() - load a bunch of variable=value settings
- *  var_string()  - expand a string with variables in it
  *  var_get()     - get value of a user defined symbol
  *  var_set()     - set a variable in jam's user defined symbol table.
  *  var_swap()    - swap a variable's value with the given one
@@ -41,8 +40,8 @@
 #include "pathsys.h"
 #include "strings.h"
 
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 
 /*
@@ -231,6 +230,7 @@ LIST * var_get_and_clear_raw( module_t * module, OBJECT * symbol )
 
     return result;
 }
+
 
 /*
  * var_set() - set a variable in Jam's user defined symbol table
