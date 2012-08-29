@@ -1024,56 +1024,116 @@ static LIST * apply_subscript_and_modifiers( STACK * s, int n )
     return result;
 }
 
+
+/*
+ * expand() - expands a list of concatenated strings and variable refereces
+ *
+ * Takes a list of expansion items - each representing one element to be
+ * concatenated and each containing a list of its values. Returns a list of all
+ * possible values constructed by selecting a single value from each of the
+ * elements and concatenating them together.
+ *
+ * For example, in the following code:
+ *
+ *     local a = one two three four ;
+ *     local b = foo bar ;
+ *     ECHO /$(a)/$(b)/$(a)/ ;
+ *
+ *   When constructing the result of /$(a)/$(b)/ this function would get called
+ * with the following 7 expansion items:
+ *     1. /
+ *     2. one two three four
+ *     3. /
+ *     4. foo bar
+ *     5. /
+ *     6. one two three four
+ *     7. /
+ *
+ *   And would result in a list containing 32 values:
+ *     1. /one/foo/one/
+ *     2. /one/foo/two/
+ *     3. /one/foo/three/
+ *     4. /one/foo/four/
+ *     5. /one/bar/one/
+ *     ...
+ *
+ */
+
 typedef struct expansion_item
 {
-    LISTITER elem;
-    LIST * saved;
-    int size;
+    /* Item's value list initialized prior to calling expand(). */
+    LIST * values;
+
+    /* Internal data initialized and used inside expand(). */
+    LISTITER current;  /* Currently used value. */
+    int size;          /* Concatenated string length prior to concatenating the
+                        * item's current value.
+                        */
 } expansion_item;
 
-static LIST * expand( expansion_item * elem, int length )
+static LIST * expand( expansion_item * items, int const length )
 {
     LIST * result = L0;
     string buf[ 1 ];
     int size = 0;
     int i;
+
     assert( length > 0 );
     for ( i = 0; i < length; ++i )
     {
-        int max = 0;
-        LISTITER iter = elem[ i ].elem;
-        LISTITER const end = list_end( elem[ i ].saved );
-        if ( iter == end ) return result;
-        for ( ; iter != end; iter = list_next( iter ) )
+        LISTITER iter = list_begin( items[ i ].values );
+        LISTITER const end = list_end( items[ i ].values );
+
+        /* If any of the items has no values - the result is an empty list. */
+        if ( iter == end ) return L0;
+
+        /* Set each item's 'current' to its first listed value. This indicates
+         * each item's next value to be used when constructing the list of all
+         * possible concatenated values.
+         */
+        items[ i ].current = iter;
+
+        /* Calculate the longest concatenated string length - to know how much
+         * memory we need to allocate as a buffer for holding the concatenated
+         * strings.
+         */
         {
-            int const len = strlen( object_str( list_item( iter ) ) );
-            if ( len > max ) max = len;
+            int max = 0;
+            for ( ; iter != end; iter = list_next( iter ) )
+            {
+                int const len = strlen( object_str( list_item( iter ) ) );
+                if ( len > max ) max = len;
+            }
+            size += max;
         }
-        size += max;
     }
+
     string_new( buf );
     string_reserve( buf, size );
+
     i = 0;
     {
     loop:
         for ( ; i < length; ++i )
         {
-            elem[ i ].size = buf->size;
-            string_append( buf, object_str( list_item( elem[ i ].elem ) ) );
+            items[ i ].size = buf->size;
+            string_append( buf, object_str( list_item( items[ i ].current ) ) );
         }
         result = list_push_back( result, object_new( buf->value ) );
         while ( --i >= 0 )
         {
-            if ( list_next( elem[ i ].elem ) != list_end( elem[ i ].saved ) )
+            if ( list_next( items[ i ].current ) != list_end( items[ i ].values
+                ) )
             {
-                elem[ i ].elem = list_next( elem[ i ].elem );
-                string_truncate( buf, elem[ i ].size );
+                items[ i ].current = list_next( items[ i ].current );
+                string_truncate( buf, items[ i ].size );
                 goto loop;
             }
             else
-                elem[ i ].elem = list_begin( elem[ i ].saved );
+                items[ i ].current = list_begin( items[ i ].values );
         }
     }
+
     string_free( buf );
     return result;
 }
@@ -4052,16 +4112,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
         case INSTR_COMBINE_STRINGS:
         {
-            LIST * result;
-            size_t buffer_size = code->arg * sizeof( expansion_item );
-            LIST * * stack_pos = stack_get( s );
+            size_t const buffer_size = code->arg * sizeof( expansion_item );
+            LIST * * const stack_pos = stack_get( s );
             expansion_item * items = stack_allocate( s, buffer_size );
+            LIST * result;
             int i;
             for ( i = 0; i < code->arg; ++i )
-            {
-                items[ i ].saved = stack_pos[ i ];
-                items[ i ].elem = list_begin( items[ i ].saved );
-            }
+                items[ i ].values = stack_pos[ i ];
             result = expand( items, code->arg );
             stack_deallocate( s, buffer_size );
             for ( i = 0; i < code->arg; ++i )
