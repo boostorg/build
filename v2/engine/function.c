@@ -1112,8 +1112,8 @@ static LIST * expand( expansion_item * items, int const length )
     string_reserve( buf, size );
 
     i = 0;
+    while ( i >= 0 )
     {
-    loop:
         for ( ; i < length; ++i )
         {
             items[ i ].size = buf->size;
@@ -1127,7 +1127,7 @@ static LIST * expand( expansion_item * items, int const length )
             {
                 items[ i ].current = list_next( items[ i ].current );
                 string_truncate( buf, items[ i ].size );
-                goto loop;
+                break;
             }
             else
                 items[ i ].current = list_begin( items[ i ].values );
