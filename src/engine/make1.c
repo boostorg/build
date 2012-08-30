@@ -944,8 +944,9 @@ static void swap_settings
  *
  * Essentially copies a chain of ACTIONs to a chain of CMDs, grouping
  * RULE_TOGETHER actions, splitting RULE_PIECEMEAL actions, and handling
- * RULE_NEWSRCS actions. The result is a chain of CMDs which can be expanded by
- * var_string() and executed using exec_cmd().
+ * RULE_NEWSRCS actions. The result is a chain of CMDs which has already had all
+ * of its embedded variable references expanded and can now be executed using
+ * exec_cmd().
  */
 
 static CMD * make1cmds( TARGET * t )
