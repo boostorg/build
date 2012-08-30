@@ -626,8 +626,8 @@ local rule should-clean-project ( project )
     if ! $(current-project) && ! $(target-ids)
     {
         import errors ;
-        errors.user-error error: no Jamfile "in" current directory found, and no
-            target references specified. ;
+        errors.user-error no Jamfile "in" current directory found, and no target
+            references specified. ;
     }
 
 
