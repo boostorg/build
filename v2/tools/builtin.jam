@@ -4,7 +4,8 @@
 # Copyright 2005 Toon Knapen
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Defines standard features and rules.
 
@@ -39,13 +40,13 @@ import convert ;
 import generate ;
 
 
-.os-names = aix bsd cygwin darwin freebsd hpux iphone linux netbsd
-    openbsd osf qnx qnxnto sgi solaris unix unixware windows 
-    elf # Not actually an OS -- used for targeting bare metal where
-        # object format is ELF.  This catches both -elf and -eabi gcc
-        # targets and well as other compilers targeting ELF. It is not
-        # clear how often do we need to key of ELF specifically as opposed
-        # to other bare metal targets, but let's stick with gcc naming.
+.os-names = aix bsd cygwin darwin freebsd hpux iphone linux netbsd openbsd osf
+    qnx qnxnto sgi solaris unix unixware windows
+    elf  # Not actually an OS -- used for targeting bare metal where object
+         # format is ELF.  This catches both -elf and -eabi gcc targets and well
+         # as other compilers targeting ELF. It is not clear how often we need
+         # the 'elf' key as opposed to other bare metal targets, but let us
+         # stick with gcc naming.
     ;
 
 # Feature used to determine which OS we're on. New <target-os> and <host-os>
@@ -78,7 +79,7 @@ local rule default-host-os ( )
             case MACOSX       : host-os = darwin  ;
             case KFREEBSD     : host-os = freebsd ;
             case LINUX        : host-os = linux   ;
-            case SUNOS        : 
+            case SUNOS        :
               ECHO "SunOS is not a supported operating system." ;
               ECHO "We believe last version of SunOS was released in 1992, " ;
               ECHO "so if you get this message, something is very wrong with configuration logic. " ;
@@ -438,7 +439,9 @@ class lib-generator : generator
 {
     rule __init__ ( * : * )
     {
-        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8)
+            : $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) :
+            $(17) : $(18) : $(19) ;
     }
 
     rule run ( project name ? : property-set : sources * )
@@ -542,7 +545,7 @@ class searched-lib-generator : generator
 
     rule __init__ ( )
     {
-        # The requirements cause the generators to be tried *only* when we're
+        # The requirements cause the generators to be tried *only* when we are
         # building a lib target with a 'search' feature. This seems ugly --- all
         # we want is to make sure searched-lib-generator is not invoked deep
         # inside transformation search to produce intermediate targets.
@@ -589,7 +592,9 @@ class prebuilt-lib-generator : generator
 {
     rule __init__ ( * : * )
     {
-        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
+        generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8)
+            : $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) :
+            $(17) : $(18) : $(19) ;
     }
 
     rule run ( project name ? : property-set : sources * )
