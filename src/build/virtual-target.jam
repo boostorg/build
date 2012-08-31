@@ -581,10 +581,10 @@ class file-target : abstract-file-target
         # targets already marked as included by the base target. Otherwise such
         # an included file being newer than the file being scanned would cause
         # the scanner target to be updated, further causing any target depending
-        # on that scanner target to be rebuild. This is the exact relationship
+        # on that scanner target to be rebuilt. This is the exact relationship
         # as set up by Boost Jam's SEARCH binding method (needed to support
         # searching for generated targets) so we want to bind scanner targets
-        # using this methon instead of explicitly specifying their location
+        # using this method instead of explicitly specifying their location
         # using LOCATE.
         #
         # FIXME: We recognize scanner targets by their given name being
