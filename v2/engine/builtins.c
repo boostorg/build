@@ -9,6 +9,7 @@
 
 #include "compile.h"
 #include "constants.h"
+#include "cwd.h"
 #include "filesys.h"
 #include "frames.h"
 #include "hash.h"
@@ -20,7 +21,6 @@
 #include "object.h"
 #include "parse.h"
 #include "pathsys.h"
-#include "pwd.h"
 #include "rules.h"
 #include "strings.h"
 #include "subst.h"
@@ -1371,7 +1371,7 @@ LIST * builtin_caller_module( FRAME * frame, int flags )
 
 LIST * builtin_pwd( FRAME * frame, int flags )
 {
-    return pwd();
+    return list_new( object_copy( cwd() ) );
 }
 
 

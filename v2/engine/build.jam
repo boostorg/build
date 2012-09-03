@@ -482,7 +482,7 @@ jam.source =
     hash.c hcache.c headers.c hdrmacro.c jam.c jambase.c jamgram.c lists.c
     make.c make1.c mem.c object.c option.c output.c parse.c pathsys.c regexp.c
     rules.c scan.c search.c subst.c w32_getreg.c timestamp.c variable.c
-    modules.c strings.c filesys.c builtins.c pwd.c class.c native.c md5.c
+    modules.c strings.c filesys.c builtins.c class.c cwd.c native.c md5.c
     modules/set.c modules/path.c modules/regex.c modules/property-set.c
     modules/sequence.c modules/order.c ;
 if $(OS) = NT
