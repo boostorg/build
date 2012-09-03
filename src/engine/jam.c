@@ -113,7 +113,7 @@
 #include "option.h"
 #include "output.h"
 #include "parse.h"
-#include "pwd.h"
+#include "cwd.h"
 #include "rules.h"
 #include "scan.h"
 #include "search.h"
@@ -345,6 +345,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     }
 
     constants_init();
+    cwd_init();
 
     {
         PROFILE_ENTER( MAIN );
@@ -579,7 +580,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     class_done();
     modules_done();
     regex_done();
-    pwd_done();
+    cwd_done();
     path_done();
     function_done();
     list_done();
