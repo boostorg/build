@@ -1,12 +1,13 @@
 # Copyright 2003 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 # Modifiers are generalized generators that mutate targets in specific ways.
 # This structure allows for grouping a variety of functionality in an
-# orthogonal way to the functionality in toolsets, and without specifying
-# more target variations. In turn the modifiers can be used as building
-# blocks to implement simple requests, like the <version> feature.
+# orthogonal way to the functionality in toolsets, and without specifying more
+# target variations. In turn the modifiers can be used as building blocks to
+# implement simple requests, like the <version> feature.
 
 import modules ;
 import feature ;
@@ -190,12 +191,14 @@ class name-modifier : modifier
     {
         local match = [ MATCH "<match>(.*)" : $(modifier-spec) ] ;
         local name-parts = [ MATCH $(match) : $(name) ] ;
-        local insertions = [ sequence.insertion-sort [ MATCH "(<[0123456789]+>.*)" : $(modifier-spec) ] ] ;
+        local insertions = [ sequence.insertion-sort [ MATCH
+            "(<[0123456789]+>.*)" : $(modifier-spec) ] ] ;
         local new-name-parts ;
         local insert-position = 1 ;
         while $(insertions)
         {
-            local insertion = [ MATCH "<$(insert-position)>(.*)" : $(insertions[1]) ] ;
+            local insertion = [ MATCH "<$(insert-position)>(.*)" :
+                $(insertions[1]) ] ;
             if $(insertion)
             {
                 new-name-parts += $(insertion) ;
@@ -218,14 +221,15 @@ feature.feature name-modifier : : free ;
 feature.feature name-modify : no yes : incidental optional ;
 generators.register [ new name-modifier ] ;
 
-# Translates <version> property to a set of modification properties
-# that are applied by the name-modifier, and symlink-modifier.
+# Translates <version> property to a set of modification properties that are
+# applied by the name-modifier, and symlink-modifier.
 #
 rule version-to-modifier ( property : properties * )
 {
     return
         <name-modify>yes
-            <name-modifier><match>"^([^.]*)(.*)" <name-modifier><2>.$(property:G=)
+            <name-modifier><match>"^([^.]*)(.*)"
+            <name-modifier><2>.$(property:G=)
             <name-modifier><symlink>yes
         ;
 }
