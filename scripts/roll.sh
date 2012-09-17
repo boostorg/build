@@ -14,9 +14,6 @@ revision=`svnversion .`
 echo "SVN Revision $revision" >> timestamp.txt
 date >> timestamp.txt
 
-# This one is not fully finished
-rm -rf example/versioned
-
 # Remove unnecessary top-level files
 find . -maxdepth 1 -type f | egrep -v "boost-build.jam|timestamp.txt|roll.sh|bootstrap.jam|build-system.jam|boost_build.png|index.html|hacking.txt|site-config.jam|user-config.jam|bootstrap.sh|bootstrap.bat|Jamroot.jam" | xargs rm -f
 
