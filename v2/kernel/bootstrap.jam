@@ -153,7 +153,7 @@ if ! $(dont-build)
                 # Make all rules in the loaded module available in the global
                 # namespace, so that we do not have to bother specifying the
                 # "correct" module when calling from Python.
-                module $(mole-name)
+                module $(module-name)
                 {
                     __name__ = $(1) ;
                     include $(2) ;
