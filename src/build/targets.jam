@@ -1252,13 +1252,15 @@ class basic-target : abstract-target
         }
         targets.push-target $(__name__) ;
 
+        # Apply free features from the command line. If user said
+        #   define=FOO
+        # he most likely wants this define to be set for all compiles.
+        # Make it before check for already built.
+        property-set = [ $(property-set).refine
+            [ build-system.command-line-free-features ] ] ;
+
         if ! $(self.generated.$(property-set))
         {
-            # Apply free features from the command line. If user said
-            #   define=FOO
-            # he most likely wants this define to be set for all compiles.
-            property-set = [ $(property-set).refine
-                [ build-system.command-line-free-features ] ] ;
             local rproperties = [ targets.common-properties $(property-set)
                 $(self.requirements) ] ;
 
