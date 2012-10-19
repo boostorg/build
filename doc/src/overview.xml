@@ -688,6 +688,28 @@ b2 toolset=gcc variant=debug optimization=space
           </varlistentry>
 
           <varlistentry>
+            <term><option>--abbreviate-paths</option></term>
+            <listitem>
+              <para>Compresses target paths by abbreviating each component.
+              This option is useful to keep paths from becoming longer than
+              the filesystem supports.  See also <xref linkend="bbv2.reference.buildprocess.targetpath"/>.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
+            <term><option>--hash</option></term>
+            <listitem>
+              <para>Compresses target paths using an MD5 hash.  This option is
+              useful to keep paths from becoming longer than the filesystem
+              supports.  This option produces shorter paths than --abbreviate-paths
+              does, but at the cost of making them less understandable.
+              See also <xref linkend="bbv2.reference.buildprocess.targetpath"/>.
+              </para>
+            </listitem>
+          </varlistentry>
+
+          <varlistentry>
             <term><option>--version</option></term>
             <listitem>
               <para>Prints information on the Boost.Build and Boost.Jam

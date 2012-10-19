@@ -2089,6 +2089,7 @@ exe a : a.cpp
     
     <section id="bbv2.reference.buildprocess.targetpath">
       <title>Target Paths</title>
+      <indexterm><primary>path</primary><secondary>for targets</secondary></indexterm>
 
       <para>Several factors determine the location of a concrete
       file target.  All files in a project are built under
