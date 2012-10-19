@@ -310,6 +310,10 @@ local rule print-help-usage ( )
     print.list-item --x;
         Any option not explicitly handled by Boost.Jam remains available to
         build scripts using the '"ARGV"' variable. ;
+    print.list-item --abbreviate-paths;
+        Use abbreviated paths for targets. ;
+    print.list-item --hash;
+        Shorten target paths by using an MD5 hash. ;
     print.list-item -dn;
         Enables output of diagnostic messages. The debug level '"n"' and all
         below it are enabled by this option. ;
