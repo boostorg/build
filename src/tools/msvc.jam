@@ -385,7 +385,8 @@ rule compile-c-c++ ( targets + : sources * )
 {
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_HEADER) ] ;
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
-    PDB_NAME on $(<) = $(<:S=.pdb) ;
+    PDB_NAME on $(<) = $(<[1]:S=.pdb) ;
+    LOCATE on $(<[1]:S=.pdb) = [ on $(<[1]) return $(LOCATE) ] ;
 }
 
 rule preprocess-c-c++ ( targets + : sources * )
@@ -393,6 +394,7 @@ rule preprocess-c-c++ ( targets + : sources * )
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_HEADER) ] ;
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
     PDB_NAME on $(<) = $(<:S=.pdb) ;
+    LOCATE on $(<[1]:S=.pdb) = [ on $(<[1]) return $(LOCATE) ] ;
 }
 
 # Action for running the C/C++ compiler using precompiled headers. In addition
@@ -559,7 +561,7 @@ else
 #
 rule archive ( targets + : sources * : properties * )
 {
-    PDB_NAME on $(>) = $(<:S=.pdb) ;
+    PDB_NAME on $(>) = $(<[1]:S=.pdb) ;
 }
 
 
@@ -1116,6 +1118,41 @@ class msvc-linking-generator : linking-generator
 }
 
 
+class msvc-archive-generator : archive-generator
+{
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        local result = [ archive-generator.generated-targets $(sources)
+          : $(property-set) : $(project) $(name) ] ;
+
+        if $(result)
+        {
+            local name-main = [ $(result[0]).name ] ;
+            local action = [ $(result[0]).action ] ;
+
+            if [ $(property-set).get <debug-symbols> ] = "on"
+            {
+                # We force the exact name on PDB. The reason is tagging -- the
+                # tag rule may reasonably special case some target types, like
+                # SHARED_LIB. The tag rule will not catch PDBs, and it cannot
+                # even easily figure out if a PDB is paired with a SHARED_LIB,
+                # EXE or something else. Because PDBs always get the same name
+                # as the main target, with .pdb as extension, just force it.
+                local target = [ class.new file-target $(name-main:S=.pdb) exact
+                    : PDB : $(project) : $(action) ] ;
+                local registered-target = [ virtual-target.register $(target) ]
+                    ;
+                if $(target) != $(registered-target)
+                {
+                    $(action).replace-targets $(target) : $(registered-target) ;
+                }
+                result += $(registered-target) ;
+            }
+        }
+        return $(result) ;
+    }
+}
+
 
 # Unsafe worker rule for the register-toolset() rule. Must not be called
 # multiple times.
@@ -1154,7 +1191,10 @@ local rule register-toolset-really ( )
             OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB :
             <toolset>msvc ] ;
 
-        generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
+        generators.register [ new msvc-archive-generator msvc.archive :
+            OBJ : STATIC_LIB :
+            <toolset>msvc ] ;
+
         generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c++.preprocess : CPP : PREPROCESSED_CPP : <toolset>msvc ;
