@@ -57,6 +57,9 @@ if [ qt4.initialized ]
       # Test moc rule
       [ run mock.cpp mock.h /qt//QtCore : : : <define>TEST_MOCK ]
 
+      # Test resource compiler
+      [ run rcc.cpp rcc.qrc /qt//QtCore : : : <rccflags>"-compress 9 -threshold 10" ]
+
    : # requirements
    : # default-build
    : # usage-requirements

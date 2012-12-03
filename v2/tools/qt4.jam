@@ -36,6 +36,21 @@
 # This is consistent with Qt guidelines:
 # http://qt-project.org/doc/qt-4.8/moc.html
 #
+# The .qrc processing utility supports various command line option (see
+# http://qt-project.org/doc/qt-4.8/rcc.html for a complete list). The
+# module provides default arguments for the "output file" and
+# "initialization function name" options. Other options can be set through
+# the <rccflags> build property. E.g. if you wish the compression settings
+# to be more aggressive than the defaults, you can apply them too all .qrc
+# files like this:
+#
+#   project my-qt-project :
+#               requirements
+#               <rccflags>"-compress 9 -threshold 10"
+#           ;
+#
+# Of course, this property can also be specified on individual targets.
+
 
 import modules ;
 import feature ;
@@ -71,6 +86,9 @@ feature.feature qt3support : off on : propagated link-incompatible ;
 # Valid are <qt>4.4 or <qt>4.5.0
 # Auto-detection via qmake sets '<qt>major.minor.patch'
 feature.feature qt : : propagated ;
+
+# Extra flags for rcc
+feature.feature rccflags : : free ;
 
 project.initialize $(__name__) ;
 project qt ;
@@ -701,11 +719,14 @@ actions moc.inc
 }
 
 
+# Get extra options for RCC
+flags qt4.rcc RCC_OPTIONS <rccflags> ;
+
 # Generates source files from resource files.
 #
 actions rcc
 {
-    $(.BINPREFIX[-1])/rcc $(>) -name $(>:B) -o $(<)
+    $(.BINPREFIX[-1])/rcc $(>) -name $(>:B) $(RCC_OPTIONS) -o $(<)
 }
 
 
