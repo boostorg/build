@@ -221,7 +221,7 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
             qt4.moc.inc : MOCCABLE_H : OBJ : <allow>qt4 ] ;
 
         # Generates .cpp files from .qrc files.
-        generators.register-standard qt4.rcc : QRC : CPP(qrc_%) ;
+        generators.register-standard qt4.rcc : QRC : CPP(qrc_%) : <allow>qt4 ;
 
         # dependency scanner for wrapped files.
         type.set-scanner QRC : qrc-scanner ;
