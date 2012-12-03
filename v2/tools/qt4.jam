@@ -34,7 +34,8 @@
 # compiled and linked in, you don't need any includes.
 #
 # This is consistent with Qt guidelines:
-# http://doc.trolltech.com/4.0/moc.html
+# http://qt-project.org/doc/qt-4.8/moc.html
+#
 
 import modules ;
 import feature ;
