@@ -243,6 +243,7 @@ if ( string.find(BoostBuild.get_toolset(), 'gcc') == 0 )or  \
 if "--extras" in sys.argv:
     tests.append("boostbook")
     tests.append("qt4")
+    tests.append("qt5")
     tests.append("example_qt4")
     # Requires ./whatever.py to work, so is not guaranted to work everywhere.
     tests.append("example_customization")
