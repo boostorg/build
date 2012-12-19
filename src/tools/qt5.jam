@@ -219,10 +219,10 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
 
         # The OBJ result type is a fake here too.
         generators.register [ new moc-h-5-generator
-            qt5.moc.inc : MOCCABLE_CPP : OBJ : <allow>qt5 ] ;
+            qt5.moc.inc : MOCCABLE5_CPP : OBJ : <allow>qt5 ] ;
 
         generators.register [ new moc-inc-5-generator
-            qt5.moc.inc : MOCCABLE_H : OBJ : <allow>qt5 ] ;
+            qt5.moc.inc : MOCCABLE5_H : OBJ : <allow>qt5 ] ;
 
         # Generates .cpp files from .qrc files.
         generators.register-standard qt5.rcc : QRC : CPP(qrc_%) : <allow>qt5 ;
@@ -518,7 +518,7 @@ class moc-h-5-generator : generator
 
     rule run ( project name ? : property-set : sources * )
     {
-        if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE_CPP
+        if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE5_CPP
         {
             name = [ $(sources[0]).name ] ;
             name = $(name:B) ;
@@ -553,7 +553,7 @@ class moc-inc-5-generator : generator
 
     rule run ( project name ? : property-set : sources * )
     {
-        if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE_H
+        if ! $(sources[2]) && [ $(sources[1]).type ] = MOCCABLE5_H
         {
             name = [ $(sources[0]).name ] ;
             name = $(name:B) ;
