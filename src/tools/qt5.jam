@@ -318,7 +318,7 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
 
        # debug versions on unix have to be built
        # separately and therefore have no suffix.
-       .suffix_version = "" ;
+       .infix_version = "" ;
        .suffix_debug = "" ;
 
        # Control flag for auto-configuration of the debug libraries.
@@ -387,7 +387,7 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
 
            lib QtCore : $(main)
                : # requirements
-                 <name>QtCore$(.suffix_debug)$(.suffix_version)
+                 <name>Qt$(.infix_version)Core$(.suffix_debug)
                  <variant>debug
                  $(target-requirements)
                : # default-build
