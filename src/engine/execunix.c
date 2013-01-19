@@ -21,7 +21,7 @@
 #include <sys/times.h>
 #include <sys/wait.h>
 
-#if defined(sun) || defined(__sun) || defined(linux)
+#if defined(sun) || defined(__sun)
     #include <wait.h>
 #endif
 
