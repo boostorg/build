@@ -43,7 +43,7 @@ if [ qt5.initialized ]
       # QtQuick version1
       [ link qtdeclarative.cpp /qt5//QtDeclarative ]
 
-      # QtQuick version2 
+      # QtQuick version2
       [ run qtquick.cpp /qt5//QtQuick : : $(CWD)/qtquick.qml ]
 
       # Help systems.
@@ -51,7 +51,7 @@ if [ qt5.initialized ]
 
       # Testing using QtTest. Simple sample
       # ToDo: better support for "automoc" aka '#include "qttest.moc"'
-      [ run qttest.cpp [ cast _ moccable-cpp : qttest.cpp ] /qt5//QtTest : : : <define>TEST_MOCK ]
+      [ run qttest.cpp [ cast _ moccable5-cpp : qttest.cpp ] /qt5//QtTest : : : <define>TEST_MOCK ]
 
       # Test moc rule
       [ run mock.cpp mock.h /qt5//QtCore : : : <define>TEST_MOCK ]
