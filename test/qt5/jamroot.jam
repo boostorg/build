@@ -36,6 +36,7 @@ if [ qt5.initialized ]
       [ link qtwidgets.cpp /qt5//QtWidgets ]
 
       # Multimedia toolkits.
+      [ link qtwebkit.cpp /qt5//QtWebKit ]
       [ link qtwebkitwidgets.cpp /qt5//QtWebKitWidgets ]
       [ link qtmultimedia.cpp /qt5//QtMultimedia ]
 

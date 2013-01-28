@@ -428,7 +428,8 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
     add-shared-library QtScriptTools : QtScript : QT_SCRIPTTOOLS_LIB : $(target-requirements) ;
 
     # WebKit
-    add-shared-library QtWebKitWidgets : QtGui : QT_WEBKIT_LIB : $(target-requirements) ;
+    add-shared-library QtWebKit        : QtGui : QT_WEBKIT_LIB : $(target-requirements) ;
+    add-shared-library QtWebKitWidgets : QtGui : QT_WEBKITWIDGETS_LIB : $(target-requirements) ;
 
     # Multimedia engine
     add-shared-library QtMultimedia : QtGui : QT_MULTIMEDIA_LIB : $(target-requirements) ;
