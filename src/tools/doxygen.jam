@@ -616,7 +616,7 @@ rule check-tools ( target )
 # User-level rule to generate HTML files or BoostBook XML from a set of headers
 # via Doxygen.
 #
-rule doxygen ( target : sources * : requirements * : default-build * :
+rule doxygen ( target : sources + : requirements * : default-build * :
     usage-requirements * )
 {
     freeze-config ;
