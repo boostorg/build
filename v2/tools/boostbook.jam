@@ -150,6 +150,11 @@ local rule lock-config ( )
     if ! $(.config-locked)
     {
         .config-locked = true ;
+
+        if $(.error-message)
+        {
+            print-error $(.error-message) ;
+        }
     }
 }
 
@@ -162,6 +167,18 @@ local rule modify-config ( )
         errors.user-error BoostBook configuration cannot be changed after it has
             been used. ;
     }
+}
+
+rule print-error ( location message * )
+{
+    ECHO error: at $(location) ;
+    ECHO error: $(message) ;
+    EXIT ;
+}
+
+rule make-error ( message * )
+{
+    return [ errors.nearest-user-location ] $(message) ;
 }
 
 
@@ -188,8 +205,8 @@ rule check-docbook-xsl-dir ( )
         if ! [ path.glob $(.docbook-xsl-dir) : common/common.xsl ]
         {
             import errors ;
-            errors.user-error BoostBook: could not find docbook XSL stylesheets
-                in: [ path.native $(.docbook-xsl-dir) ] ;
+            .error-message = [ make-error BoostBook: could not find docbook XSL stylesheets
+                in: [ path.native $(.docbook-xsl-dir) ] ] ;
         }
         else if $(.debug-configuration)
         {
@@ -207,8 +224,8 @@ rule check-docbook-dtd-dir ( )
         if ! [ path.glob $(.docbook-dtd-dir) : docbookx.dtd ]
         {
             import errors ;
-            errors.user-error BoostBook: could not find docbook DTD in: [
-                path.native $(.docbook-dtd-dir) ] ;
+            .error-message = [ make-error BoostBook: could not find docbook DTD in: [
+                path.native $(.docbook-dtd-dir) ] ] ;
         }
         else if $(.debug-configuration)
         {
@@ -223,14 +240,12 @@ rule check-boostbook-xsl-dir ( )
 {
     if ! $(.boostbook-xsl-dir)
     {
-        import errors ;
-        errors.user-error BoostBook: could not find boostbook XSL stylesheets. ;
+        .error-message = [ make-error BoostBook: could not find boostbook XSL stylesheets. ] ;
     }
     else if ! [ path.glob $(.boostbook-xsl-dir) : docbook.xsl ]
     {
-        import errors ;
-        errors.user-error BoostBook: could not find docbook XSL stylesheets in:
-            [ path.native $(.boostbook-xsl-dir) ] ;
+        .error-message = [ make-error  BoostBook: could not find docbook XSL stylesheets in:
+            [ path.native $(.boostbook-xsl-dir) ] ] ;
     }
     else if $(.debug-configuration)
     {
@@ -244,14 +259,12 @@ rule check-boostbook-dtd-dir ( )
 {
     if ! $(.boostbook-dtd-dir)
     {
-        import errors ;
-        errors.user-error BoostBook: could not find boostbook DTD. ;
+        .error-message = [ make-error BoostBook: could not find boostbook DTD. ] ;
     }
     else if ! [ path.glob $(.boostbook-dtd-dir) : boostbook.dtd ]
     {
-        import errors ;
-        errors.user-error BoostBook: could not find boostbook DTD in: [
-            path.native $(.boostbook-dtd-dir) ] ;
+        .error-message = [ make-error BoostBook: could not find boostbook DTD in: [
+            path.native $(.boostbook-dtd-dir) ] ] ;
     }
     else if $(.debug-configuration)
     {
@@ -266,8 +279,8 @@ rule check-boostbook-dir ( boostbook-dir ? )
     if $(boostbook-dir) && ! [ path.glob $(boostbook-dir) : xsl ]
     {
         import errors ;
-        errors.user-error BoostBook: could not find boostbook in: [ path.native
-            $(boostbook-dir) ] ;
+        .error-message = [ make-error BoostBook: could not find boostbook in: [ path.native
+            $(boostbook-dir) ] ] ;
     }
 }
 
