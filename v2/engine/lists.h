@@ -54,6 +54,7 @@
 typedef struct _list {
     union {
         int size;
+        struct _list * next;
         OBJECT * align;
     } impl;
 } LIST;
