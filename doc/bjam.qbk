@@ -44,9 +44,9 @@
 [template lines[items]'''<simplelist type='vert' columns='1'>'''[items]'''</simplelist>''']
 [template line[text]'''<member>'''[text]'''</member>''']
 
-[section:building Building BJam]
+[section:building Building B2]
 
-Installing =BJam= after building it is simply a matter of copying the
+Installing =B2= after building it is simply a matter of copying the
 generated executables someplace in your =PATH=. For building the executables
 there are a set of =build= bootstrap scripts to accomodate particular
 environments. The scripts take one optional argument, the name of the toolset
@@ -71,7 +71,7 @@ cd /jam source location/
 sh ./build.sh
 ]
 
-For the Boost.Jam source included with the Boost distribution the /jam source location/ is =BOOST_ROOT/tools/jam/src=.
+For the Boost.Jam source included with the Boost distribution the /jam source location/ is =BOOST_ROOT/tools/build/v2/engine=.
 
 If the scripts fail to detect an appropriate toolset to build with your particular toolset may not be auto-detectable. In that case, you can specify the toolset as the first argument, this assumes that the toolset is readily available in the =PATH=.
 
@@ -195,7 +195,7 @@ The supported toolsets, and whether they are auto-detected, are:
 
     Notes:
         [list
-            [li If =VCVARSALL.BAT= is called to set up the toolset, it is passed all the extra arguments, see below for what those arguments are. This can be used to build, for example, a Win64 specific version of =bjam=. Consult the VisualStudio documentation for what the possible argument values to the =VCVARSALL.BAT= are.]
+            [li If =VCVARSALL.BAT= is called to set up the toolset, it is passed all the extra arguments, see below for what those arguments are. This can be used to build, for example, a Win64 specific version of =b2=. Consult the VisualStudio documentation for what the possible argument values to the =VCVARSALL.BAT= are.]
             ]
         ]
 ]
@@ -334,7 +334,7 @@ The supported toolsets, and whether they are auto-detected, are:
 
 ]
 
-The built executables are placed in a subdirectory specific to your platform. For example, in Linux running on an Intel x86 compatible chip, the executables are placed in: "=bin.linuxx86=". The =bjam[.exe]= executable can be used to invoke Boost.Build.
+The built executables are placed in a subdirectory specific to your platform. For example, in Linux running on an Intel x86 compatible chip, the executables are placed in: "=bin.linuxx86=". The =b2[.exe]= executable can be used to invoke Boost.Build.
 
 The build scripts support additional invocation arguments for use by developers of Boost.Jam and for additional setup of the toolset. The extra arguments come after the toolset:
 
@@ -346,7 +346,7 @@ The build scripts support additional invocation arguments for use by developers 
 /build/ \[/toolset/\] \[/setup/\*\] \[--/option/+ /target/\*\]
 ]
 
-The arguments immediately after the toolset are passed directly to the setup script of the toolset, if available and if it needs to be invoked. This allows one to configure the toolset ass needed to do non-default builds of =bjam=. For example to build a Win64 version with =vc8=. See the toolset descriptiona above for when particular toolsets support this.
+The arguments immediately after the toolset are passed directly to the setup script of the toolset, if available and if it needs to be invoked. This allows one to configure the toolset ass needed to do non-default builds of =b2=. For example to build a Win64 version with =vc8=. See the toolset descriptiona above for when particular toolsets support this.
 
 The arguments starting with the "=--option=" forms are passed to the =build.jam= script and are used to further customize what gets built. Options and targets supported by the =build.jam= script:
 
@@ -362,9 +362,9 @@ The arguments starting with the "=--option=" forms are passed to the =build.jam=
     [[[literal --with-python=/path/]]
         [Enables Python integration, given a path to the Python libraries.]]
     [[[literal --gc]]
-        [Enables use of the Boehm Garbage Collector. The build will look for the Boehm-GC source in a "boehm_gc" subdirectory from the =bjam= sources.]]
+        [Enables use of the Boehm Garbage Collector. The build will look for the Boehm-GC source in a "boehm_gc" subdirectory from the =b2= sources.]]
     [[[literal --duma]]
-        [Enables use of the DUMA (Detect Uintended Memory Access) debugging memory allocator. The build expects to find the DUMA source files in a "duma" subdirectory from the =bjam= sources.]]
+        [Enables use of the DUMA (Detect Uintended Memory Access) debugging memory allocator. The build expects to find the DUMA source files in a "duma" subdirectory from the =b2= sources.]]
     [[[literal --toolset-root=/path/]]
         [Indicates where the toolset used to build is located. This option is passed in by the bootstrap (=build.bat= or =build.sh=) script.]]
     [[[literal --show-locate-target]]
@@ -381,15 +381,15 @@ The arguments starting with the "=--option=" forms are passed to the =build.jam=
 
 [section:language Language]
 
-=BJam= has an interpreted, procedural language. Statements in =bjam= are rule (procedure) definitions, rule invocations, flow-of-control structures, variable assignments, and sundry language support.
+=B2= has an interpreted, procedural language. Statements in =b2= are rule (procedure) definitions, rule invocations, flow-of-control structures, variable assignments, and sundry language support.
 
 [section:lexical Lexical Features]
 
-=BJam= treats its input files as whitespace-separated tokens, with two exceptions: double quotes (") can enclose whitespace to embed it into a token, and everything between the matching curly braces ({}) in the definition of a rule action is treated as a single string. A backslash (\\) can escape a double quote, or any single whitespace character.
+=B2= treats its input files as whitespace-separated tokens, with two exceptions: double quotes (") can enclose whitespace to embed it into a token, and everything between the matching curly braces ({}) in the definition of a rule action is treated as a single string. A backslash (\\) can escape a double quote, or any single whitespace character.
 
-=BJam= requires whitespace (blanks, tabs, or newlines) to surround all tokens, including the colon (:) and semicolon (;) tokens.
+=B2= requires whitespace (blanks, tabs, or newlines) to surround all tokens, including the colon (:) and semicolon (;) tokens.
 
-=BJam= keywords (an mentioned in this document) are reserved and generally
+=B2= keywords (an mentioned in this document) are reserved and generally
 must be quoted with double quotes (") to be used as arbitrary tokens, such as
 variable or target names.
 
@@ -399,9 +399,9 @@ Comments start with the [^#] character and extend until the end of line.
 
 [section:target Targets]
 
-The essential =bjam= data entity is a target. Build targets are files to be updated. Source targets are the files used in updating built targets. Built targets and source targets are collectively referred to as file targets, and frequently built targets are source targets for other built targets. Pseudotargets are symbols representing dependencies on other targets, but which are not themselves associated with any real file.
+The essential =b2= data entity is a target. Build targets are files to be updated. Source targets are the files used in updating built targets. Built targets and source targets are collectively referred to as file targets, and frequently built targets are source targets for other built targets. Pseudotargets are symbols representing dependencies on other targets, but which are not themselves associated with any real file.
 
-A file target's identifier is generally the file's name, which can be absolutely rooted, relative to the directory of =bjam='s invocation, or simply local (no directory). Most often it is the last case, and the actual file path is bound using the =$(SEARCH)= and =$(LOCATE)= special variables. See [link jam.language.variables.builtins.search SEARCH and LOCATE Variables] below. A local filename is optionally qualified with grist, a string value used to assure uniqueness. A file target with an identifier of the form /file(member)/ is a library member (usually an =ar=(1) archive on Unix).
+A file target's identifier is generally the file's name, which can be absolutely rooted, relative to the directory of =b2='s invocation, or simply local (no directory). Most often it is the last case, and the actual file path is bound using the =$(SEARCH)= and =$(LOCATE)= special variables. See [link jam.language.variables.builtins.search SEARCH and LOCATE Variables] below. A local filename is optionally qualified with grist, a string value used to assure uniqueness. A file target with an identifier of the form /file(member)/ is a library member (usually an =ar=(1) archive on Unix).
 
 [section Binding Detection]
 
@@ -419,11 +419,11 @@ This facility is useful for correct header file scanning, since many compilers w
 
 [section:rules Rules]
 
-The basic =bjam= language entity is called a rule. A rule is defined in two parts: the procedure and the actions. The procedure is a body of jam statements to be run when the rule is invoked; the actions are the OS shell commands to execute when updating the built targets of the rule.
+The basic =b2= language entity is called a rule. A rule is defined in two parts: the procedure and the actions. The procedure is a body of jam statements to be run when the rule is invoked; the actions are the OS shell commands to execute when updating the built targets of the rule.
 
 Rules can return values, which can be expanded into a list with "[ /rule/ /args/ ... ]". A rule's value is the value of its last statement, though only the following statements have values: 'if' (value of the leg chosen), 'switch' (value of the case chosen), set (value of the resulting variable), and 'return' (value of its arguments). Note that 'return' doesn't actually cause a return, i.e., is a no-op unless it is the last statement of the last block executed within rule body.
 
-The =bjam= statements for defining and invoking rules are as follows:
+The =b2= statements for defining and invoking rules are as follows:
 
 Define a rule's procedure, replacing any previous definition.
 
@@ -534,7 +534,7 @@ Each name in a list of formal arguments (separated by "=:=" in the rule declarat
 [[=+=] [Bind to one or more unbound elements of the actual argument.]]
 ]
 
-The actual and formal arguments are checked for inconsistencies, which cause Jam to exit with an error code:
+The actual and formal arguments are checked for inconsistencies, which cause =b2= to exit with an error code:
 
 [pre
 ### argument error
@@ -553,7 +553,7 @@ If you omit the list of formal arguments, all checking is bypassed as in "classi
 
 [section:builtins Built-in Rules]
 
-=BJam= has a growing set of built-in rules, all of which are pure procedure rules without updating actions. They are in three groups: the first builds the dependency graph; the second modifies it; and the third are just utility rules.
+=B2= has a growing set of built-in rules, all of which are pure procedure rules without updating actions. They are in three groups: the first builds the dependency graph; the second modifies it; and the third are just utility rules.
 
 [section Dependency Building]
 
@@ -588,7 +588,7 @@ INCLUDES foo.c : foo.h ;
 
 [section Modifying Binding]
 
-The six rules =ALWAYS=, =LEAVES=, =NOCARE=, =NOTFILE=, =NOUPDATE=, and =TEMPORARY= modify the dependency graph so that =bjam= treats the targets differently during its target binding phase. See Binding above. Normally, =bjam= updates a target if it is missing, if its filesystem modification time is older than any of its dependencies (recursively), or if any of its dependencies are being updated. This basic behavior can be changed by invoking the following rules:
+The six rules =ALWAYS=, =LEAVES=, =NOCARE=, =NOTFILE=, =NOUPDATE=, and =TEMPORARY= modify the dependency graph so that =b2= treats the targets differently during its target binding phase. See Binding above. Normally, =b2= updates a target if it is missing, if its filesystem modification time is older than any of its dependencies (recursively), or if any of its dependencies are being updated. This basic behavior can be changed by invoking the following rules:
 
 [section =ALWAYS= ]
 
@@ -616,7 +616,7 @@ Makes each of /targets/ depend only on its leaf sources, and not on any intermed
 rule NOCARE ( /targets/ * )
 ]
 
-Causes =bjam= to ignore /targets/ that neither can be found nor have updating actions to build them. Normally for such targets =bjam= issues a warning and then skips other targets that depend on these missing targets. The =HdrRule= in =Jambase= uses =NOCARE= on the header file names found during header file scanning, to let =bjam= know that the included files may not exist. For example, if an `#include` is within an `#ifdef`, the included file may not actually be around.
+Causes =b2= to ignore /targets/ that neither can be found nor have updating actions to build them. Normally for such targets =b2= issues a warning and then skips other targets that depend on these missing targets. The =HdrRule= in =Jambase= uses =NOCARE= on the header file names found during header file scanning, to let =b2= know that the included files may not exist. For example, if an `#include` is within an `#ifdef`, the included file may not actually be around.
 
 [warning For targets with build actions: if their build actions exit with a nonzero return code, dependent targets will still be built.]
 
@@ -628,7 +628,7 @@ Causes =bjam= to ignore /targets/ that neither can be found nor have updating ac
 rule NOTFILE ( /targets/ * )
 ]
 
-Marks /targets/ as pseudotargets and not real files. No timestamp is checked, and so the actions on such a target are only executed if the target's dependencies are updated, or if the target is also marked with =ALWAYS=. The default =bjam= target "=all=" is a pseudotarget. In =Jambase=, =NOTFILE= is used to define several addition convenient pseudotargets.
+Marks /targets/ as pseudotargets and not real files. No timestamp is checked, and so the actions on such a target are only executed if the target's dependencies are updated, or if the target is also marked with =ALWAYS=. The default =b2= target "=all=" is a pseudotarget. In =Jambase=, =NOTFILE= is used to define several addition convenient pseudotargets.
 
 [endsect]
 
@@ -648,7 +648,7 @@ Causes the timestamps on /targets/ to be ignored. This has two effects: first, o
 rule TEMPORARY ( /targets/ * )
 ]
 
-Marks /targets/ as temporary, allowing them to be removed after other targets that depend upon them have been updated. If a =TEMPORARY= target is missing, =bjam= uses the timestamp of the target's parent. =Jambase= uses =TEMPORARY= to mark object files that are archived in a library after they are built, so that they can be deleted after they are archived.
+Marks /targets/ as temporary, allowing them to be removed after other targets that depend upon them have been updated. If a =TEMPORARY= target is missing, =b2= uses the timestamp of the target's parent. =Jambase= uses =TEMPORARY= to mark object files that are archived in a library after they are built, so that they can be deleted after they are archived.
 
 [endsect]
 
@@ -673,7 +673,7 @@ succeeded. If it succeeds, dependent targets are skipped.
 rule RMOLD ( /targets/ * )
 ]
 
-=BJam= removes any target files that may exist on disk when the rule used to build those targets fails. However, targets whose dependencies fail to build are not removed by default. The =RMOLD= rule causes its arguments to be removed if any of their dependencies fail to build.
+=B2= removes any target files that may exist on disk when the rule used to build those targets fails. However, targets whose dependencies fail to build are not removed by default. The =RMOLD= rule causes its arguments to be removed if any of their dependencies fail to build.
 
 [endsect]
 
@@ -683,7 +683,7 @@ rule RMOLD ( /targets/ * )
 rule ISFILE ( /targets/ * )
 ]
 
-=ISFILE= marks targets as required to be files. This changes the way =bjam= searches for the target such that it ignores matches for file system items that are not files, like directories. This makes it possible to avoid `#include "exception"` matching if one happens to have a directory named exception in the header search path.
+=ISFILE= marks targets as required to be files. This changes the way =b2= searches for the target such that it ignores matches for file system items that are not files, like directories. This makes it possible to avoid `#include "exception"` matching if one happens to have a directory named exception in the header search path.
 
 [warning This is currently not fully implemented.]
 
@@ -693,7 +693,7 @@ rule ISFILE ( /targets/ * )
 
 [section Utility]
 
-The two rules =ECHO= and =EXIT= are utility rules, used only in =bjam='s parsing phase.
+The two rules =ECHO= and =EXIT= are utility rules, used only in =b2='s parsing phase.
 
 [section =ECHO= ]
 
@@ -927,7 +927,7 @@ are updated even if the =-n= parameter is specified on the command line.
 
 [section Flow-of-Control]
 
-=BJam= has several simple flow-of-control statements:
+=B2= has several simple flow-of-control statements:
 
 [pre
 for /var/ in /list/ { /statements/ }
@@ -986,9 +986,9 @@ Does the obvious; the =else= clause is optional. /cond/ is built of:
 include /file/ ;
 ]
 
-Causes =bjam= to read the named /file/. The /file/ is bound like a regular target (see Binding above) but unlike a regular target the include /file/ cannot be built.
+Causes =b2= to read the named /file/. The /file/ is bound like a regular target (see Binding above) but unlike a regular target the include /file/ cannot be built.
 
-The include /file/ is inserted into the input stream during the parsing phase. The primary input file and all the included file(s) are treated as a single file; that is, jam infers no scope boundaries from included files.
+The include /file/ is inserted into the input stream during the parsing phase. The primary input file and all the included file(s) are treated as a single file; that is, =b2= infers no scope boundaries from included files.
 
 [pre
 local /vars/ \[ = /values/ \] ;
@@ -1042,7 +1042,7 @@ Repeatedly execute /statements/ while /cond/ remains true upon entry. (See the d
 
 [section Variables]
 
-=BJam= variables are lists of zero or more elements, with each element being a string value. An undefined variable is indistinguishable from a variable with an empty list, however, a defined variable may have one more elements which are null strings. All variables are referenced as [^$(/variable/)].
+=B2= variables are lists of zero or more elements, with each element being a string value. An undefined variable is indistinguishable from a variable with an empty list, however, a defined variable may have one more elements which are null strings. All variables are referenced as [^$(/variable/)].
 
 Variables are either global or target-specific. In the latter case, the variable takes on the given value only during the updating of the specific target.
 
@@ -1061,11 +1061,11 @@ The first two forms set /variable/ globally. The third and forth forms set a tar
 
 Variables referenced in updating commands will be replaced with their values; target-specific values take precedence over global values. Variables passed as arguments (=$(1)= and =$(2)=) to actions are replaced with their bound values; the "=bind=" modifier can be used on actions to cause other variables to be replaced with bound values. See Action Modifiers above.
 
-=BJam= variables are not re-exported to the environment of the shell that executes the updating actions, but the updating actions can reference =bjam= variables with [^$(/variable/)].
+=B2= variables are not re-exported to the environment of the shell that executes the updating actions, but the updating actions can reference =b2= variables with [^$(/variable/)].
 
 [section:expansion Variable Expansion]
 
-During parsing, =bjam= performs variable expansion on each token that is not a keyword or rule name. Such tokens with embedded variable references are replaced with zero or more tokens. Variable references are of the form [^$(/v/)] or [^$(/vm/)], where ['v] is the variable name, and ['m] are optional modifiers.
+During parsing, =b2= performs variable expansion on each token that is not a keyword or rule name. Such tokens with embedded variable references are replaced with zero or more tokens. Variable references are of the form [^$(/v/)] or [^$(/vm/)], where ['v] is the variable name, and ['m] are optional modifiers.
 
 Variable expansion in a rule's actions is similar to variable expansion in statements, except that the action string is tokenized at whitespace regardless of quoting.
 
@@ -1208,7 +1208,7 @@ ECHO $(y) ;     # prints "4 5 6"
 
 [section:atfile Generated File Expansion]
 
-During expansion of expressions =bjam= also looks for subexpressions of the form
+During expansion of expressions =b2= also looks for subexpressions of the form
 =@(filename:E=filecontents)= and replaces the expression with =filename= after
 creating the given file with the contents set to =filecontents=. This is useful
 for creating compiler response files, and other "internal" files. The expansion
@@ -1219,7 +1219,7 @@ files during any of the three build phases.
 
 [section:builtins Built-in Variables]
 
-This section discusses variables that have special meaning to =bjam=. All of
+This section discusses variables that have special meaning to =b2=. All of
 these must be defined or used in the global module -- using those variables
 inside a named module will not have the desired effect.
 See [link jam.language.modules Modules].
@@ -1236,7 +1236,7 @@ Rooted (absolute path) file targets are bound as is. Unrooted file target names 
 * If =$(SEARCH)= is set then the target is bound to the first directory in =$(SEARCH)= where the target file already exists.
 * If the =$(SEARCH)= search fails, the target is bound relative to the current directory anyhow.
 
-Both =$(SEARCH)= and =$(LOCATE)= should be set target-specific and not globally. If they were set globally, =bjam= would use the same paths for all file binding, which is not likely to produce sane results. When writing your own rules, especially ones not built upon those in Jambase, you may need to set =$(SEARCH)= or =$(LOCATE)= directly. Almost all of the rules defined in Jambase set =$(SEARCH)= and =$(LOCATE)= to sensible values for sources they are looking for and targets they create, respectively.
+Both =$(SEARCH)= and =$(LOCATE)= should be set target-specific and not globally. If they were set globally, =b2= would use the same paths for all file binding, which is not likely to produce sane results. When writing your own rules, especially ones not built upon those in Jambase, you may need to set =$(SEARCH)= or =$(LOCATE)= directly. Almost all of the rules defined in Jambase set =$(SEARCH)= and =$(LOCATE)= to sensible values for sources they are looking for and targets they create, respectively.
 
 [endsect]
 
@@ -1247,12 +1247,12 @@ These two variables control header file scanning. =$(HDRSCAN)= is an
 inclusion statements in source files. =Jambase= uses =$(HDRPATTERN)= as the
 pattern for =$(HDRSCAN)=. =$(HDRRULE)= is the name of a rule to invoke with
 the results of the scan: the scanned file is the target, the found files are
-the sources. This is the only place where =bjam= invokes a rule through a
+the sources. This is the only place where =b2= invokes a rule through a
 variable setting.
 
 Both =$(HDRSCAN)= and =$(HDRRULE)= must be set for header file scanning to take place, and they should be set target-specific and not globally. If they were set globally, all files, including executables and libraries, would be scanned for header file include statements.
 
-The scanning for header file inclusions is not exact, but it is at least dynamic, so there is no need to run something like =makedepend(GNU)= to create a static dependency file. The scanning mechanism errs on the side of inclusion (i.e., it is more likely to return filenames that are not actually used by the compiler than to miss include files) because it can't tell if `#include` lines are inside `#ifdefs` or other conditional logic. In =Jambase=, =HdrRule= applies the =NOCARE= rule to each header file found during scanning so that if the file isn't present yet doesn't cause the compilation to fail, =bjam= won't care.
+The scanning for header file inclusions is not exact, but it is at least dynamic, so there is no need to run something like =makedepend(GNU)= to create a static dependency file. The scanning mechanism errs on the side of inclusion (i.e., it is more likely to return filenames that are not actually used by the compiler than to miss include files) because it can't tell if `#include` lines are inside `#ifdefs` or other conditional logic. In =Jambase=, =HdrRule= applies the =NOCARE= rule to each header file found during scanning so that if the file isn't present yet doesn't cause the compilation to fail, =b2= won't care.
 
 Also, scanning for regular expressions only works where the included file name is literally in the source file. It can't handle languages that allow including files using variable names (as the =Jam= language itself does).
 
@@ -1292,9 +1292,9 @@ A number of Jam built-in variables can be used to identify runtime platform:
 [section Jam Version]
 
 [variablelist
-[[=JAMDATE=]                [Time and date at =bjam= start-up as an ISO-8601 UTC value.]]
+[[=JAMDATE=]                [Time and date at =b2= start-up as an ISO-8601 UTC value.]]
 [[=JAMUNAME=]               [Ouput of uname(1) command (Unix only)]]
-[[=JAMVERSION=]             [=bjam= version, currently ":version:"]]
+[[=JAMVERSION=]             [=b2= version, currently ":version:"]]
 [[=JAM_VERSION=]            [A predefined global variable with two elements indicates the version number of Boost Jam. Boost Jam versions start at "=03=" "=00=". Earlier versions of =Jam= do not automatically define =JAM_VERSION=.]]
 ]
 
@@ -1302,7 +1302,7 @@ A number of Jam built-in variables can be used to identify runtime platform:
 
 [section JAMSHELL]
 
-When =bjam= executes a rule's action block, it forks and execs a shell, passing the action block as an argument to the shell. The invocation of the shell can be controlled by =$(JAMSHELL)=. The default on Unix is, for example:
+When =b2= executes a rule's action block, it forks and execs a shell, passing the action block as an argument to the shell. The invocation of the shell can be controlled by =$(JAMSHELL)=. The default on Unix is, for example:
 
 [pre
 JAMSHELL = /bin/sh -c % ;
@@ -1310,9 +1310,9 @@ JAMSHELL = /bin/sh -c % ;
 
 The =%= is replaced with the text of the action block.
 
-=BJam= does not directly support building in parallel across multiple hosts, since that is heavily dependent on the local environment. To build in parallel across multiple hosts, you need to write your own shell that provides access to the multiple hosts. You then reset =$(JAMSHELL)= to reference it.
+=B2= does not directly support building in parallel across multiple hosts, since that is heavily dependent on the local environment. To build in parallel across multiple hosts, you need to write your own shell that provides access to the multiple hosts. You then reset =$(JAMSHELL)= to reference it.
 
-Just as =bjam= expands a =%= to be the text of the rule's action block, it expands a =!= to be the multi-process slot number. The slot number varies between 1 and the number of concurrent jobs permitted by the =-j= flag given on the command line. Armed with this, it is possible to write a multiple host shell. For example:
+Just as =b2= expands a =%= to be the text of the rule's action block, it expands a =!= to be the multi-process slot number. The slot number varies between 1 and the number of concurrent jobs permitted by the =-j= flag given on the command line. Armed with this, it is possible to write a multiple host shell. For example:
 
 [pre
 #!/bin/sh
@@ -1340,7 +1340,7 @@ esac
 [section:actionrule =__TIMING_RULE__= and =__ACTION_RULE__=]
 
 The =__TIMING_RULE__= and =__ACTION_RULE__= can be set to the name of a rule
-for =bjam= to call *after* an action completes for a target. They both give
+for =b2= to call *after* an action completes for a target. They both give
 diagnostic information about the action that completed. For =__TIMING_RULE__=
 the rule is called as:
 
@@ -1357,7 +1357,7 @@ The arguments for both are:
         [Any values following the rule name in the =__TIMING_RULE__= or =__ACTION_RULE__=
         are passed along here.]]
     [[[^target]]
-        [The =bjam= target that was built.]]
+        [The =b2= target that was built.]]
     [[[^command]]
         [The text of the executed command in the action body.]]
     [[[^status]]
@@ -1586,7 +1586,7 @@ rule DELETE_MODULE ( /module/ ? )
 
 [section Diagnostics]
 
-In addition to generic error messages, =bjam= may emit one of the following:
+In addition to generic error messages, =b2= may emit one of the following:
 
 [pre warning: unknown rule X]
 
@@ -1626,7 +1626,7 @@ A target that is not a dependency of any other target is being referenced with =
 
 [pre X removed]
 
-=BJam= removed a partially built target after being interrupted.
+=B2= removed a partially built target after being interrupted.
 
 [endsect]
 
