@@ -126,6 +126,7 @@ rule init (
     #   <setup-amd64>
     #   <setup-i386>
     #   <setup-ia64>
+    #   <setup-arm>
     #       Platform specific setup command to invoke before running any of the
     #     msvc tools used when builing a target for a specific platform, e.g.
     #     when building a 32 or 64 bit executable.
@@ -262,6 +263,7 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : /MACHINE:X64 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : /MACHINE:X86 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : /MACHINE:ARM ;
 
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
@@ -787,7 +789,7 @@ local rule configure-really ( version ? : options * )
 
         local below-8.0 = [ MATCH ^([67]\\.) : $(version) ] ;
 
-        local cpu = i386 amd64 ia64 ;
+        local cpu = i386 amd64 ia64 arm ;
         if $(below-8.0)
         {
             cpu = i386 ;
@@ -796,6 +798,7 @@ local rule configure-really ( version ? : options * )
         local setup-amd64 ;
         local setup-i386 ;
         local setup-ia64 ;
+        local setup-arm ;
 
         if $(command)
         {
@@ -849,6 +852,7 @@ local rule configure-really ( version ? : options * )
             local default-setup-amd64 = vcvarsx86_amd64.bat ;
             local default-setup-i386  = vcvars32.bat ;
             local default-setup-ia64  = vcvarsx86_ia64.bat ;
+            local default-setup-arm   = vcvarsx86_arm.bat ;
 
             # http://msdn2.microsoft.com/en-us/library/x4d2c09s(VS.80).aspx and
             # http://msdn2.microsoft.com/en-us/library/x4d2c09s(vs.90).aspx
@@ -857,6 +861,7 @@ local rule configure-really ( version ? : options * )
             local default-global-setup-options-amd64 = x86_amd64 ;
             local default-global-setup-options-i386  = x86 ;
             local default-global-setup-options-ia64  = x86_ia64 ;
+            local default-global-setup-options-arm   = x86_arm ;
 
             # When using 64-bit Windows, and targeting 64-bit, it is possible to
             # use a native 64-bit compiler, selected by the "amd64" & "ia64"
@@ -938,6 +943,7 @@ local rule configure-really ( version ? : options * )
         local default-assembler-amd64 = ml64 ;
         local default-assembler-i386  = "ml -coff" ;
         local default-assembler-ia64  = ias ;
+        local default-assembler-ia64  = armasm ;
 
         assembler = [ feature.get-values <assembler> : $(options) ] ;
 
@@ -1355,6 +1361,9 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .cpu-arch-ia64 =
     <architecture>ia64/<address-model>
     <architecture>ia64/<address-model>64 ;
+
+.cpu-arch-arm =
+    <architecture>arm/<address-model>32 ;
 
 
 # Supported CPU types (only Itanium optimization options are supported from
