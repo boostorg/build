@@ -246,7 +246,7 @@ local rule print-help-top ( )
 {
     print.section "General command line usage" ;
 
-    print.text "    bjam [options] [properties] [targets]
+    print.text "    b2 [options] [properties] [targets]
 
   Options, properties and targets can be specified in any order.
       " ;
@@ -281,8 +281,8 @@ local rule print-help-top ( )
 #
 local rule print-help-usage ( )
 {
-    print.section "Boost.Jam Usage"
-        "bjam [ options... ] targets..."
+    print.section "Boost.Build Usage"
+        "b2 [ options... ] targets..."
         ;
     print.list-start ;
     print.list-item -a;
@@ -306,9 +306,9 @@ local rule print-help-usage ( )
     print.list-item -tx;
         Rebuild the target '"x"', even if it is up-to-date. ;
     print.list-item -v;
-        Display the version of bjam. ;
+        Display the version of b2. ;
     print.list-item --x;
-        Any option not explicitly handled by Boost.Jam remains available to
+        Any option not explicitly handled by Boost.Build remains available to
         build scripts using the '"ARGV"' variable. ;
     print.list-item --abbreviate-paths;
         Use abbreviated paths for targets. ;

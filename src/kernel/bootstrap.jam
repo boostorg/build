@@ -63,7 +63,7 @@ module .ENVIRON
     if ! $(TMPNAME)
     {
         ECHO "error: no @() functionality found" ;
-        ECHO "error: your version of bjam is likely out of date" ;
+        ECHO "error: your version of b2 is likely out of date" ;
         ECHO "error: please get a fresh version from SVN." ;
         EXIT ;
     }
@@ -76,7 +76,7 @@ if "\n" = "n"
     {
         ECHO "warning: escape sequences are not supported" ;
         ECHO "warning: this will cause major misbehaviour on cygwin" ;
-        ECHO "warning: your version of bjam is likely out of date" ;
+        ECHO "warning: your version of b2 is likely out of date" ;
         ECHO "warning: please get a fresh version from SVN." ;
     }
 }
