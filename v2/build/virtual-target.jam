@@ -621,12 +621,12 @@ class file-target : abstract-file-target
             # For a real file target, we create a fake target depending on the
             # real target. This allows us to run
             #
-            #    bjam hello.o
+            #    b2 hello.o
             #
             # without trying to guess the name of the real target. Note that the
             # target has no directory name and uses a special <e> grist.
             #
-            # First, that means that "bjam hello.o" will build all known hello.o
+            # First, that means that "b2 hello.o" will build all known hello.o
             # targets. Second, the <e> grist makes sure this target will not be
             # confused with other targets, for example, if we have subdir 'test'
             # with target 'test' in it that includes a 'test.o' file, then the
@@ -634,7 +634,7 @@ class file-target : abstract-file-target
             # will be <ptest/bin/gcc/debug>test.o and the target we create below
             # will be <e>test.o
             DEPENDS $(target:G=e) : $(target) ;
-            # Allow bjam <path-to-file>/<file> to work. This will not catch all
+            # Allow b2 <path-to-file>/<file> to work. This will not catch all
             # possible ways to refer to the path (relative/absolute, extra ".",
             # various "..", but should help in obvious cases.
             DEPENDS $(target:G=e:R=$(path)) : $(target) ;
@@ -842,15 +842,15 @@ class action
         self.actual-sources +=
             [ actualize-source-type $(sources) : $(property-set) ] ;
 
-        # This is used to help bjam find dependencies in generated headers and
+        # This is used to help b2 find dependencies in generated headers and
         # other main targets, e.g. in:
         #
         #   make a.h : ....... ;
         #   exe hello : hello.cpp : <implicit-dependency>a.h ;
         #
-        # For bjam to find the dependency the generated target must be
+        # For b2 to find the dependency the generated target must be
         # actualized (i.e. have its Jam target constructed). In the above case,
-        # if we are building just hello ("bjam hello"), 'a.h' will not be
+        # if we are building just hello ("b2 hello"), 'a.h' will not be
         # actualized unless we do it here.
         local implicit = [ $(self.properties).get <implicit-dependency> ] ;
         for local i in $(implicit)
