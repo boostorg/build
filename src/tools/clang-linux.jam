@@ -99,10 +99,10 @@ rule compile.c++ ( targets * : sources * : properties * ) {
 
   if $(pth-file) {
     DEPENDS $(<) : $(pth-file) ;
-    compile.c++.with-pch $(targets) : $(sources) ;
+    clang-linux.compile.c++.with-pch $(targets) : $(sources) ;
   }
   else {
-    compile.c++.without-pth $(targets) : $(sources) ;
+    clang-linux.compile.c++.without-pth $(targets) : $(sources) ;
   }
 }
 
@@ -125,10 +125,10 @@ rule compile.c ( targets * : sources * : properties * )
 
   if $(pth-file) {
     DEPENDS $(<) : $(pth-file) ;
-    compile.c.with-pch $(targets) : $(sources) ;
+    clang-linux.compile.c.with-pch $(targets) : $(sources) ;
   }
   else {
-    compile.c.without-pth $(targets) : $(sources) ;
+    clang-linux.compile.c.without-pth $(targets) : $(sources) ;
   }
 }
 
