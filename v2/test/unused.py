@@ -9,7 +9,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(["-d+2"])
+t = BoostBuild.Tester(["-d+2"], use_test_config=False)
 
 t.write("a.cpp", "int main() {}\n")
 t.write("b.cpp", "\n")

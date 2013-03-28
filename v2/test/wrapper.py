@@ -10,7 +10,7 @@
 import BoostBuild
 
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 t.write("jamfile.jam", """
 my-test : test.cpp ;

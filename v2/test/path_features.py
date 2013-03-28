@@ -9,7 +9,7 @@
 import BoostBuild
 
 def test_basic():
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "lib a : a.cpp : <include>. ;")
     t.write("a.cpp", """\
@@ -55,7 +55,7 @@ def test_absolute_paths():
     appeared only when building targets in subprojects.
 
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "build-project x ;")
     t.write("x/jamfile.jam", """\
@@ -80,7 +80,7 @@ int main() {}
 def test_ordered_paths():
     """Test that "&&" in path features is handled correctly."""
 
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "build-project sub ;")
     t.write("sub/jamfile.jam", "exe a : a.cpp : <include>../h1&&../h2 ;")
@@ -96,7 +96,7 @@ int main() { return OK; }
 
 
 def test_paths_set_by_indirect_conditionals():
-    t = BoostBuild.Tester(pass_d0=False)
+    t = BoostBuild.Tester(pass_d0=False, use_test_config=False)
 
     header = "child_dir/folder_to_include/some_header.h"
 

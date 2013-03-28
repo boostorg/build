@@ -12,7 +12,7 @@ import BoostBuild
 import os
 import string
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 
 # To start with, we have to prepare a library to link with.

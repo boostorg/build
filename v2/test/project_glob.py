@@ -11,7 +11,7 @@ import BoostBuild
 
 
 def test_basic():
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "")
     t.write("d1/a.cpp", "int main() {}\n")
@@ -45,7 +45,7 @@ def test_source_location():
     relative to the source location.
 
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "")
     t.write("d1/a.cpp", "very bad non-compilable file\n")
@@ -74,7 +74,7 @@ def test_wildcards_and_exclusion_patterns():
      patterns.
 
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "")
     t.write("d1/src/foo/a.cpp", "void bar(); int main() { bar(); }\n")
@@ -101,7 +101,7 @@ void force_import_lib_creation() {}
 def test_glob_tree():
     """Test that 'glob-tree' works."""
 
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "")
     t.write("d1/src/foo/a.cpp", "void bar(); int main() { bar(); }\n")
@@ -128,7 +128,7 @@ void force_import_lib_creation() {}
 def test_directory_names_in_glob_tree():
     """Test that directory names in patterns for 'glob-tree' are rejected."""
 
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "")
     t.write("d1/src/a.cpp", "very bad non-compilable file\n")
@@ -156,7 +156,7 @@ void force_import_lib_creation() {}
 def test_glob_with_absolute_names():
     """Test that 'glob' works with absolute names."""
 
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "")
     t.write("d1/src/a.cpp", "very bad non-compilable file\n")
@@ -190,7 +190,7 @@ def test_glob_excludes_in_subdirectory():
     subdirectory.
 
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", "build-project p ;")
     t.write("p/p.c", "int main() {}\n")

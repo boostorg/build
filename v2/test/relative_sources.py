@@ -9,7 +9,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 # Test that relative path to source, 'src', is preserved.
 t.write("jamroot.jam", "exe a : src/a.cpp ;")

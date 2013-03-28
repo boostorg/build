@@ -101,7 +101,7 @@ int main() {}
 
 # We do not pass the '-d0' option to Boost Build here to get more detailed
 # information in case of failure.
-t = BoostBuild.Tester(pass_d0=False)
+t = BoostBuild.Tester(pass_d0=False, use_test_config=False)
 
 test_alias_rule(t)
 test_alias_source_usage_requirements(t)

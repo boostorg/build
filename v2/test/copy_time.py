@@ -11,7 +11,7 @@
 
 import BoostBuild
 
-tester = BoostBuild.Tester()
+tester = BoostBuild.Tester(use_test_config=False)
 
 tester.write("test1.cpp", """\
 template<bool, int M, class Next>

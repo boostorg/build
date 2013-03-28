@@ -11,7 +11,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 # In order to correctly link this app, 'b.cpp', created by a 'make' rule, should
 # be compiled.

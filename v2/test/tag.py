@@ -114,7 +114,7 @@ __declspec (dllexport) void x () {}
 #
 ###############################################################################
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 test_tag_property(t)
 test_folder_with_dot_in_name(t)

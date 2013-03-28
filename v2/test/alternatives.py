@@ -10,7 +10,7 @@
 import BoostBuild
 import string
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 # Test that basic alternatives selection works.
 t.write("jamroot.jam", "")
