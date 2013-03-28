@@ -19,6 +19,7 @@ import modules ;
 import os ;
 import path ;
 import project ;
+import property ;
 import property-set ;
 import regex ;
 import sequence ;
@@ -428,29 +429,17 @@ local rule process-explicit-toolset-requests
     for local t in $(option-toolsets) $(feature-toolsets)
     {
         # Parse toolset-version/properties.
-        local (t-v,t,v) = [ MATCH (([^-/]+)-?([^/]+)?)/?.* : $(t) ] ;
-        local toolset-version = $((t-v,t,v)[1]) ;
-        local toolset = $((t-v,t,v)[2]) ;
-        local version = $((t-v,t,v)[3]) ;
-
-        if $(.debug-config)
-        {
-            ECHO notice: [cmdline-cfg] Detected command-line request for
-                $(toolset-version): "toolset=" $(toolset) "version="
-                $(version) ;
-        }
-
-        # If the toolset is not known, configure it now.
+        local toolset = [ MATCH ([^/]+)/?.* : $(t) ] ;
+        local properties = [ feature.expand-subfeatures <toolset>$(toolset) : true ] ;
+        local toolset-property = [ property.select <toolset> : $(properties) ] ;
         local known ;
-        if $(toolset) in [ feature.values <toolset> ]
+        if $(toolset-property:G=) in [ feature.values <toolset> ]
         {
             known = true ;
         }
-        if $(known) && $(version) && ! [ feature.is-subvalue toolset
-            : $(toolset) : version : $(version) ]
-        {
-            known = ;
-        }
+
+        # If the toolset is not known, configure it now.
+
         # TODO: we should do 'using $(toolset)' in case no version has been
         # specified and there are no versions defined for the given toolset to
         # allow the toolset to configure its default version. For this we need
@@ -464,18 +453,11 @@ local rule process-explicit-toolset-requests
         {
             if $(.debug-config)
             {
-                ECHO "notice: [cmdline-cfg] toolset $(toolset-version) not"
+                ECHO "notice: [cmdline-cfg] toolset $(toolset) not"
                     "previously configured; attempting to auto-configure now" ;
             }
-            toolset.using $(toolset) : $(version) ;
-        }
-        else
-        {
-            if $(.debug-config)
-            {
-                ECHO notice: [cmdline-cfg] toolset $(toolset-version) already
-                    configured ;
-            }
+            local t,v = [ MATCH ([^-]+)-?(.+)? : $(toolset) ] ;
+            toolset.using $(t,v[1]) : $(t,v[2]) ;
         }
 
         # Make sure we get an appropriate property into the build request in
