@@ -21,7 +21,7 @@ def test_files_with_spaces_in_their_name():
     testing files with spaces in their name.
     """
 
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("valid source.cpp", "int main() {}\n");
 

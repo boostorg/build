@@ -10,7 +10,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 # Arrange a project which will build only if 'a.cpp' is compiled with "STATIC"
 # define.

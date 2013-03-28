@@ -106,7 +106,7 @@ def boost_build_testing_support_timing_rule():
     support system.
 
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("aaa.cpp", "int main() {}\n")
 
@@ -142,7 +142,7 @@ def boost_build_testing_support_timing_rule_with_spaces_in_names():
     support system when used with targets contining spaces in their names.
 
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("aaa bbb.cpp", "int main() {}\n")
 

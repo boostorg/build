@@ -20,7 +20,7 @@ import BoostBuild
 ###############################################################################
 
 def test_building_file_from_specific_project():
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", """\
 exe hello : hello.cpp ;
@@ -51,7 +51,7 @@ exe sub : hello.cpp ;
 ###############################################################################
 
 def test_building_file_from_specific_target():
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", """\
 exe hello1 : hello1.cpp ;
@@ -77,7 +77,7 @@ exe hello3 : hello3.cpp ;
 ###############################################################################
 
 def test_building_missing_file_from_specific_target():
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", """\
 exe hello1 : hello1.cpp ;
@@ -104,7 +104,7 @@ exe hello3 : hello3.cpp ;
 ###############################################################################
 
 def test_building_multiple_files_with_different_names():
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", """\
 exe hello1 : hello1.cpp ;
@@ -132,7 +132,7 @@ exe hello3 : hello3.cpp ;
 ###############################################################################
 
 def test_building_multiple_files_with_the_same_name():
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", """\
 exe hello : hello.cpp ;

@@ -10,7 +10,7 @@ import BoostBuild
 
 
 def test_basic():
-    t = BoostBuild.Tester(["-d3", "-d+12"], pass_d0=False)
+    t = BoostBuild.Tester(["-d3", "-d+12"], pass_d0=False, use_test_config=False)
 
     t.write("a.cpp", """
 #include <a.h>

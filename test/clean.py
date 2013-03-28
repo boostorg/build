@@ -7,7 +7,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 t.write("a.cpp", "int main() {}\n")
 t.write("jamroot.jam", "exe a : a.cpp sub1//sub1 sub2//sub2 sub3//sub3 ;")

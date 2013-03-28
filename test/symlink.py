@@ -17,7 +17,7 @@ if os.name != 'posix':
     sys.exit(1)
 
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 t.write("jamroot.jam", "import gcc ;")
 

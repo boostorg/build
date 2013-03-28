@@ -6,7 +6,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 # Test a header loop that depends on (but does not contain) a generated header.
 t.write("test.cpp", '#include "header1.h"\n')

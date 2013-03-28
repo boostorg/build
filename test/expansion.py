@@ -7,7 +7,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 t.write("a.cpp", """
 #ifdef CF_IS_OFF

@@ -9,7 +9,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 t.write("jamroot.jam", "exe hello : hello.cpp : <variant>debug:<build>no ;")
 t.write("hello.cpp", "int main() {}\n")

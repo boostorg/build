@@ -8,7 +8,7 @@
 import BoostBuild
 
 def test_basic():
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", """\
 exe a1 : a1.cpp : <conditional>@a1-rule ;
@@ -70,7 +70,7 @@ def test_glob_in_indirect_conditional():
     the project modules have already finished loading.
 
     """
-    t = BoostBuild.Tester()
+    t = BoostBuild.Tester(use_test_config=False)
 
     t.write("jamroot.jam", """\
 use-project /library-example/foo : util/foo ;

@@ -11,7 +11,7 @@ import BoostBuild
 import os
 import string
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 # Stage the binary, so that it will be relinked without hardcode-dll-paths.
 # That will check that we pass correct -rpath-link, even if not passing -rpath.
