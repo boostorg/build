@@ -16,7 +16,7 @@
 #include "rules.h"
 
 int make( LIST * targets, int anyhow );
-int make1( TARGET * const t );
+int make1( LIST * t );
 
 typedef struct {
     int temp;
