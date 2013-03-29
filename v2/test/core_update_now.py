@@ -193,9 +193,143 @@ updating target1
 
     t.cleanup()
 
+def save_restore():
+    """Tests that ignore-minus-n and ignore-minus-q are
+    local to the call to UPDATE_NOW"""
+    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+
+    t.write("actions.jam", """\
+rule fail
+{
+    NOTFILE $(<) ;
+    ALWAYS $(<) ;
+}
+actions fail
+{
+    exit 1
+}
+
+rule pass
+{
+    NOTFILE $(<) ;
+    ALWAYS $(<) ;
+}
+actions pass
+{
+    echo updating $(<)
+}
+""")
+    t.write("file.jam", """
+include actions.jam ;
+fail target1 ;
+fail target2 ;
+UPDATE_NOW target1 target2 : : $(IGNORE_MINUS_N) : $(IGNORE_MINUS_Q) ;
+fail target3 ;
+fail target4 ;
+UPDATE_NOW target3 target4 ;
+UPDATE ;
+""")
+    t.run_build_system(['-n', '-sIGNORE_MINUS_N=1', '-ffile.jam'],
+                       stdout='''...found 2 targets...
+...updating 2 targets...
+fail target1
+
+    exit 1
+
+...failed fail target1...
+fail target2
+
+    exit 1
+
+...failed fail target2...
+...failed updating 2 targets...
+...found 2 targets...
+...updating 2 targets...
+fail target3
+
+    exit 1
+
+fail target4
+
+    exit 1
+
+...updated 2 targets...
+''')
+
+    t.run_build_system(['-q', '-sIGNORE_MINUS_N=1', '-ffile.jam'],
+                       status=1, stdout='''...found 2 targets...
+...updating 2 targets...
+fail target1
+
+    exit 1
+
+...failed fail target1...
+...failed updating 1 target...
+...found 2 targets...
+...updating 2 targets...
+fail target3
+
+    exit 1
+
+...failed fail target3...
+...failed updating 1 target...
+''')
+
+    t.run_build_system(['-n', '-sIGNORE_MINUS_Q=1', '-ffile.jam'],
+                       stdout='''...found 2 targets...
+...updating 2 targets...
+fail target1
+
+    exit 1
+
+fail target2
+
+    exit 1
+
+...updated 2 targets...
+...found 2 targets...
+...updating 2 targets...
+fail target3
+
+    exit 1
+
+fail target4
+
+    exit 1
+
+...updated 2 targets...
+''')
+
+    t.run_build_system(['-q', '-sIGNORE_MINUS_Q=1', '-ffile.jam'],
+                       status=1, stdout='''...found 2 targets...
+...updating 2 targets...
+fail target1
+
+    exit 1
+
+...failed fail target1...
+fail target2
+
+    exit 1
+
+...failed fail target2...
+...failed updating 2 targets...
+...found 2 targets...
+...updating 2 targets...
+fail target3
+
+    exit 1
+
+...failed fail target3...
+...failed updating 1 target...
+''')
+
+    t.cleanup()
+
 
 basic()
 ignore_minus_n()
 failed_target()
 missing_target()
 build_once()
+save_restore()

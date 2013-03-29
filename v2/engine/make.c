@@ -148,12 +148,8 @@ int make( LIST * targets, int anyhow )
     status = counts->cantfind || counts->cantmake;
 
     {
-        LISTITER iter;
-        LISTITER end;
         PROFILE_ENTER( MAKE_MAKE1 );
-        for ( iter = list_begin( targets ), end = list_end( targets ); iter !=
-            end; iter = list_next( iter ) )
-            status |= make1( bindtarget( list_item( iter ) ) );
+        status |= make1( targets );
         PROFILE_EXIT( MAKE_MAKE1 );
     }
 

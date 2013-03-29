@@ -1443,7 +1443,6 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     if ( !list_empty( force ) )
     {
         globs.noexec = original_noexec;
-        globs.quitquick = original_quitquick;
     }
 
     if ( !list_empty( continue_ ) )
