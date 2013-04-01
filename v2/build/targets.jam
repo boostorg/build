@@ -229,8 +229,25 @@ class project-target : abstract-target
             self.build-dir = [ get build-dir ] ;
             if ! $(self.build-dir)
             {
-                self.build-dir = [ path.join [ $(self.project).get location ]
-                    bin ] ;
+                local location = [ $(self.project).get location ] ;
+                if $(location)
+                {
+                    self.build-dir = [ path.join $(location) bin ] ;
+                }
+                else
+                {
+                    local id = [ get id  ] ;
+                    if $(id)
+                    {
+                        local rid = [ MATCH /(.*) : $(id) ] ;
+                        self.build-dir = [ path.join [ project.standalone-build-dir ] $(rid) ] ;
+                    }
+                    else
+                    {
+                        errors.error "Could not create build-dir for standalone project $(self.project-module:E=)."
+                                   : "Missing project id" ;
+                    }
+                }
             }
         }
         return $(self.build-dir) ;

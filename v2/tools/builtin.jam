@@ -668,8 +668,15 @@ class compile-action : action
     rule adjust-properties ( property-set )
     {
         local s = [ $(self.targets[1]).creating-subvariant ] ;
-        return [ $(property-set).add-raw
-          [ $(s).implicit-includes "include" : H ] ] ;
+        if $(s)
+        {
+            return [ $(property-set).add-raw
+              [ $(s).implicit-includes "include" : H ] ] ;
+        }
+        else
+        {
+            return $(property-set) ;
+        }
     }
 }
 
