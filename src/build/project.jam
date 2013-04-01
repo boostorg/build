@@ -523,6 +523,10 @@ rule initialize (
         if $(jamroot)
         {
             $(attributes).set project-root : $(location) : exact ;
+            if ! $(.first-project-root)
+            {
+                .first-project-root = $(module-name) ;
+            }
         }
 
         local parent ;
@@ -788,6 +792,14 @@ class project-attributes
     }
 }
 
+
+# Returns the build directory for standalone projects
+#
+rule standalone-build-dir ( )
+{
+    project = [ target $(.first-project-root) ] ;
+    return [ path.join [ $(project).build-dir ] standalone ] ;
+}
 
 # Returns the project which is currently being loaded.
 #
