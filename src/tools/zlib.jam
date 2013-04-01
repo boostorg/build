@@ -1,4 +1,5 @@
 # Copyright (c) 2010 Vladimir Prus.
+# Copyright (c) 2013 Steven Watanabe
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -106,11 +107,6 @@ rule init (
         project.initialize $(__name__) ;
         .project = [ project.current ] ;
         project zlib ;
-
-        .default-alternative = [ new ac-library zlib : $(.project) ] ;
-        $(.default-alternative).set-header $(header) ;
-        $(.default-alternative).set-default-names $(names) ;
-        targets.main-target-alternative $(.default-alternative) ;
     }
 
     local library-path = [ property.select <search> : $(options) ] ;
@@ -145,11 +141,18 @@ rule init (
 
     source-path ?= [ modules.peek : ZLIB_SOURCE ] ;
 
-    if ! $(condition) && $(is-default) && $(.configured)
+    if $(.configured.$(condition:J=-))
     {
-        if $(.debug)
+        if $(is-default)
         {
-            ECHO "notice: [zlib] zlib is already configured" ;
+            if $(.debug)
+            {
+                ECHO "notice: [zlib] zlib is already configured" ;
+            }
+        }
+        else
+        {
+            errors.user-error "zlib is already configured" ;
         }
         return ;
     }
@@ -194,25 +197,14 @@ rule init (
               : <include>$(source-path) ] ;
        }
 
-        if ! $(condition)
+        local mt = [ new ac-library zlib : $(.project) : $(condition) ] ;
+        $(mt).set-header $(header) ;
+        $(mt).set-default-names $(names) ;
+        if $(target)
         {
-            .configured = true ;
-            if $(target)
-            {
-                $(.default-alternative).set-target $(target) ;
-            }
+            $(mt).set-target $(target) ;
         }
-        else
-        {
-            local mt = [ new ac-library zlib : $(.project) : $(condition) ] ;
-            $(mt).set-header $(header) ;
-            $(mt).set-default-names $(names) ;
-            if $(target)
-            {
-                $(mt).set-target $(target) ;
-            }
-            targets.main-target-alternative $(mt) ;
-        }
+        targets.main-target-alternative $(mt) ;
     } else {
         if $(.debug)
         {
@@ -222,21 +214,12 @@ rule init (
                 ECHO "notice: [zlib] Condition $(condition)" ;
             }
         }
-        if ! $(condition)
-        {
-            .configured = true ;
-            # Special case the no-condition case so that 'using' without parameters
-            # can mix with more specific 'using'.
-            $(.default-alternative).reconfigure
-                $(include-path) : $(library-path) : $(library-name) : $(root) ;
-        }
-        else                    
-        {
-            local mt = [ new ac-library zlib : $(.project) : $(condition) :
-                $(include-path) : $(library-path) : $(library-name) : $(root) ] ;
-            $(mt).set-header $(header) ;
-            $(mt).set-default-names $(names) ;
-            targets.main-target-alternative $(mt) ;
-        }
+
+        local mt = [ new ac-library zlib : $(.project) : $(condition) :
+            $(include-path) : $(library-path) : $(library-name) : $(root) ] ;
+        $(mt).set-header $(header) ;
+        $(mt).set-default-names $(names) ;
+        targets.main-target-alternative $(mt) ;
     }
+    .configured.$(condition:J=-) = true ;
 }
