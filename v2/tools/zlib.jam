@@ -122,6 +122,8 @@ rule init (
     local build-name = [ property.select <build-name> : $(options) ] ;
     build-name = $(build-name:G=) ;
 
+    condition = [ targets.main-target-requirements $(condition) : $(.project) ] ;
+
     local no-build-from-source ;
     # Ignore environmental ZLIB_SOURCE if this initialization
     # requested to search for a specific pre-built library.
@@ -141,7 +143,7 @@ rule init (
 
     source-path ?= [ modules.peek : ZLIB_SOURCE ] ;
 
-    if $(.configured.$(condition:J=-))
+    if $(.configured.$(condition))
     {
         if $(is-default)
         {
@@ -158,7 +160,7 @@ rule init (
     }
     else if $(source-path) && ! $(no-build-from-source)
     {
-        library-name ?= z ;
+        build-name ?= z ;
         library-id = [ CALC $(library-id) + 1 ] ;
         tag = [ MATCH ^@?(.*)$ : $(tag) ] ;
         if $(tag) && ! [ MATCH ^([^%]*)%([^%]+)$ : $(tag) ]
@@ -187,15 +189,14 @@ rule init (
             target = [ targets.create-typed-target LIB : $(.project)
               : $(build-name).$(library-id)
               : $(sources)
-              : $(condition)
-                <tag>@$(tag)
+              : <tag>@$(tag)
                 <include>$(source-path)
                 <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
                 <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
                 <link>shared:<define>ZLIB_DLL
               :
               : <include>$(source-path) ] ;
-       }
+        }
 
         local mt = [ new ac-library zlib : $(.project) : $(condition) ] ;
         $(mt).set-header $(header) ;
@@ -221,5 +222,5 @@ rule init (
         $(mt).set-default-names $(names) ;
         targets.main-target-alternative $(mt) ;
     }
-    .configured.$(condition:J=-) = true ;
+    .configured.$(condition) = true ;
 }
