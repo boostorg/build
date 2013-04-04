@@ -25,13 +25,13 @@ rule generate-include ( target : sources * : properties * )
 {
     local header = [ property.select <include> : $(properties) ] ;
     print.output $(target) ;
-    print.text "#include <$(header:G=)>" ;
+    print.text "#include <$(header:G=)>" : true ;
 }
 
 rule generate-main ( target : sources * : properties * )
 {
     print.output $(target) ;
-    print.text "int main() {}" ;
+    print.text "int main() {}" : true ;
 }
 
 rule find-include-path ( properties : header : provided-path ? )
