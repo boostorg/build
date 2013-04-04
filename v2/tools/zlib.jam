@@ -122,7 +122,7 @@ rule init (
     build-name = $(build-name:G=) ;
 
     condition = [ property-set.create $(requirements) ] ;
-    condition = [ $(condition).base ] ;
+    condition = [ property-set.create [ $(condition).base ] ] ;
 
     local no-build-from-source ;
     # Ignore environmental ZLIB_SOURCE if this initialization
