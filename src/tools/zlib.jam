@@ -21,6 +21,7 @@ import modules ;
 import errors ;
 import indirect ;
 import property ;
+import property-set ;
 
 header = zlib.h ;
 names = z zlib zll zdll ;
@@ -88,10 +89,8 @@ rule init (
     : options *
     # A list of the options to use
 
-    : condition *
-    # A list of properties specifying when this configuration will be used.
-    # It is an error to initialize zlib more than once with the
-    # same condition.
+    : requirements *
+    # The requirements for the zlib target
 
     : is-default ?
     # Default configurations are only used when zlib
@@ -122,7 +121,8 @@ rule init (
     local build-name = [ property.select <build-name> : $(options) ] ;
     build-name = $(build-name:G=) ;
 
-    condition = [ targets.main-target-requirements $(condition) : $(.project) ] ;
+    condition = [ property-set.create $(requirements) ] ;
+    condition = [ $(condition).base ] ;
 
     local no-build-from-source ;
     # Ignore environmental ZLIB_SOURCE if this initialization
@@ -173,7 +173,7 @@ rule init (
             ECHO "notice: [zlib] Building zlib from source as $(build-name)" ;
             if $(condition)
             {
-                ECHO "notice: [zlib] Condition $(condition)" ;
+                ECHO "notice: [zlib] Condition" [ $(condition).raw ] ;
             }
             if $(sources)
             {
@@ -189,7 +189,8 @@ rule init (
             target = [ targets.create-typed-target LIB : $(.project)
               : $(build-name).$(library-id)
               : $(sources)
-              : <tag>@$(tag)
+              : $(requirements)
+                <tag>@$(tag)
                 <include>$(source-path)
                 <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
                 <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
@@ -212,7 +213,7 @@ rule init (
             ECHO "notice: [zlib] Using pre-installed library" ;
             if $(condition)
             {
-                ECHO "notice: [zlib] Condition $(condition)" ;
+                ECHO "notice: [zlib] Condition" [ $(condition).raw ] ;
             }
         }
 
