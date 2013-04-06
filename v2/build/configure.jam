@@ -16,6 +16,7 @@ import path ;
 import property ;
 import property-set ;
 import targets ;
+import config-cache ;
 
 
 rule log-summary ( )
@@ -134,7 +135,11 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
     {
         .$(what)-tested.$(ps) = true ;
 
-        local targets = [ targets.generate-from-reference
+        local cache-name = $(what) [ $(ps).raw ] ;
+        cache-name = $(cache-name:J=-) ;
+        local value = [ config-cache.get $(cache-name) ] ;
+        
+        local targets = [ targets.generate-from-reference 
             $(metatarget-reference) : $(project) : $(ps) ] ;
 
         local jam-targets ;
@@ -142,10 +147,24 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
         {
             jam-targets += [ $(t).actualize ] ;
         }
-
-        if ! UPDATE_NOW in [ RULENAMES ]
+             
+        if $(value)
         {
-            # Cannot determine. Assume existence.
+            local x = [ PAD "    - $(what)" : $(.width) ] ; 
+            if $(value) = true
+            {
+                .$(what)-supported.$(ps) = yes ;
+                result = true ;
+                log-check-result "$(x) : yes (cached)" ;
+            }
+            else
+            {
+                log-check-result "$(x) : no  (cached)" ;
+            }
+        }       
+        else if ! UPDATE_NOW in [ RULENAMES ]
+        {
+            # Cannot determine. Assume existance.
         }
         else
         {
@@ -162,6 +181,17 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
                 log-check-result "$(x) : no" ;
             }
         }
+        if ! $(value)
+        {
+            if $(result)
+            {
+                config-cache.set $(cache-name) : true ;
+            }
+            else
+            {
+                config-cache.set $(cache-name) : false ;
+            }
+        }        
         return $(result) ;
     }
     else

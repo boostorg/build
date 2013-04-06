@@ -12,6 +12,7 @@ import build-request ;
 import builtin ;
 import "class" : new ;
 import configure ;
+import config-cache ;
 import feature ;
 import generators ;
 import make ;
@@ -692,6 +693,7 @@ local rule should-clean-project ( project )
     local first-project-root = [ project.target $(first-project-root-module) ] ;
     local first-build-build-dir = [ $(first-project-root).build-dir ] ;
     configure.set-log-file $(first-build-build-dir)/config.log ;
+    config-cache.load $(first-build-build-dir)/project-cache.jam ;
 
     # Now that we have a set of targets to build and a set of property sets to
     # build the targets with, we can start the main build process by using each
@@ -717,6 +719,8 @@ local rule should-clean-project ( project )
     {
         actual-targets += [ $(t).actualize ] ;
     }
+
+    config-cache.save ;
 
 
     # If XML data output has been requested prepare additional rules and targets

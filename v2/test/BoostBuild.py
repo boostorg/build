@@ -702,6 +702,7 @@ class Tester(TestCmd.TestCmd):
         # Boost Build's 'configure' functionality (unfinished at the time)
         # produces this file.
         self.ignore("bin/config.log")
+        self.ignore("bin/project-cache.jam")
 
         # Compiled Python files created when running Python based Boost Build.
         self.ignore("*.pyc")

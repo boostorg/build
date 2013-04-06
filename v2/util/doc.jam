@@ -260,6 +260,7 @@ local rule print-help-top ( )
     print.list-item "-d+2 Show commands as they are executed" ;
     print.list-item "-d0 Supress all informational messages" ;
     print.list-item "-q Stop at first error" ;
+    print.list-item "--reconfigure Rerun all configuration checks" ;
     print.list-item "--debug-configuration Diagnose configuration" ;
     print.list-item "--debug-building Report which targets are built with what properties" ;
     print.list-item "--debug-generator Diagnose generator search/execution" ;

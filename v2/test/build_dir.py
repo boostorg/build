@@ -37,6 +37,7 @@ t.expect_addition(["build/$toolset/debug/a.exe",
 # Test that building from child projects work.
 t.run_build_system(subdir='src')
 t.ignore("build/config.log")
+t.ignore("build/project-cache.jam")
 t.expect_nothing_more()
 
 # Test that project can override build dir.
