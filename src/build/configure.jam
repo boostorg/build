@@ -74,8 +74,8 @@ rule log-check-result ( result )
 
 rule log-library-search-result ( library : result )
 {
-    local x = [ PAD "    - $(library) : $(result)" : $(.width) ] ;
-    log-check-result "$(x)" ;
+    local x = [ PAD "    - $(library)" : $(.width) ] ;
+    log-check-result "$(x) : $(result)" ;
 }
 
 
