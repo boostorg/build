@@ -202,8 +202,6 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
 
 rule builds ( metatarget-reference : properties * : what ? : retry ? )
 {
-    what ?= "$(metatarget-reference) builds" ;
-
     # FIXME: This should not be hardcoded. Other checks might want to consider a
     # different set of features as relevant.
     local toolset = [ property.select <toolset> : $(properties) ] ;
@@ -214,6 +212,13 @@ rule builds ( metatarget-reference : properties * : what ? : retry ? )
     local ps = [ property-set.create $(relevant) ] ;
     local t = [ targets.current ] ;
     local p = [ $(t).project ] ;
+
+    if ! $(what)
+    {
+        local resolved = [ targets.resolve-reference $(metatarget-reference) : $(p) ] ;
+        local name = [ $(resolved[1]).name ] ;
+        what = "$(name) builds" ;
+    }
 
     return [ builds-raw $(metatarget-reference) : $(p) : $(ps) : $(what) :
         $(retry) ] ;
