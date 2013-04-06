@@ -18,6 +18,7 @@ parser.add_option('-o', dest="output_file")
 parser.add_option('-x', dest="language")
 parser.add_option('-c', dest="compile", action="store_true")
 parser.add_option('-I', dest="includes", action="append")
+parser.add_option('-L', dest="library_path", action="append")
 parser.add_option('--dll', dest="dll", action="store_true")
 parser.add_option('--archive', dest="archive", action="store_true")
 parser.add_option('--static-lib', dest="static_libraries", action="append")
@@ -77,6 +78,14 @@ class MockInfo(object):
         map(os.path.abspath, expected_options.includes):
       return False
 
+    if options.library_path is None:
+      options.library_path = []
+    if expected_options.library_path is None:
+      expected_options.library_path = []
+    if map(os.path.abspath, options.library_path) != \
+        map(os.path.abspath, expected_options.library_path):
+      return False
+
     if options.static_libraries != expected_options.static_libraries:
       return False
 
@@ -108,12 +117,6 @@ class MockInfo(object):
 
     # if we've gotten here, then everything matched
     return True
-
-_instance = MockInfo()
-
-def instance():
-  return _instance
-
 ''')
 
   t.write('mock.py', '''
@@ -157,7 +160,7 @@ actions compile.c
 
 actions compile.c++
 {
-    $(python-cmd) mock.py -c -x c++ $(>) -o $(<)
+    $(python-cmd) mock.py -c -x c++ -I$(INCLUDES) $(>) -o $(<)
 }
 
 toolset.flags mock.link USER_OPTIONS <linkflags> ;
