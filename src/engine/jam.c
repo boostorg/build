@@ -573,6 +573,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     clear_targets_to_update();
 
     /* Widely scattered cleanup. */
+    property_set_done();
     file_done();
     rules_done();
     timestamp_done();
