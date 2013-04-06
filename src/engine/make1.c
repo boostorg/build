@@ -195,6 +195,7 @@ static int quit = 0;
 int make1( LIST * targets )
 {
     state * pState;
+    int status = 0;
 
     memset( (char *)counts, 0, sizeof( *counts ) );
     
@@ -252,7 +253,26 @@ int make1( LIST * targets )
     if ( intr )
         exit( 1 );
 
-    return counts->total != counts->made;
+    {
+        LISTITER iter, end;
+        for ( iter = list_begin( targets ), end = list_end( targets );
+              iter != end; iter = list_next( iter ) )
+        {
+            /* Check that the target was updated and that the
+               update succeeded. */
+            TARGET * t = bindtarget( list_item( iter ) );
+            if (t->progress == T_MAKE_DONE)
+            {
+                if (t->status != EXEC_CMD_OK)
+                    status = 1;
+            }
+            else if ( ! ( t->progress == T_MAKE_NOEXEC_DONE && globs.noexec ) )
+            {
+                status = 1;
+            }
+        }
+    }
+    return status;
 }
 
 

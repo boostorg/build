@@ -193,6 +193,47 @@ updating target1
 
     t.cleanup()
 
+
+def return_status():
+    """
+    Make sure that UPDATE_NOW returns a failure status if
+    the target failed in a previous call to UPDATE_NOW
+    """
+    t = BoostBuild.Tester(pass_toolset=0, pass_d0=False)
+
+    t.write("file.jam", """\
+actions fail
+{
+    exit 1
+}
+
+NOTFILE target1 ;
+ALWAYS target1 ;
+fail target1 ;
+
+ECHO update1: [ UPDATE_NOW target1 ] ;
+ECHO update2: [ UPDATE_NOW target1 ] ;
+
+DEPENDS all : target1 ;
+""")
+
+    t.run_build_system(["-ffile.jam"], status=1, stdout="""\
+...found 1 target...
+...updating 1 target...
+fail target1
+
+    exit 1
+
+...failed fail target1...
+...failed updating 1 target...
+update1:
+update2:
+...found 1 target...
+""")
+
+    t.cleanup()
+
+
 def save_restore():
     """Tests that ignore-minus-n and ignore-minus-q are
     local to the call to UPDATE_NOW"""
@@ -332,4 +373,5 @@ ignore_minus_n()
 failed_target()
 missing_target()
 build_once()
+return_status()
 save_restore()
