@@ -267,6 +267,7 @@ tests = ["absolute_sources",
          "using",
          "wrapper",
          "wrong_project",
+         "zlib"
          ]
 
 if os.name == "posix":
