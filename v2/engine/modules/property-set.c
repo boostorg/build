@@ -1,101 +1,181 @@
-/* Copyright Vladimir Prus 2003. Distributed under the Boost */
-/* Software License, Version 1.0. (See accompanying */
-/* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
-
-#include "../compile.h"
-#include "../lists.h"
-#include "../native.h"
-#include "../object.h"
-#include "../strings.h"
-#include "../timestamp.h"
-#include "../variable.h"
-
-#include <string.h>
-
-
-LIST * get_grist( char const * const f )
-{
-    char const * const end = strchr( f, '>' );
-    string s[ 1 ];
-    LIST * result;
-
-    string_new( s );
-
-    string_append_range( s, f, end + 1 );
-    result = list_new( object_new( s->value ) );
-
-    string_free( s );
-    return result;
-}
-
-
 /*
-rule create ( raw-properties * )
+ * Copyright 2013 Steven Watanabe
+ * Distributed under the Boost Software License, Version 1.0.
+ * (See accompanying file LICENSE_1_0.txt or copy at
+ * http://www.boost.org/LICENSE_1_0.txt)
+ */
+
+#include "../object.h"
+#include "../lists.h"
+#include "../modules.h"
+#include "../rules.h"
+#include "../variable.h"
+#include "../native.h"
+#include "../compile.h"
+#include "../mem.h"
+
+struct ps_map_entry
 {
-    raw-properties = [ sequence.unique
-        [ sequence.insertion-sort $(raw-properties) ] ] ;
+    struct ps_map_entry * next;
+    LIST * key;
+    OBJECT * value;
+};
 
-    local key = $(raw-properties:J=-:E=) ;
+struct ps_map
+{
+    struct ps_map_entry * * table;
+    size_t table_size;
+    size_t num_elems;
+};
 
-    if ! $(.ps.$(key))
+static unsigned list_hash(LIST * key)
+{
+    unsigned int hash = 0;
+    LISTITER iter = list_begin( key ), end = list_end( key );
+    for ( ; iter != end; ++iter )
     {
-        .ps.$(key) = [ new property-set $(raw-properties) ] ;
+        hash = hash * 2147059363 + object_hash( list_item( iter ) );
     }
-    return $(.ps.$(key)) ;
+    return hash;
 }
-*/
+
+static int list_equal( LIST * lhs, LIST * rhs )
+{
+    LISTITER lhs_iter, lhs_end, rhs_iter;
+    if ( list_length( lhs ) != list_length( rhs ) )
+    {
+        return 0;
+    }
+    lhs_iter = list_begin( lhs );
+    lhs_end = list_end( lhs );
+    rhs_iter = list_begin( rhs );
+    for ( ; lhs_iter != lhs_end; ++lhs_iter, ++rhs_iter )
+    {
+        if ( ! object_equal( list_item( lhs_iter ), list_item( rhs_iter ) ) )
+        {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static void ps_map_init( struct ps_map * map )
+{
+    size_t i;
+    map->table_size = 2;
+    map->num_elems = 0;
+    map->table = BJAM_MALLOC( map->table_size * sizeof( struct ps_map_entry * ) );
+    for ( i = 0; i < map->table_size; ++i )
+    {
+        map->table[ i ] = NULL;
+    }
+}
+
+static void ps_map_destroy( struct ps_map * map )
+{
+    size_t i;
+    for ( i = 0; i < map->table_size; ++i )
+    {
+        struct ps_map_entry * pos;
+        for ( pos = map->table[ i ]; pos; )
+        {
+            struct ps_map_entry * tmp = pos->next;
+            BJAM_FREE( pos );
+            pos = tmp;
+        }
+    }
+    BJAM_FREE( map->table );
+}
+
+static void ps_map_rehash( struct ps_map * map )
+{
+    struct ps_map old = *map;
+    size_t i;
+    map->table = BJAM_MALLOC( map->table_size * 2 * sizeof( struct ps_map_entry * ) );
+    map->table_size *= 2;
+    for ( i = 0; i < map->table_size; ++i )
+    {
+        map->table[ i ] = NULL;
+    }
+    for ( i = 0; i < old.table_size; ++i )
+    {
+        struct ps_map_entry * pos;
+        for ( pos = old.table[ i ]; pos; )
+        {
+            struct ps_map_entry * tmp = pos->next;
+
+            unsigned hash_val = list_hash( pos->key );
+            unsigned bucket = hash_val % map->table_size;
+            pos->next = map->table[ bucket ];
+            map->table[ bucket ] = pos;
+
+            pos = tmp;
+        }
+    }
+    BJAM_FREE( old.table );
+}
+
+static struct ps_map_entry * ps_map_insert(struct ps_map * map, LIST * key)
+{
+    unsigned hash_val = list_hash( key );
+    unsigned bucket = hash_val % map->table_size;
+    struct ps_map_entry * pos;
+    for ( pos = map->table[bucket]; pos ; pos = pos->next )
+    {
+        if ( list_equal( pos->key, key ) )
+            return pos;
+    }
+
+    if ( map->num_elems >= map->table_size )
+    {
+        ps_map_rehash( map );
+        bucket = hash_val % map->table_size;
+    }
+    pos = BJAM_MALLOC( sizeof( struct ps_map_entry ) );
+    pos->next = map->table[bucket];
+    pos->key = key;
+    pos->value = 0;
+    map->table[bucket] = pos;
+    ++map->num_elems;
+    return pos;
+}
+
+static struct ps_map all_property_sets;
 
 LIST * property_set_create( FRAME * frame, int flags )
 {
     LIST * properties = lol_get( frame->args, 0 );
-    LIST * sorted = L0;
-    LIST * unique;
-    LIST * val;
-    string var[ 1 ];
-    OBJECT * name;
-    LISTITER iter;
-    LISTITER end;
-
-    sorted = list_sort( properties );
-    unique = list_unique( sorted );
-
-    string_new( var );
-    string_append( var, ".ps." );
-
-    iter = list_begin( unique );
-    end = list_end( unique );
-    for ( ; iter != end; iter = list_next( iter ) )
+    LIST * sorted = list_sort( properties );
+    LIST * unique = list_unique( sorted );
+    struct ps_map_entry * pos = ps_map_insert( &all_property_sets, unique );
+    list_free( sorted );
+    if ( pos->value )
     {
-        string_append( var, object_str( list_item( iter ) ) );
-        string_push_back( var, '-' );
-    }
-    name = object_new( var->value );
-    val = var_get( frame->module, name );
-    if ( list_empty( val ) )
-    {
-        OBJECT * const rulename = object_new( "new" );
-        val = call_rule( rulename, frame, list_append( list_new( object_new(
-            "property-set" ) ), unique ), 0 );
-        /* The 'unique' variable is freed in 'call_rule'. */
-        object_free( rulename );
-        var_set( frame->module, name, list_copy( val ), VAR_SET );
+        list_free( unique );
+        return list_new( object_copy( pos->value ) );
     }
     else
     {
-        list_free( unique );
-        val = list_copy( val );
+        OBJECT * const rulename = object_new( "new" );
+        LIST * val = call_rule( rulename, frame, list_append( list_new( object_new(
+            "property-set" ) ), unique ), 0 );
+        /* The 'unique' variable is freed in 'call_rule'. */
+        object_free( rulename );
+        pos->value = list_front( val );
+        pos->key = var_get( bindmodule( pos->value ), object_new( "self.raw" ) );
+        return val;
     }
-    object_free( name );
-    string_free( var );
-    list_free( sorted );
-
-    return val;
 }
 
 
 void init_property_set()
 {
     char const * args[] = { "raw-properties", "*", 0 };
-    declare_native_rule( "property-set", "create", args, property_set_create, 1
-        );
+    declare_native_rule( "property-set", "create", args, property_set_create, 1 );
+    ps_map_init( &all_property_sets );
+}
+
+void property_set_done()
+{
+    ps_map_destroy( &all_property_sets );
 }
