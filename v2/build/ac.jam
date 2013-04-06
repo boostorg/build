@@ -59,6 +59,15 @@ rule find-include-path ( properties : header : provided-path ? )
     }
 }
 
+rule construct-library ( name : property-set : provided-path ? )
+{
+    property-set = [ $(property-set).refine [ property-set.create $(link-opt) ] ] ;
+    local lib-props = [ $(property-set).add-raw <name>$(name) <search>$(provided-path) ] ;
+    return [ generators.construct $(.project) lib-$(name)
+        : SEARCHED_LIB : $(lib-props) : : true ] ;
+}
+
+
 rule find-library ( properties : names + : provided-path ? )
 {
     local result ;
@@ -80,14 +89,12 @@ rule find-library ( properties : names + : provided-path ? )
     }
     while $(link-opts)
     {
-        properties = [ $(properties).refine [ property-set.create $(link-opts[1]) ] ] ;
         local names-iter = $(names) ;
+        properties = [ $(properties).refine [ property-set.create $(link-opts[1]) ] ] ;
         while $(names-iter)
         {
             local name = $(names-iter[1]) ;
-            local lib-props = [ $(properties).add-raw <name>$(name) <search>$(provided-path) ] ;
-            local lib = [ generators.construct $(.project) lib-$(name)
-                : SEARCHED_LIB : $(lib-props) : : true ] ;
+            local lib = [ construct-library $(name) : $(properties) : $(provided-path) ] ;
             local test = [ generators.construct $(.project) $(name) : EXE
                 : [ $(properties).add $(lib[1]) ] : $(.main.cpp) $(lib[2-])
                 : true ] ;
@@ -99,7 +106,7 @@ rule find-library ( properties : names + : provided-path ? )
             if [ UPDATE_NOW $(jam-targets) : [ modules.peek configure : .log-fd ]
                     : ignore-minus-n : ignore-minus-q ]
             {
-                result = $(lib) ;
+                result = $(name) $(link-opts[1]) ;
                 names-iter = ; link-opts = ; # break
             }
             names-iter = $(names-iter[2-]) ;
@@ -116,6 +123,7 @@ class ac-library : basic-target
     import virtual-target ;
     import ac ;
     import configure ;
+    import config-cache ;
 
     rule __init__ ( name : project : requirements * : include-path ? : library-path ? : library-name ? )
     {
@@ -195,23 +203,61 @@ class ac-library : basic-target
                 # Backwards compatibility only
                 library-path ?= [ modules.peek : $(name:U)_LIBPATH ] ;
             }
-                        
-            local includes = [ ac.find-include-path $(property-set) : $(self.header) : $(include-path) ] ;
-            local library = [ ac.find-library $(property-set) : $(libnames) : $(library-path) ] ;
-            if $(includes) && $(library)
+
+            local toolset = [ $(property-set).get <toolset> ] ;
+            local toolset-version-property = "<toolset-$(toolset):version>" ;
+            local relevant = [ property.select <target-os> <toolset>
+                $(toolset-version-property) <link> <address-model> <architecture> :
+                [ $(property-set).raw ] ] ;
+
+            local key = ac-library-$(name)-$(relevant:J=-) ;
+            local lookup = [ config-cache.get $(key) ] ;
+
+            if $(lookup)
             {
-                if $(includes) = %default
+                if $(lookup) = missing
                 {
-                    includes = ;
+                    configure.log-library-search-result $(name) : "no  (cached)" ;
+                    return [ property-set.empty ] ;
                 }
-                configure.log-library-search-result $(name) : "found" ;
-                return [ $(library[1]).add-raw <include>$(includes) ] $(library[2-]) ;
+                else
+                {
+                    local includes = $(lookup[1]) ;
+                    if $(includes) = %default
+                    {
+                        includes = ;
+                    }
+                    local name = $(lookup[2]) ;
+                    local link-opt = $(lookup[3]) ;
+                    local library = [ ac.construct-library $(name) :
+                        [ $(property-set).refine [ property-set.create $(link-opt) ] ] : $(library-path) ] ;
+                    configure.log-library-search-result $(name) : "yes (cached)" ;
+                    return [ $(library[1]).add-raw <include>$(includes) ] $(library[2-]) ;
+                }
             }
             else
             {
-                configure.log-library-search-result $(name) : "not found" ;
-                return [ property-set.empty ] ;
-            } 
+                local includes = [ ac.find-include-path $(property-set) : $(self.header) : $(include-path) ] ;
+                local library = [ ac.find-library $(property-set) : $(libnames) : $(library-path) ] ;
+                if $(includes) && $(library)
+                {
+                    config-cache.set $(key) : $(includes) $(library) ;
+                    if $(includes) = %default
+                    {
+                        includes = ;
+                    }
+                    library = [ ac.construct-library $(library[1]) :
+                        [ $(property-set).refine [ property-set.create $(library[2]) ] ]  : $(library-path) ] ;
+                    configure.log-library-search-result $(name) : "yes" ;
+                    return [ $(library[1]).add-raw <include>$(includes) ] $(library[2-]) ;
+                }
+                else
+                {
+                    config-cache.set $(key) : missing ;
+                    configure.log-library-search-result $(name) : "no" ;
+                    return [ property-set.empty ] ;
+                }
+            }
         }       
     }
 }
