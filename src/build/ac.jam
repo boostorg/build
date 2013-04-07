@@ -227,10 +227,8 @@ class ac-library : basic-target
                     {
                         includes = ;
                     }
-                    local name = $(lookup[2]) ;
-                    local link-opt = $(lookup[3]) ;
-                    local library = [ ac.construct-library $(name) :
-                        [ $(property-set).refine [ property-set.create $(link-opt) ] ] : $(library-path) ] ;
+                    local library = [ ac.construct-library $(lookup[2]) :
+                        [ $(property-set).refine [ property-set.create $(lookup[3]) ] ] : $(library-path) ] ;
                     configure.log-library-search-result $(name) : "yes (cached)" ;
                     return [ $(library[1]).add-raw <include>$(includes) ] $(library[2-]) ;
                 }
