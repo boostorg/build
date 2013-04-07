@@ -30,8 +30,8 @@ action('--archive $deflate.o -o $deflate.a')
 ''')
 
 t.run_build_system()
-t.expect_addition('bin/standalone/zlib/mock/debug/libz.so')
-t.expect_addition('bin/standalone/zlib/mock/debug/link-static/libz.a')
+t.expect_addition('bin/standalone/zlib/mock/debug/z.dll')
+t.expect_addition('bin/standalone/zlib/mock/debug/link-static/z.lib')
 
 t.rm('zlib')
 
