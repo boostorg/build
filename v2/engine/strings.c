@@ -99,8 +99,7 @@ void string_reserve( string * self, size_t capacity )
 }
 
 
-static void extend_full( string * self, char const * start, char const * finish
-    )
+static void extend_full( string * self, char const * start, char const * finish )
 {
     size_t new_size = self->capacity + ( finish - start );
     size_t new_capacity = self->capacity;
@@ -113,43 +112,46 @@ static void extend_full( string * self, char const * start, char const * finish
     self->size = new_size;
 }
 
+static void maybe_reserve( string * self, size_t new_size )
+{
+    size_t capacity = self->capacity;
+    if ( capacity <= new_size )
+    {
+        size_t new_capacity = capacity;
+        while ( new_capacity <= new_size )
+            new_capacity <<= 1;
+        string_reserve_internal( self, new_capacity );
+    }
+}
+
 
 void string_append( string * self, char const * rhs )
 {
-    char * p = self->value + self->size;
-    char * end = self->value + self->capacity;
+    size_t rhs_size = strlen( rhs );
+    size_t new_size = self->size + rhs_size;
     assert_invariants( self );
 
-    while ( *rhs && p != end )
-        *p++ = *rhs++;
+    maybe_reserve( self, new_size );
 
-    if ( p != end )
-    {
-        *p = 0;
-        self->size = p - self->value;
-    }
-    else
-        extend_full( self, rhs, rhs + strlen(rhs) );
+    memcpy( self->value + self->size, rhs, rhs_size + 1 );
+    self->size = new_size;
+
     assert_invariants( self );
 }
 
 
 void string_append_range( string * self, char const * start, char const * finish )
 {
-    char * p = self->value + self->size;
-    char * end = self->value + self->capacity;
+    size_t rhs_size = finish - start;
+    size_t new_size = self->size + rhs_size;
     assert_invariants( self );
 
-    while ( p != end && start != finish )
-        *p++ = *start++;
+    maybe_reserve( self, new_size );
 
-    if ( p != end )
-    {
-        *p = 0;
-        self->size = p - self->value;
-    }
-    else
-        extend_full( self, start, finish );
+    memcpy( self->value + self->size, start, rhs_size );
+    self->size = new_size;
+    self->value[ new_size ] = 0;
+
     assert_invariants( self );
 }
 
