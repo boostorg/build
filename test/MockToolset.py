@@ -69,21 +69,25 @@ class MockInfo(object):
     if options.compile != expected_options.compile:
       return False
 
+    # Normalize a path for comparison purposes
+    def adjust_path(p):
+      return os.path.normcase(os.path.abspath(p))
+
     # order matters
     if options.includes is None:
       options.includes = []
     if expected_options.includes is None:
       expected_options.includes = []
-    if map(os.path.abspath, options.includes) != \
-        map(os.path.abspath, expected_options.includes):
+    if map(adjust_path, options.includes) != \
+        map(adjust_path, expected_options.includes):
       return False
 
     if options.library_path is None:
       options.library_path = []
     if expected_options.library_path is None:
       expected_options.library_path = []
-    if map(os.path.abspath, options.library_path) != \
-        map(os.path.abspath, expected_options.library_path):
+    if map(adjust_path, options.library_path) != \
+        map(adjust_path, expected_options.library_path):
       return False
 
     if options.static_libraries != expected_options.static_libraries:
