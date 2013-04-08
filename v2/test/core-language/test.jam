@@ -75,6 +75,7 @@ check-equal var-upper : $(v4:U) : STRING/WITH/MIXED/CASE ;
 check-equal var-LU : $(v4:LU) : STRING/WITH/MIXED/CASE ;
 check-equal var-slashes : $(v5:T) : path/with/backslashes ;
 check-equal var-grist : $(v6:G) : <grist> ;
+check-equal var-grist-none : $(v1:G) : "" "" "" ;
 check-equal var-base : $(v6:B) : path ;
 check-equal var-suffix : $(v6:S) : .txt ;
 check-equal var-dir : $(v6:D) : generic ;
