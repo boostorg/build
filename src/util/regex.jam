@@ -37,6 +37,10 @@ rule split ( string separator )
     return $(s) $(result) ;
 }
 
+if [ HAS_NATIVE_RULE regex : split : 1 ]
+{
+    NATIVE_RULE regex : split ;
+}
 
 # Returns the concatenated results of Applying regex.split to every element of
 # the list using the separator pattern.
@@ -132,6 +136,11 @@ rule replace (
     string ?= "" ;
     result = "$(string)$(result)" ;
     return $(result) ;
+}
+
+if [ HAS_NATIVE_RULE regex : replace : 1 ]
+{
+    NATIVE_RULE regex : replace ;
 }
 
 

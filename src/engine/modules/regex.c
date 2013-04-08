@@ -10,6 +10,114 @@
 #include "../strings.h"
 #include "../subst.h"
 
+/*
+rule split ( string separator )
+{
+    local result ;
+    local s = $(string) ;
+
+    local match = 1 ;
+    while $(match)
+    {
+        match = [ MATCH ^(.*)($(separator))(.*) : $(s) ] ;
+        if $(match)
+        {
+            match += "" ;  # in case 3rd item was empty - works around MATCH bug
+            result = $(match[3]) $(result) ;
+            s = $(match[1]) ;
+        }
+    }
+    return $(s) $(result) ;
+}
+*/
+
+LIST * regex_split( FRAME * frame, int flags )
+{
+    LIST * args = lol_get( frame->args, 0 );
+    OBJECT * s;
+    OBJECT * separator;
+    regexp * re;
+    const char * pos;
+    LIST * result = L0;
+    LISTITER iter = list_begin( args );
+    s = list_item( iter );
+    separator = list_item( list_next( iter ) );
+    
+    re = regex_compile( separator );
+
+    pos = object_str( s );
+    while ( regexec( re, pos ) )
+    {
+        result = list_push_back( result, object_new_range( pos, re->startp[ 0 ] - pos ) );
+        pos = re->endp[ 0 ];
+    }
+
+    result = list_push_back( result, object_new( pos ) );
+
+    return result;
+}
+
+/*
+rule replace (
+    string  # The string to modify.
+    match  # The characters to replace.
+    replacement  # The string to replace with.
+    )
+{
+    local result = "" ;
+    local parts = 1 ;
+    while $(parts)
+    {
+        parts = [ MATCH ^(.*)($(match))(.*) : $(string) ] ;
+        if $(parts)
+        {
+            parts += "" ;
+            result = "$(replacement)$(parts[3])$(result)" ;
+            string = $(parts[1]) ;
+        }
+    }
+    string ?= "" ;
+    result = "$(string)$(result)" ;
+    return $(result) ;
+}
+*/
+
+LIST * regex_replace( FRAME * frame, int flags )
+{
+    LIST * args = lol_get( frame->args, 0 );
+    OBJECT * s;
+    OBJECT * match;
+    OBJECT * replacement;
+    regexp * re;
+    const char * pos;
+    string buf[ 1 ];
+    LIST * result;
+    LISTITER iter = list_begin( args );
+    s = list_item( iter );
+    iter = list_next( iter );
+    match = list_item( iter );
+    iter = list_next( iter );
+    replacement = list_item(iter );
+    
+    re = regex_compile( match );
+    
+    string_new( buf );
+
+    pos = object_str( s );
+    while ( regexec( re, pos ) )
+    {
+        string_append_range( buf, pos, re->startp[ 0 ] );
+        string_append( buf, object_str( replacement ) );
+        pos = re->endp[ 0 ];
+    }
+    string_append( buf, pos );
+
+    result = list_new( object_new( buf->value ) );
+
+    string_free( buf );
+
+    return result;
+}
 
 /*
 rule transform ( list * : pattern : indices * )
@@ -97,7 +205,16 @@ LIST * regex_transform( FRAME * frame, int flags )
 
 void init_regex()
 {
-    char const * args[] = { "list", "*", ":", "pattern", ":", "indices", "*", 0
-        };
-    declare_native_rule( "regex", "transform", args, regex_transform, 2 );
+    {
+        char const * args[] = { "string", "separator", 0  };
+        declare_native_rule( "regex", "split", args, regex_split, 1 );
+    }
+    {
+        char const * args[] = { "string", "match", "replacement", 0  };
+        declare_native_rule( "regex", "replace", args, regex_replace, 1 );
+    }
+    {
+        char const * args[] = { "list", "*", ":", "pattern", ":", "indices", "*", 0 };
+        declare_native_rule( "regex", "transform", args, regex_transform, 2 );
+    }
 }
