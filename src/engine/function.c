@@ -103,6 +103,7 @@ void backtrace_line( FRAME * );
 #define INSTR_APPLY_INDEX_GROUP            44
 #define INSTR_APPLY_INDEX_MODIFIERS_GROUP  45
 #define INSTR_COMBINE_STRINGS              46
+#define INSTR_GET_GRIST                    64
 
 #define INSTR_INCLUDE                      47
 #define INSTR_RULE                         48
@@ -1623,10 +1624,30 @@ static void var_parse_group_compile( VAR_PARSE_GROUP const * parse,
 static void var_parse_var_compile( VAR_PARSE_VAR const * parse, compiler * c )
 {
     int expand_name = 0;
+    int is_get_grist = 0;
+    int has_modifiers = 0;
+    /* Special case common modifiers */
+    if ( parse->modifiers->size == 1 )
+    {
+        VAR_PARSE_GROUP * mod = dynamic_array_at( VAR_PARSE_GROUP *, parse->modifiers, 0 );
+        if ( mod->elems->size == 1 )
+        {
+            VAR_PARSE * mod1 = dynamic_array_at( VAR_PARSE *, mod->elems, 0 );
+            if ( mod1->type == VAR_PARSE_TYPE_STRING )
+            {
+                OBJECT * s = ( (VAR_PARSE_STRING *)mod1 )->s;
+                if ( ! strcmp ( object_str( s ), "G" ) )
+                {
+                    is_get_grist = 1;
+                }
+            }
+        }
+    }
     /* If there are modifiers, emit them in reverse order. */
-    if ( parse->modifiers->size > 0 )
+    if ( parse->modifiers->size > 0 && !is_get_grist )
     {
         int i;
+        has_modifiers = 1;
         for ( i = 0; i < parse->modifiers->size; ++i )
             var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *,
                 parse->modifiers, parse->modifiers->size - i - 1 ), c );
@@ -1660,23 +1681,29 @@ static void var_parse_var_compile( VAR_PARSE_VAR const * parse, compiler * c )
     }
 
     /** Select the instruction for expanding the variable. */
-    if ( !parse->modifiers->size && !parse->subscript && !expand_name )
+    if ( !has_modifiers && !parse->subscript && !expand_name )
         ;
-    else if ( !parse->modifiers->size && !parse->subscript && expand_name )
+    else if ( !has_modifiers && !parse->subscript && expand_name )
         compile_emit( c, INSTR_PUSH_GROUP, 0 );
-    else if ( !parse->modifiers->size && parse->subscript && !expand_name )
+    else if ( !has_modifiers && parse->subscript && !expand_name )
         compile_emit( c, INSTR_APPLY_INDEX, 0 );
-    else if ( !parse->modifiers->size && parse->subscript && expand_name )
+    else if ( !has_modifiers && parse->subscript && expand_name )
         compile_emit( c, INSTR_APPLY_INDEX_GROUP, 0 );
-    if ( parse->modifiers->size && !parse->subscript && !expand_name )
+    else if ( has_modifiers && !parse->subscript && !expand_name )
         compile_emit( c, INSTR_APPLY_MODIFIERS, parse->modifiers->size );
-    else if ( parse->modifiers->size && !parse->subscript && expand_name )
+    else if ( has_modifiers && !parse->subscript && expand_name )
         compile_emit( c, INSTR_APPLY_MODIFIERS_GROUP, parse->modifiers->size );
-    else if ( parse->modifiers->size && parse->subscript && !expand_name )
+    else if ( has_modifiers && parse->subscript && !expand_name )
         compile_emit( c, INSTR_APPLY_INDEX_MODIFIERS, parse->modifiers->size );
-    else if ( parse->modifiers->size && parse->subscript && expand_name )
+    else if ( has_modifiers && parse->subscript && expand_name )
         compile_emit( c, INSTR_APPLY_INDEX_MODIFIERS_GROUP,
             parse->modifiers->size );
+
+    /* Now apply any special modifiers */
+    if ( is_get_grist )
+    {
+        compile_emit( c, INSTR_GET_GRIST, 0 );
+    }
 }
 
 static void var_parse_string_compile( VAR_PARSE_STRING const * parse,
@@ -4123,6 +4150,36 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             stack_deallocate( s, buffer_size );
             for ( i = 0; i < code->arg; ++i )
                 list_free( stack_pop( s ) );
+            stack_push( s, result );
+            break;
+        }
+
+        case INSTR_GET_GRIST:
+        {
+            LIST * vals = stack_pop( s );
+            LIST * result = L0;
+            LISTITER iter, end;
+
+            for ( iter = list_begin( vals ), end = list_end( vals ); iter != end; ++iter )
+            {
+                OBJECT * new_object;
+                const char * value = object_str( list_item( iter ) );
+                const char * p;
+                if ( value[ 0 ] == '<' && ( p = strchr( value, '>' ) ) )
+                {
+                    if( p[ 1 ] )
+                        new_object = object_new_range( value, p - value + 1 );
+                    else
+                        new_object = object_copy( list_item( iter ) );
+                }
+                else
+                {
+                    new_object = object_copy( constant_empty );
+                }
+                result = list_push_back( result, new_object );
+            }
+
+            list_free( vals );
             stack_push( s, result );
             break;
         }
