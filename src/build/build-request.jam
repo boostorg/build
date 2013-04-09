@@ -194,7 +194,7 @@ local rule convert-command-line-element ( e )
             lresult = [ regex.split $(p) "," ] ;
         }
 
-        if $(feature) && free in [ feature.attributes $(feature) ]
+        if $(feature) && free in [ feature.attributes <$(feature)> ]
         {
             # If we have free feature, then the value is everything
             # until the end of the command line token. Slashes in

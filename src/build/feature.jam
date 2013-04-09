@@ -223,7 +223,7 @@ rule valid ( names + )
 #
 rule attributes ( feature )
 {
-    return $($(:E=:G=$(feature)).attributes) ;
+    return $($(feature).attributes) ;
 }
 
 
@@ -1232,7 +1232,6 @@ rule __test__ ( )
     subfeature fu : subfu2 : q r s ;
 
     assert.result optional : attributes <fu> ;
-    assert.result optional : attributes fu ;
 
     assert.result <runtime-link>static <define>foobar <optimization>on
         <toolset>gcc:<define>FOO <toolset>gcc <variant>debug <stdlib>native
