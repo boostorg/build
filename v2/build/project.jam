@@ -234,7 +234,7 @@ rule find-jamfile (
     #
     if $(jamfile-to-load[2-])
     {
-        local v2-jamfiles = [ MATCH (.*[Jj]amfile\\.v2)|(.*[Bb]uild\\.jam) :
+        local v2-jamfiles = [ MATCH ^(.*[Jj]amfile\\.v2)|(.*[Bb]uild\\.jam)$ :
             $(jamfile-to-load) ] ;
 
         if $(v2-jamfiles) && ! $(v2-jamfiles[2])
@@ -309,7 +309,7 @@ local rule load-jamfile ( dir : jamfile-module )
             mark-as-user $(jamfile-module) ;
             modules.load $(jamfile-module) : [ path.native $(jamfile-to-load) ]
                 : . ;
-            if [ MATCH ($(JAMROOT)) : $(jamfile-to-load:BS) ]
+            if [ MATCH ^($(JAMROOT))$ : $(jamfile-to-load:BS) ]
             {
                 jamfile = [ find-jamfile $(dir) : no-errors ] ;
                 if $(jamfile)
@@ -401,7 +401,7 @@ rule load-aux ( module-name : file )
 }
 
 
-.global-build-dir = [ MATCH --build-dir=(.*) : [ modules.peek : ARGV ] ] ;
+.global-build-dir = [ MATCH ^--build-dir=(.*)$ : [ modules.peek : ARGV ] ] ;
 if $(.global-build-dir)
 {
     # If the option is specified several times, take the last value.
@@ -442,7 +442,7 @@ rule initialize (
     {
         parent-module = user-config ;
     }
-    else if $(location) && ! [ MATCH ($(JAMROOT)) : $(basename) ]
+    else if $(location) && ! [ MATCH ^($(JAMROOT))$ : $(basename) ]
     {
         # We search for parent/jamroot only if this is a jamfile project, i.e.
         # if is not a standalone or a jamroot project.
@@ -1087,7 +1087,7 @@ module project-rules
                             combine that with the --build-dir option. ;
                     }
                     # Strip the leading slash from id.
-                    local rid = [ MATCH /(.*) : $(id) ] ;
+                    local rid = [ MATCH ^/(.*) : $(id) ] ;
                     local p = [ path.join $(global-build-dir) $(rid)
                         $(explicit-build-dir) ] ;
 

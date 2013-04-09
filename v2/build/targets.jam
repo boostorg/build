@@ -239,7 +239,7 @@ class project-target : abstract-target
                     local id = [ get id  ] ;
                     if $(id)
                     {
-                        local rid = [ MATCH /(.*) : $(id) ] ;
+                        local rid = [ MATCH ^/(.*) : $(id) ] ;
                         self.build-dir = [ path.join [ project.standalone-build-dir ] $(rid) ] ;
                     }
                     else
@@ -372,7 +372,7 @@ class project-target : abstract-target
         local result ;
         local current-location = [ get location ] ;
 
-        local split = [ MATCH (.*)//(.*) : $(id) ] ;
+        local split = [ MATCH ^(.*)//(.*)$ : $(id) ] ;
         local project-part = $(split[1]) ;
         local target-part = $(split[2]) ;
 
