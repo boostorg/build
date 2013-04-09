@@ -137,7 +137,7 @@ LIST * headers1( LIST * l, OBJECT * file, int rec, regexp * re[] )
     if ( re_macros == 0 )
     {
         OBJECT * const re_str = object_new(
-            "^[     ]*#[    ]*include[  ]*([A-Za-z][A-Za-z0-9_]*).*$" );
+            "#[ \t]*include[ \t]*([A-Za-z][A-Za-z0-9_]*).*$" );
         re_macros = regex_compile( re_str );
         object_free( re_str );
     }
