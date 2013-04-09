@@ -110,11 +110,11 @@ rule evaluate-conditionals-in-context ( properties * : context * )
     for local p in $(conditionals)
     {
         # Separate condition and property.
-        local s = [ MATCH (.*):(<.*) : $(p) ] ;
+        local s = [ MATCH ^(.*):(<.*) : $(p) ] ;
         # Split condition into individual properties.
         local condition = [ regex.split $(s[1]) "," ] ;
         # Evaluate condition.
-        if ! [ MATCH (!).* : $(condition:G=) ]
+        if ! [ MATCH ^(!).* : $(condition:G=) ]
         {
             # Only positive checks
             if $(condition) in $(context)
@@ -129,7 +129,7 @@ rule evaluate-conditionals-in-context ( properties * : context * )
             while $(condition)
             {
                 local c = $(condition[1]) ;
-                local m = [ MATCH !(.*) : $(c) ] ;
+                local m = [ MATCH ^!(.*) : $(c) ] ;
                 if $(m)
                 {
                     local p = $(m:G=$(c:G)) ;
@@ -164,7 +164,7 @@ rule expand-subfeatures-in-conditions ( properties * )
     local result ;
     for local p in $(properties)
     {
-        local s = [ MATCH (.*):(<.*) : $(p) ] ;
+        local s = [ MATCH ^(.*):(<.*) : $(p) ] ;
         if ! $(s)
         {
             result += $(p) ;
@@ -459,11 +459,7 @@ rule change ( properties * : feature value ? )
 #
 rule split-conditional ( property )
 {
-    local m = [ MATCH "(.+):<(.+)" : $(property) ] ;
-    if $(m)
-    {
-        return $(m[1]) <$(m[2]) ;
-    }
+    return [ MATCH "^(.+):(<.+)" : $(property) ] ;
 }
 
 
@@ -526,7 +522,7 @@ rule translate-indirect ( specification * : context-module )
             }
             else
             {
-                if ! [ MATCH ".*([.]).*" : $(m) ]
+                if ! [ MATCH "([.])" : $(m) ]
                 {
                     # This is an unqualified rule name. The user might want to
                     # set flags on this rule name and toolset.flag
@@ -570,7 +566,7 @@ rule translate-dependencies ( specification * : project-id : location )
         }
         if dependency in [ feature.attributes $(p:G) ]
         {
-            local split-target = [ regex.match (.*)//(.*) : $(p:G=) ] ;
+            local split-target = [ regex.match ^(.*)//(.*) : $(p:G=) ] ;
             if $(split-target)
             {
                 local rooted = [ path.root [ path.make $(split-target[1]) ]
