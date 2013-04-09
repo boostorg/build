@@ -13,6 +13,7 @@
 #include "../native.h"
 #include "../compile.h"
 #include "../mem.h"
+#include "string.h"
 
 struct ps_map_entry
 {
@@ -156,13 +157,35 @@ LIST * property_set_create( FRAME * frame, int flags )
     }
     else
     {
-        OBJECT * const rulename = object_new( "new" );
-        LIST * val = call_rule( rulename, frame, list_append( list_new( object_new(
-            "property-set" ) ), unique ), 0 );
-        /* The 'unique' variable is freed in 'call_rule'. */
+        OBJECT * rulename = object_new( "new" );
+        OBJECT * varname = object_new( "self.raw" );
+        LIST * val = call_rule( rulename, frame,
+            list_new( object_new( "property-set" ) ), 0 );
+        LISTITER iter, end;
         object_free( rulename );
         pos->value = list_front( val );
-        pos->key = var_get( bindmodule( pos->value ), object_new( "self.raw" ) );
+        var_set( bindmodule( pos->value ), varname, unique, VAR_SET );
+        object_free( varname );
+
+        for ( iter = list_begin( unique ), end = list_end( unique ); iter != end; ++iter )
+        {
+            const char * str = object_str( list_item( iter ) );
+            if ( str[ 0 ] != '<' || ! strchr( str, '>' ) )
+            {
+                string message[ 1 ];
+                string_new( message );
+                string_append( message, "Invalid property: '" );
+                string_append( message, str );
+                string_append( message, "'" );
+                rulename = object_new( "errors.error" );
+                call_rule( rulename, frame,
+                    list_new( object_new( message->value ) ), 0 );
+                /* unreachable */
+                string_free( message );
+                object_free( rulename );
+            }
+        }
+
         return val;
     }
 }
