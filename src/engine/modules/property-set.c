@@ -190,11 +190,85 @@ LIST * property_set_create( FRAME * frame, int flags )
     }
 }
 
+/* binary search for the property value */
+LIST * property_set_get( FRAME * frame, int flags )
+{
+    OBJECT * varname = object_new( "self.raw" );
+    LIST * props = var_get( frame->module, varname );
+    const char * name = object_str( list_front( lol_get( frame->args, 0 ) ) );
+    size_t name_len = strlen( name );
+    LISTITER begin, end;
+    LIST * result = L0;
+    object_free( varname );
+
+    /* Assumes random access */
+    begin = list_begin( props ), end = list_end( props );
+
+    while ( 1 )
+    {
+        ptrdiff_t diff = (end - begin);
+        LISTITER mid = begin + diff / 2;
+        int res;
+        if ( diff == 0 )
+        {
+            return L0;
+        }
+        res = strncmp( object_str( list_item( mid ) ), name, name_len );
+        if ( res < 0 )
+        {
+            begin = mid + 1;
+        }
+        else if ( res > 0 )
+        {
+            end = mid;
+        }
+        else /* We've found the property */
+        {
+            /* Find the beginning of the group */
+            LISTITER tmp = mid;
+            while ( tmp > begin )
+            {
+                --tmp;
+                res = strncmp( object_str( list_item( tmp ) ), name, name_len );
+                if ( res != 0 )
+                {
+                    ++tmp;
+                    break;
+                }
+            }
+            begin = tmp;
+            /* Find the end of the group */
+            tmp = mid + 1;
+            while ( tmp < end )
+            {
+                res = strncmp( object_str( list_item( tmp ) ), name, name_len );
+                if ( res != 0 ) break;
+                ++tmp;
+            }
+            end = tmp;
+            break;
+        }
+    }
+
+    for ( ; begin != end; ++begin )
+    {
+        result = list_push_back( result,
+            object_new( object_str( list_item( begin ) ) + name_len ) );
+    }
+
+    return result;
+}
 
 void init_property_set()
 {
-    char const * args[] = { "raw-properties", "*", 0 };
-    declare_native_rule( "property-set", "create", args, property_set_create, 1 );
+    {
+        char const * args[] = { "raw-properties", "*", 0 };
+        declare_native_rule( "property-set", "create", args, property_set_create, 1 );
+    }
+    {
+        char const * args[] = { "feature", 0 };
+        declare_native_rule( "class@property-set", "get", args, property_set_get, 1 );
+    }
     ps_map_init( &all_property_sets );
 }
 

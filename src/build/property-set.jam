@@ -379,6 +379,10 @@ rule create ( raw-properties * )
 }
 NATIVE_RULE property-set : create ;
 
+if [ HAS_NATIVE_RULE class@property-set : get : 1 ]
+{
+    NATIVE_RULE class@property-set : get ;
+}
 
 # Creates a new 'property-set' instance after checking that all properties are
 # valid and converting implicit properties into gristed form.
