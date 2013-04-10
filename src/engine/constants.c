@@ -28,6 +28,7 @@ void constants_init( void )
     constant_true                     = object_new( "true" );
     constant_name                     = object_new( "__name__" );
     constant_bases                    = object_new( "__bases__" );
+    constant_class                    = object_new( "__class__" );
     constant_typecheck                = object_new( ".typecheck" );
     constant_builtin                  = object_new( "(builtin)" );
     constant_HCACHEFILE               = object_new( "HCACHEFILE" );
@@ -84,6 +85,7 @@ void constants_done( void )
     object_free( constant_true );
     object_free( constant_name );
     object_free( constant_bases );
+    object_free( constant_class );
     object_free( constant_typecheck );
     object_free( constant_builtin );
     object_free( constant_HCACHEFILE );
@@ -138,6 +140,7 @@ OBJECT * constant_ok;
 OBJECT * constant_true;
 OBJECT * constant_name;
 OBJECT * constant_bases;
+OBJECT * constant_class;
 OBJECT * constant_typecheck;
 OBJECT * constant_builtin;
 OBJECT * constant_HCACHEFILE;
