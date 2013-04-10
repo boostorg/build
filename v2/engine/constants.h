@@ -25,6 +25,7 @@ extern OBJECT * constant_ok;                        /* "ok" */
 extern OBJECT * constant_true;                      /* "true" */
 extern OBJECT * constant_name;                      /* "__name__" */
 extern OBJECT * constant_bases;                     /* "__bases__" */
+extern OBJECT * constant_class;                     /* "__class__" */
 extern OBJECT * constant_typecheck;                 /* ".typecheck" */
 extern OBJECT * constant_builtin;                   /* "(builtin)" */
 extern OBJECT * constant_HCACHEFILE;                /* "HCACHEFILE" */
