@@ -327,6 +327,7 @@ void hashstats_init( struct hashstats * stats )
     stats->tab_size = 0;
     stats->item_size = 0;
     stats->sets = 0;
+    stats->num_hashes = 0;
 }
 
 
@@ -357,19 +358,21 @@ void hashstats_add( struct hashstats * stats, struct hash * hp )
         stats->num_items += hp->items.nel;
         stats->tab_size += hp->tab.nel;
         stats->item_size = hp->items.size;
+        ++stats->num_hashes;
     }
 }
 
 
 void hashstats_print( struct hashstats * stats, char const * name )
 {
-    printf( "%s table: %d+%d+%d (%dK+%luK) items+table+hash, %f density\n",
+    printf( "%s table: %d+%d+%d (%dK+%luK+%luK) items+table+hash, %f density\n",
         name,
         stats->count,
         stats->num_items,
         stats->tab_size,
         stats->num_items * stats->item_size / 1024,
         (long unsigned)stats->tab_size * sizeof( ITEM * * ) / 1024,
+        (long unsigned)stats->num_hashes * sizeof( struct hash ) / 1024,
         (float)stats->count / (float)stats->sets );
 }
 
