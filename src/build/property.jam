@@ -22,67 +22,28 @@ import utility ;
 rule refine ( properties * : requirements * )
 {
     local result ;
-    local error ;
+    local unset ;
 
-    # All the 'requirements' elements should be present in the result. Record
-    # them so that we can handle 'properties'.
+    # Collect all non-free features in requirements
     for local r in $(requirements)
     {
         # Do not consider conditional requirements.
-        if ! [ MATCH (:) : $(r:G=) ]
+        if ! [ MATCH (:) : $(r:G=) ] && ! free in [ feature.attributes $(r:G) ]
         {
-            # Note: cannot use a local variable here, so use an ugly name.
-            __require__$(r:G) = $(r:G=) ;
+            unset += $(r:G) ;
         }
     }
 
+    # Remove properties that are overridden by requirements
     for local p in $(properties)
     {
-        if [ MATCH (:) : $(p:G=) ]
+        if [ MATCH (:) : $(p:G=) ] || ! $(p:G) in $(unset)
         {
-            # Do not modify conditional properties.
             result += $(p) ;
-        }
-        else if free in [ feature.attributes $(p:G) ]
-        {
-            # Do not modify free properties.
-            result += $(p) ;
-        }
-        else
-        {
-            local required-value = $(__require__$(p:G)) ;
-            if $(required-value)
-            {
-                if $(p:G=) != $(required-value)
-                {
-                    result += $(p:G)$(required-value) ;
-                }
-                else
-                {
-                    result += $(p) ;
-                }
-            }
-            else
-            {
-                result += $(p) ;
-            }
         }
     }
 
-    # Unset our ugly map.
-    for local r in $(requirements)
-    {
-        __require__$(r:G) = ;
-    }
-
-    if $(error)
-    {
-        return $(error) ;
-    }
-    else
-    {
-        return [ sequence.unique $(result) $(requirements) ] ;
-    }
+    return [ sequence.unique $(result) $(requirements) ] ;
 }
 
 
