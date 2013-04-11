@@ -463,6 +463,143 @@ rule split-conditional ( property )
 }
 
 
+rule translate-path-value ( value : path )
+{
+    local t ;
+    for local v in [ regex.split $(value) "&&" ]
+    {
+        t += [ path.root [ path.make $(v) ] $(path) ] ;
+    }
+    return $(t:TJ="&&") ;
+}
+
+rule translate-dependency-value ( value : project-id : project-location )
+{
+    local split-target = [ regex.match ^(.*)//(.*) : $(value) ] ;
+    if $(split-target)
+    {
+        local rooted = [ path.root [ path.make $(split-target[1]) ]
+                [ path.root $(project-location) [ path.pwd ] ] ] ;
+        return $(rooted)//$(split-target[2]) ;
+    }
+    else if [ path.is-rooted $(value) ]
+    {
+        return $(value) ;
+    }
+    else
+    {
+        return $(project-id)//$(value) ;
+    }
+}
+
+rule translate-indirect-value ( rulename : context-module )
+{
+    if [ MATCH "^([^%]*)%([^%]+)$" : $(rulename) ]
+    {
+        # Rule is already in the 'indirect-rule' format.
+        return @$(rulename) ;
+    }
+    else
+    {
+        local v ;
+        if ! [ MATCH "([.])" : $(rulename) ]
+        {
+            # This is an unqualified rule name. The user might want to
+            # set flags on this rule name and toolset.flag
+            # auto-qualifies it. Need to do the same here so flag
+            # setting works. We can arrange for toolset.flag to *not*
+            # auto-qualify the argument but then two rules defined in
+            # two Jamfiles would conflict.
+            rulename = $(context-module).$(rulename) ;
+        }
+        v = [ indirect.make $(rulename) : $(context-module) ] ;
+        return @$(v) ;
+    }
+
+}
+
+# Equivalent to a calling all of:
+#   translate-path
+#   translate-indirect
+#   translate-dependency
+#   expand-subfeatures-in-conditions
+#   make
+#
+rule translate ( properties * : project-id : project-location : context-module )
+{
+    local result ;
+    for local p in $(properties)
+    {
+        local split = [ split-conditional $(p) ] ;
+        local condition property ;
+
+        if $(split)
+        {
+            condition = $(split[1]) ;
+            property = $(split[2]) ;
+            
+            local e ;
+            for local c in [ regex.split $(condition) "," ]
+            {
+                e += [ feature.expand-subfeatures $(c) : true ] ;
+            }
+
+            condition = $(e:J=,): ;
+        }
+        else
+        {
+            property = $(p) ;
+        }
+
+        local feature = $(property:G) ;
+        if ! $(feature)
+        {
+            if [ feature.is-implicit-value $(property) ]
+            {
+                feature = [ feature.implied-feature $(property) ] ;
+                result += $(feature)$(property) ;
+            }
+            else
+            {
+                import errors ;
+                errors.error "'$(e)' is not a valid property specification" ;
+            }
+        }
+        local attributes = [ feature.attributes $(feature) ] ;
+        local value ;
+        # Only free features should be translated
+        if free in $(attributes)
+        {
+            if path in $(attributes)
+            {
+                value = [ translate-path-value $(property:G=) : $(project-location) ] ;
+            }
+            else if dependency in $(attributes)
+            {
+                value = [ translate-dependency-value $(property:G=) : $(project-id) : $(project-location) ] ;
+            }
+            else
+            {
+                local m = [ MATCH ^@(.+) : $(property:G=) ] ;
+                if $(m)
+                {
+                    value = [ translate-indirect-value $(m) : $(context-module) ] ;
+                }
+                else
+                {
+                    value = $(property:G=) ;
+                }
+            }
+        }
+        else
+        {
+            value = $(property:G=) ;
+        }
+        result += $(condition:E=)$(feature)$(value) ;
+    }
+    return $(result) ;
+}
+
 # Interpret all path properties in 'properties' as relative to 'path'. The
 # property values are assumed to be in system-specific form, and will be
 # translated into normalized form.
