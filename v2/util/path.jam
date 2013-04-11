@@ -493,16 +493,12 @@ rule make-NT ( native )
 
 rule native-NT ( path )
 {
-    local result ;
-    if [ is-rooted $(path) ] && ! [ regex.match "^/(.:)" : $(path) ]
+    local remove-slash = [ MATCH "^/(.:.*)" : $(path) ] ;
+    if $(remove-slash)
     {
-        result = $(path) ;
+        path = $(remove-slash) ;
     }
-    else
-    {
-        result = [ MATCH "^/?(.*)" : $(path) ] ;
-    }
-    return [ regex.replace $(result) / \\ ] ;
+    return [ regex.replace $(path) / \\ ] ;
 }
 
 
@@ -707,6 +703,9 @@ rule native-VMS ( path )
     return $(native) ;
 }
 
+# Remove one level of indirection
+IMPORT $(__name__) : make-$(os) native-$(os) : $(__name__) : make native ;
+EXPORT $(__name__) : make native ;
 
 rule __test__ ( )
 {
