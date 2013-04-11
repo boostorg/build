@@ -539,6 +539,7 @@ rule inherit-rules ( toolset : base : localize ? )
     IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
 }
 
+.requirements = [ property-set.empty ] ;
 
 # Return the list of global 'toolset requirements'. Those requirements will be
 # automatically added to the requirements of any main target.
@@ -558,7 +559,10 @@ rule add-requirements ( requirements * )
 {
     if ! $(.ignore-requirements)
     {
-        .requirements += $(requirements) ;
+        requirements = [ property.translate-indirect $(specification) : [ CALLER_MODULE ] ] ;
+        requirements = [ property.expand-subfeatures-in-conditions $(requirements) ] ;
+        requirements = [ property.make $(requirements) ] ;
+        .requirements = [ $(.requirements).add-raw $(requirements) ] ;
     }
 }
 
