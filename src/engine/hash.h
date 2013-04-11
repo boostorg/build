@@ -69,6 +69,7 @@ struct hashstats {
     int tab_size;
     int item_size;
     int sets;
+    int num_hashes;
 };
 
 void hashstats_init( struct hashstats * stats );
