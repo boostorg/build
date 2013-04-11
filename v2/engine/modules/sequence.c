@@ -7,6 +7,8 @@
 
 #include "../native.h"
 #include "../object.h"
+#include "../lists.h"
+#include "../compile.h"
 
 #include <stdlib.h>
 
@@ -52,9 +54,43 @@ LIST * sequence_select_highest_ranked( FRAME * frame, int flags )
     return result;
 }
 
+LIST * sequence_transform( FRAME * frame, int flags )
+{
+    LIST * function = lol_get( frame->args, 0 );
+    LIST * sequence = lol_get( frame->args, 1 );
+    LIST * result = L0;
+    OBJECT * function_name = list_front( function );
+    LISTITER args_begin = list_next( list_begin( function ) ), args_end = list_end( function );
+    LISTITER iter = list_begin( sequence ), end = list_end( sequence );
+
+    for ( ; iter != end; iter = list_next( iter ) )
+    {
+        FRAME inner[ 1 ];
+
+        frame_init( inner );
+        inner->prev = frame;
+        inner->prev_user = frame->prev_user;
+        inner->module = frame->prev->module;
+
+        lol_add( inner->args, list_push_back( list_copy_range( function, args_begin, args_end ), object_copy( list_item( iter ) ) ) );
+        result = list_append( result, evaluate_rule( function_name, inner ) );
+
+        frame_free( inner );
+    }
+
+    return result;
+}
+
 void init_sequence()
 {
-    char const * args[] = { "elements", "*", ":", "rank", "*", 0 };
-    declare_native_rule( "sequence", "select-highest-ranked", args,
-                        sequence_select_highest_ranked, 1 );
+    {
+        char const * args[] = { "elements", "*", ":", "rank", "*", 0 };
+        declare_native_rule( "sequence", "select-highest-ranked", args,
+                            sequence_select_highest_ranked, 1 );
+    }
+    {
+        char const * args[] = { "function", "+", ":", "sequence", "*", 0 };
+        declare_native_rule( "sequence", "transform", args,
+                            sequence_transform, 1 );
+    }
 }
