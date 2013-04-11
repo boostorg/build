@@ -1593,8 +1593,6 @@ rule main-target-requirements (
     : project        # Project where the main target is to be declared.
 )
 {
-    specification += [ toolset.requirements ] ;
-
     local requirements = [ property-set.refine-from-user-input
         [ $(project).get requirements ] : $(specification) :
         [ $(project).project-module ] : [ $(project).get location ] ] ;
@@ -1603,7 +1601,7 @@ rule main-target-requirements (
         import errors ;
         errors.error "Conflicting requirements for target:" $(requirements) ;
     }
-    return $(requirements) ;
+    return [ $(requirements).add [ toolset.requirements ] ] ;
 }
 
 
