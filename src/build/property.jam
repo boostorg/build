@@ -742,11 +742,10 @@ class property-map
 
     # Associate 'value' with 'properties'.
     #
-    rule insert ( properties + : value )
+    rule insert ( properties * : value )
     {
-        self.all-flags += $(self.next-flag) ;
-        self.properties.$(self.next-flag) = $(properties) ;
-        self.value.$(self.next-flag) = $(value) ;
+        self.all-flags += self.$(self.next-flag) ;
+        self.$(self.next-flag) = $(value) $(properties) ;
 
         self.next-flag = [ numbers.increment $(self.next-flag) ] ;
     }
@@ -755,25 +754,18 @@ class property-map
     # more than one subset has a value assigned to it, returns the value for the
     # longest subset, if it is unique.
     #
-    rule find ( properties + )
-    {
-        return [ find-replace $(properties) ] ;
-    }
-
-    # Returns the value associated with 'properties'. If 'value' parameter is
-    # given, replaces the found value.
-    #
-    rule find-replace ( properties + : value ? )
+    rule find ( property-set )
     {
         # First find all matches.
         local matches ;
         local match-ranks ;
         for local i in $(self.all-flags)
         {
-            if $(self.properties.$(i)) in $(properties)
+            local list = $($(i)) ;
+            if [ $(property-set).contains-raw $(list[2-]) ] 
             {
-                matches += $(i) ;
-                match-ranks += [ sequence.length $(self.properties.$(i)) ] ;
+                matches += $(list[1]) ;
+                match-ranks += [ sequence.length $(list) ] ;
             }
         }
         local best = [ sequence.select-highest-ranked $(matches)
@@ -783,10 +775,36 @@ class property-map
             import errors : error : errors.error ;
             errors.error "Ambiguous key $(properties:J= :E=)" ;
         }
-        local original = $(self.value.$(best)) ;
+        return $(best) ;
+    }
+
+    # Returns the value associated with 'properties'. If 'value' parameter is
+    # given, replaces the found value.
+    #
+    rule find-replace ( properties * : value ? )
+    {
+        # First find all matches.
+        local matches ;
+        local match-ranks ;
+        for local i in $(self.all-flags)
+        {
+            if $($(i)[2-]) in $(properties)
+            {
+                matches += $(i) ;
+                match-ranks += [ sequence.length $($(i)) ] ;
+            }
+        }
+        local best = [ sequence.select-highest-ranked $(matches)
+            : $(match-ranks) ] ;
+        if $(best[2])
+        {
+            import errors : error : errors.error ;
+            errors.error "Ambiguous key $(properties:J= :E=)" ;
+        }
+        local original = $($(best)[1]) ;
         if $(value)
         {
-            self.value.$(best) = $(value) ;
+            $(best) = $(value) $($(best)[2-]) ;
         }
         return $(original) ;
     }
@@ -901,12 +919,12 @@ rule __test__ ( )
     $(pm).insert <toolset>gcc <os>NT : obj ;
     $(pm).insert <toolset>gcc <os>CYGWIN : obj ;
 
-    assert.equal o : [ $(pm).find <toolset>gcc ] ;
+    assert.equal o : [ $(pm).find-replace <toolset>gcc ] ;
 
-    assert.equal obj : [ $(pm).find <toolset>gcc <os>NT ] ;
+    assert.equal obj : [ $(pm).find-replace <toolset>gcc <os>NT ] ;
 
     try ;
-        $(pm).find <toolset>gcc <os>NT <os>CYGWIN ;
+        $(pm).find-replace <toolset>gcc <os>NT <os>CYGWIN ;
     catch "Ambiguous key <toolset>gcc <os>NT <os>CYGWIN" ;
 
     # Test ordinary properties.

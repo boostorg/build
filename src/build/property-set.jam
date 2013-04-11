@@ -298,6 +298,17 @@ class property-set
         return $($(feature)) ;
     }
 
+    # Returns true if the property-set contains all the
+    # specified properties.
+    #
+    rule contains-raw ( properties * )
+    {
+        if $(properties) in $(self.raw)
+        {
+            return true ;
+        }
+    }
+
     # private
 
     rule init-base ( )

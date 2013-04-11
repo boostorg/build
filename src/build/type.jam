@@ -54,6 +54,12 @@ rule register ( type : suffixes * : base-type ? )
         .base.$(type) = $(base-type) ;
         .derived.$(base-type) += $(type) ;
 
+        # Store suffixes for generated targets.
+        .suffixes.$(type) = [ new property-map ] ;
+
+        # Store prefixes for generated targets (e.g. "lib" for library).
+        .prefixes.$(type) = [ new property-map ] ;
+
         if $(suffixes)-is-defined
         {
             # Specify mapping from suffixes to type.
@@ -233,11 +239,6 @@ rule is-subtype ( type base )
 }
 
 
-# Store suffixes for generated targets.
-.suffixes = [ new property-map ] ;
-
-# Store prefixes for generated targets (e.g. "lib" for library).
-.prefixes = [ new property-map ] ;
 
 
 # Sets a file suffix to be used when generating a target of 'type' with the
@@ -309,15 +310,13 @@ rule generated-target-prefix ( type : property-set )
 
 local rule set-generated-target-ps ( ps : type : properties * : psval )
 {
-    properties = <target-type>$(type) $(properties) ;
-    $(.$(ps)es).insert $(properties) : $(psval) ;
+    $(.$(ps)es.$(type)).insert $(properties) : $(psval) ;
 }
 
 
 local rule change-generated-target-ps ( ps : type : properties * : psval )
 {
-    properties = <target-type>$(type) $(properties) ;
-    local prev = [ $(.$(ps)es).find-replace $(properties) : $(psval) ] ;
+    local prev = [ $(.$(ps)es.$(type)).find-replace $(properties) : $(psval) ] ;
     if ! $(prev)
     {
         set-generated-target-ps $(ps) : $(type) : $(properties) : $(psval) ;
@@ -330,13 +329,13 @@ local rule change-generated-target-ps ( ps : type : properties * : psval )
 # 'ps' can be either "prefix" or "suffix".  If no prefix/suffix is specified for
 # 'type', returns prefix/suffix for base type, if any.
 #
-local rule generated-target-ps-real ( ps : type : properties * )
+local rule generated-target-ps ( ps : type : property-set )
 {
     local result ;
     local found ;
     while $(type) && ! $(found)
     {
-        result = [ $(.$(ps)es).find <target-type>$(type) $(properties) ] ;
+        result = [ $(.$(ps)es.$(type)).find $(property-set) ] ;
         # If the prefix/suffix is explicitly set to an empty string, we consider
         # prefix/suffix to be found. If we were not to compare with "", there
         # would be no way to specify an empty prefix/suffix.
@@ -351,28 +350,6 @@ local rule generated-target-ps-real ( ps : type : properties * )
         result = ;
     }
     return $(result) ;
-}
-
-
-local rule generated-target-ps ( ps : type : property-set )
-{
-    local key = .$(ps).$(type).$(property-set) ;
-    local v = $($(key)) ;
-    if ! $(v)
-    {
-        v = [ generated-target-ps-real $(ps) : $(type) : [ $(property-set).raw ]
-            ] ;
-        if ! $(v)
-        {
-            v = none ;
-        }
-        $(key) = $(v) ;
-    }
-
-    if $(v) != none
-    {
-        return $(v) ;
-    }
 }
 
 
