@@ -183,15 +183,9 @@ static void bind_explicitly_located_target( void * xtarget, void * data )
         SETTINGS * s = t->settings;
         for ( ; s ; s = s->next )
         {
-            if ( strcmp( object_str( s->symbol ), "LOCATE" ) == 0 )
+            if ( object_equal( s->symbol, constant_LOCATE ) && ! list_empty( s->value ) )
             {
-                pushsettings( root_module(), t->settings );
-                /* We are binding a target with explicit LOCATE. So third
-                 * argument is of no use: nothing will be returned through it.
-                 */
-                object_free( t->boundname );
-                t->boundname = search( t->name, &t->time, 0, 0 );
-                popsettings( root_module(), t->settings );
+                set_explicit_binding( t->name, list_front( s->value ) );
                 break;
             }
         }

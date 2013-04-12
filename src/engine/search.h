@@ -14,6 +14,7 @@
 #include "object.h"
 #include "timestamp.h"
 
+void set_explicit_binding( OBJECT * target, OBJECT * locate );
 OBJECT * search( OBJECT * target, timestamp * const time,
     OBJECT * * another_target, int const file );
 void search_done( void );

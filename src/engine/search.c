@@ -69,6 +69,50 @@ void call_bind_rule( OBJECT * target_, OBJECT * boundname_ )
     }
 }
 
+/* Records the binding of a target with an explicit LOCATE. */
+void set_explicit_binding( OBJECT * target, OBJECT * locate )
+{
+    OBJECT * boundname;
+    OBJECT * key;
+    PATHNAME f[ 1 ];
+    string buf[ 1 ];
+    int found;
+    BINDING * ba;
+
+    if ( !explicit_bindings )
+        explicit_bindings = hashinit( sizeof( BINDING ), "explicitly specified "
+            "locations" );
+
+    string_new( buf );
+
+    /* Parse the filename. */
+    path_parse( object_str( target ), f );
+
+    /* Ignore the grist. */
+    f->f_grist.ptr = 0;
+    f->f_grist.len = 0;
+
+    /* Root the target path at the given location. */
+    f->f_root.ptr = object_str( locate );
+    f->f_root.len = strlen( object_str( locate ) );
+
+    path_build( f, buf );
+    boundname = object_new( buf->value );
+    if ( DEBUG_SEARCH )
+        printf( "explicit locate %s: %s\n", object_str( target ), buf->value );
+    string_free( buf );
+    key = path_as_key( boundname );
+    object_free( boundname );
+
+    ba = (BINDING *)hash_insert( explicit_bindings, key, &found );
+    if ( !found )
+    {
+        ba->binding = key;
+        ba->target = target;
+    }
+    else
+        object_free( key );
+}
 
 /*
  * search.c - find a target along $(SEARCH) or $(LOCATE).
@@ -96,9 +140,6 @@ OBJECT * search( OBJECT * target, timestamp * const time,
     int found = 0;
     OBJECT * boundname = 0;
 
-    /* Set to 1 if target location is specified via LOCATE. */
-    int explicitly_located = 0;
-
     if ( another_target )
         *another_target = 0;
 
@@ -125,8 +166,6 @@ OBJECT * search( OBJECT * target, timestamp * const time,
 
         if ( DEBUG_SEARCH )
             printf( "locate %s: %s\n", object_str( target ), buf->value );
-
-        explicitly_located = 1;
 
         key = object_new( buf->value );
         timestamp_from_path( time, key );
@@ -208,25 +247,6 @@ OBJECT * search( OBJECT * target, timestamp * const time,
 
     boundname = object_new( buf->value );
     string_free( buf );
-
-    if ( explicitly_located )
-    {
-        int found;
-        BINDING * ba;
-        OBJECT * const key = path_as_key( boundname );
-        /* CONSIDER: We should probably issue a warning if another file is
-         * explicitly bound to the same location. This might break
-         * compatibility, though.
-         */
-        ba = (BINDING *)hash_insert( explicit_bindings, key, &found );
-        if ( !found )
-        {
-            ba->binding = key;
-            ba->target = target;
-        }
-        else
-            object_free( key );
-    }
 
     /* Prepare a call to BINDRULE if the variable is set. */
     call_bind_rule( target, boundname );
