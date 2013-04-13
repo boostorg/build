@@ -210,7 +210,7 @@ OBJECT * search( OBJECT * target, timestamp * const time,
                 object_free( key );
                 break;
             }
-            else if ( ff && !timestamp_empty( &ff->time ) )
+            else if ( ff )
             {
                 if ( !file || ff->is_file )
                 {
