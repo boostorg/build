@@ -24,6 +24,8 @@ parser.add_option('--archive', dest="archive", action="store_true")
 parser.add_option('--static-lib', dest="static_libraries", action="append")
 parser.add_option('--shared-lib', dest="shared_libraries", action="append")
 
+cwd = os.environ["JAM_CWD"]
+
 class MockInfo(object):
   def __init__(self):
     self.files = dict()
@@ -71,7 +73,7 @@ class MockInfo(object):
 
     # Normalize a path for comparison purposes
     def adjust_path(p):
-      return os.path.normcase(os.path.abspath(p))
+      return os.path.normcase(os.path.normpath(os.path.join(cwd, p)))
 
     # order matters
     if options.includes is None:
@@ -139,11 +141,17 @@ else:
   t.write('mock.jam', '''
 import feature ;
 import toolset ;
+import path ;
+import modules ;
+import common ;
 
-python-cmd = "\"%s\"" ;
+.python-cmd = "\"%s\"" ;
 
 rule init ( )
 {
+    local here = [ path.make [ modules.binding $(__name__) ] ] ;
+    here = [ path.native [ path.root [ path.parent $(here) ] [ path.pwd ] ] ] ;
+    .config-cmd = [ common.variable-setting-command JAM_CWD : $(here) ] $(.python-cmd) ;
 }
 
 feature.extend toolset : mock ;
@@ -159,12 +167,12 @@ toolset.flags mock.compile INCLUDES <include> ;
 
 actions compile.c
 {
-   $(python-cmd) mock.py -c -x c -I$(INCLUDES) $(>) -o $(<)
+   $(.config-cmd) mock.py -c -x c -I"$(INCLUDES)" "$(>)" -o "$(<)"
 }
 
 actions compile.c++
 {
-    $(python-cmd) mock.py -c -x c++ -I$(INCLUDES) $(>) -o $(<)
+    $(.config-cmd) mock.py -c -x c++ -I"$(INCLUDES)" "$(>)" -o "$(<)"
 }
 
 toolset.flags mock.link USER_OPTIONS <linkflags> ;
@@ -175,17 +183,17 @@ toolset.flags mock.link LIBRARIES <library-file> ;
 
 actions link
 {
-    $(python-cmd) mock.py $(>) -o $(<) $(USER_OPTIONS) -L$(LINK_PATH) --static-lib=$(FINDLIBS-STATIC) --shared-lib=$(FINDLIBS-SHARED)
+    $(.config-cmd) mock.py "$(>)" -o "$(<)" $(USER_OPTIONS) -L"$(LINK_PATH)" --static-lib=$(FINDLIBS-STATIC) --shared-lib=$(FINDLIBS-SHARED)
 }
 
 actions archive
 {
-    $(python-cmd) mock.py --archive $(>) -o $(<) $(USER_OPTIONS)
+    $(.config-cmd) mock.py --archive "$(>)" -o "$(<)" $(USER_OPTIONS)
 }
 
 actions link.dll
 {
-    $(python-cmd) mock.py --dll $(>) -o $(<) $(USER_OPTIONS) -L$(LINK_PATH) --static-lib=$(FINDLIBS-STATIC) --shared-lib=$(FINDLIBS-SHARED)
+    $(.config-cmd) mock.py --dll "$(>)" -o "$(<)" $(USER_OPTIONS) -L"$(LINK_PATH)" --static-lib=$(FINDLIBS-STATIC) --shared-lib=$(FINDLIBS-SHARED)
 }
 
 ''' % sys.executable.replace('\\', '\\\\'))
