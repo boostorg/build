@@ -402,7 +402,7 @@ void module_set_fixed_variables( struct module_t * m, int n_variables )
     LIST * * fixed_variables = BJAM_MALLOC( n_variables * sizeof( LIST * ) );
     if ( m->fixed_variables )
     {
-        memcpy( fixed_variables, m->fixed_variables, n_variables * sizeof( LIST * ) );
+        memcpy( fixed_variables, m->fixed_variables, m->num_fixed_variables * sizeof( LIST * ) );
         BJAM_FREE( m->fixed_variables );
     }
     m->fixed_variables = fixed_variables;
