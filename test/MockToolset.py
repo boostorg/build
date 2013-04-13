@@ -144,8 +144,14 @@ import toolset ;
 import path ;
 import modules ;
 import common ;
+import type ;
 
 .python-cmd = "\"%s\"" ;
+
+# Behave the same as gcc on Windows, because that's what
+# the test system expects
+type.set-generated-target-prefix SHARED_LIB : <toolset>mock <target-os>windows : lib ;
+type.set-generated-target-suffix STATIC_LIB : <toolset>mock <target-os>windows : a ;
 
 rule init ( )
 {
