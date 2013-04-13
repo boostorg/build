@@ -128,6 +128,7 @@ int file_collect_dir_content_( file_info_t * const d )
     string_new( path );
     while ( ( dirent = readdir( dd ) ) )
     {
+        OBJECT * name;
         f.f_base.ptr = dirent->d_name
         #ifdef old_sinix
             - 2  /* Broken structure definition on sinix. */
@@ -137,7 +138,12 @@ int file_collect_dir_content_( file_info_t * const d )
 
         string_truncate( path, 0 );
         path_build( &f, path );
-        files = list_push_back( files, object_new( path->value ) );
+        name = object_new( path->value );
+        /* Immediately stat the file to preserve invariants. */
+        if ( file_query( name ) )
+            files = list_push_back( files, name );
+        else
+            object_free( name );
     }
     string_free( path );
 
@@ -180,9 +186,9 @@ int file_mkdir( char const * const path )
  * file_query_() - query information about a path from the OS
  */
 
-int file_query_( file_info_t * const info )
+void file_query_( file_info_t * const info )
 {
-    return file_query_posix_( info );
+    file_query_posix_( info );
 }
 
 

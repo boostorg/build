@@ -744,11 +744,9 @@ static int has_wildcards( char const * const str )
 
 static LIST * append_if_exists( LIST * list, OBJECT * file )
 {
-    timestamp time;
-    timestamp_from_path( &time, file );
-    return timestamp_empty( &time )
-        ? list
-        : list_push_back( list, object_copy( file ) );
+    return file_query( file )
+        ? list_push_back( list, object_copy( file ) )
+        : list ;
 }
 
 

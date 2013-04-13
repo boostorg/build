@@ -45,7 +45,7 @@
  */
 void file_dirscan_( file_info_t * const dir, scanback func, void * closure );
 int file_collect_dir_content_( file_info_t * const dir );
-int file_query_( file_info_t * const );
+void file_query_( file_info_t * const );
 
 static void file_dirscan_impl( OBJECT * dir, scanback func, void * closure );
 static void free_file_info( void * xfile, void * data );
@@ -123,22 +123,18 @@ void file_done()
  * referenced.
  */
 
-file_info_t * file_info( OBJECT * const path )
+file_info_t * file_info( OBJECT * const path, int * found )
 {
     OBJECT * const path_key = path_as_key( path );
     file_info_t * finfo;
-    int found;
 
     if ( !filecache_hash )
         filecache_hash = hashinit( sizeof( file_info_t ), "file_info" );
 
-    finfo = (file_info_t *)hash_insert( filecache_hash, path_key, &found );
-    if ( !found )
+    finfo = (file_info_t *)hash_insert( filecache_hash, path_key, found );
+    if ( !*found )
     {
         finfo->name = path_key;
-        finfo->is_file = 0;
-        finfo->is_dir = 0;
-        timestamp_clear( &finfo->time );
         finfo->files = L0;
     }
     else
@@ -187,24 +183,24 @@ file_info_t * file_query( OBJECT * const path )
      * Possibly allow Jamfiles to specify some files as 'volatile' which would
      * make Boost Jam avoid caching information about those files and instead
      * ask the OS about them every time.
-     *
-     * FIXME: Consider returning a clear file_info() result here if
-     * file_query_() fails. Should simplify the caller side error checking and
-     * the caller still can and needs to detect whether the file has not been
-     * successfully detected by the OS, i.e. whether the file_query() call
-     * failed.
      */
-    file_info_t * const ff = file_info( path );
-    if ( timestamp_empty( &ff->time ) )
+    int found;
+    file_info_t * const ff = file_info( path, &found );
+    if ( !found )
     {
-        if ( file_query_( ff ) < 0 )
-            return 0;
-
-        /* Set the path's timestamp to 1 in case it is 0 or undetected to avoid
-         * confusion with non-existing paths.
-         */
-        if ( timestamp_empty( &ff->time ) )
-            timestamp_init( &ff->time, 1, 0 );
+        file_query_( ff );
+        if ( ff->exists )
+        {
+            /* Set the path's timestamp to 1 in case it is 0 or undetected to avoid
+             * confusion with non-existing paths.
+             */
+            if ( timestamp_empty( &ff->time ) )
+                timestamp_init( &ff->time, 1, 0 );
+        }
+    }
+    if ( !ff->exists )
+    {
+        return 0;
     }
     return ff;
 }
@@ -228,21 +224,26 @@ file_info_t * file_query( OBJECT * const path )
  *     with internal time representation.
  */
 
-int file_query_posix_( file_info_t * const info )
+void file_query_posix_( file_info_t * const info )
 {
     struct stat statbuf;
     char const * const pathstr = object_str( info->name );
     char const * const pathspec = *pathstr ? pathstr : ".";
 
-    assert( timestamp_empty( &info->time ) );
-
     if ( stat( pathspec, &statbuf ) < 0 )
-        return -1;
-
-    info->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
-    info->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
-    timestamp_init( &info->time, statbuf.st_mtime, 0 );
-    return 0;
+    {
+        info->is_file = 0;
+        info->is_dir = 0;
+        info->exists = 0;
+        timestamp_clear( &info->time );
+    }
+    else
+    {
+        info->is_file = statbuf.st_mode & S_IFREG ? 1 : 0;
+        info->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
+        info->exists = 1;
+        timestamp_init( &info->time, statbuf.st_mtime, 0 );
+    }
 }
 
 
@@ -288,13 +289,6 @@ static void file_dirscan_impl( OBJECT * dir, scanback func, void * closure )
         {
             OBJECT * const path = list_item( iter );
             file_info_t const * const ffq = file_query( path );
-            /* The only way a file_query() call can fail is if its internal OS
-             * file information gathering API (e.g. stat()) failed. If that
-             * happens we should treat the file as if it no longer exists. We
-             * then request the raw cached file_info_t structure for that file
-             * and use the file name from there.
-             */
-            file_info_t const * const ff = ffq ? ffq : file_info( path );
             /* Using a file name read from a file_info_t structure allows OS
              * specific implementations to store some kind of a normalized file
              * name there. Using such a normalized file name then allows us to
@@ -307,7 +301,7 @@ static void file_dirscan_impl( OBJECT * dir, scanback func, void * closure )
              *    short path variant thus allowing for many different path
              *    strings identifying the same file.
              */
-            (*func)( closure, ff->name, 1 /* stat()'ed */, &ff->time );
+            (*func)( closure, ffq->name, 1 /* stat()'ed */, &ffq->time );
         }
     }
 }

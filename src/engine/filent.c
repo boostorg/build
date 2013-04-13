@@ -116,9 +116,11 @@ int file_collect_dir_content_( file_info_t * const d )
             path_register_key( pathname_obj );
             files = list_push_back( files, pathname_obj );
             {
-                file_info_t * const ff = file_info( pathname_obj );
+                int found;
+                file_info_t * const ff = file_info( pathname_obj, &found );
                 ff->is_dir = finfo.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
                 ff->is_file = !ff->is_dir;
+                ff->exists = 1;
                 timestamp_from_filetime( &ff->time, &finfo.ftLastWriteTime );
             }
         }
@@ -192,19 +194,97 @@ int file_mkdir( char const * const path )
  * implemented (collects information about all files in a folder).
  */
 
-int file_query_( file_info_t * const info )
+int try_file_query_root( file_info_t * const info )
 {
     WIN32_FILE_ATTRIBUTE_DATA fileData;
+    char buf[ 4 ];
     char const * const pathstr = object_str( info->name );
-    char const * const pathspec = *pathstr ? pathstr : ".";
+    if ( !pathstr[ 0 ] )
+    {
+        buf[ 0 ] = '.';
+        buf[ 1 ] = 0;
+    }
+    else if ( pathstr[ 0 ] == '\\' && ! pathstr[ 1 ] )
+    {
+        buf[ 0 ] = '\\';
+        buf[ 1 ] = '\0';
+    }
+    else if ( pathstr[ 1 ] == ':' )
+    {
+        if ( !pathstr[ 2 ] )
+        {
+        }
+        else if ( !pathstr[ 2 ] || ( pathstr[ 2 ] == '\\' && !pathstr[ 3 ] ) )
+        {
+            buf[ 0 ] = pathstr[ 0 ];
+            buf[ 1 ] = ':';
+            buf[ 2 ] = '\\';
+            buf[ 3 ] = '\0';
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    else
+    {
+        return 0;
+    }
+        
+    /* We have a root path */
+    if ( !GetFileAttributesExA( buf, GetFileExInfoStandard, &fileData ) )
+    {
+        info->is_dir = 0;
+        info->is_file = 0;
+        info->exists = 0;
+        timestamp_clear( &info->time );
+    }
+    else
+    {
+        info->is_dir = fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        info->is_file = !info->is_dir;
+        info->exists = 1;
+        timestamp_from_filetime( &info->time, &fileData.ftLastWriteTime );
+    }
+    return 1;
+}
 
-    if ( !GetFileAttributesExA( pathspec, GetFileExInfoStandard, &fileData ) )
-        return -1;
+void file_query_( file_info_t * const info )
+{
+    char const * const pathstr = object_str( info->name );
+    const char * dir;
+    OBJECT * parent;
+    file_info_t * parent_info;
 
-    info->is_dir = fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-    info->is_file = !info->is_dir;
-    timestamp_from_filetime( &info->time, &fileData.ftLastWriteTime );
-    return 0;
+    if ( try_file_query_root( info ) )
+        return;
+
+    if ( ( dir = strrchr( pathstr, '\\' ) ) )
+    {
+        parent = object_new_range( pathstr, dir - pathstr );
+    }
+    else
+    {
+        parent = object_copy( constant_empty );
+    }
+    parent_info = file_query( parent );
+    object_free( parent );
+    if ( !parent_info || !parent_info->is_dir )
+    {
+        info->is_dir = 0;
+        info->is_file = 0;
+        info->exists = 0;
+        timestamp_clear( &info->time );
+    }
+    else
+    {
+        info->is_dir = 0;
+        info->is_file = 0;
+        info->exists = 0;
+        timestamp_clear( &info->time );
+        if ( list_empty( parent_info->files ) )
+            file_collect_dir_content_( parent_info );
+    }
 }
 
 

@@ -27,8 +27,9 @@
 typedef struct file_info_t
 {
     OBJECT * name;
-    short is_file;
-    short is_dir;
+    char is_file;
+    char is_dir;
+    char exists;
     timestamp time;
     LIST * files;
 } file_info_t;
@@ -40,7 +41,7 @@ typedef void (*scanback)( void * closure, OBJECT * path, int found,
 void file_archscan( char const * arch, scanback func, void * closure );
 void file_build1( PATHNAME * const f, string * file ) ;
 void file_dirscan( OBJECT * dir, scanback func, void * closure );
-file_info_t * file_info( OBJECT * const path );
+file_info_t * file_info( OBJECT * const path, int * found );
 int file_is_file( OBJECT * const path );
 int file_mkdir( char const * const path );
 file_info_t * file_query( OBJECT * const path );
@@ -49,7 +50,7 @@ void file_supported_fmt_resolution( timestamp * const );
 int file_time( OBJECT * const path, timestamp * const );
 
 /* Internal utility worker functions. */
-int file_query_posix_( file_info_t * const );
+void file_query_posix_( file_info_t * const );
 
 void file_done();
 

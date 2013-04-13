@@ -13,9 +13,8 @@
 
 LIST * path_exists( FRAME * frame, int flags )
 {
-    timestamp time;
-    timestamp_from_path( &time, list_front( lol_get( frame->args, 0 ) ) );
-    return timestamp_empty( &time ) ? L0 : list_new( object_copy( constant_true ) );
+    return file_query( list_front( lol_get( frame->args, 0 ) ) ) ?
+        list_new( object_copy( constant_true ) ) : L0;
 }
 
 
