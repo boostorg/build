@@ -1309,7 +1309,8 @@ if $(NT)
         local r ;
         for local x in $(param:L)
         {
-            if ! x in $(found) && $(x) in "addservices" "policies"
+            if ! x in $(found) &&
+                $(x) in "addservices" "policies" "deleted" "device" "ids"
             {
                 found += $(x) ;
             }
