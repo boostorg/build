@@ -32,7 +32,7 @@ t.write("test.cpp", """
 t.run_build_system(["test"], stdout="""Hello World!
 """)
 
-t.expect_addition("bin/$toolset/link-static/test.o")
+t.expect_addition("bin/$toolset/link-static/test.obj")
 t.expect_nothing_more()
 
 t.cleanup()
