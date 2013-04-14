@@ -36,6 +36,7 @@ typedef struct path_key_entry
 {
     OBJECT * path;
     OBJECT * key;
+    int exists;
 } path_key_entry;
 
 static struct hash * path_key_cache;
@@ -84,23 +85,24 @@ void path_get_temp_path_( string * buffer )
  *  - path_key_cache path/key mapping cache object already initialized
  */
 
-static void canonicWindowsPath( char const * const path, int const path_length,
+static int canonicWindowsPath( char const * const path, int const path_length,
     string * const out )
 {
     char const * last_element;
     unsigned long saved_size;
     char const * p;
+    int missing_parent;
 
     /* This is only called via path_key(), which initializes the cache. */
     assert( path_key_cache );
 
     if ( !path_length )
-        return;
+        return 1;
 
     if ( path_length == 1 && path[ 0 ] == '\\' )
     {
         string_push_back( out, '\\' );
-        return;
+        return 1;
     }
 
     if ( path[ 1 ] == ':' &&
@@ -110,7 +112,7 @@ static void canonicWindowsPath( char const * const path, int const path_length,
         string_push_back( out, toupper( path[ 0 ] ) );
         string_push_back( out, ':' );
         string_push_back( out, '\\' );
-        return;
+        return 1;
     }
 
     /* Find last '\\'. */
@@ -121,6 +123,8 @@ static void canonicWindowsPath( char const * const path, int const path_length,
     if ( p == path ||
         p == path + 2 && path[ 1 ] == ':' )
         ++p;
+
+    missing_parent = 0;
 
     if ( p >= path )
     {
@@ -133,7 +137,10 @@ static void canonicWindowsPath( char const * const path, int const path_length,
         if ( !found )
         {
             result->path = dir_obj;
-            canonicWindowsPath( dir, dir_length, out );
+            if ( canonicWindowsPath( dir, dir_length, out ) )
+                result->exists = 1;
+            else
+                result->exists = 0;
             result->key = object_new( out->value );
         }
         else
@@ -141,6 +148,8 @@ static void canonicWindowsPath( char const * const path, int const path_length,
             object_free( dir_obj );
             string_append( out, object_str( result->key ) );
         }
+        if ( !result->exists )
+            missing_parent = 1;
     }
 
     if ( out->size && out->value[ out->size - 1 ] != '\\' )
@@ -149,6 +158,7 @@ static void canonicWindowsPath( char const * const path, int const path_length,
     saved_size = out->size;
     string_append_range( out, last_element, path + path_length );
 
+    if ( !missing_parent )
     {
         char const * const n = last_element;
         int const n_length = path + path_length - n;
@@ -162,9 +172,11 @@ static void canonicWindowsPath( char const * const path, int const path_length,
                 string_truncate( out, saved_size );
                 string_append( out, fd.cFileName );
                 FindClose( hf );
+                return 1;
             }
         }
     }
+    return 0;
 }
 
 
@@ -236,8 +248,11 @@ static path_key_entry * path_key( OBJECT * const path,
             {
                 string canonic_path[ 1 ];
                 string_new( canonic_path );
-                canonicWindowsPath( object_str( normalized ), normalized_size,
-                    canonic_path );
+                if ( canonicWindowsPath( object_str( normalized ), normalized_size,
+                        canonic_path ) )
+                    nresult->exists = 1;
+                else
+                    nresult->exists = 0;
                 nresult->key = object_new( canonic_path->value );
                 string_free( canonic_path );
             }
@@ -248,6 +263,7 @@ static path_key_entry * path_key( OBJECT * const path,
         {
             result->path = object_copy( path );
             result->key = object_copy( nresult->key );
+            result->exists = nresult->exists;
         }
     }
 
