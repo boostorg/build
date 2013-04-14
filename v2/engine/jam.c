@@ -630,8 +630,6 @@ char * executable_path( char const * argv0 )
     return strdup( getexecname() );
 }
 #elif defined(__FreeBSD__)
-# include <stdlib.h>
-# include <string.h>
 # include <sys/sysctl.h>
 char * executable_path( char const * argv0 )
 {
@@ -639,45 +637,15 @@ char * executable_path( char const * argv0 )
     char buf[ 1024 ];
     size_t size = sizeof( buf );
     sysctl( mib, 4, buf, &size, NULL, 0 );
-    if ( size && size != sizeof( buf ) )
-    {
-        /* Using strndup() here might not work with older glibc installations as
-         * their headers do not declare that function unless certain symbols are
-         * defined. We could work around this issue by defining appropriate
-         * symbols but they depend on the exact glibc version used so simply
-         * using malloc()/strncpy() seems like a cleaner solution.
-         *
-         * Note: such old glibc installations have so far only been found on
-         * Linux and not Free-BSD installations but using the same logic on
-         * Free-BSD seems like something that could not hurt.
-         */
-        char * const result = (char *)malloc( size );
-        if ( result )
-            return strncpy( result, buf, size );
-    }
-    return NULL;
+    return ( !size || size == sizeof( buf ) ) ? NULL : strndup( buf, size );
 }
 #elif defined(__linux__)
-# include <stdlib.h>
-# include <string.h>
 # include <unistd.h>
 char * executable_path( char const * argv0 )
 {
     char buf[ 1024 ];
-    ssize_t const size = readlink( "/proc/self/exe", buf, sizeof( buf ) );
-    if ( size && size != sizeof( buf ) )
-    {
-        /* Using strndup() here might not work with older glibc installations as
-         * their headers do not declare that function unless certain symbols are
-         * defined. We could work around this issue by defining appropriate
-         * symbols but they depend on the exact glibc version used so simply
-         * using malloc()/strncpy() seems like a cleaner solution.
-         */
-        char * const result = (char *)malloc( size );
-        if ( result )
-            return strncpy( result, buf, size );
-    }
-    return NULL;
+    ssize_t const ret = readlink( "/proc/self/exe", buf, sizeof( buf ) );
+    return ( !ret || ret == sizeof( buf ) ) ? NULL : strndup( buf, ret );
 }
 #else
 char * executable_path( char const * argv0 )
