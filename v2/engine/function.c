@@ -2325,7 +2325,6 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         compile_set_label( c, top );
         compile_emit_branch( c, INSTR_FOR_LOOP, end );
         compile_emit( c, INSTR_SET, var );
-        compile_emit( c, INSTR_POP, 0 );
 
         /* Run the loop body */
         compile_parse( parse->right, c, RESULT_NONE );
@@ -2600,6 +2599,10 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                     group->elems, 0 ) )->s );
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
+                if ( result_location != RESULT_NONE )
+                {
+                    compile_emit( c, INSTR_SET_RESULT, 1 );
+                }
                 compile_emit( c, op_code, name );
             }
             else
@@ -2607,6 +2610,10 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 var_parse_group_compile( group, c );
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
+                if ( result_location != RESULT_NONE )
+                {
+                    compile_emit( c, INSTR_SET_RESULT, 1 );
+                }
                 compile_emit( c, op_code_group, 0 );
             }
         }
@@ -2614,9 +2621,16 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         {
             compile_parse( parse->left, c, RESULT_STACK );
             compile_parse( parse->right, c, RESULT_STACK );
+            if ( result_location != RESULT_NONE )
+            {
+                compile_emit( c, INSTR_SET_RESULT, 1 );
+            }
             compile_emit( c, op_code_group, 0 );
         }
-        adjust_result( c, RESULT_STACK, result_location );
+        if ( result_location != RESULT_NONE )
+        {
+            adjust_result( c, RESULT_RETURN, result_location );
+        }
     }
     else if ( parse->type == PARSE_SETCOMP )
     {
@@ -3761,7 +3775,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
         case INSTR_SET_RESULT:
             list_free( result );
-            result = stack_pop( s );
+            if ( !code->arg )
+                result = stack_pop( s );
+            else
+                result = list_copy( stack_top( s ) );
             break;
 
         case INSTR_PUSH_RESULT:
@@ -3997,18 +4014,18 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
          */
 
         case INSTR_SET:
-            function_set_variable( function, frame, code->arg, list_copy(
-                stack_top( s ) ) );
+            function_set_variable( function, frame, code->arg,
+                stack_pop( s ) );
             break;
 
         case INSTR_APPEND:
-            function_append_variable( function, frame, code->arg, list_copy(
-                stack_top( s ) ) );
+            function_append_variable( function, frame, code->arg,
+                stack_pop( s ) );
             break;
 
         case INSTR_DEFAULT:
-            function_default_variable( function, frame, code->arg, list_copy(
-                stack_top( s ) ) );
+            function_default_variable( function, frame, code->arg,
+                stack_pop( s ) );
             break;
 
         case INSTR_SET_FIXED:
@@ -4016,7 +4033,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
             list_free( *ptr );
-            *ptr = list_copy( stack_top( s ) );
+            *ptr = stack_pop( s );
             break;
         }
 
@@ -4024,16 +4041,19 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
-            *ptr = list_append( *ptr, list_copy( stack_top( s ) ) );
+            *ptr = list_append( *ptr, stack_pop( s ) );
             break;
         }
 
         case INSTR_DEFAULT_FIXED:
         {
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
+            LIST * value = stack_pop( s );
             assert( code->arg < frame->module->num_fixed_variables );
             if ( list_empty( *ptr ) )
-                *ptr = list_copy( stack_top( s ) );
+                *ptr = value;
+            else
+                list_free( value );
             break;
         }
 
@@ -4047,7 +4067,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 function_set_named_variable( function, frame, list_item( iter ),
                     list_copy( value ) );
             list_free( vars );
-            stack_push( s, value );
+            list_free( value );
             break;
         }
 
@@ -4061,7 +4081,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 function_append_named_variable( function, frame, list_item( iter
                     ), list_copy( value ) );
             list_free( vars );
-            stack_push( s, value );
+            list_free( value );
             break;
         }
 
@@ -4075,7 +4095,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 function_default_named_variable( function, frame, list_item(
                     iter ), list_copy( value ) );
             list_free( vars );
-            stack_push( s, value );
+            list_free( value );
             break;
         }
 
