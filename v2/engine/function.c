@@ -93,6 +93,7 @@ void backtrace_line( FRAME * );
 #define INSTR_SET_ON                       36
 #define INSTR_APPEND_ON                    37
 #define INSTR_DEFAULT_ON                   38
+#define INSTR_GET_ON                       65
 
 #define INSTR_CALL_RULE                    39
 
@@ -2482,12 +2483,62 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_ON )
     {
-        int end = compile_new_label( c );
-        compile_parse( parse->left, c, RESULT_STACK );
-        compile_emit_branch( c, INSTR_PUSH_ON, end );
-        compile_parse( parse->right, c, RESULT_STACK );
-        compile_emit( c, INSTR_POP_ON, 0 );
-        compile_set_label( c, end );
+        if ( parse->right->type == PARSE_APPEND &&
+            parse->right->left->type == PARSE_NULL &&
+            parse->right->right->type == PARSE_LIST )
+        {
+            /* [ on $(target) return $(variable) ] */
+            PARSE * value = parse->right->right;
+            OBJECT * const o = value->string;
+            char const * s = object_str( o );
+            VAR_PARSE_GROUP * group;
+            OBJECT * varname = 0;
+            current_file = object_str( value->file );
+            current_line = value->line;
+            group = parse_expansion( &s );
+            if ( group->elems->size == 1 )
+            {
+                VAR_PARSE * one = dynamic_array_at( VAR_PARSE *, group->elems, 0 );
+                if ( one->type == VAR_PARSE_TYPE_VAR )
+                {
+                    VAR_PARSE_VAR * var = ( VAR_PARSE_VAR * )one;
+                    if ( var->modifiers->size == 0 && !var->subscript && var->name->elems->size == 1 )
+                    {
+                        VAR_PARSE * name = dynamic_array_at( VAR_PARSE *, var->name->elems, 0 );
+                        if ( name->type == VAR_PARSE_TYPE_STRING )
+                        {
+                            varname = ( ( VAR_PARSE_STRING * )name )->s;
+                        }
+                    }
+                }
+            }
+            if ( varname )
+            {
+                /* We have one variable with a fixed name and no modifiers. */
+                compile_parse( parse->left, c, RESULT_STACK );
+                compile_emit( c, INSTR_GET_ON, compile_emit_constant( c, varname ) );
+            }
+            else
+            {
+                /* Too complex.  Fall back on push/pop. */
+                int end = compile_new_label( c );
+                compile_parse( parse->left, c, RESULT_STACK );
+                compile_emit_branch( c, INSTR_PUSH_ON, end );
+                var_parse_group_compile( group, c );
+                compile_emit( c, INSTR_POP_ON, 0 );
+                compile_set_label( c, end );
+            }
+            var_parse_group_free( group );
+        }
+        else
+        {
+            int end = compile_new_label( c );
+            compile_parse( parse->left, c, RESULT_STACK );
+            compile_emit_branch( c, INSTR_PUSH_ON, end );
+            compile_parse( parse->right, c, RESULT_STACK );
+            compile_emit( c, INSTR_POP_ON, 0 );
+            compile_set_label( c, end );
+        }
         adjust_result( c, RESULT_STACK, result_location );
     }
     else if ( parse->type == PARSE_RULE )
@@ -3909,6 +3960,35 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             list_free( vars );
             list_free( targets );
             stack_push( s, value );
+            break;
+        }
+
+        /* [ on $(target) return $(variable) ] */
+        case INSTR_GET_ON:
+        {
+            LIST * targets = stack_pop( s );
+            LIST * result = L0;
+            if ( !list_empty( targets ) )
+            {
+                OBJECT * varname = function->constants[ code->arg ];
+                TARGET * t = bindtarget( list_front( targets ) );
+                SETTINGS * s = t->settings;
+                int found = 0;
+                for ( ; s != 0; s = s->next )
+                {
+                    if ( object_equal( s->symbol, varname ) )
+                    {
+                        result = s->value;
+                        found = 1;
+                        break;
+                    }
+                }
+                if ( !found )
+                {
+                    result = var_get( frame->module, varname ) ;
+                }
+            }
+            stack_push( s, list_copy( result ) );
             break;
         }
 
