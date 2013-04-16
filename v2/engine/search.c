@@ -54,7 +54,10 @@ void call_bind_rule( OBJECT * target_, OBJECT * boundname_ )
 
             lol_add( frame->args, list_new( boundname ) );
             if ( lol_get( frame->args, 1 ) )
-                list_free( evaluate_rule( list_front( bind_rule ), frame ) );
+            {
+                OBJECT * rulename = list_front( bind_rule );
+                list_free( evaluate_rule( bindrule( rulename, root_module() ), rulename, frame ) );
+            }
 
             /* Clean up */
             frame_free( frame );

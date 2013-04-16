@@ -62,6 +62,7 @@ LIST * sequence_transform( FRAME * frame, int flags )
     OBJECT * function_name = list_front( function );
     LISTITER args_begin = list_next( list_begin( function ) ), args_end = list_end( function );
     LISTITER iter = list_begin( sequence ), end = list_end( sequence );
+    RULE * rule = bindrule( function_name, frame->prev->module );
 
     for ( ; iter != end; iter = list_next( iter ) )
     {
@@ -73,7 +74,7 @@ LIST * sequence_transform( FRAME * frame, int flags )
         inner->module = frame->prev->module;
 
         lol_add( inner->args, list_push_back( list_copy_range( function, args_begin, args_end ), object_copy( list_item( iter ) ) ) );
-        result = list_append( result, evaluate_rule( function_name, inner ) );
+        result = list_append( result, evaluate_rule( rule, function_name, inner ) );
 
         frame_free( inner );
     }

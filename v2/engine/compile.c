@@ -54,35 +54,28 @@ void unknown_rule( FRAME *, char const * key, module_t *, OBJECT * rule_name );
  * evaluate_rule() - execute a rule invocation
  */
 
-LIST * evaluate_rule( OBJECT * rulename, FRAME * frame )
+LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
 {
     LIST          * result = L0;
-    RULE          * rule;
     profile_frame   prof[ 1 ];
     module_t      * prev_module = frame->module;
-
-    rule = bindrule( rulename, frame->module );
 
     if ( DEBUG_COMPILE )
     {
         /* Try hard to indicate in which module the rule is going to execute. */
-        if ( rule->module != frame->module && rule->procedure && !object_equal(
-            rulename, function_rulename( rule->procedure ) ) )
+        char buf[ 256 ] = "";
+        if ( rule->module->name )
         {
-            char buf[ 256 ] = "";
-            if ( rule->module->name )
+            strncat( buf, object_str( rule->module->name ), sizeof( buf ) -
+                1 );
+            strncat( buf, ".", sizeof( buf ) - 1 );
+            if ( strncmp( buf, object_str( rule->name ), strlen( buf ) ) == 0 )
             {
-                strncat( buf, object_str( rule->module->name ), sizeof( buf ) -
-                    1 );
-                strncat( buf, ".", sizeof( buf ) - 1 );
+                buf[ 0 ] = 0;
             }
-            strncat( buf, object_str( rule->name ), sizeof( buf ) - 1 );
-            debug_compile( 1, buf, frame );
         }
-        else
-        {
-            debug_compile( 1, object_str( rulename ), frame );
-        }
+        strncat( buf, object_str( rule->name ), sizeof( buf ) - 1 );
+        debug_compile( 1, buf, frame );
 
         lol_print( frame->args );
         printf( "\n" );
@@ -238,7 +231,7 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, ... )
     }
     va_end( va );
 
-    result = evaluate_rule( rulename, inner );
+    result = evaluate_rule( bindrule( rulename, inner->module ), rulename, inner );
 
     frame_free( inner );
 

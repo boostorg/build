@@ -250,6 +250,27 @@ rule bar-x ( new-value )
 $(x)-x [ mark-order r1 : [ reset-x reset ] ] : [ mark-order r2 ] ;
 check-order rule-order : r1 r2 ;
 
+# Cases that look like member calls
+rule looks.like-a-member ( args * )
+{
+    return $(args) ;
+}
+
+rule call-non-member ( rule + )
+{
+    return [ $(rule).like-a-member ] ;
+}
+
+rule call-non-member-with-args ( rule + )
+{
+    return [ $(rule).like-a-member a2 ] ;
+}
+
+check-equal rule-non-member : [ call-non-member looks ] : ;
+#check-equal rule-non-member-a1 : [ call-non-member looks a1 ] : looks.a1 ;
+check-equal rule-non-member-args : [ call-non-member-with-args looks ] : a2 ;
+#check-equal rule-non-member-args-a1 : [ call-non-member-with-args looks a1 ] : looks.a1 a2 ;
+
 }
 
 # Check append
