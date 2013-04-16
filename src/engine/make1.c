@@ -739,6 +739,7 @@ static void call_timing_rule( TARGET * target, timing_info const * const time )
 
         /* Prepare the argument list. */
         FRAME frame[ 1 ];
+        OBJECT * rulename = list_front( timing_rule );
         frame_init( frame );
 
         /* args * :: $(__TIMING_RULE__[2-]) */
@@ -756,7 +757,7 @@ static void call_timing_rule( TARGET * target, timing_info const * const time )
             outf_double( time->system ) ) );
 
         /* Call the rule. */
-        evaluate_rule( list_front( timing_rule ), frame );
+        evaluate_rule( bindrule( rulename , root_module() ), rulename, frame );
 
         /* Clean up. */
         frame_free( frame );
@@ -795,6 +796,7 @@ static void call_action_rule
 
         /* Prepare the argument list. */
         FRAME frame[ 1 ];
+        OBJECT * rulename = list_front( action_rule );
         frame_init( frame );
 
         /* args * :: $(__ACTION_RULE__[2-]) */
@@ -822,7 +824,7 @@ static void call_action_rule
             lol_add( frame->args, L0 );
 
         /* Call the rule. */
-        evaluate_rule( list_front( action_rule ), frame );
+        evaluate_rule( bindrule( rulename, root_module() ), rulename, frame );
 
         /* Clean up. */
         frame_free( frame );

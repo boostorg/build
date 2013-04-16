@@ -96,6 +96,7 @@ void backtrace_line( FRAME * );
 #define INSTR_GET_ON                       65
 
 #define INSTR_CALL_RULE                    39
+#define INSTR_CALL_MEMBER_RULE             66
 
 #define INSTR_APPLY_MODIFIERS              40
 #define INSTR_APPLY_INDEX                  41
@@ -472,9 +473,108 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
         }
     }
 
-    result = evaluate_rule( rulename, inner );
+    result = evaluate_rule( bindrule( rulename, inner->module ), rulename, inner );
     frame_free( inner );
     object_free( rulename );
+    return result;
+}
+
+static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame, STACK * s, int n_args, OBJECT * rulename, OBJECT * file, int line )
+{
+    FRAME   inner[ 1 ];
+    int i;
+    LIST * first = stack_pop( s );
+    LIST * result = L0;
+    LIST * trailing;
+    RULE * rule;
+    module_t * module;
+    OBJECT * real_rulename = 0;
+
+    frame->file = file;
+    frame->line = line;
+    
+    if ( list_empty( first ) )
+    {
+        backtrace_line( frame );
+        printf( "warning: object is empty\n" );
+        backtrace( frame );
+
+        list_free( first );
+
+        for( i = 0; i < n_args; ++i )
+        {
+            list_free( stack_pop( s ) );
+        }
+
+        return result;
+    }
+
+    /* FIXME: handle generic case */
+    assert( list_length( first ) == 1 );
+
+    module = bindmodule( list_front( first ) );
+    if ( module->class_module )
+    {
+        rule = bindrule( rulename, module );
+        real_rulename = object_copy( function_rulename( rule->procedure ) );
+    }
+    else
+    {
+        string buf[ 1 ];
+        string_new( buf );
+        string_append( buf, object_str( list_front( first ) ) );
+        string_push_back( buf, '.' );
+        string_append( buf, object_str( rulename ) );
+        real_rulename = object_new( buf->value );
+        string_free( buf );
+        rule = bindrule( real_rulename, frame->module );
+    }
+
+    frame_init( inner );
+
+    inner->prev = frame;
+    inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
+    inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
+
+    for( i = 0; i < n_args; ++i )
+    {
+        lol_add( inner->args, stack_at( s, n_args - i - 1 ) );
+    }
+
+    for( i = 0; i < n_args; ++i )
+    {
+        stack_pop( s );
+    }
+
+    if ( list_length( first ) > 1 )
+    {
+        string buf[ 1 ];
+        LIST * trailing = L0;
+        LISTITER iter = list_begin( first ), end = list_end( first );
+        iter = list_next( iter );
+        string_new( buf );
+        for ( ; iter != end; iter = list_next( iter ) )
+        {
+            string_append( buf, object_str( list_item( iter ) ) );
+            string_push_back( buf, '.' );
+            string_append( buf, object_str( rulename ) );
+            trailing = list_push_back( trailing, object_new( buf->value ) );
+            string_truncate( buf, 0 );
+        }
+        string_free( buf );
+        if ( inner->args->count == 0 )
+            lol_add( inner->args, trailing );
+        else
+        {
+            LIST * * const l = &inner->args->list[ 0 ];
+            *l = list_append( trailing, *l );
+        }
+    }
+
+    result = evaluate_rule( rule, real_rulename, inner );
+    frame_free( inner );
+    object_free( rulename );
+    object_free( real_rulename );
     return result;
 }
 
@@ -2557,11 +2657,29 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         current_file = object_str( parse->file );
         current_line = parse->line;
         group = parse_expansion( &s );
-        var_parse_group_compile( group, c );
-        var_parse_group_free( group );
-        compile_emit( c, INSTR_CALL_RULE, n );
-        compile_emit( c, compile_emit_constant( c, parse->string ), parse->line
-            );
+
+        if ( group->elems->size == 2 &&
+            dynamic_array_at( VAR_PARSE *, group->elems, 0 )->type == VAR_PARSE_TYPE_VAR &&
+            dynamic_array_at( VAR_PARSE *, group->elems, 1 )->type == VAR_PARSE_TYPE_STRING &&
+            ( object_str( ( (VAR_PARSE_STRING *)dynamic_array_at( VAR_PARSE *, group->elems, 1 ) )->s )[ 0 ] == '.' ) )
+        {
+            VAR_PARSE_STRING * access = (VAR_PARSE_STRING *)dynamic_array_at( VAR_PARSE *, group->elems, 1 );
+            OBJECT * member = object_new( object_str( access->s ) + 1 );
+            /* Emit the object */
+            var_parse_var_compile( (VAR_PARSE_VAR *)dynamic_array_at( VAR_PARSE *, group->elems, 0 ), c );
+            var_parse_group_free( group );
+            compile_emit( c, INSTR_CALL_MEMBER_RULE, n );
+            compile_emit( c, compile_emit_constant( c, member ), parse->line );
+            object_free( member );
+        }
+        else
+        {
+            var_parse_group_compile( group, c );
+            var_parse_group_free( group );
+            compile_emit( c, INSTR_CALL_RULE, n );
+            compile_emit( c, compile_emit_constant( c, parse->string ), parse->line );
+        }
+
         adjust_result( c, RESULT_STACK, result_location );
     }
     else if ( parse->type == PARSE_RULES )
@@ -2840,7 +2958,7 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
 
         /* Prepare the argument list */
         lol_add( frame->args, list_new( object_copy( list_item( iter ) ) ) );
-        error = evaluate_rule( type_name, frame );
+        error = evaluate_rule( bindrule( type_name, frame->module ), type_name, frame );
 
         if ( !list_empty( error ) )
             argument_error( object_str( list_front( error ) ), called, caller,
@@ -3396,6 +3514,7 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
             case INSTR_APPEND: op_code = INSTR_APPEND_FIXED; break;
             case INSTR_DEFAULT: op_code = INSTR_DEFAULT_FIXED; break;
             case INSTR_RETURN: return (FUNCTION *)new_func;
+            case INSTR_CALL_MEMBER_RULE:
             case INSTR_CALL_RULE: ++i; continue;
             case INSTR_PUSH_MODULE:
                 {
@@ -4109,6 +4228,15 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 function, code[ 1 ].op_code ) );
             LIST * result = function_call_rule( function, frame, s, code->arg,
                 unexpanded, function->file, code[ 1 ].arg );
+            stack_push( s, result );
+            ++code;
+            break;
+        }
+
+        case INSTR_CALL_MEMBER_RULE:
+        {
+            OBJECT * rule_name = function_get_constant( function, code[1].op_code );
+            LIST * result = function_call_member_rule( function, frame, s, code->arg, rule_name, function->file, code[1].arg );
             stack_push( s, result );
             ++code;
             break;
