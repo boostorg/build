@@ -53,6 +53,7 @@ rule register ( type : suffixes * : base-type ? )
         .types += $(type) ;
         .base.$(type) = $(base-type) ;
         .derived.$(base-type) += $(type) ;
+        .bases.$(type) = $(type) $(.bases.$(base-type)) ;
 
         # Store suffixes for generated targets.
         .suffixes.$(type) = [ new property-map ] ;
@@ -192,13 +193,7 @@ rule base ( type )
 #
 rule all-bases ( type )
 {
-    local result = $(type) ;
-    while $(type)
-    {
-        type = [ base $(type) ] ;
-        result += $(type) ;
-    }
-    return $(result) ;
+    return $(.bases.$(type)) ;
 }
 
 
@@ -221,7 +216,7 @@ rule all-derived ( type )
 #
 rule is-derived ( type base )
 {
-    if $(base) in [ all-bases $(type) ]
+    if $(base) in $(.bases.$(type))
     {
         return true ;
     }
