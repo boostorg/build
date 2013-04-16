@@ -470,9 +470,9 @@ class abstract-file-target : virtual-target
         local name = [ actual-name ] ;
 
         # Do anything only on the first invocation.
-        if ! $(self.made.$(name))
+        if ! $(self.made-no-scanner)
         {
-            self.made.$(name) = true ;
+            self.made-no-scanner = true ;
 
             if $(self.action)
             {
