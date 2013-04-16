@@ -191,7 +191,7 @@ rule init ( )
 {
     local here = [ path.make [ modules.binding $(__name__) ] ] ;
     here = [ path.native [ path.root [ path.parent $(here) ] [ path.pwd ] ] ] ;
-    .config-cmd = [ common.variable-setting-command JAM_CWD : $(here) ] $(.python-cmd) ;
+    .config-cmd = [ common.variable-setting-command JAM_CWD : $(here) ] $(.python-cmd) -B ;
 }
 
 feature.extend toolset : mock ;
