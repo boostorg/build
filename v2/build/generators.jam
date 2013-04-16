@@ -638,17 +638,40 @@ class generator
         local result ;
         # We process each source one-by-one, trying to convert it to a usable
         # type.
-        for local source in $(sources)
+        if ! $(self.source-types)
         {
-            local _c = [ convert-to-consumable-types $(project) : $(property-set)
-                : $(source) : true ] ;
-            if ! $(_c)
-            {
-                generators.dout [ indent ] " failed to convert " $(source) ;
-            }
-            result += $(_c) ;
+            # Anything is acceptible
+            return $(sources) ;
         }
-        return $(result) ;
+        else
+        {
+            local acceptible-types = [ sequence.unique
+                [ sequence.transform type.all-derived : $(self.source-types) ] ] ;
+            for local source in $(sources)
+            {
+                if ! [ $(source).type ] in $(acceptible-types)
+                {
+                    local transformed = [ generators.construct-types $(project)
+                        : $(self.source-types) : $(property-set) : $(source) ] ;
+                    for local t in $(transformed[2-])
+                    {
+                        if [ $(t).type ] in $(self.source-types)
+                        {
+                            result += $(t) ;
+                        }
+                    }
+                    if ! $(transformed)
+                    {
+                        generators.dout [ indent ] " failed to convert " $(source) ;
+                    }
+                }
+                else
+                {
+                    result += $(source) ;
+                }
+            }
+            return [ sequence.unique $(result) ] ;
+        }
     }
 
     rule consume-directly ( source )
