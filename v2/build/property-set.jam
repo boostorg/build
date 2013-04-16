@@ -309,6 +309,17 @@ class property-set
         }
     }
 
+    # Returns true if the property-set has values for
+    # all the specified features
+    #
+    rule contains-features ( features * )
+    {
+        if $(features) in $(self.raw:G)
+        {
+            return true ;
+        }
+    }
+
     # private
 
     rule init-base ( )
@@ -393,6 +404,11 @@ NATIVE_RULE property-set : create ;
 if [ HAS_NATIVE_RULE class@property-set : get : 1 ]
 {
     NATIVE_RULE class@property-set : get ;
+}
+
+if [ HAS_NATIVE_RULE class@property-set : contains-features : 1 ]
+{
+    NATIVE_RULE class@property-set : contains-features ;
 }
 
 # Creates a new 'property-set' instance after checking that all properties are

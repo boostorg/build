@@ -220,6 +220,18 @@ class generator
             self.name-prefix += $(m[3]:E="") ;
             self.name-postfix += $(m[4]:E="") ;
         }
+        
+        for local r in [ requirements ]
+        {
+            if $(r:G=)
+            {
+                self.property-requirements += $(r) ;
+            }
+            else
+            {
+                self.feature-requirements += $(r) ;
+            }
+        }
 
         # Note that 'transform' here, is the same as 'for_each'.
         sequence.transform type.validate : $(self.source-types) ;
@@ -279,24 +291,9 @@ class generator
         # See if generator requirements are satisfied by 'properties'. Treat a
         # feature name in requirements (i.e. grist-only element), as matching
         # any value of the feature.
-        local all-requirements = [ requirements ] ;
 
-        local property-requirements feature-requirements ;
-        for local r in $(all-requirements)
-        {
-            if $(r:G=)
-            {
-                property-requirements += $(r) ;
-            }
-            else
-            {
-                feature-requirements += $(r) ;
-            }
-        }
-
-        local properties-to-match = [ $(property-set-to-match).raw ] ;
-        if $(property-requirements) in $(properties-to-match) &&
-            $(feature-requirements) in $(properties-to-match:G)
+        if [ $(property-set-to-match).contains-raw $(self.property-requirements) ] &&
+            [ $(property-set-to-match).contains-features $(self.feature-requirements) ]
         {
             return true ;
         }
