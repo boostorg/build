@@ -149,9 +149,9 @@ class virtual-target
                 $(scanner) : - ] ;
             local name = $(actual-name:G=$(g)) ;
 
-            if ! $(self.made.$(name))
+            if ! $(self.made.$(scanner))
             {
-                self.made.$(name) = true ;
+                self.made.$(scanner) = true ;
                 actualize-location $(name) ;
                 scanner.install $(scanner) : $(name) ;
             }
