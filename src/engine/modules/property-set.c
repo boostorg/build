@@ -13,6 +13,7 @@
 #include "../native.h"
 #include "../compile.h"
 #include "../mem.h"
+#include "../constants.h"
 #include "string.h"
 
 struct ps_map_entry
@@ -259,6 +260,53 @@ LIST * property_set_get( FRAME * frame, int flags )
     return result;
 }
 
+/* binary search for the property value */
+LIST * property_set_contains_features( FRAME * frame, int flags )
+{
+    OBJECT * varname = object_new( "self.raw" );
+    LIST * props = var_get( frame->module, varname );
+    LIST * features = lol_get( frame->args, 0 );
+    LIST * result = L0;
+    LISTITER features_iter = list_begin( features );
+    LISTITER features_end = list_end( features ) ;
+    object_free( varname );
+
+    for ( ; features_iter != features_end; ++features_iter )
+    {
+        const char * name = object_str( list_item( features_iter ) );
+        size_t name_len = strlen( name );
+        LISTITER begin, end;
+        /* Assumes random access */
+        begin = list_begin( props ), end = list_end( props );
+
+        while ( 1 )
+        {
+            ptrdiff_t diff = (end - begin);
+            LISTITER mid = begin + diff / 2;
+            int res;
+            if ( diff == 0 )
+            {
+                /* The feature is missing */
+                return L0;
+            }
+            res = strncmp( object_str( list_item( mid ) ), name, name_len );
+            if ( res < 0 )
+            {
+                begin = mid + 1;
+            }
+            else if ( res > 0 )
+            {
+                end = mid;
+            }
+            else /* We've found the property */
+            {
+                break;
+            }
+        }
+    }
+    return list_new( object_copy( constant_true ) );
+}
+
 void init_property_set()
 {
     {
@@ -268,6 +316,10 @@ void init_property_set()
     {
         char const * args[] = { "feature", 0 };
         declare_native_rule( "class@property-set", "get", args, property_set_get, 1 );
+    }
+    {
+        char const * args[] = { "features", "*", 0 };
+        declare_native_rule( "class@property-set", "contains-features", args, property_set_contains_features, 1 );
     }
     ps_map_init( &all_property_sets );
 }
