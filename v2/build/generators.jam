@@ -1123,27 +1123,42 @@ local rule find-viable-generators-aux ( target-type : property-set )
 {
     # Select generators that can create the required target type.
     local viable-generators = ;
-    local generator-rank = ;
 
     import type ;
-    local t = [ type.all-bases $(target-type) ] ;
+    local t = $(target-type) ;
 
-    generators.dout [ indent ] find-viable-generators target-type= $(target-type)
-        property-set= [ $(property-set).as-path ] ;
-
-    # Get the list of generators for the requested type. If no generator is
-    # registered, try base type, and so on.
-    local generators ;
-    while $(t[1])
+    if $(.debug)
     {
-        generators.dout [ indent ] "trying type" $(t[1]) ;
-        if $(.generators.$(t[1]))
+        generators.dout [ indent ] find-viable-generators target-type= $(target-type)
+            property-set= [ $(property-set).as-path ] ;
+        generators.dout [ indent ] "trying type" $(target-type) ;
+    }
+
+    local generators = $(.generators.$(target-type)) ;
+    if $(generators)
+    {
+        if $(.debug)
         {
             generators.dout [ indent ] "there are generators for this type" ;
-            generators = $(.generators.$(t[1])) ;
+        }
+    }
+    else
+    {
+        local t = [ type.base $(target-type) ] ;
 
-            if $(t[1]) != $(target-type)
+        # Get the list of generators for the requested type. If no generator is
+        # registered, try base type, and so on.
+        while $(t)
+        {
+            if $(.debug)
             {
+                generators.dout [ indent ] "trying type" $(t) ;
+            }
+            if $(.generators.$(t))
+            {
+                generators.dout [ indent ] "there are generators for this type" ;
+                generators = $(.generators.$(t)) ;
+
                 # We are here because there were no generators found for
                 # target-type but there are some generators for its base type.
                 # We will try to use them, but they will produce targets of
@@ -1157,25 +1172,33 @@ local rule find-viable-generators-aux ( target-type : property-set )
                     # should work. That list is only used when inheriting a
                     # toolset, which should have been done before running
                     # generators.
-                    generators2 += [ $(g).clone-and-change-target-type $(t[1]) :
+                    generators2 += [ $(g).clone-and-change-target-type $(t) :
                         $(target-type) ] ;
                     generators.register $(generators2[-1]) ;
                 }
                 generators = $(generators2) ;
+                t = ;
             }
-            t = ;
+            else
+            {
+                t = [ type.base $(t) ] ;
+            }
         }
-        t = $(t[2-]) ;
     }
 
     for local g in $(generators)
     {
-        generators.dout [ indent ] "trying generator" [ $(g).id ] "(" [ $(g).source-types ] -> [ $(g).target-types ] ")" ;
-
-        local m = [ $(g).match-rank $(property-set) ] ;
-        if $(m)
+        if $(.debug)
         {
-            generators.dout [ indent ] "  is viable" ;
+            generators.dout [ indent ] "trying generator" [ $(g).id ] "(" [ $(g).source-types ] -> [ $(g).target-types ] ")" ;
+        }
+
+        if [ $(g).match-rank $(property-set) ]
+        {
+            if $(.debug)
+            {
+                generators.dout [ indent ] "  is viable" ;
+            }
             viable-generators += $(g) ;
         }
     }
