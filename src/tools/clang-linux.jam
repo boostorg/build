@@ -67,7 +67,7 @@ rule init ( version ? :  command * : options * ) {
 # Flags
 
 toolset.flags clang-linux.compile OPTIONS <cflags> ;
-toolset.flags clang-linux.compile OPTIONS <cxxflags> ;
+toolset.flags clang-linux.compile.c++ OPTIONS <cxxflags> ;
 
 toolset.flags clang-linux.compile OPTIONS <optimization>off   : ;
 toolset.flags clang-linux.compile OPTIONS <optimization>speed : -O3 ;
