@@ -1988,7 +1988,7 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
         }
     }
 
-    result = evaluate_rule( rulename, inner );
+    result = evaluate_rule( bindrule( rulename, inner->module), rulename, inner );
     object_free( rulename );
 
     frame_free( inner );
