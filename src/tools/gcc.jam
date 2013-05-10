@@ -1066,10 +1066,9 @@ local rule cpu-flags ( toolset variable : architecture : instruction-set + :
 #
 # x86 and compatible
 # The 'native' option appeared in gcc 4.2 so we cannot safely use it as default.
-# Use conservative i386 instead for 32-bit.
-toolset.flags gcc OPTIONS <architecture>x86/<address-model>32/<instruction-set> : -march=i386 ;
+# Use i686 instead for 32-bit.
+toolset.flags gcc OPTIONS <architecture>x86/<address-model>32/<instruction-set> : -march=i686 ;
 cpu-flags gcc OPTIONS : x86 : native : -march=native ;
-cpu-flags gcc OPTIONS : x86 : i386 : -march=i386 ;
 cpu-flags gcc OPTIONS : x86 : i486 : -march=i486 ;
 cpu-flags gcc OPTIONS : x86 : i586 : -march=i586 ;
 cpu-flags gcc OPTIONS : x86 : i686 : -march=i686 ;
@@ -1085,6 +1084,24 @@ cpu-flags gcc OPTIONS : x86 : pentium4m : -march=pentium4m ;
 cpu-flags gcc OPTIONS : x86 : prescott : -march=prescott ;
 cpu-flags gcc OPTIONS : x86 : nocona : -march=nocona ;
 cpu-flags gcc OPTIONS : x86 : core2 : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : conroe : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : conroe-xe : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : conroe-l : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : allendale : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : wolfdale : -march=core2 -msse4.1 ;
+cpu-flags gcc OPTIONS : x86 : merom : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : merom-xe : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : kentsfield : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : kentsfield-xe : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : yorksfield : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : penryn : -march=core2 ;
+cpu-flags gcc OPTIONS : x86 : corei7 : -march=corei7 ;
+cpu-flags gcc OPTIONS : x86 : nehalem : -march=corei7 ;
+cpu-flags gcc OPTIONS : x86 : corei7-avx : -march=corei7-avx ;
+cpu-flags gcc OPTIONS : x86 : sandy-bridge : -march=corei7-avx ;
+cpu-flags gcc OPTIONS : x86 : core-avx-i : -march=core-avx-i ;
+cpu-flags gcc OPTIONS : x86 : ivy-bridge : -march=core-avx-i ;
+cpu-flags gcc OPTIONS : x86 : haswell : -march=core-avx-i -mavx2 -mfma -mbmi -mbmi2 -mlzcnt ;
 cpu-flags gcc OPTIONS : x86 : k6 : -march=k6 ;
 cpu-flags gcc OPTIONS : x86 : k6-2 : -march=k6-2 ;
 cpu-flags gcc OPTIONS : x86 : k6-3 : -march=k6-3 ;
@@ -1098,10 +1115,22 @@ cpu-flags gcc OPTIONS : x86 : k8 : -march=k8 ;
 cpu-flags gcc OPTIONS : x86 : opteron : -march=opteron ;
 cpu-flags gcc OPTIONS : x86 : athlon64 : -march=athlon64 ;
 cpu-flags gcc OPTIONS : x86 : athlon-fx : -march=athlon-fx ;
+cpu-flags gcc OPTIONS : x86 : k8-sse3 : -march=k8-sse3 ;
+cpu-flags gcc OPTIONS : x86 : opteron-sse3 : -march=opteron-sse3 ;
+cpu-flags gcc OPTIONS : x86 : athlon64-sse3 : -march=athlon64-sse3 ;
+cpu-flags gcc OPTIONS : x86 : amdfam10 : -march=amdfam10 ;
+cpu-flags gcc OPTIONS : x86 : barcelona : -march=barcelona ;
+cpu-flags gcc OPTIONS : x86 : bdver1 : -march=bdver1 ;
+cpu-flags gcc OPTIONS : x86 : bdver2 : -march=bdver2 ;
+cpu-flags gcc OPTIONS : x86 : bdver3 : -march=bdver3 ;
+cpu-flags gcc OPTIONS : x86 : btver1 : -march=btver1 ;
+cpu-flags gcc OPTIONS : x86 : btver2 : -march=btver2 ;
 cpu-flags gcc OPTIONS : x86 : winchip-c6 : -march=winchip-c6 ;
 cpu-flags gcc OPTIONS : x86 : winchip2 : -march=winchip2 ;
 cpu-flags gcc OPTIONS : x86 : c3 : -march=c3 ;
 cpu-flags gcc OPTIONS : x86 : c3-2 : -march=c3-2 ;
+##
+cpu-flags gcc OPTIONS : x86 : atom : -march=atom ;
 # Sparc
 cpu-flags gcc OPTIONS : sparc : c3 : -mcpu=c3 : default ;
 cpu-flags gcc OPTIONS : sparc : v7 : -mcpu=v7 ;
