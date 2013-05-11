@@ -518,45 +518,48 @@ rule translate ( properties * : project-id : project-location : context-module )
             if [ feature.is-implicit-value $(property) ]
             {
                 feature = [ feature.implied-feature $(property) ] ;
-                result += $(feature)$(property) ;
+                result += $(condition:E=)$(feature)$(property) ;
             }
             else
             {
                 import errors ;
                 errors.error "'$(e)' is not a valid property specification" ;
             }
-        }
-        local attributes = [ feature.attributes $(feature) ] ;
-        local value ;
-        # Only free features should be translated
-        if free in $(attributes)
-        {
-            if path in $(attributes)
+        } else {
+            local attributes = [ feature.attributes $(feature) ] ;
+            local value ;
+            # Only free features should be translated
+            if free in $(attributes)
             {
-                value = [ translate-path-value $(property:G=) : $(project-location) ] ;
-            }
-            else if dependency in $(attributes)
-            {
-                value = [ translate-dependency-value $(property:G=) : $(project-id) : $(project-location) ] ;
-            }
-            else
-            {
-                local m = [ MATCH ^@(.+) : $(property:G=) ] ;
-                if $(m)
+                if path in $(attributes)
                 {
-                    value = [ translate-indirect-value $(m) : $(context-module) ] ;
+                    value = [ translate-path-value $(property:G=) : $(project-location) ] ;
+                    result += $(condition:E=)$(feature)$(value) ;
+                }
+                else if dependency in $(attributes)
+                {
+                    value = [ translate-dependency-value $(property:G=) : $(project-id) : $(project-location) ] ;
+                    result += $(condition:E=)$(feature)$(value) ;
                 }
                 else
                 {
-                    value = $(property:G=) ;
+                    local m = [ MATCH ^@(.+) : $(property:G=) ] ;
+                    if $(m)
+                    {
+                        value = [ translate-indirect-value $(m) : $(context-module) ] ;
+                        result += $(condition:E=)$(feature)$(value) ;
+                    }
+                    else
+                    {
+                        result += $(condition:E=)$(property) ;
+                    }
                 }
             }
+            else
+            {
+                result += $(condition:E=)$(property) ;
+            }
         }
-        else
-        {
-            value = $(property:G=) ;
-        }
-        result += $(condition:E=)$(feature)$(value) ;
     }
     return $(result) ;
 }
