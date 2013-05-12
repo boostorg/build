@@ -232,7 +232,6 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>space : /Os ;
 
         toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set> : /GB ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>i386 : /G3 ;
         toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>i486 : /G4 ;
         toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(.cpu-type-g5) : /G5 ;
         toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-i386)/<instruction-set>$(.cpu-type-g6) : /G6 ;
@@ -466,18 +465,18 @@ actions compile.rc
 rule link ( targets + : sources * : properties * )
 {
     if <embed-manifest>on in $(properties)
-    {        
+    {
         msvc.manifest $(targets) : $(sources) : $(properties) ;
-    }    
+    }
 }
 
 rule link.dll ( targets + : sources * : properties * )
 {
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     if <embed-manifest>on in $(properties)
-    {        
+    {
         msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
-    }    
+    }
 }
 
 # Incremental linking a DLL causes no end of problems: if the actual exports do
@@ -497,14 +496,14 @@ if [ os.name ] in NT
         $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
-    
+
     actions manifest
-    {        
+    {
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
     }
-    
+
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
@@ -512,37 +511,37 @@ if [ os.name ] in NT
     }
 
     actions manifest.dll
-    {        
+    {
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
-    }    
+    }
 }
 else
-{        
+{
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 
     actions manifest
-    {        
+    {
         if test -e "$(<[1]).manifest"; then
             $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
         fi
     }
-    
+
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
-    
+
     actions manifest.dll
     {
         if test -e "$(<[1]).manifest"; then
           $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
         fi
-    }    
+    }
 }
 
 # this rule sets up the pdb file that will be used when generating static 
@@ -797,9 +796,9 @@ local rule configure-really ( version ? : options * )
             # toolset version.
             command = [ common.get-absolute-tool-path $(command[-1]) ] ;
         }
-        
+
         if $(command)
-        {            
+        {
             local parent = [ path.make $(command) ] ;
             parent = [ path.parent $(parent) ] ;
             parent = [ path.native $(parent) ] ;
@@ -1344,10 +1343,12 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .cpu-type-g5       = i586 pentium pentium-mmx ;
 .cpu-type-g6       = i686 pentiumpro pentium2 pentium3 pentium3m pentium-m k6
                      k6-2 k6-3 winchip-c6 winchip2 c3 c3-2 ;
-.cpu-type-em64t    = prescott nocona conroe conroe-xe conroe-l allendale mermon
-                     mermon-xe kentsfield kentsfield-xe penryn wolfdale
-                     yorksfield nehalem ;
-.cpu-type-amd64    = k8 opteron athlon64 athlon-fx ;
+.cpu-type-em64t    = prescott nocona core2 corei7 corei7-avx core-avx-i
+                     conroe conroe-xe conroe-l allendale merom
+                     merom-xe kentsfield kentsfield-xe penryn wolfdale
+                     yorksfield nehalem sandy-bridge ivy-bridge haswell ;
+.cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
+                     athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3 btver1 btver2 ;
 .cpu-type-g7       = pentium4 pentium4m athlon athlon-tbird athlon-4 athlon-xp
                      athlon-mp $(.cpu-type-em64t) $(.cpu-type-amd64) ;
 .cpu-type-itanium  = itanium itanium1 merced ;
