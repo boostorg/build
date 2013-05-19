@@ -266,7 +266,7 @@ rule configure-version-specific ( toolset : version : conditions )
 
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest>off : /MANIFEST ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
     }
     toolset.pop-checking-for-flags-module ;
 }
