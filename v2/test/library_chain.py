@@ -8,27 +8,26 @@
 # linking.
 
 import BoostBuild
-import string
 import os
+import string
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
-t.write("jamfile.jam", """
-# Stage the binary, so that it will be relinked without hardcode-dll-paths. That
-# will chech that we pass correct -rpath-link, even if not passing -rpath.
+# Stage the binary, so that it will be relinked without hardcode-dll-paths.
+# That will check that we pass correct -rpath-link, even if not passing -rpath.
+t.write("jamfile.jam", """\
 stage dist : main ;
 exe main : main.cpp b ;
 """)
 
-t.write("main.cpp", """
+t.write("main.cpp", """\
 void foo();
 int main() { foo(); }
 """)
 
-t.write("jamroot.jam", """
-""")
+t.write("jamroot.jam", "")
 
-t.write("a/a.cpp", """
+t.write("a/a.cpp", """\
 void
 #if defined(_WIN32)
 __declspec(dllexport)
@@ -41,11 +40,9 @@ __declspec(dllexport)
 geek() {}
 """)
 
-t.write("a/jamfile.jam", """
-lib a : a.cpp ;
-""")
+t.write("a/jamfile.jam", "lib a : a.cpp ;")
 
-t.write("b/b.cpp", """
+t.write("b/b.cpp", """\
 void geek();
 void
 #if defined(_WIN32)
@@ -54,32 +51,26 @@ __declspec(dllexport)
 foo() { geek(); }
 """)
 
-t.write("b/jamfile.jam", """
-lib b : b.cpp ../a//a ;
-""")
+t.write("b/jamfile.jam", "lib b : b.cpp ../a//a ;")
 
-t.run_build_system("-d2", stderr=None)
+t.run_build_system(["-d2"], stderr=None)
 t.expect_addition("bin/$toolset/debug/main.exe")
 t.rm(["bin", "a/bin", "b/bin"])
 
-t.run_build_system("link=static")
+t.run_build_system(["link=static"])
 t.expect_addition("bin/$toolset/debug/link-static/main.exe")
 t.rm(["bin", "a/bin", "b/bin"])
 
 
 # Check that <library> works for static linking.
-t.write("b/jamfile.jam", """
-lib b : b.cpp : <library>../a//a ;
-""")
+t.write("b/jamfile.jam", "lib b : b.cpp : <library>../a//a ;")
 
-t.run_build_system("link=static")
+t.run_build_system(["link=static"])
 t.expect_addition("bin/$toolset/debug/link-static/main.exe")
 
 t.rm(["bin", "a/bin", "b/bin"])
 
-t.write("b/jamfile.jam", """
-lib b : b.cpp ../a//a/<link>shared : <link>static ;
-""")
+t.write("b/jamfile.jam", "lib b : b.cpp ../a//a/<link>shared : <link>static ;")
 
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug/main.exe")
@@ -88,13 +79,13 @@ t.rm(["bin", "a/bin", "b/bin"])
 
 
 # Test that putting a library in sources of a searched library works.
-t.write("jamfile.jam", """
+t.write("jamfile.jam", """\
 exe main : main.cpp png ;
 lib png : z : <name>png ;
 lib z : : <name>zzz ;
 """)
 
-t.run_build_system("-a -d+2", status=None, stderr=None)
+t.run_build_system(["-a", "-d+2"], status=None, stderr=None)
 # Try to find the "zzz" string either in response file (for Windows compilers),
 # or in the standard output.
 rsp = t.adjust_names("bin/$toolset/debug/main.exe.rsp")[0]
@@ -110,13 +101,12 @@ else:
 t.rm(".")
 
 t.write("jamroot.jam", "")
-
-t.write("a/jamfile.jam", """
+t.write("a/jamfile.jam", """\
 lib a : a.cpp ;
 install dist : a ;
 """)
 
-t.write("a/a.cpp", """
+t.write("a/a.cpp", """\
 #if defined(_WIN32)
 __declspec(dllexport)
 #endif
@@ -126,18 +116,16 @@ void a() {}
 t.run_build_system(subdir="a")
 t.expect_addition("a/dist/a.dll")
 
-if ( ( os.name == 'nt' ) or os.uname()[0].lower().startswith('cygwin') ) and \
-    ( BoostBuild.get_toolset() != 'gcc' ):
-    # This is windows import library -- we know the exact name.
+if ( os.name == 'nt' or os.uname()[0].lower().startswith('cygwin') ) and \
+    BoostBuild.get_toolset() != 'gcc':
+    # This is a Windows import library -- we know the exact name.
     file = "a/dist/a.lib"
 else:
-    file = t.adjust_names(["a/dist/a.dll"])[0]
+    file = t.adjust_names("a/dist/a.dll")[0]
 
-t.write("b/jamfile.jam", """
-lib b : b.cpp ../%s ;
-""" % file)
+t.write("b/jamfile.jam", "lib b : b.cpp ../%s ;" % file)
 
-t.write("b/b.cpp", """
+t.write("b/b.cpp", """\
 #if defined(_WIN32)
 __declspec(dllimport)
 #endif
@@ -148,11 +136,9 @@ __declspec(dllexport)
 void b() { a(); }
 """)
 
-t.write("jamroot.jam", """
-exe main : main.cpp b//b ;
-""")
+t.write("jamroot.jam", "exe main : main.cpp b//b ;")
 
-t.write("main.cpp", """
+t.write("main.cpp", """\
 #if defined(_WIN32)
 __declspec(dllimport)
 #endif

@@ -1,32 +1,33 @@
 #!/usr/bin/python
 
-# Copyright (C) Pedro Ferreira 2003. Permission to copy, use, modify, sell and
-# distribute this software is granted provided this copyright notice appears in
-# all copies. This software is provided "as is" without express or implied
-# warranty, and with no claim as to its suitability for any purpose.
+# Copyright (C) 2003. Pedro Ferreira
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
 
 
-################################################################################
+###############################################################################
 #
 # test_folder_with_dot_in_name()
 # ------------------------------
 #
-################################################################################
+###############################################################################
 
 def test_folder_with_dot_in_name(t):
-    """ Regression test: the 'tag' feature did not work in directories that had
-    a dot in their name.
     """
+      Regression test: the 'tag' feature did not work in directories that had a
+    dot in their name.
 
-    t.write("version-1.32.0/jamroot.jam", """
+    """
+    t.write("version-1.32.0/jamroot.jam", """\
 project test : requirements <tag>@$(__name__).tag ;
 
 rule tag ( name : type ? : property-set )
 {
    # Do nothing, just make sure the rule is invoked OK.
-   ECHO "The tag rule has been invoked." ;
+   ECHO The tag rule has been invoked. ;
 }
 exe a : a.cpp ;
 """)
@@ -34,21 +35,20 @@ exe a : a.cpp ;
 
     t.run_build_system(subdir="version-1.32.0")
     t.expect_addition("version-1.32.0/bin/$toolset/debug/a.exe")
-    t.expect_output_line("The tag rule has been invoked.")
+    t.expect_output_lines("The tag rule has been invoked.")
 
 
-################################################################################
+###############################################################################
 #
 # test_tag_property()
 # -------------------
 #
-################################################################################
+###############################################################################
 
 def test_tag_property(t):
-    """Basic tag property test.
-    """
+    """Basic tag property test."""
 
-    t.write("jamroot.jam", """
+    t.write("jamroot.jam", """\
 import virtual-target ;
 
 rule tag ( name : type ? : property-set )
@@ -77,44 +77,44 @@ lib b : a.cpp : <tag>@tag ;
 stage c : a ;
 """)
 
-    t.write("a.cpp", """
+    t.write("a.cpp", """\
 int main() {}
 #ifdef _MSC_VER
 __declspec (dllexport) void x () {}
 #endif
 """)
 
-    file_list = \
-        BoostBuild.List("bin/$toolset/debug/a_ds.exe") + \
-        BoostBuild.List("bin/$toolset/debug/b_ds.dll") + \
-        BoostBuild.List("c/a_ds.exe") + \
-        BoostBuild.List("bin/$toolset/release/a_rs.exe") + \
-        BoostBuild.List("bin/$toolset/release/b_rs.dll") + \
-        BoostBuild.List("c/a_rs.exe") + \
-        BoostBuild.List("bin/$toolset/debug/link-static/a_dt.exe") + \
-        BoostBuild.List("bin/$toolset/debug/link-static/b_dt.lib") + \
-        BoostBuild.List("c/a_dt.exe") + \
-        BoostBuild.List("bin/$toolset/release/link-static/a_rt.exe") + \
-        BoostBuild.List("bin/$toolset/release/link-static/b_rt.lib") + \
-        BoostBuild.List("c/a_rt.exe")
+    file_list = (
+        BoostBuild.List("bin/$toolset/debug/a_ds.exe") +
+        BoostBuild.List("bin/$toolset/debug/b_ds.dll") +
+        BoostBuild.List("c/a_ds.exe") +
+        BoostBuild.List("bin/$toolset/release/a_rs.exe") +
+        BoostBuild.List("bin/$toolset/release/b_rs.dll") +
+        BoostBuild.List("c/a_rs.exe") +
+        BoostBuild.List("bin/$toolset/debug/link-static/a_dt.exe") +
+        BoostBuild.List("bin/$toolset/debug/link-static/b_dt.lib") +
+        BoostBuild.List("c/a_dt.exe") +
+        BoostBuild.List("bin/$toolset/release/link-static/a_rt.exe") +
+        BoostBuild.List("bin/$toolset/release/link-static/b_rt.lib") +
+        BoostBuild.List("c/a_rt.exe"))
 
-    variants = "debug release link=static,shared"
+    variants = ["debug", "release", "link=static,shared"]
 
     t.run_build_system(variants)
     t.expect_addition(file_list)
 
-    t.run_build_system(variants + " clean")
+    t.run_build_system(variants + ["clean"])
     t.expect_removal(file_list)
 
 
-################################################################################
+###############################################################################
 #
 # main()
 # ------
 #
-################################################################################
+###############################################################################
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 test_tag_property(t)
 test_folder_with_dot_in_name(t)

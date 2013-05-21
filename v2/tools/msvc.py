@@ -207,7 +207,7 @@ def configure_version_specific(toolset_arg, version, conditions):
         
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
-        toolset.flags('{}.link'.format(toolset_arg), 'LINKFLAGS', extend_conditions(conditions,["<embed-manifest>off"]), ['/MANIFEST'])
+        toolset.flags('{}.link'.format(toolset_arg), 'LINKFLAGS', conditions, ['/MANIFEST'])
 
 
 # Registers this toolset including all of its flags, features & generators. Does

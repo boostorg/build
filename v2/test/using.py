@@ -7,34 +7,24 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
-t.write("sub/a.cpp", """
-int main() {}
-""")
-
-t.write("jamroot.jam", """
-using some_tool ;
-""")
-
-t.write("some_tool.jam", """
+t.write("jamroot.jam", "using some_tool ;")
+t.write("some_tool.jam", """\
 import project ;
 project.initialize $(__name__) ;
 rule init ( ) { }
 """)
 
-t.write("some_tool.py", """
+t.write("some_tool.py", """\
 from b2.manager import get_manager
-
 get_manager().projects().initialize(__name__)
-
 def init():
     pass
 """)
 
-t.write("sub/jamfile.jam", """
-exe a : a.cpp ;
-""")
+t.write("sub/a.cpp", "int main() {}\n")
+t.write("sub/jamfile.jam", "exe a : a.cpp ;")
 
 t.run_build_system(subdir="sub")
 t.expect_addition("sub/bin/$toolset/debug/a.exe")

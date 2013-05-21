@@ -23,11 +23,11 @@ Before contributing, make sure you are subscribed to our mailing list
 Additional resources include
 
    - The issue tracker
-     http://zigzag.cs.msu.su/boost.build
+     http://trac.lvk.cs.msu.su/boost.build/
 
-   - commits mailing list:
-     boost-build@lists.sourceforge.net
-     http://sourceforge.net/mailarchive/forum.php?forum_id=9097
+   - mailing list:
+     boost-build@lists.boost.org
+     http://lists.boost.org/boost-build/
 
 
 BUGS and PATCHES
@@ -136,19 +136,3 @@ CODING CONVENTIONS.
         {
             #
         }
-
-HTML DOCUMENTATION.
-
-    Please pass HTML files though HTML Tidy (http://tidy.sf.net) before
-    comitting. This has to important purposes:
-    - detecting bad HTML
-    - converting files to uniform indentation style, which inverses effect of
-      different editors and makes differences between revisions much smaller and
-      easy for review.
-
-    Alas, the way Tidy indents HTML differs between version. Please use the
-    version available at
-
-       http://tidy.sourceforge.net/src/old/tidy_src_020411.tgz
-
-    and "-i -wrap 78" command line parameters.

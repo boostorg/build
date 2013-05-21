@@ -2,32 +2,27 @@
 
 # Copyright 2004 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
-# Tests that on gcc, we correctly report problem when static runtime is
+# Tests that on gcc, we correctly report a problem when static runtime is
 # requested for building a shared library.
 
 import BoostBuild
-import string
 
 t = BoostBuild.Tester()
+t.write("jamroot.jam", "lib hello : hello.cpp ;")
+t.write("hello.cpp", "int main() {}\n")
 
-# Create the needed files.
-t.write("jamroot.jam", "")
+t.run_build_system(["runtime-link=static"])
+t.expect_output_lines("warning: On gcc, DLLs can not be built with "
+    "'<runtime-link>static'.")
+t.expect_nothing_more()
 
-t.write("jamfile.jam", """
-lib hello : hello.cpp ;
-""")
-
-t.write("hello.cpp", """
-int main() { }
-""")
-
-t.run_build_system("runtime-link=static")
-t.fail_test(string.find(t.stdout(),
-    "On gcc, DLL can't be build with '<runtime-link>static'") == -1)
-
-t.run_build_system("link=static runtime-link=static")
-t.expect_addition("bin/$toolset/debug/link-static/runtime-link-static/hello.lib")
+t.run_build_system(["link=static", "runtime-link=static"])
+binFolder = "bin/$toolset/debug/link-static/runtime-link-static"
+t.expect_addition("%s/hello.obj" % binFolder)
+t.expect_addition("%s/hello.lib" % binFolder)
+t.expect_nothing_more()
 
 t.cleanup()

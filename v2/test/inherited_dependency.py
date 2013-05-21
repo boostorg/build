@@ -8,7 +8,7 @@
 
 import BoostBuild
 
-tester = BoostBuild.Tester()
+tester = BoostBuild.Tester(use_test_config=False)
 
 
 ################################################################################

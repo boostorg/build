@@ -8,7 +8,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
 # Create the needed files.
 t.write("jamroot.jam", """
@@ -30,7 +30,7 @@ __declspec(dllexport)
 helper() {}
 """)
 
-t.run_build_system("link=static")
+t.run_build_system(["link=static"])
 t.expect_addition("bin/$toolset/debug/link-static/test.passed")
 
 t.cleanup()

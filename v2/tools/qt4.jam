@@ -316,12 +316,18 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
    # Setup common pre-built Qt.
    # Special setup for QtCore on which everything depends
    {
+       local link = [ feature.get-values link : $(condition) ] ;
+
        local usage-requirements =
            <include>$(.incprefix)
            <library-path>$(.libprefix)
-           <dll-path>$(.libprefix)
            <threading>multi
            <allow>qt4 ;
+
+       if $(link) in shared
+       {
+           usage-requirements += <dll-path>$(.libprefix) ;
+       }
 
        local suffix ;
 
@@ -342,8 +348,11 @@ rule init ( prefix : full_bin ? : full_inc ? : full_lib ? : version ? : conditio
        {
            .have_separate_debug = TRUE ;
 
-           # On NT, the libs have "4" suffix, and "d" suffix in debug builds.
-           .suffix_version = "4" ;
+           # On NT, the shared libs have "4" suffix, and "d" suffix in debug builds.
+           if $(link) in shared
+           {
+                .suffix_version = "4" ;
+           }
            .suffix_debug = "d" ;
 
            # On Windows we must link against the qtmain library

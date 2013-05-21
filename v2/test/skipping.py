@@ -9,21 +9,12 @@
 import BoostBuild
 
 # Create a temporary working directory.
-t = BoostBuild.Tester()
+t = BoostBuild.Tester(use_test_config=False)
 
-t.write("a.cpp", """
-int main() {}
-""")
-
-t.write("b.cpp", """
-int main() {}
-""")
-
-t.write("c.cpp", """
-int main() {}
-""")
-
-t.write("jamroot.jam", """
+t.write("a.cpp", "int main() {}\n")
+t.write("b.cpp", "int main() {}\n")
+t.write("c.cpp", "int main() {}\n")
+t.write("jamroot.jam", """\
 import feature ;
 feature.feature foo : 1 2 : link-incompatible ;
 exe a : a.cpp : <foo>1 ;
@@ -31,6 +22,6 @@ exe b : b.cpp : <foo>2 ;
 exe c : c.cpp ;
 """)
 
-t.run_build_system("foo=1")
+t.run_build_system(["foo=1"])
 
 t.cleanup()

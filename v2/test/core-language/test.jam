@@ -75,6 +75,7 @@ check-equal var-upper : $(v4:U) : STRING/WITH/MIXED/CASE ;
 check-equal var-LU : $(v4:LU) : STRING/WITH/MIXED/CASE ;
 check-equal var-slashes : $(v5:T) : path/with/backslashes ;
 check-equal var-grist : $(v6:G) : <grist> ;
+check-equal var-grist-none : $(v1:G) : "" "" "" ;
 check-equal var-base : $(v6:B) : path ;
 check-equal var-suffix : $(v6:S) : .txt ;
 check-equal var-dir : $(v6:D) : generic ;
@@ -120,7 +121,7 @@ if $(OS) = CYGWIN
 
     local cyg-grist = <grist>$(cyg1) ;
     check-equal cygwin-grist : $(cyg-grist:W) : <grist>\\cygdrive\\c\\path1.txt ;
-    
+
     check-equal cygwin-WU : $(cyg2:WU) : $(cyg-root:U)\\BIN\\BASH ;
     # behavior change: L now consistently applied after W.
     # used to affect all except the drive letter.
@@ -234,7 +235,7 @@ check-equal rule-indirect-2 : [ indirect1 select 2 : a b c d e ] : b ;
 x = reset ;
 rule reset-x ( new-value )
 {
-    x = $(new-value) ; 
+    x = $(new-value) ;
 }
 $(x)-x bar ;                          # invokes reset-x...
 check-equal rule-reset : $(x) : bar ; # which changes x
@@ -248,6 +249,27 @@ rule bar-x ( new-value )
 # before the rule name
 $(x)-x [ mark-order r1 : [ reset-x reset ] ] : [ mark-order r2 ] ;
 check-order rule-order : r1 r2 ;
+
+# Cases that look like member calls
+rule looks.like-a-member ( args * )
+{
+    return $(args) ;
+}
+
+rule call-non-member ( rule + )
+{
+    return [ $(rule).like-a-member ] ;
+}
+
+rule call-non-member-with-args ( rule + )
+{
+    return [ $(rule).like-a-member a2 ] ;
+}
+
+check-equal rule-non-member : [ call-non-member looks ] : ;
+#check-equal rule-non-member-a1 : [ call-non-member looks a1 ] : looks.a1 ;
+check-equal rule-non-member-args : [ call-non-member-with-args looks ] : a2 ;
+#check-equal rule-non-member-args-a1 : [ call-non-member-with-args looks a1 ] : looks.a1 a2 ;
 
 }
 
@@ -713,7 +735,7 @@ check-equal local-duplicate-restore : $(v1) : a b c ;
     check-equal module-var-not-root : $(var1) : root-module-var ;
 
     check-equal module-rulenames : [ RULENAMES my_module ] : get ;
-    
+
     IMPORT_MODULE my_module ;
     check-equal module-rule-import-module : [ my_module.get ] : module-var ;
 
@@ -1293,16 +1315,41 @@ check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../foo/bar" ] ;
 if $(NT)
 {
     local sound = "Beep" "ExtendedSounds" ;
-    local r1 = [ W32_GETREGNAMES "HKEY_CURRENT_USER\\Control Panel\\Sound" : values ] ;
+    local r1 = [ W32_GETREGNAMES "HKEY_CURRENT_USER\\Control Panel\\Sound" :
+        values ] ;
     check-equal w32_getregnames : $(sound:L) : $(r1:L) ;
     local r2 = [ W32_GETREGNAMES "HKCU\\Control Panel\\Sound" : values ] ;
     check-equal w32_getregnames : $(sound:L) : $(r2:L) ;
 
+    #   Some Windows platforms may have additional keys under
+    # 'CurrentControlSet' which we then remove here so they would not be
+    # reported as errors by our test.
+    local rule remove-policies ( param * )
+    {
+        local found ;
+        local r ;
+        for local x in $(param:L)
+        {
+            if ! x in $(found) &&
+                $(x) in "addservices" "policies" "deleted device ids"
+            {
+                found += $(x) ;
+            }
+            else
+            {
+                r += $(x) ;
+            }
+        }
+        return $(r) ;
+    }
     local CurrentControlSet = "Control" "Enum" "Hardware Profiles" "Services" ;
-    local r3 = [ W32_GETREGNAMES "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet" : subkeys ] ;
-    check-equal w32_getregnames : $(CurrentControlSet:L) : $(r3:L) ;
+    local r3 = [ W32_GETREGNAMES "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet"
+        : subkeys ] ;
+    check-equal w32_getregnames : $(CurrentControlSet:L) : [ remove-policies
+        $(r3:L) ] ;
     local r4 = [ W32_GETREGNAMES "HKLM\\SYSTEM\\CurrentControlSet" : subkeys ] ;
-    check-equal w32_getregnames : $(CurrentControlSet:L) : $(r4:L) ;
+    check-equal w32_getregnames : $(CurrentControlSet:L) : [ remove-policies
+        $(r4:L) ] ;
 }
 
 }
@@ -1333,7 +1380,7 @@ check-equal subst-nomatch : [ SUBST "abc" "d+" x ] : ;
 
 # Check that a matched subst works
 check-equal subst-match : [ SUBST "ddd" "d+" x ] : x ;
-    
+
 # Check that we can get multiple substitutions from a single invocation
 check-equal subst-multiple : [ SUBST "x/y/z" "([^/]*)/([^/]*).*" "\\1" $2 "\\1-\\2" ] : x y x-y ;
 

@@ -1,10 +1,11 @@
 #!/bin/bash
 
 # Copyright 2004 Aleksey Gurtovoy
-# Copyright 2006 Rene Rivera 
-# Copyright 2003, 2004, 2005, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2006 Rene Rivera
+# Copyright 2003, 2004, 2005, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 set -e
 
@@ -12,9 +13,6 @@ set -e
 revision=`svnversion .`
 echo "SVN Revision $revision" >> timestamp.txt
 date >> timestamp.txt
-
-# This one is not fully finished
-rm -rf example/versioned
 
 # Remove unnecessary top-level files
 find . -maxdepth 1 -type f | egrep -v "boost-build.jam|timestamp.txt|roll.sh|bootstrap.jam|build-system.jam|boost_build.png|index.html|hacking.txt|site-config.jam|user-config.jam|bootstrap.sh|bootstrap.bat|Jamroot.jam" | xargs rm -f

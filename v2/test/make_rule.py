@@ -12,7 +12,7 @@ import string
 
 t = BoostBuild.Tester(pass_toolset=1)
 
-t.write("jamroot.jam", """
+t.write("jamroot.jam", """\
 import feature ;
 feature.feature test_feature : : free ;
 
@@ -35,24 +35,20 @@ t.fail_test(string.find(t.read("bin/$toolset/debug/foo.bar"), "12345678") == -1)
 # Regression test. Make sure that if a main target is requested two times, and
 # build requests differ only in incidental properties, the main target is
 # created only once. The bug was discovered by Kirill Lapshin.
-t.write("jamroot.jam", """
-# Make sure that incidental property does not cause second creation of
-# 'hello1.cpp'.
+t.write("jamroot.jam", """\
 exe a : dir//hello1.cpp ;
 exe b : dir//hello1.cpp/<hardcode-dll-paths>true ;
 """)
 
-t.write("dir/jamfile.jam", """
+t.write("dir/jamfile.jam", """\
 import common ;
 make hello1.cpp : hello.cpp : common.copy ;
 """)
 
-t.write("dir/hello.cpp", """
-int main() {}
-""")
+t.write("dir/hello.cpp", "int main() {}\n")
 
 # Show only action names.
-t.run_build_system("-d1 -n")
+t.run_build_system(["-d1", "-n"])
 t.fail_test(t.stdout().count("copy") != 1)
 
 t.cleanup()
