@@ -124,7 +124,7 @@ rule init (
     condition = [ property-set.create [ $(condition).base ] ] ;
 
     local no-build-from-source ;
-    # Ignore environmental ZLIB_SOURCE if this initialization
+    # Ignore environmental LIBPNG_SOURCE if this initialization
     # requested to search for a specific pre-built library.
     if $(library-path) || $(include-path) || $(library-name)
     {
@@ -140,7 +140,7 @@ rule init (
         }
     }
 
-    source-path ?= [ modules.peek : ZLIB_SOURCE ] ;
+    source-path ?= [ modules.peek : LIBPNG_SOURCE ] ;
 
     if $(.configured.$(condition))
     {
@@ -193,7 +193,7 @@ rule init (
                 <include>$(source-path)
                 <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
                 <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
-                <link>shared:<define>ZLIB_DLL
+                <link>shared:<define>LIBPNG_DLL
               :
               : <include>$(source-path) ] ;
         }
