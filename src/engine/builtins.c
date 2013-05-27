@@ -29,6 +29,10 @@
 
 #include <ctype.h>
 
+#ifdef OS_NT
+#include <windows.h>
+#endif
+
 #if defined(USE_EXECUNIX)
 # include <sys/types.h>
 # include <sys/wait.h>
@@ -424,6 +428,11 @@ void load_builtins()
     {
         char const * args [] = { "path", 0 };
         bind_builtin( "MAKEDIR", builtin_makedir, 0, args );
+    }
+    
+    {
+        const char * args [] = { "path", 0 };
+        bind_builtin( "READLINK", builtin_readlink, 0, args );
     }
 
     /* Initialize builtin modules. */
@@ -1825,6 +1834,94 @@ LIST * builtin_makedir( FRAME * frame, int flags )
     return file_mkdir( object_str( list_front( path ) ) )
         ? L0
         : list_new( object_copy( list_front( path ) ) );
+}
+
+LIST *builtin_readlink( FRAME * frame, int flags )
+{
+    const char * path = object_str( list_front( lol_get( frame->args, 0 ) ) );
+#ifdef OS_NT
+
+    /* This struct is declared in ntifs.h which is
+     * part of the Windows Driver Kit.
+     */
+    typedef struct _REPARSE_DATA_BUFFER {
+        ULONG ReparseTag;
+        USHORT ReparseDataLength;
+        USHORT Reserved;
+        union {
+            struct {
+                USHORT SubstituteNameOffset;
+                USHORT SubstituteNameLength;
+                USHORT PrintNameOffset;
+                USHORT PrintNameLength;
+                ULONG Flags;
+                WCHAR PathBuffer[ 1 ];
+            } SymbolicLinkReparseBuffer;
+            struct {
+                USHORT SubstituteNameOffset;
+                USHORT SubstituteNameLength;
+                USHORT PrintNameOffset;
+                USHORT PrintNameLength;
+                WCHAR PathBuffer[ 1 ];
+            } MountPointReparseBuffer;
+            struct {
+                UCHAR DataBuffer[ 1 ];
+            } GenericReparseBuffer;
+        };
+    } REPARSE_DATA_BUFFER;
+
+    HANDLE hLink = CreateFileA( path, 0, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OPEN_REPARSE_POINT, NULL );
+    DWORD n;
+    union {
+        REPARSE_DATA_BUFFER reparse;
+        char data[MAXIMUM_REPARSE_DATA_BUFFER_SIZE];
+    } buf;
+    int okay = DeviceIoControl(hLink, FSCTL_GET_REPARSE_POINT, NULL, 0, &buf, sizeof(buf), &n, NULL);
+
+    CloseHandle( hLink );
+
+    if (okay && buf.reparse.ReparseTag == IO_REPARSE_TAG_SYMLINK )
+    {
+        int index = buf.reparse.SymbolicLinkReparseBuffer.SubstituteNameOffset / 2;
+        int length = buf.reparse.SymbolicLinkReparseBuffer.SubstituteNameLength / 2;
+        char cbuf[MAX_PATH + 1];
+        int numchars = WideCharToMultiByte( CP_ACP, 0, buf.reparse.SymbolicLinkReparseBuffer.PathBuffer + index, length, cbuf, sizeof(cbuf), NULL, NULL );
+        if( numchars >= sizeof(cbuf) )
+        {
+            return 0;
+        }
+        cbuf[numchars] = '\0';
+        return list_new( object_new( cbuf ) );
+    }
+    return 0;
+#else
+    char static_buf[256];
+    char * buf = static_buf;
+    size_t bufsize = 256;
+    LIST * result = 0;
+    while (1) {
+        ssize_t len = readlink( path, buf, bufsize );
+        if ( len < 0 )
+        {
+            break;
+        }
+        else if ( len < bufsize )
+        {
+            buf[ len ] = '\0';
+            result = list_new( object_new( buf ) );
+            break;
+        }
+        if ( buf != static_buf )
+            BJAM_FREE( buf );
+        bufsize *= 2;
+        buf = BJAM_MALLOC( bufsize );
+    }
+    
+    if ( buf != static_buf )
+        BJAM_FREE( buf );
+
+    return result;
+#endif
 }
 
 
