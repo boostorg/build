@@ -1324,8 +1324,9 @@ class subvariant
         for local t in $(self.created-targets)
         {
             # Skip targets of the wrong type.
+            local type = [ $(t).type ] ;
             if ! $(target-type) ||
-                [ type.is-derived [ $(t).type ] $(target-type) ]
+                ( $(type) && [ type.is-derived $(type) $(target-type) ] )
             {
                 result = [ sequence.merge $(result) : [ $(t).path ] ] ;
             }
