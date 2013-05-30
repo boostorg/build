@@ -178,6 +178,7 @@ rule print-error ( location message * )
 
 rule make-error ( message * )
 {
+    import errors ;
     return [ errors.nearest-user-location ] $(message) ;
 }
 
@@ -204,7 +205,6 @@ rule check-docbook-xsl-dir ( )
     {
         if ! [ path.glob $(.docbook-xsl-dir) : common/common.xsl ]
         {
-            import errors ;
             .error-message = [ make-error BoostBook: could not find docbook XSL stylesheets
                 in: [ path.native $(.docbook-xsl-dir) ] ] ;
         }
@@ -223,7 +223,6 @@ rule check-docbook-dtd-dir ( )
     {
         if ! [ path.glob $(.docbook-dtd-dir) : docbookx.dtd ]
         {
-            import errors ;
             .error-message = [ make-error BoostBook: could not find docbook DTD in: [
                 path.native $(.docbook-dtd-dir) ] ] ;
         }
@@ -278,7 +277,6 @@ rule check-boostbook-dir ( boostbook-dir ? )
 {
     if $(boostbook-dir) && ! [ path.glob $(boostbook-dir) : xsl ]
     {
-        import errors ;
         .error-message = [ make-error BoostBook: could not find boostbook in: [ path.native
             $(boostbook-dir) ] ] ;
     }
