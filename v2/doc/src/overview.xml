@@ -1183,7 +1183,9 @@ obj main : main.cpp : &lt;optimization&gt;off ;
 </programlisting>
         </para>
 
-        <para id="bbv2.overview.targets.requirements.conditional">Sometimes, particular relationships need to be maintained
+        <para id="bbv2.overview.targets.requirements.conditional">
+          <indexterm><primary>requirements</primary><secondary>conditional</secondary></indexterm>
+          Sometimes, particular relationships need to be maintained
         among a target's build properties. This can be achieved with
         <firstterm>conditional
         requirements</firstterm>. For example, you might want to set
@@ -1212,6 +1214,7 @@ lib network : network.cpp
         </para>
 
         <para id="bbv2.overview.targets.requirements.indirect">
+          <indexterm><primary>requirements</primary><secondary>indirect</secondary></indexterm>
           A more powerful variant of conditional requirements
           is <firstterm>indirect conditional requirements</firstterm>.
           You can provide a rule that will be called with the current build properties and can compute additional properties
