@@ -166,7 +166,7 @@ rule init (
     }
     else if $(source-path) && ! $(no-build-from-source)
     {
-        build-name ?= z ;
+        build-name ?= jpeg ;
         library-id = [ CALC $(library-id) + 1 ] ;
         tag = [ MATCH ^@?(.*)$ : $(tag) ] ;
         if $(tag) && ! [ MATCH ^([^%]*)%([^%]+)$ : $(tag) ]
