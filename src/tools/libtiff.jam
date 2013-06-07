@@ -23,9 +23,8 @@ import indirect ;
 import property ;
 import property-set ;
 
-header = tiff.h tiffio.hxx ;
-
-names = libtiff ;
+header = tiff.h ;
+names = tiff ;
 
 sources =   tif_aux.c tif_close.c tif_codec.c tif_color.c tif_compress.c tif_dir.c tif_dirinfo.c
 	tif_dirread.c tif_dirwrite.c tif_dumpmode.c tif_error.c tif_extension.c tif_fax3.c tif_fax3sm.c

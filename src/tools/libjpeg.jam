@@ -23,10 +23,9 @@ import indirect ;
 import property ;
 import property-set ;
 
-header =    jconfig.h jdct.h jerror.h jinclude.h jmemsys.h jmorecfg.h jpegint.h jpeglib.h
-            jversion.h ;
+header = jpeglib.h ;
 
-names = libjpeg ;
+names = jpeg ;
 
 sources =   jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c
         jcdctmgr.c jchuff.c jcinit.c jcmainct.c jcmarker.c jcmaster.c
