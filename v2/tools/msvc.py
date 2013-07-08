@@ -647,7 +647,7 @@ def configure_really(version=None, options=[]):
             # 9.0express as 9.0 here.
             if re.search("Microsoft Visual Studio 11", command):
                 version = '11.0'
-            if re.search("Microsoft Visual Studio 10", command):
+            elif re.search("Microsoft Visual Studio 10", command):
                 version = '10.0'
             elif re.search("Microsoft Visual Studio 9", command):
                 version = '9.0'
