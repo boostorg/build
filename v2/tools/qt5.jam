@@ -680,7 +680,7 @@ flags qt5.moc DEFINES <define> ;
 #
 actions moc
 {
-    $(.BINPREFIX[-1])/moc -f $(>) -o $(<) @"@($(<).rsp:E=-D$(DEFINES)$(.nl) -I$(INCLUDES:T)$(.nl))"
+    $(.BINPREFIX[-1])/moc $(>) -o $(<) @"@($(<).rsp:E=-D$(DEFINES)$(.nl) -I$(INCLUDES:T)$(.nl))"
 }
 
 # When moccing files for include only, we don't need -f, otherwise the generated
