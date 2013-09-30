@@ -44,7 +44,7 @@ if [ qt5.initialized ]
       [ link qtdeclarative.cpp /qt5//QtDeclarative ]
 
       # QtQuick version2
-      [ run qtquick.cpp /qt5//QtQuick : : $(CWD)/qtquick.qml ]
+      [ run qtquick.cpp /qt5//QtQuick : -platform offscreen : $(CWD)/qtquick.qml ]
 
       # Help systems.
       [ link qthelp.cpp      /qt5//QtHelp ]
