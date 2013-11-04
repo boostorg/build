@@ -92,8 +92,13 @@ struct _action
 #define A_INIT           0
 #define A_RUNNING_NOEXEC 1
 #define A_RUNNING        2
-    char      status;         /* see TARGET status */
     int       refs;
+
+    /* WARNING: These variables are used to pass state required by make1cmds and
+     * are not valid anywhere else.
+     */
+    void    * first_cmd;      /* Pointer to the first CMD created by this action */
+    void    * last_cmd;       /* Pointer to the last CMD created by this action */
 };
 
 /* SETTINGS - variables to set when executing a TARGET's ACTIONS. */

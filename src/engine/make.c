@@ -161,6 +161,8 @@ int make( LIST * targets, int anyhow )
  * make0() to be updated.
  */
 
+static void force_rebuilds( TARGET * t );
+
 static void update_dependants( TARGET * t )
 {
     TARGETS * q;
@@ -190,6 +192,8 @@ static void update_dependants( TARGET * t )
                 update_dependants( p );
         }
     }
+    /* Make sure that rebuilds can be chained. */
+    force_rebuilds( t );
 }
 
 
@@ -676,7 +680,30 @@ void make0
     else
         fate = t->fate;
 
-    /* Step 4g: If this target needs to be built, force rebuild everything in
+    /*
+     * Step 4g: If this target needs to be built, make0 all targets
+     * that are updated by the same actions used to update this target.
+     * These have already been marked as REBUILDS, and make1 has
+     * special handling for them.  We just need to make sure that
+     * they get make0ed.
+     */
+    if ( ( fate >= T_FATE_BUILD ) && ( fate < T_FATE_BROKEN ) )
+    {
+        ACTIONS * a;
+        TARGETS * c;
+        for ( a = t->actions; a; a = a->next )
+        {
+            for ( c = a->action->targets; c; c = c->next )
+            {
+                if ( c->target->fate == T_FATE_INIT )
+                {
+                    make0( c->target, ptime, depth + 1, counts, anyhow, rescanning );
+                }
+            }
+        }
+    }
+
+    /* Step 4h: If this target needs to be built, force rebuild everything in
      * its rebuilds list.
      */
     if ( ( fate >= T_FATE_BUILD ) && ( fate < T_FATE_BROKEN ) )
