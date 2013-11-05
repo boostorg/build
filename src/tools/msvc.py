@@ -71,7 +71,7 @@ type.register('PDB',['pdb'])
 #    using msvc : 6.5 : cl.exe ;
 #    using msvc : 7.0 : Y:/foo/bar/cl.exe ;
 #
-# The version parameter may be ommited:
+# The version parameter may be omitted:
 #
 #    using msvc : : Z:/foo/bar/cl.exe ;
 #
