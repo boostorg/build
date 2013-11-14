@@ -227,10 +227,6 @@ rule do-split
         DEPENDS $(.current-target) : $(target) ;
         common.mkdir $(target) ;
     }
-    if ! [ on $(target) return $(RM) ]
-    {
-        NOUPDATE $(target) ;
-    }
     MKLINK_OR_DIR on $(target) = mkdir \"$(target)\" ;
 }
 
@@ -240,6 +236,11 @@ rule do-rm
     ALWAYS $(target) ;
     RM on $(target) = rmdir ;
     link.rm $(target) ;
+}
+
+rule mklink-or-dir
+{
+    NOUPDATE $(<) ;
 }
 
 actions mklink-or-dir
@@ -258,6 +259,7 @@ rule link-entries ( target : files * : split ? )
             local s = [ path.native [ path.relative-to [ path.pwd ] $(target) ] ] ;
             LOCATE on $(t) = . ;
             DEPENDS $(t) : $(s) ;
+            NOUPDATE $(s) ;
         }
         if $(split)
         {
