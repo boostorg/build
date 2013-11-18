@@ -181,7 +181,7 @@ local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
         once with the same properties. Returning to different instance of <classname>file-target</classname>
         that correspond to the same file clearly will result in problems. Therefore, whenever
         returning targets you should pass them via the <code>virtual-target.register</code>
-        function, besides allowing Boost Build to track which virtual targets
+        function, besides allowing Boost.Build to track which virtual targets
         got created for each metatarget, this will also replace targets with previously created identical
         ones, as necessary.<footnote><para>This create-then-register pattern is caused by limitations 
         of the Boost.Jam language. Python port is likely to never create duplicate targets.</para></footnote>
@@ -888,7 +888,7 @@ actions inline-file
 
                 <listitem><para>if a feature is used to refer to a path relative
                 to the Jamfile, it must be a “path” feature. Such features will
-                also get their values automatically converted to Boost Build's
+                also get their values automatically converted to Boost.Build's
                 internal path representation. For example, <code>include</code>
                 is a path feature.</para></listitem>
 
