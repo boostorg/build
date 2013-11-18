@@ -14,6 +14,9 @@
   <section id="bbv2.arch.overview">
     <title>Overview</title>
 
+    <!-- FIXME: the below does not mention engine at all, making rest of the
+         text confusing. Things like 'kernel' and 'util' don't have to be 
+         mentioned at all. -->
     <para>
       Boost.Build implementation is structured in four different components:
     "kernel", "util", "build" and "tools". The first two are relatively
@@ -58,6 +61,7 @@
         from them.
         </para></listitem>
       </itemizedlist>
+
     </para>
 
     <para>
@@ -78,13 +82,14 @@
         <listitem><para>
           A generator appropriate for the build properties is selected and its
         <code>run</code> method is called. The method returns a list of virtual
-        targets
+        targets.
         </para></listitem>
 
         <listitem><para>
-          The targets are returned to the top level code. They are converted
-        into bjam targets (via <code>virtual-target.actualize</code>) and passed
-        to bjam for building.
+          The virtual targets are returned to the top level code, and for each instance,
+          the <literal>actualize</literal> method is called to setup nodes and updating
+          actions in the depenendency graph kepts inside Boost.Build engine. This dependency
+          graph is then updated, which runs necessary commands.
         </para></listitem>
       </orderedlist>
     </para>
@@ -163,11 +168,11 @@ lib a : a.cpp : &lt;toolset&gt;gcc ;
       <title>Virtual targets</title>
 
       <para>
-        Virtual targets correspond to atomic updatable entities. Each virtual
+        Virtual targets are atomic updatable entities. Each virtual
       target can be assigned an updating action -- instance of the
       <code>action</code> class. The action class, in turn, contains a list of
-      source targets, properties, and a name of an bjam action which should be
-      executed.
+      source targets, properties, and a name of an action which 
+      should be executed.
       </para>
 
       <para>
@@ -178,12 +183,13 @@ lib a : a.cpp : &lt;toolset&gt;gcc ;
       already been created. In that case, the preexisting target is returned.
       </para>
 
+      <!-- FIXME: the below 2 para are rubbish, must be totally rewritten. -->
       <para>
         When all virtual targets are produced, they are "actualized". This means
       that the real file names are computed, and the commands that should be run
       are generated. This is done by the <code>virtual-target.actualize</code>
       and <code>action.actualize</code> methods. The first is conceptually
-      simple, while the second needs additional explanation. Commands in bjam
+      simple, while the second needs additional explanation. Commands in Boost.Build
       are generated in a two-stage process. First, a rule with an appropriate
       name (for example "gcc.compile") is called and is given a list of target
       names. The rule sets some variables, like "OPTIONS". After that, the
@@ -308,20 +314,14 @@ lib a : a.cpp : &lt;toolset&gt;gcc ;
       <para>
         As stated above, it is possible to compile a C++ file multiple times,
       using different include paths. Therefore, include dependencies for those
-      compilations can be different. The problem is that bjam does not allow
-      multiple scans of the same target.
+      compilations can be different. The problem is that Boost.Build engine does 
+      not allow multiple scans of the same target. To solve that, we pass the
+      scanner object when calling <literal>virtual-target.actualize</literal>
+      and it creates different engine targets for different scanners.
       </para>
 
       <para>
-        The solution in Boost.Build is straightforward. When a virtual target is
-      converted to a bjam target (via the
-      <literal>virtual-target.actualize</literal> method), we specify the
-      scanner object to be used. The actualize method will create different bjam
-      targets for different scanners.
-      </para>
-
-      <para>
-        For each Boost Jam target created with a scanner is created, a
+        For each engine target created with a specified scanner, a
       corresponding one is created without it. The updating action is
       associated with the scanner-less target, and the target with the scanner
       is made to depend on it. That way if sources for that action are touched,
@@ -355,7 +355,7 @@ a.cpp (installed copy)    &lt;--(copy) ----------------------- a.cpp (no scanner
         <listitem><simpara>
           If when compiling "a.cpp" there is an include of "a.h", the "dir"
         directory is on the include path, and a target called "a.h" will be
-        generated in "dir", then bjam should discover the include, and create
+        generated in "dir", then Boost.Build should discover the include, and create
         "a.h" before compiling "a.cpp".
         </simpara></listitem>
 

@@ -103,7 +103,7 @@
               </para>
 
               <para>Placing Boost.Build into <filename>/usr/share/boost-build</filename>
-              will make sure that <command>bjam</command> will find Boost.Build
+              will make sure that <command>b2</command> will find Boost.Build
               without any additional setup.</para>
             </listitem>
 
@@ -120,7 +120,7 @@ using gcc ;
         </para>
 
         <para>If those guidelines are met, users will be able to invoke
-        <command>bjam</command> without any explicit configuration.
+        <command>b2/command> without any explicit configuration.
         </para>
 
     
