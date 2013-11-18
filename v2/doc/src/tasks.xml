@@ -447,8 +447,8 @@ rule run ( sources + : args * : input-files * : requirements * : target-name ?
       <varname>args</varname> and <varname>input-files</varname> as command-line
       arguments. The <varname>args</varname> parameter is passed verbatim and
       the values of the <varname>input-files</varname> parameter are treated as
-      paths relative to containing Jamfile, and are adjusted if <command>bjam
-      </command> is invoked from a different directory. The
+      paths relative to containing Jamfile, and are adjusted if <command>b2</command> 
+      is invoked from a different directory. The
       <code>run-fail</code> rule is identical to the <code>run</code> rule,
       except that it expects that the run fails.
     </para>

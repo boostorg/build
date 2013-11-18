@@ -14,9 +14,9 @@
     </para>
 
     <para>
-      Boost.Build actually consists of two parts - Boost.Jam, a build engine
+      Boost.Build has two parts&emdash;a build engine
       with its own interpreted language, and Boost.Build itself, implemented in
-      Boost.Jam's language. The chain of events when you type
+      that language. The chain of events when you type
       <command>b2</command> on the command line is as follows:
       <orderedlist>
         <listitem>
