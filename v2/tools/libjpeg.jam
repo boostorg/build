@@ -5,11 +5,11 @@
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# Supports the libpng library
+# Supports the libjpeg library
 #
-# After 'using libpng', the following targets are available:
+# After 'using libjpeg', the following targets are available:
 #
-# /libpng//libpng -- The libpng library
+# /libjpeg//libjpeg -- The libjpeg library
 
 import project ;
 import ac ;
@@ -23,11 +23,17 @@ import indirect ;
 import property ;
 import property-set ;
 
-header = png.h ;
-names = libpng ;
+header = jpeglib.h ;
 
-sources =   png.c pngerror.c pngget.c pngmem.c pngpread.c pngread.c pngrio.c pngrtran.c pngrutil.c
-            pngset.c pngtrans.c pngwio.c pngwrite.c pngwtran.c pngwutil.c ;
+names = jpeg ;
+
+sources =   jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c
+        jcdctmgr.c jchuff.c jcinit.c jcmainct.c jcmarker.c jcmaster.c
+        jcomapi.c jcparam.c jcprepct.c jcsample.c jctrans.c jdapimin.c
+        jdapistd.c jdarith.c jdatadst.c jdatasrc.c jdcoefct.c jdcolor.c
+        jddctmgr.c jdhuff.c jdinput.c jdmainct.c jdmarker.c jdmaster.c
+        jdmerge.c jdpostct.c jdsample.c jdtrans.c jerror.c jfdctflt.c
+        jfdctfst.c jfdctint.c jidctflt.c jidctfst.c jidctint.c jquant1.c ;
 
 library-id = 0 ;
 
@@ -36,29 +42,29 @@ if --debug-configuration in [ modules.peek : ARGV ]
     .debug =  true ;
 }
 
-# Initializes the libpng library.
+# Initializes the libjpeg library.
 #
-# libpng can be configured either to use pre-existing binaries
+# libjpeg can be configured either to use pre-existing binaries
 # or to build the library from source.
 #
-# Options for configuring a prebuilt libpng::
+# Options for configuring a prebuilt libjpeg::
 #
 #   <search>
-#       The directory containing the libpng binaries.
+#       The directory containing the libjpeg binaries.
 #   <name>
 #       Overrides the default library name.
 #   <include>
-#       The directory containing the libpng headers.
+#       The directory containing the libjpeg headers.
 #
 # If none of these options is specified, then the environmental
-# variables LIBPNG_LIBRARY_PATH, LIBPNG_NAME, and LIBPNG_INCLUDE will
+# variables LIBJPEG_LIBRARY_PATH, LIBJPEG_NAME, and LIBJPEG_INCLUDE will
 # be used instead.
 #
-# Options for building libpng from source::
+# Options for building libjpeg from source::
 #
 #   <source>
-#       The libpng source directory.  Defaults to the environmental variable
-#       LIBPNG_SOURCE.
+#       The libjpeg source directory.  Defaults to the environmental variable
+#       LIBJPEG_SOURCE.
 #   <tag>
 #       A rule which computes the actual name of the compiled
 #       libraries based on the build properties.  Ignored
@@ -69,30 +75,30 @@ if --debug-configuration in [ modules.peek : ARGV ]
 #
 # Examples::
 #
-#   # Find libpng in the default system location
-#   using libpng ;
-#   # Build libpng from source
-#   using libpng : 1.5.4 : <source>/home/steven/libpng-1.5.4 ;
-#   # Find libpng in /usr/local
-#   using libpng : 1.5.4
+#   # Find libjpeg in the default system location
+#   using libjpeg ;
+#   # Build libjpeg from source
+#   using libjpeg : 8c : <source>/home/steven/libjpeg-8c ;
+#   # Find libjpeg in /usr/local
+#   using libjpeg : 8c
 #     : <include>/usr/local/include <search>/usr/local/lib ;
-#   # Build libpng from source for msvc and find
+#   # Build libjpeg from source for msvc and find
 #   # prebuilt binaries for gcc.
-#   using libpng : 1.5.4 : <source>C:/Devel/src/libpng-1.5.4 : <toolset>msvc ;
-#   using libpng : 1.5.4 : : <toolset>gcc ;
+#   using libjpeg : 8c : <source>C:/Devel/src/libjpeg-8c : <toolset>msvc ;
+#   using libjpeg : 8c : : <toolset>gcc ;
 #
 rule init (
     version ?
-    # The libpng version (currently ignored)
+    # The libjpeg version (currently ignored)
 
     : options *
     # A list of the options to use
 
     : requirements *
-    # The requirements for the libpng target
+    # The requirements for the libjpeg target
 
     : is-default ?
-    # Default configurations are only used when libpng
+    # Default configurations are only used when libjpeg
     # has not yet been configured.
     )
 {
@@ -104,7 +110,7 @@ rule init (
 
         project.initialize $(__name__) ;
         .project = [ project.current ] ;
-        project libpng ;
+        project libjpeg ;
     }
 
     local library-path = [ property.select <search> : $(options) ] ;
@@ -130,7 +136,7 @@ rule init (
     {
         if $(source-path) || $(tag) || $(build-name)
         {
-            errors.user-error "incompatible options for libpng:"
+            errors.user-error "incompatible options for libjpeg:"
                 [ property.select <search> <include> <name> : $(options) ] "and"
                 [ property.select <source> <tag> <build-name> : $(options) ] ;
         }
@@ -148,18 +154,18 @@ rule init (
         {
             if $(.debug)
             {
-                ECHO "notice: [libpng] libpng is already configured" ;
+                ECHO "notice: [libjpeg] libjpeg is already configured" ;
             }
         }
         else
         {
-            errors.user-error "libpng is already configured" ;
+            errors.user-error "libjpeg is already configured" ;
         }
         return ;
     }
     else if $(source-path) && ! $(no-build-from-source)
     {
-        build-name ?= z ;
+        build-name ?= jpeg ;
         library-id = [ CALC $(library-id) + 1 ] ;
         tag = [ MATCH ^@?(.*)$ : $(tag) ] ;
         if $(tag) && ! [ MATCH ^([^%]*)%([^%]+)$ : $(tag) ]
@@ -169,18 +175,18 @@ rule init (
         sources = [ path.glob $(source-path) : $(sources) ] ;
         if $(.debug)
         {
-            ECHO "notice: [libpng] Building libpng from source as $(build-name)" ;
+            ECHO "notice: [libjpeg] Building libjpeg from source as $(build-name)" ;
             if $(condition)
             {
-                ECHO "notice: [libpng] Condition" [ $(condition).raw ] ;
+                ECHO "notice: [libjpeg] Condition" [ $(condition).raw ] ;
             }
             if $(sources)
             {
-                ECHO "notice: [libpng] found libpng source in $(source-path)" ;
+                ECHO "notice: [libjpeg] found libjpeg source in $(source-path)" ;
             }
             else
             {
-                ECHO "warning: [libpng] could not find libpng source in $(source-path)" ;
+                ECHO "warning: [libjpeg] could not find libjpeg source in $(source-path)" ;
             }
         }
         local target ;
@@ -198,7 +204,7 @@ rule init (
               : <include>$(source-path) ] ;
         }
 
-        local mt = [ new ac-library libpng : $(.project) : $(condition) ] ;
+        local mt = [ new ac-library libjpeg : $(.project) : $(condition) ] ;
         $(mt).set-header $(header) ;
         $(mt).set-default-names $(names) ;
         if $(target)
@@ -209,14 +215,14 @@ rule init (
     } else {
         if $(.debug)
         {
-            ECHO "notice: [libpng] Using pre-installed library" ;
+            ECHO "notice: [libjpeg] Using pre-installed library" ;
             if $(condition)
             {
-                ECHO "notice: [libpng] Condition" [ $(condition).raw ] ;
+                ECHO "notice: [libjpeg] Condition" [ $(condition).raw ] ;
             }
         }
 
-        local mt = [ new ac-library libpng : $(.project) : $(condition) :
+        local mt = [ new ac-library libjpeg : $(.project) : $(condition) :
             $(include-path) : $(library-path) : $(library-name) : $(root) ] ;
         $(mt).set-header $(header) ;
         $(mt).set-default-names $(names) ;

@@ -181,7 +181,7 @@ local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
         once with the same properties. Returning to different instance of <classname>file-target</classname>
         that correspond to the same file clearly will result in problems. Therefore, whenever
         returning targets you should pass them via the <code>virtual-target.register</code>
-        function, besides allowing Boost Build to track which virtual targets
+        function, besides allowing Boost.Build to track which virtual targets
         got created for each metatarget, this will also replace targets with previously created identical
         ones, as necessary.<footnote><para>This create-then-register pattern is caused by limitations 
         of the Boost.Jam language. Python port is likely to never create duplicate targets.</para></footnote>
@@ -613,7 +613,7 @@ actions inline-file
         and the target type. When invoked, the generator will create a target
         of type <literal>CPP</literal> with a source target of
         type <literal>VERBATIM</literal> as the only source. But what command
-        will be used to actually generate the file? In bjam, actions are
+        will be used to actually generate the file? In Boost.Build, actions are
         specified using named "actions" blocks and the name of the action
         block should be specified when creating targets. By convention,
         generators use the same name of the action block as their own id. So,
@@ -888,7 +888,7 @@ actions inline-file
 
                 <listitem><para>if a feature is used to refer to a path relative
                 to the Jamfile, it must be a “path” feature. Such features will
-                also get their values automatically converted to Boost Build's
+                also get their values automatically converted to Boost.Build's
                 internal path representation. For example, <code>include</code>
                 is a path feature.</para></listitem>
 
@@ -970,7 +970,7 @@ actions link bind DEF_FILE
 
 
           <para> Note the <code>bind DEF_FILE</code> part. It tells
-          bjam to translate the internal target name in
+          Boost.Build to translate the internal target name in
           <varname>DEF_FILE</varname> to a corresponding filename in
           the <code>link</code> action.  Without it the expansion of
           <code>$(DEF_FILE)</code> would be a strange symbol that is
@@ -981,8 +981,7 @@ actions link bind DEF_FILE
                targets in general, only source files."  I'm not sure
                what I meant by that; maybe you can figure it out. -->
           <para>
-            We are almost done, but we should stop for a small workaround. Add the following
-            code to msvc.jam
+            We are almost done, except for adding the follwing code to <filename>msvc.jam</filename>:
 
 <programlisting>
 rule link
@@ -992,8 +991,8 @@ rule link
 </programlisting>
 <!-- You *must* explain the part in [...] above. It's completely opaque to the casual reader -->
 
-            This is needed to accomodate some bug in bjam, which hopefully
-            will be fixed one day.
+            This is a workaround for a bug in Boost.Build engine, which will hopefully
+            be fixed one day.
             <!-- This is *NOT* a bug!!  Anyway, BBv2 shouild handle this automatically. Why doesn't it? -->
 </para></listitem>
 

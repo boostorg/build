@@ -17,8 +17,9 @@
     <section id="bbv2.reference.init">
       <title>Initialization</title>
 
-      <para>bjam's first job upon startup is to load the Jam code that
-        implements the build system. To do this, it searches for a file
+      <para>
+        Immediately upon starting, the Boost.Build engine (<command>b2</command>)
+        loads the Jam code that implements the build system. To do this, it searches for a file
         called <filename>boost-build.jam</filename>, first in the invocation directory, then
         in its parent and so forth up to the filesystem root, and finally
         in the directories specified by the environment variable
@@ -741,7 +742,7 @@ path-constant DATA : data/a.txt ;
 
           <para>
             <emphasis role="bold">Note:</emphasis> Due to some internal details
-            in the current Boost Build implementation it is not possible to have
+            in the current Boost.Build implementation it is not possible to have
             features whose valid values are all positive integer. As a
             workaround a large set of allowed values has been defined for this
             feature and, if a different one is needed, user can easily add it by

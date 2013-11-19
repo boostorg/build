@@ -122,6 +122,19 @@ int file_collect_dir_content_( file_info_t * const d )
                 ff->is_file = !ff->is_dir;
                 ff->exists = 1;
                 timestamp_from_filetime( &ff->time, &finfo.ftLastWriteTime );
+                // Use the timestamp of the link target, not the link itself
+                // (i.e. stat instead of lstat)
+                if ( finfo.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT )
+                {
+                    HANDLE hLink = CreateFileA( pathname->value, 0, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL );
+                    BY_HANDLE_FILE_INFORMATION target_finfo[ 1 ];
+                    if ( hLink != INVALID_HANDLE_VALUE && GetFileInformationByHandle( hLink, target_finfo ) )
+                    {
+                        ff->is_file = target_finfo->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? 0 : 1;
+                        ff->is_dir = target_finfo->dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? 1 : 0;
+                        timestamp_from_filetime( &ff->time, &target_finfo->ftLastWriteTime );
+                    }
+                }
             }
         }
         while ( FindNextFile( findHandle, &finfo ) );

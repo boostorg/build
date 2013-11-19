@@ -55,7 +55,7 @@ type.register PDB : pdb ;
 #    using msvc : 6.5 : cl.exe ;
 #    using msvc : 7.0 : Y:/foo/bar/cl.exe ;
 #
-# The version parameter may be ommited:
+# The version parameter may be omitted:
 #
 #    using msvc : : Z:/foo/bar/cl.exe ;
 #
@@ -901,9 +901,9 @@ local rule configure-really ( version ? : options * )
 
                 setup-$(c) = [ feature.get-values <setup-$(c)> : $(options) ] ;
 
-                if ! $(setup-$(c))-is-not-empty
+                if ! $(setup-$(c))-is-defined
                 {
-                    if $(global-setup)-is-not-empty
+                    if $(global-setup)-is-defined
                     {
                         setup-$(c) = $(global-setup) ;
 
@@ -916,7 +916,8 @@ local rule configure-really ( version ? : options * )
                     }
                     else
                     {
-                        setup-$(c) = [ locate-default-setup $(command) : $(parent) : $(default-setup-$(c)) ] ;
+                        setup-$(c) = [ locate-default-setup $(command) :
+                            $(parent) : $(default-setup-$(c)) ] ;
                     }
                 }
 
@@ -1381,7 +1382,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
                      yorksfield nehalem sandy-bridge ivy-bridge haswell ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
-                     athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3 btver1 btver2 ;
+                     athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3
+                     btver1 btver2 ;
 .cpu-type-g7       = pentium4 pentium4m athlon athlon-tbird athlon-4 athlon-xp
                      athlon-mp $(.cpu-type-em64t) $(.cpu-type-amd64) ;
 .cpu-type-itanium  = itanium itanium1 merced ;
