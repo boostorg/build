@@ -311,7 +311,8 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
 
        if $(link) in shared
        {
-           usage-requirements += <dll-path>$(.binprefix) ;
+           usage-requirements += <dll-path>$(.libprefix) ;
+           usage-requirements += <target-os>windows:<dll-path>$(.binprefix) ;
        }
 
        local suffix ;
