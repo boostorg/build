@@ -1,11 +1,13 @@
 # Copyright 2001, 2002 Dave Abrahams
 # Copyright 2002, 2003, 2004, 2005 Vladimir Prus
 # Copyright 2008 Jurko Gospodnetic
+# Copyright Steve Gates 2013.
+# Portions Copyright (c) Microsoft Open Technologies, Inc.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import "class" : is-instance ;
-
+import string ;
 
 # For all elements of 'list' which do not already have 'suffix', add 'suffix'.
 #
@@ -142,6 +144,12 @@ rule unquote ( value ? )
     }
 }
 
+# Quotes a given value and returns it.
+#
+rule quote ( value )
+{
+    return [ string.join "\"" $(value) "\"" ] ;
+}
 
 rule __test__ ( )
 {

@@ -1,5 +1,7 @@
 # Copyright 2005 Dave Abrahams
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
+# Copyright Steve Gates 2013.
+# Portions Copyright (c) Microsoft Open Technologies, Inc.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -44,8 +46,10 @@ import property ;
 import property-set ;
 import regex ;
 import sequence ;
+import string ;
 import targets ;
 import toolset ;
+import utility ;
 import type ;
 import virtual-target ;
 
@@ -63,6 +67,11 @@ feature.feature testing.arg        : : free incidental ;
 feature.feature testing.input-file : : free dependency ;
 
 feature.feature preserve-test-targets : on off : incidental propagated ;
+
+# Feature to control whether executable binaries are run as part of test.
+# This can be used to just compile test cases in cross compilation situations.
+feature.feature disable-test-execution : on off : incidental propagated ;
+feature.set-default disable-test-execution : off ;
 
 # Register target types.
 type.register TEST         : test          ;
@@ -392,6 +401,90 @@ rule run-path-setup ( target : source : properties * )
     }
 }
 
+# Used to strip off APPCONTAINER requirement from executable and dependencies
+# for running Windows store tests.
+# All dlls in the dependency paths are copied into test executable directory
+# to avoid issues with accidently stripping APPCONTAINER off of product binaries.
+#
+rule run-app-container-strip ( target : source : properties * )
+{
+    if [ feature.get-values <windows-api> : $(properties) ] = store
+    {
+        if [ feature.get-values <toolset> : $(properties) ] = msvc
+        {
+            local dll-extension = [ type.generated-target-suffix SHARED_LIB : [ property-set.create $(properties) ] ] ;
+            dll-extension = [ string.join "*." $(dll-extension) ] ;
+        
+            # Get the msvc setup script and create the link edit command.
+            local strip-command = "" ;    
+            for local fn in [ modules.peek toolset : .msvc.link.flags ] 
+            { 
+                if $(strip-command) = ""
+                {
+                    if [ modules.peek toolset : .msvc.link.variable.$(fn) ] = ".LD" 
+                    {
+                        local k = [ modules.peek toolset : .msvc.link.values.$(fn) ] ;
+                        strip-command = [ MATCH "(.*vcvarsall.bat\" x86.*)" : [ modules.peek toolset : .msvc.link.values.$(fn) ] ] ; 
+                    }
+                }                
+            }
+            strip-command = $(strip-command) /edit /appcontainer:no ;
+            
+            # Get the directory containing the test executable.
+            local exe-full-path = [ path.make [ regex.replace [ regex.replace $(source) "<p" "" ] ">" "\\" ] ] ;
+            local test-dir = [ path.parent $(exe-full-path) ] ;
+            
+            # If using shared libraries, we need to copy all dlls over to test directory, then
+            # strip APPCONTAINER requirement off of each.
+            if [ feature.get-values <link> : $(properties) ] = shared
+            {
+                local dll-paths = [ feature.get-values <dll-path> : $(properties) ] ;
+                dll-paths += [ feature.get-values <xdll-path> : $(properties) ] ;
+                dll-paths = [ sequence.unique $(dll-paths) ] ;
+                
+                for dll-path in $(dll-paths)
+                {
+                    local dlls-in-path = [ utility.quote [ path.native [ path.join $(dll-path) $(dll-extension) ] ] ] ;
+                    STRIP_APPCONTAINER_CMD on $(target) += $(.CP) $(dlls-in-path) [ utility.quote [ path.native $(test-dir) ] ] \r\n ;
+                }
+            }
+            
+            local exe-strip-command = $(strip-command) [ utility.quote [ path.native $(exe-full-path) ] ] ;
+            local dll-strip-command = $(strip-command) [ utility.quote [ path.native [ path.join $(test-dir) $(dll-extension) ] ] ] ;
+            STRIP_APPCONTAINER_CMD on $(target) += $(dll-strip-command) \r\n $(exe-strip-command) ;
+        }
+        else
+        {
+            # With other toolsets do nothing.
+            STRIP_APPCONTAINER_CMD on $(target) = "" ;
+        }
+    }
+}
+
+# Rule to get any additional binaries that should be deleted.
+# Right now additional binaries only need to be removed when testing Windows store.
+#
+rule setup-additional-targets-to-remove (  target : source : properties * )
+{
+    RM_COPIED_DLLS on $(target) = "" ;
+    if [ feature.get-values <windows-api> : $(properties) ] = store
+    {
+        if [ feature.get-values <toolset> : $(properties) ] = msvc
+        {
+            # If using <link>shared then need to delete all copied over dlls.
+            if [ feature.get-values <link> : $(properties) ] = shared
+            {
+                # Get the directory containing the test executable.
+                local exe-full-path = [ path.make [ regex.replace [ regex.replace $(source) "<p" "" ] ">" "\\" ] ] ;
+                local test-dir = [ path.parent $(exe-full-path) ] ;
+            
+                local dll-extension = [ type.generated-target-suffix SHARED_LIB : [ property-set.create $(properties) ] ] ;
+                dll-extension = [ string.join "*." $(dll-extension) ] ;
+                RM_COPIED_DLLS on $(target) = $(.RM) [ utility.quote [ path.native [ path.join $(test-dir) $(dll-extension) ] ] ] ;
+            }
+        }
+    }
+}
 
 local argv = [ modules.peek : ARGV ] ;
 
@@ -432,10 +525,26 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
     else if ! $(targets-to-remove)
     {
         targets-to-remove = $(source) ;
+        setup-additional-targets-to-remove $(target) : $(source) : $(properties) ;
     }
-
+    
     run-path-setup $(target) : $(source) : $(properties) ;
+    run-app-container-strip $(target) : $(source) : $(properties) ;
 
+    DISABLE_TEST_EXECUTION on $(target) = 0 ;
+    # Msvc only support cross compilation on ARM so by default don't execute the tests.
+    if [ feature.get-values toolset : $(properties) ] = msvc
+    {
+        if [ feature.get-values architecture : $(properties) ] = arm
+        {
+            DISABLE_TEST_EXECUTION on $(target) = 1 ;
+        }
+    }
+    if [ feature.get-values disable-test-execution : $(properties) ] != off
+    {
+        DISABLE_TEST_EXECUTION on $(target) = 1 ;
+    }
+    
     if [ feature.get-values preserve-test-targets : $(properties) ] = off
     {
         TEMPORARY $(targets-to-remove) ;
@@ -492,8 +601,15 @@ if --verbose-test in [ modules.peek : ARGV ]
 actions capture-output bind INPUT_FILES output-file
 {
     $(PATH_SETUP)
+    $(STRIP_APPCONTAINER_CMD)
+    $(.SHELL_SET)status=$(DISABLE_TEST_EXECUTION)
+    if $(.STATUS_NOT_0)
+        echo Skipping test execution due to disable-test-execution=on
+        exit 0
+    $(.ENDIF)
     $(LAUNCHER) "$(>)" $(ARGS) "$(INPUT_FILES)" > "$(output-file)" 2>&1
     $(.SET_STATUS)
+    $(RM_COPIED_DLLS)
     $(.RUN_OUTPUT_NL) >> "$(output-file)"
     echo EXIT STATUS: $(.STATUS) >> "$(output-file)"
     if $(.STATUS_0)
