@@ -388,12 +388,12 @@ local rule split-version ( version )
 }
 
 
-# Build a list of versions from 3.0 down to 1.5. Because bjam can not enumerate
+# Build a list of versions from 3.4 down to 1.5. Because bjam can not enumerate
 # registry sub-keys, we have no way of finding a version with a 2-digit minor
 # version, e.g. 2.10 -- let us hope that never happens.
 #
 .version-countdown = ;
-for local v in [ numbers.range 15 30 ]
+for local v in [ numbers.range 15 34 ]
 {
     .version-countdown = [ SUBST $(v) (.)(.*) $1.$2 ] $(.version-countdown) ;
 }
