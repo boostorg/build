@@ -69,8 +69,14 @@ rule can-hardlink ( project : ps )
 
         local source-target = [ new file-target test-hardlink-source : :
             $(project) : [ new action : link.touch ] ] ;
+        # Use <location-prefix> so that the destination link is created
+        # in a different directory. AFS refuses to make hard links
+        # between files in different directories, so we want to check
+        # it.
         local target = [ new file-target test-hardlink : :
-            $(project) : [ new action $(source-target) : link.hardlink ] ] ;
+            $(project) : [ new action $(source-target) : link.hardlink
+            : [ new property-set <location-prefix>symlink ]
+            ] ] ;
 
         if [ configure.try-build $(target) : $(ps) : "hardlinks supported" ]
         {
