@@ -55,7 +55,7 @@ my_dir="."
 
 # Determine the toolset, if not already decided
 if test "x$TOOLSET" = x; then
-  guessed_toolset=`$my_dir/engine/build.sh --guess-toolset`
+  guessed_toolset=`$my_dir/src/engine/build.sh --guess-toolset`
   case $guessed_toolset in
     acc | darwin | gcc | como | mipspro | pathscale | pgi | qcc | vacpp )
     TOOLSET=$guessed_toolset
@@ -96,7 +96,7 @@ rm -f config.log
 if test "x$B2" = x; then
   echo -n "Bootstrapping the build engine with toolset $TOOLSET... "
   pwd=`pwd`
-  (cd "$my_dir/engine" && ./build.sh "$TOOLSET") > bootstrap.log 2>&1
+  (cd "$my_dir/src/engine" && ./build.sh "$TOOLSET") > bootstrap.log 2>&1
   if [ $? -ne 0 ]; then
       echo
       echo "Failed to bootstrap the build engine" 
@@ -104,11 +104,11 @@ if test "x$B2" = x; then
       exit 1
   fi
   cd "$pwd"
-  arch=`cd $my_dir/engine && ./bootstrap/jam0 -d0 -f build.jam --toolset=$TOOLSET --toolset-root= --show-locate-target && cd ..`
-  B2="$my_dir/engine/$arch/b2"
+  arch=`cd $my_dir/src/engine && ./bootstrap/jam0 -d0 -f build.jam --toolset=$TOOLSET --toolset-root= --show-locate-target && cd ..`
+  B2="$my_dir/src/engine/$arch/b2"
   echo "engine/$arch/b2"
   cp "$B2" .
-  cp "$my_dir/engine/$arch/bjam" .
+  cp "$my_dir/src/engine/$arch/bjam" .
 fi
 
 cat << EOF
