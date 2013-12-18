@@ -6,22 +6,22 @@ REM Distributed under the Boost Software License, Version 1.0.
 REM (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 ECHO Bootstrapping the build engine
-if exist ".\engine\bin.ntx86\bjam.exe" del engine\bin.ntx86\bjam.exe
-if exist ".\engine\bin.ntx86_64\bjam.exe" del engine\bin.ntx86_64\bjam.exe
-cd engine
+if exist ".\src\engine\bin.ntx86\bjam.exe" del src\engine\bin.ntx86\bjam.exe
+if exist ".\src\engine\bin.ntx86_64\bjam.exe" del src\engine\bin.ntx86_64\bjam.exe
+cd src\engine
 
 call .\build.bat %* > ..\bootstrap.log
 @ECHO OFF
 cd ..
 
-if exist ".\engine\bin.ntx86\b2.exe" (
-   copy .\engine\bin.ntx86\b2.exe . > nul
-   copy .\engine\bin.ntx86\bjam.exe . > nul
+if exist ".\src\engine\bin.ntx86\b2.exe" (
+   copy .\src\engine\bin.ntx86\b2.exe . > nul
+   copy .\src\engine\bin.ntx86\bjam.exe . > nul
    goto :bjam_built)
 
-if exist ".\engine\bin.ntx86_64\b2.exe" (
-   copy .\engine\bin.ntx86_64\b2.exe . > nul
-   copy .\engine\bin.ntx86_64\bjam.exe . > nul
+if exist ".\src\engine\bin.ntx86_64\b2.exe" (
+   copy .\src\engine\bin.ntx86_64\b2.exe . > nul
+   copy .\src\engine\bin.ntx86_64\bjam.exe . > nul
    goto :bjam_built)
 
 goto :bjam_failure
