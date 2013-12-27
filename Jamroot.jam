@@ -33,7 +33,7 @@ package.install-data boost-build-core
   : # Which subdir of $prefix/share
     boost-build  
   : # What to install
-    $(SELF)/src/boost-build.jam
+    $(SELF)/boost-build.jam
     $(SELF)/src/build-system.jam
     [ path.glob-tree $(SELF)/src/build : *.jam *.py ]
     [ path.glob-tree $(SELF)/src/kernel : *.jam *.py ]
