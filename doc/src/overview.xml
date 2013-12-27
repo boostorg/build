@@ -14,7 +14,7 @@
     </para>
 
     <para>
-      Boost.Build has two parts&emdash;a build engine
+      Boost.Build has two parts&mdash;a build engine
       with its own interpreted language, and Boost.Build itself, implemented in
       that language. The chain of events when you type
       <command>b2</command> on the command line is as follows:

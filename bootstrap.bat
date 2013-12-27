@@ -8,11 +8,11 @@ REM (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.t
 ECHO Bootstrapping the build engine
 if exist ".\src\engine\bin.ntx86\bjam.exe" del src\engine\bin.ntx86\bjam.exe
 if exist ".\src\engine\bin.ntx86_64\bjam.exe" del src\engine\bin.ntx86_64\bjam.exe
-cd src\engine
 
-call .\build.bat %* > ..\bootstrap.log
+pushd src\engine
+call .\build.bat %* > ..\..\bootstrap.log
 @ECHO OFF
-cd ..
+popd
 
 if exist ".\src\engine\bin.ntx86\b2.exe" (
    copy .\src\engine\bin.ntx86\b2.exe . > nul
