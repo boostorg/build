@@ -799,9 +799,11 @@ static int try_wait( int const timeoutMillis )
     HANDLE active_handles[ MAXJOBS + MAX_THREADS ];
     int active_procs[ MAXJOBS + MAX_THREADS ];
     unsigned int num_threads;
+    unsigned int num_handles;
     unsigned int last_chunk_size;
+    unsigned int last_chunk_offset;
     HANDLE completed_event = INVALID_HANDLE_VALUE;
-    HANDLE thread_handles[MAX_THREADS];
+    HANDLE thread_handles[MAXIMUM_WAIT_OBJECTS];
     twh_params thread_params[MAX_THREADS];
     int result = -1;
     BOOL success;
@@ -814,9 +816,9 @@ static int try_wait( int const timeoutMillis )
             {
                 /*
                  * We surpassed MAXIMUM_WAIT_OBJECTS, so we need to use threads
-                 * to wait for this set. Create an event which will notify
-                 * threads to stop waiting. Every wait set should have this
-                 * event as its last element.
+                 * to wait for this set. Create an event object which will
+                 * notify threads to stop waiting. Every handle set chunk should
+                 * have this event as its last element.
                  */
                 assert( completed_event == INVALID_HANDLE_VALUE );
                 completed_event = CreateEvent(NULL, FALSE, FALSE, NULL);
@@ -852,14 +854,29 @@ static int try_wait( int const timeoutMillis )
 
     num_threads = num_active / MAXIMUM_WAIT_OBJECTS;
     last_chunk_size = num_active % MAXIMUM_WAIT_OBJECTS;
+    num_handles = num_threads;
     if ( last_chunk_size )
     {
-        /* The last chunk does not have event handle, so add it now. */
-        active_handles[ num_active ] = completed_event;
-        active_procs[ num_active ] = -1;
-        ++num_active;
-        ++num_threads;
-        ++last_chunk_size;
+        /* Can we fit the last chunk in the outer WFMO call? */
+        if ( last_chunk_size <= MAXIMUM_WAIT_OBJECTS - num_threads )
+        {
+            last_chunk_offset = num_threads * MAXIMUM_WAIT_OBJECTS;
+            for ( i = 0; i < last_chunk_size; ++i )
+                thread_handles[ i + num_threads ] =
+                    active_handles[ i + last_chunk_offset ];
+            num_handles = num_threads + last_chunk_size;
+        }
+        else
+        {
+            /* We need another thread for the remainder. */
+            /* Add completed_event handle to the last chunk. */
+            active_handles[ num_active ] = completed_event;
+            active_procs[ num_active ] = -1;
+            ++last_chunk_size;
+            ++num_active;
+            ++num_threads;
+            num_handles = num_threads;
+        }
     }
 
     assert( num_threads <= MAX_THREADS );
@@ -872,13 +889,14 @@ static int try_wait( int const timeoutMillis )
             i * MAXIMUM_WAIT_OBJECTS;
         thread_params[i].timeoutMillis = INFINITE;
         thread_params[i].num_active = MAXIMUM_WAIT_OBJECTS;
-        if ( ( i == num_threads - 1 ) && last_chunk_size )
+        if ( ( i == num_threads - 1 ) && last_chunk_size &&
+            ( num_handles == num_threads ) )
             thread_params[i].num_active = last_chunk_size;
         thread_handles[i] = CreateThread(NULL, 4 * 1024,
             (LPTHREAD_START_ROUTINE)&try_wait_helper, &thread_params[i],
             0, NULL);
     }
-    wait_api_result = WaitForMultipleObjects(num_threads, thread_handles,
+    wait_api_result = WaitForMultipleObjects(num_handles, thread_handles,
         FALSE, timeoutMillis);
     if ( ( WAIT_OBJECT_0 <= wait_api_result ) &&
         ( wait_api_result < WAIT_OBJECT_0 + num_threads ) )
@@ -886,6 +904,12 @@ static int try_wait( int const timeoutMillis )
         HANDLE thread_handle = thread_handles[wait_api_result - WAIT_OBJECT_0];
         success = GetExitCodeThread(thread_handle, (DWORD *)&result);
         assert( success );
+    }
+    else if ( ( WAIT_OBJECT_0 + num_threads <= wait_api_result ) &&
+        ( wait_api_result < WAIT_OBJECT_0 + num_handles ) )
+    {
+        unsigned int offset = wait_api_result - num_threads - WAIT_OBJECT_0;
+        result = active_procs[ last_chunk_offset + offset ];
     }
     SetEvent(completed_event);
     /* Should complete instantly. */
