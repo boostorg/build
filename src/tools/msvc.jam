@@ -32,6 +32,7 @@ import path ;
 import pch ;
 import property ;
 import rc ;
+import set ;
 import toolset ;
 import type ;
 
@@ -508,6 +509,7 @@ if [ os.name ] in NT
 
     actions manifest
     {
+        $(.MT.SETUP)
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
         )
@@ -521,6 +523,7 @@ if [ os.name ] in NT
 
     actions manifest.dll
     {
+        $(.MT.SETUP)
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
@@ -674,6 +677,22 @@ local rule auto-detect-toolset-versions ( )
             register-configuration $(i) : [ default-path $(i) ] ;
         }
     }
+}
+
+
+# Helper rule to get the environment side-effects of a batch file.
+# We used to call MSVC setup scripts directly in every action, however in
+# newer MSVC versions (10.0+) they make long-lasting registry queries 
+# which have a significant impact on build time.
+# Note that this requires 'cmd.exe' based SHELL, it will not work with
+# Cygwin built b2.
+local rule batch-file-environment ( batch-file )
+{
+    local original-vars = [ SPLIT_BY_CHARACTERS [ SHELL set ] : "\n" ] ;
+    local new-vars = [ SPLIT_BY_CHARACTERS [ SHELL "$(batch-file)>nul && set" ] : "\n" ] ;
+    local diff-vars = [ set.difference $(new-vars) : $(original-vars) ] ;
+    diff-vars = "SET "$(diff-vars) ;
+    return $(diff-vars:J="\n")\n ;
 }
 
 
@@ -887,14 +906,6 @@ local rule configure-really ( version ? : options * )
                 default-global-setup-options-ia64 = ia64 ;
             }
 
-            local setup-prefix = "call " ;
-            local setup-suffix = " >nul"$(.nl) ;
-            if ! [ os.name ] in NT
-            {
-                setup-prefix = "cmd.exe /S /C call " ;
-                setup-suffix = " \">nul\" \"&&\" " ;
-            }
-
             for local c in $(cpu)
             {
                 local setup-options ;
@@ -927,7 +938,8 @@ local rule configure-really ( version ? : options * )
                 # Append setup options to the setup name and add the final setup
                 # prefix & suffix.
                 setup-options ?= "" ;
-                setup-$(c) = $(setup-prefix)$(setup-$(c):J=" ")" "$(setup-options:J=" ")$(setup-suffix) ;
+
+                setup-$(c) = $(setup-$(c):J=" ") $(setup-options:J=" ") ;
             }
         }
 
@@ -981,6 +993,20 @@ local rule configure-really ( version ? : options * )
             local cpu-assembler = $(assembler) ;
             cpu-assembler ?= $(default-assembler-$(c)) ;
 
+            if $(setup-$(c))
+            {
+                if ! [ os.name ] in NT
+                {
+                    local prefix = "cmd.exe /S /C call " ;
+                    local suffix = " \">nul\" \"&&\" " ;
+                    setup-$(c) = $(prefix)$(setup-$(c):J=" ")$(suffix) ;
+                }
+                else
+                {
+                    setup-$(c) = [ batch-file-environment $(setup-$(c):J=" ") ] ;
+                }
+            }
+
             toolset.flags msvc.compile .CC  $(cpu-conditions) : $(setup-$(c))$(compiler) /Zm800 -nologo ;
             toolset.flags msvc.compile .RC  $(cpu-conditions) : $(setup-$(c))$(resource-compiler) ;
             toolset.flags msvc.compile .ASM $(cpu-conditions) : $(setup-$(c))$(cpu-assembler) -nologo ;
@@ -989,7 +1015,8 @@ local rule configure-really ( version ? : options * )
             toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
             toolset.flags msvc.compile .MC  $(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
 
-            toolset.flags msvc.link .MT $(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
+            toolset.flags msvc.manifest .MT.SETUP : $(setup-$(c)) ;
+            toolset.flags msvc.manifest .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
 
             if $(cc-filter)
             {
