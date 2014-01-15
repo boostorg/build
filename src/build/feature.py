@@ -525,7 +525,7 @@ def subfeature (feature_name, value_string, subfeature, subvalues, attributes = 
 def compose (composite_property_s, component_properties_s):
     """ Sets the components of the given composite property.
 
-    All paremeters are <feature>value strings
+    All parameters are <feature>value strings
     """
     import property
 
