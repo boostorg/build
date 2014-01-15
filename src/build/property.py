@@ -22,6 +22,9 @@ __re_colon = re.compile (':')
 __re_has_condition = re.compile (r':<')
 __re_separate_condition_and_property = re.compile (r'(.*):(<.*)')
 
+__not_applicable_feature='not-applicable-in-this-context'
+feature.feature(__not_applicable_feature, [], ['free'])
+
 class Property(object):
 
     __slots__ = ('_feature', '_value', '_condition')
@@ -89,9 +92,24 @@ def create_from_string(s, allow_condition=False,allow_missing_value=False):
         else:        
             raise get_manager().errors()("Invalid property '%s' -- unknown feature" % s)
     else:
-        f = feature.get(feature_name)        
+        if feature.valid(feature_name):
+            f = feature.get(feature_name)
+            value = get_value(s)
+        else:
+            # In case feature name is not known, it is wrong to do a hard error.
+            # Feature sets change depending on the toolset. So e.g.
+            # <toolset-X:version> is an unknown feature when using toolset Y.
+            #
+            # Ideally we would like to ignore this value, but most of
+            # Boost.Build code expects that we return a valid Property. For this
+            # reason we use a sentinel <not-applicable-in-this-context> feature.
+            #
+            # The underlying cause for this problem is that python port Property
+            # is more strict than its Jam counterpart and must always reference
+            # a valid feature.
+            f = feature.get(__not_applicable_feature)
+            value = s
 
-        value = get_value(s)
         if not value and not allow_missing_value:
             get_manager().errors()("Invalid property '%s' -- no value specified" % s)
 

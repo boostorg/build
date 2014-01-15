@@ -21,11 +21,17 @@
 ##import scanner ;
 ##import toolset : flags ;
 
+import os.path
+import re
+
+import bjam
+
 from b2.build import type, toolset, generators, scanner, feature
 from b2.tools import builtin
 from b2.util import regex
 from b2.build.toolset import flags
 from b2.manager import get_manager
+from b2.util import utility
 
 __debug = None
 
@@ -135,7 +141,7 @@ class ResScanner(scanner.Scanner):
                "[ ]+([^ \"]+|\"[^\"]+\"))|(#include[ ]*(<[^<]+>|\"[^\"]+\")))" ;
 
     def process(self, target, matches, binding):
-
+        binding = binding[0]
         angle = regex.transform(matches, "#include[ ]*<([^<]+)>")
         quoted = regex.transform(matches, "#include[ ]*\"([^\"]+)\"")
         res = regex.transform(matches,
@@ -147,11 +153,11 @@ class ResScanner(scanner.Scanner):
         # IDR_MAINFRAME ICON "res\\icon.ico"
         #
         # so we have to replace double backslashes to single ones.
-        res = [ re.sub(r'\\\\', '/', match) for match in res ]
+        res = [ re.sub(r'\\\\', '/', match) for match in res if match is not None ]
 
         # CONSIDER: the new scoping rule seem to defeat "on target" variables.
-        g = bjam.call('get-target-variable', target, 'HDRGRIST')
-        b = os.path.normalize_path(os.path.dirname(binding))
+        g = bjam.call('get-target-variable', target, 'HDRGRIST')[0]
+        b = os.path.normpath(os.path.dirname(binding))
 
         # Attach binding of including file to included targets.
         # When target is directly created from virtual target
@@ -177,9 +183,9 @@ class ResScanner(scanner.Scanner):
 
         engine.add_dependency(target, res)
         bjam.call('NOCARE', all + res)
-        engine.set_target_variable(angle, 'SEARCH', ungrist(self.includes))
-        engine.set_target_variable(quoted, 'SEARCH', b + ungrist(self.includes))
-        engine.set_target_variable(res, 'SEARCH', b + ungrist(self.includes)) ;
+        engine.set_target_variable(angle, 'SEARCH', [utility.get_value(inc) for inc in self.includes])
+        engine.set_target_variable(quoted, 'SEARCH', [b + utility.get_value(inc) for inc in self.includes])
+        engine.set_target_variable(res, 'SEARCH', [b + utility.get_value(inc) for inc in self.includes])
         
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners.
