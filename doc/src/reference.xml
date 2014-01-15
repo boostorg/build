@@ -111,6 +111,33 @@ boost-build build-system ;
         <xref linkend="bbv2.builtins.testing"/>.</para></listitem>
       </varlistentry>
 
+      <varlistentry id="bbv2.reference.check-target-builds">
+        <indexterm><primary>check-target-builds</primary></indexterm>
+        <term><literal>check-target-builds</literal></term>
+
+        <listitem><para>The <literal>check-target-builds</literal> allows you
+        to conditionally use different properties depending on whether some
+        metatarget builds, or not. This is similar to functionality of configure
+        script in autotools projects. The function signature is:
+        </para>
+        <programlisting>
+rule check-target-builds ( target message ? : true-properties * : false-properties * )
+        </programlisting>
+
+        <para>This function can only be used when passing requirements or usage
+        requirements to a metatarget rule. For example, to make an application link
+        to a library if it's avavailable, one has use the following:</para>
+        <programlisting>
+exe app : app.cpp : [ check-target-builds has_foo "System has foo" : &lt;library&gt;foo : &lt;define&gt;FOO_MISSING=1 ] ;
+        </programlisting>
+
+        <para>For another example, the alias rule can be used to consolidate configuraiton
+        choices and make them available to other metatargets, like so:</para>
+        <programlisting>
+alias foobar : : : : [ check-target-builds has_foo "System has foo" : &lt;library&gt;foo : &lt;library&gt;bar ] ;
+        </programlisting>
+        </listitem>
+      </varlistentry>
 
       <varlistentry>
         <term><literal>obj</literal></term>

@@ -400,22 +400,6 @@ unit-test helpers_test : helpers_test.cpp helpers ;
       not miss a unit test failure.
     </para>
 
-    <para>
-      By default, the executable is run directly. Sometimes, it is desirable to
-      run the executable using some helper command. You should use the <literal>
-      testing.launcher</literal> property to specify the name of the helper
-      command. For example, if you write:
-<programlisting>
-unit-test helpers_test
-   : helpers_test.cpp helpers
-   : <emphasis role="bold">&lt;testing.launcher&gt;valgrind</emphasis>
-   ;
-</programlisting>
-      The command used to run the executable will be:
-<screen>
-<emphasis role="bold">valgrind</emphasis> bin/$toolset/debug/helpers_test
-</screen>
-    </para>
 
     <para>
        There are few specialized testing rules, listed below:
@@ -489,6 +473,82 @@ boost-test(<replaceable>test-type</replaceable>) <replaceable>path</replaceable>
       files created when test passes into human-readable status table of tests.
       Such processing utilities are not included in Boost.Build.
     </para>
+
+    <para>The following features adjust behaviour of the testing metatargets.</para>
+
+    <variablelist>
+      <varlistentry>
+        <term><literal>testing.arg</literal></term>
+        <indexterm><primary>testing.arg</primary></indexterm>
+
+        <listitem>
+          <para>
+            Defines an argument to be passed to the target when it is executed
+            before the list of input files.
+          </para>
+
+          <para>
+<programlisting>
+unit-test helpers_test
+  : helpers_test.cpp helpers
+  : <emphasis role="bold">&lt;testing.arg&gt;"--foo bar"</emphasis>
+  ;
+</programlisting>
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>testing.input-file</literal></term>
+        <indexterm><primary>testing.input-file</primary></indexterm>
+
+        <listitem>
+          <para>
+            Specifies a file to be passed to the executable on the command line
+            after the arguments. All files must be specified in alphabetical
+            order due to constrainsts in the current implementation.
+          </para>
+
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>testing.launcher</literal></term>
+        <indexterm><primary>testing.launcher</primary></indexterm>
+
+        <listitem>
+          <para>
+            By default, the executable is run directly. Sometimes, it is
+            desirable to run the executable using some helper command. You
+            should use the this property to specify the name of the helper
+            command. For example, if you write:
+<programlisting>
+unit-test helpers_test
+  : helpers_test.cpp helpers
+  : <emphasis role="bold">&lt;testing.launcher&gt;valgrind</emphasis>
+  ;
+</programlisting>
+            The command used to run the executable will be:
+<screen>
+<emphasis role="bold">valgrind</emphasis> bin/$toolset/debug/helpers_test
+</screen>
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><literal>test-info</literal></term>
+        <indexterm><primary>test-info</primary></indexterm>
+
+        <listitem>
+          <para>
+            A description of the test. This is displayed as part of the
+            <literal>--dump-tests</literal> command-line option.
+          </para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
   </section>
 
   <section id="bbv2.builtins.raw">
