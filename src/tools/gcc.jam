@@ -1025,6 +1025,7 @@ rule setup-threading ( targets * : sources * : properties * )
 
         switch $(target)
         {
+            case android:  # No threading options, everything is in already.
             case windows : option = -mthreads ;
             case cygwin  : option = -mthreads ;
             case solaris : option = -pthreads ; libs = rt ;
