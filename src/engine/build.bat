@@ -513,11 +513,11 @@ set test=%test:"###=%
 set test=%test:###"=%
 set test=%test:###=%
 if "%test%" == "--update" goto Found_Update
-endlocal
+endlocal & set BOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
 shift
 if not "_%BJAM_UPDATE%_" == "_update_" goto Check_Update
 :Found_Update
-endlocal
+endlocal & set BOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
 set BJAM_UPDATE=update
 :Check_Update_End
 if "_%BJAM_UPDATE%_" == "_update_" (
