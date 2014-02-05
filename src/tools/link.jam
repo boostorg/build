@@ -187,14 +187,14 @@ rule do-file-link
     local source = [ path.native [ path.relative-to [ path.pwd ] $(>) ] ] ;
     LOCATE on $(target) = . ;
     DEPENDS $(.current-target) : $(target) ;
-    if $(.can-hardlink) = true
+    if $(.can-symlink) = true
+    {
+        link.mklink $(target) : $(source) ;
+    }
+    else if $(.can-hardlink) = true
     {
         DEPENDS $(target) : $(source) ;
         link.hardlink $(target) : $(source) ;
-    }
-    else if $(.can-symlink) = true
-    {
-        link.mklink $(target) : $(source) ;
     }
     else
     {
