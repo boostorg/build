@@ -1893,6 +1893,28 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         cbuf[numchars] = '\0';
         return list_new( object_new( cbuf ) );
     }
+    else if( okay && buf.reparse.ReparseTag == IO_REPARSE_TAG_MOUNT_POINT )
+    {
+        int index = buf.reparse.MountPointReparseBuffer.SubstituteNameOffset / 2;
+        int length = buf.reparse.MountPointReparseBuffer.SubstituteNameLength / 2;
+        char cbuf[MAX_PATH + 1];
+        const char * result;
+        int numchars = WideCharToMultiByte( CP_ACP, 0, buf.reparse.MountPointReparseBuffer.PathBuffer + index, length, cbuf, sizeof(cbuf), NULL, NULL );
+        if( numchars >= sizeof(cbuf) )
+        {
+            return 0;
+        }
+        cbuf[numchars] = '\0';
+        /* strip off the leading "\??\" */
+        result = cbuf;
+        if ( cbuf[ 0 ] == '\\' && cbuf[ 1 ] == '?' &&
+            cbuf[ 2 ] == '?' && cbuf[ 3 ] == '\\' &&
+            cbuf[ 4 ] != '\0' && cbuf[ 5 ] == ':' )
+        {
+            result += 4;
+        }
+        return list_new( object_new( result ) );
+    }
     return 0;
 #else
     char static_buf[256];
