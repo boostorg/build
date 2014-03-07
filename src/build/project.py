@@ -372,7 +372,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
 
         module-name is the name of the project module.
         location is the location (directory) of the project to initialize.
-                 If not specified, stanalone project will be initialized
+                 If not specified, standalone project will be initialized
         """
 
         if "--debug-loading" in self.manager.argv():
@@ -395,7 +395,6 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             # so that it can declare targets. This is intended so that you can put
             # a .jam file in your sources and use it via 'using'. Standard modules
             # (in 'tools' subdir) may not assume source dir is set.
-            module = sys.modules[module_name]
             attributes.set("source-location", self.loaded_tool_module_path_[module_name], exact=1)
             python_standalone = True
 

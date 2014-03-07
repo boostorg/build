@@ -12,7 +12,7 @@ import BoostBuild
 def ignore_config(t):
     """These files are created by the configuration logic in link.jam
     They may or may not exist, depending on the system."""
-    t.ignore("bin/test-hardlink")
+    t.ignore("bin/symlink/test-hardlink")
     t.ignore("bin/test-hardlink-source")
     t.ignore("bin/test-symlink")
     t.ignore("bin/test-symlink-source")

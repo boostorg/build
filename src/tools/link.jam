@@ -60,6 +60,45 @@ rule can-symlink ( project : ps )
     }
 }
 
+if [ os.name ] = NT
+{
+
+# Test for Windows junctions (mklink /J)
+rule can-junction ( project : ps )
+{
+    if ! $(.can-junction)
+    {
+        local root-project = [ get-root-project $(project) ] ;
+
+        local source-target = [ new file-target test-junction-source : :
+            $(project) : [ new action : common.mkdir ] ] ;
+        local target = [ new file-target test-junction : :
+            $(project) : [ new action $(source-target) : link.junction ] ] ;
+
+        if [ configure.try-build $(target) : $(ps) : "junctions supported" ]
+        {
+            .can-junction = true ;
+        }       
+        else
+        {
+            .can-junction = false ;
+        }
+    }
+    if $(.can-junction) = true
+    {
+        return true ;
+    }
+}
+
+}
+else
+{
+
+rule can-junction ( project : ps )
+{
+}
+
+}
 
 rule can-hardlink ( project : ps )
 {
@@ -149,8 +188,13 @@ class symlink-target-class : basic-target
         local files = [ path.glob-tree $(location) : * ] ;
         local targets ;
 
-        link.can-symlink $(self.project) : $(property-set) ;
-        link.can-hardlink $(self.project) : $(property-set) ;
+        # If we have symlinks, don't bother checking
+        # for hardlinks and junctions.
+        if ! [ link.can-symlink $(self.project) : $(property-set) ]
+        {
+            link.can-junction $(self.project) : $(property-set) ;
+            link.can-hardlink $(self.project) : $(property-set) ;
+        }
 
         if [ $(property-set).get <location> ]
         {
@@ -187,14 +231,14 @@ rule do-file-link
     local source = [ path.native [ path.relative-to [ path.pwd ] $(>) ] ] ;
     LOCATE on $(target) = . ;
     DEPENDS $(.current-target) : $(target) ;
-    if $(.can-hardlink) = true
+    if $(.can-symlink) = true
+    {
+        link.mklink $(target) : $(source) ;
+    }
+    else if $(.can-hardlink) = true
     {
         DEPENDS $(target) : $(source) ;
         link.hardlink $(target) : $(source) ;
-    }
-    else if $(.can-symlink) = true
-    {
-        link.mklink $(target) : $(source) ;
     }
     else
     {
@@ -216,7 +260,18 @@ rule do-link
     }
     if [ os.name ] = NT
     {
-        MKLINK_OR_DIR on $(target) = mklink /D \"$(target)\" \"$(relative)\" ;
+        if $(.can-symlink) = true
+        {
+            MKLINK_OR_DIR on $(target) = mklink /D \"$(target)\" \"$(relative)\" ;
+        }
+        else
+        {
+            # This function should only be called
+            # if either symlinks or junctions are supported.
+            # To get here $(.can-junction) must be true.
+            mklink-opt = /J ;
+            MKLINK_OR_DIR on $(target) = mklink /J \"$(target)\" \"$(source)\" ;
+        }
     }
     else
     {
@@ -329,7 +384,7 @@ rule link-recursively ( target : source : no-recurse ? )
             split = true ;
         }
     }
-    else if $(.can-symlink) = false
+    else if $(.can-symlink) = false && $(.can-junction) = false
     {
         if [ READLINK [ path.native $(target) ] ]
         {
@@ -383,6 +438,12 @@ rule mklink
 
 if [ os.name ] = NT
 {
+
+actions junction
+{
+    if exist "$(<)" del "$(<)"
+    mklink /J "$(<)" "$(>)"
+}
 
 actions mklink
 {

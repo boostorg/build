@@ -16,7 +16,10 @@ import os
 import os.path
 import sys
 
-from b2.build import feature
+# for some reason this fails on Python 2.7(r27:82525)
+# from b2.build import virtual_target 
+import b2.build.virtual_target
+from b2.build import feature, type
 from b2.util.utility import *
 from b2.util import path
 
@@ -640,13 +643,13 @@ def format_name(format, name, target_type, prop_set):
             if grist == '<base>':
                 result += os.path.basename(name)
             elif grist == '<toolset>':
-                result += join_tag(ungrist(f), 
+                result += join_tag(get_value(f), 
                     toolset_tag(name, target_type, prop_set))
             elif grist == '<threading>':
-                result += join_tag(ungrist(f),
+                result += join_tag(get_value(f),
                     threading_tag(name, target_type, prop_set))
             elif grist == '<runtime>':
-                result += join_tag(ungrist(f),
+                result += join_tag(get_value(f),
                     runtime_tag(name, target_type, prop_set))
             elif grist.startswith('<version:'):
                 key = grist[len('<version:'):-1]
@@ -654,7 +657,7 @@ def format_name(format, name, target_type, prop_set):
                 if not version:
                     version = key
                 version = __re_version.match(version)
-                result += join_tag(ungrist(f), version[1] + '_' + version[2])
+                result += join_tag(get_value(f), version[1] + '_' + version[2])
             elif grist.startswith('<property:'):
                 key = grist[len('<property:'):-1]
                 property_re = re.compile('<(' + key + ')>')
@@ -670,15 +673,17 @@ def format_name(format, name, target_type, prop_set):
                         assert(len(p) == 1)
                         result += join_tag(ungrist(f), p)
             else:
-                result += ungrist(f)
+                result += f
 
-        result = virtual_target.add_prefix_and_suffix(
+        result = b2.build.virtual_target.add_prefix_and_suffix(
             ''.join(result), target_type, prop_set)
         return result
 
 def join_tag(joiner, tag):
-    if not joiner: joiner = '-'
-    return joiner + tag
+    if tag:
+        if not joiner: joiner = '-'
+        return joiner + tag
+    return ''
 
 __re_toolset_version = re.compile(r"<toolset.*version>(\d+)[.](\d*)")
 
@@ -687,7 +692,7 @@ def toolset_tag(name, target_type, prop_set):
 
     properties = prop_set.raw()
     tools = prop_set.get('<toolset>')
-    assert(len(tools) == 0)
+    assert(len(tools) == 1)
     tools = tools[0]
     if tools.startswith('borland'): tag += 'bcb'
     elif tools.startswith('como'): tag += 'como'
