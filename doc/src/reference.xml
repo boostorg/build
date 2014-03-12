@@ -2055,6 +2055,7 @@ import path : native make : native-path make-path ;
 
     <xi:include href="path.xml"/>
     <xi:include href="regex.xml"/>
+    <xi:include href="sequence.xml"/>
     <xi:include href="type.xml"/>
   
   </section>
