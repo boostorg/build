@@ -1015,8 +1015,8 @@ local rule configure-really ( version ? : options * )
             toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
             toolset.flags msvc.compile .MC  $(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
 
-            toolset.flags msvc.manifest .MT.SETUP : $(setup-$(c)) ;
-            toolset.flags msvc.manifest .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
+            toolset.flags msvc.link .MT.SETUP : $(setup-$(c)) ;
+            toolset.flags msvc.link .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
 
             if $(cc-filter)
             {
