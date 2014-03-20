@@ -509,10 +509,9 @@ if [ os.name ] in NT
 
     actions manifest
     {
-        $(.MT.SETUP)
-        if exist "$(<[1]).manifest" (
-            $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
-        )
+        if not exist "$(<[1]).manifest" goto :skip
+        $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
+        :skip
     }
 
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
@@ -523,10 +522,9 @@ if [ os.name ] in NT
 
     actions manifest.dll
     {
-        $(.MT.SETUP)
-        if exist "$(<[1]).manifest" (
-            $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
-        )
+        if not exist "$(<[1]).manifest" goto :skip
+        $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
+        :skip
     }
 }
 else
@@ -1014,9 +1012,7 @@ local rule configure-really ( version ? : options * )
             toolset.flags msvc.archive .LD  $(cpu-conditions) : $(setup-$(c))$(linker) /lib /NOLOGO  ;
             toolset.flags msvc.compile .IDL $(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
             toolset.flags msvc.compile .MC  $(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
-
-            toolset.flags msvc.link .MT.SETUP : $(setup-$(c)) ;
-            toolset.flags msvc.link .MT $(cpu-conditions) : $(manifest-tool) -nologo ;
+            toolset.flags msvc.link    .MT  $(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
 
             if $(cc-filter)
             {
