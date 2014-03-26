@@ -20,8 +20,8 @@ SPACE = " " ;
 nl = "\n" ;
 actions check-order
 {
-    echo$(SPACE)$(>[1])$(SPACE)>$(<[1])
-    echo$(SPACE)$(>[2-])$(SPACE)>>$(<[1])$(nl)
+    echo$(SPACE)$(>[1])>$(<[1])
+    echo$(SPACE)$(>[2-])>>$(<[1])$(nl)
 }
 
 generators.register-composing check-order.check-order : C : ORDER_TEST ;
