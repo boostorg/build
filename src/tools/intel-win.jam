@@ -14,6 +14,7 @@ import os ;
 import toolset ;
 import generators ;
 import type ;
+import path ;
 
 feature.extend-subfeature toolset intel : platform : win ;
 
@@ -39,20 +40,66 @@ rule init ( version ? :     # the compiler version
                             # or 'native'(default).
           )
 {
+    if $(version)
+    {
+        configure $(version) : $(command) : $(options) ;
+    }
+    else
+    {
+        errors.error "Setting up intel compiler without version infos not implemented yet" ;
+    }
+}
+
+local rule configure ( version ? : command * : options * )
+{
     local compatibility =
       [ feature.get-values <compatibility> : $(options) ] ;
+    if $(compatibility) && $(vc_in_version)
+    {
+        errors.error "feature compatibility and vc version in toolset present!" ;
+    }
+    # Allow to specify toolset and visual studio backend from commandline .e.g --toolset=intel-14.0-vc10
+    local vc_in_version = [ MATCH (vc[0-9]+)$ : $(version) ] ;
+    if $(vc_in_version)
+    {
+        # vc Version must be stripped before check-init-parameters is called!
+        version = [ MATCH ([^v]+)-vc[0-9]+$ : $(version) ] ;
+    }
+    if ! $(compatibility) && $(vc_in_version)
+    {
+        compatibility = $(vc_in_version) ;
+    }
+
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
+        
+    local m = [ MATCH ([0-9]+).* : $(version) ] ;
+    local major = $(m[1]) ;
+    if ! $(major)
+    {
+        errors.error "Major version not found: $(version)" ;
+    }
 
-    command = [ common.get-invocation-command intel-win : icl.exe :
-        $(command) ] ;
-
+    # This line disables native call
+    if ! $(compatibility) && ! $(vc_in_version)
+    {
+        errors.error "missing vc compatibility option" ;
+    }
+    
+    
+    command = [ get-compiler-invocation-cmd $(major) : $(command) ] ; 
+    
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
-
+    
     local root ;
     if $(command)
     {
         root = [ common.get-absolute-tool-path $(command[-1]) ] ;
+        if $(major) >= 12
+        {
+            root = [ path.make $(root) ] ;
+            root = [ path.parent $(root) ] ;
+        }
         root = $(root)/ ;
     }
 
@@ -61,28 +108,86 @@ rule init ( version ? :     # the compiler version
     if ! $(setup)
     {
        setup = $(root)/iclvars.bat ;
+       setup = [ path.native $(setup) ] ;
     }
-    setup = "call \""$(setup)"\" > nul " ;
-
-    if [ os.name ] = NT
+    
+    local target_types ;
+    local iclvars_vs_arg ;
+    if $(major) >= 12
     {
-        setup = $(setup)"
-" ;
+        if $(.iclvars-version-alias-$(compatibility))
+		{
+			iclvars_vs_arg = $(.iclvars-version-alias-$(compatibility)) ;
+		}
+		
+        if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITECTURE ] ]
+        {
+            target_types = ia32 intel64 ;
+        }
+        else
+        {
+            target_types = ia32 ia32_intel64 ;
+        }
     }
-    else
+    else 
     {
-        setup = "cmd /S /C "$(setup)" \"&&\" " ;
+        target_types = default ;
+        iclvars_vs_arg = $(compatibility) ;
+    }
+    
+    local default-assembler-intel64 = ml64 ;
+    local default-assembler-ia32_intel64 = ml64 ;
+    local default-assembler-ia32  = "ml -coff" ;
+    assembler = [ feature.get-values <assembler> : $(options) ] ;
+    
+    for local c in $(target_types)
+    {
+        local cpu-conditions ;
+        local setup-call ;
+        if $(major) >= 12
+        {
+            setup-call = "call \""$(setup)"\" $(c) $(iclvars_vs_arg) > nul " ;
+            cpu-conditions = $(condition)/$(.cpu-arch-$(c)) ;
+        }
+        else
+        {
+            setup-call = "call \""$(setup)"\" $(compatibility) > nul " ;
+            cpu-conditions = $(condition) ;
+        }
+
+        if [ os.name ] = NT
+        {
+            setup-call = $(setup-call)"
+    " ;
+        }
+        else
+        {
+            setup-call = "cmd /S /C "$(setup-call)" \"&&\" " ;
+        }
+        
+        if $(.debug-configuration)
+        {
+            for local cpu-condition in $(cpu-conditions)
+            {
+                ECHO "notice: [intel-cfg] condition: '$(cpu-condition)', setup: '$(setup-call)'" ;
+            }
+        }
+        
+        local cpu-assembler = $(assembler) ;
+        cpu-assembler ?= $(default-assembler-$(c)) ;
+        
+        toolset.flags intel-win.compile .CC $(cpu-conditions) : $(setup-call)icl ;
+        toolset.flags intel-win.link .LD $(cpu-conditions) : $(setup-call)xilink /nologo ;
+        toolset.flags intel-win.archive .LD $(cpu-conditions) : $(setup-call)xilink /lib /nologo ;
+        toolset.flags intel-win.link .MT $(cpu-conditions) : $(setup-call)mt -nologo ;
+        toolset.flags intel-win.compile .ASM $(cpu-conditions) : $(setup-call)$(cpu-assembler) -nologo ;
+        toolset.flags intel-win.compile .MC $(cpu-conditions) : $(setup-call)mc ;
+        toolset.flags intel-win.compile .RC $(cpu-conditions) : $(setup-call)rc ;
     }
 
-    toolset.flags intel-win.compile .CC $(condition) : $(setup)icl ;
-    toolset.flags intel-win.link .LD $(condition) : $(setup)xilink ;
-    toolset.flags intel-win.archive .LD $(condition) : $(setup)xilink /lib ;
-    toolset.flags intel-win.link .MT $(condition) : $(setup)mt -nologo ;
-    toolset.flags intel-win.compile .MC $(condition) : $(setup)mc ;
-    toolset.flags intel-win.compile .RC $(condition) : $(setup)rc ;
-
-    local m = [ MATCH (.).* : $(version) ] ;
-    local major = $(m[1]) ;
+    # Depending on the settings, running of tests require some runtime DLLs.
+    toolset.flags intel-win RUN_PATH $(condition) : $(root) ;
+    
 
     local C++FLAGS ;
 
@@ -96,7 +201,10 @@ rule init ( version ? :     # the compiler version
 
     # Disable Microsoft "secure" overloads in Dinkumware libraries since they
     # cause compile errors with Intel versions 9 and 10.
-    C++FLAGS += -D_SECURE_SCL=0 ;
+    if $(major) < 12
+    {
+        C++FLAGS += -D_SECURE_SCL=0 ;
+    }
 
     if $(major) > 5
     {
@@ -135,7 +243,7 @@ rule init ( version ? :     # the compiler version
 
     if $(compatibility) && $(compatibility) != native
     {
-        C++FLAGS += /Q$(base-vc) ;
+        C++FLAGS += /Q$(compatibility) ;
     }
     else
     {
@@ -161,8 +269,8 @@ rule init ( version ? :     # the compiler version
 
     if ! $(compatibility)
     {
-        # If there's no backend version, assume 10.
-        compatibility = vc10 ;
+        # If there's no backend version, assume 7.1.
+        compatibility = vc7.1 ;
     }
 
     local extract-version = [ MATCH ^vc(.*) : $(compatibility) ] ;
@@ -171,12 +279,82 @@ rule init ( version ? :     # the compiler version
         errors.user-error "Invalid value for compatibility option:"
             $(compatibility) ;
     }
+    
+    # The passed version to msvc needs to be 12.0 and not 12 if e.g compatibility=vc12
+    local version_cor = $(extract-version[1]) ;
+    if ! [ MATCH ^[0-9]+\.(.*) : $(version_cor) ] {
+        version_cor = $(version_cor)".0" ;
+    }
 
-    # Depending on the settings, running of tests require some runtime DLLs.
-    toolset.flags intel-win RUN_PATH $(condition) : $(root) ;
-
-    msvc.configure-version-specific intel-win : $(extract-version[1]) : $(condition) ;
+    msvc.configure-version-specific intel-win : $(version_cor) : $(condition) ;
 }
+
+local rule get-icl-path-from-environment (  major_version )
+{
+    local path = [ os.environ ICPP_COMPILER$(major_version) ] ;
+    if $(path) 
+    {
+        path = [ path.make $(path) ] ;
+        local cmdpath ;
+        local subdirs = $(.icl-target-subdirectories) ;
+        while $(subdirs)
+        {
+            cmdpath = [ path.join $(path) "bin/$(subdirs[0])/icl.exe" ] ;
+            cmdpath = [ path.native $(cmdpath) ] ;
+            if [ path.exists $(cmdpath) ]
+            {
+                subdirs = ;
+            } else {
+                cmdpath = ;
+                subdirs = $(subdirs[2-]) ;
+            }
+        }
+        path = $(cmdpath) ;
+    }
+    return $(path) ;
+}
+
+local rule get-compiler-invocation-cmd ( major_version : command * )
+{
+    if $(command)
+    {
+        return [ common.get-invocation-command intel-win : icl.exe : $(command) ] ;
+    }
+    else
+    {
+        local path = [ get-icl-path-from-environment $(major_version) ] ;
+        return [ common.get-invocation-command intel-win : icl.exe : $(path) ] ;
+    }
+}
+
+
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+{
+    .debug-configuration = true ;
+}
+
+# Copied from msvc.jam
+# Supported CPU architectures.
+.cpu-arch-ia32 =
+    <architecture>/<address-model>
+    <architecture>/<address-model>32
+    <architecture>x86/<address-model>
+    <architecture>x86/<address-model>32 ;
+
+.cpu-arch-intel64 =
+    <architecture>/<address-model>64
+    <architecture>x86/<address-model>64 ;
+
+.cpu-arch-ia32_intel64 =
+    <architecture>/<address-model>64
+    <architecture>x86/<address-model>64 ;
+
+.iclvars-version-alias-vc12 = vs2013 ;
+.iclvars-version-alias-vc11 = vs2012 ;
+.iclvars-version-alias-vc10 = vs2010 ;
+.iclvars-version-alias-vc9 = vs2008 ;
+.iclvars-version-alias-vc8 = vs2005 ;
+.icl-target-subdirectories = ia32 ia32_intel64 intel64 ;
 
 toolset.flags intel-win.link LIBRARY_OPTION <toolset>intel : "" ;
 
