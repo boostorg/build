@@ -11,6 +11,7 @@ import feature ;
 import intel ;
 import msvc ;
 import os ;
+import set ;
 import toolset ;
 import generators ;
 import type ;
@@ -46,7 +47,22 @@ rule init ( version ? :     # the compiler version
     }
     else
     {
-        errors.error "Setting up intel compiler without version infos not implemented yet" ;
+        if $(command)
+        {
+            errors.error "Autodetect of version from command not implemented!" ;
+        }
+        local intel_versions = [ get-autodetect-versions () ] ;
+        if ! $(intel_versions) 
+        {
+            errors.error "No intel compiler version found!" ;
+        }
+        else
+        {
+            for local v in $(intel_versions)
+            {
+                configure $(v) : : $(options) ;
+            }
+        }
     }
 }
 
@@ -54,22 +70,68 @@ local rule configure ( version ? : command * : options * )
 {
     local compatibility =
       [ feature.get-values <compatibility> : $(options) ] ;
+    # Allow to specify toolset and visual studio backend from commandline .e.g --toolset=intel-14.0-vc10
+    local vc_in_version = [ MATCH (vc[0-9]+)$ : $(version) ] ;
     if $(compatibility) && $(vc_in_version)
     {
         errors.error "feature compatibility and vc version in toolset present!" ;
     }
-    # Allow to specify toolset and visual studio backend from commandline .e.g --toolset=intel-14.0-vc10
-    local vc_in_version = [ MATCH (vc[0-9]+)$ : $(version) ] ;
+    
     if $(vc_in_version)
     {
         # vc Version must be stripped before check-init-parameters is called!
         version = [ MATCH ([^v]+)-vc[0-9]+$ : $(version) ] ;
-    }
-    if ! $(compatibility) && $(vc_in_version)
-    {
-        compatibility = $(vc_in_version) ;
-    }
 
+        compatibility = $(vc_in_version) ;
+        options += <compatibility>$(vc_in_version) ;
+    }
+    if $(compatibility)
+    {
+        configure-really $(version) : $(command) : $(options) : $(compatibility) ;
+    }
+    else
+    {
+        local msvc_versions = [ feature.values <toolset-msvc:version> ] ;
+        if ! $(msvc_versions)
+        {
+            ECHO notice: no msvc versions detected. trying auto detect ;
+            toolset.using msvc : all ;
+            msvc_versions = [ feature.values <toolset-msvc:version> ] ;
+        }
+        if ! $(.iclvars-$(version)-supported-vcs) 
+        {
+            errors.error "Supported msvc versions not know for intel $(version)" ;
+        }
+        
+        for local v in $(msvc_versions)
+        {
+            if [ MATCH "($(v))" : $(.iclvars-$(version)-supported-vcs) ]
+            {
+                # Strip trailing .0 from msvc version as intel compiler uses atm only major version for Qvc
+                local m = [ MATCH ([0-9]+).0$ : $(v) ] ;
+                if $(m)
+                {
+                    v = $(m) ;
+                }
+                v = "vc$(v)" ;
+                local options_really = $(options) ;
+                options_really += <compatibility>$(v) ;
+                if $(.debug-configuration)
+                {
+                    ECHO "configure: intel version: $(version) msvc version: $(v)" ;
+                }
+                configure-really $(version) : $(command) : $(options) : $(v) ;
+            }
+        }
+        if ! [ feature.values <toolset-intel:version> ] 
+        {
+            errors.error "Failed to register an intel toolset!" ;
+        }
+    }
+}
+
+local rule configure-really ( version ? : command * : options * : compatibility )
+{
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
         
@@ -80,12 +142,12 @@ local rule configure ( version ? : command * : options * )
         errors.error "Major version not found: $(version)" ;
     }
 
-    # This line disables native call
-    if ! $(compatibility) && ! $(vc_in_version)
+    local msvc-version = [ MATCH ^vc(.*) : $(compatibility) ] ;
+    if ! $(msvc-version)
     {
-        errors.error "missing vc compatibility option" ;
+        errors.user-error "Invalid value for compatibility option:"
+            $(compatibility) ;
     }
-    
     
     command = [ get-compiler-invocation-cmd $(major) : $(command) ] ; 
     
@@ -107,7 +169,7 @@ local rule configure ( version ? : command * : options * )
     setup = [ GLOB $(root) : iclvars_*.bat ] ;
     if ! $(setup)
     {
-       setup = $(root)/iclvars.bat ;
+       setup = [ path.join $(root) "iclvars.bat" ] ;
        setup = [ path.native $(setup) ] ;
     }
     
@@ -115,11 +177,23 @@ local rule configure ( version ? : command * : options * )
     local iclvars_vs_arg ;
     if $(major) >= 12
     {
+        # if we have a known intel toolset check for visual studio compatibility
+        # if not trust parameters
+        if $(.iclvars-$(version)-supported-vcs) 
+        {
+            if ! [ MATCH "($(msvc-version))" : $(.iclvars-$(version)-supported-vcs) ]
+            {
+                errors.error "msvc $(msvc-version) not supported for intel toolset version $(version)" ;
+            }
+        }
         if $(.iclvars-version-alias-$(compatibility))
 		{
 			iclvars_vs_arg = $(.iclvars-version-alias-$(compatibility)) ;
 		}
-		
+		else
+        {
+            errors.error "Don't know what parameter to pass for vc version ( $(compatibility) )" ;
+        }
         if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITECTURE ] ]
         {
             target_types = ia32 intel64 ;
@@ -155,6 +229,7 @@ local rule configure ( version ? : command * : options * )
             cpu-conditions = $(condition) ;
         }
 
+        
         if [ os.name ] = NT
         {
             setup-call = $(setup-call)"
@@ -164,12 +239,12 @@ local rule configure ( version ? : command * : options * )
         {
             setup-call = "cmd /S /C "$(setup-call)" \"&&\" " ;
         }
-        
+
         if $(.debug-configuration)
         {
-            for local cpu-condition in $(cpu-conditions)
+            for local cond in $(cpu-conditions)
             {
-                ECHO "notice: [intel-cfg] condition: '$(cpu-condition)', setup: '$(setup-call)'" ;
+                ECHO "notice: [intel-cfg] condition: '$(cond)', setup: '$(setup-call)'" ;
             }
         }
         
@@ -273,20 +348,21 @@ local rule configure ( version ? : command * : options * )
         compatibility = vc7.1 ;
     }
 
-    local extract-version = [ MATCH ^vc(.*) : $(compatibility) ] ;
-    if ! $(extract-version)
-    {
-        errors.user-error "Invalid value for compatibility option:"
-            $(compatibility) ;
-    }
-    
-    # The passed version to msvc needs to be 12.0 and not 12 if e.g compatibility=vc12
-    local version_cor = $(extract-version[1]) ;
-    if ! [ MATCH ^[0-9]+\.(.*) : $(version_cor) ] {
-        version_cor = $(version_cor)".0" ;
-    }
+    msvc.configure-version-specific intel-win :  $(msvc-version) : $(condition) ;
+}
 
-    msvc.configure-version-specific intel-win : $(version_cor) : $(condition) ;
+local rule get-autodetect-versions
+{
+    local result ;
+    for local v in $(.intel-autodetect-versions)
+    {
+        local major = [ MATCH ([0-9]+).* : $(v) ] ; # Use only major version
+        if [ get-icl-path-from-environment $(major) ]
+        {
+            result += $(v) ;
+        }
+    }
+    return $(result) ;
 }
 
 local rule get-icl-path-from-environment (  major_version )
@@ -349,6 +425,10 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
     <architecture>/<address-model>64
     <architecture>x86/<address-model>64 ;
 
+.intel-autodetect-versions = 14.0 13.0 12.0 ;
+.iclvars-12.0-supported-vcs = "10.0 9.0 8.0" ;
+.iclvars-13.0-supported-vcs = "11.0 10.0 9.0" ;
+.iclvars-14.0-supported-vcs = "12.0 11.0 10.0 9.0" ;
 .iclvars-version-alias-vc12 = vs2013 ;
 .iclvars-version-alias-vc11 = vs2012 ;
 .iclvars-version-alias-vc10 = vs2010 ;
