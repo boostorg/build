@@ -523,7 +523,7 @@ rule translate ( properties * : project-id : project-location : context-module )
             else
             {
                 import errors ;
-                errors.error "'$(e)' is not a valid property specification" ;
+                errors.error "'$(property)' is not a valid property specification" ;
             }
         } else {
             local attributes = [ feature.attributes $(feature) ] ;

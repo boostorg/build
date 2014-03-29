@@ -73,7 +73,7 @@ rule init ( version ? :  command * : options * )
 SPACE = " " ;
 
 flags clang-darwin.compile OPTIONS <cflags> ;
-flags clang-darwin.compile OPTIONS <cxxflags> ;
+flags clang-darwin.compile.c++ OPTIONS <cxxflags> ;
 # flags clang-darwin.compile INCLUDES <include> ;
 
 # Declare flags and action for compilation.
