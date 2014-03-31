@@ -6,6 +6,7 @@
 # Copyright (c) 2007 Rene Rivera
 # Copyright (c) 2008 Jurko Gospodnetic
 # Copyright Steve Gates 2013.
+# Copyright (c) 2014 Pat Brenner
 # Portions Copyright (c) Microsoft Open Technologies, Inc.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
@@ -269,9 +270,9 @@ rule configure-version-specific ( toolset : version : conditions )
         # dependencies to put there.
         toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
     }
-	
-    # VS 2012 adds support for Windows store and phone applications.
-    if [ MATCH "(11)" : $(version) ]
+
+    # VS 2012/13 add support for Windows store and phone applications.
+    if [ MATCH "(12)" : $(version) ]
     {
         msvc-version = $(version) ;	
         feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
@@ -1087,6 +1088,11 @@ local rule configure-really ( version ? : options * )
             local cpu-assembler = $(assembler) ;
             cpu-assembler ?= $(default-assembler-$(c)) ;
 
+            toolset.flags msvc.compile .RC  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(resource-compiler) ;
+            toolset.flags msvc.compile .IDL <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
+            toolset.flags msvc.compile .MC  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
+            toolset.flags msvc.link    .MT  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
+
             for api in desktop store phone
             {
                 local setup-script = $(setup-$(c)) ;
@@ -1095,13 +1101,9 @@ local rule configure-really ( version ? : options * )
                     setup-script = $(setup-phone-$(c)) ;
                 }
                 toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(compiler) /Zm800 -nologo ;
-                toolset.flags msvc.compile .RC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(resource-compiler) ;
                 toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(cpu-assembler) -nologo ;
                 toolset.flags msvc.link    .LD  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(linker) /NOLOGO /INCREMENTAL:NO ;
                 toolset.flags msvc.archive .LD  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(linker) /lib /NOLOGO  ;
-                toolset.flags msvc.compile .IDL <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(idl-compiler) ;
-                toolset.flags msvc.compile .MC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(mc-compiler) ;
-                toolset.flags msvc.link    .MT  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(manifest-tool) -nologo ;
             }
 
             if $(cc-filter)
