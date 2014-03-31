@@ -58,9 +58,14 @@ rule init ( version ? :     # the compiler version
         }
         else
         {
+            local msvc-version = [ feature.get-values <compatibility> : $(options) ] ; # On auto config mode the user can still request a msvc backend. If some intel compiler doesn't support it, don't try to configure it!
+            msvc-version = [ get-msvc-version-from-vc-string $(msvc-version) ] ;
             for local v in $(intel_versions)
             {
-                configure $(v) : : $(options) ;
+                if [ is-msvc-supported $(v) : $(msvc-version) ]
+                {
+                    configure $(v) : : $(options) ;
+                }
             }
         }
     }
@@ -71,16 +76,20 @@ local rule configure ( version ? : command * : options * )
     local compatibility =
       [ feature.get-values <compatibility> : $(options) ] ;
     # Allow to specify toolset and visual studio backend from commandline .e.g --toolset=intel-14.0-vc10
-    local vc_in_version = [ MATCH (vc[0-9]+)$ : $(version) ] ;
+    local vc_in_version = [ MATCH (vc[0-9]+(\\.[0-9]+)?)$ : $(version) ] ;
+    vc_in_version = $(vc_in_version[1]) ;
     if $(compatibility) && $(vc_in_version)
     {
-        errors.error "feature compatibility and vc version in toolset present!" ;
+        if $(compatibility) != $(vc_in_version)
+        {
+            errors.error "feature compatibility and vc version in toolset present!" ;
+        }
     }
     
-    if $(vc_in_version)
+    if $(vc_in_version) && ! $(compatibility)
     {
         # vc Version must be stripped before check-init-parameters is called!
-        version = [ MATCH ([^v]+)-vc[0-9]+$ : $(version) ] ;
+        version = [ MATCH (.+)-vc.+$ : $(version) ] ;
 
         compatibility = $(vc_in_version) ;
         options += <compatibility>$(vc_in_version) ;
@@ -100,7 +109,7 @@ local rule configure ( version ? : command * : options * )
         }
         if ! $(.iclvars-$(version)-supported-vcs) 
         {
-            errors.error "Supported msvc versions not know for intel $(version)" ;
+            errors.error "Supported msvc versions not known for intel $(version)" ;
         }
         
         for local v in $(msvc_versions)
@@ -142,7 +151,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         errors.error "Major version not found: $(version)" ;
     }
 
-    local msvc-version = [ MATCH ^vc(.*) : $(compatibility) ] ;
+    local msvc-version = [ get-msvc-version-from-vc-string $(compatibility) ] ;
     if ! $(msvc-version)
     {
         errors.user-error "Invalid value for compatibility option:"
@@ -179,12 +188,9 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     {
         # if we have a known intel toolset check for visual studio compatibility
         # if not trust parameters
-        if $(.iclvars-$(version)-supported-vcs) 
+        if ! [ is-msvc-supported $(version) : $(msvc-version) ]
         {
-            if ! [ MATCH "($(msvc-version))" : $(.iclvars-$(version)-supported-vcs) ]
-            {
-                errors.error "msvc $(msvc-version) not supported for intel toolset version $(version)" ;
-            }
+            errors.error "msvc $(msvc-version) not supported for intel toolset version $(version)" ;
         }
         if $(.iclvars-version-alias-$(compatibility))
 		{
@@ -403,6 +409,33 @@ local rule get-compiler-invocation-cmd ( major_version : command * )
     }
 }
 
+local rule is-msvc-supported ( intel-version : msvc-version )
+{
+    if ! $(msvc-version)
+    {
+        return true ;
+    }
+    else
+    {
+        if $(.iclvars-$(intel-version)-supported-vcs) 
+        {
+            if [ MATCH "($(msvc-version))" : $(.iclvars-$(intel-version)-supported-vcs) ]
+            {
+               return true ; 
+            }
+        }
+        else
+        {
+            return true ; 
+        }
+    }
+}
+
+local rule get-msvc-version-from-vc-string ( vc-string )
+{
+    local r = [ MATCH "^vc([0-9]+(\\.[0-9]+)?)$" : $(vc-string) ] ;
+    return $(r[1]) ;
+}
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -427,6 +460,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 .intel-autodetect-versions = 14.0 13.0 12.0 ;
 .iclvars-12.0-supported-vcs = "10.0 9.0 8.0" ;
+.iclvars-12.1-supported-vcs = "10.0 9.0 8.0" ;
 .iclvars-13.0-supported-vcs = "11.0 10.0 9.0" ;
 .iclvars-14.0-supported-vcs = "12.0 11.0 10.0 9.0" ;
 .iclvars-version-alias-vc12 = vs2013 ;
