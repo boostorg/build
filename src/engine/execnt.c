@@ -97,7 +97,7 @@ static void string_new_from_argv( string * result, char const * const * argv );
 /* frees and renews the given string */
 static void string_renew( string * const );
 /* reports the last failed Windows API related error message */
-static void reportWindowsError( char const * const apiName );
+static void reportWindowsError( char const * const apiName, int slot );
 /* closes a Windows HANDLE and resets its variable to 0. */
 static void closeWinHandle( HANDLE * const handle );
 
@@ -439,19 +439,23 @@ static void invoke_cmd( char const * const command, int const slot )
     sa.lpSecurityDescriptor = &sd;
     sa.bInheritHandle = TRUE;
 
+    /* Create output buffers. */
+    string_new( cmdtab[ slot ].buffer_out );
+    string_new( cmdtab[ slot ].buffer_err );
+
     /* Create pipes for communicating with the child process. */
     if ( !CreatePipe( &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_READ ],
         &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ], &sa, 0 ) )
     {
-        reportWindowsError( "CreatePipe" );
-        exit( EXITBAD );
+        reportWindowsError( "CreatePipe", slot );
+        return;
     }
     if ( globs.pipe_action && !CreatePipe( &cmdtab[ slot ].pipe_err[
         EXECCMD_PIPE_READ ], &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ],
         &sa, 0 ) )
     {
-        reportWindowsError( "CreatePipe" );
-        exit( EXITBAD );
+        reportWindowsError( "CreatePipe", slot );
+        return;
     }
 
     /* Set handle inheritance off for the pipe ends the parent reads from. */
@@ -475,10 +479,6 @@ static void invoke_cmd( char const * const command, int const slot )
     /* Let the child inherit stdin, as some commands assume it is available. */
     si.hStdInput = GetStdHandle( STD_INPUT_HANDLE );
 
-    /* Create output buffers. */
-    string_new( cmdtab[ slot ].buffer_out );
-    string_new( cmdtab[ slot ].buffer_err );
-
     if ( DEBUG_EXECCMD )
         printf( "Command string for CreateProcessA(): '%s'\n", command );
 
@@ -495,8 +495,8 @@ static void invoke_cmd( char const * const command, int const slot )
         &si                     ,  /* startup info                         */
         &cmdtab[ slot ].pi ) )     /* child process info, if created       */
     {
-        reportWindowsError( "CreateProcessA" );
-        exit( EXITBAD );
+        reportWindowsError( "CreateProcessA", slot );
+        return;
     }
 }
 
@@ -1204,9 +1204,12 @@ static void string_new_from_argv( string * result, char const * const * argv )
  * Reports the last failed Windows API related error message.
  */
 
-static void reportWindowsError( char const * const apiName )
+static void reportWindowsError( char const * const apiName, int slot )
 {
     char * errorMessage;
+    char buf[24];
+    string * err_buf;
+    timing_info time;
     DWORD const errorCode = GetLastError();
     DWORD apiResult = FormatMessageA(
         FORMAT_MESSAGE_ALLOCATE_BUFFER |  /* __in      DWORD dwFlags       */
@@ -1218,14 +1221,49 @@ static void reportWindowsError( char const * const apiName )
         (LPSTR)&errorMessage,             /* __out     LPTSTR lpBuffer     */
         0,                                /* __in      DWORD nSize         */
         0 );                              /* __in_opt  va_list * Arguments */
+    
+    /* Build a message as if the process had written to stderr. */
+    if ( globs.pipe_action )
+        err_buf = cmdtab[ slot ].buffer_err;
+    else
+        err_buf = cmdtab[ slot ].buffer_out;
+    string_append( err_buf, apiName );
+    string_append( err_buf, "() Windows API failed: " );
+    sprintf( buf, "%d", errorCode );
+    string_append( err_buf, buf );
+
     if ( !apiResult )
-        printf( "%s() Windows API failed: %d.\n", apiName, errorCode );
+        string_append( err_buf, ".\n" );
     else
     {
-        printf( "%s() Windows API failed: %d - %s\n", apiName, errorCode,
-            errorMessage );
+        string_append( err_buf, " - " );
+        string_append( err_buf, errorMessage );
+        /* Make sure that the buffer is terminated with a newline */
+        if( err_buf->value[ err_buf->size - 1 ] != '\n' )
+            string_push_back( err_buf, '\n' );
         LocalFree( errorMessage );
     }
+
+    /* Since the process didn't actually start, use a blank timing_info. */
+    time.system = 0;
+    time.user = 0;
+    timestamp_current( &time.start );
+    timestamp_current( &time.end );
+
+    /* Invoke the callback with a failure status. */
+    (*cmdtab[ slot ].func)( cmdtab[ slot ].closure, EXEC_CMD_FAIL, &time,
+        cmdtab[ slot ].buffer_out->value, cmdtab[ slot ].buffer_err->value,
+        EXIT_OK );
+    
+    /* Clean up any handles that were opened. */
+    closeWinHandle( &cmdtab[ slot ].pi.hProcess );
+    closeWinHandle( &cmdtab[ slot ].pi.hThread );
+    closeWinHandle( &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_READ ] );
+    closeWinHandle( &cmdtab[ slot ].pipe_out[ EXECCMD_PIPE_WRITE ] );
+    closeWinHandle( &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_READ ] );
+    closeWinHandle( &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ] );
+    string_renew( cmdtab[ slot ].buffer_out );
+    string_renew( cmdtab[ slot ].buffer_err );
 }
 
 
