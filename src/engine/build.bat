@@ -36,7 +36,7 @@ goto :eof
 
 
 :Test_Path
-REM Tests for the given file(executable) presence in the directories in the PATH
+REM Tests for the given executable file presence in the directories in the PATH
 REM environment variable. Additionaly sets FOUND_PATH to the path of the
 REM found file.
 call :Clear_Error
@@ -292,7 +292,7 @@ REM the toolset was guessed at and found, or when the toolset
 REM was indicated in the command arguments.
 REM NOTE: The strange multiple "if ?? == _toolset_" tests are that way
 REM because in BAT variables are subsituted only once during a single
-REM command. A complete "if ... ( commands ) else ( commands )"
+REM command. A complete "if ... else ..."
 REM is a single command, even though it's in multiple lines here.
 :Setup_Args
 call :Clear_Error
