@@ -31,6 +31,12 @@
 
 #ifdef OS_NT
 #include <windows.h>
+#ifndef FSCTL_GET_REPARSE_POINT
+/* MinGW's version of windows.h is missing this, so we need
+ * to include winioctl.h directly
+ */
+#include <winioctl.h>
+#endif
 #endif
 
 #if defined(USE_EXECUNIX)
