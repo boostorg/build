@@ -271,8 +271,8 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
     }
 
-    # VS 2012/13 add support for Windows store and phone applications.
-    if [ MATCH "(12)" : $(version) ]
+    # VS 2012 adds support for Windows store and phone applications.
+    if [ MATCH "(11)" : $(version) ]
     {
         msvc-version = $(version) ;	
         feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
