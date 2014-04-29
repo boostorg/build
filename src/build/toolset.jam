@@ -1,7 +1,6 @@
 # Copyright 2003 Dave Abrahams
 # Copyright 2005 Rene Rivera
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
-# Copyright (c) Microsoft Corporation
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -588,20 +587,6 @@ rule add-requirements ( requirements * )
     }
 }
 
-# Feature for handling targeting different Windows API sets.
-#
-feature.feature windows-api : desktop store phone : propagated composite link-incompatible ;
-feature.set-default windows-api : desktop ;    
-
-# Default rule for returning the supported Windows APIs.
-# Returns empty, which is equivalent to desktop.
-# Compilers which support Windows store need to implement to return <windows-api>store as well.
-# An example can be seen in the msvc module.
-#
-local rule supported-windows-api-impl ( )
-{    
-}
-IMPORT $(__name__) : supported-windows-api-impl : : supported-windows-api ;
 
 rule __test__ ( )
 {

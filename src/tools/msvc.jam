@@ -267,45 +267,17 @@ rule configure-version-specific ( toolset : version : conditions )
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
         toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
-        
-        # Record the msvc version so it can be determined in supported-windows-api-impl to support
-        # the Windows Runtime (WinRT).
-        msvc-version = $(version) ;
-        IMPORT $(__name__) : supported-windows-api-impl : : supported-windows-api ;
     }
     toolset.pop-checking-for-flags-module ;
 }
 
 
-# Checks the version of msvc and returns the supported Windows APIs.
-# This should be used in the default-build for WinRT support.
-# By default Windows 8 store is only built on Windows 8 and later, unless explicitly
-# specified by the user at the command line.
+# Feature for handling targeting different Windows API sets.
 #
-local msvc-version = ;
+feature.feature windows-api : desktop store phone : propagated composite link-incompatible ;
 feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
 feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
-local rule supported-windows-api-impl ( )
-{
-    local result ;
-
-    if $(msvc-version) >= 11 
-    {    
-        # Get the host OS version by examining the registry.
-        # Tried using os.version, but it was always empty.
-        local osver = [ W32_GETREG "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion" : "CurrentVersion" ] ;
-        if $(osver) >= 6.2
-        {
-            result = <windows-api>desktop <windows-api>store ;
-        }
-    }
-    else
-    {
-        result = <windows-api>desktop ;
-    }
-    
-    return $(result) ;
-}
+feature.set-default windows-api : desktop ; 
 
 # Registers this toolset including all of its flags, features & generators. Does
 # nothing on repeated calls.
