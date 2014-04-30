@@ -288,7 +288,7 @@ rule configure-version-specific ( toolset : version : conditions )
 #
 feature.feature windows-api : desktop store phone : propagated composite link-incompatible ;
 feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
-feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
+feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER <disable-test-execution>on ;
 feature.set-default windows-api : desktop ; 
 
 # Registers this toolset including all of its flags, features & generators. Does
