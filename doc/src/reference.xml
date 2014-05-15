@@ -681,6 +681,21 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
+      <varlistentry><term><literal>runtime-debugging</literal></term>
+
+        <listitem>
+          <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
+
+          <para>The <literal>runtime-debugging</literal> feature specifies if
+          produced object files, executables and libraries should include
+          behaviour useful only for debugging, such as asserts.
+          Typically, the value of this feature is implicitly set by the
+          <literal>variant</literal> feature, but it can be explicitly
+          specified by the user. The most common usage is to build
+          release variant with debugging output.</para>
+        </listitem>
+      </varlistentry>
+
       <varlistentry><term><literal>target-os</literal></term>
         <listitem>
 
