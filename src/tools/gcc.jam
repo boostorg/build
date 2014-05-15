@@ -382,7 +382,9 @@ toolset.flags gcc.compile OPTIONS <warnings-as-errors>on : -Werror ;
 toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 toolset.flags gcc.compile OPTIONS <profiling>on : -pg ;
 
-toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
+# It is imposible to detect RTTI support on old compilers during compilation,
+# so we explicitly define BOOST_NO_RTTI
+toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti -DBOOST_NO_RTTI ;
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
 
 rule setup-fpic ( targets * : sources * : properties * )
