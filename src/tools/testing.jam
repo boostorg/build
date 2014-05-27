@@ -55,7 +55,7 @@ rule init ( )
 }
 
 
-# Feature controling the command used to lanch test programs.
+# Feature controlling the command used to launch test programs.
 feature.feature testing.launcher   : : free optional ;
 
 feature.feature test-info          : : free incidental ;
@@ -63,6 +63,11 @@ feature.feature testing.arg        : : free incidental ;
 feature.feature testing.input-file : : free dependency ;
 
 feature.feature preserve-test-targets : on off : incidental propagated ;
+
+# Feature to control whether executable binaries are run as part of test.
+# This can be used to just compile test cases in cross compilation situations.
+feature.feature testing.execute : on off : incidental propagated ;
+feature.set-default testing.execute : on ;
 
 # Register target types.
 type.register TEST         : test          ;
@@ -436,6 +441,12 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
 
     run-path-setup $(target) : $(source) : $(properties) ;
 
+    DISABLE_TEST_EXECUTION on $(target) = 0 ;
+    if [ feature.get-values testing.execute : $(properties) ] = off
+    {
+        DISABLE_TEST_EXECUTION on $(target) = 1 ;
+    }
+    
     if [ feature.get-values preserve-test-targets : $(properties) ] = off
     {
         TEMPORARY $(targets-to-remove) ;
@@ -492,6 +503,11 @@ if --verbose-test in [ modules.peek : ARGV ]
 actions capture-output bind INPUT_FILES output-file
 {
     $(PATH_SETUP)
+    $(.SHELL_SET)status=$(DISABLE_TEST_EXECUTION)
+    if $(.STATUS_NOT_0)
+        echo Skipping test execution due to testing.execute=off
+        exit 0
+    $(.ENDIF)
     $(LAUNCHER) "$(>)" $(ARGS) "$(INPUT_FILES)" > "$(output-file)" 2>&1
     $(.SET_STATUS)
     $(.RUN_OUTPUT_NL) >> "$(output-file)"
