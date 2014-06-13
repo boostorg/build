@@ -57,7 +57,7 @@ if [ qt5.initialized ]
       [ run mock.cpp mock.h /qt5//QtCore : : : <define>TEST_MOCK ]
 
       # Test resource compiler
-      [ run rcc.cpp rcc.qrc /qt//QtCore : : : <rccflags>"-compress 9 -threshold 10" ]
+      [ run rcc.cpp rcc.qrc /qt5//QtCore : : : <rccflags>"-compress 9 -threshold 10" ]
 
    : # requirements
    : # default-build
