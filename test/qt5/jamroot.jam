@@ -12,7 +12,7 @@ path-constant CWD : . ;
 
 if [ qt5.initialized ]
 {
-    use-project /boost : ../../../../.. ;
+    use-project /boost : ../../../.. ;
 
     project qttest
       : requirements
