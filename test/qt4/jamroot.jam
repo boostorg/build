@@ -11,7 +11,7 @@ import cast ;
 
 if [ qt4.initialized ]
 {
-    use-project /boost : ../../../../.. ;
+    use-project /boost : ../../../.. ;
 
     project qttest
       : requirements
