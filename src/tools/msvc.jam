@@ -287,7 +287,7 @@ rule configure-version-specific ( toolset : version : conditions )
 # Feature for handling targeting different Windows API sets.
 feature.feature windows-api : desktop store phone : propagated composite link-incompatible ;
 feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
-feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
+feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER <linkflags>/NODEFAULTLIB:ole32.lib ;
 feature.set-default windows-api : desktop ;
 
 
@@ -1005,8 +1005,15 @@ local rule configure-really ( version ? : options * )
             }
             
             # Windows phone uses a setup script in a different directory hierarchy.
-            # Support for future version of Windows phone will need to deal with phone versions here.
-            local phone-command = [ path.native [ path.join $(parent) WPSDK WP80 ] ] ;
+            local phone-command = [ path.native [ path.join $(parent) WPSDK ] ] ;
+            if [ MATCH "(11.0)" : $(version) ]
+            {
+                phone-command = [ path.native [ path.join $(phone-command) WP80 ] ] ;
+            }
+            else if [ MATCH "(12.0)" : $(version) ]
+            {
+                phone-command = [ path.native [ path.join $(phone-command) WP81 ] ] ;
+            }
             local phone-parent = [ path.make $(phone-command) ] ;
             phone-parent = [ path.native [ path.parent $(phone-parent) ] ] ;
             local global-setup-phone = [ feature.get-values <setup> : $(options) ] ;
