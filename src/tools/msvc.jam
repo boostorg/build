@@ -32,6 +32,7 @@ import path ;
 import pch ;
 import property ;
 import rc ;
+import set ;
 import toolset ;
 import type ;
 
@@ -130,6 +131,14 @@ rule init (
     #       Platform specific setup command to invoke before running any of the
     #     msvc tools used when builing a target for a specific platform, e.g.
     #     when building a 32 or 64 bit executable.
+    #
+    #   <rewrite-setup-scripts>
+    #       Whether to rewrite setup scripts. New scripts will be output in
+    #     TEMP directory and will be used instead of originals in build actions.
+    #     Possible values:
+    #       * on - rewrite scripts, if they do not already exist (default)
+    #       * always - always rewrite scripts, even if they already exist
+    #       * off - use original setup scripts
     : options *
 )
 {
@@ -676,6 +685,58 @@ local rule auto-detect-toolset-versions ( )
     }
 }
 
+# Helper rule to generate a faster alternative to MSVC setup scripts.
+# We used to call MSVC setup scripts directly in every action, however in
+# newer MSVC versions (10.0+) they make long-lasting registry queries 
+# which have a significant impact on build time.
+local rule maybe-rewrite-setup ( setup-script : setup-options : version : rewrite-setup ? )
+{
+    local result = $(setup-script)" "$(setup-options) ;
+    # At the moment we only know how to rewrite scripts with cmd shell.
+    if ( [ os.name ] in NT ) && ( $(rewrite-setup) != off )
+    {
+        setup-script-id = b2_msvc_$(version)_$(setup-script:B) ;
+        if $(setup-options)-is-not-empty
+        {
+            setup-script-id = $(setup-script-id)_$(setup-options) ;
+        }
+
+        if $(.$(setup-script-id))
+        {
+            errors.error rewriting setup script for the second time ;
+        }
+
+        local tmpdir = [ os.environ TEMP ] ;
+        local replacement = [ path.native $(tmpdir)/$(setup-script-id).cmd ] ;
+        if ( $(rewrite-setup) = always ) || ( ! [ path.exists $(replacement) ] )
+        {
+            local original-vars = [ SPLIT_BY_CHARACTERS [ SHELL set ] : "\n" ] ;
+            local new-vars = [ SPLIT_BY_CHARACTERS [ SHELL "$(setup-script) $(setup-options)>nul && set" ] : "\n" ] ;
+            local diff-vars = [ set.difference $(new-vars) : $(original-vars) ] ;
+            if $(diff-vars)
+            {
+                local target = <new-setup-script>$(replacement) ;
+                FILE_CONTENTS on $(target) = "SET "$(diff-vars) ;
+                ALWAYS $(target) ;
+                msvc.write-setup-script $(target) ;
+                UPDATE_NOW $(target) : : ignore-minus-n ;
+                .$(setup-script-id) = $(replacement) ;
+                result = $(replacement) ;
+            }
+        }
+        else
+        {
+            result = $(replacement) ;
+        }
+    }
+    return $(result) ;
+}
+
+actions write-setup-script
+{
+    @($(STDOUT):E=$(FILE_CONTENTS:J=$(.nl))) > "$(<)"
+}
+
 
 # Worker rule for toolset version configuration. Takes an explicit version id or
 # nothing in case it should configure the default toolset version (the first
@@ -931,7 +992,9 @@ local rule configure-really ( version ? : options * )
                 # Append setup options to the setup name and add the final setup
                 # prefix & suffix.
                 setup-options ?= "" ;
-                setup-$(c) = $(setup-prefix)$(setup-$(c):J=" ")" "$(setup-options:J=" ")$(setup-suffix) ;
+                local rewrite = [ feature.get-values <rewrite-setup-scripts> : $(options) ] ;
+                setup-$(c) = [ maybe-rewrite-setup $(setup-$(c):J=" ") : $(setup-options:J=" ") : $(version) : $(rewrite) ] ;
+                setup-$(c) = $(setup-prefix)$(setup-$(c))$(setup-suffix) ;
             }
         }
 
