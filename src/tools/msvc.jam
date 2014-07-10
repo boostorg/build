@@ -128,6 +128,8 @@ rule init (
     #   <setup-i386>
     #   <setup-ia64>
     #   <setup-arm>
+    #   <setup-phone-i386>
+    #   <setup-phone-arm>
     #       Platform specific setup command to invoke before running any of the
     #     msvc tools used when builing a target for a specific platform, e.g.
     #     when building a 32 or 64 bit executable.
@@ -712,9 +714,9 @@ local rule generate-setup-cmd ( command : parent : options * : cpu : global-setu
     local setup-options ;
     local setup = [ feature.get-values <setup-$(cpu)> : $(options) ] ;
     
-    if $(setup) = ""
+    if ! $(setup)-is-defined
     {
-        if $(global-setup) != ""
+        if $(global-setup)-is-defined
         {
             setup = $(global-setup) ;
                         
@@ -875,6 +877,8 @@ local rule configure-really ( version ? : options * )
         local setup-i386 ;
         local setup-ia64 ;
         local setup-arm ;
+        local setup-phone-i386 ;
+        local setup-phone-arm ;
 
         if $(command)
         {
@@ -897,7 +901,7 @@ local rule configure-really ( version ? : options * )
 
             # Setup will be used if the command name has been specified. If
             # setup is not specified explicitly then a default setup script will
-            # be used instead. Setup scripts may be global or arhitecture/
+            # be used instead. Setup scripts may be global or architecture/
             # /platform/cpu specific. Setup options are used only in case of
             # global setup scripts.
 
@@ -919,6 +923,7 @@ local rule configure-really ( version ? : options * )
 
             local global-setup = [ feature.get-values <setup> : $(options) ] ;
             global-setup = $(global-setup[1]) ;
+            local global-setup-phone = $(global-setup) ;
             if ! $(below-8.0)
             {
                 global-setup ?= [ locate-default-setup $(command) : $(parent) :
@@ -929,7 +934,8 @@ local rule configure-really ( version ? : options * )
             local default-setup-i386  = vcvars32.bat ;
             local default-setup-ia64  = vcvarsx86_ia64.bat ;
             local default-setup-arm   = vcvarsx86_arm.bat ;
-            local default-setup-phone = vcvarsphoneall.bat ;
+            local default-setup-phone-i386 = vcvarsphonex86.bat ;
+            local default-setup-phone-arm = vcvarsphonex86_arm.bat ;
 
             # http://msdn2.microsoft.com/en-us/library/x4d2c09s(VS.80).aspx and
             # http://msdn2.microsoft.com/en-us/library/x4d2c09s(vs.90).aspx
@@ -961,67 +967,35 @@ local rule configure-really ( version ? : options * )
                 default-global-setup-options-ia64 = ia64 ;
             }
 
-            local setup-prefix = "call " ;
-            local setup-suffix = " >nul"$(.nl) ;
-            if ! [ os.name ] in NT
-            {
-                setup-prefix = "cmd.exe /S /C call " ;
-                setup-suffix = " \">nul\" \"&&\" " ;
-            }
-
             for local c in $(cpu)
             {
-                local setup-options ;
-
-                setup-$(c) = [ feature.get-values <setup-$(c)> : $(options) ] ;
-
-                if ! $(setup-$(c))-is-defined
-                {
-                    if $(global-setup)-is-defined
-                    {
-                        setup-$(c) = $(global-setup) ;
-
-                        # If needed we can easily add using configuration flags
-                        # here for overriding which options get passed to the
-                        # global setup command for which target platform:
-                        # setup-options = [ feature.get-values <setup-options-$(c)> : $(options) ] ;
-
-                        setup-options ?= $(default-global-setup-options-$(c)) ;
-                    }
-                    else
-                    {
-                        setup-$(c) = [ locate-default-setup $(command) :
-                            $(parent) : $(default-setup-$(c)) ] ;
-                    }
-                }
-
-                # Cygwin to Windows path translation.
-                setup-$(c) = "\""$(setup-$(c):W)"\"" ;
-
-                # Append setup options to the setup name and add the final setup
-                # prefix & suffix.
-                setup-options ?= "" ;
-                setup-$(c) = $(setup-prefix)$(setup-$(c):J=" ")" "$(setup-options:J=" ")$(setup-suffix) ;
+                setup-$(c) = [ generate-setup-cmd $(command) : $(parent) : $(options) : $(c) : $(global-setup) : $(default-global-setup-options-$(c)) : $(default-setup-$(c)) ] ;
             }
             
-            # Windows phone uses a setup script in a different directory hierarchy.
-            local phone-command = [ path.native [ path.join $(parent) WPSDK ] ] ;
-            if [ MATCH "(11.0)" : $(version) ]
+            # Windows phone has different setup scripts, located in a different directory hierarchy.
+            # The 11.0 toolset can target Windows Phone 8.0 and the 12.0 toolset can target Windows Phone 8.1,
+            # each of which have a different directory for their vcvars setup scripts.
+            if ! $(below-11.0)
             {
-                phone-command = [ path.native [ path.join $(phone-command) WP80 ] ] ;
+                local phone-parent = [ path.native [ path.join $(parent) WPSDK ] ] ;
+                local phone-directory = $(phone-parent) ;
+                if [ MATCH "(11.0)" : $(version) ]
+                {
+                    phone-directory = [ path.native [ path.join $(phone-directory) WP80 ] ] ;
+                }
+                else if [ MATCH "(12.0)" : $(version) ]
+                {
+                    phone-directory = [ path.native [ path.join $(phone-directory) WP81 ] ] ;
+                }
+                global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
+                
+                # i386 CPU is for the Windows Phone emulator in Visual Studio.
+                local phone-cpu = i386 arm ;
+                for local c in $(phone-cpu)
+                {
+                    setup-phone-$(c) = [ generate-setup-cmd $(phone-directory) : $(phone-parent) : $(options) : $(c) : $(global-setup-phone) : $(default-global-setup-options-$(c)) : $(default-setup-phone-$(c)) ] ;
+                }
             }
-            else if [ MATCH "(12.0)" : $(version) ]
-            {
-                phone-command = [ path.native [ path.join $(phone-command) WP81 ] ] ;
-            }
-            local phone-parent = [ path.make $(phone-command) ] ;
-            phone-parent = [ path.native [ path.parent $(phone-parent) ] ] ;
-            local global-setup-phone = [ feature.get-values <setup> : $(options) ] ;
-            global-setup-phone ?= [ path.native [ path.join $(phone-command) $(default-setup-phone) ] ] ;
-            setup-phone-i386 = [ generate-setup-cmd $(phone-command) : $(phone-parent) : $(options) : i386 
-                : $(global-setup-phone) : $(default-global-setup-options-i386) : $(default-setup-phone) ] ;
-            setup-phone-arm = [ generate-setup-cmd $(phone-command) : $(phone-parent) : $(options) : arm 
-                : $(global-setup-phone) : $(default-global-setup-options-arm) : $(default-setup-phone) ] ;
         }
 
         # Get tool names (if any) and finish setup.
