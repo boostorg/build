@@ -33,6 +33,7 @@ import path ;
 import pch ;
 import property ;
 import rc ;
+import set ;
 import toolset ;
 import type ;
 
@@ -133,6 +134,14 @@ rule init (
     #       Platform specific setup command to invoke before running any of the
     #     msvc tools used when builing a target for a specific platform, e.g.
     #     when building a 32 or 64 bit executable.
+    #
+    #   <rewrite-setup-scripts>
+    #       Whether to rewrite setup scripts. New scripts will be output in
+    #     TEMP directory and will be used instead of originals in build actions.
+    #     Possible values:
+    #       * on - rewrite scripts, if they do not already exist (default)
+    #       * always - always rewrite scripts, even if they already exist
+    #       * off - use original setup scripts
     : options *
 )
 {
@@ -697,11 +706,63 @@ local rule auto-detect-toolset-versions ( )
     }
 }
 
+# Helper rule to generate a faster alternative to MSVC setup scripts.
+# We used to call MSVC setup scripts directly in every action, however in
+# newer MSVC versions (10.0+) they make long-lasting registry queries 
+# which have a significant impact on build time.
+local rule maybe-rewrite-setup ( setup-script : setup-options : version : rewrite-setup ? )
+{
+    local result = $(setup-script)" "$(setup-options) ;
+    # At the moment we only know how to rewrite scripts with cmd shell.
+    if ( [ os.name ] in NT ) && ( $(rewrite-setup) != off )
+    {
+        setup-script-id = b2_msvc_$(version)_$(setup-script:B) ;
+        if $(setup-options)-is-not-empty
+        {
+            setup-script-id = $(setup-script-id)_$(setup-options) ;
+        }
+
+        if $(.$(setup-script-id))
+        {
+            errors.error rewriting setup script for the second time ;
+        }
+
+        local tmpdir = [ os.environ TEMP ] ;
+        local replacement = [ path.native $(tmpdir)/$(setup-script-id).cmd ] ;
+        if ( $(rewrite-setup) = always ) || ( ! [ path.exists $(replacement) ] )
+        {
+            local original-vars = [ SPLIT_BY_CHARACTERS [ SHELL set ] : "\n" ] ;
+            local new-vars = [ SPLIT_BY_CHARACTERS [ SHELL "$(setup-script) $(setup-options)>nul && set" ] : "\n" ] ;
+            local diff-vars = [ set.difference $(new-vars) : $(original-vars) ] ;
+            if $(diff-vars)
+            {
+                local target = <new-setup-script>$(replacement) ;
+                FILE_CONTENTS on $(target) = "SET "$(diff-vars) ;
+                ALWAYS $(target) ;
+                msvc.write-setup-script $(target) ;
+                UPDATE_NOW $(target) : : ignore-minus-n ;
+                .$(setup-script-id) = $(replacement) ;
+                result = $(replacement) ;
+            }
+        }
+        else
+        {
+            result = $(replacement) ;
+        }
+    }
+    return $(result) ;
+}
+
+actions write-setup-script
+{
+    @($(STDOUT):E=$(FILE_CONTENTS:J=$(.nl))) > "$(<)"
+}
+
 
 # Local helper rule to create the vcvars setup command for given architecture
 # and options.
 #
-local rule generate-setup-cmd ( command : parent : options * : cpu : global-setup : default-global-setup-options : default-setup )
+local rule generate-setup-cmd ( version : command : parent : options * : cpu : global-setup : default-global-setup-options : default-setup )
 {
     local setup-prefix = "call " ;
     local setup-suffix = " >nul"$(.nl) ;
@@ -734,12 +795,14 @@ local rule generate-setup-cmd ( command : parent : options * : cpu : global-setu
     
     # Cygwin to Windows path translation.
     setup = "\""$(setup:W)"\"" ;
-                
+
     # Append setup options to the setup name and add the final setup
     # prefix & suffix.
     setup-options ?= "" ;
-                
-    setup = $(setup-prefix)$(setup:J=" ")" "$(setup-options:J=" ")$(setup-suffix) ;
+    local rewrite = [ feature.get-values <rewrite-setup-scripts> : $(options) ] ;
+    setup = [ maybe-rewrite-setup $(setup:J=" ") : $(setup-options:J=" ") : $(version) : $(rewrite) ] ;
+    setup = $(setup-prefix)$(setup)$(setup-suffix) ;
+    
     return $(setup) ;
 }
 
@@ -816,7 +879,11 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(Microsoft Visual Studio 12)" : $(command) ]
+            if [ MATCH "(Microsoft Visual Studio 14)" : $(command) ]
+            {
+                version = 14.0 ;
+            }
+            else if [ MATCH "(Microsoft Visual Studio 12)" : $(command) ]
             {
                 version = 12.0 ;
             }
@@ -969,7 +1036,7 @@ local rule configure-really ( version ? : options * )
 
             for local c in $(cpu)
             {
-                setup-$(c) = [ generate-setup-cmd $(command) : $(parent) : $(options) : $(c) : $(global-setup) : $(default-global-setup-options-$(c)) : $(default-setup-$(c)) ] ;
+                setup-$(c) = [ generate-setup-cmd $(version) : $(command) : $(parent) : $(options) : $(c) : $(global-setup) : $(default-global-setup-options-$(c)) : $(default-setup-$(c)) ] ;
             }
             
             # Windows phone has different setup scripts, located in a different directory hierarchy.
@@ -978,22 +1045,27 @@ local rule configure-really ( version ? : options * )
             if ! $(below-11.0)
             {
                 local phone-parent = [ path.native [ path.join $(parent) WPSDK ] ] ;
-                local phone-directory = $(phone-parent) ;
+                local phone-directory ;
                 if [ MATCH "(11.0)" : $(version) ]
                 {
-                    phone-directory = [ path.native [ path.join $(phone-directory) WP80 ] ] ;
+                    phone-directory = [ path.native [ path.join $(phone-parent) WP80 ] ] ;
                 }
                 else if [ MATCH "(12.0)" : $(version) ]
                 {
-                    phone-directory = [ path.native [ path.join $(phone-directory) WP81 ] ] ;
+                    phone-directory = [ path.native [ path.join $(phone-parent) WP81 ] ] ;
                 }
-                global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
                 
-                # i386 CPU is for the Windows Phone emulator in Visual Studio.
-                local phone-cpu = i386 arm ;
-                for local c in $(phone-cpu)
+                # If phone-directory is not set then this VS version doesn't support Windows Phone.
+                if $(phone-directory)-is-defined
                 {
-                    setup-phone-$(c) = [ generate-setup-cmd $(phone-directory) : $(phone-parent) : $(options) : $(c) : $(global-setup-phone) : $(default-global-setup-options-$(c)) : $(default-setup-phone-$(c)) ] ;
+                    global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
+                
+                    # i386 CPU is for the Windows Phone emulator in Visual Studio.
+                    local phone-cpu = i386 arm ;
+                    for local c in $(phone-cpu)
+                    {
+                        setup-phone-$(c) = [ generate-setup-cmd $(version) : $(phone-directory) : $(phone-parent) : $(options) : $(c) : $(global-setup-phone) : $(default-global-setup-options-$(c)) : $(default-setup-phone-$(c)) ] ;
+                    }
                 }
             }
         }
@@ -1468,7 +1540,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      armv7 armv7s ;
 
 # Known toolset versions, in order of preference.
-.known-versions = 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+.known-versions = 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
     7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
@@ -1480,6 +1552,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-10 = 10.0 ;
 .version-alias-11 = 11.0 ;
 .version-alias-12 = 12.0 ;
+.version-alias-14 = 14.0 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -1494,6 +1567,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-10.0express-reg = "VCExpress\\10.0\\Setup\\VC" ;
 .version-11.0-reg = "VisualStudio\\11.0\\Setup\\VC" ;
 .version-12.0-reg = "VisualStudio\\12.0\\Setup\\VC" ;
+.version-14.0-reg = "VisualStudio\\14.0\\Setup\\VC" ;
 
 # Visual C++ Toolkit 2003 does not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation
