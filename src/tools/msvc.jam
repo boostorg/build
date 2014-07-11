@@ -925,10 +925,7 @@ local rule configure-really ( version ? : options * )
         # Generate and register setup command.
 
         local below-8.0 = [ MATCH ^([67]\\.) : $(version) ] ;
-        if $(version) < 11
-        {
-            local below-11.0 = true ;
-        }
+        local below-11.0 = [ MATCH ^([6789]\\.|10\\.) : $(version) ] ;
         
         local cpu = i386 amd64 ia64 arm ;
         if $(below-8.0)
@@ -1042,29 +1039,26 @@ local rule configure-really ( version ? : options * )
             # Windows phone has different setup scripts, located in a different directory hierarchy.
             # The 11.0 toolset can target Windows Phone 8.0 and the 12.0 toolset can target Windows Phone 8.1,
             # each of which have a different directory for their vcvars setup scripts.
-            if ! $(below-11.0)
+            local phone-parent = [ path.native [ path.join $(parent) WPSDK ] ] ;
+            local phone-directory = $(phone-parent) ;
+            if [ MATCH "(11.0)" : $(version) ]
             {
-                local phone-parent = [ path.native [ path.join $(parent) WPSDK ] ] ;
-                local phone-directory ;
-                if [ MATCH "(11.0)" : $(version) ]
-                {
-                    phone-directory = [ path.native [ path.join $(phone-parent) WP80 ] ] ;
-                }
-                else if [ MATCH "(12.0)" : $(version) ]
-                {
-                    phone-directory = [ path.native [ path.join $(phone-parent) WP81 ] ] ;
-                }
-                global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
+                phone-directory = [ path.native [ path.join $(phone-directory) WP80 ] ] ;
+            }
+            else if [ MATCH "(12.0)" : $(version) ]
+            {
+                phone-directory = [ path.native [ path.join $(phone-directory) WP81 ] ] ;
+            }
+            global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
                 
-                # If can't locate default phone setup script then this VS version doesn't support Windows Phone.
-                if $(global-setup-phone)-is-defined
+            # If can't locate default phone setup script then this VS version doesn't support Windows Phone.
+            if $(global-setup-phone)-is-defined
+            {
+                # i386 CPU is for the Windows Phone emulator in Visual Studio.
+                local phone-cpu = i386 arm ;
+                for local c in $(phone-cpu)
                 {
-                    # i386 CPU is for the Windows Phone emulator in Visual Studio.
-                    local phone-cpu = i386 arm ;
-                    for local c in $(phone-cpu)
-                    {
-                        setup-phone-$(c) = [ generate-setup-cmd $(version) : $(phone-directory) : $(phone-parent) : $(options) : $(c) : $(global-setup-phone) : $(default-global-setup-options-$(c)) : $(default-setup-phone-$(c)) ] ;
-                    }
+                    setup-phone-$(c) = [ generate-setup-cmd $(version) : $(phone-directory) : $(phone-parent) : $(options) : $(c) : $(global-setup-phone) : $(default-global-setup-options-$(c)) : $(default-setup-phone-$(c)) ] ;
                 }
             }
         }
