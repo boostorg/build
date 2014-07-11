@@ -191,35 +191,15 @@ rule link.dll ( targets * : sources * : properties * ) {
 
 rule setup-threading ( targets * : sources * : properties * )
 {
-    local threading = [ feature.get-values threading : $(properties) ] ;
-    if $(threading) = multi
+    switch $(target)
     {
-        local target = [ feature.get-values target-os : $(properties) ] ;
-        local option ;
-        local libs ;
-
-        switch $(target)
-        {
-            case android : # No threading options, everything is in already.
-#            case windows : option = -mthreads ;
-            case windows : option = -pthread ;
-            case cygwin  : option = -mthreads ;
-            case solaris : option = -pthreads ; libs = rt ;
-            case beos    : # No threading options.
-            case *bsd    : option = -pthread ;  # There is no -lrt on BSD.
-            case sgi     : # gcc on IRIX does not support multi-threading.
-            case darwin  : # No threading options.
-            case *       : option = -pthread ; libs = rt ;
-        }
-
-        if $(option)
-        {
-            OPTIONS on $(targets) += $(option) ;
-        }
-        if $(libs)
-        {
-            FINDLIBS-SA on $(targets) += $(libs) ;
-        }
+        case windows : 
+            local threading = [ feature.get-values threading : $(properties) ] ;
+            if $(threading) = multi
+                {
+                OPTIONS on $(targets) += -pthread ;
+                }
+        case * : gcc.setup-threading $(targets) : $(sources) : $(properties) ;
     }
 }
 
