@@ -1054,12 +1054,11 @@ local rule configure-really ( version ? : options * )
                 {
                     phone-directory = [ path.native [ path.join $(phone-parent) WP81 ] ] ;
                 }
+                global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
                 
-                # If phone-directory is not set then this VS version doesn't support Windows Phone.
-                if $(phone-directory)-is-defined
+                # If can't locate default phone setup script then this VS version doesn't support Windows Phone.
+                if $(global-setup-phone)-is-defined
                 {
-                    global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
-                
                     # i386 CPU is for the Windows Phone emulator in Visual Studio.
                     local phone-cpu = i386 arm ;
                     for local c in $(phone-cpu)
