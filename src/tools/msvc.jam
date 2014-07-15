@@ -297,8 +297,10 @@ rule configure-version-specific ( toolset : version : conditions )
 
 # Feature for handling targeting different Windows API sets.
 feature.feature windows-api : desktop store phone : propagated composite link-incompatible ;
-feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER ;
-feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 <linkflags>/APPCONTAINER <linkflags>/NODEFAULTLIB:ole32.lib ;
+feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 
+    <linkflags>/APPCONTAINER ;
+feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 
+    <linkflags>/APPCONTAINER <linkflags>/NODEFAULTLIB:ole32.lib <linkflags>/NODEFAULTLIB:kernel32.lib <linkflags>WindowsPhoneCore.lib ;
 feature.set-default windows-api : desktop ;
 
 
