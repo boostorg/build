@@ -712,13 +712,13 @@ local rule auto-detect-toolset-versions ( )
 # We used to call MSVC setup scripts directly in every action, however in
 # newer MSVC versions (10.0+) they make long-lasting registry queries 
 # which have a significant impact on build time.
-local rule maybe-rewrite-setup ( setup-script : setup-options : version : rewrite-setup ? )
+rule maybe-rewrite-setup ( toolset : setup-script : setup-options : version : rewrite-setup ? )
 {
     local result = $(setup-script)" "$(setup-options) ;
     # At the moment we only know how to rewrite scripts with cmd shell.
     if ( [ os.name ] in NT ) && ( $(rewrite-setup) != off )
     {
-        setup-script-id = b2_msvc_$(version)_$(setup-script:B) ;
+        setup-script-id = b2_$(toolset)_$(version)_$(setup-script:B) ;
         if $(setup-options)-is-not-empty
         {
             setup-script-id = $(setup-script-id)_$(setup-options) ;
@@ -744,12 +744,12 @@ local rule maybe-rewrite-setup ( setup-script : setup-options : version : rewrit
                 msvc.write-setup-script $(target) ;
                 UPDATE_NOW $(target) : : ignore-minus-n ;
                 .$(setup-script-id) = $(replacement) ;
-                result = $(replacement) ;
+                result = "\""$(replacement)"\"" ;
             }
         }
         else
         {
-            result = $(replacement) ;
+            result = "\""$(replacement)"\"" ;
         }
     }
     return $(result) ;
@@ -802,7 +802,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
     # prefix & suffix.
     setup-options ?= "" ;
     local rewrite = [ feature.get-values <rewrite-setup-scripts> : $(options) ] ;
-    setup = [ maybe-rewrite-setup $(setup:J=" ") : $(setup-options:J=" ") : $(version) : $(rewrite) ] ;
+    setup = [ maybe-rewrite-setup msvc : $(setup:J=" ") : $(setup-options:J=" ") : $(version) : $(rewrite) ] ;
     setup = $(setup-prefix)$(setup)$(setup-suffix) ;
     
     return $(setup) ;
