@@ -40,6 +40,7 @@ import type ;
 
 type.register MANIFEST : manifest ;
 feature.feature embed-manifest : on off : incidental propagated ;
+feature.feature embed-manifest-file : : free dependency ;
 
 type.register PDB : pdb ;
 
@@ -507,7 +508,15 @@ rule link ( targets + : sources * : properties * )
 {
     if <embed-manifest>on in $(properties)
     {
-        msvc.manifest $(targets) : $(sources) : $(properties) ;
+        if [ feature.get-values <embed-manifest-file> : $(properties) ]
+        {
+            DEPENDS $(<) : [ on $(<) return $(EMBED_MANIFEST_FILE) ] ;
+            msvc.manifest.user $(targets) $(EMBED_MANIFEST_FILE) : $(sources) : $(properties) ;
+        }
+        else 
+        {
+            msvc.manifest $(targets) : $(sources) : $(properties) ;
+        }
     }
 }
 
@@ -516,7 +525,15 @@ rule link.dll ( targets + : sources * : properties * )
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
     if <embed-manifest>on in $(properties)
     {
-        msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
+        if [ feature.get-values <embed-manifest-file> : $(properties) ]
+        {
+            DEPENDS $(<) : [ on $(<) return $(EMBED_MANIFEST_FILE) ] ;
+            msvc.manifest.dll.user $(targets) $(EMBED_MANIFEST_FILE) : $(sources) : $(properties) ;
+        }
+        else 
+        {
+            msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
+        }
     }
 }
 
@@ -545,6 +562,11 @@ if [ os.name ] in NT
         )
     }
 
+    actions manifest.user bind EMBED_MANIFEST_FILE
+    {
+        $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);1"
+    }
+
     actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
@@ -556,6 +578,10 @@ if [ os.name ] in NT
         if exist "$(<[1]).manifest" (
             $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
         )
+    }
+    actions manifest.dll.user bind EMBED_MANIFEST_FILE
+    {
+        $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);2"
     }
 }
 else
@@ -582,6 +608,11 @@ else
         if test -e "$(<[1]).manifest"; then
             $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
         fi
+    }
+
+    actions manifest.dll.user bind EMBED_MANIFEST_FILE
+    {
+        $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);2"
     }
 }
 
