@@ -356,11 +356,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         compatibility = vc7.1 ;
     }
 
-    # configure-version-specific chokes now on msvc version 12 it needs 12.0
-    if $(msvc-version) >= 12
-    {
-        msvc-version = "$(msvc-version).0" ;
-    }
+    msvc-version = [ msvc.resolve-possible-msvc-version-alias $(msvc-version) ] ;
     msvc.configure-version-specific intel-win :  $(msvc-version) : $(condition) ;
 }
 

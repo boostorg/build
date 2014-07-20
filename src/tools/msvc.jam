@@ -315,6 +315,15 @@ rule register-toolset ( )
     }
 }
 
+rule resolve-possible-msvc-version-alias ( version )
+{
+    if $(.version-alias-$(version))
+    {
+        version = $(.version-alias-$(version)) ;
+    }
+    return $(version) ;
+}
+
 
 # Declare action for creating static libraries. If library exists, remove it
 # before adding files. See
@@ -832,10 +841,7 @@ local rule configure-really ( version ? : options * )
     }
 
     # Version alias -> real version number.
-    if $(.version-alias-$(version))
-    {
-        version = $(.version-alias-$(version)) ;
-    }
+    version = [ resolve-possible-msvc-version-alias $(version) ] ;
 
     # Check whether the selected configuration is already in use.
     if $(version) in [ $(.versions).used ]
