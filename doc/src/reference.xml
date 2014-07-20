@@ -817,6 +817,26 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
+      <varlistentry><term><literal>embed-manifest-file</literal></term>
+        <listitem>
+
+          <indexterm><primary>manifest file</primary><secondary>embedding</secondary></indexterm>
+          <indexterm><primary>embed-manifest-file</primary></indexterm>
+
+          <para>This feature is specific to the msvc toolset (see
+          <xref linkend="bbv2.reference.tools.compiler.msvc"/>),
+          and controls which manifest files should be embedded inside
+          executables and shared libraries.  This
+          feature corresponds to the IDE option found in the project settings dialog,
+          under <menuchoice><guimenu>Configuration Properties</guimenu> 
+            <guisubmenu>Manifest Tool</guisubmenu>
+            <guisubmenu>Input and Output</guisubmenu>
+            <guimenuitem>Additional Manifest Files</guimenuitem> </menuchoice>.
+          </para>
+
+        </listitem>
+      </varlistentry>
+
 
     </variablelist>
   </section>
