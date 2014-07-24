@@ -347,6 +347,8 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     # happy when compiler produces not the file it was asked for.
     # The option below stops this behaviour.
     toolset.flags intel-win CFLAGS : -Qpchi- ;
+    toolset.flags intel-win.compile CFLAGS <whole-program-optimization>on : /Qipo ;
+    toolset.flags intel-win.link LINKFLAGS <link-time-optimization>on : /qipo ;
 
     if ! $(compatibility)
     {

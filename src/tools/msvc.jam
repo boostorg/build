@@ -276,6 +276,10 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : /MACHINE:ARM ;
 
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<whole-program-optimization>on : /GL ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/<link-time-optimization>on : /LTCG ;
+
+
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
         toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
