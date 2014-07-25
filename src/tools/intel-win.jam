@@ -141,6 +141,7 @@ local rule configure ( version ? : command * : options * )
 
 local rule configure-really ( version ? : command * : options * : compatibility )
 {
+    local rewrite-setupscript = [ feature.get-values <rewrite-setup-scripts> : $(options) ] ;
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
         
@@ -226,7 +227,8 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         local setup-call ;
         if $(major) >= 12
         {
-            setup-call = "call \""$(setup)"\" $(c) $(iclvars_vs_arg) > nul " ;
+            local t = [ msvc.maybe-rewrite-setup intel-win : "\"$(setup)\"" :  "$(c) $(iclvars_vs_arg)" : $(version) : $(rewrite-setupscript) ] ;
+            setup-call = "call $(t) > nul " ;
             cpu-conditions = $(condition)/$(.cpu-arch-$(c)) ;
         }
         else
@@ -354,6 +356,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         compatibility = vc7.1 ;
     }
 
+    msvc-version = [ msvc.resolve-possible-msvc-version-alias $(msvc-version) ] ;
     msvc.configure-version-specific intel-win :  $(msvc-version) : $(condition) ;
 }
 
