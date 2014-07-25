@@ -752,7 +752,7 @@ local rule scan-rule (
         # Scan within this rules scope.
         local scope-level = [ extract-token $(var) ] ;
         local scope-name = $(rule-name) ;
-        while $(scope-level) && $($(var))        
+        while $(scope-level) && $($(var))
         {
             local comment-block = [ extract-comment $(var) ] ;
             local syntax-block = [ extract-syntax $(var) ] ;
