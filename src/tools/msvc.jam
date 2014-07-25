@@ -32,10 +32,15 @@ import os ;
 import path ;
 import pch ;
 import property ;
+import property-set ;
 import rc ;
+import regex ;
+import sequence ;
 import set ;
+import string ;
 import toolset ;
 import type ;
+import utility ;
 
 
 type.register MANIFEST : manifest ;
@@ -298,10 +303,144 @@ rule configure-version-specific ( toolset : version : conditions )
 # Feature for handling targeting different Windows API sets.
 feature.feature windows-api : desktop store phone : propagated composite link-incompatible ;
 feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 
-    <linkflags>/APPCONTAINER ;
+    <linkflags>/APPCONTAINER <preserve-test-targets>off ;
 feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 
-    <linkflags>/APPCONTAINER <linkflags>/NODEFAULTLIB:ole32.lib <linkflags>/NODEFAULTLIB:kernel32.lib <linkflags>WindowsPhoneCore.lib ;
+    <linkflags>/APPCONTAINER <preserve-test-targets>off <testing.execute>off
+    <linkflags>/NODEFAULTLIB:ole32.lib <linkflags>/NODEFAULTLIB:kernel32.lib <linkflags>WindowsPhoneCore.lib ;
 feature.set-default windows-api : desktop ;
+
+
+# Used to strip off APPCONTAINER option from executable and dependent dlls
+# for running Windows Runtime tests. Dlls used in a Windows Store application
+# all have the APPCONTAINER option to indicate they run in the sandboxed environment.
+# Removing the APPCONTAINER requirement allows the tests to execute from the
+# command line.
+#
+# All dlls in the dependency paths are copied into the test's directory to avoid 
+# issues with accidentally stripping APPCONTAINER off of product binaries. 
+# To avoid space issues when running tests, <preserve-test-targets> is set 
+# to off by default removing the copied dlls after execution.
+#
+rule remove-appcontainer-requirement ( target : source : properties * )
+{
+    local dll-extension = [ type.generated-target-suffix SHARED_LIB : [ property-set.create $(properties) ] ] ;
+    dll-extension = [ string.join "*." $(dll-extension) ] ;
+        
+    # Get the msvc setup script.
+    local vcvars-command = "" ;    
+    for local fn in [ modules.peek toolset : .msvc.link.flags ] 
+    { 
+        if $(vcvars-command) = ""
+        {
+            if [ modules.peek toolset : .msvc.link.variable.$(fn) ] = ".LD" 
+            {
+                vcvars-command = [ MATCH "(.*vcvarsall_x86.*>nul)" : [ modules.peek toolset : .msvc.link.values.$(fn) ] ] ;
+            }
+        }                
+    }
+    SETUP_VCVARS on $(target) = $(vcvars-command) ;
+
+    # Get the directory containing the test executable.
+    local exe-full-path = [ path.make [ regex.replace [ regex.replace $(source) "<p" "" ] ">" "\\" ] ] ;
+    local test-dir = [ path.parent $(exe-full-path) ] ;
+            
+    # If using shared libraries, we need to copy all dlls over to test directory, then
+    # strip APPCONTAINER requirement off of each.
+    COPY_DEPENDENT_DLLS on $(target) = ;
+    if [ feature.get-values <link> : $(properties) ] = shared
+    {
+        local dll-paths = [ feature.get-values <dll-path> : $(properties) ] ;
+        dll-paths += [ feature.get-values <xdll-path> : $(properties) ] ;
+        dll-paths = [ sequence.unique $(dll-paths) ] ;
+                
+        for dll-path in $(dll-paths)
+        {
+            local dlls-in-path = [ utility.quote [ path.native [ path.join $(dll-path) $(dll-extension) ] ] ] ;
+            COPY_DEPENDENT_DLLS on $(target) += copy $(dlls-in-path) [ utility.quote [ path.native $(test-dir) ] ] $(.nl) ;
+        }
+    }
+    
+    # Starting with Visual Studio 2013 (toolset 12.0), the CRT is split into a desktop and app version
+    # with the app version having APPCONTAINER set. It needs to be stripped off just like for other
+    # dependent dlls.
+    local toolset-version = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
+    if $(toolset-version) != 11.00
+    {
+        local config = Debug ;
+        if [ feature.get-values <variant> : $(properties) ] = release
+        {
+            config = Retail ;
+        }
+           
+        local arch = x86 ;
+        if [ feature.get-values <address-model> : $(properties) ] = 64
+        {
+             arch = x64 ;
+        }
+        if [ feature.get-values <architecture> : $(properties) ] = arm
+        {
+            arch = ARM ;
+        }
+                
+        # When upgrading to future Windows versions, this will need to be updated.
+        local windows-version = 8.1 ;
+        
+        # Get the location of the vclibs appx package.
+        local vclibs-appx-package = [ string.join [ common.get-program-files-dir ] "\\Microsoft SDKs\\Windows\\v" $(windows-version) "\\ExtensionSDKs\\Microsoft.VCLibs\\" $(toolset-version) "\\AppX\\" $(config) "\\" $(arch) "\\Microsoft.VCLibs." $(arch) ] ;
+        if $(config) = Debug
+        {
+            vclibs-appx-package = [ string.join $(vclibs-appx-package) ".Debug" ] ;
+        }
+        vclibs-appx-package = [ utility.quote [ string.join $(vclibs-appx-package) "." $(toolset-version) "0.appx" ] ] ;
+        
+        # Create a temp directory to unpack the vclibs appx package into.
+        local appx-temp-dir = [ utility.quote [ path.join [ os.environ TEMP ] [ string.join b2_vclibs_appx_ $(toolset-version) _ $(config) _ $(arch) ] ] ] ;
+        MAKE_VCLIBS_APPX_DIR on $(target) = mkdir [ path.native $(appx-temp-dir) ] ;
+        UNPACK_VCLIBS_APPX on $(target) = "makeappx.exe unpack /nv /o /p" $(vclibs-appx-package) "/d" [ path.native $(appx-temp-dir) ] ;
+        
+        # Copy dlls from vclibs appx package into test directory.
+        COPY_VCLIBS_DLLS on $(target) = copy [ path.native [ path.join $(appx-temp-dir) $(dll-extension) ] ] [ utility.quote [ path.native $(test-dir) ] ] ;
+    }
+ 
+    # Create the link edit command to strip APPCONTAINER from all the dlls.
+    local strip-command = link /edit /appcontainer:no ;
+    REMOVE_EXE_APPCONTAINER on $(target) = $(strip-command) [ utility.quote [ path.native $(exe-full-path) ] ] ;
+    REMOVE_DLLS_APPCONTAINER on $(target) = $(strip-command) [ utility.quote [ path.native [ path.join $(test-dir) $(dll-extension) ] ] ] ;
+}
+
+actions ignore quietly remove-appcontainer-requirement
+{
+    $(SETUP_VCVARS)
+    $(COPY_DEPENDENT_DLLS)
+    $(MAKE_VCLIBS_APPX_DIR)
+    $(UNPACK_VCLIBS_APPX)
+    $(COPY_VCLIBS_DLLS)
+    $(REMOVE_EXE_APPCONTAINER)
+    $(REMOVE_DLLS_APPCONTAINER)
+}
+
+
+# Rule to delete dependency dlls copied into test folder, when testing Windows Runtime.
+#
+rule remove-winrt-copied-dlls (  target : source : properties * )
+{
+    RM_COPIED_DLLS on $(target) = "" ;
+    if [ feature.get-values <link> : $(properties) ] = shared || [ feature.get-values <runtime-link> : $(properties) ] = shared
+    {
+        # Get the directory containing the test executable.
+        local exe-full-path = [ path.make [ regex.replace [ regex.replace $(source) "<p" "" ] ">" "\\" ] ] ;
+        local test-dir = [ path.parent $(exe-full-path) ] ;
+            
+        local dll-extension = [ type.generated-target-suffix SHARED_LIB : [ property-set.create $(properties) ] ] ;
+        dll-extension = [ string.join "*." $(dll-extension) ] ;
+        RM_COPIED_DLLS on $(target) = $(.RM) [ utility.quote [ path.native [ path.join $(test-dir) $(dll-extension) ] ] ] ;
+    }
+}
+
+actions ignore quietly remove-winrt-copied-dlls 
+{
+    $(RM_COPIED_DLLS)
+}
 
 
 # Registers this toolset including all of its flags, features & generators. Does
