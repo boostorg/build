@@ -1171,14 +1171,14 @@ using msvc : &toolset_ops; ;
             Starting with version 11.0, Microsoft Visual Studio can
             produce binaries for Windows Store and Phone in addition to 
             traditional Win32 desktop. To specify which Windows API set
-            to target use the <command>windows-api</command> feature.
-            Available options are <command>desktop</command>, 
-            <command>store</command>, or <command>phone</command>. If not
-            specified, <command>desktop</command> will be used.
+            to target, use the <literal>windows-api</literal> feature.
+            Available options are <literal>desktop</literal>,
+            <literal>store</literal>, or <literal>phone</literal>. If not
+            specified, <literal>desktop</literal> will be used.
             </para>
             
             <para>
-            When using <command>store</command> or <command>phone</command>
+            When using <literal>store</literal> or <literal>phone</literal>
             the specified toolset determines what Windows version is 
             targeted. The following options are available:
             </para>
