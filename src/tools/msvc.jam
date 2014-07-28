@@ -276,10 +276,6 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : /MACHINE:ARM ;
 
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/<whole-program-optimization>on : /GL ;
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/<link-time-optimization>on : /LTCG ;
-
-
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
         toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
@@ -1350,6 +1346,8 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile CFLAGS <optimization>speed : /O2 ;
     toolset.flags msvc.compile CFLAGS <optimization>space : /O1 ;
 
+    toolset.flags msvc.compile CFLAGS <whole-program-optimization>on : /GL ;
+
     toolset.flags msvc.compile CFLAGS $(.cpu-arch-ia64)/<instruction-set>$(.cpu-type-itanium) : /G1 ;
     toolset.flags msvc.compile CFLAGS $(.cpu-arch-ia64)/<instruction-set>$(.cpu-type-itanium2) : /G2 ;
 
@@ -1411,6 +1409,8 @@ local rule register-toolset-really ( )
         # The linker disables the default optimizations when using /DEBUG so we
         # have to enable them manually for release builds with debug symbols.
         toolset.flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : /OPT:REF,ICF ;
+        
+        toolset.flags msvc.link LINKFLAGS <link-time-optimization>on : /LTCG ;
 
         toolset.flags msvc LINKFLAGS <user-interface>console : /subsystem:console ;
         toolset.flags msvc LINKFLAGS <user-interface>gui : /subsystem:windows ;

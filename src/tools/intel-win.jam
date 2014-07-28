@@ -20,7 +20,7 @@ import path ;
 feature.extend-subfeature toolset intel : platform : win ;
 
 toolset.inherit-generators intel-win <toolset>intel <toolset-intel:platform>win : msvc ;
-toolset.inherit-flags intel-win : msvc : : YLOPTION ;
+toolset.inherit-flags intel-win : msvc : <whole-program-optimization>on <link-time-optimization>on : YLOPTION  ;
 toolset.inherit-rules intel-win : msvc ;
 
 # Override default do-nothing generators.
