@@ -790,12 +790,16 @@ rule init-link-flags ( toolset linker condition )
         # searched during load-time. Note that the AIX linker does not have an
         # -soname equivalent, this is as close as it gets.
         #
+        # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
+        # This is neccesary for some submodules such as math, but it does make running
+        # the tests a tad slower.
+        #
         # The above options are definately for AIX 5.x, and most likely also for
         # AIX 4.x and AIX 6.x. For details about the AIX linker see:
         # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
         #
 
-        toolset.flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath
+        toolset.flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc
             : unchecked ;
 
     case darwin :
@@ -1182,4 +1186,4 @@ cpu-flags gcc OPTIONS : power : rios2 : -mcpu=rios2 ;
 cpu-flags gcc OPTIONS : power : rsc : -mcpu=rsc ;
 cpu-flags gcc OPTIONS : power : rs64a : -mcpu=rs64 ;
 # AIX variant of RS/6000 & PowerPC
-toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X 64" ;
+toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;
