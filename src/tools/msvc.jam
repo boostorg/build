@@ -1306,7 +1306,10 @@ local rule register-toolset-really ( )
             OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ] ;
         generators.register [ new msvc-linking-generator msvc.link.dll :
             OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB :
-            <toolset>msvc ] ;
+            <toolset>msvc <suppress-import-lib>false ] ;
+        generators.register [ new msvc-linking-generator msvc.link.dll :
+            OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB :
+            <toolset>msvc <suppress-import-lib>true ] ;
 
         generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
