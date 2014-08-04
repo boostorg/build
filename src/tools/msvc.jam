@@ -1343,7 +1343,10 @@ local rule register-toolset-really ( )
             OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>msvc ] ;
         generators.register [ new msvc-linking-generator msvc.link.dll :
             OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB :
-            <toolset>msvc ] ;
+            <toolset>msvc <suppress-import-lib>false ] ;
+        generators.register [ new msvc-linking-generator msvc.link.dll :
+            OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB :
+            <toolset>msvc <suppress-import-lib>true ] ;
 
         generators.register-archiver msvc.archive : OBJ : STATIC_LIB : <toolset>msvc ;
         generators.register-c-compiler msvc.compile.c++ : CPP : OBJ : <toolset>msvc ;
@@ -1458,6 +1461,8 @@ local rule register-toolset-really ( )
         toolset.flags msvc.link FINDLIBS_SA <find-shared-library> ;
         toolset.flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
         toolset.flags msvc.link LIBRARIES_MENTIONED_BY_FILE : <library-file> ;
+        
+        toolset.flags msvc.link.dll LINKFLAGS <suppress-import-lib>true : /NOENTRY ;
     }
 
     toolset.flags msvc.archive AROPTIONS <archiveflags> ;
