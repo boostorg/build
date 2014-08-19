@@ -191,6 +191,9 @@ rule link.dll ( targets * : sources * : properties * ) {
 
 rule setup-threading ( targets * : sources * : properties * )
 {
+
+    local target = [ feature.get-values target-os : $(properties) ] ;
+        
     switch $(target)
     {
         case windows : 
