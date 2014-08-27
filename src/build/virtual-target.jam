@@ -1088,15 +1088,19 @@ rule register-actual-name ( actual-name : virtual-target )
             properties-added = [ set.difference $(p2) : $(p1) ] ;
             properties-added ?= "none" ;
         }
-        import errors : error : errors.error ;
-        errors.error "Duplicate name of actual target:" $(actual-name)
-            : "previous virtual target" [ $(.actual.$(actual-name)).str ]
-            : "created from"            $(cmt1-name)
-            : "another virtual target"  [ $(virtual-target).str ]
-            : "created from"            $(cmt2-name)
-            : "added properties:"       $(properties-added)
-            : "removed properties:"     $(properties-removed)
-            : $(extra-error-information) ;
+        import errors : user-error : errors.user-error ;
+        errors.user-error "Name clash for '$(actual-name)'"
+            : ""
+            : "Tried to build the target twice, with property sets having "
+            : "these incompabile properties:"
+            : ""
+            : "    - " $(properties-removed)
+            : "    - " $(properties-added)
+            : ""
+            : "Please make sure to have consistent requirements for these "
+            : "properties everywhere in your project, especially for install"
+            : "targets."
+            ;
     }
     else
     {
