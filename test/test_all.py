@@ -124,6 +124,9 @@ def run_tests(critical_tests, other_tests):
         FAIL: %d
         """ % (pass_count, failures_count)
 
+    # exit with failure with failures
+    if failures_count > 0:
+        sys.exit(1)
 
 def last_failed_test():
     "Returns the name of the last failed test or None."
