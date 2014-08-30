@@ -246,13 +246,18 @@ class Tester(TestCmd.TestCmd):
                     cpu = os.uname()[4]
                     if re.match("i.86", cpu):
                         jam_build_dir = "bin.linuxx86"
+                    elif cpu == "x86_64":
+                        jam_build_dir = "bin.linuxx86_64"
                     else:
                         jam_build_dir = "bin.linux" + os.uname()[4]
                 elif os.uname()[0] == "SunOS":
                     jam_build_dir = "bin.solaris"
                 elif os.uname()[0] == "Darwin":
-                    if os.uname()[4] == "i386":
+                    cpu = os.uname()[4]
+                    if re.match("i.86", cpu):
                         jam_build_dir = "bin.macosxx86"
+                    elif cpu == "x86_64":
+                        jam_build_dir = "bin.macosxx86_64"
                     else:
                         jam_build_dir = "bin.macosxppc"
                 elif os.uname()[0] == "AIX":
