@@ -173,6 +173,7 @@ def check_init_parameters(toolset, requirement, *args):
 
         The return value from this rule is a condition to be used for flags settings.
     """
+    from b2.build import toolset as b2_toolset
     # The type checking here is my best guess about
     # what the types should be.
     assert(isinstance(toolset, str))
@@ -233,6 +234,11 @@ def check_init_parameters(toolset, requirement, *args):
         
         sig = sig + value + '-'
 
+    # if a requirement is specified, the signature should be unique
+    # with that requirement
+    if requirement:
+        sig += '-' + requirement
+
     if __all_signatures.has_key(sig):
         message = "duplicate initialization of '%s' with the following parameters: " % toolset
         
@@ -255,7 +261,7 @@ def check_init_parameters(toolset, requirement, *args):
     if requirement:
         r = ['<toolset>' + toolset, requirement]
         r = ','.join(r)
-        toolset.add_requirements([r + ':' + c for c in subcondition])
+        b2_toolset.add_requirements([r + ':' + c for c in subcondition])
 
     # We add the requirements, if any, to the condition to scope the toolset
     # variables and options to this specific version.
