@@ -115,7 +115,10 @@ def init(version = None, command = None, options = None):
     command = to_seq(command)
     
     if command:
-        options.extend("<command>"+cmd for cmd in command)
+        if isinstance(command, str):
+            options.append('<command>' + command)
+        else:
+            options.extend("<command>"+cmd for cmd in command)
     configure(version,options)
 
 def configure(version=None, options=None):
