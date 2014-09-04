@@ -5,6 +5,9 @@
 
 import re
 
+from b2.util import bjam_signature
+
+
 def transform (list, pattern, indices = [1]):
     """ Matches all elements of 'list' agains the 'pattern' 
         and returns a list of the elements indicated by indices of 
@@ -23,3 +26,12 @@ def transform (list, pattern, indices = [1]):
 
     return result
 
+
+@bjam_signature((['s', 'match', 'replacement']))
+def replace(s, match, replacement):
+    return s.replace(match, replacement)
+
+
+@bjam_signature((['items', '*'], ['match'], ['replacement']))
+def replace_list(items, match, replacement):
+    return [replace(item, match, replacement) for item in items]
