@@ -418,7 +418,11 @@ def programs_path ():
     for elem in raw:
         if elem:
             for p in elem.split(os.path.pathsep):
-                result.append(make(p))
+                # it's possible that the user's Path has
+                # double path separators, thus it is possible
+                # for p to be an empty string.
+                if p:
+                    result.append(make(p))
 
     return result
 
