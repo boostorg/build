@@ -14,11 +14,11 @@ import b2.util
 
 class BjamAction:
     """Class representing bjam action defined from Python."""
-    
+
     def __init__(self, action_name, function):
         self.action_name = action_name
         self.function = function
-            
+
     def __call__(self, targets, sources, property_set):
 
         # Bjam actions defined from Python have only the command
@@ -35,21 +35,21 @@ class BjamNativeAction:
     We still allow to associate a Python callable that will
     be called when this action is installed on any target.
     """
-    
+
     def __init__(self, action_name, function):
         self.action_name = action_name
         self.function = function
-        
+
     def __call__(self, targets, sources, property_set):
         if self.function:
             self.function(targets, sources, property_set)
-        
+
         p = []
         if property_set:
             p = property_set.raw()
 
         b2.util.set_jam_action(self.action_name, targets, sources, p)
-        
+
 action_modifiers = {"updated": 0x01,
                     "together": 0x02,
                     "ignore": 0x04,
@@ -81,7 +81,32 @@ class Engine:
         for target in targets:
             for source in sources:
                 self.do_add_dependency (target, source)
-    
+
+    def get_target_variable(self, targets, variable):
+        """Gets the value of `variable` on set on the first target in `targets`.
+
+        Args:
+            targets (str or list): one or more targets to get the variable from.
+            variable (str): the name of the variable
+
+        Returns:
+             the value of `variable` set on `targets` (list)
+
+        Example:
+
+            >>> ENGINE = get_manager().engine()
+            >>> ENGINE.set_target_variable(targets, 'MY-VAR', 'Hello World')
+            >>> ENGINE.get_target_variable(targets, 'MY-VAR')
+            ['Hello World']
+
+        Equivalent Jam code:
+
+            MY-VAR on $(targets) = "Hello World" ;
+            echo [ on $(targets) return $(MY-VAR) ] ;
+            "Hello World"
+        """
+        return bjam_interface.call('get-target-variable', targets, variable)
+
     def set_target_variable (self, targets, variable, value, append=0):
         """ Sets a target variable.
 
@@ -89,7 +114,7 @@ class Engine:
         where to generate targets, and will also be available to
         updating rule for that 'taret'.
         """
-        if isinstance (targets, str): 
+        if isinstance (targets, str):
             targets = [targets]
 
         for target in targets:
@@ -104,7 +129,7 @@ class Engine:
             method.
         """
         assert(isinstance(properties, property_set.PropertySet))
-        if isinstance (targets, str): 
+        if isinstance (targets, str):
             targets = [targets]
         self.do_set_update_action (action_name, targets, sources, properties)
 
@@ -155,7 +180,7 @@ class Engine:
         # action is already registered.
         if not self.actions.has_key(action_name):
             self.actions[action_name] = BjamNativeAction(action_name, function)
-    
+
     # Overridables
 
 
@@ -170,8 +195,8 @@ class Engine:
             bjam_interface.call("set-target-variable", target, variable, value, "true")
         else:
             bjam_interface.call("set-target-variable", target, variable, value)
-        
+
     def do_add_dependency (self, target, source):
         bjam_interface.call("DEPENDS", target, source)
-         
-        
+
+
