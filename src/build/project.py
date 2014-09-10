@@ -662,22 +662,31 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         if existing:
             return existing
 
-        # check the extra path first and load the
-        # module if it exists
-        location = None
-        for p in extra_path:
-            l = os.path.join(p, name + ".py")
-            if os.path.exists(l):
-                location = l
-                break
-        mname = name + "__for_jamfile"
-        if location:
-            with open(location) as f:
-                self.loaded_tool_module_path_[mname] = location
-                module = imp.load_module(mname, f, location,
-                                         (".py", "r", imp.PY_SOURCE))
-                self.loaded_tool_modules_[name] = module
-                return module
+        # check the extra path as well as any paths outside
+        # of the b2 package and import the  module if it exists
+        b2_path = os.path.normpath(b2.__path__[0])
+        # normalize the pathing in the BOOST_BUILD_PATH.
+        # this allows for using startswith() to determine
+        # if a path is a subdirectory of the b2 root_path
+        paths = [os.path.normpath(p) for p in self.manager.boost_build_path()]
+        # remove all paths that start with b2's root_path
+        paths = [p for p in paths if not p.startswith(b2_path)]
+        # add any extra paths
+        paths.extend(extra_path)
+
+        try:
+            # find_module is used so that the pyc's can be used.
+            # an ImportError is raised if not found
+            f, location, description = imp.find_module(name, paths)
+            mname = name + "__for_jamfile"
+            self.loaded_tool_module_path_[mname] = location
+            module = imp.load_module(mname, f, location, description)
+            self.loaded_tool_modules_[name] = module
+            return module
+        except ImportError:
+            # if the module is not found in the b2 package,
+            # this error will be handled later
+            pass
 
         # the cache is created here due to possibly importing packages
         # that end up calling get_manager() which might fail
@@ -685,7 +694,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             self.__build_python_module_cache()
 
         underscore_name = name.replace('-', '_')
-        # check to see if the module is within the BOOST_BUILD_PATH
+        # check to see if the module is within the b2 package
         # and already loaded
         mname = self.__python_module_cache.get(underscore_name)
         if mname in sys.modules:
