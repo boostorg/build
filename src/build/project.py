@@ -529,7 +529,6 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
     def attribute(self, project, attribute):
         """Returns the value of the specified attribute in the
         specified jamfile module."""
-        return self.module2attributes[project].get(attribute)
         try:
             return self.module2attributes[project].get(attribute)
         except:
