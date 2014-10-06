@@ -9,7 +9,7 @@
 import hashlib
 
 from b2.util.utility import *
-import property, feature, string
+import property, feature
 import b2.build.feature
 from b2.exceptions import *
 from b2.util.sequence import unique
