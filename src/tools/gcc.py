@@ -839,4 +839,4 @@ cpu_flags('gcc', 'OPTIONS', 'power', 'rs64a', ['-mcpu=rs64'])
 # AIX variant of RS/6000 & PowerPC
 flags('gcc', 'OPTIONS', ['<architecture>power/<address-model>32/<target-os>aix'], ['-maix32'])
 flags('gcc', 'OPTIONS', ['<architecture>power/<address-model>64/<target-os>aix'], ['-maix64'])
-flags('gcc', 'AROPTIONS', ['<architecture>power/<address-model>64/<target-os>aix'], ['-X 64'])
+flags('gcc', 'AROPTIONS', ['<architecture>power/<address-model>64/<target-os>aix'], ['-X64'])
