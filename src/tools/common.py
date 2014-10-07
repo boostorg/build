@@ -174,14 +174,17 @@ def check_init_parameters(toolset, requirement, *args):
         The return value from this rule is a condition to be used for flags settings.
     """
     from b2.build import toolset as b2_toolset
+    if requirement is None:
+        requirement = []
     # The type checking here is my best guess about
     # what the types should be.
     assert(isinstance(toolset, str))
-    assert(isinstance(requirement, str) or requirement is None)
+    # iterable and not a string, allows for future support of sets
+    assert(not isinstance(requirement, basestring) and hasattr(requirement, '__contains__'))
     sig = toolset
     condition = replace_grist(toolset, '<toolset>')
     subcondition = []
-    
+
     for arg in args:
         assert(isinstance(arg, tuple))
         assert(len(arg) == 2)
@@ -237,7 +240,7 @@ def check_init_parameters(toolset, requirement, *args):
     # if a requirement is specified, the signature should be unique
     # with that requirement
     if requirement:
-        sig += '-' + requirement
+        sig += '-' + '-'.join(requirement)
 
     if __all_signatures.has_key(sig):
         message = "duplicate initialization of '%s' with the following parameters: " % toolset
@@ -259,7 +262,7 @@ def check_init_parameters(toolset, requirement, *args):
     # condition. To accomplish this we add a toolset requirement that imposes
     # the toolset subcondition, which encodes the version.
     if requirement:
-        r = ['<toolset>' + toolset, requirement]
+        r = ['<toolset>' + toolset] + requirement
         r = ','.join(r)
         b2_toolset.add_requirements([r + ':' + c for c in subcondition])
 
@@ -267,7 +270,7 @@ def check_init_parameters(toolset, requirement, *args):
     # variables and options to this specific version.
     condition = [condition]
     if requirement:
-        condition += [requirement]
+        condition += requirement
 
     if __show_configuration:
         print "notice:", condition
