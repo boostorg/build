@@ -1092,7 +1092,7 @@ rule register-actual-name ( actual-name : virtual-target )
         errors.user-error "Name clash for '$(actual-name)'"
             : ""
             : "Tried to build the target twice, with property sets having "
-            : "these incompabile properties:"
+            : "these incompatible properties:"
             : ""
             : "    - " $(properties-removed)
             : "    - " $(properties-added)
