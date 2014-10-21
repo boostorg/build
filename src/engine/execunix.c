@@ -448,10 +448,17 @@ void exec_wait()
 
         /* select() will wait for I/O on a descriptor, a signal, or timeout. */
         {
+            /* disable child termination signals while in select */
             int ret;
+            sigset_t sigmask;
+            sigemptyset(&sigmask);
+            sigaddset(&sigmask, SIGCHLD);
+            sigprocmask(SIG_BLOCK, &sigmask, NULL);
             while ( ( ret = select( fd_max + 1, &fds, 0, 0, ptv ) ) == -1 )
                 if ( errno != EINTR )
                     break;
+            /* restore original signal mask by unblocking sigchld */
+            sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
             if ( ret <= 0 )
                 continue;
         }
