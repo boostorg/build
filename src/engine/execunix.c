@@ -236,7 +236,10 @@ void exec_cmd
             r_limit.rlim_max = globs.timeout;
             setrlimit( RLIMIT_CPU, &r_limit );
         }
-        setpgid( pid, pid );
+        if (0 != setpgid( pid, pid )) {
+            perror("setpgid(child)");
+            exit( EXITBAD );
+        }
         execvp( argv[ 0 ], (char * *)argv );
         perror( "execvp" );
         _exit( 127 );
@@ -245,7 +248,10 @@ void exec_cmd
     /******************/
     /* Parent process */
     /******************/
-    setpgid( cmdtab[ slot ].pid, cmdtab[ slot ].pid );
+    if (0 != setpgid(cmdtab[ slot ].pid, cmdtab[ slot ].pid)) {
+        perror("setpgid (parent)");
+        exit( EXITBAD );
+    }
 
     /* Parent not need the write pipe ends used by the child. */
     close( out[ EXECCMD_PIPE_WRITE ] );
