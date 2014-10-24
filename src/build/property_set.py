@@ -41,7 +41,7 @@ def create (raw_properties = []):
     else:
         x = [property.create_from_string(ps) for ps in raw_properties]
     x.sort()
-    x = unique (x)
+    x = unique(x, stable=True)
 
     # FIXME: can we do better, e.g. by directly computing
     # hash value of the list?
