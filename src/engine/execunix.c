@@ -238,7 +238,7 @@ void exec_cmd
         }
         if (0 != setpgid( pid, pid )) {
             perror("setpgid(child)");
-            exit( EXITBAD );
+            /* exit( EXITBAD ); */
         }
         execvp( argv[ 0 ], (char * *)argv );
         perror( "execvp" );
@@ -250,7 +250,7 @@ void exec_cmd
     /******************/
     if (0 != setpgid(cmdtab[ slot ].pid, cmdtab[ slot ].pid)) {
         perror("setpgid (parent)");
-        exit( EXITBAD );
+        /* exit( EXITBAD ); */
     }
 
     /* Parent not need the write pipe ends used by the child. */
