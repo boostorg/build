@@ -73,7 +73,7 @@ static struct tms old_time;
 #define OUT 0
 #define ERR 1
 
-static struct
+typedef struct
 {
     int          pid;            /* on win32, a real process handle */
     int          fd[ 2 ];        /* file descriptors for stdout and stderr */
@@ -89,7 +89,9 @@ static struct
 
     /* Opaque data passed back to the 'func' callback. */
     void * closure;
-} cmdtab[ MAXJOBS ] = { { 0 } };
+} cmd;
+
+static cmd cmdtab[ MAXJOBS ] = { { 0 } };
 
 
 /*
@@ -397,6 +399,21 @@ static int populate_file_descriptors( fd_set * const fds )
     return fd_max;
 }
 
+/*
+ * Tell the tasks to continue, just in case someone told them to pause.
+ */
+void wakeup_tasks(cmd const* tasks, int nb) {
+    cmd const* c;
+    errno = 0;
+    for ( c = tasks; c < (tasks + nb); ++c) {
+        if ( c->pid != 0 ) {
+            if ( kill(c->pid, SIGCONT) != 0 ) {
+                fprintf(stderr, "wake up task %d: %s\n", 
+                        c->pid, strerror(errno));
+            }
+        }
+    }
+}
 
 /*
  * exec_wait() - wait for any of the async command processes to terminate.
@@ -420,7 +437,9 @@ void exec_wait()
         /* Prepare file descriptor information for use in select(). */
         fd_set fds;
         int const fd_max = populate_file_descriptors( &fds );
-
+        
+        /* if paused, will hang on select */
+        wakeup_tasks(cmdtab, globs.jobs);
         /* Check for timeouts:
          *   - kill children that already timed out
          *   - decide how long until the next one times out
