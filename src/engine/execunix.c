@@ -13,6 +13,7 @@
 #include "strings.h"
 
 #include <errno.h>
+#include <assert.h>
 #include <signal.h>
 #include <stdio.h>
 #include <time.h>
@@ -405,11 +406,31 @@ static int populate_file_descriptors( fd_set * const fds )
 void wakeup_tasks(cmd const* tasks, int nb) {
     cmd const* c;
     errno = 0;
-    for ( c = tasks; c < (tasks + nb); ++c) {
+    for ( c = tasks; c != (tasks + nb); ++c) {
         if ( c->pid != 0 ) {
-            if ( kill(c->pid, SIGCONT) != 0 ) {
+            if ( killpg(c->pid, SIGCONT) != 0 ) {
                 fprintf(stderr, "wake up task %d: %s\n", 
                         c->pid, strerror(errno));
+            }
+        }
+    }
+}
+
+/*
+ *   - kill children that already timed out
+ */
+void kill_timed_out_tasks(cmd* tasks, int nb, long max_time) {
+    if ( max_time > 0 ) {
+        struct tms buf;
+        cmd* c;
+        clock_t const current = times( &buf );
+        for ( c = tasks; c != (tasks + nb); ++c) {
+            if ( c->pid != 0 ) {
+                clock_t const consumed = ( current - c->start_time ) / tps;
+                if ( consumed >= max_time ) {
+                    killpg( c->pid, SIGKILL );
+                    c->exit_reason = EXIT_TIMEOUT;
+                }
             }
         }
     }
@@ -430,62 +451,41 @@ void exec_wait()
     while ( !finished )
     {
         int i;
-        struct timeval tv;
-        struct timeval * ptv = NULL;
-        int select_timeout = globs.timeout;
-
         /* Prepare file descriptor information for use in select(). */
         fd_set fds;
+        int nbfd;
+
         int const fd_max = populate_file_descriptors( &fds );
+        kill_timed_out_tasks(cmdtab, globs.jobs, globs.timeout);
         
-        /* if paused, will hang on select */
-        wakeup_tasks(cmdtab, globs.jobs);
-        /* Check for timeouts:
-         *   - kill children that already timed out
-         *   - decide how long until the next one times out
-         */
-        if ( globs.timeout > 0 )
-        {
-            struct tms buf;
-            clock_t const current = times( &buf );
-            for ( i = 0; i < globs.jobs; ++i )
-                if ( cmdtab[ i ].pid )
-                {
-                    clock_t const consumed =
-                        ( current - cmdtab[ i ].start_time ) / tps;
-                    if ( consumed >= globs.timeout )
-                    {
-                        killpg( cmdtab[ i ].pid, SIGKILL );
-                        cmdtab[ i ].exit_reason = EXIT_TIMEOUT;
-                    }
-                    else if ( globs.timeout - consumed < select_timeout )
-                        select_timeout = globs.timeout - consumed;
-                }
-
-            /* If nothing else causes our select() call to exit, force it after
-             * however long it takes for the next one of our child processes to
-             * crossed its alloted processing time so we can terminate it.
-             */
-            tv.tv_sec = select_timeout;
-            tv.tv_usec = 0;
-            ptv = &tv;
-        }
-
         /* select() will wait for I/O on a descriptor, a signal, or timeout. */
         {
             /* disable child termination signals while in select */
-            int ret;
+            struct timeval pool = { 0, 0 };
             sigset_t sigmask;
             sigemptyset(&sigmask);
             sigaddset(&sigmask, SIGCHLD);
             sigprocmask(SIG_BLOCK, &sigmask, NULL);
-            while ( ( ret = select( fd_max + 1, &fds, 0, 0, ptv ) ) == -1 )
-                if ( errno != EINTR )
+            wakeup_tasks(cmdtab, globs.jobs);
+            errno = 0;
+            while ( ( nbfd = select( fd_max + 1, &fds, 0, 0, &pool ) ) == -1 ) {
+                if ( errno != EINTR ) {
                     break;
+                } else {
+                    static int last = 0;
+                    if (errno != last) {
+                        perror("exec_wait/select");
+                        last = errno;
+                    } 
+                }
+            }
             /* restore original signal mask by unblocking sigchld */
             sigprocmask(SIG_UNBLOCK, &sigmask, NULL);
-            if ( ret <= 0 )
-                continue;
+        }
+        assert(nbfd >= 0); /* otherwise, fds could be screwed */
+        if ( nbfd == 0 ) {
+            /* No file touched, re-scan */
+            continue;
         }
 
         for ( i = 0; i < globs.jobs; ++i )
