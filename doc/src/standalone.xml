@@ -23,7 +23,7 @@
     </legalnotice>  
   </bookinfo>
 
-  <title>Boost.Build V2 User Manual</title>
+  <title>Boost.Build User Manual</title>
 
   <!-- Chapters -->
   <xi:include href="howto.xml"/>

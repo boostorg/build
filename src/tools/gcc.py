@@ -176,6 +176,13 @@ def init(version = None, command = None, options = None):
     if debug():
         print 'notice: using gcc archiver ::', condition, '::', archiver
 
+    # - Ranlib
+    ranlib = common.get_invocation_command('gcc',
+            'ranlib', feature.get_values('<ranlib>', options), [bin], path_last=True)
+    toolset.flags('gcc.archive', '.RANLIB', condition, [ranlib])
+    if debug():
+        print 'notice: using gcc archiver ::', condition, '::', ranlib
+
     # - The resource compiler.
     rc_command = common.get_invocation_command_nodefault('gcc',
             'windres', feature.get_values('<rc>', options), [bin], path_last=True)
@@ -639,7 +646,9 @@ def gcc_archive(targets, sources, properties):
 # The letter 'c' suppresses the warning in case the archive does not exists yet.
 # That warning is produced only on some platforms, for whatever reasons.
 engine.register_action('gcc.archive',
-                       '"$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"',
+                       '''"$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
+                       "$(.RANLIB)" "$(<)"
+                       ''',
                        function=gcc_archive,
                        flags=['piecemeal'])
 
