@@ -529,7 +529,6 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
     def attribute(self, project, attribute):
         """Returns the value of the specified attribute in the
         specified jamfile module."""
-        return self.module2attributes[project].get(attribute)
         try:
             return self.module2attributes[project].get(attribute)
         except:
@@ -708,6 +707,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             __import__(mname)
             module = sys.modules[mname]
             self.loaded_tool_modules_[name] = module
+            self.loaded_tool_module_path_[mname] = module.__file__
             return module
 
         self.manager.errors()("Cannot find module '%s'" % name)
