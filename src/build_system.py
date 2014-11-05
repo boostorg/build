@@ -455,7 +455,7 @@ def main_real():
     import b2.build.configure as configure
 
     if "--version" in sys.argv:
-
+        from b2.build import version
         version.report()
         return
 
