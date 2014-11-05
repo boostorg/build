@@ -62,9 +62,9 @@ class Property(object):
         return hash((self._feature, self._value, tuple(self._condition)))
 
     def __cmp__(self, other):
-        return cmp((self._feature, self._value, self._condition),
-                   (other._feature, other._value, other._condition))
-                           
+        return cmp((self._feature.name(), self._value, self._condition),
+                   (other._feature.name(), other._value, other._condition))
+
 
 def create_from_string(s, allow_condition=False,allow_missing_value=False):
 
