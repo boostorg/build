@@ -1,4 +1,4 @@
-# Status: ported, except for tests and --abbreviate-paths.
+# Status: ported, except for tests.
 # Base revision: 64070
 #
 # Copyright 2001, 2002, 2003 Dave Abrahams 
@@ -8,6 +8,7 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 import re
+import sys
 from b2.util.utility import *
 from b2.build import feature
 from b2.util import sequence, qualify_jam_action
@@ -24,6 +25,8 @@ __re_separate_condition_and_property = re.compile (r'(.*):(<.*)')
 
 __not_applicable_feature='not-applicable-in-this-context'
 feature.feature(__not_applicable_feature, [], ['free'])
+
+__abbreviated_paths = False
 
 class Property(object):
 
@@ -130,10 +133,19 @@ def reset ():
 
     # A cache of results from as_path
     __results = {}
-    
+
 reset ()
 
-        
+
+def set_abbreviated_paths(on=True):
+    global __abbreviated_paths
+    __abbreviated_paths = on
+
+
+def get_abbreviated_paths():
+    return __abbreviated_paths or '--abbreviated-paths' in sys.argv
+
+
 def path_order (x, y):
     """ Helper for as_path, below. Orders properties with the implicit ones
         first, and within the two sections in alphabetical order of feature

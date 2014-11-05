@@ -12,9 +12,10 @@ from b2.util.utility import *
 import property, feature
 import b2.build.feature
 from b2.exceptions import *
+from b2.build.property import get_abbreviated_paths
 from b2.util.sequence import unique
 from b2.util.set import difference
-from b2.util import cached
+from b2.util import cached, abbreviate_dashed
 
 from b2.manager import get_manager
 
@@ -350,7 +351,10 @@ class PropertySet:
                 if p.feature().implicit():
                     components.append(p.value())
                 else:
-                    components.append(p.feature().name() + "-" + p.value())
+                    value = p.feature().name() + "-" + p.value()
+                    if property.get_abbreviated_paths():
+                        value = abbreviate_dashed(value)
+                    components.append(value)
 
             self.as_path_ = '/'.join (components)
 
