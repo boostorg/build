@@ -804,7 +804,7 @@ def main_real():
 
     j = option.get("jobs")
     if j:
-        bjam.call("set-variable", PARALLELISM, j)
+        bjam.call("set-variable", 'PARALLELISM', j)
 
     k = option.get("keep-going", "true", "true")
     if k in ["on", "yes", "true"]:
