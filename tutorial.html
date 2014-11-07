@@ -103,19 +103,19 @@
     <hr>
 
     <h2 id="buildprocess">Build process<br>
-      <small>Jamfiles and an interpreter called bjam</small>
+      <small>Jamfiles and an interpreter called b2</small>
     </h2>
 
     <div>
 
       <p>The program you use to build a project managed by Boost.Build is
-      called <span class="command"><strong>bjam</strong></span>. If you
+      called <span class="command"><strong>b2</strong></span>. If you
       downloaded and built the Boost C++ libraries you have used <span class=
-      "command"><strong>bjam</strong></span> already. <span class=
-      "command"><strong>bjam</strong></span> looks for configuration files,
+      "command"><strong>b2</strong></span> already. <span class=
+      "command"><strong>b2</strong></span> looks for configuration files,
       reads them and builds a project accordingly. It also accepts various
       command line options which can be useful for example to show all
-      commands executed by <span class="command"><strong>bjam</strong></span>
+      commands executed by <span class="command"><strong>b2</strong></span>
       to build a project.</p>
 
       <p>Projects can be large and can consist of many components whose
@@ -124,7 +124,7 @@
       get their own configuration files. This is no different with
       Boost.Build: In a large project there will be many configuration files
       which have to be found and interpreted by <span class=
-      "command"><strong>bjam</strong></span>.</p>
+      "command"><strong>b2</strong></span>.</p>
 
       <p>For Boost.Build every directory with a configuration file is a
       project: If there is a configuration file in a directory something can
@@ -132,36 +132,36 @@
       consisting of many components doesn't make a difference for
       Boost.Build.</p>
 
-      <p>When <span class="command"><strong>bjam</strong></span> is started
+      <p>When <span class="command"><strong>b2</strong></span> is started
       it doesn't run a search for configuration files on the entire file
       system. It searches for a configuration file in the current working
       directory only. If it doesn't find a configuration file it doesn't do
-      anything. <span class="command"><strong>bjam</strong></span> does not
+      anything. <span class="command"><strong>b2</strong></span> does not
       search for configuration files in any other directory if there is no
       configuration file in the current working directory.</p>
 
       <p>The configuration file <span class=
-      "command"><strong>bjam</strong></span> is looking for is called
+      "command"><strong>b2</strong></span> is looking for is called
       <code class="filename">Jamfile.jam</code>. Files with the extension
       <code class="filename">jam</code> are called Jamfiles. If <span class=
-      "command"><strong>bjam</strong></span> finds a Jamfile in the current
+      "command"><strong>b2</strong></span> finds a Jamfile in the current
       working directory it searches for more Jamfiles in parent directories.
-      <span class="command"><strong>bjam</strong></span> climbs up parent
+      <span class="command"><strong>b2</strong></span> climbs up parent
       directories until it finds a configuration file called <code class=
       "filename">Jamroot.jam</code>. <code class=
       "filename">Jamroot.jam</code> is no different from <code class=
       "filename">Jamfile.jam</code>. It only indicates that <span class=
-      "command"><strong>bjam</strong></span> doesn't need to look
+      "command"><strong>b2</strong></span> doesn't need to look
       further.</p>
 
-      <p>The reason why <span class="command"><strong>bjam</strong></span>
+      <p>The reason why <span class="command"><strong>b2</strong></span>
       looks for Jamfiles in parent directories is that it makes it possible
       to group settings. If there are some components which should be built
       with similar settings they can be stored in a Jamfile in a parent
       directory which will be automatically used if a component in a
       subdirectory is built.</p>
 
-      <p>Please note that <span class="command"><strong>bjam</strong></span>
+      <p>Please note that <span class="command"><strong>b2</strong></span>
       must find a file called <code class="filename">Jamroot.jam</code>. It
       is an error if no <code class="filename">Jamroot.jam</code> exists. If
       <code class="filename">Jamroot.jam</code> is in the current working
@@ -169,12 +169,12 @@
       required. If <code class="filename">Jamroot.jam</code> is in a parent
       directory a file <code class="filename">Jamfile.jam</code> must exist
       in the current working directory - otherwise <span class=
-      "command"><strong>bjam</strong></span> doesn't do anything.</p>
+      "command"><strong>b2</strong></span> doesn't do anything.</p>
 
-      <p>If you copy <span class="command"><strong>bjam</strong></span> to a
+      <p>If you copy <span class="command"><strong>b2</strong></span> to a
       directory which contains no Jamfiles and start the program you get an
       error message. However <span class=
-      "command"><strong>bjam</strong></span> doesn't complain that it can't
+      "command"><strong>b2</strong></span> doesn't complain that it can't
       find a Jamfile. It complains about not finding the build system.</p>
       <pre class="screen">
 Unable to load Boost.Build: could not find "boost-build.jam"
@@ -184,24 +184,24 @@ Attempted search from C:\Users\Boris\Desktop up to the root
 Please consult the documentation at 'http://www.boost.org'.
 </pre>
 
-      <p>The first thing <span class="command"><strong>bjam</strong></span>
+      <p>The first thing <span class="command"><strong>b2</strong></span>
       does is not looking for a Jamfile but loading the build system. But
       what exactly is the build system?</p>
 
-      <p><span class="command"><strong>bjam</strong></span> is an
+      <p><span class="command"><strong>b2</strong></span> is an
       interpreter. It doesn't really know how to build anything. What
-      <span class="command"><strong>bjam</strong></span> does is interpreting
+      <span class="command"><strong>b2</strong></span> does is interpreting
       Jamfiles. Boost.Build is really implemented in Jamfiles. And they
       contain all the logic which makes Boost.Build such a powerful tool. As
-      <span class="command"><strong>bjam</strong></span> only does what it
+      <span class="command"><strong>b2</strong></span> only does what it
       reads in Jamfiles it needs to know where to find the Jamfiles
       Boost.Build is made of.</p>
 
-      <p>When <span class="command"><strong>bjam</strong></span> is started
+      <p>When <span class="command"><strong>b2</strong></span> is started
       it looks for a file <code class="filename">boost-build.jam</code> in
       the current working directory. If it doesn't find the file it searches
       all parent directories. This file needs to contain only one line to
-      tell <span class="command"><strong>bjam</strong></span> where to find
+      tell <span class="command"><strong>b2</strong></span> where to find
       the build system.</p>
       <pre class="programlisting">
 boost-build C:/boost_1_39_0/tools/build/v2 ; 
@@ -210,7 +210,7 @@ boost-build C:/boost_1_39_0/tools/build/v2 ;
       <p>The path after <code class="code">boost-build</code> must refer to a
       directory which contains a file called <code class=
       "filename">bootstrap.jam</code>. This is the file <span class=
-      "command"><strong>bjam</strong></span> needs to load the build system.
+      "command"><strong>b2</strong></span> needs to load the build system.
       As the Boost C++ libraries ship Boost.Build you can refer to the
       subdirectory <code class="filename">tools/build/v2</code> of the root
       directory of the Boost C++ libraries. And you can always use a slash as
@@ -221,13 +221,13 @@ boost-build C:/boost_1_39_0/tools/build/v2 ;
       missing. You'll learn more about the syntax used in Jamfiles later in
       this article.</p>
 
-      <p>If <span class="command"><strong>bjam</strong></span> finds
+      <p>If <span class="command"><strong>b2</strong></span> finds
       <code class="filename">boost-build.jam</code> it uses the path within
       the file to load the build system. When the build system is loaded it
       also prepares itself to use a certain compiler, linker and maybe other
       tools required to build a project. Boost.Build refers to these programs
       as a toolset. If no command line option is used to start <span class=
-      "command"><strong>bjam</strong></span> the build system tries to find a
+      "command"><strong>b2</strong></span> the build system tries to find a
       toolset it can use automatically. On Windows for example it searches
       for Visual C++. And if it detects that Visual C++ is installed it uses
       the toolset msvc.</p>
@@ -240,14 +240,14 @@ warning: For more configuration options, please consult
 warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html
 </pre>
 
-      <p>If you start <span class="command"><strong>bjam</strong></span>
+      <p>If you start <span class="command"><strong>b2</strong></span>
       without specifying which toolset should be used you see a warning.
-      <span class="command"><strong>bjam</strong></span> tells you which
+      <span class="command"><strong>b2</strong></span> tells you which
       toolset it detected and decided to use. If you want to suppress the
       warning you must specify the toolset yourself. For example you tell the
-      build system to use Visual C++ with <span class="command"><strong>bjam
+      build system to use Visual C++ with <span class="command"><strong>b2
       toolset=msvc</strong></span>. If you want GCC to be used you enter
-      <span class="command"><strong>bjam toolset=gcc</strong></span>.</p>
+      <span class="command"><strong>b2 toolset=gcc</strong></span>.</p>
 
       <p>As of today there are more than 10 toolsets supported. There is a
       good chance that Boost.Build will work with the compiler you use out of
@@ -255,7 +255,7 @@ warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html
 
       <p>Once the build system has been found, loaded and knows which toolset
       to use - either because you specified one or the build system detected
-      one automatically - <span class="command"><strong>bjam</strong></span>
+      one automatically - <span class="command"><strong>b2</strong></span>
       looks for a file <code class="filename">Jamfile.jam</code> in the
       current working directory. If it doesn't find a Jamfile an error
       message is printed.</p>
@@ -265,24 +265,24 @@ error: error: no Jamfile in current directory found, and no target references sp
 
       <p>If you create an empty file <code class=
       "filename">Jamfile.jam</code> and start <span class=
-      "command"><strong>bjam</strong></span> again another error message is
+      "command"><strong>b2</strong></span> again another error message is
       printed.</p>
       <pre class="screen">
 error: Could not find parent for project at '.'
 error: Did not find Jamfile.jam or Jamroot.jam in any parent directory.
 </pre>
 
-      <p><span class="command"><strong>bjam</strong></span> is ultimately
+      <p><span class="command"><strong>b2</strong></span> is ultimately
       looking for a Jamfile called <code class="filename">Jamroot.jam</code>.
       If it doesn't exist in the current working directory <span class=
-      "command"><strong>bjam</strong></span> expects to find it in a parent
+      "command"><strong>b2</strong></span> expects to find it in a parent
       directory.</p>
 
       <p>If you create an empty file <code class=
       "filename">Jamroot.jam</code> and start <span class=
-      "command"><strong>bjam</strong></span> the error message is gone.
+      "command"><strong>b2</strong></span> the error message is gone.
       Obviously there is nothing done by Boost.Build. But now you know how
-      <span class="command"><strong>bjam</strong></span> proceeds to build a
+      <span class="command"><strong>b2</strong></span> proceeds to build a
       program and what the minimum Boost.Build configuration looks like.</p>
 
       <p>Please note that if you work on a small project and you need only
@@ -303,10 +303,10 @@ error: Did not find Jamfile.jam or Jamroot.jam in any parent directory.
       old configuration files where for example values seem to be assigned to
       keys. What is important to understand though is that Jamfiles are
       really script files. There is a programming language used to write
-      Jamfiles. <span class="command"><strong>bjam</strong></span> isn't the
+      Jamfiles. <span class="command"><strong>b2</strong></span> isn't the
       core component of Boost.Build which knows how to build programs. The
       logic of Boost.Build is in the Jamfiles which tell <span class=
-      "command"><strong>bjam</strong></span> how to build programs.</p>
+      "command"><strong>b2</strong></span> how to build programs.</p>
 
       <p>Even though Boost.Build is based on a programming language you don't
       need to think of programming when you create Jamfiles. The syntax of
@@ -369,10 +369,10 @@ exe "hello" : "hello.cpp" ;
       that there is a space around all tokens. For example there must be a
       space on the left and on the right of the colon and there must be a
       space on the left of the semicolon. Without spaces around tokens
-      <span class="command"><strong>bjam</strong></span> won't be able to
+      <span class="command"><strong>b2</strong></span> won't be able to
       parse Jamfiles correctly.</p>
 
-      <p>If <span class="command"><strong>bjam</strong></span> is run in a
+      <p>If <span class="command"><strong>b2</strong></span> is run in a
       directory which contains the Jamfile above and a source file
       <code class="filename">hello.cpp</code>, and if the msvc toolset is
       used on Windows a subdirectory <code class=
@@ -417,7 +417,7 @@ msvc.manifest bin\msvc-9.0\debug\hello.exe
       another variant. By default the debug variant is used. That's why the
       subdirectory <code class="filename">bin\msvc-9.0\debug</code> was
       created. If you want a release version to be created you can specify
-      the variant on the command line with <span class="command"><strong>bjam
+      the variant on the command line with <span class="command"><strong>b2
       variant=release</strong></span>.</p>
       <pre class="screen">
 ...found 9 targets...
@@ -437,7 +437,7 @@ msvc.manifest bin\msvc-9.0\release\hello.exe
       <code class="filename">hello.exe</code>.</p>
 
       <p>Choosing a variant is something which is done so often that it's
-      sufficient to enter <span class="command"><strong>bjam
+      sufficient to enter <span class="command"><strong>b2
       release</strong></span>. Boost.Build figures out that release is meant
       to choose the variant.</p>
 
@@ -465,10 +465,10 @@ exe hello : hello.cpp : &lt;variant&gt;release ;
       are free which means they can be set to any value you want.
       <code class="code">&lt;variant&gt;</code> is a non-free feature as it
       can only be set to debug or release. No other value is allowed. If
-      another value is set <code class="code">bjam</code> will report an
+      another value is set <code class="code">b2</code> will report an
       error.</p>
 
-      <p>If you run <code class="code">bjam variant=debug</code> and try to
+      <p>If you run <code class="code">b2 variant=debug</code> and try to
       build a debug version of <code class="filename">hello.exe</code> it
       won't work as the Jamfile contains the requirement that <code class=
       "filename">hello.exe</code> is built as a release version. If you want
@@ -492,7 +492,7 @@ exe hello : hello.cpp : : &lt;variant&gt;debug &lt;variant&gt;release ;
       <p>It is important that <code class="code">&lt;variant&gt;</code> is
       set twice in the fourth parameter where default values are specified.
       If it was the third parameter where requirements are specified
-      <span class="command"><strong>bjam</strong></span> would report an
+      <span class="command"><strong>b2</strong></span> would report an
       error. It is possible to set a feature multiple times in the
       requirements but only if values are not mutually exclusive. As a
       program can't be a debug and a release version at the same time
@@ -515,7 +515,7 @@ exe hello : hello.cpp : : &lt;variant&gt;debug &lt;variant&gt;release &lt;define
 </pre>
 
       <p>If the definitions are moved to the fourth parameter and you run
-      <span class="command"><strong>bjam</strong></span> you get the same two
+      <span class="command"><strong>b2</strong></span> you get the same two
       versions of <code class="filename">hello.exe</code> built with the two
       directives <code class="code">WIN32</code> and <code class=
       "code">_WIN32</code>. As <code class="code">&lt;define&gt;</code> does
@@ -531,7 +531,7 @@ exe hello : hello.cpp : : &lt;variant&gt;debug &lt;variant&gt;release &lt;define
 exe hello : hello.cpp : : &lt;variant&gt;debug &lt;variant&gt;release &lt;optimization&gt;speed &lt;optimization&gt;off ; 
 </pre>
 
-      <p><span class="command"><strong>bjam</strong></span> creates four
+      <p><span class="command"><strong>b2</strong></span> creates four
       versions of <code class="filename">hello.exe</code>: A debug version
       optimized for speed, a debug version with no optimization, a release
       version optimized for speed and a release version with no optimization.
@@ -645,10 +645,10 @@ exe hello : [ glob *.cpp ] ;
       Jamfiles somehow. There is typically a <code class=
       "filename">Jamroot.jam</code> file in the project's root directory and
       many <code class="filename">Jamfile.jam</code> files in subdirectories.
-      If <span class="command"><strong>bjam</strong></span> is run in the
+      If <span class="command"><strong>b2</strong></span> is run in the
       root directory developers probably expect that the entire project
       including all components in subdirectories is built. As <span class=
-      "command"><strong>bjam</strong></span> looks for Jamfiles in parent
+      "command"><strong>b2</strong></span> looks for Jamfiles in parent
       directories but not in subdirectories Jamfiles need to refer to
       Jamfiles in subdirectories explicitly.</p>
       <pre class="programlisting">
@@ -805,7 +805,7 @@ exe hello : hello.cpp world C:/boost_1_39_0//filesystem/ ;
 
       <p>In the above Jamfile the path to the root directory of the Boost C++
       libraries is hardcoded. Somehow <span class=
-      "command"><strong>bjam</strong></span> needs to know where to find the
+      "command"><strong>b2</strong></span> needs to know where to find the
       Boost C++ libraries. But it would be better if the path was hardcoded
       only once in case several components in a project need to link against
       some Boost C++ libraries.</p>
@@ -823,7 +823,7 @@ build-project world ;
 exe hello : hello.cpp world /boost//filesystem ; 
 </pre>
 
-      <p><span class="command"><strong>bjam</strong></span> figures out that
+      <p><span class="command"><strong>b2</strong></span> figures out that
       <code class="filename">hello.cpp</code> is a source file, <code class=
       "filename">world</code> a subdirectory and /boost//filesystem a
       reference to a target filesystem in a Jamfile in <code class=
@@ -941,12 +941,12 @@ lib world : world.cpp ;
       <p>Instead of trying to put paths for various platforms in a project's
       Jamfiles it is better to rely on configuration files on every system
       for system-specific settings. As it turns out <span class=
-      "command"><strong>bjam</strong></span> does indeed look for two more
+      "command"><strong>b2</strong></span> does indeed look for two more
       configuration files when it starts.</p>
 
       <p>The file <code class="filename">site-config.jam</code> should be
       used to set options for an entire system. As it is machine-dependent
-      <span class="command"><strong>bjam</strong></span> expects to find it
+      <span class="command"><strong>b2</strong></span> expects to find it
       in <code class="filename">C:\Windows</code> on Windows platforms and in
       <code class="filename">/etc</code> on Unix systems. As <code class=
       "filename">site-config.jam</code> is machine-dependent paths to local
@@ -956,7 +956,7 @@ lib world : world.cpp ;
       "filename">site-config.jam</code> though. They would either need to
       wait for system administrators to update the file or be forced again to
       add system-specific paths to their own Jamfiles. As neither is a good
-      solution <span class="command"><strong>bjam</strong></span> also looks
+      solution <span class="command"><strong>b2</strong></span> also looks
       for a file <code class="filename">user-config.jam</code> in a user's
       home directory. On Windows it is a subdirectory of <code class=
       "filename">C:\Users</code>, on Unix a subdirecory of <code class=
@@ -976,10 +976,10 @@ using msvc ;
 </pre>
 
       <p>The <code class="code">using</code> rule above tells <span class=
-      "command"><strong>bjam</strong></span> to use the msvc toolset. If you
+      "command"><strong>b2</strong></span> to use the msvc toolset. If you
       know that there is only Visual C++ installed on a system it makes sense
       to put this line into a configuration file. Then <span class=
-      "command"><strong>bjam</strong></span> doesn't need to guess anymore
+      "command"><strong>b2</strong></span> doesn't need to guess anymore
       which toolset to use and won't omit a warning.</p>
 
       <p>If you define targets in <code class=
