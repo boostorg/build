@@ -3,6 +3,19 @@ body {
     font-size: 16px;
 }
 
+.header {
+    margin-top: 1em;
+}
+
+.header > ul {
+    float: right;
+}
+
+.header > ul > li {
+    display: inline;
+    padding-left: 2em;
+}
+
 /*
 @media (min-width: 768px) {
   .container {
