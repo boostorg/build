@@ -16,6 +16,22 @@ body {
     padding-left: 2em;
 }
 
+th {
+	color: #000;
+	background-color: #D6D6FF;
+	border: 1px solid #C0C0FF;
+	padding: 4px;
+	vertical-align: top;
+}
+td {
+	color: #000;
+	background-color: #F0F0FF;
+	border: 1px solid #C0C0FF;
+	padding: 4px;
+	vertical-align: top;
+}
+
+
 /*
 @media (min-width: 768px) {
   .container {
