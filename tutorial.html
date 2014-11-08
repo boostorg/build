@@ -94,8 +94,8 @@
       <p>This article is an introduction to help you using Boost.Build for
       your own C++ or C projects. It gives you a basic understanding of how
       Boost.Build works and how you start using it. After reading the article
-      you should not only be able to use Boost.Build for your own projects.
-      If will also be easier to understand the <a class="link" href=
+      you should not only be able to use Boost.Build for your own projects,
+      it will also be easier to understand the <a class="link" href=
       "http://www.boost.org/doc/tools/build/doc/html/index.html" target=
       "_top">Boost.Build documentation</a> as you'll know the big
       picture.</p>
@@ -204,7 +204,7 @@ Please consult the documentation at 'http://www.boost.org'.
       tell <span class="command"><strong>b2</strong></span> where to find
       the build system.</p>
       <pre class="programlisting">
-boost-build C:/boost_1_39_0/tools/build/v2 ; 
+boost-build C:/boost_1_57_0/tools/build/src ; 
 </pre>
 
       <p>The path after <code class="code">boost-build</code> must refer to a
@@ -212,7 +212,7 @@ boost-build C:/boost_1_39_0/tools/build/v2 ;
       "filename">bootstrap.jam</code>. This is the file <span class=
       "command"><strong>b2</strong></span> needs to load the build system.
       As the Boost C++ libraries ship Boost.Build you can refer to the
-      subdirectory <code class="filename">tools/build/v2</code> of the root
+      subdirectory <code class="filename">tools/build</code> of the root
       directory of the Boost C++ libraries. And you can always use a slash as
       a path separator - even if you are on Windows.</p>
 
@@ -418,7 +418,8 @@ msvc.manifest bin\msvc-9.0\debug\hello.exe
       subdirectory <code class="filename">bin\msvc-9.0\debug</code> was
       created. If you want a release version to be created you can specify
       the variant on the command line with <span class="command"><strong>b2
-      variant=release</strong></span>.</p>
+      variant=release</strong></span> or, even simpler, <span class="command">
+      <strong>b2 release </strong></span>.</p>
       <pre class="screen">
 ...found 9 targets...
 ...updating 5 targets...
@@ -449,7 +450,7 @@ msvc.manifest bin\msvc-9.0\release\hello.exe
 exe hello : hello.cpp : &lt;variant&gt;release ; 
 </pre>
 
-      <p>The <code class="code">exe</code> rule - or if you want function -
+      <p>The <code class="code">exe</code> rule (or, if you prefer, function)
       accepts a few more parameters which are optional. The third parameter
       is a list of requirements. You can think of command line options which
       are always set and passed to commands run to build an executable.</p>
@@ -956,7 +957,7 @@ lib world : world.cpp ;
       "filename">site-config.jam</code> though. They would either need to
       wait for system administrators to update the file or be forced again to
       add system-specific paths to their own Jamfiles. As neither is a good
-      solution <span class="command"><strong>b2</strong></span> also looks
+      solution, <span class="command"><strong>b2</strong></span> also looks
       for a file <code class="filename">user-config.jam</code> in a user's
       home directory. On Windows it is a subdirectory of <code class=
       "filename">C:\Users</code>, on Unix a subdirecory of <code class=
@@ -1407,7 +1408,7 @@ exe hello : hello.cpp : &lt;library&gt;/boost//thread ;
 
             <td>shared, static</td>
 
-            <td>Link to singlethreaded or thread-safe runtime library.</td>
+            <td>Link to single-threaded or thread-safe runtime library.</td>
           </tr>
 
           <tr>
