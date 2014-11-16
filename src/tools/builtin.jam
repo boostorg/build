@@ -40,8 +40,8 @@ import convert ;
 import generate ;
 
 
-.os-names = aix android bsd cygwin darwin freebsd hpux iphone linux netbsd openbsd osf
-    qnx qnxnto sgi solaris unix unixware windows
+.os-names = aix android bsd cygwin darwin freebsd haiku hpux iphone linux netbsd
+    openbsd osf qnx qnxnto sgi solaris unix unixware windows
     elf  # Not actually an OS -- used for targeting bare metal where object
          # format is ELF.  This catches both -elf and -eabi gcc targets and well
          # as other compilers targeting ELF. It is not clear how often we need
@@ -76,6 +76,7 @@ local rule default-host-os ( )
             case COHERENT     : host-os = unix    ;
             case DRAGONFLYBSD : host-os = bsd     ;
             case IRIX         : host-os = sgi     ;
+            case HAIKU        : host-os = haiku   ;
             case MACOSX       : host-os = darwin  ;
             case KFREEBSD     : host-os = freebsd ;
             case LINUX        : host-os = linux   ;

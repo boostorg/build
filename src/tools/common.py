@@ -66,7 +66,8 @@ def reset ():
     m = {"NT": __executable_path_variable,
          "CYGWIN": "PATH",
          "MACOSX": "DYLD_LIBRARY_PATH",
-         "AIX": "LIBPATH"}
+         "AIX": "LIBPATH",
+         "HAIKU": "LIBRARY_PATH"}
     global __shared_library_path_variable
     __shared_library_path_variable = m.get(OS, "LD_LIBRARY_PATH")
                             
