@@ -154,6 +154,11 @@
     #define OSMINOR "OS=HPUX"
     #define OS_HPUX
 #endif
+#ifdef __HAIKU__
+    #define unix
+    #define OSMINOR "OS=HAIKU"
+    #define OS_HAIKU
+#endif
 #ifdef __OPENNT
     #define unix
     #define OSMINOR "OS=INTERIX"
