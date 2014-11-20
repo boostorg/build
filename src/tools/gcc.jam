@@ -1034,6 +1034,7 @@ rule setup-threading ( targets * : sources * : properties * )
             case cygwin  : option = -mthreads ;
             case solaris : option = -pthreads ; libs = rt ;
             case beos    : # No threading options.
+            case haiku   : option = ;
             case *bsd    : option = -pthread ;  # There is no -lrt on BSD.
             case sgi     : # gcc on IRIX does not support multi-threading.
             case darwin  : # No threading options.

@@ -639,6 +639,7 @@ local rule system-library-dependencies ( target-os )
         case qnx* : return ;
         case darwin : return ;
         case windows : return ;
+        case haiku : return ;
 
         case hpux : return  <library>rt ;
         case *bsd : return  <library>pthread <toolset>gcc:<library>util ;
