@@ -16,7 +16,11 @@ Body defaults
 
     body
     {
-        margin: 1em;
+        font-size: 16px;
+        max-width: 60em;
+        padding-left: 4em;
+        padding-right: 4em;
+        margin: auto;
         font-family: sans-serif;
     }
 
@@ -27,8 +31,6 @@ Paragraphs
     p
     {
         text-align: left;
-        font-size: 10pt;
-        line-height: 1.15;
     }
 
 /*=============================================================================
@@ -38,12 +40,11 @@ Program listings
     /* Code on paragraphs */
     p tt.computeroutput
     {
-        font-size: 9pt;
+
     }
 
     pre.synopsis
     {
-        font-size: 9pt;
         margin: 1pc 4% 0pc 4%;
         padding: 0.5pc 0.5pc 0.5pc 0.5pc;
     }
@@ -51,7 +52,6 @@ Program listings
     .programlisting,
     .screen
     {
-        font-size: 9pt;
         display: block;
         margin: 1pc 4% 0pc 4%;
         padding: 0.5pc 0.5pc 0.5pc 0.5pc;
@@ -77,7 +77,7 @@ Headings
     }
 
     h1 { font-size: 140%; }
-    h2 { font-weight: bold; font-size: 140%; }
+    h2 { font-weight: bold; font-size: 140%; color: rgb(74, 100, 132); }
     h3 { font-weight: bold; font-size: 130%; }
     h4 { font-weight: bold; font-size: 120%; }
     h5 { font-weight: normal; font-style: italic; font-size: 110%; }
@@ -140,8 +140,6 @@ Lists
 
     li
     {
-        font-size: 10pt;
-        line-height: 1.3;
     }
 
     /* Unordered lists */
@@ -211,10 +209,7 @@ Table of contents
 
     div.toc
     {
-       margin: 1pc 4% 0pc 4%;
-       padding: 0.1pc 1pc 0.1pc 1pc;
-       font-size: 80%;
-       line-height: 1.15;
+        font-size: 14px;
     }
 
     .boost-toc
@@ -262,7 +257,6 @@ Tables
     {
         padding: 0.5em;
         text-align: left;
-        font-size: 9pt;
     }
 
     div.informaltable table tr th,
@@ -285,7 +279,6 @@ Tables
         margin: 0em !important;
         padding: 0em !important;
         text-align: left !important;
-        font-size: 9pt !important;
         border: none !important;
     }
 
@@ -300,11 +293,8 @@ Blurbs
     div.warning,
     p.blurb
     {
-        font-size: 9pt; /* A little bit smaller than the main text */
-        line-height: 1.2;
         display: block;
-        margin: 1pc 4% 0pc 4%;
-        padding: 0.5pc 0.5pc 0.5pc 0.5pc;
+        padding: 0.5em;
     }
 
     p.blurb img
@@ -326,7 +316,6 @@ Variable Lists
     span.term
     {
         font-weight: bold;
-        font-size: 10pt;
     }
 
     div.variablelist table tbody tr td
@@ -334,9 +323,7 @@ Variable Lists
         text-align: left;
         vertical-align: top;
         padding: 0em 2em 0em 0em;
-        font-size: 10pt;
         margin: 0em 0em 0.5em 0em;
-        line-height: 1;
     }
 
     div.variablelist dl dt
@@ -347,14 +334,12 @@ Variable Lists
     div.variablelist dl dd
     {
         margin: 0em 0em 0.5em 2em;
-        font-size: 10pt;
     }
 
     div.variablelist table tbody tr td p,
     div.variablelist dl dd p
     {
         margin: 0em 0em 0.5em 0em;
-        line-height: 1;
     }
 
 /*=============================================================================
@@ -432,7 +417,7 @@ Colors
         .copyright
         {
             color: #666666;
-            font-size: small;
+            margin-left: 4em;
         }
 
         div div.legalnotice p
@@ -444,18 +429,27 @@ Colors
         pre.synopsis
         {
             border: 1px solid #DCDCDC;
+            border-left: 6px solid #DCDCDC;
+            padding: 0.5em;
+            margin: 1em 0px;
         }
 
         .programlisting,
         .screen
         {
             border: 1px solid #DCDCDC;
+            border-left: 6px solid #DCDCDC;
+            padding: 0.5em;
+            margin: 1em 0px;
         }
 
         td .programlisting,
         td .screen
         {
-            border: 0px solid #DCDCDC;
+            border: 1px solid #DCDCDC;
+            border-left: 6px solid #DCDCDC;
+            padding: 0.5em;
+            margin: 1em 0px;
         }
 
     /* Blurbs */
@@ -473,6 +467,7 @@ Colors
         div.toc
         {
             border: 1px solid #DCDCDC;
+            padding-left: 0.5em;
         }
 
     /* Tables */
@@ -698,3 +693,7 @@ span.purple { color: purple; }
 span.gold { color: gold; }
 span.silver { color: silver; } /* lighter gray */
 span.gray { color: #808080; } /* light gray */
+
+div.titlepage hr { display: none; }
+div.dedication h1 { display: none; }
+
