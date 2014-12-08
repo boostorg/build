@@ -428,8 +428,8 @@ Colors
     /* Program listing */
         pre.synopsis
         {
-            border: 1px solid #DCDCDC;
-            border-left: 6px solid #DCDCDC;
+            border: 1px solid #ddd;
+            border-left: 6px solid #ddd;
             padding: 0.5em;
             margin: 1em 0px;
         }
@@ -437,8 +437,8 @@ Colors
         .programlisting,
         .screen
         {
-            border: 1px solid #DCDCDC;
-            border-left: 6px solid #DCDCDC;
+            border: 1px solid #ddd;
+            border-left: 6px solid #ddd;
             padding: 0.5em;
             margin: 1em 0px;
         }
@@ -446,8 +446,8 @@ Colors
         td .programlisting,
         td .screen
         {
-            border: 1px solid #DCDCDC;
-            border-left: 6px solid #DCDCDC;
+            border: 1px solid #ddd;
+            border-left: 6px solid #ddd;
             padding: 0.5em;
             margin: 1em 0px;
         }
@@ -460,13 +460,13 @@ Colors
         div.warning,
         p.blurb
         {
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
         }
 
     /* Table of contents */
         div.toc
         {
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
             padding-left: 0.5em;
         }
 
@@ -474,14 +474,14 @@ Colors
         div.informaltable table tr td,
         div.table table tr td
         {
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
         }
 
         div.informaltable table tr th,
         div.table table tr th
         {
             background-color: #F0F0F0;
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
         }
 
         .copyright-footer
@@ -529,7 +529,7 @@ Colors
         td .programlisting,
         td .screen
         {
-            border: 0px solid #DCDCDC;
+            border: 0px solid #ddd;
         }
 
     /* Table of contents */
@@ -696,4 +696,9 @@ span.gray { color: #808080; } /* light gray */
 
 div.titlepage hr { display: none; }
 div.dedication h1 { display: none; }
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+}
 
