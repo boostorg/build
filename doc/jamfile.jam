@@ -18,6 +18,7 @@ boostbook userman : src/standalone.xml
      <xsl:param>boost.graphics.root=../images/
      <xsl:param>html.stylesheet=../boostbook.css
      <xsl:param>chunk.first.sections=0
+     <xsl:param>admon.graphics=0
 
      <xsl:param>boost.defaults=Boost
    ;

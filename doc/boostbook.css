@@ -295,6 +295,29 @@ Blurbs
     {
         display: block;
         padding: 0.5em;
+        border: 1px solid #ddd;
+    }
+
+    div.note h3, div.tip h3, div.important h3, div.caution h3, div.warning h3
+    {
+        font-size: 100%;
+        margin: 0 !important;
+        display: inline;
+    }
+
+    div.note p, div.tip p, div.important p, div.caution p, div.warning p
+    {
+        margin: 0;
+    }
+
+    div.warning
+    {
+        border-left: 6px solid #f2dede;
+    }
+
+    div.tip, div.note
+    {
+        border-left: 6px solid #d9edf7;
     }
 
     p.blurb img
@@ -450,17 +473,6 @@ Colors
             border-left: 6px solid #ddd;
             padding: 0.5em;
             margin: 1em 0px;
-        }
-
-    /* Blurbs */
-        div.note,
-        div.tip,
-        div.important,
-        div.caution,
-        div.warning,
-        p.blurb
-        {
-            border: 1px solid #ddd;
         }
 
     /* Table of contents */
