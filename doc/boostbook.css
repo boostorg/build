@@ -229,26 +229,22 @@ Table of contents
 Tables
 =============================================================================*/
 
-    .table-title,
-    div.table p.title
-    {
-        margin-left: 4%;
-        padding-right: 0.5em;
-        padding-left: 0.5em;
-    }
-
     .informaltable table,
     .table table
     {
-        width: 92%;
-        margin-left: 4%;
-        margin-right: 4%;
+        width: 100%;
     }
 
-    div.informaltable table,
-    div.table table
+    .table p.title
     {
-        padding: 4px;
+        text-align: right;
+        color: #959595;
+        margin-bottom: 0;
+    }
+
+    .table p.title b
+    {
+        font-weight: normal;
     }
 
     /* Table Cells */
@@ -258,6 +254,7 @@ Tables
         padding: 0.5em;
         text-align: left;
     }
+
 
     div.informaltable table tr th,
     div.table table tr th
