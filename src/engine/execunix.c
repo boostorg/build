@@ -278,7 +278,7 @@ void exec_cmd
     /******************/
 
     /* redundant call, ignore return value */
-    setpgid(cmdtab[ slot ].pid, cmdtab[ slot ].pid)) {
+    setpgid(cmdtab[ slot ].pid, cmdtab[ slot ].pid);
 
     /* Parent not need the write pipe ends used by the child. */
     close( out[ EXECCMD_PIPE_WRITE ] );
