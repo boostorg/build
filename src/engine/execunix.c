@@ -211,15 +211,15 @@ void exec_cmd
     sigemptyset(&ignore.sa_mask);
     ignore.sa_flags = 0;
     if (sigaction(SIGINT, &ignore, &saveintr) < 0)
-      return;
+        return;
     if (sigaction(SIGQUIT, &ignore, &savequit) < 0)
-      return;
+        return;
 
     /* block SIGCHLD */
     sigemptyset(&chldmask);
     sigaddset(&chldmask, SIGCHLD);
     if (sigprocmask(SIG_BLOCK, &chldmask, &savemask) < 0)
-      return;
+        return;
 
     if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
@@ -276,10 +276,9 @@ void exec_cmd
     /******************/
     /* Parent process */
     /******************/
-    if (0 != setpgid(cmdtab[ slot ].pid, cmdtab[ slot ].pid)) {
-        perror("setpgid (parent)");
-        /* exit( EXITBAD ); */
-    }
+
+    /* redundant call, ignore return value */
+    setpgid(cmdtab[ slot ].pid, cmdtab[ slot ].pid)) {
 
     /* Parent not need the write pipe ends used by the child. */
     close( out[ EXECCMD_PIPE_WRITE ] );
