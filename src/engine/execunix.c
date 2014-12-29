@@ -137,6 +137,9 @@ void exec_cmd
     LIST * shell
 )
 {
+    struct sigaction ignore, saveintr, savequit;
+    sigset_t chldmask, savemask;
+
     int const slot = get_free_cmdtab_slot();
     int out[ 2 ];
     int err[ 2 ];
@@ -203,6 +206,21 @@ void exec_cmd
     if ( globs.pipe_action )
         fcntl( err[ EXECCMD_PIPE_READ ], F_SETFD, FD_CLOEXEC );
 
+    /* ignore SIGINT and SIGQUIT */
+    ignore.sa_handler = SIG_IGN;
+    sigemptyset(&ignore.sa_mask);
+    ignore.sa_flags = 0;
+    if (sigaction(SIGINT, &ignore, &saveintr) < 0)
+      return;
+    if (sigaction(SIGQUIT, &ignore, &savequit) < 0)
+      return;
+
+    /* block SIGCHLD */
+    sigemptyset(&chldmask);
+    sigaddset(&chldmask, SIGCHLD);
+    if (sigprocmask(SIG_BLOCK, &chldmask, &savemask) < 0)
+      return;
+
     if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
         perror( "vfork" );
@@ -215,6 +233,11 @@ void exec_cmd
         /* Child process */
         /*****************/
         int const pid = getpid();
+
+        /* restore previous signals */
+        sigaction(SIGINT, &saveintr, NULL);
+        sigaction(SIGQUIT, &savequit, NULL);
+        sigprocmask(SIG_SETMASK, &savemask, NULL);
 
         /* Redirect stdout and stderr to pipes inherited from the parent. */
         dup2( out[ EXECCMD_PIPE_WRITE ], STDOUT_FILENO );
@@ -244,6 +267,11 @@ void exec_cmd
         perror( "execvp" );
         _exit( 127 );
     }
+
+    /* restore previous signals */
+    sigaction(SIGINT, &saveintr, NULL);
+    sigaction(SIGQUIT, &savequit, NULL);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
 
     /******************/
     /* Parent process */
