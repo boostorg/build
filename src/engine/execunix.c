@@ -268,11 +268,6 @@ void exec_cmd
         _exit( 127 );
     }
 
-    /* restore previous signals */
-    sigaction(SIGINT, &saveintr, NULL);
-    sigaction(SIGQUIT, &savequit, NULL);
-    sigprocmask(SIG_SETMASK, &savemask, NULL);
-
     /******************/
     /* Parent process */
     /******************/
@@ -314,6 +309,11 @@ void exec_cmd
     /* Save input data into the selected running commands table slot. */
     cmdtab[ slot ].func = func;
     cmdtab[ slot ].closure = closure;
+
+    /* restore previous signals */
+    sigaction(SIGINT, &saveintr, NULL);
+    sigaction(SIGQUIT, &savequit, NULL);
+    sigprocmask(SIG_SETMASK, &savemask, NULL);
 }
 
 #undef EXECCMD_PIPE_READ
