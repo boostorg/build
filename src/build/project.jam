@@ -902,7 +902,7 @@ rule target ( project-module )
 # extensions are really projects, they can be initialized as a module would be
 # with the "using" (project.project-rules.using) mechanism.
 #
-rule extension ( id : options * : * )
+rule extension ( id space ? : options * : * )
 {
     # The caller is a standalone module for the extension.
     local mod = [ CALLER_MODULE ] ;
@@ -921,15 +921,19 @@ rule extension ( id : options * : * )
         {
             root-project = [ project.attribute $(root-project) parent-module ] ;
         }
+        
+        # Default to creating extensions in /ext/.. project space.
+        local id = $(1[1]) ;
+        local space = $(1[2]) ;
+        space ?= ext ;
 
         # Create the project data, and bring in the project rules into the
         # module.
         project.initialize $(__name__) : [ path.join [ project.attribute
-            $(root-project) location ] ext $(1:L) ] ;
+            $(root-project) location ] $(space:L) $(id:L) ] ;
 
-        # Create the project itself, i.e. the attributes. All extensions are
-        # created in the "/ext" project space.
-        project /ext/$(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
+        # Create the project itself, i.e. the attributes.
+        project /$(space:L)/$(id:L) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
             $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17)
             : $(18) : $(19) ;
         local attributes = [ project.attributes $(__name__) ] ;
