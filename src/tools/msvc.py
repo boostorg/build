@@ -380,12 +380,12 @@ def setup_preprocess_c_cpp_action(targets, sources, properties):
     return 'preprocess-c-c++'
     
 register_setup_action(
-    'msvc.preprocess.c',
+    'msvc.compile.c.preprocess',
     setup_preprocess_c_cpp_action,
     function=compile_c_preprocess)
 
 register_setup_action(
-    'msvc.preprocess.c++',
+    'msvc.compile.c++.preprocess',
     setup_preprocess_c_cpp_action,
     function=compile_cpp_preprocess)
 
@@ -816,8 +816,7 @@ def configure_really(version=None, options=[]):
 
         # Get tool names (if any) and finish setup.
         compiler = feature.get_values("<compiler>", options)
-        if not compiler:
-            compiler = "cl"
+        compiler = compiler[0] if compiler else 'cl'
 
         linker = feature.get_values("<linker>", options)
         if not linker:
@@ -965,7 +964,7 @@ def register_toolset_really():
     feature.extend('toolset', ['msvc'])
 
     # Intel and msvc supposedly have link-compatible objects.
-    feature.subfeature( 'toolset', 'msvc', 'vendor', 'intel', ['propagated', 'optional'])
+    feature.subfeature( 'toolset', 'msvc', 'vendor', ['intel'], ['propagated', 'optional'])
 
     # Inherit MIDL flags.
     toolset.inherit_flags('msvc', 'midl')

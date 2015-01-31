@@ -139,6 +139,9 @@ reset ()
 
 def set_abbreviated_paths(on=True):
     global __abbreviated_paths
+    if on == 'off':
+        on = False
+    on = bool(on)
     __abbreviated_paths = on
 
 
@@ -187,30 +190,35 @@ def refine (properties, requirements):
     """
     # The result has no duplicates, so we store it in a set
     result = set()
-    
-    # Records all requirements.
     required = {}
-    
-    # All the elements of requirements should be present in the result
-    # Record them so that we can handle 'properties'.
+    remove = set()
+
     for r in requirements:
         # Don't consider conditional requirements.
-        if not r.condition():
-            required[r.feature()] = r
+        if not (r.condition() or r.feature().free()):
+            required[r.feature().name()] = r
 
     for p in properties:
-        # Skip conditional properties
-        if p.condition():
-            result.add(p)
-        # No processing for free properties
-        elif p.feature().free():
-            result.add(p)
+        f = p.feature()
+        if f.name() in required:
+            required_prop = required[f.name()]
+            if 'composite' in f.attributes_string_list():
+                props = feature.expand_composites([p])
+                rprops = feature.expand_composites([required_prop])
+                remove.update(b2.util.set.difference(props, rprops + [p]))
+            result.add(required_prop)
         else:
-            if required.has_key(p.feature()):
-                result.add(required[p.feature()])
-            else:
+            subfeature = re.match(r'(.*)-(.*):.*', f.name())
+            f_name = None
+            subf_name = None
+            if subfeature:
+                f_name = subfeature.group(1)
+                subf_name = subfeature.group(2)
+            required_prop = required.get(f_name)
+            if not required_prop or required_prop.value() == subf_name:
                 result.add(p)
 
+    result = result - remove
     return sequence.unique(list(result) + requirements)
 
 def translate_paths (properties, path):

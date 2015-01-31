@@ -345,7 +345,7 @@ def __handle_flag_value (manager, value, ps):
                 else:
                     result.extend(value.split ('&&'))
             else:
-                result.append (ungristed)
+                result.append (value)
     else:
         result.append (value)
 

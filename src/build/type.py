@@ -70,8 +70,14 @@ def register (type, suffixes = [], base_type = None):
     # which need to be decomposed.
     if __re_hyphen.search (type):
         raise BaseException ('type name "%s" contains a hyphen' % type)
-    
-    if __types.has_key (type):
+
+    # it's possible for a type to be registered with a
+    # base type that hasn't been registered yet. in the
+    # check for base_type below and the following calls to setdefault()
+    # the key `type` will be added to __types. When the base type
+    # actually gets registered, it would fail after the simple check
+    # of "type in __types"; thus the check for "'base' in __types[type]"
+    if type in __types and 'base' in __types[type]:
         raise BaseException ('Type "%s" is already registered.' % type)
 
     entry = {}
@@ -221,17 +227,22 @@ def change_generated_target_suffix (type, properties, suffix):
 def generated_target_suffix(type, properties):
     return generated_target_ps(1, type, properties)
 
-# Sets a target prefix that should be used when generating targets of 'type'
-# with the specified properties. Can be called with empty properties if no
-# prefix for 'type' has been specified yet.
+
+# Sets a file suffix to be used when generating a target of 'type' with the
+# specified properties. Can be called with no properties if no suffix has
+# already been specified for the 'type'. The 'suffix' parameter can be an empty
+# string ("") to indicate that no suffix should be used.
 #
-# The 'prefix' parameter can be empty string ("") to indicate that no prefix
-# should be used.
+# Note that this does not cause files with 'suffix' to be automatically
+# recognized as being of 'type'. Two different types can use the same suffix for
+# their generated files but only one type can be auto-detected for a file with
+# that suffix. User should explicitly specify which one using the
+# register-suffixes rule.
 #
 # Usage example: library names use the "lib" prefix on unix.
 @bjam_signature((["type"], ["properties", "*"], ["suffix"]))
-def set_generated_target_prefix(type, properties, prefix):
-    set_generated_target_ps(0, type, properties, prefix)
+def set_generated_target_prefix(type, properties, suffix):
+    set_generated_target_ps(0, type, properties, suffix)
 
 # Change the prefix previously registered for this type/properties combination.
 # If prefix is not yet specified, sets it.

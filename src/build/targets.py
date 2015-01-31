@@ -897,7 +897,7 @@ class BasicTarget (AbstractTarget):
         free_unconditional = []
         other = []
         for p in requirements.all():
-            if p.feature().free() and not p.condition() and p.feature().name() != 'conditional':
+            if p.feature().free() and not p.condition() and not p.feature().incidental() and p.feature().name() != 'conditional':
                 free_unconditional.append(p)
             else:
                 other.append(p)
@@ -1239,9 +1239,18 @@ class BasicTarget (AbstractTarget):
         # they are propagated only to direct dependents. We might need
         # a more general mechanism, but for now, only those two
         # features are special.
-        removed_pch = filter(lambda prop: prop.feature().name() not in ['<pch-header>', '<pch-file>'], subvariant.sources_usage_requirements().all())
-        result = result.add(property_set.PropertySet(removed_pch))
-        
+        properties = []
+        link_shared = False
+        for p in subvariant.sources_usage_requirements().all():
+            if p.feature().name() not in ('<pch-header>', '<pch-file>'):
+                if not link_shared or (link_shared and p.feature().name() != 'library'):
+                    properties.append(p)
+            if p.feature() == 'link' and p.value() == 'shared':
+                link_shared = True
+                # remove any existing <library> features
+                properties = [p for p in properties if p.feature().name() != 'library']
+        result = result.add(property_set.PropertySet(properties))
+
         return result
 
     def create_subvariant (self, root_targets, all_targets,
