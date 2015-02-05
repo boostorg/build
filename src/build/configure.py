@@ -10,7 +10,7 @@
 # This module defines function to help with two main tasks:
 #
 # - Discovering build-time configuration for the purposes of adjusting
-#   build process.  
+#   build process.
 # - Reporting what is built, and how it is configured.
 
 import b2.build.property as property
@@ -109,7 +109,7 @@ def builds(metatarget_reference, project, ps, what):
         jam_targets = []
         for t in targets:
             jam_targets.append(t.actualize())
-        
+
         x = ("    - %s" % what).rjust(__width)
         if bjam.call("UPDATE_NOW", jam_targets, str(__log_fd), "ignore-minus-n"):
             __builds_cache[(what, ps)] = True
@@ -158,7 +158,7 @@ class CheckTargetBuildsWorker:
                    ps.get_properties("architecture")
         rps = property_set.create(relevant)
         t = get_manager().targets().current()
-        p = t.project()        
+        p = t.project()
         if builds(self.target, p, rps, "%s builds" % self.target):
             choosen = self.true_properties
         else:

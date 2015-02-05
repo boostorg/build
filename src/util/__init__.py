@@ -197,9 +197,9 @@ def qualify_jam_action(action_name, context_module):
         ix = action_name.find('.')
         if ix != -1 and action_name[:ix] == context_module:
             return context_module + '%' + action_name[ix+1:]
-        
-        return context_module + '%' + action_name        
-    
+
+        return context_module + '%' + action_name
+
 
 def set_jam_action(name, *args):
 

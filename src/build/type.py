@@ -32,17 +32,17 @@ def __register_features ():
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
         Note that this must be called _after_ resetting the module 'feature'.
-    """    
+    """
     global __prefixes_suffixes, __suffixes_to_types, __types, __rule_names_to_types, __target_suffixes_cache
-    
+
     __register_features ()
 
     # Stores suffixes for generated targets.
     __prefixes_suffixes = [property.PropertyMap(), property.PropertyMap()]
-    
+
     # Maps suffixes to types
     __suffixes_to_types = {}
-    
+
     # A map with all the registered types, indexed by the type name
     # Each entry is a dictionary with following values:
     # 'base': the name of base type or None if type has no base
@@ -52,12 +52,12 @@ def reset ():
 
     # Caches suffixes for targets with certain properties.
     __target_suffixes_cache = {}
-    
+
 reset ()
 
 @bjam_signature((["type"], ["suffixes", "*"], ["base_type", "?"]))
 def register (type, suffixes = [], base_type = None):
-    """ Registers a target type, possibly derived from a 'base-type'. 
+    """ Registers a target type, possibly derived from a 'base-type'.
         If 'suffixes' are provided, they list all the suffixes that mean a file is of 'type'.
         Also, the first element gives the suffix to be used when constructing and object of
         'type'.
@@ -70,7 +70,7 @@ def register (type, suffixes = [], base_type = None):
     # which need to be decomposed.
     if __re_hyphen.search (type):
         raise BaseException ('type name "%s" contains a hyphen' % type)
-    
+
     if __types.has_key (type):
         raise BaseException ('Type "%s" is already registered.' % type)
 
@@ -79,7 +79,7 @@ def register (type, suffixes = [], base_type = None):
     entry ['derived'] = []
     entry ['scanner'] = None
     __types [type] = entry
-    
+
     if base_type:
         __types.setdefault(base_type, {}).setdefault('derived', []).append(type)
 
@@ -116,7 +116,7 @@ def type_from_rule_name(rule_name):
 
 
 def register_suffixes (suffixes, type):
-    """ Specifies that targets with suffix from 'suffixes' have the type 'type'. 
+    """ Specifies that targets with suffix from 'suffixes' have the type 'type'.
         If a different type is already specified for any of syffixes, issues an error.
     """
     assert is_iterable_typed(suffixes, basestring)
@@ -164,7 +164,7 @@ def get_scanner (type, prop_set):
         if scanner_type:
             return scanner.get (scanner_type, prop_set.raw ())
             pass
-            
+
     return None
 
 def base(type):
@@ -202,7 +202,7 @@ def is_derived (type, base):
     # TODO: this isn't very efficient, especially for bases close to type
     if base in all_bases (type):
         return True
-    else: 
+    else:
         return False
 
 def is_subtype (type, base):
@@ -215,7 +215,7 @@ def is_subtype (type, base):
 
 @bjam_signature((["type"], ["properties", "*"], ["suffix"]))
 def set_generated_target_suffix (type, properties, suffix):
-    """ Sets a target suffix that should be used when generating target 
+    """ Sets a target suffix that should be used when generating target
         of 'type' with the specified properties. Can be called with
         empty properties if no suffix for 'type' was specified yet.
         This does not automatically specify that files 'suffix' have
@@ -233,9 +233,9 @@ def set_generated_target_suffix (type, properties, suffix):
     set_generated_target_ps(1, type, properties, suffix)
 
 
-    
+
 def change_generated_target_suffix (type, properties, suffix):
-    """ Change the suffix previously registered for this type/properties 
+    """ Change the suffix previously registered for this type/properties
         combination. If suffix is not yet specified, sets it.
     """
     assert isinstance(type, basestring)
@@ -340,7 +340,7 @@ def generated_target_ps(is_suffix, type, prop_set):
 
 def type(filename):
     """ Returns file type given it's name. If there are several dots in filename,
-        tries each suffix. E.g. for name of "file.so.1.2" suffixes "2", "1", and 
+        tries each suffix. E.g. for name of "file.so.1.2" suffixes "2", "1", and
         "so"  will be tried.
     """
     assert isinstance(filename, basestring)
@@ -348,7 +348,7 @@ def type(filename):
         filename, suffix = os.path.splitext (filename)
         if not suffix: return None
         suffix = suffix[1:]
-        
+
         if __suffixes_to_types.has_key(suffix):
             return __suffixes_to_types[suffix]
 

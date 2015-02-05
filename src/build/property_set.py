@@ -466,7 +466,7 @@ class PropertySet:
 
     def __contains__(self, item):
         return item in self.all_set_
-    
+
 def hash(p):
     m = hashlib.md5()
     m.update(p)

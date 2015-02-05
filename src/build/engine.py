@@ -15,7 +15,7 @@ from b2.util import set_jam_action, is_iterable
 
 class BjamAction(object):
     """Class representing bjam action defined from Python."""
-    
+
     def __init__(self, action_name, function):
         assert isinstance(action_name, basestring)
         assert callable(function) or function is None

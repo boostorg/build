@@ -1,13 +1,13 @@
-# Copyright 2003, 2004, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003, 2004, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Status: ported (danielw)
 # Base revision: 56043
 
 #  This module defines the 'alias' rule and associated class.
 #
-#  Alias is just a main target which returns its source targets without any 
+#  Alias is just a main target which returns its source targets without any
 #  processing. For example::
 #
 #    alias bin : hello test_hello ;
@@ -18,7 +18,7 @@
 #    alias platform-src : win.cpp : <os>NT ;
 #    alias platform-src : linux.cpp : <os>LINUX ;
 #    exe main : main.cpp platform-src ;
-# 
+#
 #  Lastly, it's possible to create local alias for some target, with different
 #  properties::
 #

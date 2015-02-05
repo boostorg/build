@@ -1,11 +1,11 @@
 # Status: ported, except for tests.
 # Base revision: 64070
 #
-# Copyright 2001, 2002, 2003 Dave Abrahams 
-# Copyright 2006 Rene Rivera 
-# Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2001, 2002, 2003 Dave Abrahams
+# Copyright 2006 Rene Rivera
+# Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import re
 import sys
@@ -41,7 +41,7 @@ class Property(object):
         self._feature = f
         self._value = value
         self._condition = condition
-        
+
     def feature(self):
         return self._feature
 
@@ -94,7 +94,7 @@ def create_from_string(s, allow_condition=False,allow_missing_value=False):
         if feature.is_implicit_value(s):
             f = feature.implied_feature(s)
             value = s
-        else:        
+        else:
             raise get_manager().errors()("Invalid property '%s' -- unknown feature" % s)
     else:
         if feature.valid(feature_name):
@@ -155,7 +155,7 @@ def path_order (x, y):
     """
     if x == y:
         return 0
-        
+
     xg = get_grist (x)
     yg = get_grist (y)
 
@@ -166,10 +166,10 @@ def path_order (x, y):
         return 1
 
     else:
-        if not xg:            
+        if not xg:
             x = feature.expand_subfeatures([x])
             y = feature.expand_subfeatures([y])
-        
+
         if x < y:
             return -1
         elif x > y:
@@ -178,12 +178,12 @@ def path_order (x, y):
             return 0
 
 def identify(string):
-    return string 
+    return string
 
 # Uses Property
 def refine (properties, requirements):
-    """ Refines 'properties' by overriding any non-free properties 
-        for which a different value is specified in 'requirements'. 
+    """ Refines 'properties' by overriding any non-free properties
+        for which a different value is specified in 'requirements'.
         Conditional requirements are just added without modification.
         Returns the resulting list of properties.
     """
@@ -191,10 +191,10 @@ def refine (properties, requirements):
     assert is_iterable_typed(requirements, Property)
     # The result has no duplicates, so we store it in a set
     result = set()
-    
+
     # Records all requirements.
     required = {}
-    
+
     # All the elements of requirements should be present in the result
     # Record them so that we can handle 'properties'.
     for r in requirements:
@@ -228,14 +228,14 @@ def translate_paths (properties, path):
 
         if p.feature().path():
             values = __re_two_ampersands.split(p.value())
-            
+
             new_value = "&&".join(os.path.join(path, v) for v in values)
 
             if new_value != p.value():
                 result.append(Property(p.feature(), new_value, p.condition()))
             else:
                 result.append(p)
-            
+
         else:
             result.append (p)
 
@@ -303,7 +303,7 @@ def split_conditional (property):
     """
     assert isinstance(property, basestring)
     m = __re_split_conditional.match (property)
-    
+
     if m:
         return (m.group (1), '<' + m.group (2))
 
@@ -315,7 +315,7 @@ def select (features, properties):
     """
     assert is_iterable_typed(properties, basestring)
     result = []
-    
+
     # add any missing angle brackets
     features = add_grist (features)
 
@@ -397,7 +397,7 @@ def __validate1 (property):
 # Still to port.
 # Original lines are prefixed with "#   "
 #
-#   
+#
 #   import utility : ungrist ;
 #   import sequence : unique ;
 #   import errors : error ;
@@ -407,8 +407,8 @@ def __validate1 (property):
 #   import set ;
 #   import path ;
 #   import assert ;
-#   
-#   
+#
+#
 
 
 #   rule validate-property-sets ( property-sets * )
@@ -472,10 +472,10 @@ def translate_dependencies(properties, project_id, location):
                     pass
                 else:
                     rooted = os.path.join(os.getcwd(), location, rooted)
-                    
+
                 result.append(Property(p.feature(), rooted + "//" + m.group(2), p.condition()))
-                
-            elif os.path.isabs(v):                
+
+            elif os.path.isabs(v):
                 result.append(p)
             else:
                 result.append(Property(p.feature(), project_id + "//" + v, p.condition()))
@@ -512,10 +512,10 @@ class PropertyMap:
         assert isinstance(value, (basestring, type(None)))
         matches = []
         match_ranks = []
-        
+
         for i in range(0, len(self.__properties)):
             p = self.__properties[i]
-                        
+
             if b2.util.set.contains (p, properties):
                 matches.append (i)
                 match_ranks.append(len(p))
@@ -529,7 +529,7 @@ class PropertyMap:
             raise NoBestMatchingAlternative ()
 
         best = best [0]
-            
+
         original = self.__values[best]
 
         if value:
@@ -542,12 +542,12 @@ class PropertyMap:
 #       import errors : try catch ;
 #       import feature ;
 #       import feature : feature subfeature compose ;
-#       
+#
 #       # local rules must be explicitly re-imported
 #       import property : path-order ;
-#       
+#
 #       feature.prepare-test property-test-temp ;
-#   
+#
 #       feature toolset : gcc : implicit symmetric ;
 #       subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
 #         3.0 3.0.1 3.0.2 : optional ;
@@ -556,98 +556,98 @@ class PropertyMap:
 #       feature optimization : on off ;
 #       feature variant : debug release : implicit composite symmetric ;
 #       feature rtti : on off : link-incompatible ;
-#   
+#
 #       compose <variant>debug : <define>_DEBUG <optimization>off ;
 #       compose <variant>release : <define>NDEBUG <optimization>on ;
-#   
+#
 #       import assert ;
 #       import "class" : new ;
-#       
+#
 #       validate <toolset>gcc  <toolset>gcc-3.0.1 : $(test-space) ;
-#       
+#
 #       assert.result <toolset>gcc <rtti>off <define>FOO
 #           : refine <toolset>gcc <rtti>off
 #           : <define>FOO
 #           : $(test-space)
 #           ;
-#   
+#
 #       assert.result <toolset>gcc <optimization>on
 #           : refine <toolset>gcc <optimization>off
 #           : <optimization>on
 #           : $(test-space)
 #           ;
-#   
+#
 #       assert.result <toolset>gcc <rtti>off
 #           : refine <toolset>gcc : <rtti>off : $(test-space)
 #           ;
-#   
+#
 #       assert.result <toolset>gcc <rtti>off <rtti>off:<define>FOO
-#           : refine <toolset>gcc : <rtti>off <rtti>off:<define>FOO 
+#           : refine <toolset>gcc : <rtti>off <rtti>off:<define>FOO
 #           : $(test-space)
 #           ;
-#       
-#       assert.result <toolset>gcc:<define>foo <toolset>gcc:<define>bar 
-#           : refine <toolset>gcc:<define>foo : <toolset>gcc:<define>bar 
+#
+#       assert.result <toolset>gcc:<define>foo <toolset>gcc:<define>bar
+#           : refine <toolset>gcc:<define>foo : <toolset>gcc:<define>bar
 #           : $(test-space)
 #           ;
-#   
+#
 #       assert.result <define>MY_RELEASE
-#           : evaluate-conditionals-in-context 
+#           : evaluate-conditionals-in-context
 #             <variant>release,<rtti>off:<define>MY_RELEASE
 #             : <toolset>gcc <variant>release <rtti>off
-#                    
+#
 #           ;
-#   
+#
 #       try ;
 #           validate <feature>value : $(test-space) ;
 #       catch "Invalid property '<feature>value': unknown feature 'feature'." ;
-#   
+#
 #       try ;
 #           validate <rtti>default : $(test-space) ;
 #       catch \"default\" is not a known value of feature <rtti> ;
-#       
+#
 #       validate <define>WHATEVER : $(test-space) ;
-#   
+#
 #       try ;
 #           validate <rtti> : $(test-space) ;
 #       catch "Invalid property '<rtti>': No value specified for feature 'rtti'." ;
-#   
+#
 #       try ;
 #           validate value : $(test-space) ;
 #       catch "value" is not a value of an implicit feature ;
-#              
-#   
-#       assert.result <rtti>on 
+#
+#
+#       assert.result <rtti>on
 #           : remove free implicit : <toolset>gcc <define>foo <rtti>on : $(test-space) ;
-#   
-#       assert.result <include>a 
+#
+#       assert.result <include>a
 #           : select include : <include>a <toolset>gcc ;
-#   
-#       assert.result <include>a 
+#
+#       assert.result <include>a
 #           : select include bar : <include>a <toolset>gcc ;
-#   
+#
 #       assert.result <include>a <toolset>gcc
 #           : select include <bar> <toolset> : <include>a <toolset>gcc ;
-#       
-#       assert.result <toolset>kylix <include>a 
+#
+#       assert.result <toolset>kylix <include>a
 #           : change <toolset>gcc <include>a : <toolset> kylix ;
-#   
-#       # Test ordinary properties 
-#       assert.result 
-#         : split-conditional <toolset>gcc 
+#
+#       # Test ordinary properties
+#       assert.result
+#         : split-conditional <toolset>gcc
 #         ;
-#       
+#
 #       # Test properties with ":"
 #       assert.result
 #         : split-conditional <define>FOO=A::B
 #         ;
-#       
+#
 #       # Test conditional feature
 #       assert.result <toolset>gcc,<toolset-gcc:version>3.0 <define>FOO
 #         : split-conditional <toolset>gcc,<toolset-gcc:version>3.0:<define>FOO
 #         ;
-#       
+#
 #       feature.finish-test property-test-temp ;
 #   }
-#   
-    
+#
+

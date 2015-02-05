@@ -1,11 +1,11 @@
 # Status: ported, except for unit tests.
 # Base revision: 64488
 #
-# Copyright 2001, 2002, 2003 Dave Abrahams 
-# Copyright 2002, 2006 Rene Rivera 
-# Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2001, 2002, 2003 Dave Abrahams
+# Copyright 2002, 2006 Rene Rivera
+# Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import re
 
@@ -90,14 +90,14 @@ class Feature(object):
     def __str__(self):
         return self._name
 
-    
+
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
     """
     global __all_attributes, __all_features, __implicit_features, __composite_properties
     global __features_with_attributes, __subfeature_from_value, __all_top_features, __free_features
     global __all_subfeatures
-        
+
     # The list with all attribute names.
     __all_attributes = [ 'implicit',
                         'composite',
@@ -120,28 +120,28 @@ def reset ():
             return getattr(self, "_attributes") & flag
         setattr(Feature, a.replace("-", "_"), probe)
         i = i << 1
-    
+
     # A map containing all features. The key is the feature name.
     # The value is an instance of Feature class.
     __all_features = {}
-    
+
     # All non-subfeatures.
     __all_top_features = []
-    
+
     # Maps valus to the corresponding implicit feature
     __implicit_features = {}
-    
+
     # A map containing all composite properties. The key is a Property instance,
     # and the value is a list of Property instances
     __composite_properties = {}
-    
+
     __features_with_attributes = {}
     for attribute in __all_attributes:
         __features_with_attributes [attribute] = []
-    
+
     # Maps a value to the corresponding subfeature name.
     __subfeature_from_value = {}
-    
+
     # All free features
     __free_features = []
 
@@ -177,12 +177,12 @@ def feature (name, values, attributes = []):
     __all_features[name] = feature
     # Temporary measure while we have not fully moved from 'gristed strings'
     __all_features["<" + name + ">"] = feature
-        
+
     for attribute in attributes:
         __features_with_attributes [attribute].append (name)
 
     name = add_grist(name)
-        
+
     if 'subfeature' in attributes:
         __all_subfeatures.append(name)
     else:
@@ -262,18 +262,18 @@ def is_implicit_value (value_string):
     assert isinstance(value_string, basestring)
     if __implicit_features.has_key(value_string):
         return __implicit_features[value_string]
-    
+
     v = value_string.split('-')
 
     if not __implicit_features.has_key(v[0]):
         return False
 
     feature = __implicit_features[v[0]]
-    
+
     for subvalue in (v[1:]):
         if not __find_implied_subfeature(feature, subvalue, v[0]):
             return False
-            
+
     return True
 
 def implied_feature (implicit_value):
@@ -281,10 +281,10 @@ def implied_feature (implicit_value):
     """
     assert isinstance(implicit_value, basestring)
     components = implicit_value.split('-')
-    
+
     if not __implicit_features.has_key(components[0]):
         raise InvalidValue ("'%s' is not a value of an implicit feature" % implicit_value)
-        
+
     return __implicit_features[components[0]]
 
 def __find_implied_subfeature (feature, subvalue, value_string):
@@ -323,7 +323,6 @@ def validate_feature (name):
     else:
         return __all_features[name]
 
-
 # Uses Property
 def __expand_subfeatures_aux (property_, dont_validate = False):
     """ Helper for expand_subfeatures.
@@ -350,7 +349,7 @@ def __expand_subfeatures_aux (property_, dont_validate = False):
         validate_value_string(f, v)
 
     components = v.split ("-")
-    
+
     v = components[0]
 
     result = [property.Property(f, components[0])]
@@ -360,15 +359,15 @@ def __expand_subfeatures_aux (property_, dont_validate = False):
     while len(subvalues) > 0:
         subvalue = subvalues [0]    # pop the head off of subvalues
         subvalues = subvalues [1:]
-        
+
         subfeature = __find_implied_subfeature (f, subvalue, v)
-        
+
         # If no subfeature was found, reconstitute the value string and use that
         if not subfeature:
             return [property.Property(f, '-'.join(components))]
-            
+
         result.append(property.Property(subfeature, subvalue))
-    
+
     return result
 
 def expand_subfeatures(properties, dont_validate = False):
@@ -376,11 +375,11 @@ def expand_subfeatures(properties, dont_validate = False):
     Make all elements of properties corresponding to implicit features
     explicit, and express all subfeature values as separate properties
     in their own right. For example, the property
-    
+
        gcc-2.95.2-linux-x86
-    
+
     might expand to
-    
+
       <toolset>gcc <toolset-version>2.95.2 <toolset-os>linux <toolset-cpu>x86
 
     properties:     A sequence with elements of the form
@@ -474,17 +473,17 @@ def validate_value_string (f, value_string):
     value-string is provided, the subvalues are only valid for the given
     value of the feature. Thus, you could say that
     <target-platform>mingw is specifc to <toolset>gcc-2.95.2 as follows:
-    
+
           extend-subfeature toolset gcc-2.95.2 : target-platform : mingw ;
 
     feature:        The feature whose subfeature is being extended.
-    
+
     value-string:   If supplied, specifies a specific value of the
                     main feature for which the new subfeature values
                     are valid.
-    
+
     subfeature:     The name of the subfeature.
-    
+
     subvalues:      The additional values of the subfeature being defined.
 """
 def extend_subfeature (feature_name, value_string, subfeature_name, subvalues):
@@ -493,23 +492,23 @@ def extend_subfeature (feature_name, value_string, subfeature_name, subvalues):
     assert isinstance(subfeature_name, basestring)
     assert is_iterable_typed(subvalues, basestring)
     feature = validate_feature(feature_name)
-    
+
     if value_string:
         validate_value_string(feature, value_string)
 
     subfeature_name = feature_name + '-' + __get_subfeature_name (subfeature_name, value_string)
-    
+
     extend(subfeature_name, subvalues) ;
     subfeature = __all_features[subfeature_name]
 
     if value_string == None: value_string = ''
-    
+
     if not __subfeature_from_value.has_key(feature):
         __subfeature_from_value [feature] = {}
-        
+
     if not __subfeature_from_value[feature].has_key(value_string):
         __subfeature_from_value [feature][value_string] = {}
-        
+
     for subvalue in subvalues:
         __subfeature_from_value [feature][value_string][subvalue] = subfeature
 
@@ -520,16 +519,16 @@ def subfeature (feature_name, value_string, subfeature, subvalues, attributes = 
         feature_name:   Root feature that is not a subfeature.
         value_string:   An optional value-string specifying which feature or
                         subfeature values this subfeature is specific to,
-                        if any.                
+                        if any.
         subfeature:     The name of the subfeature being declared.
         subvalues:      The allowed values of this subfeature.
         attributes:     The attributes of the subfeature.
     """
     parent_feature = validate_feature (feature_name)
-    
+
     # Add grist to the subfeature name if a value-string was supplied
     subfeature_name = __get_subfeature_name (subfeature, value_string)
-    
+
     if subfeature_name in __all_features[feature_name].subfeatures():
         message = "'%s' already declared as a subfeature of '%s'" % (subfeature, feature_name)
         message += " specific to '%s'" % value_string
@@ -538,7 +537,7 @@ def subfeature (feature_name, value_string, subfeature, subvalues, attributes = 
     # First declare the subfeature as a feature in its own right
     f = feature (feature_name + '-' + subfeature_name, subvalues, attributes + ['subfeature'])
     f.set_parent(parent_feature, value_string)
-    
+
     parent_feature.add_subfeature(f)
 
     # Now make sure the subfeature values are known.
@@ -561,7 +560,7 @@ def compose (composite_property_s, component_properties_s):
         component_properties = component_properties_s
     else:
         component_properties = [property.create_from_string(p) for p in component_properties_s]
-                                       
+
     if not f.composite():
         raise BaseException ("'%s' is not a composite feature" % f)
 
@@ -594,7 +593,7 @@ def get_values (feature, properties):
     for p in properties:
         if get_grist (p) == feature:
             result.append (replace_grist (p, ''))
-    
+
     return result
 
 def free_features ():
@@ -634,7 +633,7 @@ def expand_composites (properties):
                             result.append (x)
                 elif any(r.feature() == f for r in result):
                     raise FeatureConflict ("explicitly-specified values of non-free feature '%s' conflict\n"
-                    "existing values: '%s'\nvalue from expanding '%s': '%s'" % (f, 
+                    "existing values: '%s'\nvalue from expanding '%s': '%s'" % (f,
                     [r.value() for r in result if r.feature() == f], p, x.value()))
                 else:
                     result.append (x)
@@ -713,45 +712,45 @@ def expand (properties):
         assert is_iterable_typed(properties, Property)
     expanded = expand_subfeatures(properties)
     return expand_composites (expanded)
-    
+
 # Accepts list of Property objects
 def add_defaults (properties):
     """ Given a set of properties, add default values for features not
-        represented in the set. 
+        represented in the set.
         Note: if there's there's ordinary feature F1 and composite feature
         F2, which includes some value for F1, and both feature have default values,
         then the default value of F1 will be added, not the value in F2. This might
         not be right idea: consider
-        
+
           feature variant : debug ... ;
                <variant>debug : .... <runtime-debugging>on
           feature <runtime-debugging> : off on ;
-          
+
           Here, when adding default for an empty property set, we'll get
-        
+
             <variant>debug <runtime_debugging>off
-         
-          and that's kind of strange.        
+
+          and that's kind of strange.
     """
     if __debug__:
         from .property import Property
         assert is_iterable_typed(properties, Property)
 
     result = [x for x in properties]
-    
+
     handled_features = set()
     for p in properties:
         # We don't add default for conditional properties.  We don't want
         # <variant>debug:<define>DEBUG to be takes as specified value for <variant>
         if not p.condition():
             handled_features.add(p.feature())
-        
+
     missing_top = [f for f in __all_top_features if not f in handled_features]
     more = defaults(missing_top)
     result.extend(more)
     for p in more:
         handled_features.add(p.feature())
-       
+
     # Add defaults for subfeatures of features which are present
     for p in result[:]:
         s = p.feature().subfeatures()
@@ -759,7 +758,7 @@ def add_defaults (properties):
         for p in more:
             handled_features.add(p.feature())
         result.extend(more)
-    
+
     return result
 
 def minimize (properties):
@@ -780,21 +779,21 @@ def minimize (properties):
         if __composite_properties.has_key (property):
             components.extend(__composite_properties[property])
     properties = b2.util.set.difference (properties, components)
-    
+
     # handle subfeatures and implicit features
 
     # move subfeatures to the end of the list
     properties = [p for p in properties if not p.feature().subfeature()] +\
         [p for p in properties if p.feature().subfeature()]
-    
+
     result = []
     while properties:
         p = properties[0]
         f = p.feature()
-        
+
         # locate all subproperties of $(x[1]) in the property set
         subproperties = __select_subproperties (p, properties)
-        
+
         if subproperties:
             # reconstitute the joined property name
             subproperties.sort ()
@@ -807,7 +806,7 @@ def minimize (properties):
             # eliminate properties whose value is equal to feature's
             # default and which are not symmetric and which do not
             # contradict values implied by composite properties.
-            
+
             # since all component properties of composites in the set
             # have been eliminated, any remaining property whose
             # feature is the same as a component of a composite in the
@@ -817,7 +816,7 @@ def minimize (properties):
                   #\
                    #or get_grist (fullp) in get_grist (components):
                    # FIXME: restore above
-                  
+
 
             properties = properties[1:]
 
@@ -839,13 +838,13 @@ def split (properties):
     def split_one (properties):
         pieces = re.split (__re_slash_or_backslash, properties)
         result = []
-        
+
         for x in pieces:
             if not get_grist (x) and len (result) > 0 and get_grist (result [-1]):
                 result = result [0:-1] + [ result [-1] + '/' + x ]
             else:
                 result.append (x)
-        
+
         return result
 
     if isinstance (properties, str):
@@ -855,14 +854,14 @@ def split (properties):
     for p in properties:
         result += split_one (p)
     return result
-    
+
 
 def compress_subproperties (properties):
     """ Combine all subproperties into their parent properties
 
         Requires: for every subproperty, there is a parent property.  All
         features are explicitly expressed.
-        
+
         This rule probably shouldn't be needed, but
         build-request.expand-no-defaults is being abused for unintended
         purposes and it needs help
@@ -874,11 +873,11 @@ def compress_subproperties (properties):
     all_subs = set()
     for p in properties:
         f = p.feature()
-        
+
         if not f.subfeature():
             subs = __select_subproperties (p, properties)
             if subs:
-            
+
                 matched_subs.update(subs)
 
                 subvalues = '-'.join (sub.value() for sub in subs)
@@ -931,7 +930,7 @@ def __validate_feature_attributes (name, attributes):
     elif 'free' in attributes and 'propagated' in attributes:
         raise InvalidAttribute ("free features cannot also be propagated (in declaration of feature '%s')" % name)
 
-    
+
 def __validate_feature (feature):
     """ Generates an error if the feature is unknown.
     """
@@ -951,5 +950,5 @@ def __select_subfeatures (parent_property, features):
         assert isinstance(parent_property, Property)
         assert is_iterable_typed(features, Feature)
     return [f for f in features if is_subfeature_of (parent_property, f)]
-  
+
 # FIXME: copy over tests.
