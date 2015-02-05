@@ -47,17 +47,17 @@ class CastTargetClass(targets.TypedTarget):
             result.append(get_manager().virtual_targets().register(r))
 
         return result
-    
+
 
 @bjam_signature((["name", "type"], ["sources", "*"], ["requirements", "*"],
                  ["default_build", "*"], ["usage_requirements", "*"]))
 def cast(name, type, sources, requirements, default_build, usage_requirements):
-   
+
     from b2.manager import get_manager
     t = get_manager().targets()
-    
+
     project = get_manager().projects().current()
-        
+
     return t.main_target_alternative(
         CastTargetClass(name, project, type,
                         t.main_target_sources(sources, name),

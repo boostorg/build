@@ -151,7 +151,7 @@ def handle_input_files(input_files):
 
 @bjam_signature((["sources", "*"], ["args", "*"], ["input_files", "*"],
                  ["requirements", "*"], ["target_name", "?"],
-                 ["default_build", "*"]))                 
+                 ["default_build", "*"]))
 def run(sources, args, input_files, requirements, target_name=None, default_build=[]):
     if args:
         requirements.append("<testing.arg>" + " ".join(args))
@@ -160,7 +160,7 @@ def run(sources, args, input_files, requirements, target_name=None, default_buil
 
 @bjam_signature((["sources", "*"], ["args", "*"], ["input_files", "*"],
                  ["requirements", "*"], ["target_name", "?"],
-                 ["default_build", "*"]))                 
+                 ["default_build", "*"]))
 def run_fail(sources, args, input_files, requirements, target_name=None, default_build=[]):
     if args:
         requirements.append("<testing.arg>" + " ".join(args))
@@ -189,7 +189,7 @@ __ln1 = re.compile("/(tools|libs)/(.*)/(test|example)")
 __ln2 = re.compile("/(tools|libs)/(.*)$")
 __ln3 = re.compile("(/status$)")
 def get_library_name(path):
-    
+
     path = path.replace("\\", "/")
     match1 = __ln1.match(path)
     match2 = __ln2.match(path)

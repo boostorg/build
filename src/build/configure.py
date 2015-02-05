@@ -10,7 +10,7 @@
 # This module defines function to help with two main tasks:
 #
 # - Discovering build-time configuration for the purposes of adjusting
-#   build process.  
+#   build process.
 # - Reporting what is built, and how it is configured.
 
 import b2.build.property as property
@@ -42,7 +42,7 @@ __log_fd = -1
 def register_components(components):
     """Declare that the components specified by the parameter exist."""
     __components.extend(components)
-    
+
 def components_building(components):
     """Declare that the components specified by the parameters will be build."""
     __built_components.extend(components)
@@ -98,7 +98,7 @@ def builds(metatarget_reference, project, ps, what):
         jam_targets = []
         for t in targets:
             jam_targets.append(t.actualize())
-        
+
         x = ("    - %s" % what).rjust(__width)
         if bjam.call("UPDATE_NOW", jam_targets, str(__log_fd), "ignore-minus-n"):
             __builds_cache[(what, ps)] = True
@@ -134,7 +134,7 @@ class CheckTargetBuildsWorker:
         self.false_properties = property.create_from_strings(false_properties, True)
 
     def check(self, ps):
-        
+
         # FIXME: this should not be hardcoded. Other checks might
         # want to consider different set of features as relevant.
         toolset = ps.get('toolset')[0]
@@ -146,7 +146,7 @@ class CheckTargetBuildsWorker:
                    ps.get_properties("architecture")
         rps = property_set.create(relevant)
         t = get_manager().targets().current()
-        p = t.project()        
+        p = t.project()
         if builds(self.target, p, rps, "%s builds" % self.target):
             choosen = self.true_properties
         else:
