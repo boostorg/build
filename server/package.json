@@ -1,0 +1,14 @@
+{
+  "name": "b2-server",
+  "version": "0.0.1",
+  "description": "Boost.Build remote server",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Vladimir Prus <vladimir.prus@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.11.2"
+  }
+}
