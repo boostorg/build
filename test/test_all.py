@@ -11,6 +11,7 @@ import BoostBuild
 import os
 import os.path
 import sys
+import platform
 
 xml = "--xml" in sys.argv
 toolset = BoostBuild.get_toolset()
@@ -24,6 +25,11 @@ for s in ("BOOST_ROOT", "BOOST_BUILD_PATH", "JAM_TOOLSET", "BCCROOT",
         del os.environ[s]
     except:
         pass
+
+FAILED = "FAILED"
+     
+if hasattr(sys.stdout, "isatty") and sys.stdout.isatty() and platform.system() != 'Windows':
+    FAILED = '\x1b[31mFAILED\x1b[0m'
 
 BoostBuild.set_defer_annotations(1)
 
@@ -95,7 +101,7 @@ def run_tests(critical_tests, other_tests):
             if passed:
                 print("PASSED")
             else:
-                print("FAILED")
+                print(FAILED)
         else:
             rs = "succeed"
             if not passed:
