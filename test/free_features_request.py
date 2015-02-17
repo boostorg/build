@@ -10,7 +10,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 t.write("jamroot.jam", """\
 exe hello : hello.cpp foo ;

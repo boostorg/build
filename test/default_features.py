@@ -9,7 +9,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 # Declare *non-propagated* feature foo.
 t.write("jamroot.jam", """

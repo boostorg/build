@@ -6,7 +6,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 t.write("jamroot.jam", """\
 project : requirements <link>static ;

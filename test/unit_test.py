@@ -8,7 +8,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 # Create the needed files.
 t.write("jamroot.jam", """

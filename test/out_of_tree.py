@@ -11,7 +11,7 @@
 import BoostBuild
 
 # Create a temporary working directory.
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 # Create the needed files.
 t.write("p1/jamroot.jam", "exe hello : hello.cpp ;")

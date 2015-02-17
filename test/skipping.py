@@ -9,7 +9,7 @@
 import BoostBuild
 
 # Create a temporary working directory.
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 t.write("a.cpp", "int main() {}\n")
 t.write("b.cpp", "int main() {}\n")

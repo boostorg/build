@@ -10,7 +10,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 # The point of this test is to have exe "main" which uses library "b", which
 # uses library "a". When "main" is built with <hardcode-dll-paths>true, paths

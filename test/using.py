@@ -7,7 +7,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 t.write("jamroot.jam", "using some_tool ;")
 t.write("some_tool.jam", """\

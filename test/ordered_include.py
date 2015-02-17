@@ -9,7 +9,7 @@
 import BoostBuild
 
 def test_basic():
-    tester = BoostBuild.Tester(use_test_config=False)
+    tester = BoostBuild.Tester()
     tester.write("jamroot.jam", """
     obj test : test.cpp : <include>a&&b ;
     """)
@@ -42,7 +42,7 @@ def test_basic():
     tester.cleanup()
 
 def test_order1():
-    t = BoostBuild.Tester(use_test_config=False)
+    t = BoostBuild.Tester()
     t.write("jamroot.jam", """
     obj test : test.cpp : <include>a&&b ;
     """)
@@ -69,7 +69,7 @@ def test_order1():
     t.cleanup()
 
 def test_order2():
-    t = BoostBuild.Tester(use_test_config=False)
+    t = BoostBuild.Tester()
     t.write("jamroot.jam", """
     obj test : test.cpp : <include>b&&a ;
     """)
@@ -96,7 +96,7 @@ def test_order2():
     t.cleanup()
 
 def test_order_graph():
-    t = BoostBuild.Tester(use_test_config=False)
+    t = BoostBuild.Tester()
     t.write("jamroot.jam", """
     obj test : test.cpp :
         <include>b&&a

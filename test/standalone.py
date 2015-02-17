@@ -7,7 +7,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 
 # Regression tests: standalone project were not able to refer to targets

@@ -18,7 +18,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 t.write("foo.jam", r"""
 import common ;

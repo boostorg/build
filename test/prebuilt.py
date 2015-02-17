@@ -8,7 +8,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(["debug", "release"], use_test_config=False)
+t = BoostBuild.Tester(["debug", "release"])
 
 t.set_tree('prebuilt')
 

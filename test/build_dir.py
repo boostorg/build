@@ -12,7 +12,7 @@ import BoostBuild
 import string
 import os
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 
 # Test that top-level project can affect build dir.

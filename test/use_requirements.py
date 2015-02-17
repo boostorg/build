@@ -7,7 +7,7 @@
 
 import BoostBuild
 
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester()
 
 
 # Test that usage requirements on main targets work (and are propagated all the
