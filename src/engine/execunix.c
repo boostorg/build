@@ -84,6 +84,9 @@ static struct
     int          buf_size[ 2 ];  /* buffer sizes in bytes */
     timestamp    start_dt;       /* start of command timestamp */
 
+    /* Function called on each chunk of command output. */
+    ExecCmdOutputCallback output_func;
+
     /* Function called when the command completes. */
     ExecCmdCallback func;
 
@@ -132,6 +135,7 @@ int exec_check
 void exec_cmd
 (
     string const * command,
+    ExecCmdOutputCallback output_func,
     ExecCmdCallback func,
     void * closure,
     LIST * shell
@@ -307,6 +311,7 @@ void exec_cmd
     }
 
     /* Save input data into the selected running commands table slot. */
+    cmdtab[ slot ].output_func = output_func;
     cmdtab[ slot ].func = func;
     cmdtab[ slot ].closure = closure;
 
@@ -366,6 +371,15 @@ static int read_descriptor( int i, int s )
                 BJAM_FREE( tmp );
             }
         }
+
+        if (cmdtab[ i ].output_func) {
+            /* The code above adds terminating 0, which we don't want to
+               report in the callback. */
+            int end = cmdtab[i].buf_size[s] - 1;
+            int begin = end - ret;            
+            cmdtab[i].output_func(cmdtab[i].closure, s, cmdtab[i].buffer[s],
+                                  begin, end);
+        }
     }
 
     /* If buffer full, ensure last buffer char is newline so that jam log
@@ -374,6 +388,8 @@ static int read_descriptor( int i, int s )
      */
     if ( globs.max_buf && globs.max_buf <= cmdtab[ i ].buf_size[ s ] )
         cmdtab[ i ].buffer[ s ][ cmdtab[ i ].buf_size[ s ] - 2 ] = '\n';
+
+   
 
     return feof( cmdtab[ i ].stream[ s ] );
 }

@@ -3,6 +3,7 @@
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 import bjam
+import json
 
 # To simplify implementation of tools level, we'll
 # have a global variable keeping the current manager.
@@ -107,4 +108,32 @@ class Manager:
         actual_targets = []
         for virtual_target in virtual_targets:
             actual_targets.extend (virtual_target.actualize ())
-    
+                
+    def build_started(self, action):
+        print json.dumps({
+            'token': id(action),
+            'type': 'event',
+            'event': 'build-action-started',
+            'action-name': action.action_name(),            
+            # FIXME: need to filter out non-file target.
+            'targets': [t.full_name() for t in action.targets()],
+            'sources': [t.full_name() for t in action.sources()],
+            'properties': {p.feature().name(): p.value() for p in action.properties().all()}
+        })
+
+    def build_output(self, action, stream, output):
+        print json.dumps({
+            'token': id(action),
+            'type': 'event',
+            'event': 'build-action-output',
+            'stream': stream,
+            'output': output})
+
+    def build_finished(self, action, exit_status):
+        print json.dumps({
+            'type': 'event',
+            'token': id(action),
+            'event': 'build-action-finished',
+            'exit-status': exit_status
+        })
+

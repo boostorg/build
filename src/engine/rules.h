@@ -231,6 +231,11 @@ struct _target
     char     * cmds;                  /* type-punned command list */
 
     char const * failed;
+
+#ifdef HAVE_PYTHON
+    PyObject * python_callback;
+#endif
+
 };
 
 

@@ -206,6 +206,8 @@ int anyhow = 0;
     extern PyObject * bjam_variable     ( PyObject * self, PyObject * args );
     extern PyObject * bjam_backtrace    ( PyObject * self, PyObject * args );
     extern PyObject * bjam_caller       ( PyObject * self, PyObject * args );
+
+    extern PyObject * bjam_set_update_action (PyObject * self, PyObject *args);
 #endif
 
 void regex_done();
@@ -368,6 +370,8 @@ int main( int argc, char * * argv, char * * arg_environ )
                      "Returns bjam backtrace from the last call into Python."},
                     {"caller", bjam_caller, METH_VARARGS,
                      "Returns the module from which the last call into Python is made."},
+                    {"set_update_action", bjam_set_update_action, METH_VARARGS,
+                     "Set action to update a target."},
                     {NULL, NULL, 0, NULL}
                 };
 

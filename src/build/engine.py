@@ -19,13 +19,14 @@ class BjamAction:
         self.action_name = action_name
         self.function = function
             
-    def __call__(self, targets, sources, property_set):
+    def __call__(self, targets, sources, property_set, callback=None):
 
         # Bjam actions defined from Python have only the command
         # to execute, and no associated jam procedural code. So
         # passing 'property_set' to it is not necessary.
-        bjam_interface.call("set-update-action", self.action_name,
-                            targets, sources, [])
+        bjam_interface.set_update_action(
+            self.action_name, targets, sources, [], callback)
+
         if self.function:
             self.function(targets, sources, property_set)
 
@@ -40,7 +41,7 @@ class BjamNativeAction:
         self.action_name = action_name
         self.function = function
         
-    def __call__(self, targets, sources, property_set):
+    def __call__(self, targets, sources, property_set, callback=None):
         if self.function:
             self.function(targets, sources, property_set)
         
@@ -120,7 +121,9 @@ class Engine:
         for target in targets:
             self.do_set_target_variable (target, variable, value, append)
 
-    def set_update_action (self, action_name, targets, sources, properties=property_set.empty()):
+    def set_update_action (self, action_name, targets, sources,
+                           properties=property_set.empty(),
+                           callback=None):
         """ Binds a target to the corresponding update action.
             If target needs to be updated, the action registered
             with action_name will be used.
@@ -131,7 +134,7 @@ class Engine:
         assert(isinstance(properties, property_set.PropertySet))
         if isinstance (targets, str): 
             targets = [targets]
-        self.do_set_update_action (action_name, targets, sources, properties)
+        self.do_set_update_action (action_name, targets, sources, properties, callback)
 
     def register_action (self, action_name, command, bound_list = [], flags = [],
                          function = None):
@@ -184,11 +187,11 @@ class Engine:
     # Overridables
 
 
-    def do_set_update_action (self, action_name, targets, sources, property_set):
+    def do_set_update_action (self, action_name, targets, sources, property_set, callback):
         action = self.actions.get(action_name)
         if not action:
             raise Exception("No action %s was registered" % action_name)
-        action(targets, sources, property_set)
+        action(targets, sources, property_set, callback)
 
     def do_set_target_variable (self, target, variable, value, append):
         if append:

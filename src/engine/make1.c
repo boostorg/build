@@ -102,6 +102,9 @@ static void make1c_closure( void * const closure, int status,
     timing_info const * const, char const * const cmd_stdout,
     char const * const cmd_stderr, int const cmd_exit_reason );
 
+static void make1c_output_closure(void * const closure, int stream,
+     char const * const buffer, int begin, int end);
+
 typedef struct _stack
 {
     state * stack;
@@ -113,6 +116,23 @@ static state * state_freelist = NULL;
 
 /* Currently running command counter. */
 static int cmdsrunning;
+
+#ifdef HAVE_PYTHON
+static void python_callback(PyObject *callback_name, TARGET *t, PyObject *args)
+{
+    PyObject *result;
+    
+    PyObject *method = PyObject_GetAttr(t->python_callback, callback_name);
+    
+    if (!method || !PyCallable_Check(method)) {
+        printf("internal error: Invalid Python callback for an action.\n");
+        exit(1);
+    }
+        
+    result = PyObject_Call(method, args, NULL);
+    Py_XDECREF(result);
+}
+#endif
 
 
 static state * alloc_state()
@@ -487,9 +507,18 @@ static void make1b( state * const pState )
      * empty and MAKE1C processing will directly signal the target's completion.
      */
 
-    if ( t->cmds == NULL || --( ( CMD * )t->cmds )->asynccnt == 0 )
+    if ( t->cmds == NULL || --( ( CMD * )t->cmds )->asynccnt == 0 ) {
+
+#ifdef HAVE_PYTHON
+        if (t->python_callback) {
+            PyObject *args = PyTuple_New(0);
+            python_callback(constant_py_build_started, t, args);
+            Py_DECREF(args);
+        }
+#endif
+
         push_state( &state_stack, t, NULL, T_STATE_MAKE1C );
-    else if ( DEBUG_EXECCMD )
+    }  else if ( DEBUG_EXECCMD )
     {
         CMD * cmd = ( CMD * )t->cmds;
         printf( "Delaying %s %s: %d targets not ready\n", object_str( cmd->rule->name ), object_str( t->boundname ), cmd->asynccnt );
@@ -551,7 +580,8 @@ static void make1c( state const * const pState )
         }
         else
         {
-            exec_cmd( cmd->buf, make1c_closure, t, cmd->shell );
+            exec_cmd( cmd->buf, make1c_output_closure, make1c_closure, 
+                      t, cmd->shell );
 
             /* Wait until under the concurrent command count limit. */
             /* FIXME: This wait could be skipped here and moved to just before
@@ -786,6 +816,34 @@ static void call_action_rule
     }
 }
 
+/* Handle output from running commands. Needed for server mode,
+   where we can and should report output as it's produced,
+   as opposed to when the command is done. */
+static void make1c_output_closure
+(
+    void * const closure,
+    int stream,
+    char const * const buffer,
+    int begin,
+    int end
+)
+{
+#ifdef HAVE_PYTHON
+    TARGET * const t = (TARGET *)closure;
+    
+    if (t->python_callback) {
+        PyObject *args = PyTuple_New(2);
+        PyObject* py_s = PyInt_FromLong(stream);
+        PyObject *py_output = PyString_FromStringAndSize(buffer + begin,
+                                                         end - begin);
+        PyTuple_SetItem(args, 0, py_s); /* Steals reference */
+        PyTuple_SetItem(args, 1, py_output); /* Likewise */
+        python_callback(constant_py_build_output, t, args);
+        Py_DECREF(args);
+    }    
+
+#endif
+}
 
 /*
  * make1c_closure() - handle command execution completion and go to MAKE1C.
@@ -850,6 +908,21 @@ static void make1c_closure
 
     out_action( rule_name, target_name, cmd->buf->value, cmd_stdout, cmd_stderr,
         cmd_exit_reason );
+
+#ifdef HAVE_PYTHON
+    if (t->python_callback) {
+        
+        PyObject *args = PyTuple_New(1);
+        PyObject *py_exit_reason = PyInt_FromLong(cmd_exit_reason);
+        
+        /* Steals the reference. */
+        PyTuple_SetItem(args, 0, py_exit_reason);
+
+        python_callback(constant_py_build_finished, t, args);
+
+        Py_DECREF(args);
+    }
+#endif
 
     if ( !globs.noexec )
     {

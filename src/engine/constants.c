@@ -72,6 +72,12 @@ void constants_init( void )
     constant_python_interface         = object_new( "python_interface" );
     constant_extra_pythonpath         = object_new( "EXTRA_PYTHONPATH" );
     constant_MAIN_PYTHON              = object_new( "MAIN_PYTHON" );
+
+#ifdef HAVE_PYTHON
+    constant_py_build_started       = PyString_FromString( "build_started" );
+    constant_py_build_output        = PyString_FromString( "build_output" );
+    constant_py_build_finished      = PyString_FromString( "build_finished" );
+#endif
 }
 
 void constants_done( void )
@@ -184,3 +190,9 @@ OBJECT * constant_python;
 OBJECT * constant_python_interface;
 OBJECT * constant_extra_pythonpath;
 OBJECT * constant_MAIN_PYTHON;
+
+#ifdef HAVE_PYTHON
+PyObject * constant_py_build_started;
+PyObject * constant_py_build_output;
+PyObject * constant_py_build_finished;
+#endif

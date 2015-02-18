@@ -62,6 +62,7 @@
 
 import bjam
 
+import sys
 import re
 import os.path
 import string
@@ -710,6 +711,9 @@ class FileTarget (AbstractFileTarget):
 
         return os.path.normpath(self.path_)
 
+    def full_name (self):
+        return os.path.join(self.path(), self.name())
+
 
 class NotFileTarget(AbstractFileTarget):
 
@@ -811,8 +815,9 @@ class Action:
         # not but putting variables on bjam-level targets.
         bjam.call("set-target-variable", actual_targets, ".action", repr(self))
 
-        self.manager_.engine ().set_update_action (self.action_name_, actual_targets, self.actual_sources_,
-                                                   properties)
+        self.manager_.engine ().set_update_action (
+            self.action_name_, actual_targets, self.actual_sources_,
+            properties, self)
 
         # Since we set up creating action here, we also set up
         # action for cleaning up
@@ -880,6 +885,15 @@ class Action:
             its argument.
         """
         return prop_set
+
+    def build_started(self):
+        self.manager_.build_started(self)
+
+    def build_output(self, stream, output):
+        self.manager_.build_output(self, stream, output)
+    
+    def build_finished(self, exit_status):
+        self.manager_.build_finished(self, exit_status)
 
 
 class NullAction (Action):

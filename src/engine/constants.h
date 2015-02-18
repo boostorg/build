@@ -13,6 +13,10 @@
 
 #include "object.h"
 
+#ifdef HAVE_PYTHON
+#include <Python.h>
+#endif
+
 void constants_init( void );
 void constants_done( void );
 
@@ -69,5 +73,11 @@ extern OBJECT * constant_python;                    /* "__python__" */
 extern OBJECT * constant_python_interface;          /* "python_interface" */
 extern OBJECT * constant_extra_pythonpath;          /* "EXTRA_PYTHONPATH" */
 extern OBJECT * constant_MAIN_PYTHON;               /* "MAIN_PYTHON" */
+
+#ifdef HAVE_PYTHON
+extern PyObject * constant_py_build_started;        /* action_finished */
+extern PyObject * constant_py_build_output;         /* action_finished */
+extern PyObject * constant_py_build_finished;       /* action_finished */
+#endif
 
 #endif

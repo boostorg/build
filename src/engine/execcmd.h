@@ -38,6 +38,19 @@ typedef void (* ExecCmdCallback)
     int const cmd_exit_reason
 );
 
+typedef void (* ExecCmdOutputCallback)
+(
+    void * const closure,
+    int stream,
+    /* Buffer where output is stored. */
+    char const * const buffer,
+    /* Index where new output starts. */
+    int start,
+    /* Index past the end of new output, where output does not
+       include any terminating zeroes. */
+    int end
+);
+
 /* Status codes passed to ExecCmdCallback routines. */
 #define EXEC_CMD_OK    0
 #define EXEC_CMD_FAIL  1
@@ -60,6 +73,7 @@ int exec_check
 void exec_cmd
 (
     string const * command,
+    ExecCmdOutputCallback output_func,
     ExecCmdCallback func,
     void * closure,
     LIST * shell

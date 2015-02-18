@@ -2326,6 +2326,55 @@ PyObject * bjam_caller( PyObject * self, PyObject * args )
         object_str( frame_before_python_call->prev->module->name ) : "" );
 }
 
+PyObject * bjam_set_update_action (PyObject * self, PyObject *args)
+{
+    FRAME    inner[ 1 ];
+    LIST   * result;
+    PARSE  * p;
+    OBJECT * rulename;
+    PyObject *args_proper;
+
+    int s = PyTuple_Size(args);
+
+    /* PyTuple_GetItem returns borrowed reference. */
+    rulename = object_new( PyString_AsString( PyTuple_GetItem( args, 0 ) ) );
+
+    /* 3 arguments to action - targets, sources and properties */
+    args_proper = PyTuple_GetSlice(args, 1, 4);
+    make_jam_arguments_from_python (inner, args_proper);
+    Py_DECREF(args_proper);
+
+    result = evaluate_rule( bindrule( rulename, inner->module), rulename, inner );
+    object_free( rulename );
+
+    frame_free( inner );
+
+    /* The function should not return anything, and we won't use any result, but
+       free the result just in case. */
+    list_free( result );
+
+    if (s > 4) {
+        /* Last parameter is callback */
+        PyObject *callback = PyTuple_GetItem(args, s-1);
+
+        if (callback != Py_None) {
+            PyObject *targets = PyTuple_GetItem(args, 1);
+            Py_ssize_t targets_length = PyList_Size(targets);
+            int i;
+
+            for (i = 0; i < targets_length; ++i) {
+                PyObject *tn = PyList_GetItem(targets, i);
+                OBJECT* target_name = object_new(PyString_AsString(tn));
+                TARGET* target = bindtarget(target_name);
+                target->python_callback = callback;            
+                object_free(target_name);
+            }                
+        }
+    }
+    
+    return Py_None;
+}
+
 #endif  /* #ifdef HAVE_PYTHON */
 
 
