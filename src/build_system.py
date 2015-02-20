@@ -467,7 +467,7 @@ class Builder:
             def should_clean_project(p):
                 if p in projects:
                     return True
-                elif p.parent().name() == 'project-config':
+                elif p.parent().is_root():
                     return False
                 else:
                     return should_clean_project(p.parent())
@@ -626,6 +626,14 @@ class Server:
                             "success": "true" if ok else "false"
                             }
                     print json.dumps(done)
+                    sys.stdout.flush()
+
+                elif r == "get":
+                    p = j.get('path')
+
+                    if p == 'properties':
+                        pass
+
 
             else:
                 print "unknown type"
@@ -703,7 +711,7 @@ def main_real():
         if not current_project:
             manager.errors()("Server mode requires starting in project root")
 
-        if not current_project.parent().name() == 'project-config':
+        if not current_project.is_root():
             manager.errors()("Server mode requires starting in project root")
 
         server = Server(current_project, manager)

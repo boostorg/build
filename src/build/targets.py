@@ -352,6 +352,8 @@ class ProjectTarget (AbstractTarget):
         self.location_ = manager.projects().attribute (project_module, 'location')
         self.requirements_ = requirements
         self.default_build_ = default_build
+
+        self.is_root_ = manager.projects().attribute(project_module, 'project-root') == self.location_;
        
         self.build_dir_ = None
         
@@ -389,6 +391,9 @@ class ProjectTarget (AbstractTarget):
     # way to make 'make' work without this method.
     def project_module (self):
         return self.project_module_
+
+    def is_root(self):
+        return self.is_root_
 
     def parent(self):
         """Return ProjectTarget instance that is parent of this one, or None."""
