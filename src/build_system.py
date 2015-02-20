@@ -26,6 +26,7 @@ import b2.build.project as project
 import b2.build.virtual_target as virtual_target
 import b2.build.build_request as build_request
 
+
 import b2.util.regex
 
 from b2.manager import get_manager
@@ -38,6 +39,7 @@ import bjam
 import os
 import sys
 import re
+import json
 
 ################################################################################
 #
@@ -111,33 +113,6 @@ def set_post_build_hook(callable):
 #
 ################################################################################
 
-# Returns actual Jam targets to be used for executing a clean request.
-#
-def actual_clean_targets(targets):
-
-    # Construct a list of projects explicitly detected as targets on this build
-    # system run. These are the projects under which cleaning is allowed.
-    for t in targets:
-        if isinstance(t, b2.build.targets.ProjectTarget):
-            project_targets.append(t.project_module())
-
-    # Construct a list of targets explicitly detected on this build system run
-    # as a result of building main targets.
-    targets_to_clean = set()
-    for t in results_of_main_targets:
-        # Do not include roots or sources.
-        targets_to_clean.update(virtual_target.traverse(t))
-
-    to_clean = []
-    for t in get_manager().virtual_targets().all_targets():
-
-        # Remove only derived targets.
-        if t.action():
-            p = t.project()
-            if t in targets_to_clean or should_clean_project(p.project_module()):
-                to_clean.append(t)
-
-    return [t.actualize() for t in to_clean]
 
 _target_id_split = re.compile("(.*)//(.*)")
 
@@ -392,25 +367,118 @@ def process_explicit_toolset_requests():
 
     return extra_properties
 
+class Builder:
+
+        def __init__(self, current_project, metatarget_ids, manager):
+
+            self.manager = manager
+
+            self.metatargets = []
+            self.directly_requested_targets = []
+            self.engine_targets = []
+            self.config_log = None
+
+            projects = manager.projects()
+
+            for id in metatarget_ids:
+                t = None
+                if current_project:
+                    t = current_project.find(id, no_error=1)
+                else:
+                    t = find_target(id)
+
+                if not t:
+                    manager.errors()("could not find metatarget '%s'" % id)
+                else:
+                    self.metatargets.append(t)
+
+            if not self.metatargets:
+                self.metatargets = [projects.target(projects.module_name("."))]
 
 
-# Returns 'true' if the given 'project' is equal to or is a (possibly indirect)
-# child to any of the projects requested to be cleaned in this build system run.
-# Returns 'false' otherwise. Expects the .project-targets list to have already
-# been constructed.
-#
-@cached
-def should_clean_project(project):
+        def setup_config_log(self):
 
-    if project in project_targets:
-        return True
-    else:
+            # We wish to put config.log in the build directory corresponding
+            # to Jamroot, so that the location does not differ depending on
+            # directory where we do build.  The amount of indirection necessary
+            # here is scary.
+            first_project = self.metatargets[0].project()
+            first_project_root_location = first_project.get('project-root')
+            first_project_root_module = self.manager.projects().load(first_project_root_location)
+            first_project_root = self.manager.projects().target(first_project_root_module)
+            first_build_build_dir = first_project_root.build_dir()
+            path = os.path.join(first_build_build_dir, "config.log")
+            if self.config_log and path != self.config_log:
+                self.manager.error()("location of configuration log changed");
+            self.config_log = path;
 
-        parent = get_manager().projects().attribute(project, "parent-module")
-        if parent and parent != "user-config":
-            return should_clean_project(parent)
-        else:
-            return False
+            import b2.build.configure as configure
+            configure.set_log_file(path)
+
+        def generate(self, properties):
+
+            # Generation of targets might invoke configuration checks,
+            # so make sure config.log is setup.
+            self.setup_config_log()
+
+
+            self.manager.set_command_line_free_features(property_set.create(properties.free()))
+
+            targets = []
+            for t in self.metatargets:
+                try:
+                    g = t.generate(properties)
+                    if not isinstance(t, ProjectTarget):
+                        self.directly_requested_targets.extend(g.targets())
+                    targets.extend(g.targets())
+                except ExceptionWithUserContext, e:
+                    e.report()
+                except Exception:
+                    raise
+
+            self.engine_targets.extend([t.actualize() for t in targets])
+
+        def build(self):
+            bjam.call("DEPENDS", "all", self.engine_targets)
+            ok = bjam.call("UPDATE_NOW", "all")
+            # Prevent automatic update of the 'all' target, now that
+            # we have explicitly updated what we wanted.
+            bjam.call("UPDATE")
+
+            return ok
+
+        def clean(self):
+
+            """Instead of building, clean the requested targets
+
+               If a non-project metatarget was requested, we want to clean
+               final targets as well as intermediate targets, but not sources
+               or roots from other metatargets.
+
+               If a project metatarget was requested, we want to clean all targets
+               below that project.
+            """
+
+            to_clean = set([t for root in self.directly_requested_targets for t in virtual_target.traverse(root)])
+
+            projects = {m for m in self.metatargets if isinstance(m, b2.build.targets.ProjectTarget)}
+
+            @cached
+            def should_clean_project(p):
+                if p in projects:
+                    return True
+                elif p.parent().name() == 'project-config':
+                    return False
+                else:
+                    return should_clean_project(p.parent())
+
+            to_clean.update([t for t in self.manager.virtual_targets().all_targets()
+                                    if t.action() and should_clean_project(t.project())])
+
+            self.manager.engine().set_update_action("common.Clean", "clean",
+                                                    [t.actualize() for t in to_clean])
+            bjam.call("UPDATE_NOW", "clean")
+
 
 ################################################################################
 #
@@ -440,6 +508,131 @@ def main():
         except ExceptionWithUserContext, e:
             e.report()
 
+
+
+
+def command_line_build(current_project, manager, metatarget_ids, properties):
+    # Expand properties specified on the command line into multiple property
+    # sets consisting of all legal property combinations. Each expanded property
+    # set will be used for a single build run. E.g. if multiple toolsets are
+    # specified then requested targets will be built with each of them.
+    if properties:
+        expanded = build_request.expand_no_defaults(properties)
+    else:
+        expanded = [property_set.empty()]
+
+    # Check that we actually found something to build.
+    if not current_project and not metatarget_ids:
+        get_manager().errors()("no Jamfile in current directory found, and no target references specified.")
+        # FIXME:
+        # EXIT
+    # Flags indicating that this build system run has been started in order to
+    # clean existing instead of create new targets. Note that these are not the
+    # final flag values as they may get changed later on due to some special
+    # targets being specified on the command line.
+    clean = "--clean" in sys.argv
+    if "clean" in metatarget_ids:
+        clean = True
+        metatarget_ids = [t for t in metatarget_ids if t != "clean"]
+    cleanall = "--clean-all" in sys.argv
+    # List of explicitly requested files to build. Any target references read
+    # from the command line parameter not recognized as one of the targets
+    # defined in the loaded Jamfiles will be interpreted as an explicitly
+    # requested file to build. If any such files are explicitly requested then
+    # only those files and the targets they depend on will be built and they
+    # will be searched for among targets that would have been built had there
+    # been no explicitly requested files.
+    explicitly_requested_files = []
+    manager.errors().push_user_context("Processing build request")
+    # FIXME: put this BACK.
+    ## if [ option.get dump-generators : : true ]
+    ## {
+    ##     generators.dump ;
+    ## }
+    virtual_targets = []
+    builder = Builder(current_project, metatarget_ids, manager)
+
+    j = option.get("jobs")
+    if j:
+        bjam.call("set-variable", 'PARALLELISM', j)
+    k = option.get("keep-going", "true", "true")
+    if k in ["on", "yes", "true"]:
+        bjam.call("set-variable", "KEEP_GOING", "1")
+    elif k in ["off", "no", "false"]:
+        bjam.call("set-variable", "KEEP_GOING", "0")
+    else:
+        print "error: Invalid value for the --keep-going option"
+        sys.exit()
+
+        # Now that we have a set of targets to build and a set of property sets to
+    # build the targets with, we can start the main build process by using each
+    # property set to generate virtual targets from all of our listed targets
+    # and any of their dependants.
+    for p in expanded:
+        builder.generate(p)
+
+    # The 'all' pseudo target is not strictly needed expect in the case when we
+    # use it below but people often assume they always have this target
+    # available and do not declare it themselves before use which may cause
+    # build failures with an error message about not being able to build the
+    # 'all' target.
+    bjam.call("NOTFILE", "all")
+    if cleanall:
+        # Just clean totally everything.
+        bjam.call("UPDATE", "clean-all")
+    elif clean:
+        builder.clean()
+    else:
+        # FIXME:
+        # configure.print-configure-checks-summary ;
+
+        if pre_build_hook:
+            for h in pre_build_hook:
+                h()
+
+        ok = builder.build()
+
+        if post_build_hook:
+            post_build_hook(ok)
+
+class Server:
+
+    def __init__(self, current_project, manager):
+        self.current_project = current_project
+        self.manager = manager
+
+    def main_loop(self):
+
+        while True:
+            line = sys.stdin.readline()
+            if not line:
+                break
+
+            j = json.loads(line)
+
+            if j['type'] == 'request':
+                r = j['request']
+                if r == "build" or r == "clean":
+                    metatarget_ids = j.get('metatargets', [])
+                    properties = j.get('properties', [])
+                    properties = property_set.create(properties)
+
+                    builder = Builder(self.current_project, metatarget_ids, self.manager)
+                    builder.generate(properties)
+                    ok = builder.build()
+
+                    done = {"type": "event",
+                            "event": "build-finished",
+                            "success": "true" if ok else "false"
+                            }
+                    print json.dumps(done)
+
+            else:
+                print "unknown type"
+
+        print "Running main loop"
+
+
 def main_real():
 
     global debug_config, out_xml
@@ -452,7 +645,7 @@ def main_real():
     global_build_dir = option.get("build-dir")
     manager = Manager(engine, global_build_dir)
 
-    import b2.build.configure as configure
+
 
     if "--version" in sys.argv:
         from b2.build import version
@@ -505,171 +698,26 @@ def main_real():
 
         using(dt, dtv)
 
-    # Parse command line for targets and properties. Note that this requires
-    # that all project files already be loaded.
-    (target_ids, properties) = build_request.from_command_line(sys.argv[1:] + extra_properties)
+    if "--server" in sys.argv:
 
-    # Expand properties specified on the command line into multiple property
-    # sets consisting of all legal property combinations. Each expanded property
-    # set will be used for a single build run. E.g. if multiple toolsets are
-    # specified then requested targets will be built with each of them.
-    if properties:
-        expanded = build_request.expand_no_defaults(properties)
+        if not current_project:
+            manager.errors()("Server mode requires starting in project root")
+
+        if not current_project.parent().name() == 'project-config':
+            manager.errors()("Server mode requires starting in project root")
+
+        server = Server(current_project, manager)
+        server.main_loop()
+
     else:
-        expanded = [property_set.empty()]
+        # Parse command line for targets and properties. Note that this requires
+        # that all project files already be loaded.
+        (metatarget_ids, properties) = build_request.from_command_line(sys.argv[1:] + extra_properties)
 
-    # Check that we actually found something to build.
-    if not current_project and not target_ids:
-        get_manager().errors()("no Jamfile in current directory found, and no target references specified.")
-        # FIXME:
-        # EXIT
+        command_line_build(current_project, manager, metatarget_ids, properties)
 
-    # Flags indicating that this build system run has been started in order to
-    # clean existing instead of create new targets. Note that these are not the
-    # final flag values as they may get changed later on due to some special
-    # targets being specified on the command line.
-    clean = "--clean" in sys.argv
-    cleanall = "--clean-all" in sys.argv
 
-    # List of explicitly requested files to build. Any target references read
-    # from the command line parameter not recognized as one of the targets
-    # defined in the loaded Jamfiles will be interpreted as an explicitly
-    # requested file to build. If any such files are explicitly requested then
-    # only those files and the targets they depend on will be built and they
-    # will be searched for among targets that would have been built had there
-    # been no explicitly requested files.
-    explicitly_requested_files = []
-
-    # List of Boost Build meta-targets, virtual-targets and actual Jam targets
-    # constructed in this build system run.
-    targets = []
-    virtual_targets = []
-    actual_targets = []
-
-    explicitly_requested_files = []
-
-    # Process each target specified on the command-line and convert it into
-    # internal Boost Build target objects. Detect special clean target. If no
-    # main Boost Build targets were explictly requested use the current project
-    # as the target.
-    for id in target_ids:
-        if id == "clean":
-            clean = 1
+        if manager.errors().count() == 0:
+            return ["ok"]
         else:
-            t = None
-            if current_project:
-                t = current_project.find(id, no_error=1)
-            else:
-                t = find_target(id)
-
-            if not t:
-                print "notice: could not find main target '%s'" % id
-                print "notice: assuming it's a name of file to create " ;
-                explicitly_requested_files.append(id)
-            else:
-                targets.append(t)
-
-    if not targets:
-        targets = [projects.target(projects.module_name("."))]
-
-    # FIXME: put this BACK.
-
-    ## if [ option.get dump-generators : : true ]
-    ## {
-    ##     generators.dump ;
-    ## }
-
-
-    # We wish to put config.log in the build directory corresponding
-    # to Jamroot, so that the location does not differ depending on
-    # directory where we do build.  The amount of indirection necessary
-    # here is scary.
-    first_project = targets[0].project()
-    first_project_root_location = first_project.get('project-root')
-    first_project_root_module = manager.projects().load(first_project_root_location)
-    first_project_root = manager.projects().target(first_project_root_module)
-    first_build_build_dir = first_project_root.build_dir()
-    configure.set_log_file(os.path.join(first_build_build_dir, "config.log"))
-
-    virtual_targets = []
-
-    global results_of_main_targets
-
-    # Now that we have a set of targets to build and a set of property sets to
-    # build the targets with, we can start the main build process by using each
-    # property set to generate virtual targets from all of our listed targets
-    # and any of their dependants.
-    for p in expanded:
-        manager.set_command_line_free_features(property_set.create(p.free()))
-
-        for t in targets:
-            try:
-                g = t.generate(p)
-                if not isinstance(t, ProjectTarget):
-                    results_of_main_targets.extend(g.targets())
-                virtual_targets.extend(g.targets())
-            except ExceptionWithUserContext, e:
-                e.report()
-            except Exception:
-                raise
-
-    # Convert collected virtual targets into actual raw Jam targets.
-    for t in virtual_targets:
-        actual_targets.append(t.actualize())
-
-    j = option.get("jobs")
-    if j:
-        bjam.call("set-variable", 'PARALLELISM', j)
-
-    k = option.get("keep-going", "true", "true")
-    if k in ["on", "yes", "true"]:
-        bjam.call("set-variable", "KEEP_GOING", "1")
-    elif k in ["off", "no", "false"]:
-        bjam.call("set-variable", "KEEP_GOING", "0")
-    else:
-        print "error: Invalid value for the --keep-going option"
-        sys.exit()
-
-    # The 'all' pseudo target is not strictly needed expect in the case when we
-    # use it below but people often assume they always have this target
-    # available and do not declare it themselves before use which may cause
-    # build failures with an error message about not being able to build the
-    # 'all' target.
-    bjam.call("NOTFILE", "all")
-
-    # And now that all the actual raw Jam targets and all the dependencies
-    # between them have been prepared all that is left is to tell Jam to update
-    # those targets.
-    if explicitly_requested_files:
-        # Note that this case can not be joined with the regular one when only
-        # exact Boost Build targets are requested as here we do not build those
-        # requested targets but only use them to construct the dependency tree
-        # needed to build the explicitly requested files.
-        # FIXME: add $(.out-xml)
-        bjam.call("UPDATE", ["<e>%s" % x for x in explicitly_requested_files])
-    elif cleanall:
-        bjam.call("UPDATE", "clean-all")
-    elif clean:
-        manager.engine().set_update_action("common.Clean", "clean",
-                                           actual_clean_targets(targets))
-        bjam.call("UPDATE", "clean")
-    else:
-        # FIXME:
-        #configure.print-configure-checks-summary ;
-
-        if pre_build_hook:
-            for h in pre_build_hook:
-                h()
-
-        bjam.call("DEPENDS", "all", actual_targets)
-        ok = bjam.call("UPDATE_NOW", "all") # FIXME: add out-xml
-        if post_build_hook:
-            post_build_hook(ok)
-        # Prevent automatic update of the 'all' target, now that
-        # we have explicitly updated what we wanted.
-        bjam.call("UPDATE")
-
-    if manager.errors().count() == 0:
-        return ["ok"]
-    else:
-        return []
+            return []

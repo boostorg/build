@@ -381,6 +381,7 @@ class ProjectTarget (AbstractTarget):
         self.built_main_targets_ = 0
 
         if parent_project:
+            self.parent_ = parent_project
             self.inherit (parent_project)
 
 
@@ -388,6 +389,10 @@ class ProjectTarget (AbstractTarget):
     # way to make 'make' work without this method.
     def project_module (self):
         return self.project_module_
+
+    def parent(self):
+        """Return ProjectTarget instance that is parent of this one, or None."""
+        return self.parent_
     
     def get (self, attribute):
         return self.manager().projects().attribute(
