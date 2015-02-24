@@ -371,7 +371,13 @@ rule link-recursively ( target : source : no-recurse ? )
         {
             local full-path =
                 [ path.root [ path.make $(link-target) ] [ path.parent $(target) ] ] ;
-            if $(full-path) != $(source)
+            # HACK: Take advantage of the fact that path.glob
+            # normalizes its arguments.  If full-path and
+            # source are different, but both are empty, they
+            # will compare equal, but that's okay because
+            # for the purposes of this module, empty directories
+            # are equivalent.
+            if [ path.glob $(full-path) : * ] != [ path.glob $(source) : * ]
             {
                 do-rm $(target) ;
                 do-split $(target) ;
