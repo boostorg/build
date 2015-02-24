@@ -94,6 +94,8 @@ rule can-junction ( project : ps )
 else
 {
 
+.can-junction = false ;
+
 rule can-junction ( project : ps )
 {
 }
