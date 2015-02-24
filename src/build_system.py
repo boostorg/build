@@ -608,10 +608,15 @@ class Server:
             if not line:
                 break
 
+            token = None
             j = json.loads(line)
+
+            if 'token' in j:
+                token = j['token']
 
             if j['type'] == 'request':
                 r = j['request']
+
                 if r == "build" or r == "clean":
                     metatarget_ids = j.get('metatargets', [])
                     properties = j.get('properties', [])
@@ -629,13 +634,53 @@ class Server:
                     sys.stdout.flush()
 
                 elif r == "get":
-                    p = j.get('path')
 
-                    if p == 'properties':
-                        pass
+                    result = None
+                    error = None
+                    try:
+                        result = self.handle_get(j)
+                    except Exception as e:
+                        error = str(e)
+
+                    fullResult = {}
+                    if token:
+                        fullResult['token'] = token
+
+                    if result:
+                        fullResult['type'] = 'response'
+                        fullResult['response'] = result
+                    else:
+                        fullResult['type'] = 'error'
+                        fullResult['error'] = error or "unknown error"
+
+                    print json.dumps(fullResult)
+                    sys.stdout.flush()
 
             else:
                 print "unknown type"
+
+    def handle_get(self, j):
+
+        if not 'path' in j:
+            raise ValueError('get request without resource path')
+
+        p = j.get('path').split('/')
+
+        if p[0] == 'properties':
+            return self.get_properties()
+        else:
+            raise Exception("The get request does not handle path '%s'" % (j.get('path')))
+
+    def get_properties(self):
+        r = []
+
+        important = set(['toolset', 'target-os', 'architecture', 'variant', 'optimization', 'link'])
+
+        for t in feature.enumerate():
+            if t[0] in important:
+                r.append(t[1].json())
+
+        return r
 
 
 def main_real():

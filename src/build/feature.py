@@ -77,6 +77,14 @@ class Feature(object):
     def __str__(self):
         return self._name
 
+    def json(self):
+        """Returns a map object that can be JSON-serialized in API call."""
+
+        result = {}
+        result['name'] = self._name
+        result['values'] = self._values
+        return result
+
     
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
