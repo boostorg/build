@@ -634,11 +634,8 @@ class Server:
                     if p == 'properties':
                         pass
 
-
             else:
                 print "unknown type"
-
-        print "Running main loop"
 
 
 def main_real():
@@ -713,6 +710,8 @@ def main_real():
 
         if not current_project.is_root():
             manager.errors()("Server mode requires starting in project root")
+
+        manager.enable_events()
 
         server = Server(current_project, manager)
         server.main_loop()

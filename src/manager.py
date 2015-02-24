@@ -38,6 +38,8 @@ class Manager:
         self.boost_build_path_ = bjam.variable("BOOST_BUILD_PATH")
         self.errors_ = Errors()
         self.command_line_free_features_ = property_set.empty()
+
+        self.events_enabled = False
         
         global the_manager
         the_manager = self
@@ -108,8 +110,13 @@ class Manager:
         actual_targets = []
         for virtual_target in virtual_targets:
             actual_targets.extend (virtual_target.actualize ())
+
+    def enable_events(self, value=True):
+        self.events_enabled = value;
                 
     def build_started(self, action):
+        if not self.events_enabled:
+            return
         print json.dumps({
             'token': id(action),
             'type': 'event',
@@ -122,6 +129,8 @@ class Manager:
         })
 
     def build_output(self, action, stream, output):
+        if not self.events_enabled:
+            return
         print json.dumps({
             'token': id(action),
             'type': 'event',
@@ -130,6 +139,8 @@ class Manager:
             'output': output})
 
     def build_finished(self, action, exit_status):
+        if not self.events_enabled:
+            return
         print json.dumps({
             'type': 'event',
             'token': id(action),
