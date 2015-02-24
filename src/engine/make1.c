@@ -510,7 +510,7 @@ static void make1b( state * const pState )
     if ( t->cmds == NULL || --( ( CMD * )t->cmds )->asynccnt == 0 ) {
 
 #ifdef HAVE_PYTHON
-        if (t->python_callback) {
+        if (t->cmds && t->python_callback) {
             PyObject *args = PyTuple_New(0);
             python_callback(constant_py_build_started, t, args);
             Py_DECREF(args);
