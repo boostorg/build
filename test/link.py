@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Copyright 2004 Vladimir Prus
+# Copyright 2014-2015 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
@@ -57,7 +57,7 @@ def test_merge_two():
     t.expect_nothing_more()
     t.cleanup()
 
-def test_merge_existing():
+def test_merge_existing(group1, group2):
     """Test adding a link when a different symlink already exists"""
     t = BoostBuild.Tester()
     t.write("jamroot.jam", """\
@@ -69,24 +69,42 @@ def test_merge_existing():
     t.write("src/dir1/include/file1.h", "file1")
     t.write("src/dir2/include/file2.h", "file2")
 
-    t.run_build_system(["dir1-link"])
+    t.run_build_system(group1)
 
-    t.expect_addition("include/file1.h")
-    t.expect_content("include/file1.h", "file1")
+    if "dir1-link" in group1:
+        t.expect_addition("include/file1.h")
+        t.expect_content("include/file1.h", "file1")
+    if "dir2-link" in group1:
+        t.expect_addition("include/file2.h")
+        t.expect_content("include/file2.h", "file2")
     ignore_config(t)
     t.expect_nothing_more()
 
-    t.run_build_system(["dir2-link"])
+    t.run_build_system(group2)
 
-    t.expect_addition("include/file2.h")
-    t.expect_content("include/file2.h", "file2")
-    # If include is a symlink to src/dir1/include, then
-    # we have to delete it and add a directory.
-    t.ignore_removal("include/file1.h")
+    if "dir1-link" in group2:
+        if "dir1-link" not in group1:
+            t.expect_addition("include/file1.h")
+        t.expect_content("include/file1.h", "file1")
+    else:
+        t.ignore_removal("include/file1.h")
+        
+    if "dir2-link" in group2:
+        if "dir2-link" not in group1:
+            t.expect_addition("include/file2.h")
+        t.expect_content("include/file2.h", "file2")
+    else:
+        t.ignore_removal("include/file2.h")
     ignore_config(t)
     t.expect_nothing_more()
 
     t.cleanup()
+
+def test_merge_existing_all():
+    test_merge_existing(["dir1-link"], ["dir2-link"])
+    test_merge_existing(["dir2-link"], ["dir1-link"])
+    test_merge_existing(["dir1-link"], ["dir1-link", "dir2-link"])
+    test_merge_existing(["dir2-link"], ["dir1-link", "dir2-link"])
 
 def test_merge_recursive():
     "Test merging several directories including common prefixes"
@@ -143,6 +161,37 @@ def test_include_scan():
     t.expect_addition("bin/$toolset/debug/test.obj")
 
     t.run_build_system()
+    t.expect_nothing_more()
+
+    t.cleanup()
+
+def test_include_scan_merge_existing():
+    """Make sure that files are replaced if needed when merging in
+    a new directory"""
+    t = BoostBuild.Tester()
+
+    t.write("jamroot.jam", """\
+    import link ;
+    link-directory dir1-link : src/dir1/include : <location>. ;
+    link-directory dir2-link : src/dir2/include : <location>. ;
+    obj test : test.cpp :
+        <include>include
+        <implicit-dependency>dir1-link
+        <implicit-dependency>dir2-link ;
+    """)
+
+    t.write("src/dir1/include/file1.h", "int f();")
+    t.write("src/dir2/include/file2.h", "#include <file1.h>")
+    t.write("test.cpp", """\
+    #include <file2.h>
+    int main() { f(); }
+    """)
+
+    t.run_build_system(["dir2-link"])
+
+    t.run_build_system(["test"])
+    t.expect_addition("include/file1.h")
+    t.expect_addition("bin/$toolset/debug/test.obj")
     t.expect_nothing_more()
 
     t.cleanup()
@@ -213,7 +262,8 @@ def test_update_file_link_all():
 
 test_basic()
 test_merge_two()
-test_merge_existing()
+test_merge_existing_all()
 test_merge_recursive()
 test_include_scan()
+test_include_scan_merge_existing()
 test_update_file_link_all()

@@ -364,7 +364,6 @@ rule link-recursively ( target : source : no-recurse ? )
                 do-rm $(target) ;
             }
             do-split $(target) ;
-            .split-dirs.$(target) = true ;
         }
     }
     else if [ path.exists [ path.native $(target) ] ]
@@ -405,6 +404,11 @@ rule link-recursively ( target : source : no-recurse ? )
     else
     {
         do-link $(target) : $(source) ;
+    }
+
+    if $(split)
+    {
+        .split-dirs.$(target) = true ;
     }
 
     if ! $(no-recurse)
