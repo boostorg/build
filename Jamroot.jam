@@ -18,7 +18,7 @@ package.install boost-build-engine boost-build
     b2$(ext) bjam$(ext)
   ;
 
-local e1 = [ path.glob-tree $(SELF)/example : * : . .svn ] ;
+local e1 = [ path.glob-tree $(SELF)/example : * : . .svn boost-build.jam ] ;
 local e2 ;
 for e in $(e1)
 {
@@ -33,15 +33,16 @@ package.install-data boost-build-core
   : # Which subdir of $prefix/share
     boost-build  
   : # What to install
-    $(SELF)/boost-build.jam
+    $(SELF)/src/boost-build.jam
     $(SELF)/src/build-system.jam
+    [ path.glob $(SELF)/src : *.py ]
     [ path.glob-tree $(SELF)/src/build : *.jam *.py ]
     [ path.glob-tree $(SELF)/src/kernel : *.jam *.py ]
     [ path.glob-tree $(SELF)/src/util : *.jam *.py ]
     [ path.glob-tree $(SELF)/src/tools : *.jam *.py *.xml *.xsl *.doxyfile *.hpp ]
     $(e2)
   : # What is the root of the directory
-    <install-source-root>.
+    <install-source-root>src
   ;
   
 alias install : boost-build-engine boost-build-core ;
