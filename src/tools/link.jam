@@ -235,6 +235,7 @@ rule do-file-link
     DEPENDS $(.current-target) : $(target) ;
     if $(.can-symlink) = true
     {
+        DEPENDS $(target) : $(source) ;
         link.mklink $(target) : $(source) ;
     }
     else if $(.can-hardlink) = true
@@ -441,7 +442,6 @@ rule mklink
         [ path.join [ path.root [ path.make $(source-path[1]) ] [ path.pwd ] ] [ path.make $(>:G=) ] ] ] ;
 
     PATH_TO_SOURCE on $(<) = [ path.native $(relative-path) ] ;
-    NOUPDATE $(<) ;
 }
 
 if [ os.name ] = NT

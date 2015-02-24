@@ -147,8 +147,73 @@ def test_include_scan():
 
     t.cleanup()
 
+def test_update_file_link(params1, params2):
+    """Tests the behavior of updates when changing the link mode.
+    The link needs to be updated iff the original was a copy."""
+    t = BoostBuild.Tester()
+
+    t.write("jamroot.jam", """\
+    import link ;
+    import project ;
+    import property-set ;
+    import modules ;
+
+    if --no-symlinks in [ modules.peek : ARGV ]
+    {
+        modules.poke link : .can-symlink : false ;
+    }
+
+    if --no-hardlinks in [ modules.peek : ARGV ]
+    {
+        modules.poke link : .can-hardlink : false ;
+    }
+
+    .project = [ project.current ] ;
+    .has-files = [ glob include/file1.h ] ;
+    
+    rule can-link ( properties * ) {
+        if ( ! [ link.can-symlink $(.project) : [ property-set.empty ] ] ) &&
+           ( ! [ link.can-hardlink $(.project) : [ property-set.empty ] ] )
+        {
+            ECHO links unsupported ;
+        }
+    }
+
+    # Use two directories so that we link to individual files.
+    link-directory dir1-link : src/dir1/include : <location>. ;
+    link-directory dir2-link : src/dir2/include : <location>. ;
+    alias check-linking : : <conditional>@can-link ;
+    """)
+    t.write("src/dir1/include/file1.h", "file1")
+    t.write("src/dir2/include/file2.h", "file2")
+
+    t.run_build_system(params1)
+    ignore_config(t)
+    t.expect_addition("include/file1.h")
+    t.expect_addition("include/file2.h")
+    t.expect_nothing_more()
+
+    using_links = "links unsupported" not in t.stdout()
+
+    t.touch("src/dir1/include/file1.h")
+
+    t.run_build_system(params2)
+    if not using_links: t.expect_touch("include/file1.h")
+    ignore_config(t)
+    t.expect_nothing_more()
+
+    t.cleanup()
+
+def test_update_file_link_all():
+    """Test all nine possible combinations of two runs."""
+    possible_args = [[], ["--no-symlinks"], ["--no-symlinks", "--no-hardlinks"]]
+    for arg1 in possible_args:
+        for arg2 in possible_args:
+            test_update_file_link(arg1, arg2)
+
 test_basic()
 test_merge_two()
 test_merge_existing()
 test_merge_recursive()
 test_include_scan()
+test_update_file_link_all()
