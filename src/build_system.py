@@ -22,6 +22,8 @@ from b2.build.errors import ExceptionWithUserContext
 import b2.tools.common
 from b2.build.toolset import using
 
+from b2.build.property import Property
+
 import b2.build.project as project
 import b2.build.virtual_target as virtual_target
 import b2.build.build_request as build_request
@@ -619,11 +621,24 @@ class Server:
 
                 if r == "build" or r == "clean":
                     metatarget_ids = j.get('metatargets', [])
-                    properties = j.get('properties', [])
-                    properties = property_set.create(properties)
+                    properties_raw = j.get('properties', {})
+                    properties = []
+
+                    for name,value in properties_raw.iteritems():
+                        f = feature.get(name)
+                        # JSON is unicode, but there's some code that will not
+                        # like that, in particular utility.get_grist does
+                        # isinstance(..., str) and so fails.
+                        # Convert to strings now, to be reconsidered.
+                        if type(value) == type([]):
+                            properties.extend([Property(f, str(v)) for v in value])
+                        else:
+                            properties.append(Property(f, str(value)))
+
+                    ps = property_set.create(properties)
 
                     builder = Builder(self.current_project, metatarget_ids, self.manager)
-                    builder.generate(properties)
+                    builder.generate(ps)
                     ok = builder.build()
 
                     done = {"type": "event",
