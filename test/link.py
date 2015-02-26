@@ -136,6 +136,48 @@ def test_merge_recursive():
 
     t.cleanup()
 
+def test_merge_recursive_existing(group1, group2):
+    "Test merging several directories including common prefixes."
+    t = BoostBuild.Tester()
+    t.write("jamroot.jam", """\
+    import link ;
+    link-directory dir1-link : src/dir1/include : <location>. ;
+    link-directory dir2-link : src/dir2/include : <location>. ;
+    link-directory dir3-link : src/dir3/include : <location>. ;
+    link-directory dir4-link : src/dir4/include : <location>. ;
+    link-directory dir5-link : src/dir5/include : <location>. ;
+    """)
+
+    t.write("src/dir1/include/file1.h", "file1")
+    t.write("src/dir2/include/nested/file2.h", "file2")
+    t.write("src/dir3/include/nested/file3.h", "file3")
+    t.write("src/dir4/include/nested/xxx/yyy/file4.h", "file4")
+    t.write("src/dir5/include/nested/xxx/yyy/file5.h", "file5")
+
+    t.run_build_system(group1)
+    t.run_build_system(group2 + ["-d+12"])
+
+    t.ignore_addition("include/file1.h")
+    t.ignore_addition("include/nested/file2.h")
+    t.ignore_addition("include/nested/file3.h")
+    t.ignore_addition("include/nested/xxx/yyy/file4.h")
+    t.ignore_addition("include/nested/xxx/yyy/file5.h")
+    ignore_config(t)
+    t.expect_nothing_more()
+
+    t.cleanup()
+
+def test_merge_recursive_existing_all():
+    # These should create a link
+    test_merge_recursive_existing(["dir2-link"], ["dir2-link", "dir1-link"])
+    test_merge_recursive_existing(["dir2-link"], ["dir1-link", "dir2-link"])
+    # These should create a directory
+    test_merge_recursive_existing(["dir2-link"], ["dir2-link", "dir3-link"])
+    test_merge_recursive_existing(["dir2-link"], ["dir3-link", "dir2-link"])
+    # It should work even if we have to create many intermediate subdirectories
+    test_merge_recursive_existing(["dir4-link"], ["dir4-link", "dir5-link"])
+    test_merge_recursive_existing(["dir4-link"], ["dir5-link", "dir4-link"])
+
 def test_include_scan():
     """Make sure that the #include scanner finds the headers"""
     t = BoostBuild.Tester()
@@ -264,6 +306,7 @@ test_basic()
 test_merge_two()
 test_merge_existing_all()
 test_merge_recursive()
+test_merge_recursive_existing_all()
 test_include_scan()
 test_include_scan_merge_existing()
 test_update_file_link_all()

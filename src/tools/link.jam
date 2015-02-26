@@ -282,6 +282,12 @@ rule do-link
     }
 }
 
+rule force-update
+{
+    local target = [ path.native [ path.relative-to [ path.pwd ] $(<) ] ] ;
+    ALWAYS $(target) ;
+}
+
 rule do-split
 {
     local target = [ path.native [ path.relative-to [ path.pwd ] $(<) ] ] ;
@@ -312,7 +318,7 @@ actions mklink-or-dir
     $(MKLINK_OR_DIR)
 }
 
-rule link-entries ( target : files * : split ? )
+rule link-entries ( target : files * : split ? : deleted ? )
 {
     for local s in $(files)
     {
@@ -327,7 +333,7 @@ rule link-entries ( target : files * : split ? )
         }
         if $(split)
         {
-            link-recursively $(t) : $(s) ;
+            link-recursively $(t) : $(s) : : $(deleted) ;
         }
         else
         {
@@ -341,8 +347,12 @@ rule link-entries ( target : files * : split ? )
     }
 }
 
-rule link-recursively ( target : source : no-recurse ? )
+rule link-recursively ( target : source : no-recurse ? : deleted ? )
 {
+    if $(deleted) {
+        force-update $(target) ;
+    }
+
     local split ;
     if [ CHECK_IF_FILE [ path.native $(source) ] ]
     {
@@ -353,20 +363,28 @@ rule link-recursively ( target : source : no-recurse ? )
         split = true ;
         if ! $(.split-dirs.$(target))
         {
+            if [ READLINK [ path.native $(target) ] ]
+            {
+                if ! $(deleted) {
+                    do-rm $(target) ;
+                    deleted = true ;
+                    .deleted-dirs.$(target) = true ;
+                }
+            }
             local .current-target = $(.known-dirs.base.$(target)) ;
             for local s in $(.known-dirs.$(target))
             {
                 local t = [ path.join $(target) [ path.basename $(s) ] ] ;
-                link-recursively $(t) : $(s) : flat ;
-            }
-            if [ READLINK [ path.native $(target) ] ]
-            {
-                do-rm $(target) ;
+                link-recursively $(t) : $(s) : flat : $(deleted) ;
             }
             do-split $(target) ;
         }
+        else if $(.deleted-dirs.$(target))
+        {
+            deleted = true ;
+        }
     }
-    else if [ path.exists [ path.native $(target) ] ]
+    else if [ path.exists [ path.native $(target) ] ] && ! $(deleted)
     {
         local link-target = [ READLINK [ path.native $(target) ] ] ;
         if $(link-target)
@@ -381,7 +399,11 @@ rule link-recursively ( target : source : no-recurse ? )
             # are equivalent.
             if [ path.glob $(full-path) : * ] != [ path.glob $(source) : * ]
             {
-                do-rm $(target) ;
+                if ! $(deleted) {
+                    do-rm $(target) ;
+                    deleted = true ;
+                    .deleted-dirs.$(target) = true ;
+                }
                 do-split $(target) ;
                 split = true ;
             }
@@ -396,7 +418,11 @@ rule link-recursively ( target : source : no-recurse ? )
     {
         if [ READLINK [ path.native $(target) ] ]
         {
-            do-rm $(target) ;
+            if ! $(deleted) {
+                do-rm $(target) ;
+                deleted = true ;
+                .deleted-dirs.$(target) = true ;
+            }
         }
         do-split $(target) ;
         split = true ;
@@ -413,7 +439,7 @@ rule link-recursively ( target : source : no-recurse ? )
 
     if ! $(no-recurse)
     {
-        link-entries $(target) : [ path.glob $(source) : * ] : $(split) ;
+        link-entries $(target) : [ path.glob $(source) : * ] : $(split) : $(deleted) ;
     }
 }
 
