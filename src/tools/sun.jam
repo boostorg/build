@@ -22,6 +22,14 @@ feature.extend stdlib : sun-stlport ;
 feature.compose <stdlib>sun-stlport
     : <cxxflags>-library=stlport4 <linkflags>-library=stlport4
     ;
+feature.extend stdlib : apache ;
+feature.compose <stdlib>apache
+    : <cxxflags>-library=stdcxx4 <linkflags>-library=stdcxx4
+    ;
+feature.extend stdlib : cxx11 ;
+feature.compose <stdlib>cxx11
+    : <cxxflags>-std=c++11 <linkflags>-std=c++11
+    ;
 
 rule init ( version ? : command * : options * ) 
 {
