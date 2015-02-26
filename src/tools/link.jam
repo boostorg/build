@@ -231,6 +231,15 @@ rule do-file-link
 {
     local target = [ path.native [ path.relative-to [ path.pwd ] $(<) ] ] ;
     local source = [ path.native [ path.relative-to [ path.pwd ] $(>) ] ] ;
+    local old-source = [ on $(target) return $(LINK-SOURCE) ] ;
+    if $(old-source)
+    {
+        import errors ;
+        errors.user-error
+            Cannot create link $(target) to $(source). :
+            Link previously defined to another file, $(old-source[1]). ;
+    }
+    LINK-SOURCE on $(target) = $(source) $(.current-target) ;
     LOCATE on $(target) = . ;
     DEPENDS $(.current-target) : $(target) ;
     if $(.can-symlink) = true

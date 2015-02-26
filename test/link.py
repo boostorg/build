@@ -302,6 +302,27 @@ def test_update_file_link_all():
         for arg2 in possible_args:
             test_update_file_link(arg1, arg2)
 
+def test_error_duplicate():
+    """Test that linking a single file from
+    multiple sources causes a hard error."""
+    t = BoostBuild.Tester()
+
+    t.write("jamroot.jam", """\
+    import link ;
+    link-directory dir1-link : src/dir1/include : <location>. ;
+    link-directory dir2-link : src/dir2/include : <location>. ;
+    """)
+
+    t.write("src/dir1/include/file1.h", "file1")
+    t.write("src/dir2/include/file1.h", "file2")
+
+    t.run_build_system(status=1)
+    t.expect_output_lines(
+        ["error: Cannot create link include/file1.h to src/dir2/include/file1.h.",
+         "error: Link previously defined to another file, src/dir1/include/file1.h."])
+
+    t.cleanup()
+
 test_basic()
 test_merge_two()
 test_merge_existing_all()
@@ -310,3 +331,4 @@ test_merge_recursive_existing_all()
 test_include_scan()
 test_include_scan_merge_existing()
 test_update_file_link_all()
+test_error_duplicate()
