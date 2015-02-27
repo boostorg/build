@@ -446,8 +446,9 @@ class abstract-file-target : virtual-target
                     errors.error <tag>@rulename is present but is not the only
                         <tag> feature. ;
                 }
+
                 self.name = [ indirect.call $(rule-name) $(specified-name)
-                    : $(self.type) : $(ps) : $(__name__) ] ;
+                    : $(self.type) : $(ps) ] ;
             }
             else
             {
