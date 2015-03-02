@@ -9,6 +9,7 @@
   "author": "Vladimir Prus <vladimir.prus@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "byline": "^4.2.1",
     "express": "^4.11.2"
   }
 }
