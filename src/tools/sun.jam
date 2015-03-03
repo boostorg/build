@@ -23,8 +23,7 @@ generators.override sun.searched-lib-generator : searched-lib-generator ;
 #    also available via -std=sun03.
 # 2) C++03 mode + STLport, selected via the -library option.
 # 3) C++03 mode plus the Apache std lib, selected via the -library option.
-# 4) C++03 mode in g++ compatibility mode, and GNU libstdc++3, selected via -std=c++03.
-# 5) C++11 mode in g++ compatibility mode, and GNU libstdc++3, selected via -std=c++11.
+# 4) C++03 or c++11 in g++ compatibility mode, and GNU libstdc++3, selected via -std=c++03.
 #
 # Note that the -std, -library and -compat compiler switches appear to be largely mutually
 # incompatible, and that going forward the -std switch seems to be the prefered one.
@@ -39,13 +38,9 @@ feature.extend stdlib : apache ;
 feature.compose <stdlib>apache
     : <cxxflags>-library=stdcxx4 <linkflags>-library=stdcxx4
     ;
-feature.extend stdlib : cxx03 ;
-feature.compose <stdlib>cxx03
+feature.extend stdlib : gnu ;
+feature.compose <stdlib>gnu
     : <cxxflags>-std=c++03 <linkflags>-std=c++03
-    ;
-feature.extend stdlib : cxx11 ;
-feature.compose <stdlib>cxx11
-    : <cxxflags>-std=c++11 <linkflags>-std=c++11
     ;
 
 rule init ( version ? : command * : options * ) 
