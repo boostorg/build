@@ -1,15 +1,31 @@
 {
   "name": "b2-server",
   "version": "0.0.1",
-  "description": "Boost.Build remote server",
+  "description": "Boost.Build cloud server",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "cd client && bower install"
   },
   "author": "Vladimir Prus <vladimir.prus@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "backbone": "^1.1.2",
+    "bootstrap": "^3.3.2",
     "byline": "^4.2.1",
-    "express": "^4.11.2"
+    "express": "^4.11.2",
+    "react-bootstrap": "^0.14.0",
+    "react-progressbar": "^1.0.0",
+    "underscore": "^1.8.2",
+    "ws": "^0.7.1"
+  },
+  "devDependencies": {
+    "browserify": "^6.3.3",
+    "envify": "^3.2.0",
+    "gulp": "^3.8.11",
+    "react": "^0.12.0",
+    "reactify": "^0.17.1",
+    "vinyl-source-stream": "^1.0.0",
+    "watchify": "^2.4.0"
   }
 }

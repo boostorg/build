@@ -11,9 +11,7 @@ var WS = require('ws').Server;
 var os = require('os');
 var byline = require('byline');
 
-app.get('/', function(req, res) {
-    res.send('<h1>Hello, World</h1>')
-});
+app.use(express.static(__dirname + '/client'));
 
 http.listen(3000, function() {
     console.log("Listening");

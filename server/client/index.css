@@ -1,0 +1,162 @@
+
+body {
+    width: 900px;
+    margin: 0 auto;
+}
+
+div#container {
+    margin-top: 20px;
+}
+
+div.toolbar {
+    margin-bottom: 12px;
+}
+
+div.toolbar h1 {
+    display: inline;
+    vertical-align: middle;
+}
+
+div.source {
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.175);
+    padding: 12px 12px;
+    font-size: 26px;
+    clear: both;
+    position: relative;
+}
+
+div.property {
+    margin-bottom: 12px;
+    font-size: 18px;
+}
+
+div.property > span:first-child {
+    display: inline-block;
+    width: 20%;
+}
+
+div.pills {
+    display: inline-block;
+}
+
+div.pills a {
+    padding: 3px 8px;
+    border: 1px solid #ccc;
+    background: #cccccc;
+    border-radius: 14px;
+    margin-right: 6px;
+}
+
+div.pills a:first-child {
+    border: 1px solid orange;
+    background: orange;
+    color: #ffffff;
+}
+
+div.pills a:hover {
+    text-decoration: none;
+}
+
+div.properties {
+    font-size: 18px;
+}
+
+div.messages {
+    margin-top: 12px;
+    font-weight: bold;
+}
+
+div.messages span.sub {
+    font-weight: normal;
+    display: block;
+    padding-left: 1em;
+    margin-top: 0px;
+    color: #777;
+}
+
+a.back {
+    display: inline-block;
+    width: 30px;
+    position: relative;
+    right: 30px;
+    font-size: 30px;
+    vertical-align: middle;
+}
+
+span.detailed {
+    position: relative;
+    left: -30px;
+    vertical-align: middle;
+}
+
+div.breadcrumbs {
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-bottom-right-radius: 21px;
+    border-top-right-radius: 21px;
+    padding: 2px 12px;
+    margin-bottom: 2px;
+    visibility: hidden;
+}
+
+div.buttons {
+    display: inline-block;
+    float: right;
+    vertical-align: bottom  ;
+}
+
+div.toolbar .btn {
+    float: none;
+}
+
+.done {
+    color: green;
+}
+
+.property input {
+    border: none;
+    border-bottom: 1px solid #ccc;
+}
+
+.property input:focus {
+    outline: none;
+    border-bottom: 1px solid #0000FF;
+}
+
+.property input.error:focus {
+    outline: none;
+    border-bottom: 1px solid #ff3a04;
+}
+
+.typeAhead {
+    display: inline-block;
+    position: relative;
+}
+
+.dropdown-menu {
+    max-height: 10em;
+    overflow-y: auto;
+    width: 100%;
+}
+
+.breadcrumbs2 {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-size: 14px;
+    line-height: 1.42857143;
+
+    display: inline;
+}
+
+.breadcrumbs2 i {
+    padding: 0px 6px;
+    display: inline-block;
+}
+
+.breadcrumbs-item {
+    display: inline-block;
+    position: relative;
+    cursos: pointer;
+}
