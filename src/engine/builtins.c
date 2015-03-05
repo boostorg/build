@@ -2375,6 +2375,13 @@ PyObject * bjam_set_update_action (PyObject * self, PyObject *args)
     return Py_None;
 }
 
+PyObject * bjam_reinit_targets (PyObject * self, PyObject * args)
+{
+    reinit_targets();
+
+    return Py_None;
+}
+
 #endif  /* #ifdef HAVE_PYTHON */
 
 

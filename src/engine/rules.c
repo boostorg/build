@@ -288,6 +288,43 @@ TARGETS * targetchain( TARGETS * chain, TARGETS * targets )
     return chain;
 }
 
+static void reinit_target( TARGET * target )
+{
+    ACTIONS * a0;
+
+    /* The order of assignment follows the order of the fields. */
+
+    for ( a0 = target->actions; a0; a0 = a0->next )
+    {
+        a0->action->running = A_INIT;
+    }
+
+    target->rescanned = 0;
+
+    target->fate = T_FATE_INIT;
+    target->progress = T_MAKE_INIT;
+    target->status = 0;
+
+    freetargets(target->parents);
+    target->parents = 0;
+    target->scc_root = 0;
+    target->rescanning = 0;
+    target->depth = 0;
+}
+
+static void reinit_targets_cb( void * xtarget, void * data)
+{
+    reinit_target((TARGET *)xtarget);
+}
+
+void reinit_targets()
+{
+    if (targethash) {
+        hashenumerate( targethash, reinit_targets_cb, (void *)0 );
+    }
+}
+
+
 /*
  * action_free - decrement the ACTIONs refrence count and (maybe) free it.
  */

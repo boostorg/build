@@ -223,6 +223,8 @@ int make1( LIST * targets )
     state * pState;
     int status = 0;
 
+    state_stack.stack = NULL;
+
     memset( (char *)counts, 0, sizeof( *counts ) );
     
     {
