@@ -440,9 +440,19 @@ class Builder:
 
             self.engine_targets.extend([t.actualize() for t in targets])
 
-        def build(self):
-            bjam.call("DEPENDS", "all", self.engine_targets)
-            ok = bjam.call("UPDATE_NOW", "all")
+        def build(self, redo=False, noexec=False):
+            redo_s = "0"
+            if redo:
+                redo_s = "1"
+            noexec_s = "0"
+            if noexec:
+                noexec_s = "1"
+
+            if redo:
+                # Reinit targets, since -a only really affects timestamp check.
+                bjam.reinit_targets()
+
+            ok = bjam.call("UPDATE_NOW", self.engine_targets, [], noexec_s, "0", redo_s)
             # Prevent automatic update of the 'all' target, now that
             # we have explicitly updated what we wanted.
             bjam.call("UPDATE")
@@ -603,6 +613,42 @@ class Server:
         self.current_project = current_project
         self.manager = manager
 
+    def build(self, j):
+        metatarget_ids = j.get('metatargets', [])
+        properties_raw = j.get('properties', {})
+        properties = []
+        for name, value in properties_raw.iteritems():
+            f = feature.get(name)
+            # JSON is unicode, but there's some code that will not
+            # like that, in particular utility.get_grist does
+            # isinstance(..., str) and so fails.
+            # Convert to strings now, to be reconsidered.
+            if type(value) == type([]):
+                properties.extend([Property(f, str(v)) for v in value])
+            else:
+                properties.append(Property(f, str(value)))
+        ps = property_set.create(properties)
+        # Just like for feature, make ids into strings, not unicode.
+        metatarget_ids = [str(id) for id in metatarget_ids]
+        builder = Builder(self.current_project, metatarget_ids, self.manager)
+        builder.generate(ps)
+
+        redo = False
+        if 'redo' in j:
+            redo = j['redo']
+
+        noexec = False
+        if 'noexec' in j:
+            noexec = j['noexec']
+
+        ok = builder.build(redo=redo, noexec=noexec)
+
+        done = {"type": "event",
+                "event": "build-finished",
+                "success": "true" if ok else "false"
+        }
+        print json.dumps(done)
+
     def main_loop(self):
 
         while True:
@@ -620,32 +666,7 @@ class Server:
                 r = j['request']
 
                 if r == "build" or r == "clean":
-                    metatarget_ids = j.get('metatargets', [])
-                    properties_raw = j.get('properties', {})
-                    properties = []
-
-                    for name,value in properties_raw.iteritems():
-                        f = feature.get(name)
-                        # JSON is unicode, but there's some code that will not
-                        # like that, in particular utility.get_grist does
-                        # isinstance(..., str) and so fails.
-                        # Convert to strings now, to be reconsidered.
-                        if type(value) == type([]):
-                            properties.extend([Property(f, str(v)) for v in value])
-                        else:
-                            properties.append(Property(f, str(value)))
-
-                    ps = property_set.create(properties)
-
-                    builder = Builder(self.current_project, metatarget_ids, self.manager)
-                    builder.generate(ps)
-                    ok = builder.build()
-
-                    done = {"type": "event",
-                            "event": "build-finished",
-                            "success": "true" if ok else "false"
-                            }
-                    print json.dumps(done)
+                    self.build(j)
                     sys.stdout.flush()
 
                 elif r == "get":

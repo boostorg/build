@@ -424,6 +424,7 @@
 
 struct globs
 {
+    int    anyhow;
     int    noexec;
     int    jobs;
     int    quitquick;

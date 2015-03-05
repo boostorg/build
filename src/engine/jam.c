@@ -134,6 +134,7 @@
 
 struct globs globs =
 {
+    0,          /* anyhow */
     0,          /* noexec */
     1,          /* jobs */
     0,          /* quitquick */
@@ -196,8 +197,6 @@ static void run_unit_tests()
     string_unit_test();
 }
 #endif
-
-int anyhow = 0;
 
 #ifdef HAVE_PYTHON
     extern PyObject * bjam_call         ( PyObject * self, PyObject * args );
@@ -299,7 +298,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         globs.quitquick = 1;
 
     if ( ( s = getoptval( optv, 'a', 0 ) ) )
-        anyhow++;
+        globs.anyhow = 1;
 
     if ( ( s = getoptval( optv, 'j', 0 ) ) )
     {
@@ -560,7 +559,7 @@ int main( int argc, char * * argv, char * * arg_environ )
             PROFILE_ENTER( MAIN_MAKE );
             LIST * const targets = targets_to_update();
             if ( !list_empty( targets ) )
-                status |= make( targets, anyhow );
+                status |= make( targets, globs.anyhow );
             else
                 status = last_update_now_status;
             PROFILE_EXIT( MAIN_MAKE );

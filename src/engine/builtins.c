@@ -238,8 +238,10 @@ void load_builtins()
     {
         char const * args[] = { "targets", "*",
                             ":", "log", "?",
-                            ":", "ignore-minus-n", "?",
-                            ":", "ignore-minus-q", "?", 0 };
+                            ":", "redo", "?",
+                            ":", "quitquick", "?",
+                            ":", "noexec", "?",
+                                0 };
         bind_builtin( "UPDATE_NOW",
                       builtin_update_now, 0, args );
     }
@@ -1403,7 +1405,18 @@ LIST * builtin_update( FRAME * frame, int flags )
     return result;
 }
 
-extern int anyhow;
+static int parse_one_or_zero(const char *v)
+{
+    if (strcmp(v, "0") == 0) {
+        return 0;
+    } else if (strcmp(v, "1") == 0) {
+        return 1;
+    } else {
+        printf("Bad value '%s'\n", v);
+        exit (EXITBAD);
+    }
+}
+
 int last_update_now_status;
 
 /* Takes a list of target names and immediately updates them.
@@ -1423,11 +1436,13 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     LIST * log = lol_get( frame->args, 1 );
     LIST * force = lol_get( frame->args, 2 );
     LIST * continue_ = lol_get( frame->args, 3 );
+    LIST * anyhow = lol_get( frame->args, 4 );
     int status;
     int original_stdout = 0;
     int original_stderr = 0;
     int original_noexec = 0;
     int original_quitquick = 0;
+    int original_anyhow = 0;
 
     if ( !list_empty( log ) )
     {
@@ -1441,17 +1456,38 @@ LIST * builtin_update_now( FRAME * frame, int flags )
 
     if ( !list_empty( force ) )
     {
+        const char *v = object_str(list_front(force));
         original_noexec = globs.noexec;
-        globs.noexec = 0;
+        if (strcmp(v, "ignore-minus-n") == 0) {
+            globs.noexec = 0;
+        } else {
+            globs.noexec = parse_one_or_zero(v);
+        }
     }
 
     if ( !list_empty( continue_ ) )
     {
+        const char *v = object_str(list_front(continue_));
         original_quitquick = globs.quitquick;
-        globs.quitquick = 0;
+        if (strcmp(v, "ignore-minus-q") == 0) {
+            globs.quitquick = 0;
+        } else {
+            globs.quitquick = parse_one_or_zero(v);
+        }
     }
 
-    status = make( targets, anyhow );
+    if ( !list_empty( anyhow ) )
+    {
+        const char *v = object_str(list_front(anyhow));
+        original_anyhow = globs.anyhow;
+        /* While we support 'ignore-minus-n' and 'ignore-minus-q'
+           for the two previous options, this one is newer and
+           all versions of jam code will either not pass it or
+           pass 0/1 values. */
+        globs.anyhow = parse_one_or_zero(v);
+    }
+
+    status = make( targets, globs.anyhow );
 
     if ( !list_empty( force ) )
     {
@@ -1461,6 +1497,11 @@ LIST * builtin_update_now( FRAME * frame, int flags )
     if ( !list_empty( continue_ ) )
     {
         globs.quitquick = original_quitquick;
+    }
+
+    if ( !list_empty (anyhow ) )
+    {
+        globs.anyhow = original_anyhow;
     }
 
     if ( !list_empty( log ) )
