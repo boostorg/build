@@ -125,18 +125,22 @@ class Manager:
             # FIXME: need to filter out non-file target.
             'targets': [t.full_name() for t in action.targets()],
             'sources': [t.full_name() for t in action.sources()],
-            'properties': {p.feature().name(): p.value() for p in action.properties().all()}
+            'properties': action.properties().json()
         })
 
     def build_output(self, action, stream, output):
         if not self.events_enabled:
             return
-        print json.dumps({
+        j = {
             'token': id(action),
             'type': 'event',
             'event': 'build-action-output',
             'stream': stream,
-            'output': output})
+            'output': output
+            }
+        if output.find("warning:") != -1:
+            j['output-kind'] = 'warning'
+        print json.dumps(j)
 
     def build_finished(self, action, exit_status):
         if not self.events_enabled:

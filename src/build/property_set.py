@@ -16,6 +16,7 @@ from b2.build.property import get_abbreviated_paths
 from b2.util.sequence import unique
 from b2.util.set import difference
 from b2.util import cached, abbreviate_dashed
+from feature import Feature
 
 from b2.manager import get_manager
 
@@ -242,6 +243,21 @@ class PropertySet:
 
     def __str__(self):
         return ' '.join(str(p) for p in self.all_)
+
+    def json(self):
+        r = {}
+        for p in self.all_:
+            name = p.feature().name()
+            if Feature.FREE & p.feature().attributes():
+                # Multiple values are permitted
+                r.setdefault(name, []).append(p.value())
+            else:
+                # Non-free feature can only have a single value,
+                # and it's more convenient not to report the value
+                # as list
+                assert not name in r
+                r[name] = p.value()
+        return r
 
     def base (self):
         """ Returns properties that are neither incidental nor free.
