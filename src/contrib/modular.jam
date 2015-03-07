@@ -75,6 +75,11 @@ rule library ( name caller-module ? : root )
     {
         # Load/create/declare library project.
         local lib-module = [ project.find $(root) : $(caller-dir) ] ;
+        if ! $(lib-module)
+        {
+            lib-module = [ project.load
+                [ path.root [ path.make $(root) ] $(caller-dir) ] : synthesize ] ;
+        }
         local lib-target = [ project.target $(lib-module) ] ;
         
         # We move to the library project module to define the various
