@@ -5,12 +5,17 @@ var reactify = require('reactify');
 var source = require('vinyl-source-stream');
 var watchify = require('watchify');
 
+var _ = require('underscore');
+
 function bundle(watch)
 {
     var bundler;
     var input = './client/index.js';
+
+    var args = _.extend({}, watchify.args, {debug: true});
+
     if (watch) {
-        bundler = watchify(browserify(input, watchify.args));
+        bundler = watchify(browserify(input, args));
     } else {
         bundler = browserify(input);
     }
@@ -27,7 +32,11 @@ function bundle(watch)
     bundleProper();
 
     if (watch) {
-        bundler.on('update', bundleProper);        
+        bundler.on('update', bundleProper);
+        bundler.on('error', function(e) {
+            console.log(e.message);
+            this.end();
+        });
     }
 }
 

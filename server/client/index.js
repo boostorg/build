@@ -4,6 +4,7 @@ var Backbone = require('backbone');
 var Button = Bootstrap.Button;
 var Modal = Bootstrap.Modal;
 
+
 var DropdownStateMixin = require('react-bootstrap/DropdownStateMixin')
 
 var Progress = require('react-progressbar');
@@ -309,10 +310,8 @@ var BreadcrumbsItem = React.createClass({
         }
 
         var icon;
-        if (this.props.type === 'project') {
-            icon = <i className="fa fa-folder-o"/>;
-        } else {
-            icon = <i className="fa fa-dot-circle-o"/>;
+        if (this.props.icon) {
+            icon = <i className={'fa ' + this.props.icon}/>;
         }
 
         return <div className="dropdown breadcrumbs-item" onKeyDown={this.handleKeyDown}>
@@ -366,13 +365,12 @@ var Breadcrumbs = React.createClass({
                     newPath = newPath.concat([{name: v}]);
                 }
                 newPath = newPath.map(function(e) { return e.name })
-                console.log("newPath: " + newPath);
                 this.props.onChange(newPath);
             }
             content.push(<BreadcrumbsItem
                 value={this.props.path[i].name}
-                type={this.props.path[i].type}
                 values={this.props.path[i].children}
+                icon={this.props.path[i].icon}
                 onValueSelected={handler.bind(this, i)}/>)
         }
 
@@ -389,33 +387,31 @@ var Settings = React.createClass({
         this.props.onFeatureChange(feature, value);
     },
 
-    handleMetatargetChange: function(path) {
-        this.props.onMetatargetChange(path);
+    handleMetaChange: function(path) {
+        this.props.onMetatargetPathChange(path);
 ;    },
 
     render: function () {
 
-        var path = [];
-        var projects = [this.props.projects];
-        var metatarget = this.props.metatarget;
-
-        metatarget.forEach(function(m) {
-            var p = _.find(projects, function(p) { return p.name === m;});
-            var pe = {
+        var path = this.props.metatargetPath.map(function(p) {
+            var r = {
                 name: p.name
             };
-            if (p.children && p.children.length) {
-                pe.type = 'project';
-                pe.children = _.pluck(p.children, 'name');
+            if (p.type === 'project') {
+                r.icon = 'fa-folder-o';
+            } else {
+                r.icon = 'fa-dot-circle-o';
             }
-            projects = p.children;
-            path.push(pe);
+            if (p.children && p.children.length) {
+                r.children = _.pluck(p.children, 'name');
+            }
+            return r;
         });
 
         return <div>
             <div className="property">
                 <span style={{'vertical-align': 'middle'}}>Metatarget</span>
-                <Breadcrumbs path={path} onChange={this.handleMetatargetChange}/>
+                <Breadcrumbs path={path} onChange={this.props.onMetatargetPathChange}/>
             </div>
             <hr/>
             <BuildProperties features={this.props.features} onChange={this.handleChange}/>
@@ -428,6 +424,140 @@ var Store = Backbone.Model.extend({
 
     }
 })
+
+var BuildActionMessage = React.createClass({
+    render: function() {
+        var e = this.props.event;
+        var text = e['action-name'];
+        if (e.targets)
+            text += ' ' + e.targets[0];
+
+        var titleClass = "action-title";
+        /* Temporary disabled - yellow looks ugly really.
+        if (e.errors) {
+            titleClass += " error";
+        } else if (e.warnings) {
+            titleClass += " warning";
+        } */
+
+        var badges = [];
+
+        if (e.lines) {
+            badges.push(<span key='b-m' className='badge'>{e.lines}</span>);
+        }
+
+        if (e.warnings) {
+            badges.push(<span key='b-w' className='badge bg-warning'>{e.warnings}</span>);
+        }
+
+        if (e.errors) {
+            badges.push(<span key='b-e' className='badge bg-danger'>{e.errors}</span>);
+        }
+
+        if (this.props.full) {
+
+            var submessages = this.props.event.submessages.map(function(m) {
+                return <span className='command-output'>{m.text}</span>;
+            });
+
+            var commands = this.props.event.commands.map(function(c) {
+                return <span className='command'>{c}</span>;
+            });
+
+            var includes;
+            if (e.properties.include) {
+                includes = <span>Include: {e.properties.include.join(' ')}</span>;
+            }
+
+            return <div className='message'>
+                <div className={titleClass}>
+                    <a className='back' href='#' onClick={this.props.onBack}><i className='fa fa-arrow-circle-o-left'/></a>
+                    <span className='detailed'> {text}</span> {badges}
+                </div>
+                <div>
+                <span>Sources: {e.sources.join(' ') || 'none'}</span>
+                </div>
+                <div>
+                    <span>Targets: {e.targets.join(' ') || 'none'}</span>
+                </div>
+                <div>
+                    {includes}
+                    </div>
+                <hr/>
+                <div>
+                    {commands}
+                </div>
+                {submessages}
+            </div>
+        } else {
+
+            return <div>
+                <div className={titleClass} >
+                    <a href='#' onClick={this.props.onDetails}>{text} {badges}</a>
+                </div>
+                </div>
+        }
+    }
+});
+
+
+var BuildFinishedMessage = React.createClass({
+    render: function() {
+        var e = this.props.event;
+        if (e.success) {
+            return <div className="build-finished text-success">Built successfully</div>;
+        } else {
+            return <div className="build-finished text-danger">Build failed</div>;
+        }
+    }
+});
+
+var Messages2 = React.createClass({
+
+    getInitialState: function() {
+        return {
+            selection: null
+        }
+    },
+
+    render: function() {
+
+        var self = this;
+
+        function createEventView(e, p, full) {
+
+            function handleDetails() {
+                self.setState({selection: e});
+            }
+
+            function handleBack() {
+                self.setState({selection: p});
+            }
+
+            if (e.event === "build-action-started") {
+                return <BuildActionMessage key={e.token} event={e} full={full}
+                                           onDetails={handleDetails} onBack={handleBack}/>;
+            } else if (e.event === 'build-finished') {
+                return <BuildFinishedMessage event={e}/>;
+            }
+        }
+
+        var messages;
+        if (this.state.selection) {
+            messages = [createEventView(this.state.selection, null, true)];
+        } else {
+            console.log("----");
+            messages = this.props.messages.map(function (e) {
+                console.log(e.token);
+                return createEventView(e, null, false);
+            });
+        }
+
+        return <div className='messages'>{messages}</div>;
+    }
+
+});
+
 
 
 var BoostBuildUI = React.createClass({
@@ -463,10 +593,24 @@ var BoostBuildUI = React.createClass({
             ]
         }
 
-        this.target_path = ['hello', 'app'];
+        this.metatarget_path = this.computeMetatargetPath(['hello', 'app']);
 
-        return {elapsed: 0, messages: [], settings: false, connection: 'opening',
-            projects: this.projects, target_path: this.target_path}
+        return {elapsed: 0, messages: [], events: [], settings: false, connection: 'opening',
+            projects: this.projects, metatarget_path: this.metatarget_path}
+    },
+
+    /* Given a list of strings, return target path consisting of
+       full target objects. */
+    computeMetatargetPath: function(names) {
+
+        var result = [];
+        var projects = [this.projects];
+        names.forEach(function(n) {
+            var p = _.find(projects, function(p) { return p.name === n;});
+            result.push(p);
+            projects = p.children;
+        });
+        return result;
     },
 
     send: function(data) {
@@ -499,64 +643,16 @@ var BoostBuildUI = React.createClass({
 
     componentWillUnmount: function() {
 
-        clearInterval(this.timer);
-        clearInterval(this.timer2);
-    },
-
-    tick: function() {
-        this.state.elapsed = (new Date().getTime()) - this.start;
-        this.setState(this.state);
-    },
-
-    tick2: function() {
-        var last;
-        if (this.state.messages.length > 0) {
-            last = this.state.messages[this.state.messages.length-1];
-            if (last.submessages === undefined) {
-                last.submessages = [];
-            }
-        }
-
-        switch(this.step) {
-            case 0:
-                this.state.messages.push({text: 'common.mkdir bin/gcc-4.8'});
-                break;
-            case 1:
-                this.state.messages.push({text: 'common.mkdir bin/gcc-4.8/debug'});
-                break;
-            case 2:
-                this.state.messages.push({text: 'gcc.compile.c++ bin/gcc-4.8/debug/hello.o'});
-                break;
-            case 2:
-                this.state.messages.push({text: 'gcc.compile.c++ bin/gcc-4.8/debug/hello.o'});
-                break;
-            case 3:
-                last.submessages.push("Working hard on compilation");
-                break;
-            case 4:
-                last.submessages.push("Working some more");
-                break;
-            case 5:
-                this.state.messages.push({text: 'gcc.link bin/gcc-4.8/debug/hello'});
-                break;
-            case 6:
-                last.submessages.push("Linking C++ binaries is hard");
-                break;
-            case 7:
-                this.state.messages.push({text: "Done"});
-            default:
-                clearInterval(this.timer2);
-        }
-        ++this.step;
-        this.setState(this.state);
     },
 
     handleBuild: function(force) {
 
         var r = {type: 'request', request: 'build'};
-        if (force) {
-            r.force = true;
-        }
+        //if (force) {
+        //    r.force = true;
+        //}
+        r.redo = true;
+        //r.noexec = true;
 
         var properties;
         // Add any specified values of features.
@@ -573,14 +669,15 @@ var BoostBuildUI = React.createClass({
             r.properties = properties;
         }
 
+        if (this.state.metatarget_path.length > 1) {
 
-        if (this.state.target_path.length > 1) {
-
-            var names = this.state.target_path.concat();
-            names[0] = '.'
+            var names = _.pluck(this.state.metatarget_path, 'name');
             var length = names.length;
-            var metatarget = names.slice(0, length-1).join('/') + '//' + names[length-1];
-            r.metatargets = [metatarget];
+            names[0] = '.'
+            if (this.state.metatarget_path[length-1].type !== 'project') {
+                names[length-1] = '/' + names[length-1];
+            }
+            r.metatargets = [names.join('/')];
         }
         console.log("Metatargets requested: " + JSON.stringify(r.metatargets));
 
@@ -590,11 +687,6 @@ var BoostBuildUI = React.createClass({
         this.step = 0;
         this.state.messages = []
         this.setState(this.state);
-        clearInterval(this.timer);
-        clearInterval(this.timer2)
-        this.timer = setInterval(this.tick, 50);
-        this.timer2 = setInterval(this.tick2, 1000);
-
     },
 
     handleCode: function() {
@@ -611,8 +703,8 @@ var BoostBuildUI = React.createClass({
         this.setState({features: this.state.features});
     },
 
-    handleMetatargetChange: function(path) {
-        this.setState({target_path: path});
+    handleMetatargetPathChange: function(path) {
+        this.setState({metatarget_path: this.computeMetatargetPath(path)});
     },
 
     handleServerMessage: function(xm) {
@@ -636,21 +728,37 @@ var BoostBuildUI = React.createClass({
                 }
                 m.text = text;
                 m.submessages = [];
+                m.lines = 0;
+                m.warnings = 0;
+                m.errors = 0;   
                 this.token2message[m['token']] = m;
                 this.state.messages.push(m);
             } else if (m.event === 'build-action-output') {
                 text = m.output;
                 var token = m['token'];
                 if (token in this.token2message) {
-                    this.token2message[token].submessages.push({text: text});
+                    var parent = this.token2message[token];
+                    parent.submessages.push({text: text});
+                    parent.lines++;
+                    if (m['output-kind'] === 'warning') {
+                        parent.warnings++;
+                    } else if (m['output-kind'] === 'error') {
+                        parent.errors++;
+                    }
                 }
             } else if (m.event === 'build-action-finished') {
                 token = m['token'];
                 if (token in this.token2message) {
                     this.token2message[token].success = m['exit-status'] == '0';
                 }
+            } else if (m.event === 'build-finished') {
+                this.state.messages.push(m);
             }
-            this.setState({messages: this.state.messages});
+            this.state.events.push(m);
+            this.setState({
+                messages: this.state.messages,
+                events: this.state.events
+            });
         }
     },
 
@@ -660,7 +768,7 @@ var BoostBuildUI = React.createClass({
             content = <Settings
                 features={this.state.features} onFeatureChange={this.handleFeatureValueChange}
                 projects={this.state.projects}
-                metatarget={this.state.target_path} onMetatargetChange={this.handleMetatargetChange}
+                metatargetPath={this.state.metatarget_path} onMetatargetPathChange={this.handleMetatargetPathChange}
                 />;
         } else {
             content = <Source/>;
@@ -674,7 +782,7 @@ var BoostBuildUI = React.createClass({
             <div className='source'>
             {content}
             </div>
-            <Messages messages={this.state.messages} elapsed={this.state.elapsed}/>
+            <Messages2 messages={this.state.messages}/>
             </div>
         ;
     }

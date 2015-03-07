@@ -29,7 +29,7 @@ ws.on('connection', function(ws) {
 
     sendOutput(ws, "Hi there");
 
-    var b2 = spawn("/home/ghost/Sources/boost/tools/build/src/engine/bin.linuxx86_64/b2",
+    var b2 = spawn("/home/ghost/Sources/boost/tools/build/src/engine/bin.linuxx86_64.debug/b2",
                    ["-a", "-d0", "--python", "--server"],
                    {
                        cwd: "/home/ghost/Sources/boost/tools/build/example/libraries"
@@ -58,7 +58,8 @@ ws.on('connection', function(ws) {
             s = JSON.stringify(j);
             ws.send(s);
         } catch(e) {
-            console.log(e);
+            // We've logged this output above, but since it's not valid
+            // JSON, don't send to websocket.
         }                                
 
     });

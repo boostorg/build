@@ -64,8 +64,24 @@ div.properties {
 
 div.messages {
     margin-top: 12px;
+}
+
+.action-title {
     font-weight: bold;
 }
+
+.message {
+    margin-bottom: 10px;
+}
+
+.action-title.warning, .action-title.warning a {
+    color: yellow;
+}
+
+.action-title.error, .action-title.error a {
+    color: red;
+}
+
 
 div.messages span.sub {
     font-weight: normal;
@@ -159,4 +175,35 @@ div.toolbar .btn {
     display: inline-block;
     position: relative;
     cursos: pointer;
+}
+
+.bg-warning {
+  background-color: #fccf2f;
+}
+
+.bg-danger {
+  background-color: #f23a47;
+}
+
+.action-title .badge {
+    margin-right: 5px;
+}
+
+.command, .command-output {
+    font-family: monospace;
+    display: block;
+    white-space: pre;
+}
+.command {
+    font-style: italic;
+    white-space: pre-wrap;
+}
+
+hr {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.build-finished {
+    font-weight: bold;
 }
