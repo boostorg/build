@@ -275,6 +275,9 @@ void      clear_includes                 ( TARGET * );
 TARGET  * target_scc                     ( TARGET * );
 void      reinit_targets                 ( );
 
+#ifdef HAVE_PYTHON
+void      invoke_python_callback         (TARGET *t, PyObject* callback_name, PyObject *args);
+#endif
 
 /* Final module cleanup. */
 void rules_done();

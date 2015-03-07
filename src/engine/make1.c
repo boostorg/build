@@ -117,22 +117,6 @@ static state * state_freelist = NULL;
 /* Currently running command counter. */
 static int cmdsrunning;
 
-#ifdef HAVE_PYTHON
-static void python_callback(PyObject *callback_name, TARGET *t, PyObject *args)
-{
-    PyObject *result;
-    
-    PyObject *method = PyObject_GetAttr(t->python_callback, callback_name);
-    
-    if (!method || !PyCallable_Check(method)) {
-        printf("internal error: Invalid Python callback for an action.\n");
-        exit(1);
-    }
-        
-    result = PyObject_Call(method, args, NULL);
-    Py_XDECREF(result);
-}
-#endif
 
 
 static state * alloc_state()
@@ -513,8 +497,22 @@ static void make1b( state * const pState )
 
 #ifdef HAVE_PYTHON
         if (t->cmds && t->python_callback) {
-            PyObject *args = PyTuple_New(0);
-            python_callback(constant_py_build_started, t, args);
+            PyObject *args = PyTuple_New(1);
+            PyObject *cmds = PyList_New(0);
+            CMD* cmd = (CMD *)t->cmds;
+            while(cmd) {
+                CMDLIST* next = cmd->next;
+                PyObject *s = PyString_FromString(cmd->buf->value);
+                PyList_Append(cmds, s);
+                Py_DECREF(s);
+
+                while (next && !next->iscmd)
+                    next = next->next;
+
+                cmd = next ? next->impl.cmd : 0;
+            }
+            PyTuple_SetItem(args, 0, cmds);
+            invoke_python_callback(t, constant_py_build_started, args);
             Py_DECREF(args);
         }
 #endif
@@ -840,7 +838,7 @@ static void make1c_output_closure
                                                          end - begin);
         PyTuple_SetItem(args, 0, py_s); /* Steals reference */
         PyTuple_SetItem(args, 1, py_output); /* Likewise */
-        python_callback(constant_py_build_output, t, args);
+        invoke_python_callback(t, constant_py_build_output, args);
         Py_DECREF(args);
     }    
 

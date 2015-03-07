@@ -312,6 +312,24 @@ static void reinit_target( TARGET * target )
     target->depth = 0;
 }
 
+#ifdef HAVE_PYTHON
+static void invoke_python_callback(TARGET *t, PyObject *callback_name, PyObject *args)
+{
+    PyObject *result;
+
+    PyObject *method = PyObject_GetAttr(t->python_callback, callback_name);
+
+    if (!method || !PyCallable_Check(method)) {
+        printf("internal error: Invalid Python callback for an action.\n");
+        exit(1);
+    }
+
+    result = PyObject_Call(method, args, NULL);
+    Py_XDECREF(result);
+}
+#endif
+
+
 static void reinit_targets_cb( void * xtarget, void * data)
 {
     reinit_target((TARGET *)xtarget);

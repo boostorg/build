@@ -4,6 +4,7 @@
 
 import bjam
 import json
+import os
 
 # To simplify implementation of tools level, we'll
 # have a global variable keeping the current manager.
@@ -114,7 +115,7 @@ class Manager:
     def enable_events(self, value=True):
         self.events_enabled = value;
                 
-    def build_started(self, action):
+    def build_started(self, action, commands):
         if not self.events_enabled:
             return
         print json.dumps({
@@ -125,22 +126,35 @@ class Manager:
             # FIXME: need to filter out non-file target.
             'targets': [t.full_name() for t in action.targets()],
             'sources': [t.full_name() for t in action.sources()],
+            'commands': commands,
             'properties': action.properties().json()
         })
 
     def build_output(self, action, stream, output):
         if not self.events_enabled:
             return
-        j = {
+        while output:
+            n = output.find(os.linesep)
+            if n != -1:
+                line = output[:n]
+                output = output[n+1:]
+            else:
+                line = output
+                output = None
+
+            j = {
             'token': id(action),
             'type': 'event',
             'event': 'build-action-output',
             'stream': stream,
-            'output': output
+            'output': line
             }
-        if output.find("warning:") != -1:
-            j['output-kind'] = 'warning'
-        print json.dumps(j)
+            if line.find("error:") != -1:
+                j['output-kind'] = 'error'
+            elif line.find("warning:") != -1:
+                j['output-kind'] = 'warning'
+
+            print json.dumps(j)
 
     def build_finished(self, action, exit_status):
         if not self.events_enabled:

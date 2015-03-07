@@ -886,8 +886,8 @@ class Action:
         """
         return prop_set
 
-    def build_started(self):
-        self.manager_.build_started(self)
+    def build_started(self, commands):
+        self.manager_.build_started(self, commands)
 
     def build_output(self, stream, output):
         self.manager_.build_output(self, stream, output)
