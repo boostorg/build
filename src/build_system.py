@@ -656,6 +656,10 @@ class Server:
             if not line:
                 break
 
+            line = line.strip()
+            if len(line) == 0:
+                continue
+
             token = None
             j = json.loads(line)
 
