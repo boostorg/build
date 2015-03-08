@@ -4,13 +4,17 @@
 # Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-bjam_interface = __import__('bjam')
+bjam = __import__('bjam')
 
 import operator
 import re
+import os
 
 import b2.build.property_set as property_set
 import b2.util
+
+from b2.util.utility import os_name
+
 
 class BjamAction:
     """Class representing bjam action defined from Python."""
@@ -24,7 +28,7 @@ class BjamAction:
         # Bjam actions defined from Python have only the command
         # to execute, and no associated jam procedural code. So
         # passing 'property_set' to it is not necessary.
-        bjam_interface.set_update_action(
+        bjam.set_update_action(
             self.action_name, targets, sources, [], callback)
 
         if self.function:
@@ -36,7 +40,9 @@ class BjamNativeAction:
     We still allow to associate a Python callable that will
     be called when this action is installed on any target.
     """
-    
+
+    __re_windows_drive = re.compile(r'^.*:\$')
+
     def __init__(self, action_name, function):
         self.action_name = action_name
         self.function = function
@@ -67,6 +73,8 @@ class Engine:
     """
     def __init__ (self):
         self.actions = {}
+        self.mkdir_set = set()
+        self.register_base_actions()
 
     def add_dependency (self, targets, sources):
         """Adds a dependency from 'targets' to 'sources'
@@ -106,7 +114,7 @@ class Engine:
             echo [ on $(targets) return $(MY-VAR) ] ;
             "Hello World"
         """
-        return bjam_interface.call('get-target-variable', targets, variable)
+        return bjam.call('get-target-variable', targets, variable)
 
     def set_target_variable (self, targets, variable, value, append=0):
         """ Sets a target variable.
@@ -165,7 +173,7 @@ class Engine:
         # to other actions.
         assert command or function
         if command:
-            bjam_interface.define_action(action_name, command, bound_list, bjam_flags)
+            bjam.define_action(action_name, command, bound_list, bjam_flags)
 
         self.actions[action_name] = BjamAction(action_name, function)
 
@@ -183,7 +191,61 @@ class Engine:
         # action is already registered.
         if not self.actions.has_key(action_name):
             self.actions[action_name] = BjamNativeAction(action_name, function)
-    
+
+    def register_base_actions(self):
+        self.register_action("common.MkDir1-quick-fix-for-unix", 'mkdir -p "$(<)"')
+        self.register_action("common.MkDir1-quick-fix-for-windows", 'if not exist "$(<)\\" mkdir "$(<)"')
+
+        if os_name() == 'NT':
+            __RM = 'del /f /q'
+        else:
+            __RM = 'rm -f'
+
+        self.register_action("common.Clean", __RM + ' "$(>)"',
+                             flags=['piecemeal', 'together', 'existing'])
+
+
+    def mkdir(self, path):
+        """ Add actions for creating directory 'path', which is also name of target.
+
+        The caller should arrange to have dependency of target target. This method
+        is part of the engine since it's absolutely necessary for anything to work,
+        regardless of what tools we want to run.
+        """
+
+        # If dir exists, do not update it. Do this even for $(DOT).
+        bjam.call('NOUPDATE', path)
+
+        if path != '.' and path not in self.mkdir_set:
+            # Cheesy gate to prevent multiple invocations on same dir.
+            self.mkdir_set.add(path)
+
+            # Schedule the mkdir build action.
+            if os_name() == 'NT':
+                self.set_update_action("common.MkDir1-quick-fix-for-windows", path, [])
+            else:
+                self.set_update_action("common.MkDir1-quick-fix-for-unix", path, [])
+
+            # Prepare a Jam 'dirs' target that can be used to make the build only
+            # construct all the target directories.
+            self.add_dependency('dirs', path)
+
+            # Recursively create parent directories. $(<:P) = $(<)'s parent & we
+            # recurse until root.
+
+            s = os.path.dirname(path)
+            if os_name() == 'NT':
+                if(Engine.__re_windows_drive.match(s)):
+                    s = ''
+
+            if s:
+                if s != path:
+                    self.add_dependency(path, s)
+                    self.mkdir(s)
+                else:
+                    bjam.call('NOTFILE', s)
+
+
     # Overridables
 
 
@@ -195,11 +257,11 @@ class Engine:
 
     def do_set_target_variable (self, target, variable, value, append):
         if append:
-            bjam_interface.call("set-target-variable", target, variable, value, "true")
+            bjam.call("set-target-variable", target, variable, value, "true")
         else:
-            bjam_interface.call("set-target-variable", target, variable, value)
+            bjam.call("set-target-variable", target, variable, value)
         
     def do_add_dependency (self, target, source):
-        bjam_interface.call("DEPENDS", target, source)
+        bjam.call("DEPENDS", target, source)
          
         

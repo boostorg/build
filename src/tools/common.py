@@ -18,7 +18,7 @@ import sys
 
 # for some reason this fails on Python 2.7(r27:82525)
 # from b2.build import virtual_target 
-import b2.build.virtual_target
+from b2.build import virtual_target
 from b2.build import feature, type
 from b2.util.utility import *
 from b2.util import path
@@ -557,46 +557,6 @@ def file_creation_command():
     else:
         return "touch "
 
-#FIXME: global variable
-__mkdir_set = set()
-__re_windows_drive = re.compile(r'^.*:\$')
-
-def mkdir(engine, target):
-    # If dir exists, do not update it. Do this even for $(DOT).
-    bjam.call('NOUPDATE', target)
-
-    global __mkdir_set
-
-    # FIXME: Where is DOT defined?
-    #if $(<) != $(DOT) && ! $($(<)-mkdir):
-    if target != '.' and target not in __mkdir_set:
-        # Cheesy gate to prevent multiple invocations on same dir.
-        __mkdir_set.add(target)
-
-        # Schedule the mkdir build action.
-        if os_name() == 'NT':
-            engine.set_update_action("common.MkDir1-quick-fix-for-windows", target, [])
-        else:
-            engine.set_update_action("common.MkDir1-quick-fix-for-unix", target, [])
-
-        # Prepare a Jam 'dirs' target that can be used to make the build only
-        # construct all the target directories.
-        engine.add_dependency('dirs', target)
-
-        # Recursively create parent directories. $(<:P) = $(<)'s parent & we
-        # recurse until root.
-
-        s = os.path.dirname(target)
-        if os_name() == 'NT':
-            if(__re_windows_drive.match(s)):
-                s = ''
-                
-        if s:
-            if s != target:
-                engine.add_dependency(target, s)
-                mkdir(engine, s)
-            else:
-                bjam.call('NOTFILE', s)
 
 __re_version = re.compile(r'^([^.]+)[.]([^.]+)[.]?([^.]*)')
 
@@ -827,9 +787,6 @@ def runtime_tag(name, target_type, prop_set ):
 def init(manager):
     engine = manager.engine()
 
-    engine.register_action("common.MkDir1-quick-fix-for-unix", 'mkdir -p "$(<)"')
-    engine.register_action("common.MkDir1-quick-fix-for-windows", 'if not exist "$(<)\\" mkdir "$(<)"')
-
     import b2.tools.make
     import b2.build.alias
 
@@ -847,9 +804,7 @@ def init(manager):
         __CP = 'cp'
         __IGNORE = ''
         __LN = 'ln'
-        
-    engine.register_action("common.Clean", __RM + ' "$(>)"',
-                           flags=['piecemeal', 'together', 'existing'])
+
     engine.register_action("common.copy", __CP + ' "$(>)" "$(<)"')
     engine.register_action("common.RmTemps", __RM + ' "$(>)" ' + __IGNORE,
                            flags=['quietly', 'updated', 'piecemeal', 'together'])

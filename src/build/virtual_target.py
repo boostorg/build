@@ -71,7 +71,7 @@ import types
 from b2.util import path, utility, set
 from b2.util.utility import add_grist, get_grist, ungrist, replace_grist, get_value
 from b2.util.sequence import unique
-from b2.tools import common
+
 from b2.exceptions import *
 import b2.build.type
 import b2.build.property_set as property_set
@@ -652,7 +652,7 @@ class FileTarget (AbstractFileTarget):
 
             # Make sure the path exists.
             engine.add_dependency (target, path)
-            common.mkdir(engine, path)
+            engine.mkdir(path)
 
             # It's possible that the target name includes a directory
             # too, for example when installing headers. Create that
@@ -661,7 +661,7 @@ class FileTarget (AbstractFileTarget):
             if d:
                 d = os.path.join(path, d)
                 engine.add_dependency(target, d)
-                common.mkdir(engine, d)
+                engine.mkdir(d)
 
             # For real file target, we create a fake target that
             # depends on the real target. This allows to run
