@@ -455,6 +455,17 @@ class PropertySet:
 
         return self.feature_map_.get(feature, [])
 
+    def getSingle(self, feature):
+        """ Assuming feature has zero or one values, return either the value or None"""
+
+        v = self.get(feature)
+        if not v:
+            return None
+        if len(v) == 1:
+            return v[0]
+        raise Exception("Unexpected value of feature '" + feature + "': " + str(v))
+
+
     @cached
     def get_properties(self, feature):
         """Returns all contained properties associated with 'feature'"""

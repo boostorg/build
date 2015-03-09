@@ -293,32 +293,70 @@ flags('gcc.compile', 'OPTIONS', ['<profiling>on'], ['-pg'])
 flags('gcc.compile.c++', 'OPTIONS', ['<rtti>off'], ['-fno-rtti'])
 flags('gcc.compile.c++', 'OPTIONS', ['<exception-handling>off'], ['-fno-exceptions'])
 
-# On cygwin and mingw, gcc generates position independent code by default, and
-# warns if -fPIC is specified. This might not be the right way of checking if
-# we're using cygwin. For example, it's possible to run cygwin gcc from NT
-# shell, or using crosscompiling. But we'll solve that problem when it's time.
-# In that case we'll just add another parameter to 'init' and move this login
-# inside 'init'.
-if not os_name () in ['CYGWIN', 'NT']:
-    # This logic will add -fPIC for all compilations:
-    #
-    # lib a : a.cpp b ;
-    # obj b : b.cpp ;
-    # exe c : c.cpp a d ;
-    # obj d : d.cpp ;
-    #
-    # This all is fine, except that 'd' will be compiled with -fPIC even though
-    # it's not needed, as 'd' is used only in exe. However, it's hard to detect
-    # where a target is going to be used. Alternative, we can set -fPIC only
-    # when main target type is LIB but than 'b' will be compiled without -fPIC.
-    # In x86-64 that will lead to link errors. So, compile everything with
-    # -fPIC.
-    #
-    # Yet another alternative would be to create propagated <sharedable>
-    # feature, and set it when building shared libraries, but that's hard to
-    # implement and will increase target path length even more.
-    flags('gcc.compile', 'OPTIONS', ['<link>shared'], ['-fPIC'])
+# ported from 7f0d33a7b0bbeae0bcf6a0e3f9c7f0909d68f84d
+def setup_fpic(targets, sources, properties):
 
+    if properties.get('link') == ['shared']:
+
+        target = properties.get('target-os')[0]
+
+        # This logic will add -fPIC for all compilations:
+        #
+        # lib a : a.cpp b ;
+        # obj b : b.cpp ;
+        # exe c : c.cpp a d ;
+        # obj d : d.cpp ;
+        #
+        # This all is fine, except that 'd' will be compiled with -fPIC even
+        # though it is not needed, as 'd' is used only in exe. However, it is
+        # hard to detect where a target is going to be used. Alternatively, we
+        # can set -fPIC only when main target type is LIB but than 'b' would be
+        # compiled without -fPIC which would lead to link errors on x86-64. So,
+        # compile everything with -fPIC.
+        #
+        # Yet another alternative would be to create a propagated <sharedable>
+        # feature and set it when building shared libraries, but that would be
+        # hard to implement and would increase the target path length even more.
+
+        # On Windows, fPIC is the default, and specifying -fPIC explicitly leads
+        # to a warning.
+        if not (target in ['cygwin', 'windows']):
+            get_manager().engine().set_target_variable (targets, 'OPTIONS', '-fPIC', True)
+
+def setup_address_model(targets, sources, properties):
+
+    model = properties.getSingle('address-model')
+    if model:
+
+        os = properties.getSingle('target-os')
+
+        if os == 'aix':
+            if model == '32':
+                option = '-maix32'
+            else:
+                option = '-maix64'
+
+        elif os == 'hpux':
+
+            if model == '32':
+                option = '-milp32'
+            else:
+                option = '-mlp64'
+
+        else:
+
+            arch = properties.get('architecture')[0]
+            if arch != 'arm':
+                if model == '32':
+                    option = '-m32'
+                else:
+                    option = '-m64'
+
+            # For darwin, the model can be 32_64. darwin.jam will handle that
+            # on its own.
+
+        get_manager().engine().set_target_variable(targets, 'OPTIONS', option, True)
+            
 if os_name() != 'NT' and os_name() != 'OSF' and os_name() != 'HPUX':
     # OSF does have an option called -soname but it doesn't seem to work as
     # expected, therefore it has been disabled.
@@ -339,8 +377,12 @@ engine.register_action('gcc.compile.c++.pch',
 engine.register_action('gcc.compile.c.pch',
     '"$(CONFIG_COMMAND)" -x c-header $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"')
 
-
 def gcc_compile_cpp(targets, sources, properties):
+
+    setup_threading(targets, sources, properties)
+    setup_fpic(targets, sources, properties)
+    setup_address_model(targets, sources, properties)
+    
     # Some extensions are compiled as C++ by default. For others, we need to
     # pass -x c++. We could always pass -x c++ but distcc does not work with it.
     extension = os.path.splitext (sources [0]) [1]
@@ -351,6 +393,11 @@ def gcc_compile_cpp(targets, sources, properties):
     engine.add_dependency(targets, bjam.call('get-target-variable', targets, 'PCH_FILE'))
 
 def gcc_compile_c(targets, sources, properties):
+
+    setup_threading(targets, sources, properties)
+    setup_fpic(targets, sources, properties)
+    setup_address_model(targets, sources, properties)
+    
     engine = get_manager().engine()
     # If we use the name g++ then default file suffix -> language mapping does
     # not work. So have to pass -x option. Maybe, we can work around this by
@@ -587,6 +634,10 @@ def init_link_flags(toolset, linker, condition):
 
 # Declare actions for linking.
 def gcc_link(targets, sources, properties):
+
+    setup_threading(targets, sources, properties)
+    setup_address_model(targets, sources, properties)
+    
     engine = get_manager().engine()
     engine.set_target_variable(targets, 'SPACE', ' ')
     # Serialize execution of the 'link' action, since running N links in
@@ -672,39 +723,45 @@ engine.register_action(
     function = gcc_link_dll,
     bound_list=['LIBRARIES'])
 
-# Set up threading support. It's somewhat contrived, so perform it at the end,
-# to avoid cluttering other code.
+def setup_threading(targets, sources, properties):
 
-if on_windows():
-    flags('gcc', 'OPTIONS', ['<threading>multi'], ['-mthreads'])
-elif bjam.variable('UNIX'):
-    jamuname = bjam.variable('JAMUNAME')
-    host_os_name = jamuname[0]
-    if host_os_name.startswith('SunOS'):
-        flags('gcc', 'OPTIONS', ['<threading>multi'], ['-pthreads'])
-        flags('gcc', 'FINDLIBS-SA', [], ['rt'])
-    elif host_os_name == 'BeOS':
-        # BeOS has no threading options, don't set anything here.
-        pass
-    elif host_os_name == 'Haiku':
-        flags('gcc', 'OPTIONS', ['<threading>multi'], ['-lroot'])
-        # there is no -lrt on Haiku, and -pthread is implicit
-    elif host_os_name.endswith('BSD'):
-        flags('gcc', 'OPTIONS', ['<threading>multi'], ['-pthread'])
-        # there is no -lrt on BSD
-    elif host_os_name == 'DragonFly':
-        flags('gcc', 'OPTIONS', ['<threading>multi'], ['-pthread'])
-        # there is no -lrt on BSD - DragonFly is a FreeBSD variant,
-        # which anoyingly doesn't say it's a *BSD.
-    elif host_os_name == 'IRIX':
-        # gcc on IRIX does not support multi-threading, don't set anything here.
-        pass
-    elif host_os_name == 'Darwin':
-        # Darwin has no threading options, don't set anything here.
-        pass
-    else:
-        flags('gcc', 'OPTIONS', ['<threading>multi'], ['-pthread'])
-        flags('gcc', 'FINDLIBS-SA', [], ['rt'])
+    threading = properties.getSingle('threading')
+    if threading == 'multi':
+
+        target = properties.get('target-os')
+
+        option = None
+        libs = None
+
+        if target == 'android':
+            pass # No threading options, everything is in already.
+        elif target == 'windows':
+            option = '-mthreads'
+        elif target == 'cygwin':
+            option = '-mthreads'
+        elif target == 'solaris':
+            option = '-pthreads'
+            libs = ['rt']
+        elif target == 'beos':
+            pass # No threading options.
+        elif target == 'haiku':
+            pass
+        elif target[-3:0] == 'bsd':
+            option = '-pthread' # There is no -lrt on BSD.
+        elif target == 'sgi':
+            pass # gcc on IRIX does not support multi-threading.
+        elif target == 'darwin':
+            pass  # No threading options.
+        else:
+            option = '-pthread'
+            libs = ['rt']
+
+        if option:
+            get_manager().engine().set_target_variable (targets, 'OPTIONS', option, True)
+
+        if libs:
+            get_manager().engine().set_target_variable (targets, 'OPTIONS', libs, True)
+
 
 def cpu_flags(toolset, variable, architecture, instruction_set, values, default=None):
     #FIXME: for some reason this fails.  Probably out of date feature code
