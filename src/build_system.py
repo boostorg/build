@@ -419,6 +419,8 @@ class Builder:
 
         def generate(self, properties):
 
+            ok = True
+
             # Generation of targets might invoke configuration checks,
             # so make sure config.log is setup.
             self.setup_config_log()
@@ -434,11 +436,15 @@ class Builder:
                         self.directly_requested_targets.extend(g.targets())
                     targets.extend(g.targets())
                 except ExceptionWithUserContext, e:
+                    self.manager.message(str(e), 'error', e.messages())
                     e.report()
+                    ok = False
                 except Exception:
                     raise
 
             self.engine_targets.extend([t.actualize() for t in targets])
+
+            return ok
 
         def build(self, redo=False, noexec=False):
             redo_s = "0"
@@ -613,9 +619,8 @@ class Server:
         self.current_project = current_project
         self.manager = manager
 
-    def build(self, j):
-        metatarget_ids = j.get('metatargets', [])
-        properties_raw = j.get('properties', {})
+    # TODO: possibly move to property_set class?
+    def extract_properties(self, properties_raw):
         properties = []
         for name, value in properties_raw.iteritems():
             f = feature.get(name)
@@ -628,20 +633,29 @@ class Server:
             else:
                 properties.append(Property(f, str(value)))
         ps = property_set.create(properties)
+        return ps
+
+    def build(self, j):
+        metatarget_ids = j.get('metatargets', [])
+        ps = self.extract_properties(j.get('properties', {}))
         # Just like for feature, make ids into strings, not unicode.
         metatarget_ids = [str(id) for id in metatarget_ids]
         builder = Builder(self.current_project, metatarget_ids, self.manager)
-        builder.generate(ps)
 
-        redo = False
-        if 'redo' in j:
-            redo = j['redo']
+        self.manager.message("Generating targets")
+        ok = builder.generate(ps)
 
-        noexec = False
-        if 'noexec' in j:
-            noexec = j['noexec']
+        if ok:
+            redo = False
+            if 'redo' in j:
+                redo = j['redo']
 
-        ok = builder.build(redo=redo, noexec=noexec)
+            noexec = False
+            if 'noexec' in j:
+                noexec = j['noexec']
+
+            self.manager.message("Updating targets")
+            ok = builder.build(redo=redo, noexec=noexec)
 
         done = {"type": "event",
                 "event": "build-finished",
@@ -696,6 +710,15 @@ class Server:
                     print json.dumps(fullResult)
                     sys.stdout.flush()
 
+                elif r == 'get-applicability':
+                    result = {}
+                    if token:
+                        result['token'] = token
+                    result['type'] = 'response'
+                    result['response'] = self.get_applicability(j)
+                    print json.dumps(result)
+                    sys.stdout.flush()
+
             else:
                 print "unknown type"
 
@@ -712,16 +735,43 @@ class Server:
             raise Exception("The get request does not handle path '%s'" % (j.get('path')))
 
     def get_properties(self):
-        r = []
+        r = [
+            {
+                'name': 'Core properties',
+                'properties': [
+                    feature.get('variant').json(),
+                    feature.get('link').json()
+                ]
+            },
+            {
+                'name': 'Cross-compilation',
+                'properties': [
+                    feature.get('architecture').json(),
+                    feature.get('target-os').json(),
+                    feature.get('target-board').json()
+                ]
+            }
+        ]
 
-        important = set(['toolset', 'target-os', 'architecture', 'variant', 'optimization', 'link'])
+        #//important = set(['toolset', 'target-os', 'architecture', 'variant', 'optimization', 'link'])
 
-        for t in feature.enumerate():
-            if t[0] in important:
-                r.append(t[1].json())
+        #for t in feature.enumerate():
+        #    #if t[0] in important:
+        #        r.append(t[1].json())
 
         return r
 
+    def get_applicability(self, j):
+
+        p = self.extract_properties(j.get('properties', {}))
+
+        r = {}
+        for f in [f for f in feature.all() if f.get_applicability_calculator() != None]:
+            a = f.get_applicability_calculator()(p)
+
+            r[f.name()] = a;
+
+        return r
 
 def main_real():
 
@@ -734,8 +784,6 @@ def main_real():
 
     global_build_dir = option.get("build-dir")
     manager = Manager(engine, global_build_dir)
-
-
 
     if "--version" in sys.argv:
         from b2.build import version
