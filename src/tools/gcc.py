@@ -43,6 +43,16 @@ def debug():
 
 feature.extend('toolset', ['gcc'])
 
+tb = feature.feature('target-board', [], ['composite'])
+def board_is_applicable(property_set):
+    if property_set.get('architecture') == ['arm']:
+        return True
+    return False
+
+tb.set_applicability_calculator(board_is_applicable)
+
+
+
 
 toolset.inherit_generators('gcc', [], 'unix', ['unix.link', 'unix.link.dll'])
 toolset.inherit_flags('gcc', 'unix')
