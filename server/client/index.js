@@ -238,7 +238,6 @@ var Feature = React.createClass({
     },
 
     handleChange: function(value) {
-        //this.setState({value: e.target.value});
         this.props.onChange(this.props.feature, value);
 
         if (this.timer) {
@@ -268,15 +267,34 @@ var Feature = React.createClass({
    }
 });
 
+var PropertyGroup = React.createClass({
+    render: function() {
+
+        var self = this;
+        var properties = []
+        this.props.group.properties.forEach(function(f) {
+            if (f.applicable === false)
+                return;
+
+            properties.push(<Feature feature={f} onChange={self.props.onChange}/>);
+        });
+
+        return <div className='property-group'>
+            <h1>{this.props.group.name}</h1>
+            {properties}
+            </div>
+    }
+});
+
 var BuildProperties = React.createClass({
 
     render: function() {
         var self = this;
-        var features = this.props.features.map(function(f) {
-            return <Feature feature={f} onChange={self.props.onChange}/>;
+        var groups = this.props.features.map(function(f) {
+            return <PropertyGroup group={f} onChange={self.props.onChange}/>;
         });
         return <div className="properties">
-                {features}
+                {groups}
             </div>;
     }
 });
@@ -504,10 +522,47 @@ var BuildActionMessage = React.createClass({
 var BuildFinishedMessage = React.createClass({
     render: function() {
         var e = this.props.event;
-        if (e.success) {
+        if (e.success === 'true') {
             return <div className="build-finished text-success">Built successfully</div>;
         } else {
             return <div className="build-finished text-danger">Build failed</div>;
+        }
+    }
+});
+
+var Message = React.createClass({
+    render: function() {
+        var e = this.props.event;
+        var className = "message";
+        if (e.kind === 'error') {
+            className += ' text-danger';
+        } else if (e.kind === 'warning') {
+            className += ' text-information';
+        }
+
+        if (this.props.full) {
+
+            var subs = e.submessages.map(function(s) {
+                return <div class="message">{s.message}</div>;
+            });
+
+            return <div>
+                <div className={className}>
+                    <a className='back' href='#' onClick={this.props.onBack}><i className='fa fa-arrow-circle-o-left'/></a>
+                    <span>{e.message}</span>
+                </div>
+                {subs}
+            </div>;
+
+        } else {
+            var text;
+            if (e.submessages && e.submessages.length > 0) {
+                text = <a href='#' onClick={this.props.onDetails}>{e.message + '\u2026'}</a>;
+            } else {
+                text = e.message;
+            }
+
+            return <div className={className}>{text}</div>;
         }
     }
 });
@@ -539,6 +594,8 @@ var Messages2 = React.createClass({
                                            onDetails={handleDetails} onBack={handleBack}/>;
             } else if (e.event === 'build-finished') {
                 return <BuildFinishedMessage event={e}/>;
+            } else if (e.event === 'message') {
+                return <Message key={e.token} event={e} full={full} onDetails={handleDetails} onBack={handleBack}/>;
             }
         }
 
@@ -546,9 +603,7 @@ var Messages2 = React.createClass({
         if (this.state.selection) {
             messages = [createEventView(this.state.selection, null, true)];
         } else {
-            console.log("----");
             messages = this.props.messages.map(function (e) {
-                console.log(e.token);
                 return createEventView(e, null, false);
             });
         }
@@ -619,6 +674,7 @@ var BoostBuildUI = React.createClass({
 
     request: function(request, callback) {
         request.token = this.token++;
+        request.type = 'request';
         this.requests[request.token] = callback;
         this.send(request);
     },
@@ -631,6 +687,7 @@ var BoostBuildUI = React.createClass({
             console.log("Connection is now opoen");
             self.setState({connection: 'open'});
             this.request({type: 'request', request: 'get', path: 'properties'}, function(m) {
+                self.flattenProperties(m.response);
                 self.setState({features: m.response});
             });
         }.bind(this);
@@ -645,6 +702,24 @@ var BoostBuildUI = React.createClass({
 
     },
 
+    flattenProperties: function(groups) {
+
+        var self = this;
+        this.feature_map = {}
+        this.feature_list = []
+
+        var result = {}
+
+        groups.forEach(function(g) {
+            g.properties.forEach(function(p) {
+                self.feature_list.push(p);
+                self.feature_map[p.name] = p;
+            });
+
+            // TODO: handle children.
+        });
+    },
+
     handleBuild: function(force) {
 
         var r = {type: 'request', request: 'build'};
@@ -655,8 +730,7 @@ var BoostBuildUI = React.createClass({
         //r.noexec = true;
 
         var properties;
-        // Add any specified values of features.
-        this.state.features.forEach(function(f) {
+        this.feature_list.forEach(function(f) {
            if (f.value) {
                 if (!properties) {
                     properties = {}
@@ -664,6 +738,7 @@ var BoostBuildUI = React.createClass({
                properties[f.name] = f.value;
            }
         });
+
         if (properties) {
             console.log("Build properties: " + JSON.stringify(properties));
             r.properties = properties;
@@ -686,6 +761,7 @@ var BoostBuildUI = React.createClass({
         this.start = new Date().getTime();
         this.step = 0;
         this.state.messages = []
+        this.state.
         this.setState(this.state);
     },
 
@@ -699,7 +775,33 @@ var BoostBuildUI = React.createClass({
     },
 
     handleFeatureValueChange: function(feature, value) {
+
+        var self = this;
+
         feature.value = value;
+
+        function handleApplicability(m) {
+            _.each(m.response, function(value, key) {
+                self.feature_map[key].applicable = value;
+            }, this);
+            self.setState({feature: self.state.features});
+        }
+
+        var properties = {}
+        this.feature_list.forEach(function(f) {
+            if (f.value) {
+                if (!properties) {
+                    properties = {}
+                }
+                properties[f.name] = f.value;
+            }
+        });
+
+        this.request({
+            'request': 'get-applicability',
+            'properties': properties
+        }, handleApplicability);
+
         this.setState({features: this.state.features});
     },
 
@@ -719,6 +821,13 @@ var BoostBuildUI = React.createClass({
 
         } if (m.type === 'event') {
 
+            var token = m['token'];
+            /* For now, allow new message to override earlier ones.
+               We'd need to consider that in future. */
+            if (token) {
+                this.token2message[token] = m;
+            }
+
             var text;
             if (m.event === 'build-action-started') {
                 text = m['action-name'];
@@ -730,14 +839,13 @@ var BoostBuildUI = React.createClass({
                 m.submessages = [];
                 m.lines = 0;
                 m.warnings = 0;
-                m.errors = 0;   
-                this.token2message[m['token']] = m;
+                m.errors = 0;
                 this.state.messages.push(m);
             } else if (m.event === 'build-action-output') {
                 text = m.output;
-                var token = m['token'];
-                if (token in this.token2message) {
-                    var parent = this.token2message[token];
+                var parent = m['parent'];
+                if (parent in this.token2message) {
+                    var parent = this.token2message[parent];
                     parent.submessages.push({text: text});
                     parent.lines++;
                     if (m['output-kind'] === 'warning') {
@@ -753,11 +861,18 @@ var BoostBuildUI = React.createClass({
                 }
             } else if (m.event === 'build-finished') {
                 this.state.messages.push(m);
+            } else if (m.event === 'message') {
+                var p = m['parent'];
+                if (p) {
+                    var parent = this.token2message[p];
+                    parent.submessages.push(m);
+                } else {
+                    m.submessages = [];
+                    this.state.messages.push(m);
+                }
             }
-            this.state.events.push(m);
             this.setState({
-                messages: this.state.messages,
-                events: this.state.events
+                messages: this.state.messages
             });
         }
     },
@@ -779,12 +894,13 @@ var BoostBuildUI = React.createClass({
                      onCode={this.handleCode}
                      onSettings={this.handleSettings}
                      connection={this.state.connection}/>
+
             <div className='source'>
-            {content}
+                {content}
             </div>
             <Messages2 messages={this.state.messages}/>
-            </div>
-        ;
+        </div>
+            ;
     }
 });
 

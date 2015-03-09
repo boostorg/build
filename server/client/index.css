@@ -64,6 +64,7 @@ div.properties {
 
 div.messages {
     margin-top: 12px;
+    font-size: 18px;
 }
 
 .action-title {
@@ -128,6 +129,10 @@ div.toolbar .btn {
 
 .done {
     color: green;
+}
+
+.property {
+    font-size: 16px;
 }
 
 .property input {
@@ -206,4 +211,18 @@ hr {
 
 .build-finished {
     font-weight: bold;
+}
+
+.property-group {
+    margin-bottom: 12px;
+}
+
+.property-group h1 {
+    margin-bottom: 12px;
+    font-size: 18px;
+    color: #777;
+}
+
+.text-danger a {
+    color:#a94442;
 }
