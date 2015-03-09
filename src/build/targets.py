@@ -1107,7 +1107,11 @@ class BasicTarget (AbstractTarget):
         """
         self.manager_.errors().push_user_context(
             "Generating target " + self.full_name(), self.user_context_)
-        
+
+        t = self.manager().message("Generating metatarget '%s'" % self.name_)
+
+        self.manager().message("Build request: '%s'" % str (ps.raw ()), parent = t)
+
         if self.manager().targets().logging():
             self.manager().targets().log(
                 "Building target '%s'" % self.name_)

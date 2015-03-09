@@ -121,18 +121,21 @@ class Manager:
         self.next_event_token = self.next_event_token + 1
         return r
 
-    def message(self, message, kind='information', submessages=[]):
+    def message(self, message, kind='information', submessages=[], parent = None):
         if not self.events_enabled:
             return
 
         t = self.get_token()
-        print json.dumps({
+        j = {
             'token': t,
             'type': 'event',
             'event': 'message',
             'kind': kind,
             'message':  message
-        })
+        }
+        if  parent:
+            j['parent'] = parent
+        print json.dumps(j)
         for s in submessages:
             print json.dumps({
                 'parent': t,
@@ -140,6 +143,8 @@ class Manager:
                 'event': 'message',
                 'message': s
             })
+
+        return t
 
     def build_started(self, action, commands):
         if not self.events_enabled:
