@@ -57,8 +57,12 @@ class ExceptionWithUserContext(Exception):
         self.original_tb_ = original_tb
         self.stack_ = stack
 
+        self.submessages_ = []
+
     def report(self):
         print "error:", self.args[0]
+        for m in self.submessages_:
+            print "  " + m
         if self.original_exception_:
             print format(str(self.original_exception_), "    ")
         print
@@ -75,6 +79,16 @@ class ExceptionWithUserContext(Exception):
         else:
             print "    use the '--stacktrace' option to get Python stacktrace"
         print
+
+
+    def addMessage(self, message):
+        self.submessages_.append(message)
+
+    def setSubmessages(self, submessaegs):
+        self.submessages_ = submessaegs
+
+    def messages(self):
+        return self.submessages_
 
 def user_error_checkpoint(callable):
     def wrapper(self, *args):
@@ -117,10 +131,13 @@ class Errors:
     def handle_stray_exception(self, e):
         raise ExceptionWithUserContext("unexpected exception", self.contexts_[:],
                                        e, sys.exc_info()[2])    
-    def __call__(self, message):
+    def __call__(self, message, submessages = None):
         self._count = self._count + 1
-        raise ExceptionWithUserContext(message, self.contexts_[:], 
-                                       stack=traceback.extract_stack())
+        e = ExceptionWithUserContext(message, self.contexts_[:],
+                                     stack=traceback.extract_stack())
+        if submessages:
+            e.setSubmessages(submessages)
+        raise e
 
         
 
