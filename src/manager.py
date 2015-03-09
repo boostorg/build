@@ -41,6 +41,7 @@ class Manager:
         self.command_line_free_features_ = property_set.empty()
 
         self.events_enabled = False
+        self.next_event_token = 0;
         
         global the_manager
         the_manager = self
@@ -114,7 +115,32 @@ class Manager:
 
     def enable_events(self, value=True):
         self.events_enabled = value;
-                
+
+    def get_token(self):
+        r = "e" + str(self.next_event_token)
+        self.next_event_token = self.next_event_token + 1
+        return r
+
+    def message(self, message, kind='information', submessages=[]):
+        if not self.events_enabled:
+            return
+
+        t = self.get_token()
+        print json.dumps({
+            'token': t,
+            'type': 'event',
+            'event': 'message',
+            'kind': kind,
+            'message':  message
+        })
+        for s in submessages:
+            print json.dumps({
+                'parent': t,
+                'type': 'event',
+                'event': 'message',
+                'message': s
+            })
+
     def build_started(self, action, commands):
         if not self.events_enabled:
             return
@@ -143,7 +169,7 @@ class Manager:
                 output = None
 
             j = {
-            'token': id(action),
+            'parent': id(action),
             'type': 'event',
             'event': 'build-action-output',
             'stream': stream,
