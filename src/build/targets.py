@@ -83,6 +83,7 @@ from b2.exceptions import *
 from b2.util.sequence import unique
 from b2.util import path, bjam_signature
 from b2.build.errors import user_error_checkpoint
+from toolset import Toolset
 
 import b2.build.build_request as build_request
 
@@ -1015,6 +1016,9 @@ class BasicTarget (AbstractTarget):
             self.manager().errors("Invalid value of the 'what' parameter")
 
     def __common_properties2(self, build_request, requirements):
+
+        build_request = Toolset.select(build_request)
+
         # This guarantees that default properties are present
         # in result, unless they are overrided by some requirement.
         # TODO: There is possibility that we've added <foo>bar, which is composite

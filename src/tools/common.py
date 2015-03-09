@@ -23,6 +23,8 @@ from b2.build import feature, type
 from b2.util.utility import *
 from b2.util import path
 
+from b2.build.toolset import Toolset
+
 __re__before_first_dash = re.compile ('([^-]*)-')
 
 def reset ():
@@ -159,9 +161,9 @@ class Configurations(object):
     def set (self, id, param, value):
         """ Sets the value of a configuration parameter. """
         self.params_.setdefault(param, {})[id] = value
-
+        
 # Ported from trunk@47174
-def check_init_parameters(toolset, requirement, *args):
+def check_init_parameters(toolset, command, requirement, *args):
     """ The rule for checking toolset parameters. Trailing parameters should all be
         parameter name/value pairs. The rule will check that each parameter either has
         a value in each invocation or has no value in each invocation. Also, the rule
@@ -183,7 +185,16 @@ def check_init_parameters(toolset, requirement, *args):
     # iterable and not a string, allows for future support of sets
     assert(not isinstance(requirement, basestring) and hasattr(requirement, '__contains__'))
     sig = toolset
-    condition = replace_grist(toolset, '<toolset>')
+
+    toolset_object = Toolset(toolset, command, requirement)
+
+    tid = str(id(toolset_object))
+    feature.extend('toolset-instance', [tid])
+    condition = replace_grist(tid, '<toolset-instance>')
+
+    # FIXME
+    args = []
+
     subcondition = []
 
     for arg in args:
@@ -240,10 +251,10 @@ def check_init_parameters(toolset, requirement, *args):
 
     # if a requirement is specified, the signature should be unique
     # with that requirement
-    if requirement:
-        sig += '-' + '-'.join(requirement)
+    #if requirement:
+    #    sig += '-' + '-'.join(requirement)
 
-    if __all_signatures.has_key(sig):
+    if False and __all_signatures.has_key(sig):
         message = "duplicate initialization of '%s' with the following parameters: " % toolset
         
         for arg in args:
@@ -262,16 +273,18 @@ def check_init_parameters(toolset, requirement, *args):
     # If we have a requirement, this version should only be applied under that
     # condition. To accomplish this we add a toolset requirement that imposes
     # the toolset subcondition, which encodes the version.
-    if requirement:
-        r = ['<toolset>' + toolset] + requirement
-        r = ','.join(r)
-        b2_toolset.add_requirements([r + ':' + c for c in subcondition])
+    #if requirement:
+    #    r = ['<toolset>' + toolset] + requirement
+    #    r = ','.join(r)
+    #    b2_toolset.add_requirements([r + ':' + c for c in subcondition])
 
     # We add the requirements, if any, to the condition to scope the toolset
     # variables and options to this specific version.
     condition = [condition]
-    if requirement:
-        condition += requirement
+    #if requirement:
+    #    condition += requirement
+
+
 
     if __show_configuration:
         print "notice:", condition

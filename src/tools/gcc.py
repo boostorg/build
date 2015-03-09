@@ -108,6 +108,10 @@ def init(version = None, command = None, options = None):
     bin = None
     #   The flavor of compiler.
     flavor = feature.get_values('<flavor>', options)
+
+    architecture = None
+    target_os = None
+
     #   Autodetect the root and bin dir if not given.
     if command:
         if not bin:
@@ -117,20 +121,41 @@ def init(version = None, command = None, options = None):
     #   Autodetect the version and flavor if not given.
     if command:
         machine_info = subprocess.Popen(command + ['-dumpmachine'], stdout=subprocess.PIPE).communicate()[0]
-        machine = __machine_match.search(machine_info).group(1)
+        machine = machine_info.strip()
+
+        if machine:
+            parts = machine.split('-')
+            cpu = parts[0]
+            manufacturer = parts[1]
+            target_os = '-'.join(parts[2:])
+
+            if cpu == 'x86_64':
+                cpu = 'x86'
+            elif cpu == 'i686':
+                cpu = 'x86'
+
+            if target_os == 'gnu':
+                target_os = 'linux'
+            elif target_os == 'mingw32':
+                target_os = 'windows'
 
         version_info = subprocess.Popen(command + ['-dumpversion'], stdout=subprocess.PIPE).communicate()[0]
         version = __version_match.search(version_info).group(1)
         if not flavor and machine.find('mingw') != -1:
             flavor = 'mingw'
 
+    properties = property_set.create([
+        Property('architecture', cpu),
+        Property('target-os', target_os)
+    ])
+
     condition = None
     if flavor:
-        condition = common.check_init_parameters('gcc', None,
+       condition = common.check_init_parameters('gcc', command, properties,
             ('version', version),
             ('flavor', flavor))
     else:
-        condition = common.check_init_parameters('gcc', None,
+        condition = common.check_init_parameters('gcc', command, properties,
             ('version', version))
 
     if command:

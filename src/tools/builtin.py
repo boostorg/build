@@ -130,6 +130,7 @@ def register_globals ():
     feature.set_default('target-os', default_host_os())
     
     feature.feature ('toolset', [], ['implicit', 'propagated' ,'symmetric'])
+    feature.feature ('toolset-instance', [], ['incidental'])
     
     feature.feature ('stdlib', ['native'], ['propagated', 'composite'])
     

@@ -397,3 +397,71 @@ def inherit(toolset, base):
     inherit_generators(toolset, [], base)
     inherit_flags(toolset, base)
     inherit_rules(toolset, base)
+
+class Toolset:
+
+    __all = []
+
+    def __init__(self, name, command, condition):
+        """Instance of a toolset with particular name, command and condition.
+
+         For example we might have toolset gcc, and a particular instance of it
+         will use i686-w64-mingw32-g++ as command and target-os=windows as condition.
+        """
+
+        Toolset.__all.append(self)
+        print "Create TOOLSET", name, command
+        if type(condition) == type([]):
+            condition = property_set.create(condition)
+        if type(command) == type([]):
+            assert len(command) == 1
+            command = command[0]
+        self.name = name
+        self.command = command
+        self.condition = condition
+
+    def __str__(self):
+        r = self.name + ", " + self.command + ", " + str(self.condition)
+        return r
+
+    @staticmethod
+    def select(build_request):
+        maybe = []
+        for t in Toolset.__all:
+            for p in t.condition.all():
+                existing = build_request.get(p.feature())
+                if existing:
+                    assert len(existing) == 1
+                    if existing[0] != p.value():
+                        print "XXX", existing[0], p.value()
+                        break
+            else:
+                maybe.append(t)
+
+        if len(maybe) == 0:
+            get_manager().errors()("The required properties don't match any of configured toolchains",
+                                   [str(t) for t in Toolset.__all])
+
+        maybe2 = []
+        if len(maybe) > 1:
+
+            for t in maybe:
+                for p in t.condition.all():
+                    existing = build_request.get(p.feature())
+                    if existing and existing[0] != p.value() or p.value() != p.feature().default():
+                        break
+                else:
+                    maybe2.append(t)
+        else:
+            maybe2 = maybe
+
+        if len(maybe2) > 1:
+            get_manager().errors()("Multiple toolchains can build with these requirements",
+                                   [str(t) for t in maybe2]);
+
+
+        best = maybe[0]
+        bid = str(id(best));
+        build_request = build_request.refine(property_set.create(['<toolset-instance>' + bid]));
+
+        return build_request
