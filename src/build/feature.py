@@ -14,6 +14,8 @@ import b2.util.set
 from b2.util.utility import add_grist, get_grist, ungrist, replace_grist, to_seq
 from b2.exceptions import *
 
+import property_set
+
 __re_split_subfeatures = re.compile ('<(.*):(.*)>')
 __re_no_hyphen = re.compile ('^([^:]+)$')
 __re_slash_or_backslash = re.compile (r'[\\/]')
@@ -34,6 +36,7 @@ class Feature(object):
         self._attributes_string_list = attributes
         self._subfeatures = []
         self._parent = None
+        self.applicability_calculator_ = None
 
     def name(self):
         return self._name
@@ -74,8 +77,26 @@ class Feature(object):
     def set_parent(self, feature, value):
         self._parent = (feature, value)
 
+    def is_applicable(self, properties):
+        """Return whether this feature is applicable in context of properties
+
+        Features that are not applicable are not supposed to be shown by UI at all.
+        """
+        if self.applicability_calculator_:
+            return self.applicability_calculator_(properties)
+        else:
+            return True
+
+    def set_applicability_calculator(self, f):
+        """Set a function that computes whether the option is applicable"""
+        self.applicability_calculator_ = f
+
+    def get_applicability_calculator(self):
+        return self.applicability_calculator_
+
     def __str__(self):
         return self._name
+
 
     def json(self):
         """Returns a map object that can be JSON-serialized in API call."""
@@ -83,6 +104,8 @@ class Feature(object):
         result = {}
         result['name'] = self._name
         result['values'] = self._values
+        if self.applicability_calculator_:
+            result['applicable'] = self.applicability_calculator_(property_set.empty())
         return result
 
     
@@ -148,6 +171,9 @@ def enumerate ():
     """ Returns an iterator to the features map.
     """
     return __all_features.iteritems ()
+
+def all():
+    return __all_features.itervalues()
 
 def get(name):
     """Return the Feature instance for the specified name.
