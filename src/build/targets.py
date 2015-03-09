@@ -198,7 +198,7 @@ class TargetRegistry:
             for t in self.targets_being_built_.values() + [main_target_instance]:
                 names.append (t.full_name())
             
-            get_manager().errors()("Recursion in main target references\n")
+            get_manager().errors()("Recursion in main target references\n" + str(names))
         
         self.targets_being_built_[id(main_target_instance)] = main_target_instance
 
