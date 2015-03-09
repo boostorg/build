@@ -168,6 +168,13 @@ def init(version = None, command = None, options = None):
         condition = common.check_init_parameters('gcc', command, properties,
             ('version', version))
 
+    if cpu == 'arm':
+        feature.extend('target-board', ['tiva', 'beagle'])
+        board_condition = [condition[0] + "/<target-board>tiva"]
+        toolset.flags('gcc.compile', 'OPTIONS', board_condition, ['-mcpu=cortex-m4', '-mthumb'])
+        toolset.flags('gcc.link', 'OPTIONS', board_condition, ['-mcpu=cortex-m4', '-mthumb', '-T ek-tm4c123gxl-ram-hosted.ld'])
+
+
     if command:
         command = command[0]
 
