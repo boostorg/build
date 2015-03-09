@@ -313,7 +313,7 @@ static void reinit_target( TARGET * target )
 }
 
 #ifdef HAVE_PYTHON
-static void invoke_python_callback(TARGET *t, PyObject *callback_name, PyObject *args)
+void invoke_python_callback(TARGET *t, PyObject *callback_name, PyObject *args)
 {
     PyObject *result;
 

@@ -918,7 +918,7 @@ static void make1c_closure
         /* Steals the reference. */
         PyTuple_SetItem(args, 0, py_exit_reason);
 
-        python_callback(constant_py_build_finished, t, args);
+        invoke_python_callback(t, constant_py_build_finished, args);
 
         Py_DECREF(args);
     }
