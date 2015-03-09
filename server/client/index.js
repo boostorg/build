@@ -761,7 +761,6 @@ var BoostBuildUI = React.createClass({
         this.start = new Date().getTime();
         this.step = 0;
         this.state.messages = []
-        this.state.
         this.setState(this.state);
     },
 
