@@ -708,20 +708,22 @@ class MainTarget (AbstractTarget):
             longest requirements set.
             Returns the result of calling 'generate' on that alternative.
         """
-        self.manager_.targets ().start_building (self)
+        try:
+            self.manager_.targets ().start_building (self)
 
-        # We want composite properties in build request act as if
-        # all the properties it expands too are explicitly specified.
-        ps = ps.expand ()
+            # We want composite properties in build request act as if
+            # all the properties it expands too are explicitly specified.
+            ps = ps.expand ()
         
-        all_property_sets = self.apply_default_build (ps)
+            all_property_sets = self.apply_default_build (ps)
 
-        result = GenerateResult ()
+            result = GenerateResult ()
         
-        for p in all_property_sets:
-            result.extend (self.__generate_really (p))
+            for p in all_property_sets:
+                result.extend (self.__generate_really (p))
 
-        self.manager_.targets ().end_building (self)
+        finally:
+            self.manager_.targets ().end_building (self)
 
         return result
         
