@@ -92,15 +92,40 @@ if $(with-python)
     {
         --python-include = ;
         --python-lib = ;
-        for local v in 2.7 2.6 2.5 2.4 2.3 2.2
+
+        local versions = 2.7 2.6 2.5 2.4 2.3 2.2 ;
+        while $(versions)
         {
-            local inc = [ GLOB [ .path $(python-location) include ] : python$(v) ] ;
-            local lib = [ GLOB [ .path $(python-location) lib ] : libpython$(v)* ] ;
+            v = $(versions[1]) ;
+
+            local inc
+            local lib
+
+            # Try pkg-config first.
+            inc = [ SHELL "pkg-config --silence-errors --cflags python-$(v)" : strip-eol ] ;
+            lib = [ SHELL "pkg-config --silence-errors --libs python-$(v)" : strip-eol ] ;
+
             if $(inc) && $(lib)
             {
-                --python-include ?= $(inc) ;
-                --python-lib ?= $(lib[1]:D) python$(v) ;
+                --python-cflags = [ SPLIT_BY_CHARACTERS $(inc) : " " ] ;
+                --python-libs = $(lib) ;
+                versions = ;
             }
+            else
+            {
+                # Try looking at directories. This is likely won't work, since
+                # modern Ubuntu has nothing under /lib, but only somewhere
+                # like lib/x86_64-linux-gnu
+                local inc = [ GLOB [ .path $(python-location) include ] : python$(v) ] ;
+                local lib = [ GLOB [ .path $(python-location) lib ] : libpython$(v)* ] ;
+                if $(inc) && $(lib)
+                {
+                    --python-include ?= $(inc) ;
+                    --python-lib ?= $(lib[1]:D) python$(v) ;
+                    version = ;
+                }
+            }
+            versions = $(versions[2-]) ;
         }
     }
 }
@@ -212,8 +237,8 @@ toolset gcc gcc : "-o " : -D
     [ opt --release : [ opt --symbols : -g : -s ] -O3 ]
     [ opt --debug : -g -O0 -fno-inline ]
     [ opt --profile : -O3 -g -pg ]
-    -I$(--python-include) -I$(--extra-include) -Wno-long-long
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+    -I$(--python-include) $(--python-cflags) -I$(--extra-include) -Wno-long-long
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) $(--python-libs) ;
 ## GCC 2.x, 3.x on CYGWIN but without cygwin1.dll
 toolset gcc-nocygwin gcc : "-o " : -D
     : -s -O3 -mno-cygwin
