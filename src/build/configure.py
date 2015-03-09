@@ -80,7 +80,7 @@ def print_component_configuration():
 
 __builds_cache = {}
 
-def builds(metatarget_reference, project, ps, what):
+def builds(metatarget_reference, ps, what):
     # Attempt to build a metatarget named by 'metatarget-reference'
     # in context of 'project' with properties 'ps'.
     # Returns non-empty value if build is OK.
@@ -93,8 +93,11 @@ def builds(metatarget_reference, project, ps, what):
         result = False
         __builds_cache[(what, ps)] = False
 
+        t = targets.current()
+        p = t.project();
+
         targets = b2.build.targets.generate_from_reference(
-            metatarget_reference, project, ps).targets()
+            metatarget_reference, p, ps).targets()
         jam_targets = []
         for t in targets:
             jam_targets.append(t.actualize())

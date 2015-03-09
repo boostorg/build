@@ -238,7 +238,7 @@ class TargetRegistry:
         self.targets_ = self.targets_[:-1]
 
     def current(self):
-        return self.targets_[0]
+        return self.targets_[-1]
 
 
 class GenerateResult:
