@@ -43,8 +43,10 @@ var Toolbar = React.createClass({
                     <a href='#' className={codeButtonClass} onClick={this.props.onCode}><i className="fa fa-code"></i></a>
                     <a href='#' className={settingsButtonClass} onClick={this.props.onSettings}><i className='fa fa-cog'></i></a>
                 </div>
-                <h1> Hello <small>Connection: {this.props.connection}</small></h1>
-            </div>
+                <h1></h1>
+            </div>;
+
+            /* <h1> Hello <small>Connection: {this.props.connection}</small></h1> */
     }
 
 });
@@ -52,11 +54,11 @@ var Toolbar = React.createClass({
 var Source = React.createClass({
 
     getInitialState: function() {
-        return {source: "exe hello : hello.cpp ;"};
+        return {source: "exe app : app.cpp /library-example/foo//bar\n        : <conditional>@add-64-bit-properties ;"};
     },
 
     render: function() {
-        return <span>{this.state.source}</span>;
+        return <span className='source'>{this.state.source}</span>;
     }
 });
 
@@ -445,6 +447,9 @@ var Store = Backbone.Model.extend({
 
 var BuildActionMessage = React.createClass({
     render: function() {
+
+        var self = this;
+
         var e = this.props.event;
         var text = e['action-name'];
         if (e.targets)
@@ -487,9 +492,13 @@ var BuildActionMessage = React.createClass({
                 includes = <span>Include: {e.properties.include.join(' ')}</span>;
             }
 
+            function onBackHere() {
+                self.props.onSelection(e.parent);
+            }
+
             return <div className='message'>
                 <div className={titleClass}>
-                    <a className='back' href='#' onClick={this.props.onBack}><i className='fa fa-arrow-circle-o-left'/></a>
+                    <a className='back' href='#' onClick={onBackHere}><i className='fa fa-arrow-circle-o-left'/></a>
                     <span className='detailed'> {text}</span> {badges}
                 </div>
                 <div>
@@ -509,9 +518,13 @@ var BuildActionMessage = React.createClass({
             </div>
         } else {
 
+            function onDetailsHere() {
+                self.props.onSelection(e);
+            }
+
             return <div>
                 <div className={titleClass} >
-                    <a href='#' onClick={this.props.onDetails}>{text} {badges}</a>
+                    <a href='#' onClick={onDetailsHere}>{text} {badges}</a>
                 </div>
                 </div>
         }
@@ -534,22 +547,31 @@ var Message = React.createClass({
     render: function() {
         var e = this.props.event;
         var className = "message";
+        if (e.kind == 'phase') {
+            className += ' phase';
+        }
         if (e.kind === 'error') {
             className += ' text-danger';
         } else if (e.kind === 'warning') {
             className += ' text-information';
         }
 
+        var self = this;
+
         if (this.props.full) {
 
             var subs = e.submessages.map(function(s) {
-                return <div class="message">{s.message}</div>;
+                return createEventView(s, e, false, self.props.onSelection);
             });
+
+            function onBackHere() {
+                self.props.onSelection(e.parent);
+            }
 
             return <div>
                 <div className={className}>
-                    <a className='back' href='#' onClick={this.props.onBack}><i className='fa fa-arrow-circle-o-left'/></a>
-                    <span>{e.message}</span>
+                    <a className='back' href='#' onClick={onBackHere}><i className='fa fa-arrow-circle-o-left'/></a>
+                    <span className='detailed'>{e.message}</span>
                 </div>
                 {subs}
             </div>;
@@ -557,15 +579,36 @@ var Message = React.createClass({
         } else {
             var text;
             if (e.submessages && e.submessages.length > 0) {
-                text = <a href='#' onClick={this.props.onDetails}>{e.message + '\u2026'}</a>;
+
+                function onDetailsHere() {
+                    self.props.onSelection(e);
+                }
+
+                text = <a href='#' onClick={onDetailsHere}>{e.message + '\u2026'}</a>;
             } else {
                 text = e.message;
             }
 
             return <div className={className}>{text}</div>;
         }
+    },
+
+    handleDetails: function(e) {
+        this.props.onDetails(e);
     }
 });
+
+function createEventView(e, p, full, handleSelection) {
+
+    if (e.event === "build-action-started") {
+        return <BuildActionMessage key={e.token} event={e} full={full}
+                                   onSelection={handleSelection}/>;
+    } else if (e.event === 'build-finished') {
+        return <BuildFinishedMessage event={e}/>;
+    } else if (e.event === 'message') {
+        return <Message key={e.token} event={e} full={full} onSelection={handleSelection}/>;
+    }
+}
 
 var Messages2 = React.createClass({
 
@@ -575,36 +618,20 @@ var Messages2 = React.createClass({
         }
     },
 
+    handleSelection: function(e) {
+        this.setState({selection: e})
+    },
+
     render: function() {
 
         var self = this;
 
-        function createEventView(e, p, full) {
-
-            function handleDetails() {
-                self.setState({selection: e});
-            }
-
-            function handleBack() {
-                self.setState({selection: p});
-            }
-
-            if (e.event === "build-action-started") {
-                return <BuildActionMessage key={e.token} event={e} full={full}
-                                           onDetails={handleDetails} onBack={handleBack}/>;
-            } else if (e.event === 'build-finished') {
-                return <BuildFinishedMessage event={e}/>;
-            } else if (e.event === 'message') {
-                return <Message key={e.token} event={e} full={full} onDetails={handleDetails} onBack={handleBack}/>;
-            }
-        }
-
         var messages;
         if (this.state.selection) {
-            messages = [createEventView(this.state.selection, null, true)];
+            messages = [createEventView(this.state.selection, null, true, self.handleSelection)];
         } else {
             messages = this.props.messages.map(function (e) {
-                return createEventView(e, null, false);
+                return createEventView(e, null, false, self.handleSelection);
             });
         }
 
@@ -839,12 +866,21 @@ var BoostBuildUI = React.createClass({
                 m.lines = 0;
                 m.warnings = 0;
                 m.errors = 0;
-                this.state.messages.push(m);
+
+                var p = m['parent'];
+                if (p) {
+                    var parent = this.token2message[p];
+                    m.parent = parent;
+                    parent.submessages.push(m);
+                } else {
+                    this.state.messages.push(m);
+                }
             } else if (m.event === 'build-action-output') {
                 text = m.output;
                 var parent = m['parent'];
                 if (parent in this.token2message) {
                     var parent = this.token2message[parent];
+                    m.parent = parent;
                     parent.submessages.push({text: text});
                     parent.lines++;
                     if (m['output-kind'] === 'warning') {
@@ -861,13 +897,19 @@ var BoostBuildUI = React.createClass({
             } else if (m.event === 'build-finished') {
                 this.state.messages.push(m);
             } else if (m.event === 'message') {
+
                 var p = m['parent'];
-                if (p) {
-                    var parent = this.token2message[p];
-                    parent.submessages.push(m);
+                if (m.kind == 'configuration-check-result') {
+                    this.token2message[p].message += ": " + m.message;
                 } else {
-                    m.submessages = [];
-                    this.state.messages.push(m);
+                    if (p) {
+                        var parent = this.token2message[p];
+                        m.parent = parent;
+                        parent.submessages.push(m);
+                    } else {
+                        m.submessages = [];
+                        this.state.messages.push(m);
+                    }
                 }
             }
             this.setState({

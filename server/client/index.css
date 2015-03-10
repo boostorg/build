@@ -21,9 +21,14 @@ div.source {
     border: 1px solid #ccc;
     box-shadow: 0 4px 6px rgba(0,0,0,0.175);
     padding: 12px 12px;
-    font-size: 26px;
+    font-size: 18px;
     clear: both;
     position: relative;
+}
+
+span.source {
+    font-family: monospace;
+    white-space: pre;
 }
 
 div.property {
@@ -68,11 +73,11 @@ div.messages {
 }
 
 .action-title {
-    font-weight: bold;
+    /* font-weight: bold; */
 }
 
 .message {
-    margin-bottom: 10px;
+    /* margin-bottom: 10px; */
 }
 
 .action-title.warning, .action-title.warning a {
@@ -225,4 +230,16 @@ hr {
 
 .text-danger a {
     color:#a94442;
+}
+
+.build-finished {
+    margin-top: 12px;
+}
+
+.phase {
+    font-weight: bold;
+}
+
+.phase:not(:first-child) {
+    margin-top: 12px;
 }
