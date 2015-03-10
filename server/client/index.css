@@ -2,10 +2,12 @@
 body {
     width: 900px;
     margin: 0 auto;
+
+    font-size: 24px;
 }
 
 div#container {
-    margin-top: 20px;
+    margin-top: 60px;
 }
 
 div.toolbar {
@@ -21,7 +23,7 @@ div.source {
     border: 1px solid #ccc;
     box-shadow: 0 4px 6px rgba(0,0,0,0.175);
     padding: 12px 12px;
-    font-size: 18px;
+    font-size: 24px;
     clear: both;
     position: relative;
 }
@@ -33,7 +35,7 @@ span.source {
 
 div.property {
     margin-bottom: 12px;
-    font-size: 18px;
+    font-size: 24px;
 }
 
 div.property > span:first-child {
@@ -64,12 +66,12 @@ div.pills a:hover {
 }
 
 div.properties {
-    font-size: 18px;
+    font-size: 24px;
 }
 
 div.messages {
     margin-top: 12px;
-    font-size: 18px;
+    font-size: 24px;
 }
 
 .action-title {
@@ -137,7 +139,7 @@ div.toolbar .btn {
 }
 
 .property {
-    font-size: 16px;
+    font-size: 24px;
 }
 
 .property input {
@@ -170,7 +172,7 @@ div.toolbar .btn {
     border: 1px solid #ccc;
     border-radius: 4px;
     padding: 6px 12px;
-    font-size: 14px;
+    font-size: 24px;
     line-height: 1.42857143;
 
     display: inline;
@@ -224,7 +226,7 @@ hr {
 
 .property-group h1 {
     margin-bottom: 12px;
-    font-size: 18px;
+    font-size: 26px;
     color: #777;
 }
 

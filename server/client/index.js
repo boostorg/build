@@ -34,10 +34,9 @@ var Toolbar = React.createClass({
 
         // <div className='breadcrumbs'>Hello, world</div>
         return <div className='toolbar'>
-            <div className='btn-group buttons'>
+            <div className='buttons'>
                 <h1></h1>
                 <a href='#' className='btn btn-default' onClick={this.handleBuild}>Build</a>
-                <a href='#' className='btn btn-default' onClick={this.handleCleanBuild}>Clean Build</a>
             </div>
                 <div className="btn-group">
                     <a href='#' className={codeButtonClass} onClick={this.props.onCode}><i className="fa fa-code"></i></a>
@@ -944,6 +943,7 @@ var BoostBuildUI = React.createClass({
             ;
     }
 });
+
 
 React.render(
     <BoostBuildUI />,
