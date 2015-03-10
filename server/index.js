@@ -10,6 +10,9 @@ var WS = require('ws').Server;
 
 var os = require('os');
 var byline = require('byline');
+var temp = require('temp');
+var ncp = require('ncp');
+var _ = require('underscore');
 
 app.use(express.static(__dirname + '/client'));
 
@@ -24,17 +27,8 @@ function sendOutput(ws, output) {
     ws.send(JSON.stringify(r));
 }
 
-ws.on('connection', function(ws) {
-    console.log("client connected");
-
-    sendOutput(ws, "Hi there");
-
-    var b2 = spawn("/home/ghost/Sources/boost/tools/build/src/engine/bin.linuxx86_64.debug/b2",
-                   ["-a", "-d0", "--python", "--server"],
-                   {
-                       cwd: "/home/ghost/Sources/boost/tools/build/example/libraries"
-                   });
-
+function talkToB2(ws, b2)
+{
     b2.on('error', function(err) {
         console.log(JSON.stringify(err));
     });
@@ -74,6 +68,41 @@ ws.on('connection', function(ws) {
         console.log("> " + JSON.stringify(data));
         b2.stdin.write(data + "\n");
     });
+}
+
+ws.on('connection', function(ws) {
+    console.log("client connected");
+
+    sendOutput(ws, "Hi there");
+
+    var binary = __dirname + "/../src/engine/bin.linuxx86_64.debug/b2"
+    var example = __dirname + "/../example/libraries"
+
+    temp.mkdir('libraries', function(err, destination) {
+        ncp(example, destination, function (err) {
+            if (err) {
+                return console.error(err);
+            } else {
+                
+                console.log("Copied example to" + destination);
+
+                env = _.extend({}, process.env, {
+                    BOOST_BUILD_PATH: __dirname + "/.."
+                })
+                
+                var b2 = spawn(binary,
+                               ["-a", "-d0", "--python", "--server"],
+                               {
+                                   cwd: destination,
+                                   env: env
+                               });
+                
+                talkToB2(ws, b2);
+                
+            }
+        });
+    });
+    
 });
 
 ws.on('error', function(ws) {

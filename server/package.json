@@ -14,8 +14,10 @@
     "bootstrap": "^3.3.2",
     "byline": "^4.2.1",
     "express": "^4.11.2",
+    "ncp": "^2.0.0",
     "react-bootstrap": "^0.14.0",
     "react-progressbar": "^1.0.0",
+    "temp": "^0.8.1",
     "underscore": "^1.8.2",
     "ws": "^0.7.1"
   },
