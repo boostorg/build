@@ -1,4 +1,18 @@
 
+project libraries ;
+
+import configure ;
+
+obj 64 : 64.cpp ;
+explicit 64 ;
+
+rule add-64-bit-properties ( properties * )
+{
+    if [ configure.builds /libraries//64 : : 64-bit ] {
+       return <define>HAVE_64_BITS=1 ;
+    }
+}
+
 use-project /library-example/foo : util/foo ;
 
 build-project app ;
