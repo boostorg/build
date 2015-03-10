@@ -18,6 +18,7 @@
 import bjam
 import traceback
 import sys
+from b2.manager import get_manager
 
 def format(message, prefix=""):
     parts = str(message).split("\n")
@@ -60,7 +61,6 @@ class ExceptionWithUserContext(Exception):
         self.submessages_ = []
 
     def report(self):
-        print "error:", self.args[0]
         for m in self.submessages_:
             print "  " + m
         if self.original_exception_:

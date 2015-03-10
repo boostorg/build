@@ -5,6 +5,7 @@
 import bjam
 import json
 import os
+import sys
 
 # To simplify implementation of tools level, we'll
 # have a global variable keeping the current manager.
@@ -41,7 +42,8 @@ class Manager:
         self.command_line_free_features_ = property_set.empty()
 
         self.events_enabled = False
-        self.next_event_token = 0;
+        self.next_event_token = 0
+        self.message_context_ = []
         
         global the_manager
         the_manager = self
@@ -113,13 +115,34 @@ class Manager:
         for virtual_target in virtual_targets:
             actual_targets.extend (virtual_target.actualize ())
 
-    def enable_events(self, value=True):
-        self.events_enabled = value;
+    def enable_events(self, value=True, file = None):
+        self.events_enabled = value
+        self.events_output = file if file else sys.stdout
 
     def get_token(self):
         r = "e" + str(self.next_event_token)
         self.next_event_token = self.next_event_token + 1
         return r
+
+    def output_event(self, str):
+
+        if not str:
+            return
+
+        if str[-1] == os.linesep:
+            self.events_output.write(str)
+        else:
+            self.events_output.write(str)
+            self.events_output.write(os.linesep)
+
+    def push_message_context(self, token):
+        self.message_context_.append(token)
+
+    def pop_message_context(self):
+        self.message_context_.pop()
+
+    def message_context(self):
+        return self.message_context_[-1] if len(self.message_context_) else None
 
     def message(self, message, kind='information', submessages=[], parent = None):
         if not self.events_enabled:
@@ -133,33 +156,42 @@ class Manager:
             'kind': kind,
             'message':  message
         }
+        if not parent:
+            parent = self.message_context()
         if  parent:
             j['parent'] = parent
-        print json.dumps(j)
+        self.output_event(json.dumps(j))
         for s in submessages:
-            print json.dumps({
+            self.output_event(json.dumps({
                 'parent': t,
                 'type': 'event',
                 'event': 'message',
                 'message': s
-            })
+            }))
+        self.events_output.flush()
 
         return t
 
     def build_started(self, action, commands):
         if not self.events_enabled:
             return
-        print json.dumps({
+
+        j = {
             'token': id(action),
             'type': 'event',
             'event': 'build-action-started',
-            'action-name': action.action_name(),            
+            'action-name': action.action_name(),
             # FIXME: need to filter out non-file target.
             'targets': [t.full_name() for t in action.targets()],
             'sources': [t.full_name() for t in action.sources()],
             'commands': commands,
             'properties': action.properties().json()
-        })
+        }
+        parent = self.message_context()
+        if parent:
+            j['parent'] = parent
+
+        self.output_event(json.dumps(j))
 
     def build_output(self, action, stream, output):
         if not self.events_enabled:
@@ -185,15 +217,15 @@ class Manager:
             elif line.find("warning:") != -1:
                 j['output-kind'] = 'warning'
 
-            print json.dumps(j)
+            self.output_event(json.dumps(j))
 
     def build_finished(self, action, exit_status):
         if not self.events_enabled:
             return
-        print json.dumps({
+        self.output_event(json.dumps({
             'type': 'event',
             'token': id(action),
             'event': 'build-action-finished',
             'exit-status': exit_status
-        })
+        }))
 

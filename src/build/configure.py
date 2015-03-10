@@ -15,6 +15,7 @@
 
 import b2.build.property as property
 import b2.build.property_set as property_set
+import b2.build.targets as targets
 
 import b2.build.targets
 
@@ -85,6 +86,14 @@ def builds(metatarget_reference, ps, what):
     # in context of 'project' with properties 'ps'.
     # Returns non-empty value if build is OK.
 
+    metatarget_reference = metatarget_reference[0]
+
+    if type(what) == type([]):
+        what = what[0]
+
+    if type(ps) == type([]):
+        ps = property_set.create(ps)
+
     result = []
 
     existing = __builds_cache.get((what, ps), None)
@@ -93,8 +102,12 @@ def builds(metatarget_reference, ps, what):
         result = False
         __builds_cache[(what, ps)] = False
 
-        t = targets.current()
-        p = t.project();
+        token = get_manager().message('Checking for ' + what, 'configuration-check')
+        get_manager().push_message_context(token)
+
+
+        t = get_manager().targets().current()
+        p = t.project() if t else get_manager().projects().current()
 
         targets = b2.build.targets.generate_from_reference(
             metatarget_reference, p, ps).targets()
@@ -106,9 +119,13 @@ def builds(metatarget_reference, ps, what):
         if bjam.call("UPDATE_NOW", jam_targets, str(__log_fd), "ignore-minus-n"):
             __builds_cache[(what, ps)] = True
             result = True
+            get_manager().message("yes", 'configuration-check-result')
             log_check_result("%s: yes" % x)
         else:
+            get_manager().message("no", 'configuration-check-result')
             log_check_result("%s: no" % x)
+
+        get_manager().pop_message_context()
 
         return result
     else:

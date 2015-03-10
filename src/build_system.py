@@ -642,7 +642,7 @@ class Server:
         metatarget_ids = [str(id) for id in metatarget_ids]
         builder = Builder(self.current_project, metatarget_ids, self.manager)
 
-        self.manager.message("Generating targets")
+        self.manager.message("Generating targets", 'phase')
         ok = builder.generate(ps)
 
         if ok:
@@ -654,7 +654,7 @@ class Server:
             if 'noexec' in j:
                 noexec = j['noexec']
 
-            self.manager.message("Updating targets")
+            self.manager.message("Updating targets", 'phase')
             ok = builder.build(redo=redo, noexec=noexec)
 
         done = {"type": "event",
@@ -844,7 +844,9 @@ def main_real():
         if not current_project.is_root():
             manager.errors()("Server mode requires starting in project root")
 
-        manager.enable_events()
+        events_file = os.fdopen(os.dup(sys.stdout.fileno()), 'w')
+
+        manager.enable_events(True, events_file)
 
         server = Server(current_project, manager)
         server.main_loop()
