@@ -1,5 +1,6 @@
 
 var express = require('express');
+var compress = require('compression')
 
 var spawn = require('child_process').spawn;
 
@@ -13,6 +14,8 @@ var byline = require('byline');
 var temp = require('temp');
 var ncp = require('ncp');
 var _ = require('underscore');
+
+app.use(compress());
 
 app.use(express.static(__dirname + '/client'));
 

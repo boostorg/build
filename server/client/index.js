@@ -707,7 +707,7 @@ var BoostBuildUI = React.createClass({
 
     componentDidMount: function() {
         var self = this;
-        this.ws = new WebSocket("ws://" + location.host);
+        this.ws = new WebSocket("ws://" + location.host + '/' + location.pathname + '/api');
         this.ws.onmessage = this.handleServerMessage;
         this.ws.onopen = function() {
             console.log("Connection is now opoen");

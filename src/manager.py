@@ -192,6 +192,7 @@ class Manager:
             j['parent'] = parent
 
         self.output_event(json.dumps(j))
+        self.events_output.flush()
 
     def build_output(self, action, stream, output):
         if not self.events_enabled:
@@ -218,6 +219,7 @@ class Manager:
                 j['output-kind'] = 'warning'
 
             self.output_event(json.dumps(j))
+        self.events_output.flush()
 
     def build_finished(self, action, exit_status):
         if not self.events_enabled:
@@ -228,4 +230,6 @@ class Manager:
             'event': 'build-action-finished',
             'exit-status': exit_status
         }))
+
+        self.events_output.flush()
 

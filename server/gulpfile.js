@@ -3,7 +3,9 @@ var gulp = require('gulp');
 var browserify = require('browserify');
 var reactify = require('reactify');
 var source = require('vinyl-source-stream');
+var buffer = require('vinyl-buffer');
 var watchify = require('watchify');
+var uglify = require('gulp-uglifyjs');
 
 var _ = require('underscore');
 
@@ -26,6 +28,8 @@ function bundle(watch)
         var bundle = bundler.bundle();
         bundle
             .pipe(source('bundle.js'))
+            .pipe(buffer())
+            .pipe(uglify())
             .pipe(gulp.dest('./client'));
     }
 

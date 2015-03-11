@@ -746,8 +746,8 @@ class Server:
             {
                 'name': 'Cross-compilation',
                 'properties': [
-                    feature.get('architecture').json(),
                     feature.get('target-os').json(),
+                    feature.get('architecture').json(),
                     feature.get('target-board').json()
                 ]
             }
