@@ -1,6 +1,7 @@
 
 var express = require('express');
 var compress = require('compression')
+var logger = require('morgan')
 
 var spawn = require('child_process').spawn;
 
@@ -15,9 +16,12 @@ var temp = require('temp');
 var ncp = require('ncp');
 var _ = require('underscore');
 
+
 app.use(compress());
 
 app.use(express.static(__dirname + '/client'));
+
+app.use(logger());
 
 http.listen(3000, function() {
     console.log("Listening");

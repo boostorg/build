@@ -707,7 +707,8 @@ var BoostBuildUI = React.createClass({
 
     componentDidMount: function() {
         var self = this;
-        this.ws = new WebSocket("ws://" + location.host + '/' + location.pathname + '/api');
+        //this.ws = new WebSocket("ws://" + location.host + location.pathname);
+        this.ws = new WebSocket('ws://104.131.124.127:3000')
         this.ws.onmessage = this.handleServerMessage;
         this.ws.onopen = function() {
             console.log("Connection is now opoen");
@@ -897,6 +898,7 @@ var BoostBuildUI = React.createClass({
                 this.state.messages.push(m);
             } else if (m.event === 'message') {
 
+                m.submessages = [];
                 var p = m['parent'];
                 if (m.kind == 'configuration-check-result') {
                     this.token2message[p].message += ": " + m.message;
@@ -906,7 +908,6 @@ var BoostBuildUI = React.createClass({
                         m.parent = parent;
                         parent.submessages.push(m);
                     } else {
-                        m.submessages = [];
                         this.state.messages.push(m);
                     }
                 }
