@@ -1199,7 +1199,7 @@ using msvc : &toolset_ops; ;
             with the ARM architecture:
             </para>
             <programlisting>
-.\b2 toolset=msvc=12.0 windows-api=store architecture=arm</programlisting>
+.\b2 toolset=msvc-12.0 windows-api=store architecture=arm</programlisting>
             
             <para>
             Note that when targeting Windows Phone 8.1, version 12.0 didn't 
