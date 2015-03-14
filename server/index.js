@@ -36,6 +36,11 @@ function sendOutput(ws, output) {
 
 function talkToB2(ws, b2)
 {
+    ws.on('message', function(data) {
+        console.log("> " + JSON.stringify(data));
+        b2.stdin.write(data + "\n");
+    });
+
     b2.on('error', function(err) {
         console.log(JSON.stringify(err));
     });
@@ -69,18 +74,11 @@ function talkToB2(ws, b2)
         console.log("<!" + data);
     });
 
-    //b2.stdin.write(JSON.stringify({type: 'request', request: 'build'}) + "\n");
-    
-    ws.on('message', function(data) {
-        console.log("> " + JSON.stringify(data));
-        b2.stdin.write(data + "\n");
-    });
+    ws.send(JSON.stringify({type: 'event', event: 'server-ready'}));
 }
 
 ws.on('connection', function(ws) {
     console.log("client connected");
-
-    sendOutput(ws, "Hi there");
 
     var binary = __dirname + "/../src/engine/bin.linuxx86_64.debug/b2"
     var example = __dirname + "/../example/libraries"

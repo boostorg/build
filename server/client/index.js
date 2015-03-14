@@ -713,10 +713,6 @@ var BoostBuildUI = React.createClass({
         this.ws.onopen = function() {
             console.log("Connection is now opoen");
             self.setState({connection: 'open'});
-            this.request({type: 'request', request: 'get', path: 'properties'}, function(m) {
-                self.flattenProperties(m.response);
-                self.setState({features: m.response});
-            });
         }.bind(this);
         this.ws.onerror = function() {
             console.log("Connection error");
@@ -837,6 +833,17 @@ var BoostBuildUI = React.createClass({
 
     handleServerMessage: function(xm) {
         var m = JSON.parse(xm.data);
+
+
+        if (m.type === 'event' && m.event === 'server-ready') {
+
+            this.request({type: 'request', request: 'get', path: 'properties'}, function(m) {
+                this.flattenProperties(m.response);
+                this.setState({features: m.response});
+            }.bind(this));
+            return;
+        }
+
         if (m.type === 'request') {
             // Quite impossible.
         } else if (m.type === 'response') {
