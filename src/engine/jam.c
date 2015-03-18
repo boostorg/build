@@ -104,6 +104,7 @@
 #include "class.h"
 #include "compile.h"
 #include "constants.h"
+#include "debugger.h"
 #include "filesys.h"
 #include "function.h"
 #include "hcache.h"
@@ -223,6 +224,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     char          *       * arg_v = argv;
     char            const * progname = argv[ 0 ];
     module_t              * environ_module;
+    int                     is_debugger;
 
     saved_argv0 = argv[ 0 ];
 
@@ -230,6 +232,47 @@ int main( int argc, char * * argv, char * * arg_environ )
 
 #ifdef OS_MAC
     InitGraf( &qd.thePort );
+#endif
+
+#ifdef JAM_DEBUGGER
+
+#if NT
+
+    is_debugger = 1;
+    if ( argc >= 3 )
+    {
+        size_t opt_len = strlen( debugger_opt );
+        if ( strncmp( argv[ 1 ], debugger_opt, opt_len ) == 0 &&
+            strncmp( argv[ 2 ], debugger_opt, opt_len ) == 0 )
+        {
+            debug_init_handles( argv[ 1 ] + opt_len, argv[ 2 ] + opt_len );
+            is_debugger = 0;
+            /* Fix up argc/argv to hide the internal options */
+            arg_c = argc = (argc - 2);
+            argv[ 2 ] = argv[ 0 ];
+            arg_v = argv = (argv + 2);
+        }
+    }
+
+    if ( is_debugger )
+    {
+        return debugger();
+    }
+
+#else
+
+    if ( setjmp( debug_child_data.jmp ) != 0 )
+    {
+        arg_c = argc = debug_child_data.argc;
+        arg_v = argv = (char * *)debug_child_data.argv;
+    }
+    else
+    {
+        return debugger();
+    }
+
+#endif
+
 #endif
 
     --argc;

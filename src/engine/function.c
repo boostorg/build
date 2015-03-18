@@ -11,6 +11,7 @@
 #include "class.h"
 #include "compile.h"
 #include "constants.h"
+#include "debugger.h"
 #include "filesys.h"
 #include "frames.h"
 #include "lists.h"
@@ -118,6 +119,8 @@ void backtrace_line( FRAME * );
 #define INSTR_APPEND_STRINGS               53
 #define INSTR_WRITE_FILE                   54
 #define INSTR_OUTPUT_STRINGS               55
+
+#define INSTR_DEBUG_LINE                   67
 
 typedef struct instruction
 {
@@ -2380,6 +2383,9 @@ static void compile_append_chain( PARSE * parse, compiler * c )
 
 static void compile_parse( PARSE * parse, compiler * c, int result_location )
 {
+#ifdef JAM_DEBUGGER
+    compile_emit( c, INSTR_DEBUG_LINE, parse->line );
+#endif
     if ( parse->type == PARSE_APPEND )
     {
         compile_append_chain( parse, c );
@@ -3680,14 +3686,21 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         if ( function_->formal_arguments )
             argument_list_check( function_->formal_arguments,
                 function_->num_formal_arguments, function_, frame );
-        return f->func( frame, f->flags );
+
+        debug_on_enter_function( frame, f->base.rulename, NULL, -1 );
+        result = f->func( frame, f->flags );
+        debug_on_exit_function( f->base.rulename );
+        return result;
     }
 
 #ifdef HAVE_PYTHON
     else if ( function_->type == FUNCTION_PYTHON )
     {
         PYTHON_FUNCTION * f = (PYTHON_FUNCTION *)function_;
-        return call_python_function( f, frame );
+        debug_on_enter_function( frame, f->base.rulename, NULL, -1 );
+        result = call_python_function( f, frame );
+        debug_on_exit_function( f->base.rulename );
+        return result;
     }
 #endif
 
@@ -3698,6 +3711,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             function_->num_formal_arguments, function_, frame, s );
 
     function = (JAM_FUNCTION *)function_;
+    debug_on_enter_function( frame, function->base.rulename, function->file, function->line );
     code = function->code;
     for ( ; ; )
     {
@@ -3931,6 +3945,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
 #endif
             assert( saved_stack == s->data );
+            debug_on_exit_function( function->base.rulename );
             return result;
         }
 
@@ -4594,6 +4609,12 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             string * const buf = *(string * *)( (char *)stack_get( s ) + (
                 code->arg * sizeof( LIST * ) ) );
             combine_strings( s, code->arg, buf );
+            break;
+        }
+
+        case INSTR_DEBUG_LINE:
+        {
+            debug_on_instruction( frame, function->file, code->arg );
             break;
         }
 

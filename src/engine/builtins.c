@@ -10,6 +10,7 @@
 #include "compile.h"
 #include "constants.h"
 #include "cwd.h"
+#include "debugger.h"
 #include "filesys.h"
 #include "frames.h"
 #include "hash.h"
@@ -440,6 +441,15 @@ void load_builtins()
         const char * args [] = { "path", 0 };
         bind_builtin( "READLINK", builtin_readlink, 0, args );
     }
+    
+#ifdef JAM_DEBUGGER
+
+    {
+        const char * args [] = { "list", "*", 0 };
+        bind_builtin( "__DEBUG_PRINT_HELPER__", builtin_debug_print_helper, 0, args );
+    }
+
+#endif
 
     /* Initialize builtin modules. */
     init_set();
@@ -1953,6 +1963,15 @@ LIST *builtin_readlink( FRAME * frame, int flags )
 #endif
 }
 
+#ifdef JAM_DEBUGGER
+
+LIST *builtin_debug_print_helper( FRAME * frame, int flags )
+{
+    debug_print_result = list_copy( lol_get( frame->args, 0 ) );
+    return L0;
+}
+
+#endif
 
 #ifdef HAVE_PYTHON
 

@@ -30,10 +30,8 @@
 
 static PARSE * yypsave;
 
-void parse_file( OBJECT * f, FRAME * frame )
+static void parse_impl( FRAME * frame )
 {
-    /* Suspend scan of current file and push this new file in the stream. */
-    yyfparse( f );
 
     /* Now parse each block of rules and execute it. Execute it outside of the
      * parser so that recursive calls to yyrun() work (no recursive yyparse's).
@@ -57,6 +55,22 @@ void parse_file( OBJECT * f, FRAME * frame )
         list_free( function_run( func, frame, stack_global() ) );
         function_free( func );
     }
+}
+
+
+void parse_file( OBJECT * f, FRAME * frame )
+{
+    /* Suspend scan of current file and push this new file in the stream. */
+    yyfparse( f );
+
+    parse_impl( frame );
+}
+
+
+void parse_string( OBJECT * name, const char * * lines, FRAME * frame )
+{
+    yysparse( name, lines );
+    parse_impl( frame );
 }
 
 
