@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #ifdef NT
 #include <windows.h>
@@ -305,9 +306,18 @@ static void debug_child_break( int argc, const char * * argv )
         const char * ptr = strrchr( file_ptr, ':' );
         if ( ptr )
         {
-            int line = atoi(ptr + 1);
-            OBJECT * file = object_new_range( file_ptr,  ptr - file_ptr );
-            add_line_breakpoint( file, line );
+            char * end;
+            long line = strtoul( ptr + 1, &end, 10 );
+            if ( line > 0 && line <= INT_MAX && end != ptr + 1 && *end == 0 )
+            {
+                OBJECT * file = object_new_range( file_ptr,  ptr - file_ptr );
+                add_line_breakpoint( file, line );
+            }
+            else
+            {
+                OBJECT * name = object_new( file_ptr );
+                add_function_breakpoint( name );
+            }
         }
         else
         {
