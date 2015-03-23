@@ -206,7 +206,7 @@ void debug_on_instruction( FRAME * frame, OBJECT * file, int line )
         fflush( stdout );
         debug_listen();
     }
-    else if ( debug_state == DEBUG_FINISH && debug_depth == 0 )
+    else if ( debug_state == DEBUG_FINISH && debug_depth <= 0 )
     {
         debug_file = file;
         debug_line = line;
