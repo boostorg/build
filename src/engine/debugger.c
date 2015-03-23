@@ -57,16 +57,16 @@ LIST * debug_print_result;
 struct command_elem
 {
     const char * key;
-    void (*command)(int, const char * *);
+    void (*command)( int, const char * * );
 };
 
 static struct command_elem * command_array;
 
-static void debug_listen();
-static int read_command();
+static void debug_listen( void );
+static int read_command( void );
 static int is_same_file( OBJECT * file1, OBJECT * file2 );
 
-void add_breakpoint( struct breakpoint elem )
+static void add_breakpoint( struct breakpoint elem )
 {
     if ( num_breakpoints == breakpoints_capacity )
     {
@@ -78,7 +78,7 @@ void add_breakpoint( struct breakpoint elem )
     breakpoints[ num_breakpoints++ ] = elem;
 }
 
-void add_line_breakpoint( OBJECT * file, int line )
+static void add_line_breakpoint( OBJECT * file, int line )
 {
     struct breakpoint elem;
     elem.file = file;
@@ -88,7 +88,7 @@ void add_line_breakpoint( OBJECT * file, int line )
     add_breakpoint( elem );
 }
 
-void add_function_breakpoint( OBJECT * name )
+static void add_function_breakpoint( OBJECT * name )
 {
     struct breakpoint elem;
     elem.file = name;
@@ -98,7 +98,7 @@ void add_function_breakpoint( OBJECT * name )
     add_breakpoint( elem );
 }
 
-int handle_line_breakpoint( OBJECT * file, int line )
+static int handle_line_breakpoint( OBJECT * file, int line )
 {
     int i;
     if ( file == NULL ) return 0;
@@ -119,7 +119,7 @@ int handle_line_breakpoint( OBJECT * file, int line )
     return 0;
 }
 
-int handle_function_breakpoint( OBJECT * name )
+static int handle_function_breakpoint( OBJECT * name )
 {
     return handle_line_breakpoint( name, -1 );
 }
@@ -179,7 +179,7 @@ static int is_same_file( OBJECT * file1, OBJECT * file2 )
     return result;
 }
 
-void debug_print_source ( OBJECT * filename, int line )
+static void debug_print_source( OBJECT * filename, int line )
 {
     FILE * file;
 
@@ -219,7 +219,7 @@ void debug_print_source ( OBJECT * filename, int line )
     }
 }
 
-void debug_print_frame( FRAME * frame )
+static void debug_print_frame( FRAME * frame )
 {
     OBJECT * file = frame->file;
     if ( file == NULL ) file = constant_builtin;
@@ -237,7 +237,7 @@ void debug_print_frame( FRAME * frame )
     printf( "at %s:%d", object_str( file ), frame->line );
 }
 
-void debug_on_breakpoint( int id )
+static void debug_on_breakpoint( int id )
 {
     FRAME base;
     base = *debug_frame;
@@ -332,33 +332,37 @@ static DWORD child_pid;
 #else
 static int child_pid;
 #endif
+
+/* Commands are read from this stream. */
 static FILE * command_input;
+/* Where to send output from commands. */
 static FILE * command_output;
+/* Only valid in the parent.  Reads command output from the child. */
 static FILE * command_child;
 
-void debug_child_continue( int argc, const char * * argv )
+static void debug_child_continue( int argc, const char * * argv )
 {
     debug_state = DEBUG_RUN;
 }
 
-void debug_child_step( int argc, const char * * argv )
+static void debug_child_step( int argc, const char * * argv )
 {
     debug_state = DEBUG_STEP;
 }
 
-void debug_child_next( int argc, const char * * argv )
+static void debug_child_next( int argc, const char * * argv )
 {
     debug_state = DEBUG_NEXT;
     debug_depth = 0;
 }
 
-void debug_child_finish( int argc, const char * * argv )
+static void debug_child_finish( int argc, const char * * argv )
 {
     debug_state = DEBUG_FINISH;
     debug_depth = 1;
 }
 
-void debug_child_kill( int argc, const char * * argv )
+static void debug_child_kill( int argc, const char * * argv )
 {
     exit( 0 );
 }
@@ -471,9 +475,11 @@ static void debug_child_print( int argc, const char * * argv )
     fflush(stdout);
 }
 
+/* Commands for the parent. */
+
 #ifdef NT
 
-int get_module_filename( string * out )
+static int get_module_filename( string * out )
 {
     DWORD result;
     string_reserve( out, 256 + 1 );
@@ -512,6 +518,7 @@ static struct command_elem child_commands[] =
     { NULL, NULL }
 };
 
+/* Waits for events from the child. */
 static void debug_parent_wait( int print_message )
 {
     if ( fgetc( command_child ) == EOF )
@@ -545,6 +552,7 @@ static void debug_parent_wait( int print_message )
     }
 }
 
+/* Prints the message for starting the child. */
 static void debug_parent_run_print( int argc, const char * * argv )
 {
     int i;
@@ -902,7 +910,8 @@ static struct command_elem parent_commands[] =
     { NULL, NULL }
 };
 
-int debugger()
+/* The debugger's main loop. */
+int debugger( void )
 {
     command_array = parent_commands;
     command_input = stdin;
@@ -914,6 +923,7 @@ int debugger()
             printf("unknown command\n");
         }
     }
+    return 0;
     /* commands: */
     "frame";
     "ignore";
@@ -922,6 +932,7 @@ int debugger()
     "skip";
 }
 
+/* Runs the matching command in the current command_array. */
 static int run_command( int argc, const char * * argv )
 {
     struct command_elem * command;
@@ -940,16 +951,17 @@ static int run_command( int argc, const char * * argv )
     return 0;
 }
 
+/* Parses a single command into whitespace separated tokens, and runs it. */
 static int process_command( char * line )
 {
     int result;
-    const char * * buffer = malloc( 8 * sizeof( const char * ) );
+    size_t capacity = 8;
+    const char * * buffer = malloc( capacity * sizeof( const char * ) );
     const char * * current = buffer;
-    const char * const * end = buffer + 8;
     char * iter = line;
     const char * saved = iter;
     *current = iter;
-    while ( current < end )
+    for ( ; ; )
     {
         /* skip spaces */
         while ( *iter && isspace( *iter ) )
@@ -966,7 +978,15 @@ static int process_command( char * line )
         {
             ++iter;
         }
+        /* resize the buffer if necessary */
+        if ( current == buffer + capacity )
+        {
+            buffer = realloc( buffer, capacity * 2 * sizeof( const char * ) );
+            current = buffer + capacity;
+        }
+        /* append the token to the buffer */
         *current++ = saved;
+        /* null terminate the token */
         if ( *iter )
         {
             *iter++ = '\0';
@@ -977,7 +997,7 @@ static int process_command( char * line )
     return result;
 }
 
-static int read_command()
+static int read_command( void )
 {
     int result;
     int ch;
@@ -1001,7 +1021,7 @@ static int read_command()
     return result;
 }
 
-static void debug_listen()
+static void debug_listen( void )
 {
     debug_state = DEBUG_STOPPED;
     while ( debug_state == DEBUG_STOPPED )

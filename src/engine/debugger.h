@@ -17,6 +17,7 @@
 void debug_on_instruction( FRAME * frame, OBJECT * file, int line );
 void debug_on_enter_function( FRAME * frame, OBJECT * name, OBJECT * file, int line );
 void debug_on_exit_function( OBJECT * name );
+int debugger( void );
 
 struct debug_child_data_t
 {
