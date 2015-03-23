@@ -9,6 +9,7 @@
 #include "constants.h"
 #include "strings.h"
 #include "pathsys.h"
+#include "cwd.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -26,6 +27,7 @@
 struct breakpoint
 {
     OBJECT * file;
+    OBJECT * bound_file;
     int line;
     int status;
 };
@@ -62,6 +64,7 @@ static struct command_elem * command_array;
 
 static void debug_listen();
 static int read_command();
+static int is_same_file( OBJECT * file1, OBJECT * file2 );
 
 void add_breakpoint( struct breakpoint elem )
 {
@@ -79,6 +82,7 @@ void add_line_breakpoint( OBJECT * file, int line )
 {
     struct breakpoint elem;
     elem.file = file;
+    elem.bound_file = NULL;
     elem.line = line;
     elem.status = BREAKPOINT_ENABLED;
     add_breakpoint( elem );
@@ -88,6 +92,7 @@ void add_function_breakpoint( OBJECT * name )
 {
     struct breakpoint elem;
     elem.file = name;
+    elem.bound_file = object_copy( name );
     elem.line = -1;
     elem.status = BREAKPOINT_ENABLED;
     add_breakpoint( elem );
@@ -99,8 +104,13 @@ int handle_line_breakpoint( OBJECT * file, int line )
     if ( file == NULL ) return 0;
     for ( i = 0; i < num_breakpoints; ++i )
     {
+        if ( breakpoints[ i ].bound_file == NULL && is_same_file( breakpoints[ i ].file, file ) )
+        {
+            breakpoints[ i ].bound_file = object_copy( file );
+        }
         if ( breakpoints[ i ].status == BREAKPOINT_ENABLED &&
-            object_equal( breakpoints[ i ].file, file ) &&
+            breakpoints[ i ].bound_file != NULL &&
+            object_equal( breakpoints[ i ].bound_file, file ) &&
             breakpoints[ i ].line == line )
         {
             return i + 1;
@@ -112,6 +122,61 @@ int handle_line_breakpoint( OBJECT * file, int line )
 int handle_function_breakpoint( OBJECT * name )
 {
     return handle_line_breakpoint( name, -1 );
+}
+
+static OBJECT * make_absolute_path( OBJECT * filename )
+{
+    PATHNAME path1[ 1 ];
+    string buf[ 1 ];
+    OBJECT * result;
+    const char * root = object_str( cwd() );
+    path_parse( object_str( filename ), path1 );
+    path1->f_root.ptr = root;
+    path1->f_root.len = strlen( root );
+    string_new( buf );
+    path_build( path1, buf );
+    result = object_new( buf->value );
+    string_free( buf );
+    return result;
+}
+
+static OBJECT * get_filename( OBJECT * path )
+{
+    PATHNAME path1[ 1 ];
+    string buf[ 1 ];
+    OBJECT * result;
+    const char * root = object_str( cwd() );
+    path_parse( object_str( path ), path1 );
+    path1->f_dir.ptr = NULL;
+    path1->f_dir.len = 0;
+    string_new( buf );
+    path_build( path1, buf );
+    result = object_new( buf->value );
+    string_free( buf );
+    return result;
+}
+
+static int is_same_file( OBJECT * file1, OBJECT * file2 )
+{
+    OBJECT * absolute1 = make_absolute_path( file1 );
+    OBJECT * absolute2 = make_absolute_path( file2 );
+    OBJECT * norm1 = path_as_key( absolute1 );
+    OBJECT * norm2 = path_as_key( absolute2 );
+    OBJECT * base1 = get_filename( file1 );
+    OBJECT * base2 = get_filename( file2 );
+    OBJECT * normbase1 = path_as_key( base1 );
+    OBJECT * normbase2 = path_as_key( base2 );
+    int result = object_equal( norm1, norm2 ) ||
+        ( object_equal( base1, file1 ) && object_equal( normbase1, normbase2 ) );
+    object_free( absolute1 );
+    object_free( absolute2 );
+    object_free( norm1 );
+    object_free( norm2 );
+    object_free( base1 );
+    object_free( base2 );
+    object_free( normbase1 );
+    object_free( normbase2 );
+    return result;
 }
 
 void debug_print_source ( OBJECT * filename, int line )
