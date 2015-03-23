@@ -678,11 +678,13 @@ static void debug_parent_run( int argc, const char * * argv )
     else if ( pid == 0 )
     {
         /* child */
+        extern const char * saved_argv0;
         read_fd = pipe1[ 0 ];
         write_fd = pipe2[ 1 ];
         close( pipe2[ 0 ] );
         close( pipe1[ 1 ] );
         command_array = child_commands;
+        argv[ 0 ] = executable_path( saved_argv0 );
         debug_child_data.argc = argc;
         debug_child_data.argv = argv;
         command_input = fdopen( read_fd, "r" );
