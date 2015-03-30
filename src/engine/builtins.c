@@ -55,6 +55,8 @@
 #if defined(USE_EXECUNIX)
 # include <sys/types.h>
 # include <sys/wait.h>
+#elif defined(OS_VMS)
+# include <wait.h>
 #else
 /*
  * NT does not have wait() and associated macros and uses the system() return
@@ -608,7 +610,21 @@ LIST * builtin_exit( FRAME * frame, int flags )
     list_print( lol_get( frame->args, 0 ) );
     out_printf( "\n" );
     if ( !list_empty( code ) )
-        exit( atoi( object_str( list_front( code ) ) ) );
+    {
+        int status = atoi( object_str( list_front( code ) ) );
+#ifdef OS_VMS
+        switch( status )
+        {
+        case 0:
+            status = EXITOK;
+            break;
+        case 1:
+            status = EXITBAD;
+            break;
+        }
+#endif
+        exit( status );
+    }
     else
         exit( EXITBAD );  /* yeech */
     return L0;
@@ -739,7 +755,7 @@ LIST * builtin_glob( FRAME * frame, int flags )
     globbing.patterns = r;
 
     globbing.case_insensitive =
-# if defined( OS_NT ) || defined( OS_CYGWIN )
+# if defined( OS_NT ) || defined( OS_CYGWIN ) || defined( OS_VMS )
        l;  /* Always case-insensitive if any files can be found. */
 # else
        lol_get( frame->args, 2 );
@@ -788,7 +804,7 @@ LIST * glob1( OBJECT * dirname, OBJECT * pattern )
     globbing.patterns = plist;
 
     globbing.case_insensitive
-# if defined( OS_NT ) || defined( OS_CYGWIN )
+# if defined( OS_NT ) || defined( OS_CYGWIN ) || defined( OS_VMS )
        = plist;  /* always case-insensitive if any files can be found */
 # else
        = L0;
@@ -2481,6 +2497,9 @@ LIST * builtin_shell( FRAME * frame, int flags )
                 rtrim( buffer );
             string_append( &s, buffer );
         }
+
+        /* Explicit EOF check for systems with broken fread */
+        if ( feof( p ) ) break;
     }
 
     exit_status = pclose( p );
@@ -2496,6 +2515,11 @@ LIST * builtin_shell( FRAME * frame, int flags )
             exit_status = WEXITSTATUS( exit_status );
         else
             exit_status = -1;
+
+#ifdef OS_VMS
+        /* Harmonize VMS success status with POSIX */
+        if ( exit_status == 1 ) exit_status = EXIT_SUCCESS;
+#endif
         sprintf( buffer, "%d", exit_status );
         result = list_push_back( result, object_new( buffer ) );
     }

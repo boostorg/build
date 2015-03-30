@@ -42,6 +42,7 @@
  */
 unsigned long path_get_process_id_( void );
 void path_get_temp_path_( string * buffer );
+int path_translate_to_os_( char const * f, string * file );
 
 
 /*
@@ -282,4 +283,15 @@ OBJECT * path_tmpfile( void )
     string_free( file_path );
 
     return result;
+}
+
+
+/*
+ * path_translate_to_os() - translate filename to OS-native path
+ *
+ */
+
+int path_translate_to_os( char const * f, string * file )
+{
+  return path_translate_to_os_( f, file );
 }

@@ -727,7 +727,7 @@ rule GLOB ( /directories/ * : /patterns/ * : /downcase-opt/ ? )
 
 Using the same wildcards as for the patterns in the switch statement. It is invoked by being used as an argument to a rule invocation inside of "=[ ]=". For example: "[^FILES = \[ GLOB dir1 dir2 : *.c *.h \]]" sets =FILES= to the list of C source and header files in =dir1= and =dir2=. The resulting filenames are the full pathnames, including the directory, but the pattern is applied only to the file name without the directory.
 
-If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, filenames are always downcased before matching.
+If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, and OpenVMS, filenames are always downcased before matching.
 
 [endsect]
 
@@ -1162,12 +1162,19 @@ prints [^"C:/Program Files/Borland"]
   it can be important to pass them true windows-style paths. The =:W=
   modifier, *under Cygwin only*, turns a cygwin path into a Win32 path using
  the  [@http://www.cygwin.com/cygwin-api/func-cygwin-conv-to-win32-path.html
- =cygwin_conv_to_win32_path=] function. On other platforms, the string is
- unchanged. For example
+ =cygwin_conv_to_win32_path=] function. For example
 ``
  x = "/cygdrive/c/Program Files/Borland" ; ECHO $(x:W) ;
 ``
 prints [^"C:\\Program Files\\Borland"] on Cygwin
+
+Similarly, when used on OpenVMS, the =:W= modifier translates a POSIX-style path into native VMS-style format using =decc$to_vms= CRTL function. This modifier is generally used inside action blocks to properly specify file paths in VMS-specific commands. For example
+``
+ x = "subdir/filename.c" ; ECHO $(x:W) ;
+``
+prints [^"\[.subdir\]filename.c"] on OpenVMS
+
+On other platforms, the string is unchanged.
 ]]
 
 [[[^:['chars]]]
