@@ -662,6 +662,7 @@ class Server:
                 "success": "true" if ok else "false"
         }
         print json.dumps(done)
+        sys.stdout.flush()
 
     def main_loop(self):
 
