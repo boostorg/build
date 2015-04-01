@@ -775,7 +775,7 @@ b2 toolset=gcc variant=debug optimization=space
           <varlistentry>
             <term><option>-d0</option></term>
             <listitem>
-              <para>Supress all informational messages.</para>
+              <para>Suppress all informational messages.</para>
             </listitem>
           </varlistentry>
 
