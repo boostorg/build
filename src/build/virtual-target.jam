@@ -432,6 +432,10 @@ class abstract-file-target : virtual-target
         {
             ps = [ property-set.empty ] ;
         }
+        
+        # Add this target object for use in getting additional information
+        # when tagging.
+        ps = [ property-set.create [ $(ps).raw ] <target>$(__name__) ] ;
 
         local tag = [ $(ps).get <tag> ] ;
 
@@ -1092,7 +1096,7 @@ rule register-actual-name ( actual-name : virtual-target )
         errors.user-error "Name clash for '$(actual-name)'"
             : ""
             : "Tried to build the target twice, with property sets having "
-            : "these incompabile properties:"
+            : "these incompatible properties:"
             : ""
             : "    - " $(properties-removed)
             : "    - " $(properties-added)
@@ -1285,7 +1289,7 @@ class subvariant
 
     # Returns the properties specifying implicit include paths to generated
     # headers. This traverses all targets in this subvariant and subvariants
-    # referred by <implicit-dependecy> properties. For all targets of type
+    # referred by <implicit-dependency> properties. For all targets of type
     # 'target-type' (or for all targets, if 'target-type' is not specified), the
     # result will contain <$(feature)>path-to-that-target.
     #

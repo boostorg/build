@@ -686,6 +686,9 @@ elif bjam.variable('UNIX'):
     elif host_os_name == 'BeOS':
         # BeOS has no threading options, don't set anything here.
         pass
+    elif host_os_name == 'Haiku':
+        flags('gcc', 'OPTIONS', ['<threading>multi'], ['-lroot'])
+        # there is no -lrt on Haiku, and -pthread is implicit
     elif host_os_name.endswith('BSD'):
         flags('gcc', 'OPTIONS', ['<threading>multi'], ['-pthread'])
         # there is no -lrt on BSD

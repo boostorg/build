@@ -237,12 +237,15 @@ rule as-path ( properties * )
         local components ;
         for local p in $(properties)
         {
-            if $(p:G)
+            if ! hidden in [ feature.attributes $(p:G) ]
             {
-                local f = [ utility.ungrist $(p:G) ] ;
-                p = $(f)-$(p:G=) ;
+                if $(p:G)
+                {
+                    local f = [ utility.ungrist $(p:G) ] ;
+                    p = $(f)-$(p:G=) ;
+                 }
+                 components += [ $(.abbrev) $(p) ] ;
             }
-            components += [ $(.abbrev) $(p) ] ;
         }
 
         $(entry) = $(components:J=/) ;

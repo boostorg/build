@@ -264,7 +264,7 @@ local rule print-help-top ( )
     print.list-item "-a Rebuild everything" ;
     print.list-item "-n Don't execute the commands, only print them" ;
     print.list-item "-d+2 Show commands as they are executed" ;
-    print.list-item "-d0 Supress all informational messages" ;
+    print.list-item "-d0 Suppress all informational messages" ;
     print.list-item "-q Stop at first error" ;
     print.list-item "--reconfigure Rerun all configuration checks" ;
     print.list-item "--debug-configuration Diagnose configuration" ;

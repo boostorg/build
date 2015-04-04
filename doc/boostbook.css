@@ -16,7 +16,11 @@ Body defaults
 
     body
     {
-        margin: 1em;
+        font-size: 16px;
+        max-width: 60em;
+        padding-left: 4em;
+        padding-right: 4em;
+        margin: auto;
         font-family: sans-serif;
     }
 
@@ -27,8 +31,6 @@ Paragraphs
     p
     {
         text-align: left;
-        font-size: 10pt;
-        line-height: 1.15;
     }
 
 /*=============================================================================
@@ -38,12 +40,11 @@ Program listings
     /* Code on paragraphs */
     p tt.computeroutput
     {
-        font-size: 9pt;
+
     }
 
     pre.synopsis
     {
-        font-size: 9pt;
         margin: 1pc 4% 0pc 4%;
         padding: 0.5pc 0.5pc 0.5pc 0.5pc;
     }
@@ -51,7 +52,6 @@ Program listings
     .programlisting,
     .screen
     {
-        font-size: 9pt;
         display: block;
         margin: 1pc 4% 0pc 4%;
         padding: 0.5pc 0.5pc 0.5pc 0.5pc;
@@ -77,7 +77,7 @@ Headings
     }
 
     h1 { font-size: 140%; }
-    h2 { font-weight: bold; font-size: 140%; }
+    h2 { font-weight: bold; font-size: 140%; color: rgb(74, 100, 132); }
     h3 { font-weight: bold; font-size: 130%; }
     h4 { font-weight: bold; font-size: 120%; }
     h5 { font-weight: normal; font-style: italic; font-size: 110%; }
@@ -140,8 +140,6 @@ Lists
 
     li
     {
-        font-size: 10pt;
-        line-height: 1.3;
     }
 
     /* Unordered lists */
@@ -195,14 +193,7 @@ Copyright footer
 =============================================================================*/
     .copyright-footer
     {
-        text-align: right;
-        font-size: 70%;
-    }
-
-    .copyright-footer p
-    {
-        text-align: right;
-        font-size: 80%;
+        margin-top: 3em;
     }
 
 /*=============================================================================
@@ -211,10 +202,7 @@ Table of contents
 
     div.toc
     {
-       margin: 1pc 4% 0pc 4%;
-       padding: 0.1pc 1pc 0.1pc 1pc;
-       font-size: 80%;
-       line-height: 1.15;
+        font-size: 14px;
     }
 
     .boost-toc
@@ -234,26 +222,22 @@ Table of contents
 Tables
 =============================================================================*/
 
-    .table-title,
-    div.table p.title
-    {
-        margin-left: 4%;
-        padding-right: 0.5em;
-        padding-left: 0.5em;
-    }
-
     .informaltable table,
     .table table
     {
-        width: 92%;
-        margin-left: 4%;
-        margin-right: 4%;
+        width: 100%;
     }
 
-    div.informaltable table,
-    div.table table
+    .table p.title
     {
-        padding: 4px;
+        text-align: right;
+        color: #959595;
+        margin-bottom: 0;
+    }
+
+    .table p.title b
+    {
+        font-weight: normal;
     }
 
     /* Table Cells */
@@ -262,8 +246,8 @@ Tables
     {
         padding: 0.5em;
         text-align: left;
-        font-size: 9pt;
     }
+
 
     div.informaltable table tr th,
     div.table table tr th
@@ -285,7 +269,6 @@ Tables
         margin: 0em !important;
         padding: 0em !important;
         text-align: left !important;
-        font-size: 9pt !important;
         border: none !important;
     }
 
@@ -300,11 +283,31 @@ Blurbs
     div.warning,
     p.blurb
     {
-        font-size: 9pt; /* A little bit smaller than the main text */
-        line-height: 1.2;
         display: block;
-        margin: 1pc 4% 0pc 4%;
-        padding: 0.5pc 0.5pc 0.5pc 0.5pc;
+        padding: 0.5em;
+        border: 1px solid #ddd;
+    }
+
+    div.note h3, div.tip h3, div.important h3, div.caution h3, div.warning h3
+    {
+        font-size: 100%;
+        margin: 0 !important;
+        display: inline;
+    }
+
+    div.note p, div.tip p, div.important p, div.caution p, div.warning p
+    {
+        margin: 0;
+    }
+
+    div.warning
+    {
+        border-left: 6px solid #f2dede;
+    }
+
+    div.tip, div.note
+    {
+        border-left: 6px solid #d9edf7;
     }
 
     p.blurb img
@@ -326,7 +329,6 @@ Variable Lists
     span.term
     {
         font-weight: bold;
-        font-size: 10pt;
     }
 
     div.variablelist table tbody tr td
@@ -334,9 +336,7 @@ Variable Lists
         text-align: left;
         vertical-align: top;
         padding: 0em 2em 0em 0em;
-        font-size: 10pt;
         margin: 0em 0em 0.5em 0em;
-        line-height: 1;
     }
 
     div.variablelist dl dt
@@ -347,14 +347,12 @@ Variable Lists
     div.variablelist dl dd
     {
         margin: 0em 0em 0.5em 2em;
-        font-size: 10pt;
     }
 
     div.variablelist table tbody tr td p,
     div.variablelist dl dd p
     {
         margin: 0em 0em 0.5em 0em;
-        line-height: 1;
     }
 
 /*=============================================================================
@@ -432,7 +430,7 @@ Colors
         .copyright
         {
             color: #666666;
-            font-size: small;
+            margin-left: 4em;
         }
 
         div div.legalnotice p
@@ -443,50 +441,49 @@ Colors
     /* Program listing */
         pre.synopsis
         {
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
+            border-left: 6px solid #ddd;
+            padding: 0.5em;
+            margin: 1em 0px;
         }
 
         .programlisting,
         .screen
         {
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
+            border-left: 6px solid #ddd;
+            padding: 0.5em;
+            margin: 1em 0px;
         }
 
         td .programlisting,
         td .screen
         {
-            border: 0px solid #DCDCDC;
-        }
-
-    /* Blurbs */
-        div.note,
-        div.tip,
-        div.important,
-        div.caution,
-        div.warning,
-        p.blurb
-        {
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
+            border-left: 6px solid #ddd;
+            padding: 0.5em;
+            margin: 1em 0px;
         }
 
     /* Table of contents */
         div.toc
         {
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
+            padding-left: 0.5em;
         }
 
     /* Tables */
         div.informaltable table tr td,
         div.table table tr td
         {
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
         }
 
         div.informaltable table tr th,
         div.table table tr th
         {
             background-color: #F0F0F0;
-            border: 1px solid #DCDCDC;
+            border: 1px solid #ddd;
         }
 
         .copyright-footer
@@ -534,7 +531,7 @@ Colors
         td .programlisting,
         td .screen
         {
-            border: 0px solid #DCDCDC;
+            border: 0px solid #ddd;
         }
 
     /* Table of contents */
@@ -698,3 +695,12 @@ span.purple { color: purple; }
 span.gold { color: gold; }
 span.silver { color: silver; } /* lighter gray */
 span.gray { color: #808080; } /* light gray */
+
+div.titlepage hr { display: none; }
+div.dedication h1 { display: none; }
+
+hr {
+    border: 0;
+    border-top: 1px solid #eee;
+}
+

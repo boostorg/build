@@ -196,12 +196,12 @@ def set_default (feature, value):
         bad_attribute = "free"
     elif attributes & Feature.OPTIONAL:
         bad_attribute = "optional"
-        
+
     if bad_attribute:
         raise InvalidValue ("%s property %s cannot have a default" % (bad_attribute, feature.name()))
-        
+
     if not value in f.values():
-        raise InvalidValue ("The specified default value, '%s' is invalid.\n" % value + "allowed values are: %s" % values)
+        raise InvalidValue ("The specified default value, '%s' is invalid.\n" % value + "allowed values are: %s" % f.values())
 
     f.set_default(value)
 

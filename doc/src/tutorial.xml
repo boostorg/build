@@ -17,8 +17,8 @@
 -->
 
   <para>
-    This section will guide you though the most basic features of Boost.Build
-    V2. We will start with the &#x201C;Hello, world&#x201D; example, learn how
+    This section will guide you though the most basic features of Boost.Build.
+    We will start with the &#x201C;Hello, world&#x201D; example, learn how
     to use libraries, and finish with testing and installing features.
   </para>
 
