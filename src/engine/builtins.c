@@ -26,6 +26,7 @@
 #include "subst.h"
 #include "timestamp.h"
 #include "variable.h"
+#include "output.h"
 
 #include <ctype.h>
 
@@ -577,8 +578,8 @@ LIST * builtin_rebuilds( FRAME * frame, int flags )
 LIST * builtin_echo( FRAME * frame, int flags )
 {
     list_print( lol_get( frame->args, 0 ) );
-    printf( "\n" );
-    fflush( stdout );
+    out_printf( "\n" );
+    out_flush();
     return L0;
 }
 
@@ -593,7 +594,7 @@ LIST * builtin_exit( FRAME * frame, int flags )
 {
     LIST * const code = lol_get( frame->args, 1 );
     list_print( lol_get( frame->args, 0 ) );
-    printf( "\n" );
+    out_printf( "\n" );
     if ( !list_empty( code ) )
         exit( atoi( object_str( list_front( code ) ) ) );
     else
@@ -1014,7 +1015,7 @@ LIST * builtin_hdrmacro( FRAME * frame, int flags )
 
         /* Scan file for header filename macro definitions. */
         if ( DEBUG_HEADER )
-            printf( "scanning '%s' for header file macro definitions\n",
+            out_printf( "scanning '%s' for header file macro definitions\n",
                 object_str( list_item( iter ) ) );
 
         macro_headers( t );
@@ -1111,14 +1112,14 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
 {
     backtrace_line( frame->prev );
     if ( key )
-        printf("%s error", key);
+        out_printf("%s error", key);
     else
-        printf("ERROR");
-    printf( ": rule \"%s\" unknown in ", object_str( rule_name ) );
+        out_printf("ERROR");
+    out_printf( ": rule \"%s\" unknown in ", object_str( rule_name ) );
     if ( module->name )
-        printf( "module \"%s\".\n", object_str( module->name ) );
+        out_printf( "module \"%s\".\n", object_str( module->name ) );
     else
-        printf( "root module.\n" );
+        out_printf( "root module.\n" );
     backtrace( frame->prev );
     exit( 1 );
 }
@@ -1192,13 +1193,13 @@ LIST * builtin_import( FRAME * frame, int flags )
     if ( source_iter != source_end || target_iter != target_end )
     {
         backtrace_line( frame->prev );
-        printf( "import error: length of source and target rule name lists "
+        out_printf( "import error: length of source and target rule name lists "
             "don't match!\n" );
-        printf( "    source: " );
+        out_printf( "    source: " );
         list_print( source_rules );
-        printf( "\n    target: " );
+        out_printf( "\n    target: " );
         list_print( target_rules );
-        printf( "\n" );
+        out_printf( "\n" );
         backtrace( frame->prev );
         exit( 1 );
     }
@@ -1271,9 +1272,9 @@ void print_source_line( FRAME * frame )
     int line;
     get_source_line( frame, &file, &line );
     if ( line < 0 )
-        printf( "(builtin):" );
+        out_printf( "(builtin):" );
     else
-        printf( "%s:%d:", file, line );
+        out_printf( "%s:%d:", file, line );
 }
 
 
@@ -1286,12 +1287,12 @@ void backtrace_line( FRAME * frame )
 {
     if ( frame == 0 )
     {
-        printf( "(no frame):" );
+        out_printf( "(no frame):" );
     }
     else
     {
         print_source_line( frame );
-        printf( " in %s\n", frame->rulename );
+        out_printf( " in %s\n", frame->rulename );
     }
 }
 
@@ -1469,8 +1470,8 @@ LIST * builtin_update_now( FRAME * frame, int flags )
         /* Flush whatever stdio might have buffered, while descriptions 0 and 1
          * still refer to the log file.
          */
-        fflush( stdout );
-        fflush( stderr );
+        out_flush( );
+        err_flush( );
         dup2( original_stdout, 0 );
         dup2( original_stderr, 1 );
         close( original_stdout );
@@ -1669,7 +1670,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
     else
     {
         backtrace_line( frame->prev );
-        printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
+        out_printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
             object_str( list_front( rule_name ) ), object_str( module->name ) );
         backtrace( frame->prev );
         exit( 1 );
@@ -2015,14 +2016,14 @@ LIST * builtin_python_import_rule( FRAME * frame, int flags )
         {
             if ( PyErr_Occurred() )
                 PyErr_Print();
-            fprintf( stderr, "Cannot find function \"%s\"\n", python_function );
+            err_printf( "Cannot find function \"%s\"\n", python_function );
         }
         Py_DECREF( pModule );
     }
     else
     {
         PyErr_Print();
-        fprintf( stderr, "Failed to load \"%s\"\n", python_module );
+        err_printf( "Failed to load \"%s\"\n", python_module );
     }
     return L0;
 
@@ -2103,7 +2104,7 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
                     char * s = PyString_AsString( e );
                     if ( !s )
                     {
-                        printf( "Invalid parameter type passed from Python\n" );
+                        err_printf( "Invalid parameter type passed from Python\n" );
                         exit( 1 );
                     }
                     l = list_push_back( l, object_new( s ) );

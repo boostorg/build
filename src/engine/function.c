@@ -19,6 +19,7 @@
 #include "rules.h"
 #include "search.h"
 #include "variable.h"
+#include "output.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -449,7 +450,7 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     if ( list_empty( first ) )
     {
         backtrace_line( frame );
-        printf( "warning: rulename %s expands to empty string\n", unexpanded );
+        out_printf( "warning: rulename %s expands to empty string\n", unexpanded );
         backtrace( frame );
         list_free( first );
         for ( i = 0; i < n_args; ++i )
@@ -505,7 +506,7 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
     if ( list_empty( first ) )
     {
         backtrace_line( frame );
-        printf( "warning: object is empty\n" );
+        out_printf( "warning: object is empty\n" );
         backtrace( frame );
 
         list_free( first );
@@ -1991,7 +1992,7 @@ static int current_line;
 
 static void parse_error( char const * message )
 {
-    printf( "%s:%d: %s\n", current_file, current_line, message );
+    out_printf( "%s:%d: %s\n", current_file, current_line, message );
 }
 
 
@@ -2397,7 +2398,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             int f = compile_new_label( c );
             int end = compile_new_label( c );
 
-            printf( "%s:%d: Conditional used as list (check operator "
+            out_printf( "%s:%d: Conditional used as list (check operator "
                 "precedence).\n", object_str( parse->file ), parse->line );
 
             /* Emit the condition */
@@ -2925,15 +2926,15 @@ static void argument_error( char const * message, FUNCTION * procedure,
     extern void print_source_line( FRAME * );
     LOL * actual = frame->args;
     backtrace_line( frame->prev );
-    printf( "*** argument error\n* rule %s ( ", frame->rulename );
+    out_printf( "*** argument error\n* rule %s ( ", frame->rulename );
     argument_list_print( procedure->formal_arguments,
         procedure->num_formal_arguments );
-    printf( " )\n* called with: ( " );
+    out_printf( " )\n* called with: ( " );
     lol_print( actual );
-    printf( " )\n* %s %s\n", message, arg ? object_str ( arg ) : "" );
+    out_printf( " )\n* %s %s\n", message, arg ? object_str ( arg ) : "" );
     function_location( procedure, &frame->file, &frame->line );
     print_source_line( frame );
-    printf( "see definition of rule '%s' being called\n", frame->rulename );
+    out_printf( "see definition of rule '%s' being called\n", frame->rulename );
     backtrace( frame->prev );
     exit( 1 );
 }
@@ -3226,7 +3227,7 @@ static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg,
 
         if ( is_type_name( object_str( arg ) ) )
         {
-            printf( "%s:%d: missing argument name before type name: %s\n",
+            err_printf( "%s:%d: missing argument name before type name: %s\n",
                 object_str( file ), line, object_str( arg ) );
             exit( 1 );
         }
@@ -3274,7 +3275,7 @@ static struct arg_list arg_compile_impl( struct argument_compiler * c,
     case ARGUMENT_COMPILER_DONE:
         break;
     case ARGUMENT_COMPILER_FOUND_TYPE:
-        printf( "%s:%d: missing argument name after type name: %s\n",
+        err_printf( "%s:%d: missing argument name after type name: %s\n",
             object_str( file ), line, object_str( c->arg.type_name ) );
         exit( 1 );
     case ARGUMENT_COMPILER_FOUND_OBJECT:
@@ -3398,19 +3399,19 @@ static void argument_list_print( struct arg_list * args, int num_args )
         for ( i = 0; i < num_args; ++i )
         {
             int j;
-            if ( i ) printf( " : " );
+            if ( i ) out_printf( " : " );
             for ( j = 0; j < args[ i ].size; ++j )
             {
                 struct argument * formal_arg = &args[ i ].args[ j ];
-                if ( j ) printf( " " );
+                if ( j ) out_printf( " " );
                 if ( formal_arg->type_name )
-                    printf( "%s ", object_str( formal_arg->type_name ) );
-                printf( "%s", object_str( formal_arg->arg_name ) );
+                    out_printf( "%s ", object_str( formal_arg->type_name ) );
+                out_printf( "%s", object_str( formal_arg->arg_name ) );
                 switch ( formal_arg->flags )
                 {
-                case ARG_OPTIONAL: printf( " ?" ); break;
-                case ARG_PLUS:     printf( " +" ); break;
-                case ARG_STAR:     printf( " *" ); break;
+                case ARG_OPTIONAL: out_printf( " ?" ); break;
+                case ARG_PLUS:     out_printf( " +" ); break;
+                case ARG_STAR:     out_printf( " *" ); break;
                 }
             }
         }
@@ -3925,7 +3926,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 frame->file = function->file;
                 frame->line = function->line;
                 backtrace_line( frame );
-                printf( "error: stack check failed.\n" );
+                out_printf( "error: stack check failed.\n" );
                 backtrace( frame );
                 assert( saved_stack == s->data );
             }
@@ -4566,16 +4567,16 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 if ( !out_file )
                 {
-                    printf( "failed to write output file '%s'!\n",
+                    err_printf( "failed to write output file '%s'!\n",
                         out_name->value );
                     exit( EXITBAD );
                 }
                 string_free( out_name );
             }
 
-            if ( out_debug ) printf( "\nfile %s\n", out );
+            if ( out_debug ) out_printf( "\nfile %s\n", out );
             if ( out_file ) fputs( buf->value, out_file );
-            if ( out_debug ) fputs( buf->value, stdout );
+            if ( out_debug ) out_puts( buf->value );
             if ( out_file )
             {
                 fflush( out_file );
@@ -4585,7 +4586,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             if ( tmp_filename )
                 object_free( tmp_filename );
 
-            if ( out_debug ) fputc( '\n', stdout );
+            if ( out_debug ) out_putc( '\n' );
             break;
         }
 
@@ -4833,7 +4834,7 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
             {
                 OBJECT * s = python_to_string( PyList_GetItem( py_result, i ) );
                 if ( !s )
-                    fprintf( stderr,
+                    err_printf(
                         "Non-string object returned by Python call.\n" );
                 else
                     result = list_push_back( result, s );
@@ -4864,7 +4865,7 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
     else
     {
         PyErr_Print();
-        fprintf( stderr, "Call failed\n" );
+        err_printf( "Call failed\n" );
     }
 
     return result;
