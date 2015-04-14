@@ -87,9 +87,10 @@ toolset.flags clang-darwin.compile OPTIONS <optimization>off   : -O0 ;
 toolset.flags clang-darwin.compile OPTIONS <optimization>speed : -O3 ;
 toolset.flags clang-darwin.compile OPTIONS <optimization>space : -Os ;
 
+# For clang, 'on' and 'full' are identical
 toolset.flags clang-darwin.compile OPTIONS <inlining>off  : -fno-inline ;
 toolset.flags clang-darwin.compile OPTIONS <inlining>on   : -Wno-inline ;
-toolset.flags clang-darwin.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
+toolset.flags clang-darwin.compile OPTIONS <inlining>full : -Wno-inline ;
 
 toolset.flags clang-darwin.compile OPTIONS <warnings>off : -w ;
 toolset.flags clang-darwin.compile OPTIONS <warnings>on  : -Wall ;
