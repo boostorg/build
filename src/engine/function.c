@@ -120,6 +120,8 @@ void backtrace_line( FRAME * );
 #define INSTR_WRITE_FILE                   54
 #define INSTR_OUTPUT_STRINGS               55
 
+#define INSTR_FOR_POP                      70
+
 typedef struct instruction
 {
     unsigned int op_code;
@@ -1314,7 +1316,7 @@ static void dynamic_array_push_impl( struct dynamic_array * const array,
 
 #define dynamic_array_push( array, value ) (dynamic_array_push_impl(array, &value, sizeof(value)))
 #define dynamic_array_at( type, array, idx ) (((type *)(array)->data)[idx])
-
+#define dynamic_array_pop( array ) (--(array)->size)
 
 /*
  * struct compiler
@@ -1324,6 +1326,16 @@ struct label_info
 {
     int absolute_position;
     struct dynamic_array uses[ 1 ];
+};
+
+#define LOOP_INFO_BREAK 0
+#define LOOP_INFO_CONTINUE 1
+
+struct loop_info
+{
+    int type;
+    int label;
+    int cleanup_depth;
 };
 
 struct stored_rule
@@ -1342,6 +1354,8 @@ typedef struct compiler
     struct dynamic_array labels[ 1 ];
     struct dynamic_array rules[ 1 ];
     struct dynamic_array actions[ 1 ];
+    struct dynamic_array cleanups[ 1 ];
+    struct dynamic_array loop_scopes[ 1 ];
 } compiler;
 
 static void compiler_init( compiler * c )
@@ -1351,6 +1365,8 @@ static void compiler_init( compiler * c )
     dynamic_array_init( c->labels );
     dynamic_array_init( c->rules );
     dynamic_array_init( c->actions );
+    dynamic_array_init( c->cleanups );
+    dynamic_array_init( c->loop_scopes );
 }
 
 static void compiler_free( compiler * c )
@@ -1364,6 +1380,8 @@ static void compiler_free( compiler * c )
     dynamic_array_free( c->labels );
     dynamic_array_free( c->constants );
     dynamic_array_free( c->code );
+    dynamic_array_free( c->cleanups );
+    dynamic_array_free( c->loop_scopes );
 }
 
 static void compile_emit_instruction( compiler * c, instruction instr )
@@ -1427,6 +1445,82 @@ static int compile_emit_constant( compiler * c, OBJECT * value )
     OBJECT * copy = object_copy( value );
     dynamic_array_push( c->constants, copy );
     return c->constants->size - 1;
+}
+
+static void compile_push_cleanup( compiler * c, unsigned int op_code, int arg )
+{
+    instruction instr;
+    instr.op_code = op_code;
+    instr.arg = arg;
+    dynamic_array_push( c->cleanups, instr );
+}
+
+static void compile_pop_cleanup( compiler * c )
+{
+    dynamic_array_pop( c->cleanups );
+}
+
+static void compile_emit_cleanups( compiler * c, int end )
+{
+    int i;
+    for ( i = c->cleanups->size; --i >= end; )
+    {
+        compile_emit_instruction( c, dynamic_array_at( instruction, c->cleanups, i ) );
+    }
+}
+
+static void compile_emit_loop_jump( compiler * c, int type )
+{
+    struct loop_info * info = NULL;
+    int i;
+    for ( i = c->loop_scopes->size; --i >= 0; )
+    {
+        struct loop_info * elem = &dynamic_array_at( struct loop_info, c->loop_scopes, i );
+        if ( elem->type == type )
+        {
+            info = elem;
+            break;
+        }
+    }
+    if ( info == NULL )
+    {
+        printf( "warning: ignoring break statement used outside of loop\n" );
+        return;
+    }
+    compile_emit_cleanups( c, info->cleanup_depth );
+    compile_emit_branch( c, INSTR_JUMP, info->label );
+}
+
+static void compile_push_break_scope( compiler * c, int label )
+{
+    struct loop_info info;
+    info.type = LOOP_INFO_BREAK;
+    info.label = label;
+    info.cleanup_depth = c->cleanups->size;
+    dynamic_array_push( c->loop_scopes, info );
+}
+
+static void compile_push_continue_scope( compiler * c, int label )
+{
+    struct loop_info info;
+    info.type = LOOP_INFO_CONTINUE;
+    info.label = label;
+    info.cleanup_depth = c->cleanups->size;
+    dynamic_array_push( c->loop_scopes, info );
+}
+
+static void compile_pop_break_scope( compiler * c )
+{
+    assert( c->loop_scopes->size > 0 );
+    assert( dynamic_array_at( struct loop_info, c->loop_scopes, c->loop_scopes->size - 1 ).type == LOOP_INFO_BREAK );
+    dynamic_array_pop( c->loop_scopes );
+}
+
+static void compile_pop_continue_scope( compiler * c )
+{
+    assert( c->loop_scopes->size > 0 );
+    assert( dynamic_array_at( struct loop_info, c->loop_scopes, c->loop_scopes->size - 1 ).type == LOOP_INFO_CONTINUE );
+    dynamic_array_pop( c->loop_scopes );
 }
 
 static int compile_emit_rule( compiler * c, OBJECT * name, PARSE * parse,
@@ -2417,6 +2511,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         int var = compile_emit_constant( c, parse->string );
         int top = compile_new_label( c );
         int end = compile_new_label( c );
+        int continue_ = compile_new_label( c );
 
         /*
          * Evaluate the list.
@@ -2429,6 +2524,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             compile_emit( c, INSTR_PUSH_EMPTY, 0 );
             compile_emit( c, INSTR_PUSH_LOCAL, var );
             compile_emit( c, INSTR_SWAP, 1 );
+            compile_push_cleanup( c, INSTR_POP_LOCAL, var );
         }
 
         compile_emit( c, INSTR_FOR_INIT, 0 );
@@ -2436,14 +2532,26 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         compile_emit_branch( c, INSTR_FOR_LOOP, end );
         compile_emit( c, INSTR_SET, var );
 
+        compile_push_break_scope( c, end );
+        compile_push_cleanup( c, INSTR_FOR_POP, 0 );
+        compile_push_continue_scope( c, continue_ );
+
         /* Run the loop body */
         compile_parse( parse->right, c, RESULT_NONE );
 
+        compile_pop_continue_scope( c );
+        compile_pop_cleanup( c );
+        compile_pop_break_scope( c );
+
+        compile_set_label( c, continue_ );
         compile_emit_branch( c, INSTR_JUMP, top );
         compile_set_label( c, end );
 
         if ( parse->num )
+        {
+            compile_pop_cleanup( c );
             compile_emit( c, INSTR_POP_LOCAL, var );
+        }
 
         adjust_result( c, RESULT_NONE, result_location);
     }
@@ -2474,6 +2582,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             : RESULT_RETURN;
         int test = compile_new_label( c );
         int top = compile_new_label( c );
+        int end = compile_new_label( c );
         /* Make sure that we return an empty list if the loop runs zero times.
          */
         adjust_result( c, RESULT_NONE, nested_result );
@@ -2481,10 +2590,15 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         compile_emit_branch( c, INSTR_JUMP, test );
         compile_set_label( c, top );
         /* Emit the loop body. */
+        compile_push_break_scope( c, end );
+        compile_push_continue_scope( c, test );
         compile_parse( parse->right, c, nested_result );
+        compile_pop_continue_scope( c );
+        compile_pop_break_scope( c );
         /* Emit the condition. */
         compile_set_label( c, test );
         compile_condition( parse->left, c, 1, top );
+        compile_set_label( c, end );
 
         adjust_result( c, nested_result, result_location );
     }
@@ -2502,7 +2616,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             : RESULT_RETURN;
         compile_parse( parse->left, c, RESULT_STACK );
         compile_emit( c, INSTR_PUSH_MODULE, 0 );
+        compile_push_cleanup( c, INSTR_POP_MODULE, 0 );
         compile_parse( parse->right, c, nested_result );
+        compile_pop_cleanup( c );
         compile_emit( c, INSTR_POP_MODULE, 0 );
         adjust_result( c, nested_result, result_location );
     }
@@ -2516,8 +2632,10 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         else
             compile_emit( c, INSTR_PUSH_EMPTY, 0 );
         compile_emit( c, INSTR_CLASS, 0 );
+        compile_push_cleanup( c, INSTR_POP_MODULE, 0 );
         compile_parse( parse->right, c, RESULT_NONE );
         compile_emit( c, INSTR_BIND_MODULE_VARIABLES, 0 );
+        compile_pop_cleanup( c );
         compile_emit( c, INSTR_POP_MODULE, 0 );
 
         adjust_result( c, RESULT_NONE, result_location );
@@ -2567,7 +2685,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
                 compile_emit( c, INSTR_PUSH_LOCAL, name );
+                compile_push_cleanup( c, INSTR_POP_LOCAL, name );
                 compile_parse( parse->third, c, nested_result );
+                compile_pop_cleanup( c );
                 compile_emit( c, INSTR_POP_LOCAL, name );
             }
             else
@@ -2576,7 +2696,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
                 compile_emit( c, INSTR_PUSH_LOCAL_GROUP, 0 );
+                compile_push_cleanup( c, INSTR_POP_LOCAL_GROUP, 0 );
                 compile_parse( parse->third, c, nested_result );
+                compile_pop_cleanup( c );
                 compile_emit( c, INSTR_POP_LOCAL_GROUP, 0 );
             }
         }
@@ -2585,7 +2707,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             compile_parse( parse->left, c, RESULT_STACK );
             compile_parse( parse->right, c, RESULT_STACK );
             compile_emit( c, INSTR_PUSH_LOCAL_GROUP, 0 );
+            compile_push_cleanup( c, INSTR_POP_LOCAL_GROUP, 0 );
             compile_parse( parse->third, c, nested_result );
+            compile_pop_cleanup( c );
             compile_emit( c, INSTR_POP_LOCAL_GROUP, 0 );
         }
         adjust_result( c, nested_result, result_location );
@@ -2633,7 +2757,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 int end = compile_new_label( c );
                 compile_parse( parse->left, c, RESULT_STACK );
                 compile_emit_branch( c, INSTR_PUSH_ON, end );
+                compile_push_cleanup( c, INSTR_POP_ON, 0 );
                 var_parse_group_compile( group, c );
+                compile_pop_cleanup( c );
                 compile_emit( c, INSTR_POP_ON, 0 );
                 compile_set_label( c, end );
             }
@@ -2644,7 +2770,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             int end = compile_new_label( c );
             compile_parse( parse->left, c, RESULT_STACK );
             compile_emit_branch( c, INSTR_PUSH_ON, end );
+            compile_push_cleanup( c, INSTR_POP_ON, 0 );
             compile_parse( parse->right, c, RESULT_STACK );
+            compile_pop_cleanup( c );
             compile_emit( c, INSTR_POP_ON, 0 );
             compile_set_label( c, end );
         }
@@ -2809,6 +2937,20 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         compile_emit( c, INSTR_POP, 0 );
         adjust_result( c, RESULT_NONE, result_location );
         compile_set_label( c, switch_end );
+    }
+    else if ( parse->type == PARSE_RETURN )
+    {
+        compile_parse( parse->left, c, RESULT_RETURN );
+        compile_emit_cleanups( c, 0 );
+        compile_emit( c, INSTR_RETURN, 0 );
+    }
+    else if ( parse->type == PARSE_BREAK )
+    {
+        compile_emit_loop_jump( c, LOOP_INFO_BREAK );
+    }
+    else if ( parse->type == PARSE_CONTINUE )
+    {
+        compile_emit_loop_jump( c, LOOP_INFO_CONTINUE );
     }
     else if ( parse->type == PARSE_NULL )
         adjust_result( c, RESULT_NONE, result_location );
@@ -3875,6 +4017,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 *(LISTITER *)stack_allocate( s, sizeof( LISTITER ) ) = iter;
                 stack_push( s, r );
             }
+            break;
+        }
+
+        case INSTR_FOR_POP:
+        {
+            stack_deallocate( s, sizeof( LISTITER ) );
+            list_free( stack_pop( s ) );
             break;
         }
 
