@@ -1499,6 +1499,7 @@ if $(NT)
 {
 
 local c = "echo value" ;
+if $(OS) = VMS { c = "PIPE WRITE SYS$OUTPUT \"value\"" ; }
 
 check-equal shell : "value\n"   : [ SHELL $(c) ] ;
 check-equal shell : ""          : [ SHELL $(c) : no-output ] ;
