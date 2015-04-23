@@ -226,6 +226,9 @@ feature.feature def-file : : free dependency ;
 
 feature.feature suppress-import-lib : false true : incidental ;
 
+# support https://gcc.gnu.org/install/configure.html#WithAixSoname
+feature.feature aix-soname : svr4 : propagated optional ;
+
 # Internal feature used to store the name of a bjam action to call when building
 # a target.
 feature.feature action : : free ;
