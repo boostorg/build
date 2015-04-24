@@ -451,7 +451,7 @@ rule setup-address-model ( targets * : sources * : properties * )
         else
         {
             local arch = [ feature.get-values architecture : $(properties) ] ;
-            if $(arch) != arm
+            if $(arch) != arm && $(arch) != mips1
             {
                 if $(model) = 32
                 {
