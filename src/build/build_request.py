@@ -19,10 +19,10 @@ def expand_no_defaults (property_sets):
     """
     # First make all features and subfeatures explicit
     expanded_property_sets = [ps.expand_subfeatures() for ps in property_sets]
-    
+
     # Now combine all of the expanded property_sets
     product = __x_product (expanded_property_sets)
-    
+
     return [property_set.create(p) for p in product]
 
 
@@ -42,7 +42,7 @@ def __x_product_aux (property_sets, seen_features):
     Returns a tuple of:
     - list of lists of Property instances, such that within each list, no two Property instance
     have the same feature, and no Property is for feature in seen_features.
-    - set of features we saw in property_sets      
+    - set of features we saw in property_sets
     """
     if not property_sets:
         return ([], set())
@@ -76,7 +76,7 @@ def __x_product_aux (property_sets, seen_features):
                 result.append(properties + inner)
         else:
             result.append(properties)
-        
+
         if inner_seen & these_features:
             # Some of elements in property_sets[1:] conflict with elements of property_sets[0],
             # Try again, this time omitting elements of property_sets[0]
@@ -85,7 +85,7 @@ def __x_product_aux (property_sets, seen_features):
 
         return (result, inner_seen | these_features)
 
-    
+
 
 def looks_like_implicit_value(v):
     """Returns true if 'v' is either implicit value, or
@@ -112,13 +112,13 @@ def from_command_line(command_line):
         if e[:1] != "-":
             # Build request spec either has "=" in it, or completely
             # consists of implicit feature values.
-            if e.find("=") != -1 or looks_like_implicit_value(e.split("/")[0]):                
+            if e.find("=") != -1 or looks_like_implicit_value(e.split("/")[0]):
                 properties += convert_command_line_element(e)
             elif e:
                 targets.append(e)
 
     return [targets, properties]
- 
+
 # Converts one element of command line build request specification into
 # internal form.
 def convert_command_line_element(e):
@@ -133,7 +133,7 @@ def convert_command_line_element(e):
             lresult = [("<%s>%s" % (feature, v)) for v in values]
         else:
             lresult = p.split(",")
-            
+
         if p.find('-') == -1:
             # FIXME: first port property.validate
             # property.validate cannot handle subfeatures,
@@ -149,68 +149,68 @@ def convert_command_line_element(e):
 
     return [property_set.create(b2.build.feature.split(r)) for r in result]
 
-### 
+###
 ### rule __test__ ( )
 ### {
 ###     import assert feature ;
-###     
+###
 ###     feature.prepare-test build-request-test-temp ;
-###     
+###
 ###     import build-request ;
 ###     import build-request : expand_no_defaults : build-request.expand_no_defaults ;
 ###     import errors : try catch ;
 ###     import feature : feature subfeature ;
-### 
+###
 ###     feature toolset : gcc msvc borland : implicit ;
 ###     subfeature toolset gcc : version : 2.95.2 2.95.3 2.95.4
 ###       3.0 3.0.1 3.0.2 : optional ;
-### 
+###
 ###     feature variant : debug release : implicit composite ;
 ###     feature inlining : on off ;
 ###     feature "include" : : free ;
-### 
+###
 ###     feature stdlib : native stlport : implicit ;
-### 
+###
 ###     feature runtime-link : dynamic static : symmetric ;
-### 
-### 
+###
+###
 ###     local r ;
-### 
-###     r = [ build-request.from-command-line bjam debug runtime-link=dynamic ] ;              
+###
+###     r = [ build-request.from-command-line bjam debug runtime-link=dynamic ] ;
 ###     assert.equal [ $(r).get-at 1 ] : ;
 ###     assert.equal [ $(r).get-at 2 ] : debug <runtime-link>dynamic ;
-### 
+###
 ###     try ;
 ###     {
-### 
+###
 ###         build-request.from-command-line bjam gcc/debug runtime-link=dynamic/static ;
 ###     }
 ###     catch \"static\" is not a value of an implicit feature ;
-### 
-### 
+###
+###
 ###     r = [ build-request.from-command-line bjam -d2 --debug debug target runtime-link=dynamic ] ;
 ###     assert.equal [ $(r).get-at 1 ] : target ;
 ###     assert.equal [ $(r).get-at 2 ] : debug <runtime-link>dynamic ;
-### 
+###
 ###     r = [ build-request.from-command-line bjam debug runtime-link=dynamic,static ] ;
 ###     assert.equal [ $(r).get-at 1 ] : ;
 ###     assert.equal [ $(r).get-at 2 ] : debug <runtime-link>dynamic <runtime-link>static ;
-### 
+###
 ###     r = [ build-request.from-command-line bjam debug gcc/runtime-link=dynamic,static ] ;
 ###     assert.equal [ $(r).get-at 1 ] : ;
-###     assert.equal [ $(r).get-at 2 ] : debug gcc/<runtime-link>dynamic 
+###     assert.equal [ $(r).get-at 2 ] : debug gcc/<runtime-link>dynamic
 ###                  gcc/<runtime-link>static ;
-### 
+###
 ###     r = [ build-request.from-command-line bjam msvc gcc,borland/runtime-link=static ] ;
 ###     assert.equal [ $(r).get-at 1 ] : ;
-###     assert.equal [ $(r).get-at 2 ] : msvc gcc/<runtime-link>static 
+###     assert.equal [ $(r).get-at 2 ] : msvc gcc/<runtime-link>static
 ###                     borland/<runtime-link>static ;
-### 
+###
 ###     r = [ build-request.from-command-line bjam gcc-3.0 ] ;
 ###     assert.equal [ $(r).get-at 1 ] : ;
 ###     assert.equal [ $(r).get-at 2 ] : gcc-3.0 ;
-### 
+###
 ###     feature.finish-test build-request-test-temp ;
 ### }
-### 
-### 
+###
+###

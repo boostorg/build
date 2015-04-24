@@ -46,7 +46,7 @@ def add_grist (features):
             return '<' + feature + '>'
         else:
             return feature
-    
+
     if isinstance (features, str):
         return grist_one (features)
     else:
@@ -72,7 +72,7 @@ def get_value (property):
     """ Gets the value of a property, that is, the part following the grist, if any.
     """
     return replace_grist (property, '')
-    
+
 def get_grist (value):
     """ Returns the grist of a string.
         If value is a sequence, does it for every value and returns the result as a sequence.
@@ -90,7 +90,7 @@ def get_grist (value):
         return [ get_grist_one (v) for v in value ]
 
 def ungrist (value):
-    """ Returns the value without grist. 
+    """ Returns the value without grist.
         If value is a sequence, does it for every value and returns the result as a sequence.
     """
     def ungrist_one (value):
@@ -136,7 +136,7 @@ def os_name ():
 
 def platform ():
     return bjam.variable("OSPLAT")
-    
+
 def os_version ():
     return bjam.variable("OSVER")
 

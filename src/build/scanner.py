@@ -1,10 +1,10 @@
 # Status: ported.
 # Base revision: 45462
-# 
-# Copyright 2003 Dave Abrahams 
-# Copyright 2002, 2003, 2004, 2005 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+#
+# Copyright 2003 Dave Abrahams
+# Copyright 2002, 2003, 2004, 2005 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 #  Implements scanners: objects that compute implicit dependencies for
 #  files, such as includes in C++.
@@ -19,10 +19,10 @@
 #  then associated with actual targets. It is possible to use
 #  several scanners for a virtual-target. For example, a single source
 #  might be used by to compile actions, with different include paths.
-#  In this case, two different actual targets will be created, each 
+#  In this case, two different actual targets will be created, each
 #  having scanner of its own.
 #
-#  Typically, scanners are created from target type and action's 
+#  Typically, scanners are created from target type and action's
 #  properties, using the rule 'get' in this module. Directly creating
 #  scanners is not recommended, because it might create many equvivalent
 #  but different instances, and lead in unneeded duplication of
@@ -42,17 +42,17 @@ def reset ():
 
     # Maps registered scanner classes to relevant properties
     __scanners = {}
-    
+
     # A cache of scanners.
-    # The key is: class_name.properties_tag, where properties_tag is the concatenation 
+    # The key is: class_name.properties_tag, where properties_tag is the concatenation
     # of all relevant properties, separated by '-'
     __scanner_cache = {}
-    
+
 reset ()
 
 
 def register(scanner_class, relevant_properties):
-    """ Registers a new generator class, specifying a set of 
+    """ Registers a new generator class, specifying a set of
         properties relevant to this scanner.  Ctor for that class
         should have one parameter: list of properties.
     """
@@ -62,13 +62,13 @@ def registered(scanner_class):
     """ Returns true iff a scanner of that class is registered
     """
     return __scanners.has_key(str(scanner_class))
-    
+
 def get(scanner_class, properties):
     """ Returns an instance of previously registered scanner
         with the specified properties.
     """
     scanner_name = str(scanner_class)
-    
+
     if not registered(scanner_name):
         raise BaseException ("attempt to get unregisted scanner: %s" % scanner_name)
 
@@ -76,7 +76,7 @@ def get(scanner_class, properties):
     r = property.select(relevant_properties, properties)
 
     scanner_id = scanner_name + '.' + '-'.join(r)
-    
+
     if not __scanner_cache.has_key(scanner_name):
         __scanner_cache[scanner_name] = scanner_class(r)
 
@@ -87,7 +87,7 @@ class Scanner:
     """
     def __init__ (self):
         pass
-    
+
     def pattern (self):
         """ Returns a pattern to use for scanning.
         """
@@ -120,14 +120,14 @@ class CommonScanner(Scanner):
         get_manager().scanners().propagate(self, matches)
 
 class ScannerRegistry:
-    
+
     def __init__ (self, manager):
         self.manager_ = manager
         self.count_ = 0
         self.exported_scanners_ = {}
 
     def install (self, scanner, target, vtarget):
-        """ Installs the specified scanner on actual target 'target'. 
+        """ Installs the specified scanner on actual target 'target'.
             vtarget: virtual target from which 'target' was actualized.
         """
         engine = self.manager_.engine()
@@ -141,8 +141,8 @@ class ScannerRegistry:
             exported_name = self.exported_scanners_[scanner]
 
         engine.set_target_variable(target, "HDRRULE", exported_name)
-        
-        # scanner reflects difference in properties affecting    
+
+        # scanner reflects difference in properties affecting
         # binding of 'target', which will be known when processing
         # includes for it, will give information on how to
         # interpret quoted includes.

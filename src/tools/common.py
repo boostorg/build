@@ -17,7 +17,7 @@ import os.path
 import sys
 
 # for some reason this fails on Python 2.7(r27:82525)
-# from b2.build import virtual_target 
+# from b2.build import virtual_target
 import b2.build.virtual_target
 from b2.build import feature, type
 from b2.util.utility import *
@@ -28,20 +28,20 @@ __re__before_first_dash = re.compile ('([^-]*)-')
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
         Note that this must be called _after_ resetting the module 'feature'.
-    """    
+    """
     global __had_unspecified_value, __had_value, __declared_subfeature
     global __init_loc
     global __all_signatures, __debug_configuration, __show_configuration
-    
+
     # Stores toolsets without specified initialization values.
     __had_unspecified_value = {}
 
     # Stores toolsets with specified initialization values.
     __had_value = {}
-    
+
     # Stores toolsets with declared subfeatures.
     __declared_subfeature = {}
-    
+
     # Stores all signatures of the toolsets.
     __all_signatures = {}
 
@@ -70,7 +70,7 @@ def reset ():
          "HAIKU": "LIBRARY_PATH"}
     global __shared_library_path_variable
     __shared_library_path_variable = m.get(OS, "LD_LIBRARY_PATH")
-                            
+
 reset()
 
 def shared_library_path_variable():
@@ -193,7 +193,7 @@ def check_init_parameters(toolset, requirement, *args):
         value = arg[1]
         assert(isinstance(name, str))
         assert(isinstance(value, str) or value is None)
-        
+
         str_toolset_name = str((toolset, name))
 
         # FIXME: is this the correct translation?
@@ -235,7 +235,7 @@ def check_init_parameters(toolset, requirement, *args):
             __had_unspecified_value[str_toolset_name] = True
 
         if value == None: value = ''
-        
+
         sig = sig + value + '-'
 
     # if a requirement is specified, the signature should be unique
@@ -245,12 +245,12 @@ def check_init_parameters(toolset, requirement, *args):
 
     if __all_signatures.has_key(sig):
         message = "duplicate initialization of '%s' with the following parameters: " % toolset
-        
+
         for arg in args:
             name = arg[0]
             value = arg[1]
             if value == None: value = '<unspecified>'
-            
+
             message += "'%s' = '%s'\n" % (name, value)
 
         raise BaseException(message)
@@ -285,7 +285,7 @@ def get_invocation_command_nodefault(
         'user-provided-command' is not given, tries to find binary named 'tool' in
         PATH and in the passed 'additional-path'. Otherwise, verifies that the first
         element of 'user-provided-command' is an existing program.
-        
+
         This rule returns the command to be used when invoking the tool. If we can't
         find the tool, a warning is issued. If 'path-last' is specified, PATH is
         checked after 'additional-paths' when searching for 'tool'.
@@ -298,9 +298,9 @@ def get_invocation_command_nodefault(
         assert(all([isinstance(path, str) for path in additional_paths]))
     assert(all(isinstance(path, str) for path in additional_paths))
     assert(isinstance(path_last, bool))
-    
+
     if not user_provided_command:
-        command = find_tool(tool, additional_paths, path_last) 
+        command = find_tool(tool, additional_paths, path_last)
         if not command and __debug_configuration:
             print "warning: toolset", toolset, "initialization: can't find tool, tool"
             #FIXME
@@ -316,7 +316,7 @@ def get_invocation_command_nodefault(
             #ECHO "warning: initialized from" [ errors.nearest-user-location ]
 
     assert(isinstance(command, str))
-    
+
     return command
 
 # ported from trunk@47174
@@ -346,7 +346,7 @@ def get_invocation_command(toolset, tool, user_provided_command = [],
             result = tool
 
     assert(isinstance(result, str))
-    
+
     return result
 
 # ported from trunk@47281
@@ -425,7 +425,7 @@ def check_tool_aux(command):
 
 # ported from trunk@47281
 def check_tool(command):
-    """ Checks that a tool can be invoked by 'command'. 
+    """ Checks that a tool can be invoked by 'command'.
         If command is not an absolute path, checks if it can be found in 'path'.
         If comand is absolute path, check that it exists. Returns 'command'
         if ok and empty string otherwise.
@@ -542,7 +542,7 @@ def prepend_path_variable_command(variable, paths):
     """
         Returns a command that prepends the given paths to the named path variable on
         the current platform.
-    """    
+    """
     return path_variable_setting_command(variable,
         paths + os.environ.get(variable, "").split(os.pathsep))
 
@@ -590,7 +590,7 @@ def mkdir(engine, target):
         if os_name() == 'NT':
             if(__re_windows_drive.match(s)):
                 s = ''
-                
+
         if s:
             if s != target:
                 engine.add_dependency(target, s)
@@ -653,7 +653,7 @@ def format_name(format, name, target_type, prop_set):
             if grist == '<base>':
                 result += os.path.basename(name)
             elif grist == '<toolset>':
-                result += join_tag(get_value(f), 
+                result += join_tag(get_value(f),
                     toolset_tag(name, target_type, prop_set))
             elif grist == '<threading>':
                 result += join_tag(get_value(f),
@@ -847,13 +847,13 @@ def init(manager):
         __CP = 'cp'
         __IGNORE = ''
         __LN = 'ln'
-        
+
     engine.register_action("common.Clean", __RM + ' "$(>)"',
                            flags=['piecemeal', 'together', 'existing'])
     engine.register_action("common.copy", __CP + ' "$(>)" "$(<)"')
     engine.register_action("common.RmTemps", __RM + ' "$(>)" ' + __IGNORE,
                            flags=['quietly', 'updated', 'piecemeal', 'together'])
 
-    engine.register_action("common.hard-link", 
+    engine.register_action("common.hard-link",
         __RM + ' "$(<)" 2$(NULL_OUT) $(NULL_OUT)' + os.linesep +
         __LN + ' "$(>)" "$(<)" $(NULL_OUT)')

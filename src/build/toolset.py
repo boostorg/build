@@ -1,11 +1,11 @@
 # Status: being ported by Vladimir Prus
 # Base revision:  40958
 #
-# Copyright 2003 Dave Abrahams 
-# Copyright 2005 Rene Rivera 
-# Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2003 Dave Abrahams
+# Copyright 2005 Rene Rivera
+# Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 """ Support for toolset definition.
 """
@@ -22,7 +22,7 @@ __re_two_ampersands = re.compile ('(&&)')
 __re_first_segment = re.compile ('([^.]*).*')
 __re_first_group = re.compile (r'[^.]*\.(.*)')
 
-# Flag is a mechanism to set a value 
+# Flag is a mechanism to set a value
 # A single toolset flag. Specifies that when certain
 # properties are in build property set, certain values
 # should be appended to some variable.
@@ -30,13 +30,13 @@ __re_first_group = re.compile (r'[^.]*\.(.*)')
 # A flag applies to a specific action in specific module.
 # The list of all flags for a module is stored, and each
 # flag further contains the name of the rule it applies
-# for, 
+# for,
 class Flag:
 
     def __init__(self, variable_name, values, condition, rule = None):
         self.variable_name = variable_name
         self.values = values
-        self.condition = condition        
+        self.condition = condition
         self.rule = rule
 
     def __str__(self):
@@ -47,7 +47,7 @@ def reset ():
     """ Clear the module state. This is mainly for testing purposes.
     """
     global __module_flags, __flags, __stv
-    
+
     # Mapping from module name to a list of all flags that apply
     # to either that module directly, or to any rule in that module.
     # Each element of the list is Flag instance.
@@ -61,21 +61,21 @@ def reset ():
     # entries for module name 'xxx', they are flags for 'xxx' itself,
     # not including any rules in that module.
     __flags = {}
-    
+
     # A cache for varaible settings. The key is generated from the rule name and the properties.
     __stv = {}
-    
+
 reset ()
 
 # FIXME: --ignore-toolset-requirements
 def using(toolset_module, *args):
      loaded_toolset_module= get_manager().projects().load_module(toolset_module, [os.getcwd()]);
      loaded_toolset_module.init(*args)
-    
+
 # FIXME push-checking-for-flags-module ....
 # FIXME: investigate existing uses of 'hack-hack' parameter
 # in jam code.
-    
+
 @bjam_signature((["rule_or_module", "variable_name", "condition", "*"],
                  ["values", "*"]))
 def flags(rule_or_module, variable_name, condition, values = []):
@@ -84,7 +84,7 @@ def flags(rule_or_module, variable_name, condition, values = []):
         rule_or_module:   If contains dot, should be a rule name.
                           The flags will be applied when that rule is
                           used to set up build actions.
-                          
+
                           If does not contain dot, should be a module name.
                           The flags will be applied for all rules in that
                           module.
@@ -92,7 +92,7 @@ def flags(rule_or_module, variable_name, condition, values = []):
                           module, an error is issued.
 
          variable_name:   Variable that should be set on target
-         
+
          condition        A condition when this flag should be applied.
                           Should be set of property sets. If one of
                           those property sets is contained in build
@@ -102,19 +102,19 @@ def flags(rule_or_module, variable_name, condition, values = []):
                           "gcc". Subfeatures, like in "<toolset>gcc-3.2"
                           are allowed. If left empty, the flag will
                           always used.
-                          
-                          Propery sets may use value-less properties 
-                          ('<a>'  vs. '<a>value') to match absent 
+
+                          Propery sets may use value-less properties
+                          ('<a>'  vs. '<a>value') to match absent
                           properties. This allows to separately match
-                          
+
                              <architecture>/<address-model>64
                              <architecture>ia64/<address-model>
-                          
+
                           Where both features are optional. Without this
                           syntax we'd be forced to define "default" value.
 
          values:          The value to add to variable. If <feature>
-                          is specified, then the value of 'feature' 
+                          is specified, then the value of 'feature'
                           will be added.
     """
     caller = bjam.caller()
@@ -129,17 +129,17 @@ def flags(rule_or_module, variable_name, condition, values = []):
         # FIXME: revive checking that we don't set flags for a different
         # module unintentionally
         pass
-                          
+
     if condition and not replace_grist (condition, ''):
         # We have condition in the form '<feature>', that is, without
         # value. That's a previous syntax:
         #
         #   flags gcc.link RPATH <dll-path> ;
         # for compatibility, convert it to
-        #   flags gcc.link RPATH : <dll-path> ;                
+        #   flags gcc.link RPATH : <dll-path> ;
         values = [ condition ]
         condition = None
-    
+
     if condition:
         transformed = []
         for c in condition:
@@ -150,14 +150,14 @@ def flags(rule_or_module, variable_name, condition, values = []):
         condition = transformed
 
         property.validate_property_sets(condition)
-    
+
     __add_flag (rule_or_module, variable_name, condition, values)
 
 def set_target_variables (manager, rule_or_module, targets, ps):
     """
     """
     settings = __set_target_variables_aux(manager, rule_or_module, ps)
-        
+
     if settings:
         for s in settings:
             for target in targets:
@@ -177,11 +177,11 @@ def find_satisfied_condition(conditions, ps):
             found = False
             if i.value():
                 found = i.value() in ps.get(i.feature())
-            else:            
-                # Handle value-less properties like '<architecture>' (compare with 
+            else:
+                # Handle value-less properties like '<architecture>' (compare with
                 # '<architecture>x86').
-                # If $(i) is a value-less property it should match default 
-                # value of an optional property. See the first line in the 
+                # If $(i) is a value-less property it should match default
+                # value of an optional property. See the first line in the
                 # example below:
                 #
                 #  property set     properties     result
@@ -197,7 +197,7 @@ def find_satisfied_condition(conditions, ps):
             return condition
 
     return None
-    
+
 
 def register (toolset):
     """ Registers a new toolset.
@@ -207,12 +207,12 @@ def register (toolset):
 def inherit_generators (toolset, properties, base, generators_to_ignore = []):
     if not properties:
         properties = [replace_grist (toolset, '<toolset>')]
-        
+
     base_generators = generators.generators_for_toolset(base)
-    
+
     for g in base_generators:
         id = g.id()
-        
+
         if not id in generators_to_ignore:
             # Some generator names have multiple periods in their name, so
             # $(id:B=$(toolset)) doesn't generate the right new_id name.
@@ -232,13 +232,13 @@ def inherit_flags(toolset, base, prohibited_properties = []):
     'prohibited-properties' are ignored. Don't confuse property and feature, for
     example <debug-symbols>on and <debug-symbols>off, so blocking one of them does
     not block the other one.
-    
+
     The flag conditions are not altered at all, so if a condition includes a name,
     or version of a base toolset, it won't ever match the inheriting toolset. When
     such flag settings must be inherited, define a rule in base toolset module and
     call it as needed."""
     for f in __module_flags.get(base, []):
-        
+
         if not f.condition or b2.util.set.difference(f.condition, prohibited_properties):
             match = __re_first_group.match(f.rule)
             rule_ = None
@@ -273,19 +273,19 @@ def inherit_rules (toolset, base):
 #    for action in engine.action.values():
 #        pass
 #        (old_toolset, id) = split_action_id(action.action_name)
-#    
+#
 #        if old_toolset == base:
 #            new_actions.append ((id, value [0], value [1]))
 #
 #    for a in new_actions:
 #        action.register (toolset + '.' + a [0], a [1], a [2])
-        
+
     # TODO: how to deal with this?
 #       IMPORT $(base) : $(rules) : $(toolset) : $(rules) : localized ;
 #       # Import the rules to the global scope
 #       IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
 #   }
-#   
+#
 
 ######################################################################################
 # Private functions
@@ -294,12 +294,12 @@ def inherit_rules (toolset, base):
 def __set_target_variables_aux (manager, rule_or_module, ps):
     """ Given a rule name and a property set, returns a list of tuples of
         variables names and values, which must be set on targets for that
-        rule/properties combination. 
+        rule/properties combination.
     """
     result = []
 
     for f in __flags.get(rule_or_module, []):
-           
+
         if not f.condition or find_satisfied_condition (f.condition, ps):
             processed = []
             for v in f.values:
@@ -309,10 +309,10 @@ def __set_target_variables_aux (manager, rule_or_module, ps):
 
             for r in processed:
                 result.append ((f.variable_name, r))
-    
+
     # strip away last dot separated part and recurse.
     next = __re_split_last_segment.match(rule_or_module)
-    
+
     if next:
         result.extend(__set_target_variables_aux(
             manager, next.group(1), ps))
@@ -321,11 +321,11 @@ def __set_target_variables_aux (manager, rule_or_module, ps):
 
 def __handle_flag_value (manager, value, ps):
     result = []
-    
+
     if get_grist (value):
         f = feature.get(value)
         values = ps.get(f)
-        
+
         for value in values:
 
             if f.dependency():
@@ -334,7 +334,7 @@ def __handle_flag_value (manager, value, ps):
                 result.append(value.actualize())
 
             elif f.path() or f.free():
-                
+
                 # Treat features with && in the value
                 # specially -- each &&-separated element is considered
                 # separate value. This is needed to handle searched
@@ -356,7 +356,7 @@ def __add_flag (rule_or_module, variable_name, condition, values):
         Does no checking.
     """
     f = Flag(variable_name, values, condition, rule_or_module)
-    
+
     # Grab the name of the module
     m = __re_first_segment.match (rule_or_module)
     assert m
@@ -377,17 +377,17 @@ def add_requirements(requirements):
     will be automatically added to the requirements for all main targets, as if
     they were specified literally. For best results, all requirements added should
     be conditional or indirect conditional."""
-    
+
     #if ! $(.ignore-requirements)
     #{
     __requirements.extend(requirements)
     #}
-         
+
 # Make toolset 'toolset', defined in a module of the same name,
 # inherit from 'base'
 # 1. The 'init' rule from 'base' is imported into 'toolset' with full
 #    name. Another 'init' is called, which forwards to the base one.
-# 2. All generators from 'base' are cloned. The ids are adjusted and 
+# 2. All generators from 'base' are cloned. The ids are adjusted and
 #    <toolset> property in requires is adjusted too
 # 3. All flags are inherited
 # 4. All rules are imported.
