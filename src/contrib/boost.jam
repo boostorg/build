@@ -234,6 +234,8 @@ rule boost_std ( inc ? lib ? )
     boost_lib_std test_exec_monitor   : BOOST_TEST_DYN_LINK ;
     boost_lib_std thread              : BOOST_THREAD_DYN_DLL  ;
     boost_lib_std wave                : BOOST_WAVE_DYN_LINK  ;
+    boost_lib_std log                 : BOOST_LOG_DYN_LINK  ;
+    boost_lib_std log_setup           : BOOST_LOG_SETUP_DYN_LINK  ;
 }
 
 # Example placeholder for rules defining Boost library project & library targets
