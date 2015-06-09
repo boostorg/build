@@ -96,9 +96,10 @@ rule init ( version ? : command * : options * )
                 ;
             if $(tool-command)
             {
-                local tool-command-string = $(tool-command:J=" ") ;
+                local tool-command-string = \"$(tool-command)\" ;
+                tool-command-string = $(tool-command-string:J=" ") ;
                 local tool-version = [ MATCH "^([0-9.]+)" :
-                    [ SHELL "\"$(tool-command-string)\" -dumpversion" ] ] ;
+                    [ SHELL "$(tool-command-string) -dumpversion" ] ] ;
                 if $(tool-version) != $(version)
                 {
                     # Permit a match betwen a two-digit version specified by the
@@ -153,9 +154,11 @@ rule init ( version ? : command * : options * )
     # Information about the gcc command...
     #   The command.
     local command = $(tool-command) ;
-    #   The 'command' variable can have multiple elements but when calling the
-    # SHELL builtin we need a single string.
-    local command-string = $(command:J=" ") ;
+    #   The 'command' variable can have multiple elements but when calling the    
+    # SHELL builtin we need a single string, and we need to quote elements
+    # with spaces.
+    local command-string = \"$(command)\" ;
+    command-string = $(command-string:J=" ") ;
     #   The root directory of the tool install.
     local root = [ feature.get-values <root> : $(options) ] ;
     #   The bin directory where to find the command to execute.
@@ -172,9 +175,9 @@ rule init ( version ? : command * : options * )
     if $(command)
     {
         local machine = [ MATCH "^([^ ]+)" :
-            [ SHELL "\"$(command-string)\" -dumpmachine" ] ] ;
+            [ SHELL "$(command-string) -dumpmachine" ] ] ;
         version ?= [ MATCH "^([0-9.]+)" :
-            [ SHELL "\"$(command-string)\" -dumpversion" ] ] ;
+            [ SHELL "$(command-string) -dumpversion" ] ] ;
         switch $(machine:L)
         {
             case *mingw* : flavor ?= mingw ;
@@ -234,7 +237,7 @@ rule init ( version ? : command * : options * )
     # - Archive builder.
     local archiver = [ common.get-invocation-command gcc
         : [ NORMALIZE_PATH [ MATCH "(.*)[$(nl)]+" :
-            [ SHELL "\"$(command-string)\" -print-prog-name=ar" ] ] ]
+            [ SHELL "$(command-string) -print-prog-name=ar" ] ] ]
         : [ feature.get-values <archiver> : $(options) ]
         : $(bin)
         : search-path ] ;
@@ -247,7 +250,7 @@ rule init ( version ? : command * : options * )
     # - Ranlib.
     local ranlib = [ common.get-invocation-command gcc
         : [ NORMALIZE_PATH [ MATCH "(.*)[$(nl)]+" :
-            [ SHELL "\"$(command-string)\" -print-prog-name=ranlib" ] ] ]
+            [ SHELL "$(command-string) -print-prog-name=ranlib" ] ] ]
         : [ feature.get-values <ranlib> : $(options) ]
         : $(bin)
         : search-path ] ;
