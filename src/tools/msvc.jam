@@ -281,18 +281,7 @@ rule configure-version-specific ( toolset : version : conditions )
         # dependencies to put there.
         toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
     }
-    
-    # Starting with Visual Studio 2013 the CRT is split into a desktop and app dll.
-    #If targeting WinRT and 12.0 set lib path to link against app CRT.
-    if [ MATCH "(12)" : $(version) ]
-    {
-        local VCPath = [ path.parent [ path.make [ default-path $(version) ] ] ] ;
-        local storeLibPath = [ path.join [ path.join $(VCPath) "lib" ] "store" ] ;
-        toolset.flags $(toolset).link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-i386) : [ path.native $(storeLibPath) ] ;
-        toolset.flags $(toolset).link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-amd64) : [ path.native [ path.join $(storeLibPath) "amd64" ] ] ;
-        toolset.flags $(toolset).link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-arm) : [ path.native [ path.join $(storeLibPath) "arm" ] ] ;
-    }
-    
+
     toolset.pop-checking-for-flags-module ;
 }
 
@@ -1174,6 +1163,16 @@ local rule configure-really ( version ? : options * )
             {
                 toolset.flags msvc .CC.FILTER $(cpu-conditions) : "|" $(cc-filter) ;
             }
+        }
+
+        # Starting with Visual Studio 2013 the CRT is split into a desktop and app dll.
+        # If targeting WinRT and 12.0 set lib path to link against app CRT.
+        if [ MATCH "(12)" : $(version) ]
+        {
+            local storeLibPath = [ path.join $(parent) "lib/store" ] ;
+            toolset.flags msvc.link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-i386) : [ path.native $(storeLibPath) ] ;
+            toolset.flags msvc.link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-amd64) : [ path.native [ path.join $(storeLibPath) "amd64" ] ] ;
+            toolset.flags msvc.link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-arm) : [ path.native [ path.join $(storeLibPath) "arm" ] ] ;
         }
 
         # Set version-specific flags.
