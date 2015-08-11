@@ -150,11 +150,11 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     intel-linux)
-    which icc >/dev/null 2>&1
+    test_path icc >/dev/null 2>&1
     if test $? ; then
-	BOOST_JAM_CC=$(which icc)
+	BOOST_JAM_CC=`test_path icc`
 	echo "Found $BOOST_JAM_CC in environment"
-	BOOST_JAM_TOOLSET_ROOT=$(echo $BOOST_JAM_CC | sed -e 's/bin.*\/icc//')
+	BOOST_JAM_TOOLSET_ROOT=`echo $BOOST_JAM_CC | sed -e 's/bin.*\/icc//'`
 	# probably the most widespread
 	ARCH=intel64
     else
