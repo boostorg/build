@@ -1050,6 +1050,14 @@ local rule configure-really ( version ? : options * )
             {
                 default-global-setup-options-amd64 = amd64 ;
             }
+            # When Boost.Build itself is running as a 32-bit process on 64-bit
+            # Windows, the above test will fail (since WOW64 simulates a 32-bit
+            # environment, including environment values).  So check the WOW64
+            # variable PROCESSOR_ARCHITEW6432 as well.
+            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITEW6432 ] ]
+            {
+                default-global-setup-options-amd64 = amd64 ;
+            }
             # TODO: The same 'native compiler usage' should be implemented for
             # the Itanium platform by using the "ia64" parameter. For this
             # though we need someone with access to this platform who can find
