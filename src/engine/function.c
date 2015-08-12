@@ -3078,7 +3078,7 @@ static void argument_error( char const * message, FUNCTION * procedure,
     print_source_line( frame );
     out_printf( "see definition of rule '%s' being called\n", frame->rulename );
     backtrace( frame->prev );
-    exit( 1 );
+    exit( EXITBAD );
 }
 
 static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
@@ -3371,7 +3371,7 @@ static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg,
         {
             err_printf( "%s:%d: missing argument name before type name: %s\n",
                 object_str( file ), line, object_str( arg ) );
-            exit( 1 );
+            exit( EXITBAD );
         }
 
         c->arg.arg_name = object_copy( arg );
@@ -3419,7 +3419,7 @@ static struct arg_list arg_compile_impl( struct argument_compiler * c,
     case ARGUMENT_COMPILER_FOUND_TYPE:
         err_printf( "%s:%d: missing argument name after type name: %s\n",
             object_str( file ), line, object_str( c->arg.type_name ) );
-        exit( 1 );
+        exit( EXITBAD );
     case ARGUMENT_COMPILER_FOUND_OBJECT:
         dynamic_array_push( c->args, c->arg );
         break;

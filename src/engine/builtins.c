@@ -1133,7 +1133,7 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
     else
         out_printf( "root module.\n" );
     backtrace( frame->prev );
-    exit( 1 );
+    exit( EXITBAD );
 }
 
 
@@ -1213,7 +1213,7 @@ LIST * builtin_import( FRAME * frame, int flags )
         list_print( target_rules );
         out_printf( "\n" );
         backtrace( frame->prev );
-        exit( 1 );
+        exit( EXITBAD );
     }
 
     return L0;
@@ -1685,7 +1685,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
         out_printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
             object_str( list_front( rule_name ) ), object_str( module->name ) );
         backtrace( frame->prev );
-        exit( 1 );
+        exit( EXITBAD );
     }
     return L0;
 }
