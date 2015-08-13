@@ -48,6 +48,11 @@ class Feature(object):
         return self._attributes
 
     def set_default(self, value):
+        for attr in ('free', 'optional'):
+            if getattr(self, attr)():
+                get_manager().errors()('"{}" feature "<{}>" cannot have a default value.'
+                                       .format(attr, self._name))
+
         self._default = value
 
     def default(self):
@@ -419,7 +424,7 @@ def extend (name, values):
 
             __implicit_features[v] = feature
 
-    if len (feature.values()) == 0 and len (values) > 0:
+    if values and not feature.values() and not(feature.free() or feature.optional()):
         # This is the first value specified for this feature,
         # take it as default value
         feature.set_default(values[0])
