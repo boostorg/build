@@ -80,8 +80,15 @@ function talkToB2(ws, b2)
 ws.on('connection', function(ws) {
     console.log("client connected");
 
-    var binary = __dirname + "/../src/engine/bin.linuxx86_64.debug/b2"
-    var example = __dirname + "/../example/libraries"
+    var binary = __dirname;
+    if(process.platform === 'win32'){
+        binary += "/../src/engine/bin.ntx86/b2.exe";
+    }
+    else {
+        binary += "/../src/engine/bin.linuxx86_64.debug/b2";
+    }
+
+    var example = __dirname + "/../example/libraries";
 
     temp.mkdir('libraries', function(err, destination) {
         ncp(example, destination, function (err) {
