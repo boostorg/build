@@ -41,8 +41,6 @@ class BjamNativeAction:
     be called when this action is installed on any target.
     """
 
-    __re_windows_drive = re.compile(r'^.*:\$')
-
     def __init__(self, action_name, function):
         self.action_name = action_name
         self.function = function
@@ -71,6 +69,8 @@ class Engine:
     target variables like SEARCH and LOCATE make this class coupled
     to bjam engine.
     """
+    __re_windows_drive = re.compile(r'^.*:\$')
+
     def __init__ (self):
         self.actions = {}
         self.mkdir_set = set()

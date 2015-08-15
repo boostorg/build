@@ -331,14 +331,14 @@ class SetupAction:
         self.setup_func = setup_func
         self.function = function
             
-    def __call__(self, targets, sources, property_set):
+    def __call__(self, targets, sources, property_set, callback=None):
         assert(callable(self.setup_func))
         # This can modify sources.
         action_name = self.setup_func(targets, sources, property_set)
         # Bjam actions defined from Python have only the command
         # to execute, and no associated jam procedural code. So
         # passing 'property_set' to it is not necessary.
-        bjam.call("set-update-action", action_name, targets, sources, [])
+        bjam.set_update_action(action_name, targets, sources, [], callback)
         if self.function:
             self.function(targets, sources, property_set)
 
@@ -662,7 +662,7 @@ def configure_really(version=None, options=[]):
         # Mark the configuration as 'used'.
         __versions.use(version)
         # Generate conditions and save them.
-        conditions = common.check_init_parameters('msvc', None, ('version', v))
+        conditions = common.check_init_parameters('msvc', None, [], ('version', v))
         __versions.set(version, 'conditions', conditions)
         command = feature.get_values('<command>', options)
         

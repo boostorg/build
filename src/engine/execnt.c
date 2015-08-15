@@ -135,6 +135,9 @@ static struct
 
     PROCESS_INFORMATION pi;  /* running process information */
 
+    /* Function called on each chunk of command output. */
+    ExecCmdOutputCallback output_func;
+
     /* Function called when the command completes. */
     ExecCmdCallback func;
 
@@ -270,6 +273,7 @@ int exec_check
 void exec_cmd
 (
     string const * cmd_orig,
+    ExecCmdOutputCallback output_func,
     ExecCmdCallback func,
     void * closure,
     LIST * shell
@@ -336,6 +340,7 @@ void exec_cmd
     }
 
     /* Save input data into the selected running commands table slot. */
+    cmdtab[ slot ].output_func = output_func;
     cmdtab[ slot ].func = func;
     cmdtab[ slot ].closure = closure;
 
@@ -702,8 +707,10 @@ static char ioBuffer[ IO_BUFFER_SIZE + 1 ];
 
 static void read_pipe
 (
-    HANDLE   in,  /* the pipe to read from */
-    string * out
+    HANDLE                in,  /* the pipe to read from */
+    string              * out,
+    ExecCmdOutputCallback output_func,
+    void                * closure
 )
 {
     DWORD bytesInBuffer = 0;
@@ -736,6 +743,9 @@ static void read_pipe
                     ioBuffer[ bytesInBuffer ] = '\0';
                     /* Append to the output. */
                     string_append( out, ioBuffer );
+                    if(output_func){
+                        output_func(closure, in, ioBuffer, 0, bytesInBuffer);
+                    }
                     /* Subtract what we read in. */
                     bytesAvailable -= bytesInBuffer;
                 }
@@ -765,11 +775,11 @@ static void read_output()
             /* Read stdout data. */
             if ( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ] )
                 read_pipe( cmdtab[ i ].pipe_out[ EXECCMD_PIPE_READ ],
-                    cmdtab[ i ].buffer_out );
+                    cmdtab[ i ].buffer_out, cmdtab[ i ].output_func, cmdtab[ i ].closure );
             /* Read stderr data. */
             if ( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ] )
                 read_pipe( cmdtab[ i ].pipe_err[ EXECCMD_PIPE_READ ],
-                    cmdtab[ i ].buffer_err );
+                    cmdtab[ i ].buffer_err, cmdtab[ i ].output_func, cmdtab[ i ].closure );
         }
 }
 
