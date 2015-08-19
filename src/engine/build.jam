@@ -105,6 +105,12 @@ if $(with-python)
     }
 }
 
+if $(--python-include) || $(--python-lib)
+{
+    ECHO "Python includes: $(--python-include:J=)" ;
+    ECHO "Python includes: $(--python-lib:J=)" ;
+}
+
 # Boehm GC?
 if --gc in $(ARGV)
 {
