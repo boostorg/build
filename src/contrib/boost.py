@@ -206,7 +206,8 @@ def boost_std(inc = None, lib = None):
         if (isinstance(lib_name,str)):
             lib_name = [lib_name]
         builtin.lib(lib_name, usage_requirements=['<link>shared:<define>{}'.format(dyn_link_macro)])
-    
+
+    boost_lib('container'           , 'BOOST_CONTAINER_DYN_LINK'      )
     boost_lib('date_time'           , 'BOOST_DATE_TIME_DYN_LINK'      )
     boost_lib('filesystem'          , 'BOOST_FILE_SYSTEM_DYN_LINK'    )
     boost_lib('graph'               , 'BOOST_GRAPH_DYN_LINK'          )

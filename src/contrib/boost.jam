@@ -207,6 +207,7 @@ rule boost_std ( inc ? lib ? )
 
     alias headers ;
     boost_lib_std chrono              : BOOST_CHRONO_DYN_LINK ;
+    boost_lib_std container           : BOOST_CONTAINER_DYN_LINK ;
     boost_lib_std date_time           : BOOST_DATE_TIME_DYN_LINK ;
     boost_lib_std filesystem          : BOOST_FILE_SYSTEM_DYN_LINK ;
     boost_lib_std graph               : BOOST_GRAPH_DYN_LINK ;
