@@ -63,6 +63,9 @@ if $(python-location)
 {
     with-python = true ;
 }
+
+ECHO "Python: $(python-location)" ;
+
 if $(with-python)
 {
     if $(OS) = NT
@@ -129,6 +132,9 @@ if $(with-python)
         }
     }
 }
+
+ECHO "Python include: $(--python-include)" ;
+ECHO "Python lib: $(--python-lib)" ;
 
 # Boehm GC?
 if --gc in $(ARGV)
