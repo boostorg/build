@@ -38,7 +38,19 @@
  */
 #include <winioctl.h>
 #endif
+
+/* With VC8 (VS2005) these are not defined:
+ *   FSCTL_GET_REPARSE_POINT  (expects WINVER >= 0x0500 _WIN32_WINNT >= 0x0500 )
+ *   IO_REPARSE_TAG_SYMLINK   (is part of a separate Driver SDK)
+ * So define them explicitily to their expected values.
+ */
+#ifndef FSCTL_GET_REPARSE_POINT
+# define FSCTL_GET_REPARSE_POINT 0x000900a8
 #endif
+#ifndef IO_REPARSE_TAG_SYMLINK
+# define IO_REPARSE_TAG_SYMLINK	(0xA000000CL)
+#endif
+#endif /* OS_NT */
 
 #if defined(USE_EXECUNIX)
 # include <sys/types.h>
@@ -436,7 +448,7 @@ void load_builtins()
         char const * args [] = { "path", 0 };
         bind_builtin( "MAKEDIR", builtin_makedir, 0, args );
     }
-    
+
     {
         const char * args [] = { "path", 0 };
         bind_builtin( "READLINK", builtin_readlink, 0, args );
@@ -1946,7 +1958,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         bufsize *= 2;
         buf = BJAM_MALLOC( bufsize );
     }
-    
+
     if ( buf != static_buf )
         BJAM_FREE( buf );
 
