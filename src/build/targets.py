@@ -967,16 +967,20 @@ class BasicTarget (AbstractTarget):
         
             # Evaluate indirect conditionals.
             for i in indirect:
+                new = None
                 i = b2.util.jam_to_value_maybe(i)
                 if callable(i):
                     # This is Python callable, yeah.
-                    e.extend(i(current))
+                    new = i(current)
                 else:
                     # Name of bjam function. Because bjam is unable to handle
                     # list of Property, pass list of strings.
                     br = b2.util.call_jam_function(i[1:], [str(p) for p in current.all()])
                     if br:
-                        e.extend(property.create_from_strings(br))
+                        new = property.create_from_strings(br)
+                if new:
+                    new = property.translate_paths(new, self.project().location())
+                    e.extend(new)
 
             if e == added_requirements:
                 # If we got the same result, we've found final properties.
