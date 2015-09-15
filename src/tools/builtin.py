@@ -13,7 +13,7 @@ import b2.build.targets as targets
 import sys
 from b2.build import feature, property, virtual_target, generators, type, property_set, scanner
 from b2.util.utility import *
-from b2.util import path, regex, bjam_signature
+from b2.util import path, regex, bjam_signature, is_iterable_typed
 import b2.tools.types
 from b2.manager import get_manager
 
@@ -413,9 +413,12 @@ class LibGenerator (generators.Generator):
 
     def __init__(self, id, composing = True, source_types = [], target_types_and_names = ['LIB'], requirements = []):
         generators.Generator.__init__(self, id, composing, source_types, target_types_and_names, requirements)
-    
-    def run(self, project, name, prop_set, sources):
 
+    def run(self, project, name, prop_set, sources):
+        assert isinstance(project, targets.ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
         # The lib generator is composing, and can be only invoked with
         # explicit name. This check is present in generator.run (and so in
         # builtin.LinkingGenerator), but duplicate it here to avoid doing
@@ -451,7 +454,11 @@ generators.override("builtin.prebuilt", "builtin.lib-generator")
 def lib(names, sources=[], requirements=[], default_build=[], usage_requirements=[]):
     """The implementation of the 'lib' rule. Beyond standard syntax that rule allows
     simplified: 'lib a b c ;'."""
-
+    assert is_iterable_typed(names, basestring)
+    assert is_iterable_typed(sources, basestring)
+    assert is_iterable_typed(requirements, basestring)
+    assert is_iterable_typed(default_build, basestring)
+    assert is_iterable_typed(usage_requirements, basestring)
     if len(names) > 1:
         if any(r.startswith('<name>') for r in requirements):
             get_manager().errors()("When several names are given to the 'lib' rule\n" +
@@ -490,8 +497,12 @@ class SearchedLibGenerator (generators.Generator):
         # is make sure SearchedLibGenerator is not invoked deep in transformation
         # search.
         generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
-    
+
     def run(self, project, name, prop_set, sources):
+        assert isinstance(project, targets.ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
 
         if not name:
             return None
@@ -525,9 +536,14 @@ generators.register (SearchedLibGenerator ())
 class PrebuiltLibGenerator(generators.Generator):
 
     def __init__(self, id, composing, source_types, target_types_and_names, requirements):
-        generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)        
+        generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
 
     def run(self, project, name, properties, sources):
+        assert isinstance(project, targets.ProjectTarget)
+        assert isinstance(name, basestring)
+        assert isinstance(properties, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
+
         f = properties.get("file")
         return f + sources
 
@@ -546,6 +562,7 @@ class CompileAction (virtual_target.Action):
             i.e. which belong to the same main target, add their directories
             to include path.
         """
+        assert isinstance(prop_set, property_set.PropertySet)
         s = self.targets () [0].creating_subvariant ()
 
         return prop_set.add_raw (s.implicit_includes ('include', 'H'))
@@ -576,6 +593,10 @@ class LinkingGenerator (generators.Generator):
         generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
         
     def run (self, project, name, prop_set, sources):
+        assert isinstance(project, targets.ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
 
         sources.extend(prop_set.get('<library>'))
         
@@ -623,7 +644,8 @@ class LinkingGenerator (generators.Generator):
         return (ur, result)
     
     def extra_usage_requirements (self, created_targets, prop_set):
-        
+        assert is_iterable_typed(created_targets, virtual_target.VirtualTarget)
+        assert isinstance(prop_set, property_set.PropertySet)
         result = property_set.empty ()
         extra = []
                         
@@ -659,7 +681,10 @@ class LinkingGenerator (generators.Generator):
         return result
 
     def generated_targets (self, sources, prop_set, project, name):
-
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert isinstance(project, targets.ProjectTarget)
+        assert isinstance(name, basestring)
         # sources to pass to inherited rule
         sources2 = []
         # sources which are libraries

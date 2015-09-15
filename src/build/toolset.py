@@ -12,7 +12,9 @@
 
 import feature, property, generators, property_set
 import b2.util.set
-from b2.util import cached, qualify_jam_action
+import bjam
+
+from b2.util import cached, qualify_jam_action, is_iterable_typed, is_iterable
 from b2.util.utility import *
 from b2.util import bjam_signature
 from b2.manager import get_manager
@@ -34,6 +36,11 @@ __re_first_group = re.compile (r'[^.]*\.(.*)')
 class Flag:
 
     def __init__(self, variable_name, values, condition, rule = None):
+        assert isinstance(variable_name, basestring)
+        assert is_iterable(values) and all(
+            isinstance(v, (basestring, type(None))) for v in values)
+        assert is_iterable_typed(condition, property_set.PropertySet)
+        assert isinstance(rule, (basestring, type(None)))
         self.variable_name = variable_name
         self.values = values
         self.condition = condition        
@@ -117,6 +124,10 @@ def flags(rule_or_module, variable_name, condition, values = []):
                           is specified, then the value of 'feature' 
                           will be added.
     """
+    assert isinstance(rule_or_module, basestring)
+    assert isinstance(variable_name, basestring)
+    assert is_iterable_typed(condition, basestring)
+    assert is_iterable(values) and all(isinstance(v, (basestring, type(None))) for v in values)
     caller = bjam.caller()
     if not '.' in rule_or_module and caller and caller[:-1].startswith("Jamfile"):
         # Unqualified rule name, used inside Jamfile. Most likely used with
@@ -156,6 +167,9 @@ def flags(rule_or_module, variable_name, condition, values = []):
 def set_target_variables (manager, rule_or_module, targets, ps):
     """
     """
+    assert isinstance(rule_or_module, basestring)
+    assert is_iterable_typed(targets, basestring)
+    assert isinstance(ps, property_set.PropertySet)
     settings = __set_target_variables_aux(manager, rule_or_module, ps)
         
     if settings:
@@ -166,7 +180,8 @@ def set_target_variables (manager, rule_or_module, targets, ps):
 def find_satisfied_condition(conditions, ps):
     """Returns the first element of 'property-sets' which is a subset of
     'properties', or an empty list if no such element exists."""
-
+    assert is_iterable_typed(conditions, property_set.PropertySet)
+    assert isinstance(ps, property_set.PropertySet)
     features = set(p.feature() for p in ps.all())
 
     for condition in conditions:
@@ -202,9 +217,14 @@ def find_satisfied_condition(conditions, ps):
 def register (toolset):
     """ Registers a new toolset.
     """
+    assert isinstance(toolset, basestring)
     feature.extend('toolset', [toolset])
 
 def inherit_generators (toolset, properties, base, generators_to_ignore = []):
+    assert isinstance(toolset, basestring)
+    assert is_iterable_typed(properties, basestring)
+    assert isinstance(base, basestring)
+    assert is_iterable_typed(generators_to_ignore, basestring)
     if not properties:
         properties = [replace_grist (toolset, '<toolset>')]
         
@@ -237,6 +257,9 @@ def inherit_flags(toolset, base, prohibited_properties = []):
     or version of a base toolset, it won't ever match the inheriting toolset. When
     such flag settings must be inherited, define a rule in base toolset module and
     call it as needed."""
+    assert isinstance(toolset, basestring)
+    assert isinstance(base, basestring)
+    assert is_iterable_typed(prohibited_properties, basestring)
     for f in __module_flags.get(base, []):
         
         if not f.condition or b2.util.set.difference(f.condition, prohibited_properties):
@@ -296,6 +319,8 @@ def __set_target_variables_aux (manager, rule_or_module, ps):
         variables names and values, which must be set on targets for that
         rule/properties combination. 
     """
+    assert isinstance(rule_or_module, basestring)
+    assert isinstance(ps, property_set.PropertySet)
     result = []
 
     for f in __flags.get(rule_or_module, []):
@@ -320,6 +345,8 @@ def __set_target_variables_aux (manager, rule_or_module, ps):
     return result
 
 def __handle_flag_value (manager, value, ps):
+    assert isinstance(value, basestring)
+    assert isinstance(ps, property_set.PropertySet)
     result = []
     
     if get_grist (value):
@@ -355,8 +382,13 @@ def __add_flag (rule_or_module, variable_name, condition, values):
     """ Adds a new flag setting with the specified values.
         Does no checking.
     """
+    assert isinstance(rule_or_module, basestring)
+    assert isinstance(variable_name, basestring)
+    assert is_iterable_typed(condition, property_set.PropertySet)
+    assert is_iterable(values) and all(
+        isinstance(v, (basestring, type(None))) for v in values)
     f = Flag(variable_name, values, condition, rule_or_module)
-    
+
     # Grab the name of the module
     m = __re_first_segment.match (rule_or_module)
     assert m
@@ -377,7 +409,7 @@ def add_requirements(requirements):
     will be automatically added to the requirements for all main targets, as if
     they were specified literally. For best results, all requirements added should
     be conditional or indirect conditional."""
-    
+    assert is_iterable_typed(requirements, basestring)
     #if ! $(.ignore-requirements)
     #{
     __requirements.extend(requirements)
@@ -392,6 +424,8 @@ def add_requirements(requirements):
 # 3. All flags are inherited
 # 4. All rules are imported.
 def inherit(toolset, base):
+    assert isinstance(toolset, basestring)
+    assert isinstance(base, basestring)
     get_manager().projects().load_module(base, []);
 
     inherit_generators(toolset, [], base)

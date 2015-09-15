@@ -29,7 +29,7 @@ import targets
 import property_set
 from b2.manager import get_manager
 
-from b2.util import metatarget
+from b2.util import metatarget, is_iterable_typed
 
 class AliasTarget(targets.BasicTarget):
 
@@ -37,9 +37,17 @@ class AliasTarget(targets.BasicTarget):
         targets.BasicTarget.__init__(self, *args)
 
     def construct(self, name, source_targets, properties):
+        if __debug__:
+            from .virtual_target import VirtualTarget
+            assert isinstance(name, basestring)
+            assert is_iterable_typed(source_targets, VirtualTarget)
+            assert isinstance(properties, property_set.PropertySet)
         return [property_set.empty(), source_targets]
 
     def compute_usage_requirements(self, subvariant):
+        if __debug__:
+            from .virtual_target import Subvariant
+            assert isinstance(subvariant, Subvariant)
         base = targets.BasicTarget.compute_usage_requirements(self, subvariant)
         # Add source's usage requirement. If we don't do this, "alias" does not
         # look like 100% alias.
@@ -47,7 +55,11 @@ class AliasTarget(targets.BasicTarget):
 
 @metatarget
 def alias(name, sources=[], requirements=[], default_build=[], usage_requirements=[]):
-
+    assert isinstance(name, basestring)
+    assert is_iterable_typed(sources, basestring)
+    assert is_iterable_typed(requirements, basestring)
+    assert is_iterable_typed(default_build, basestring)
+    assert is_iterable_typed(usage_requirements, basestring)
     project = get_manager().projects().current()
     targets = get_manager().targets()
 

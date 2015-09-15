@@ -9,7 +9,7 @@
 
 import re
 
-from b2.util import utility, bjam_signature
+from b2.util import utility, bjam_signature, is_iterable_typed
 import b2.util.set
 from b2.util.utility import add_grist, get_grist, ungrist, replace_grist, to_seq
 from b2.exceptions import *
@@ -25,6 +25,9 @@ class Feature(object):
     _attribute_name_to_integer = {}
 
     def __init__(self, name, values, attributes):
+        assert isinstance(name, basestring)
+        assert is_iterable_typed(values, basestring)
+        assert is_iterable_typed(attributes, basestring)
         self._name = name
         self._values = values
         self._default = None
@@ -42,12 +45,14 @@ class Feature(object):
         return self._values
 
     def add_values(self, values):
+        assert is_iterable_typed(values, basestring)
         self._values.extend(values)
 
     def attributes(self):
         return self._attributes
 
     def set_default(self, value):
+        assert isinstance(value, basestring)
         for attr in ('free', 'optional'):
             if getattr(self, attr)():
                 get_manager().errors()('"{}" feature "<{}>" cannot have a default value.'
@@ -66,6 +71,7 @@ class Feature(object):
         return self._subfeatures
 
     def add_subfeature(self, name):
+        assert isinstance(name, Feature)
         self._subfeatures.append(name)
 
     def parent(self):
@@ -77,6 +83,8 @@ class Feature(object):
         return self._parent
 
     def set_parent(self, feature, value):
+        assert isinstance(feature, Feature)
+        assert isinstance(value, basestring)
         self._parent = (feature, value)
 
     def __str__(self):
@@ -151,6 +159,7 @@ def get(name):
 
     Throws if no feature by such name exists
     """
+    assert isinstance(name, basestring)
     return __all_features[name]
 
 # FIXME: prepare-test/finish-test?
@@ -213,9 +222,10 @@ def set_default (feature, value):
 def defaults(features):
     """ Returns the default property values for the given features.
     """
+    assert is_iterable_typed(features, Feature)
     # FIXME: should merge feature and property modules.
-    import property
-    
+    from . import property
+
     result = []
     for f in features:
         if not f.free() and not f.optional() and f.default():
@@ -226,21 +236,22 @@ def defaults(features):
 def valid (names):
     """ Returns true iff all elements of names are valid features.
     """
-    def valid_one (name): return __all_features.has_key (name)
-        
-    if isinstance (names, str):
-        return valid_one (names)
-    else:
-        return all([ valid_one (name) for name in names ])
+    if isinstance(names, str):
+        names = [names]
+        assert is_iterable_typed(names, basestring)
+
+    return all(name in __all_features for name in names)
 
 def attributes (feature):
     """ Returns the attributes of the given feature.
     """
+    assert isinstance(feature, basestring)
     return __all_features[feature].attributes_string_list()
-        
+
 def values (feature):
     """ Return the values of the given feature.
     """
+    assert isinstance(feature, basestring)
     validate_feature (feature)
     return __all_features[feature].values()
 
@@ -248,7 +259,7 @@ def is_implicit_value (value_string):
     """ Returns true iff 'value_string' is a value_string
     of an implicit feature.
     """
-
+    assert isinstance(value_string, basestring)
     if __implicit_features.has_key(value_string):
         return __implicit_features[value_string]
     
@@ -268,6 +279,7 @@ def is_implicit_value (value_string):
 def implied_feature (implicit_value):
     """ Returns the implicit feature associated with the given implicit value.
     """
+    assert isinstance(implicit_value, basestring)
     components = implicit_value.split('-')
     
     if not __implicit_features.has_key(components[0]):
@@ -276,15 +288,14 @@ def implied_feature (implicit_value):
     return __implicit_features[components[0]]
 
 def __find_implied_subfeature (feature, subvalue, value_string):
-    
-    #if value_string == None: value_string = ''
+    assert isinstance(feature, Feature)
+    assert isinstance(subvalue, basestring)
+    assert isinstance(value_string, basestring)
 
-    if not __subfeature_from_value.has_key(feature) \
-        or not __subfeature_from_value[feature].has_key(value_string) \
-        or not __subfeature_from_value[feature][value_string].has_key (subvalue):
+    try:
+        return __subfeature_from_value[feature][value_string][subvalue]
+    except KeyError:
         return None
-        
-    return __subfeature_from_value[feature][value_string][subvalue]
 
 # Given a feature and a value of one of its subfeatures, find the name
 # of the subfeature. If value-string is supplied, looks for implied
@@ -294,6 +305,9 @@ def __find_implied_subfeature (feature, subvalue, value_string):
 #  value-string        # The value of the main feature
 
 def implied_subfeature (feature, subvalue, value_string):
+    assert isinstance(feature, Feature)
+    assert isinstance(subvalue, basestring)
+    assert isinstance(value_string, basestring)
     result = __find_implied_subfeature (feature, subvalue, value_string)
     if not result:
         raise InvalidValue ("'%s' is not a known subfeature value of '%s%s'" % (subvalue, feature, value_string))
@@ -303,28 +317,20 @@ def implied_subfeature (feature, subvalue, value_string):
 def validate_feature (name):
     """ Checks if all name is a valid feature. Otherwise, raises an exception.
     """
+    assert isinstance(name, basestring)
     if not __all_features.has_key(name):
         raise InvalidFeature ("'%s' is not a valid feature name" % name)
     else:
         return __all_features[name]
 
-def valid (names):
-    """ Returns true iff all elements of names are valid features.
-    """
-    def valid_one (name): return __all_features.has_key (name)
-        
-    if isinstance (names, str):
-        return valid_one (names)
-    else:
-        return [ valid_one (name) for name in names ]
 
 # Uses Property
-def __expand_subfeatures_aux (property, dont_validate = False):
+def __expand_subfeatures_aux (property_, dont_validate = False):
     """ Helper for expand_subfeatures.
         Given a feature and value, or just a value corresponding to an
         implicit feature, returns a property set consisting of all component
         subfeatures and their values. For example:
-        
+
           expand_subfeatures <toolset>gcc-2.95.2-linux-x86
               -> <toolset>gcc <toolset-version>2.95.2 <toolset-os>linux <toolset-cpu>x86
           equivalent to:
@@ -334,8 +340,12 @@ def __expand_subfeatures_aux (property, dont_validate = False):
         value:          The value of the feature.
         dont_validate:  If True, no validation of value string will be done.
     """
-    f = property.feature()
-    v = property.value()
+    from . import property  # no __debug__ since Property is used elsewhere
+    assert isinstance(property_, property.Property)
+    assert isinstance(dont_validate, int)  # matches bools
+
+    f = property_.feature()
+    v = property_.value()
     if not dont_validate:
         validate_value_string(f, v)
 
@@ -343,10 +353,8 @@ def __expand_subfeatures_aux (property, dont_validate = False):
     
     v = components[0]
 
-    import property
+    result = [property.Property(f, components[0])]
 
-    result = [property.Property(f, components[0])] 
-    
     subvalues = components[1:]
 
     while len(subvalues) > 0:
@@ -380,6 +388,10 @@ def expand_subfeatures(properties, dont_validate = False):
                     case of implicit features.
   : dont_validate:  If True, no validation of value string will be done.
     """
+    if __debug__:
+        from .property import Property
+        assert is_iterable_typed(properties, Property)
+        assert isinstance(dont_validate, int)  # matches bools
     result = []
     for p in properties:
         # Don't expand subfeatures in subfeatures
@@ -413,6 +425,8 @@ def expand_subfeatures(properties, dont_validate = False):
 def extend (name, values):
     """ Adds the given values to the given feature.
     """
+    assert isinstance(name, basestring)
+    assert is_iterable_typed(values, basestring)
     name = add_grist (name)
     __validate_feature (name)
     feature = __all_features [name]
@@ -434,6 +448,8 @@ def extend (name, values):
 def validate_value_string (f, value_string):
     """ Checks that value-string is a valid value-string for the given feature.
     """
+    assert isinstance(f, Feature)
+    assert isinstance(value_string, basestring)
     if f.free() or value_string in f.values():
         return
 
@@ -472,7 +488,10 @@ def validate_value_string (f, value_string):
     subvalues:      The additional values of the subfeature being defined.
 """
 def extend_subfeature (feature_name, value_string, subfeature_name, subvalues):
-
+    assert isinstance(feature_name, basestring)
+    assert isinstance(value_string, basestring)
+    assert isinstance(subfeature_name, basestring)
+    assert is_iterable_typed(subvalues, basestring)
     feature = validate_feature(feature_name)
     
     if value_string:
@@ -532,7 +551,7 @@ def compose (composite_property_s, component_properties_s):
 
     All parameters are <feature>value strings
     """
-    import property
+    from . import property
 
     component_properties_s = to_seq (component_properties_s)
     composite_property = property.create_from_string(composite_property_s)
@@ -555,10 +574,13 @@ def compose (composite_property_s, component_properties_s):
     __composite_properties[composite_property] = component_properties
 
 
-def expand_composite(property):
-    result = [ property ]
-    if __composite_properties.has_key(property):
-        for p in __composite_properties[property]:
+def expand_composite(property_):
+    if __debug__:
+        from .property import Property
+        assert isinstance(property_, Property)
+    result = [ property_ ]
+    if __composite_properties.has_key(property_):
+        for p in __composite_properties[property_]:
             result.extend(expand_composite(p))
     return result
 
@@ -584,6 +606,9 @@ def expand_composites (properties):
     """ Expand all composite properties in the set so that all components
         are explicitly expressed.
     """
+    if __debug__:
+        from .property import Property
+        assert is_iterable_typed(properties, Property)
     explicit_features = set(p.feature() for p in properties)
 
     result = []
@@ -622,6 +647,11 @@ def is_subfeature_of (parent_property, f):
         feature, or if f is a subfeature of the parent_property's feature
         specific to the parent_property's value.
     """
+    if __debug__:
+        from .property import Property
+        assert isinstance(parent_property, Property)
+        assert isinstance(f, Feature)
+
     if not f.subfeature():
         return False
 
@@ -643,38 +673,27 @@ def is_subfeature_of (parent_property, f):
 def __is_subproperty_of (parent_property, p):
     """ As is_subfeature_of, for subproperties.
     """
+    if __debug__:
+        from .property import Property
+        assert isinstance(parent_property, Property)
+        assert isinstance(p, Property)
     return is_subfeature_of (parent_property, p.feature())
 
-    
+
 # Returns true iff the subvalue is valid for the feature.  When the
 # optional value-string is provided, returns true iff the subvalues
 # are valid for the given value of the feature.
 def is_subvalue(feature, value_string, subfeature, subvalue):
-
+    assert isinstance(feature, basestring)
+    assert isinstance(value_string, basestring)
+    assert isinstance(subfeature, basestring)
+    assert isinstance(subvalue, basestring)
     if not value_string:
         value_string = ''
-
-    if not __subfeature_from_value.has_key(feature):
+    try:
+        return  __subfeature_from_value[feature][value_string][subvalue] == subfeature
+    except KeyError:
         return False
-        
-    if not __subfeature_from_value[feature].has_key(value_string):
-        return False
-        
-    if not __subfeature_from_value[feature][value_string].has_key(subvalue):
-        return False
-
-    if __subfeature_from_value[feature][value_string][subvalue]\
-           != subfeature:
-        return False
-
-    return True
-
-def implied_subfeature (feature, subvalue, value_string):
-    result = __find_implied_subfeature (feature, subvalue, value_string)
-    if not result:
-        raise InvalidValue ("'%s' is not a known subfeature value of '%s%s'" % (subvalue, feature, value_string))
-
-    return result
 
 
 # Uses Property
@@ -689,6 +708,9 @@ def expand (properties):
         two values of a given non-free feature are directly expressed in the
         input, an error is issued.
     """
+    if __debug__:
+        from .property import Property
+        assert is_iterable_typed(properties, Property)
     expanded = expand_subfeatures(properties)
     return expand_composites (expanded)
     
@@ -711,6 +733,10 @@ def add_defaults (properties):
          
           and that's kind of strange.        
     """
+    if __debug__:
+        from .property import Property
+        assert is_iterable_typed(properties, Property)
+
     result = [x for x in properties]
     
     handled_features = set()
@@ -744,8 +770,10 @@ def minimize (properties):
         Implicit properties will be expressed without feature
         grist, and sub-property values will be expressed as elements joined
         to the corresponding main property.
-    """    
-    
+    """
+    if __debug__:
+        from .property import Property
+        assert is_iterable_typed(properties, Property)
     # remove properties implied by composite features
     components = []
     for property in properties:
@@ -807,7 +835,7 @@ def split (properties):
     substitution of backslashes for slashes, since Jam, unbidden,
     sometimes swaps slash direction on NT.
     """
-
+    assert isinstance(properties, basestring)
     def split_one (properties):
         pieces = re.split (__re_slash_or_backslash, properties)
         result = []
@@ -839,6 +867,8 @@ def compress_subproperties (properties):
         build-request.expand-no-defaults is being abused for unintended
         purposes and it needs help
     """
+    from .property import Property
+    assert is_iterable_typed(properties, Property)
     result = []
     matched_subs = set()
     all_subs = set()
@@ -852,7 +882,7 @@ def compress_subproperties (properties):
                 matched_subs.update(subs)
 
                 subvalues = '-'.join (sub.value() for sub in subs)
-                result.append(b2.build.property.Property(
+                result.append(Property(
                     p.feature(), p.value() + '-' + subvalues,
                     p.condition()))
             else:
@@ -870,10 +900,16 @@ def compress_subproperties (properties):
 # Private methods
 
 def __select_subproperties (parent_property, properties):
+    if __debug__:
+        from .property import Property
+        assert is_iterable_typed(properties, Property)
+        assert isinstance(parent_property, Property)
     return [ x for x in properties if __is_subproperty_of (parent_property, x) ]
 
 def __get_subfeature_name (subfeature, value_string):
-    if value_string == None: 
+    assert isinstance(subfeature, basestring)
+    assert isinstance(value_string, basestring) or value_string is None
+    if value_string == None:
         prefix = ''
     else:
         prefix = value_string + ':'
@@ -882,10 +918,12 @@ def __get_subfeature_name (subfeature, value_string):
 
 
 def __validate_feature_attributes (name, attributes):
+    assert isinstance(name, basestring)
+    assert is_iterable_typed(attributes, basestring)
     for attribute in attributes:
         if not attribute in __all_attributes:
             raise InvalidAttribute ("unknown attributes: '%s' in feature declaration: '%s'" % (str (b2.util.set.difference (attributes, __all_attributes)), name))
-    
+
     if name in __all_features:
             raise AlreadyDefined ("feature '%s' already defined" % name)
     elif 'implicit' in attributes and 'free' in attributes:
@@ -897,6 +935,7 @@ def __validate_feature_attributes (name, attributes):
 def __validate_feature (feature):
     """ Generates an error if the feature is unknown.
     """
+    assert isinstance(feature, basestring)
     if not __all_features.has_key (feature):
         raise BaseException ('unknown feature "%s"' % feature)
 
@@ -907,6 +946,10 @@ def __select_subfeatures (parent_property, features):
         subfeatures of the property's feature which are conditional on the
         property's value.
     """
+    if __debug__:
+        from .property import Property
+        assert isinstance(parent_property, Property)
+        assert is_iterable_typed(features, Feature)
     return [f for f in features if is_subfeature_of (parent_property, f)]
   
 # FIXME: copy over tests.

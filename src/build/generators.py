@@ -52,10 +52,10 @@ import cStringIO
 import os.path
 
 from virtual_target import Subvariant
-import virtual_target, type, property_set, property
+from . import virtual_target, type, property_set, property
 from b2.util.logger import *
 from b2.util.utility import *
-from b2.util import set
+from b2.util import set as set_, is_iterable_typed, is_iterable
 from b2.util.sequence import unique
 import b2.util.sequence as sequence
 from b2.manager import get_manager
@@ -114,7 +114,7 @@ def decrease_indent():
 # same generator. Does nothing if a non-derived target type is passed to it.
 #
 def update_cached_information_with_a_new_type(type):
-
+    assert isinstance(type, basestring)
     base_type = b2.build.type.base(type)
 
     if base_type:
@@ -184,8 +184,11 @@ class Generator:
             NOTE: all subclasses must have a similar signature for clone to work!
     """
     def __init__ (self, id, composing, source_types, target_types_and_names, requirements = []):
-        assert(not isinstance(source_types, str))
-        assert(not isinstance(target_types_and_names, str))
+        assert isinstance(id, basestring)
+        assert isinstance(composing, bool)
+        assert is_iterable_typed(source_types, basestring)
+        assert is_iterable_typed(target_types_and_names, basestring)
+        assert is_iterable_typed(requirements, basestring)
         self.id_ = id
         self.composing_ = composing
         self.source_types_ = source_types
@@ -229,9 +232,11 @@ class Generator:
               - id
               - value to <toolset> feature in properties
         """
-        return self.__class__ (new_id, 
-                               self.composing_, 
-                               self.source_types_, 
+        assert isinstance(new_id, basestring)
+        assert is_iterable_typed(new_toolset_properties, basestring)
+        return self.__class__ (new_id,
+                               self.composing_,
+                               self.source_types_,
                                self.target_types_and_names_,
                                # Note: this does not remove any subfeatures of <toolset>
                                # which might cause problems
@@ -241,6 +246,8 @@ class Generator:
         """Creates another generator that is the same as $(self), except that
         if 'base' is in target types of $(self), 'type' will in target types
         of the new generator."""
+        assert isinstance(base, basestring)
+        assert isinstance(type, basestring)
         target_types = []
         for t in self.target_types_and_names_:
             m = _re_match_type.match(t)
@@ -291,6 +298,7 @@ class Generator:
         # 'properties'.  Treat a feature name in requirements
         # (i.e. grist-only element), as matching any value of the
         # feature.
+        assert isinstance(ps, property_set.PropertySet)
         all_requirements = self.requirements ()
         
         property_requirements = []
@@ -321,7 +329,13 @@ class Generator:
             
             sources:        Source targets.
         """
-        
+        if __debug__:
+            from .targets import ProjectTarget
+            assert isinstance(project, ProjectTarget)
+            # intermediary targets don't have names, so None is possible
+            assert isinstance(name, basestring) or name is None
+            assert isinstance(prop_set, property_set.PropertySet)
+            assert is_iterable_typed(sources, virtual_target.VirtualTarget)
         if project.manager ().logger ().on ():
             project.manager ().logger ().log (__name__, "  generator '%s'" % self.id_)
             project.manager ().logger ().log (__name__, "  composing: '%s'" % self.composing_)
@@ -345,7 +359,13 @@ class Generator:
             return []
 
     def run_really (self, project, name, prop_set, sources):
-
+        if __debug__:
+            from .targets import ProjectTarget
+            assert isinstance(project, ProjectTarget)
+            # intermediary targets don't have names, so None is possible
+            assert isinstance(name, basestring) or name is None
+            assert isinstance(prop_set, property_set.PropertySet)
+            assert is_iterable_typed(sources, virtual_target.VirtualTarget)
         # consumed: Targets that this generator will consume directly.
         # bypassed: Targets that can't be consumed and will be returned as-is.
         
@@ -380,6 +400,12 @@ class Generator:
                 name:
                 prop_set:        Properties to be used for all actions create here
         """
+        if __debug__:
+            from .targets import ProjectTarget
+            assert is_iterable_typed(consumed, virtual_target.VirtualTarget)
+            assert isinstance(project, ProjectTarget)
+            assert isinstance(name, basestring) or name is None
+            assert isinstance(prop_set, property_set.PropertySet)
         result = []
         # If this is 1->1 transformation, apply it to all consumed targets in order.
         if len (self.source_types_) < 2 and not self.composing_:
@@ -395,6 +421,7 @@ class Generator:
         return result
 
     def determine_target_name(self, fullname):
+        assert isinstance(fullname, basestring)
         # Determine target name from fullname (maybe including path components)
         # Place optional prefix and postfix around basename
 
@@ -415,7 +442,7 @@ class Generator:
     def determine_output_name(self, sources):
         """Determine the name of the produced target from the
         names of the sources."""
-        
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
         # The simple case if when a name
         # of source has single dot. Then, we take the part before
         # dot. Several dots can be caused by:
@@ -460,6 +487,12 @@ class Generator:
             in make. It's a way to produce target which name is different for name of 
             source.
         """
+        if __debug__:
+            from .targets import ProjectTarget
+            assert is_iterable_typed(sources, virtual_target.VirtualTarget)
+            assert isinstance(prop_set, property_set.PropertySet)
+            assert isinstance(project, ProjectTarget)
+            assert isinstance(name, basestring) or name is None
         if not name:
             name = self.determine_output_name(sources)
         
@@ -494,6 +527,13 @@ class Generator:
                 consumed: all targets that can be consumed. 
                 bypassed: all targets that cannot be consumed.
         """
+        if __debug__:
+            from .targets import ProjectTarget
+            assert isinstance(name, basestring) or name is None
+            assert isinstance(project, ProjectTarget)
+            assert isinstance(prop_set, property_set.PropertySet)
+            assert is_iterable_typed(sources, virtual_target.VirtualTarget)
+            assert isinstance(only_one, bool)
         consumed = []
         bypassed = []
         missing_types = [] 
@@ -563,7 +603,16 @@ class Generator:
         """        
         consumed = []
         bypassed = []
+        if __debug__:
+            from .targets import ProjectTarget
 
+            assert isinstance(project, ProjectTarget)
+            assert isinstance(prop_set, property_set.PropertySet)
+            assert is_iterable_typed(sources, virtual_target.VirtualTarget)
+
+        assert isinstance(project, ProjectTarget)
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
         # We process each source one-by-one, trying to convert it to
         # a usable type.
         for s in sources:
@@ -578,6 +627,7 @@ class Generator:
         return (consumed, bypassed)
 
     def consume_directly (self, source):
+        assert isinstance(source, virtual_target.VirtualTarget)
         real_source_type = source.type ()
 
         # If there are no source types, we can consume anything
@@ -607,11 +657,13 @@ class Generator:
 def find (id):
     """ Finds the generator with id. Returns None if not found.
     """
+    assert isinstance(id, basestring)
     return __generators.get (id, None)
 
 def register (g):
     """ Registers new generator instance 'g'.
     """
+    assert isinstance(g, Generator)
     id = g.id()
 
     __generators [id] = g
@@ -660,6 +712,19 @@ def register (g):
     invalidate_extendable_viable_source_target_type_cache()
 
 
+def check_register_types(fn):
+    def wrapper(id, source_types, target_types, requirements=[]):
+        assert isinstance(id, basestring)
+        assert is_iterable_typed(source_types, basestring)
+        assert is_iterable_typed(target_types, basestring)
+        assert is_iterable_typed(requirements, basestring)
+        return fn(id, source_types, target_types, requirements=requirements)
+    wrapper.__name__ = fn.__name__
+    wrapper.__doc__ = fn.__doc__
+    return wrapper
+
+
+@check_register_types
 def register_standard (id, source_types, target_types, requirements = []):
     """ Creates new instance of the 'generator' class and registers it.
         Returns the creates instance.
@@ -671,6 +736,8 @@ def register_standard (id, source_types, target_types, requirements = []):
     register (g)
     return g
 
+
+@check_register_types
 def register_composing (id, source_types, target_types, requirements = []):
     g = Generator (id, True, source_types, target_types, requirements)
     register (g)
@@ -679,6 +746,7 @@ def register_composing (id, source_types, target_types, requirements = []):
 def generators_for_toolset (toolset):
     """ Returns all generators which belong to 'toolset'.
     """
+    assert isinstance(toolset, basestring)
     return __generators_for_toolset.get(toolset, [])
 
 def override (overrider_id, overridee_id):
@@ -691,7 +759,8 @@ def override (overrider_id, overridee_id):
     The overridden generators are discarded immediately
     after computing the list of viable generators, before
     running any of them."""
-    
+    assert isinstance(overrider_id, basestring)
+    assert isinstance(overridee_id, basestring)
     __overrides.setdefault(overrider_id, []).append(overridee_id)
 
 def __viable_source_types_real (target_type):
@@ -702,6 +771,7 @@ def __viable_source_types_real (target_type):
         returns union of source types for those generators and result
         of calling itself recusrively on source types.
     """
+    assert isinstance(target_type, basestring)
     generators = []
 
     # 't0' is the initial list of target types we need to process to get a list
@@ -750,13 +820,14 @@ def __viable_source_types_real (target_type):
                             if not n in t0:
                                 t.append (n)
                             result.append (n)
-           
+
     return result
 
 
 def viable_source_types (target_type):
     """ Helper rule, caches the result of '__viable_source_types_real'.
     """
+    assert isinstance(target_type, basestring)
     if not __viable_source_types_cache.has_key(target_type):
         __vst_cached_types.append(target_type)
         __viable_source_types_cache [target_type] = __viable_source_types_real (target_type)
@@ -767,6 +838,7 @@ def viable_source_types_for_generator_real (generator):
         method of 'generator', has some change of being eventually used
         (probably after conversion by other generators)
     """
+    assert isinstance(generator, Generator)
     source_types = generator.source_types ()
 
     if not source_types:
@@ -791,6 +863,7 @@ def viable_source_types_for_generator_real (generator):
 def viable_source_types_for_generator (generator):
     """ Caches the result of 'viable_source_types_for_generator'.
     """
+    assert isinstance(generator, Generator)
     if not __viable_source_types_cache.has_key(generator):
         __vstg_cached_generators.append(generator)
         __viable_source_types_cache[generator] = viable_source_types_for_generator_real (generator)
@@ -800,6 +873,14 @@ def viable_source_types_for_generator (generator):
 def try_one_generator_really (project, name, generator, target_type, properties, sources):
     """ Returns usage requirements + list of created targets.
     """
+    if __debug__:
+        from .targets import ProjectTarget
+        assert isinstance(project, ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert isinstance(generator, Generator)
+        assert isinstance(target_type, basestring)
+        assert isinstance(properties, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
     targets = generator.run (project, name, properties, sources)
 
     usage_requirements = []
@@ -834,6 +915,14 @@ def try_one_generator (project, name, generator, target_type, properties, source
         to fail. If so, quickly returns empty list. Otherwise, calls
         try_one_generator_really.
     """
+    if __debug__:
+        from .targets import ProjectTarget
+        assert isinstance(project, ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert isinstance(generator, Generator)
+        assert isinstance(target_type, basestring)
+        assert isinstance(properties, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
     source_types = []
 
     for s in sources:
@@ -842,7 +931,7 @@ def try_one_generator (project, name, generator, target_type, properties, source
     viable_source_types = viable_source_types_for_generator (generator)
     
     if source_types and viable_source_types != ['*'] and\
-           not set.intersection (source_types, viable_source_types):
+           not set_.intersection (source_types, viable_source_types):
         if project.manager ().logger ().on ():
             id = generator.id ()            
             project.manager ().logger ().log (__name__, "generator '%s' pruned" % id)
@@ -856,10 +945,16 @@ def try_one_generator (project, name, generator, target_type, properties, source
 
 
 def construct_types (project, name, target_types, prop_set, sources):
-    
+    if __debug__:
+        from .targets import ProjectTarget
+        assert isinstance(project, ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert is_iterable_typed(target_types, basestring)
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
     result = []
     usage_requirements = property_set.empty()
-    
+
     for t in target_types:
         r = construct (project, name, t, prop_set, sources)
 
@@ -886,6 +981,7 @@ def __ensure_type (targets):
     """ Ensures all 'targets' have types. If this is not so, exists with 
         error.
     """
+    assert is_iterable_typed(targets, virtual_target.VirtualTarget)
     for t in targets:
         if not t.type ():
             get_manager().errors()("target '%s' has no type" % str (t))
@@ -902,11 +998,13 @@ def find_viable_generators_aux (target_type, prop_set):
         Note: this algorithm explicitly ignores generators for base classes if there's
         at least one generator for requested target_type.
     """
+    assert isinstance(target_type, basestring)
+    assert isinstance(prop_set, property_set.PropertySet)
     # Select generators that can create the required target type.
     viable_generators = []
     initial_generators = []
 
-    import type
+    from . import type
 
     # Try all-type generators first. Assume they have
     # quite specific requirements.
@@ -949,6 +1047,8 @@ def find_viable_generators_aux (target_type, prop_set):
     return viable_generators
 
 def find_viable_generators (target_type, prop_set):
+    assert isinstance(target_type, basestring)
+    assert isinstance(prop_set, property_set.PropertySet)
     key = target_type + '.' + str (prop_set)
 
     l = __viable_generators_cache.get (key, None)
@@ -994,6 +1094,13 @@ def __construct_really (project, name, target_type, prop_set, sources):
     """ Attempts to construct target by finding viable generators, running them
         and selecting the dependency graph.
     """
+    if __debug__:
+        from .targets import ProjectTarget
+        assert isinstance(project, ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert isinstance(target_type, basestring)
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
     viable_generators = find_viable_generators (target_type, prop_set)
                     
     result = []
@@ -1048,7 +1155,14 @@ def construct (project, name, target_type, prop_set, sources, top_level=False):
         has to build a metatarget -- for example a target corresponding to
         built tool.        
     """
-
+    if __debug__:
+        from .targets import ProjectTarget
+        assert isinstance(project, ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert isinstance(target_type, basestring)
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
+        assert isinstance(top_level, bool)
     global __active_generators
     if top_level:
         saved_active = __active_generators
@@ -1086,7 +1200,7 @@ def add_usage_requirements (result, raw_properties):
         if isinstance (result[0], property_set.PropertySet):
           return (result[0].add_raw(raw_properties), result[1])
         else:
-          return (propery_set.create(raw-properties), result) 
+          return (property_set.create(raw_properties), result)
         #if [ class.is-a $(result[1]) : property-set ]
         #{
         #    return [ $(result[1]).add-raw $(raw-properties) ] $(result[2-]) ;
