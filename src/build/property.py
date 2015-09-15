@@ -11,7 +11,7 @@ import re
 import sys
 from b2.util.utility import *
 from b2.build import feature
-from b2.util import sequence, qualify_jam_action
+from b2.util import sequence, qualify_jam_action, is_iterable_typed
 import b2.util.set
 from b2.manager import get_manager
 
@@ -70,7 +70,9 @@ class Property(object):
 
 
 def create_from_string(s, allow_condition=False,allow_missing_value=False):
-
+    assert isinstance(s, basestring)
+    assert isinstance(allow_condition, bool)
+    assert isinstance(allow_missing_value, bool)
     condition = []
     import types
     if not isinstance(s, types.StringType):
@@ -119,11 +121,11 @@ def create_from_string(s, allow_condition=False,allow_missing_value=False):
 
     if condition:
         condition = [create_from_string(x) for x in condition.split(',')]
-                   
+
     return Property(f, value, condition)
 
 def create_from_strings(string_list, allow_condition=False):
-
+    assert is_iterable_typed(string_list, basestring)
     return [create_from_string(s, allow_condition) for s in string_list]
 
 def reset ():
@@ -185,6 +187,8 @@ def refine (properties, requirements):
         Conditional requirements are just added without modification.
         Returns the resulting list of properties.
     """
+    assert is_iterable_typed(properties, Property)
+    assert is_iterable_typed(requirements, Property)
     # The result has no duplicates, so we store it in a set
     result = set()
     
@@ -242,6 +246,8 @@ def translate_indirect(properties, context_module):
     names of rules, used in 'context-module'. Such rules can be
     either local to the module or global. Qualified local rules
     with the name of the module."""
+    assert is_iterable_typed(properties, Property)
+    assert isinstance(context_module, basestring)
     result = []
     for p in properties:
         if p.value()[0] == '@':
@@ -257,15 +263,14 @@ def validate (properties):
     """ Exit with error if any of the properties is not valid.
         properties may be a single property or a sequence of properties.
     """
-    
-    if isinstance (properties, str):
-        __validate1 (properties)
-    else:
-        for p in properties:
-            __validate1 (p)
+    if isinstance(properties, Property):
+        properties = [properties]
+    assert is_iterable_typed(properties, Property)
+    for p in properties:
+        __validate1(p)
 
 def expand_subfeatures_in_conditions (properties):
-
+    assert is_iterable_typed(properties, Property)
     result = []
     for p in properties:
 
@@ -296,6 +301,7 @@ def split_conditional (property):
         <variant>debug,<toolset>gcc <inlining>full.
         Otherwise, returns empty string.
     """
+    assert isinstance(property, basestring)
     m = __re_split_conditional.match (property)
     
     if m:
@@ -307,6 +313,7 @@ def split_conditional (property):
 def select (features, properties):
     """ Selects properties which correspond to any of the given features.
     """
+    assert is_iterable_typed(properties, basestring)
     result = []
     
     # add any missing angle brackets
@@ -315,6 +322,9 @@ def select (features, properties):
     return [p for p in properties if get_grist(p) in features]
 
 def validate_property_sets (sets):
+    if __debug__:
+        from .property_set import PropertySet
+        assert is_iterable_typed(sets, PropertySet)
     for s in sets:
         validate(s.all())
 
@@ -323,6 +333,10 @@ def evaluate_conditionals_in_context (properties, context):
         For those with met conditions, removes the condition. Properies
         in conditions are looked up in 'context'
     """
+    if __debug__:
+        from .property_set import PropertySet
+        assert is_iterable_typed(properties, Property)
+        assert isinstance(context, PropertySet)
     base = []
     conditional = []
 
@@ -348,8 +362,11 @@ def change (properties, feature, value = None):
         given feature replaced by the given value.
         If 'value' is None the feature will be removed.
     """
+    assert is_iterable_typed(properties, basestring)
+    assert isinstance(feature, basestring)
+    assert isinstance(value, (basestring, type(None)))
     result = []
-    
+
     feature = add_grist (feature)
 
     for p in properties:
@@ -368,7 +385,8 @@ def change (properties, feature, value = None):
 
 def __validate1 (property):
     """ Exit with error if property is not valid.
-    """        
+    """
+    assert isinstance(property, Property)
     msg = None
 
     if not property.feature().free():
@@ -405,7 +423,10 @@ def __validate1 (property):
 def remove(attributes, properties):
     """Returns a property sets which include all the elements
     in 'properties' that do not have attributes listed in 'attributes'."""
-    
+    if isinstance(attributes, basestring):
+        attributes = [attributes]
+    assert is_iterable_typed(attributes, basestring)
+    assert is_iterable_typed(properties, basestring)
     result = []
     for e in properties:
         attributes_new = feature.attributes(get_grist(e))
@@ -424,6 +445,8 @@ def remove(attributes, properties):
 def take(attributes, properties):
     """Returns a property set which include all
     properties in 'properties' that have any of 'attributes'."""
+    assert is_iterable_typed(attributes, basestring)
+    assert is_iterable_typed(properties, basestring)
     result = []
     for e in properties:
         if b2.util.set.intersection(attributes, feature.attributes(get_grist(e))):
@@ -431,7 +454,9 @@ def take(attributes, properties):
     return result
 
 def translate_dependencies(properties, project_id, location):
-
+    assert is_iterable_typed(properties, Property)
+    assert isinstance(project_id, basestring)
+    assert isinstance(location, basestring)
     result = []
     for p in properties:
 
@@ -464,10 +489,12 @@ class PropertyMap:
     def __init__ (self):
         self.__properties = []
         self.__values = []
-    
+
     def insert (self, properties, value):
         """ Associate value with properties.
         """
+        assert is_iterable_typed(properties, basestring)
+        assert isinstance(value, basestring)
         self.__properties.append(properties)
         self.__values.append(value)
 
@@ -477,9 +504,12 @@ class PropertyMap:
         subset has value assigned to it, return the
         value for the longest subset, if it's unique.
         """
+        assert is_iterable_typed(properties, basestring)
         return self.find_replace (properties)
 
     def find_replace(self, properties, value=None):
+        assert is_iterable_typed(properties, basestring)
+        assert isinstance(value, (basestring, type(None)))
         matches = []
         match_ranks = []
         

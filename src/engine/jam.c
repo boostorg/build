@@ -206,6 +206,7 @@ int anyhow = 0;
     extern PyObject * bjam_variable     ( PyObject * self, PyObject * args );
     extern PyObject * bjam_backtrace    ( PyObject * self, PyObject * args );
     extern PyObject * bjam_caller       ( PyObject * self, PyObject * args );
+    int python_optimize = 1;  /* Set Python optimzation on by default */
 #endif
 
 void regex_done();
@@ -235,7 +236,13 @@ int main( int argc, char * * argv, char * * arg_environ )
     --argc;
     ++argv;
 
-    if ( getoptions( argc, argv, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
+    #ifdef HAVE_PYTHON
+    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qvz"
+    #else
+    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qv"
+    #endif
+
+    if ( getoptions( argc, argv, OPTSTRING, optv ) < 0 )
     {
         err_printf( "\nusage: %s [ options ] targets...\n\n", progname );
 
@@ -253,6 +260,9 @@ int main( int argc, char * * argv, char * * arg_environ )
         err_printf( "-sx=y   Set variable x=y, overriding environment.\n" );
         err_printf( "-tx     Rebuild x, even if it is up-to-date.\n" );
         err_printf( "-v      Print the version of jam and exit.\n" );
+        #ifdef HAVE_PYTHON
+        err_printf( "-z      Disable Python Optimization and enable asserts\n" );
+        #endif
         err_printf( "--x     Option is ignored.\n\n" );
 
         exit( EXITBAD );
@@ -318,6 +328,11 @@ int main( int argc, char * * argv, char * * arg_environ )
     if ( ( s = getoptval( optv, 'm', 0 ) ) )
         globs.max_buf = atoi( s ) * 1024;  /* convert to kb */
 
+    #ifdef HAVE_PYTHON
+    if ( ( s = getoptval( optv, 'z', 0 ) ) )
+        python_optimize = 0;  /* disable python optimization */
+    #endif
+
     /* Turn on/off debugging */
     for ( n = 0; ( s = getoptval( optv, 'd', n ) ); ++n )
     {
@@ -364,6 +379,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 #ifdef HAVE_PYTHON
         {
             PROFILE_ENTER( MAIN_PYTHON );
+            Py_OptimizeFlag = python_optimize;
             Py_Initialize();
             {
                 static PyMethodDef BjamMethods[] = {

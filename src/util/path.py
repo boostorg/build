@@ -40,6 +40,7 @@ def make (native):
     # TODO: make os selection here.
     return make_UNIX (native)
 
+@bjam_signature([['native']])
 def make_UNIX (native):
 
     # VP: I have no idea now 'native' can be empty here! But it can!

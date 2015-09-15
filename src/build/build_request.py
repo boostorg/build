@@ -11,12 +11,14 @@ import b2.build.feature
 feature = b2.build.feature
 
 from b2.util.utility import *
+from b2.util import is_iterable_typed
 import b2.build.property_set as property_set
 
 def expand_no_defaults (property_sets):
     """ Expand the given build request by combining all property_sets which don't
         specify conflicting non-free features.
     """
+    assert is_iterable_typed(property_sets, property_set.PropertySet)
     # First make all features and subfeatures explicit
     expanded_property_sets = [ps.expand_subfeatures() for ps in property_sets]
     
@@ -30,6 +32,7 @@ def __x_product (property_sets):
     """ Return the cross-product of all elements of property_sets, less any
         that would contain conflicting values for single-valued features.
     """
+    assert is_iterable_typed(property_sets, property_set.PropertySet)
     x_product_seen = set()
     return __x_product_aux (property_sets, x_product_seen)[0]
 
@@ -44,6 +47,8 @@ def __x_product_aux (property_sets, seen_features):
     have the same feature, and no Property is for feature in seen_features.
     - set of features we saw in property_sets      
     """
+    assert is_iterable_typed(property_sets, property_set.PropertySet)
+    assert isinstance(seen_features, set)
     if not property_sets:
         return ([], set())
 
@@ -90,6 +95,7 @@ def __x_product_aux (property_sets, seen_features):
 def looks_like_implicit_value(v):
     """Returns true if 'v' is either implicit value, or
     the part before the first '-' symbol is implicit value."""
+    assert isinstance(v, basestring)
     if feature.is_implicit_value(v):
         return 1
     else:
@@ -104,7 +110,7 @@ def from_command_line(command_line):
     and constructs build request from it. Returns a list of two
     lists. First is the set of targets specified in the command line,
     and second is the set of requested build properties."""
-
+    assert is_iterable_typed(command_line, basestring)
     targets = []
     properties = []
 
@@ -122,7 +128,7 @@ def from_command_line(command_line):
 # Converts one element of command line build request specification into
 # internal form.
 def convert_command_line_element(e):
-
+    assert isinstance(e, basestring)
     result = None
     parts = e.split("/")
     for p in parts:

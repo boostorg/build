@@ -34,6 +34,8 @@ import bjam
 import os
 from b2.exceptions import *
 from b2.manager import get_manager
+from b2.util import is_iterable_typed
+
 
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
@@ -56,6 +58,8 @@ def register(scanner_class, relevant_properties):
         properties relevant to this scanner.  Ctor for that class
         should have one parameter: list of properties.
     """
+    assert issubclass(scanner_class, Scanner)
+    assert isinstance(relevant_properties, basestring)
     __scanners[str(scanner_class)] = relevant_properties
 
 def registered(scanner_class):
@@ -67,6 +71,8 @@ def get(scanner_class, properties):
     """ Returns an instance of previously registered scanner
         with the specified properties.
     """
+    assert issubclass(scanner_class, Scanner)
+    assert is_iterable_typed(properties, basestring)
     scanner_name = str(scanner_class)
     
     if not registered(scanner_name):
@@ -130,6 +136,9 @@ class ScannerRegistry:
         """ Installs the specified scanner on actual target 'target'. 
             vtarget: virtual target from which 'target' was actualized.
         """
+        assert isinstance(scanner, Scanner)
+        assert isinstance(target, basestring)
+        assert isinstance(vtarget, basestring)
         engine = self.manager_.engine()
         engine.set_target_variable(target, "HDRSCAN", scanner.pattern())
         if not self.exported_scanners_.has_key(scanner):
@@ -150,6 +159,8 @@ class ScannerRegistry:
         pass
 
     def propagate(self, scanner, targets):
+        assert isinstance(scanner, Scanner)
+        assert is_iterable_typed(targets, basestring) or isinstance(targets, basestring)
         engine = self.manager_.engine()
         engine.set_target_variable(targets, "HDRSCAN", scanner.pattern())
         engine.set_target_variable(targets, "HDRRULE",
