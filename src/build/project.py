@@ -371,12 +371,14 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         else:
             return 0
 
-    def initialize(self, module_name, location=None, basename=None):
+    def initialize(self, module_name, location=None, basename=None, standalone_path=''):
         """Initialize the module for a project.
 
         module-name is the name of the project module.
         location is the location (directory) of the project to initialize.
                  If not specified, standalone project will be initialized
+        standalone_path is the path to the source-location.
+                        this should only be called from the python side.
         """
 
         if "--debug-loading" in self.manager.argv():
@@ -399,7 +401,13 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             # so that it can declare targets. This is intended so that you can put
             # a .jam file in your sources and use it via 'using'. Standard modules
             # (in 'tools' subdir) may not assume source dir is set.
-            attributes.set("source-location", self.loaded_tool_module_path_[module_name], exact=1)
+            source_location = standalone_path
+            if not source_location:
+                source_location = self.loaded_tool_module_path_.get(module_name)
+            if not source_location:
+                self.manager.errors()('Standalone module path not found for "{}"'
+                                      .format(module_name))
+            attributes.set("source-location", source_location, exact=1)
             python_standalone = True
 
         attributes.set("requirements", property_set.empty(), exact=True)
@@ -702,12 +710,17 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         # the module exists within the BOOST_BUILD_PATH,
         # load it.
         elif mname:
-            # __import__ can be used here since the module
-            # is guaranteed to be found under the `b2` namespace.
+            # in some cases, self.loaded_tool_module_path_ needs to
+            # have the path to the file during the import
+            # (project.initialize() for example),
+            # so the path needs to be set *before* importing the module.
+            path = os.path.join(b2.__path__[0], *mname.split('.')[1:])
+            self.loaded_tool_module_path_[mname] = path
+            # mname is guaranteed to be importable since it was
+            # found within the cache
             __import__(mname)
             module = sys.modules[mname]
             self.loaded_tool_modules_[name] = module
-            self.loaded_tool_module_path_[mname] = module.__file__
             return module
 
         self.manager.errors()("Cannot find module '%s'" % name)

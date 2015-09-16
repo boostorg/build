@@ -79,6 +79,9 @@ class Feature(object):
     def set_parent(self, feature, value):
         self._parent = (feature, value)
 
+    def __hash__(self):
+        return hash(self._name)
+
     def __str__(self):
         return self._name
 
@@ -711,27 +714,23 @@ def add_defaults (properties):
          
           and that's kind of strange.        
     """
-    result = [x for x in properties]
-    
-    handled_features = set()
-    for p in properties:
-        # We don't add default for conditional properties.  We don't want
-        # <variant>debug:<define>DEBUG to be takes as specified value for <variant>
-        if not p.condition():
-            handled_features.add(p.feature())
-        
+    # create a copy since properties will be modified
+    result = list(properties)
+
+    # We don't add default for conditional properties.  We don't want
+    # <variant>debug:<define>DEBUG to be takes as specified value for <variant>
+    handled_features = set(p.feature() for p in properties if not p.condition())
+
     missing_top = [f for f in __all_top_features if not f in handled_features]
     more = defaults(missing_top)
     result.extend(more)
-    for p in more:
-        handled_features.add(p.feature())
-       
+    handled_features.update(p.feature() for p in more)
+
     # Add defaults for subfeatures of features which are present
     for p in result[:]:
-        s = p.feature().subfeatures()
-        more = defaults([s for s in p.feature().subfeatures() if not s in handled_features])
-        for p in more:
-            handled_features.add(p.feature())
+        subfeatures = [s for s in p.feature().subfeatures() if not s in handled_features]
+        more = defaults(__select_subfeatures(p, subfeatures))
+        handled_features.update(p.feature() for p in more)
         result.extend(more)
     
     return result
