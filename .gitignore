@@ -1,4 +1,4 @@
-*.pyc
+*.py[cod]
 /doc/bin
 /doc/html
 /b2

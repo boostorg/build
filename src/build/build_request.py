@@ -119,7 +119,7 @@ def from_command_line(command_line):
             # Build request spec either has "=" in it, or completely
             # consists of implicit feature values.
             if e.find("=") != -1 or looks_like_implicit_value(e.split("/")[0]):
-                properties += convert_command_line_element(e)
+                properties.append(e)
             elif e:
                 targets.append(e)
 

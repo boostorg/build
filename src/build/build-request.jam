@@ -150,8 +150,7 @@ rule from-command-line ( command-line * )
             if [ MATCH "(.*=.*)" : $(e) ]
                 || [ looks-like-implicit-value $(e:D=) : $(feature-space) ]
             {
-                properties += [ convert-command-line-element $(e) :
-                    $(feature-space) ] ;
+                properties += $(e) ;
             }
             else if $(e)
             {
@@ -172,7 +171,7 @@ rule from-command-line ( command-line * )
 # Converts one element of command line build request specification into internal
 # form. Expects all the project files to already be loaded.
 #
-local rule convert-command-line-element ( e )
+rule convert-command-line-element ( e )
 {
     local result ;
     local parts = [ regex.split $(e) "/" ] ;
