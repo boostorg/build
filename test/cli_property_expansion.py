@@ -9,7 +9,6 @@
 import BoostBuild
 
 t = BoostBuild.Tester(use_test_config=False)
-t.toolset = 'msvc'
 
 t.write("jamroot.jam", "")
 t.write(
