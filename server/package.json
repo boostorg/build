@@ -20,7 +20,9 @@
     "react-progressbar": "^1.0.0",
     "temp": "^0.8.1",
     "underscore": "^1.8.2",
-    "ws": "^0.7.1"
+    "ws": "^0.7.1",
+    "morgan": "~1.6.1",
+    "jquery": "~2.1.4"
   },
   "devDependencies": {
     "browserify": "^6.3.3",
