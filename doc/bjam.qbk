@@ -841,6 +841,7 @@ rule SHELL ( /command/ : * )
 [variablelist
     [[=exit-status=] [In addition to the output the result status of the executed command is returned as a second element of the result.]]
     [[=no-output=] [Don't capture the output of the command. Instead an empty ("") string value is returned in place of the output.]]
+    [[=strip-eol=] [Remove trailing end-of-line character from output, if any.]]
 ]
 
 Because the Perforce/Jambase defines a =SHELL= rule which hides the
