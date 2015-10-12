@@ -277,38 +277,20 @@ def inherit_flags(toolset, base, prohibited_properties = []):
 
             __add_flag (new_rule_or_module, f.variable_name, f.condition, f.values)
 
-def inherit_rules (toolset, base):
-    pass
-    # FIXME: do something about this.
-#    base_generators = generators.generators_for_toolset (base)
 
-#    import action
+def inherit_rules(toolset, base):
+    engine = get_manager().engine()
+    new_actions = {}
+    for action_name, action in engine.actions.iteritems():
+        module, id = split_action_id(action_name)
+        if module == base:
+            new_action_name = toolset + '.' + id
+            # make sure not to override any existing actions
+            # that may have been declared already
+            if new_action_name not in engine.actions:
+                new_actions[new_action_name] = action
 
-#    ids = []
-#    for g in base_generators:
-#        (old_toolset, id) = split_action_id (g.id ())
-#        ids.append (id) ;
-
-#    new_actions = []
-
-#    engine = get_manager().engine()
-    # FIXME: do this!
-#    for action in engine.action.values():
-#        pass
-#        (old_toolset, id) = split_action_id(action.action_name)
-#
-#        if old_toolset == base:
-#            new_actions.append ((id, value [0], value [1]))
-#
-#    for a in new_actions:
-#        action.register (toolset + '.' + a [0], a [1], a [2])
-
-    # TODO: how to deal with this?
-#       IMPORT $(base) : $(rules) : $(toolset) : $(rules) : localized ;
-#       # Import the rules to the global scope
-#       IMPORT $(toolset) : $(rules) : : $(toolset).$(rules) ;
-#   }
-#
+    engine.actions.update(new_actions)
 
 ######################################################################################
 # Private functions
