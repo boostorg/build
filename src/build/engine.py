@@ -179,8 +179,6 @@ class Engine:
         assert is_iterable(bound_list)
         assert is_iterable(flags)
         assert function is None or callable(function)
-        if self.actions.has_key(action_name):
-            raise "Bjam action %s is already defined" % action_name
 
         bjam_flags = reduce(operator.or_,
                             (action_modifiers[flag] for flag in flags), 0)
