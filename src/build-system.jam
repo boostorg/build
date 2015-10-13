@@ -684,10 +684,7 @@ local rule should-clean-project ( project )
     # on the command line) have been loaded.
     if $(properties)
     {
-        for local p in $(properties)
-        {
-            expanded += [ build-request.convert-command-line-element $(p) ] ;
-        }
+        expanded += [ build-request.convert-command-line-elements $(properties) ] ;
         expanded = [ build-request.expand-no-defaults $(expanded) ] ;
         local xexpanded ;
         for local e in $(expanded)
