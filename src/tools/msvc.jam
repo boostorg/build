@@ -1161,7 +1161,14 @@ local rule configure-really ( version ? : options * )
                 {
                     setup-script = $(setup-phone-$(c)) ;
                 }
-                toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(compiler) /Zm800 -nologo ;
+                if $(api) = desktop
+                {
+                    toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(compiler) /Zm800 -nologo ;
+                }
+                else
+                {
+                    toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(compiler) /Zm800 /ZW /EHsc -nologo ;
+                }
                 toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(cpu-assembler) -nologo ;
                 toolset.flags msvc.link    .LD  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(linker) /NOLOGO /INCREMENTAL:NO ;
                 toolset.flags msvc.archive .LD  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(linker) /lib /NOLOGO  ;

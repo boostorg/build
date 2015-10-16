@@ -71,7 +71,7 @@ cd /jam source location/
 sh ./build.sh
 ]
 
-For the Boost.Jam source included with the Boost distribution the /jam source location/ is =BOOST_ROOT/tools/build/v2/engine=.
+For the Boost.Jam source included with the Boost distribution the /jam source location/ is =BOOST_ROOT/tools/build/src/engine=.
 
 If the scripts fail to detect an appropriate toolset to build with your particular toolset may not be auto-detectable. In that case, you can specify the toolset as the first argument, this assumes that the toolset is readily available in the =PATH=.
 
@@ -841,6 +841,7 @@ rule SHELL ( /command/ : * )
 [variablelist
     [[=exit-status=] [In addition to the output the result status of the executed command is returned as a second element of the result.]]
     [[=no-output=] [Don't capture the output of the command. Instead an empty ("") string value is returned in place of the output.]]
+    [[=strip-eol=] [Remove trailing end-of-line character from output, if any.]]
 ]
 
 Because the Perforce/Jambase defines a =SHELL= rule which hides the

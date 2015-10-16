@@ -38,7 +38,19 @@
  */
 #include <winioctl.h>
 #endif
+
+/* With VC8 (VS2005) these are not defined:
+ *   FSCTL_GET_REPARSE_POINT  (expects WINVER >= 0x0500 _WIN32_WINNT >= 0x0500 )
+ *   IO_REPARSE_TAG_SYMLINK   (is part of a separate Driver SDK)
+ * So define them explicitily to their expected values.
+ */
+#ifndef FSCTL_GET_REPARSE_POINT
+# define FSCTL_GET_REPARSE_POINT 0x000900a8
 #endif
+#ifndef IO_REPARSE_TAG_SYMLINK
+# define IO_REPARSE_TAG_SYMLINK	(0xA000000CL)
+#endif
+#endif /* OS_NT */
 
 #if defined(USE_EXECUNIX)
 # include <sys/types.h>
@@ -2058,6 +2070,62 @@ void lol_build( LOL * lol, char const * * elements )
 
 #ifdef HAVE_PYTHON
 
+static LIST *jam_list_from_string(PyObject *a)
+{
+    return list_new( object_new( PyString_AsString( a ) ) );
+}
+
+static LIST *jam_list_from_sequence(PyObject *a)
+{
+    LIST * l = 0;
+
+    int i = 0;
+    int s = PySequence_Size( a );
+
+    for ( ; i < s; ++i )
+    {
+        /* PySequence_GetItem returns new reference. */
+        PyObject * e = PySequence_GetItem( a, i );
+        char * s = PyString_AsString( e );
+        if ( !s )
+        {
+                        err_printf( "Invalid parameter type passed from Python\n" );
+            exit( 1 );
+        }
+        l = list_push_back( l, object_new( s ) );
+        Py_DECREF( e );
+    }
+
+    return l;
+}
+
+static void make_jam_arguments_from_python(FRAME* inner, PyObject *args)
+{
+    int i;
+    int size;
+
+    /* Build up the list of arg lists. */
+    frame_init( inner );
+    inner->prev = 0;
+    inner->prev_user = 0;
+    inner->module = bindmodule( constant_python_interface );
+
+    size = PyTuple_Size( args );
+    for (i = 0 ; i < size; ++i)
+    {
+        PyObject * a = PyTuple_GetItem( args, i );
+        if ( PyString_Check( a ) )
+        {
+            lol_add( inner->args, jam_list_from_string(a) );
+        }
+        else if ( PySequence_Check( a ) )
+        {
+            lol_add( inner->args, jam_list_from_sequence(a) );
+        }
+    }
+}
+
+
 /*
  * Calls the bjam rule specified by name passed in 'args'. The name is looked up
  * in the context of bjam's 'python_interface' module. Returns the list of
@@ -2070,50 +2138,14 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
     LIST   * result;
     PARSE  * p;
     OBJECT * rulename;
-
-    /* Build up the list of arg lists. */
-    frame_init( inner );
-    inner->prev = 0;
-    inner->prev_user = 0;
-    inner->module = bindmodule( constant_python_interface );
-
-    /* Extract the rule name and arguments from 'args'. */
+    PyObject *args_proper;
 
     /* PyTuple_GetItem returns borrowed reference. */
     rulename = object_new( PyString_AsString( PyTuple_GetItem( args, 0 ) ) );
-    {
-        int i = 1;
-        int size = PyTuple_Size( args );
-        for ( ; i < size; ++i )
-        {
-            PyObject * a = PyTuple_GetItem( args, i );
-            if ( PyString_Check( a ) )
-            {
-                lol_add( inner->args, list_new( object_new(
-                    PyString_AsString( a ) ) ) );
-            }
-            else if ( PySequence_Check( a ) )
-            {
-                LIST * l = 0;
-                int s = PySequence_Size( a );
-                int i = 0;
-                for ( ; i < s; ++i )
-                {
-                    /* PySequence_GetItem returns new reference. */
-                    PyObject * e = PySequence_GetItem( a, i );
-                    char * s = PyString_AsString( e );
-                    if ( !s )
-                    {
-                        err_printf( "Invalid parameter type passed from Python\n" );
-                        exit( 1 );
-                    }
-                    l = list_push_back( l, object_new( s ) );
-                    Py_DECREF( e );
-                }
-                lol_add( inner->args, l );
-            }
-        }
-    }
+
+    args_proper = PyTuple_GetSlice(args, 1, PyTuple_Size(args));
+    make_jam_arguments_from_python (inner, args_proper);
+    Py_DECREF(args_proper);
 
     result = evaluate_rule( bindrule( rulename, inner->module), rulename, inner );
     object_free( rulename );
