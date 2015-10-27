@@ -14,7 +14,7 @@ $
 $ ON WARNING THEN CONTINUE
 $ ON ERROR THEN GOTO ERROR
 $
-$ SAY "I|Bootstrapping the build engine"
+$ SAY "I|Bootstrapping the build engine..."
 $
 $ set def [.src.engine]
 $ @build_vms /out=[--]bootstrap.log
@@ -26,6 +26,16 @@ $ copy [.src.engine.bin_vms]b2.exe []
 $ copy [.src.engine.bin_vms]bjam.exe []
 $
 $ SAY "I|Bootstrapping is done, B2.EXE created."
+$ type sys$input
+$DECK
+
+  To build and install under ROOT: directory, run:
+    MC []B2 --prefix="/root" install
+
+  Set B2 command:
+    B2 :== $ROOT:[BIN]B2.EXE
+
+$EOD
 $ sts = 1
 $
 $EXIT:
