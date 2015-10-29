@@ -1,0 +1,119 @@
+# Copyright 2001 David Abrahams.
+# Copyright 2004, 2005 Markus Schoepflin.
+# Copyright 2011, John Maddock
+# Copyright 2013, Cray, Inc.
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+#
+# Cray C++ Compiler
+# See http://docs.cray.com/books/S-2179-50/html-S-2179-50/S-2179-50-toc.html
+#
+
+import feature generators common ;
+import toolset : flags ;
+
+feature.extend toolset : crayGnu ;
+
+# Inherit from Unix toolset to get library ordering magic.
+toolset.inherit  crayGnu : unix ;
+
+generators.override crayGnu.prebuilt : builtin.lib-generator ;
+generators.override crayGnu.prebuilt : builtin.prebuilt ;
+generators.override crayGnu.searched-lib-generator : searched-lib-generator ;
+
+
+rule init ( version ? : command * : options * )
+{
+    local condition = [ common.check-init-parameters crayGnu : version $(version) ] ;
+    
+    local command = [ common.get-invocation-command crayGnu : CC : $(command) ] ;
+    
+    if $(command)
+    {
+        local root = [ common.get-absolute-tool-path $(command[-1]) ] ;
+
+        if $(root)
+        {
+            flags crayGnu .root $(condition) : "\"$(root)\"/" ;
+        }        
+    }      
+    # If we can't find 'CC' anyway, at least show 'CC' in the commands
+    command ?= CC ;
+        
+    common.handle-options crayGnu : $(condition) : $(command) : $(options) ;               
+}
+
+generators.register-c-compiler crayGnu.compile.c++ : CPP : OBJ : <toolset>crayGnu ;
+generators.register-c-compiler crayGnu.compile.c : C : OBJ : <toolset>crayGnu ;
+
+
+# unlike most compliers, Cray defaults to static linking.
+# flags cxx LINKFLAGS <runtime-link>static : -bstatic ;
+flags crayGnu.compile OPTIONS <debug-symbols>on : -g ;
+flags crayGnu.link OPTIONS <debug-symbols>on : -g ;
+
+flags crayGnu.compile OPTIONS <optimization>off : -O0 ;
+flags crayGnu.compile OPTIONS <optimization>speed : -O2 ;
+flags crayGnu.compile OPTIONS <optimization>space : -O1 ;
+
+flags crayGnu.compile OPTIONS <cflags> ;
+flags crayGnu.compile.c++ OPTIONS <cxxflags> ;
+flags crayGnu.compile DEFINES <define> ;
+flags crayGnu.compile INCLUDES <include> ;
+flags crayGnu.link OPTIONS <linkflags> ;
+
+flags crayGnu.compile OPTIONS : -fPIC ;
+flags crayGnu.compile OPTIONS <link>shared : -dynamic ;
+flags crayGnu.compile OPTIONS <link>static : -static ;
+flags crayGnu.link OPTIONS <link>static : -static ;
+flags crayGnu.link OPTIONS <link>shared ;
+flags crayGnu.link LOPTIONS <link>shared : -dynamic ;
+
+flags crayGnu.link LIBPATH <library-path> ;
+flags crayGnu.link LIBRARIES <library-file> ;
+flags crayGnu.link FINDLIBS-ST <find-static-library> ;
+flags crayGnu.link FINDLIBS-SA <find-shared-library> ;
+
+actions link bind LIBRARIES
+{
+    $(CONFIG_COMMAND) $(OPTIONS) $(LOPTIONS) -o "$(<)" -L$(LIBPATH) "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA)
+}
+
+# When creating dynamic libraries, we don't want to be warned about unresolved
+# symbols, therefore all unresolved symbols are marked as expected by
+# '-expect_unresolved *'. This also mirrors the behaviour of the GNU tool
+# chain.
+
+actions link.dll bind LIBRARIES
+{
+    $(CONFIG_COMMAND) -o "$(<[1])" -Wl,-h -Wl,$(<[-1]:D=) -shared -L$(LIBPATH)  "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS)
+}
+
+
+# Note: Relaxed ANSI mode (-std) is used for compilation because in strict ANSI
+# C89 mode (-std1) the compiler doesn't accept C++ comments in C files. As -std
+# is the default, no special flag is needed.
+actions compile.c
+{
+    $(.root:E=)cc -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+}
+
+# Note: The compiler is forced to compile the files as C++ (-x cxx) because
+# otherwise it will silently ignore files with no file extension.
+#
+# Note: We deliberately don't suppress any warnings on the compiler command
+# line, the user can always do this in a customized toolset later on.
+
+actions compile.c++
+{
+    $(CONFIG_COMMAND) -c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+}
+
+# Always create archive from scratch. See the gcc toolet for rationale.
+RM = [ common.rm-command ] ;
+actions together piecemeal archive
+{
+  $(RM) "$(<)"
+  ar rc $(<) $(>)
+}
