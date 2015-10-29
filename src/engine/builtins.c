@@ -2089,8 +2089,19 @@ static LIST *jam_list_from_sequence(PyObject *a)
         char * s = PyString_AsString( e );
         if ( !s )
         {
-                        err_printf( "Invalid parameter type passed from Python\n" );
-            exit( 1 );
+            /* try to get the repr() on the object */
+            PyObject *repr = PyObject_Repr(e);
+            if (repr)
+            {
+                const char *str = PyString_AsString(repr);
+                PyErr_Format(PyExc_TypeError, "expecting type <str> got %s", str);
+            }
+            /* fall back to a dumb error */
+            else
+            {
+                PyErr_BadArgument();
+            }
+            return NULL;
         }
         l = list_push_back( l, object_new( s ) );
         Py_DECREF( e );
@@ -2145,6 +2156,10 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
 
     args_proper = PyTuple_GetSlice(args, 1, PyTuple_Size(args));
     make_jam_arguments_from_python (inner, args_proper);
+    if ( PyErr_Occurred() )
+    {
+        return NULL;
+    }
     Py_DECREF(args_proper);
 
     result = evaluate_rule( bindrule( rulename, inner->module), rulename, inner );
