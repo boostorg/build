@@ -736,7 +736,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     local fallback-version ;
 
     # Anything left to find or check?
-    if ! ( $(interpreter-cmd) && $(includes) && $(libraries) )
+    if ! ( $(interpreter-cmd) && $(version) && $(includes) && $(libraries) )
     {
         # Values to be extracted from python's sys module. These will be set by
         # the probe rule, above, using Jam's dynamic scoping.
