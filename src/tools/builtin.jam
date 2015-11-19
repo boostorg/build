@@ -304,7 +304,7 @@ feature.feature instruction-set :
 
     # Advanced RISC Machines
     armv2 armv2a armv3 armv3m armv4 armv4t armv5 armv5t armv5te armv6 armv6j iwmmxt ep9312
-	armv7 armv7s
+	armv7 armv7s arm64
 
     : propagated optional ;
 
