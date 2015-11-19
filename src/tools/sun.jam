@@ -148,11 +148,15 @@ actions link bind LIBRARIES
 rule link.dll ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
+    if [ MATCH "(-std=c\\+\\+[03,11])" : [ on $(targets) return $(OPTIONS) ] ]
+    {
+       STDLIBOPT on $(targets) = -library=stdcpp,CrunG3 ;
+    }
 }
 
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -h$(<[1]:D=) -G "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" -h$(<[1]:D=) -G $(STDLIBOPT) "$(>)" "$(LIBRARIES)" -Bdynamic -l$(FINDLIBS-SA) -Bstatic -l$(FINDLIBS-ST) -B$(LINK-RUNTIME)
 }
 
 # Declare action for creating static libraries
