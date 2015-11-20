@@ -5,4 +5,4 @@ language: c
 compiler:
   - gcc
 script:
-  - ./bootstrap.sh
+  - ./bootstrap.sh --with-toolset=${CC}
