@@ -2,7 +2,13 @@ sudo: false
 os:
   - linux
 env:
-  - TOOLSET=gcc
-  - TOOLSET=clang
+  - TOOLSET=gcc TEST_ALL_EXTRAS=
+#  - TOOLSET=gcc TEST_ALL_EXTRAS=--extras
+  - TOOLSET=clang TEST_ALL_EXTRAS=
+#  - TOOLSET=clang TEST_ALL_EXTRAS=--extras
+language: python
+python:
+  - 2.6
 script:
   - ./bootstrap.sh --with-toolset=${TOOLSET}
+  - cd test && python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
