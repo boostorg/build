@@ -1,9 +1,8 @@
 sudo: false
 os:
   - linux
-language: c
-compiler:
-  - gcc
-  - clang
+env:
+  - TOOLSET=gcc
+  - TOOLSET=clang
 script:
-  - ./bootstrap.sh --with-toolset=${CC}
+  - ./bootstrap.sh --with-toolset=${TOOLSET}
