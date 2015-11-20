@@ -4,5 +4,6 @@ os:
 language: c
 compiler:
   - gcc
+  - clang
 script:
   - ./bootstrap.sh --with-toolset=${CC}
