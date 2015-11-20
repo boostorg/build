@@ -2,4 +2,5 @@ sudo: false
 language: c
 compiler:
   - gcc
-script: ./bootstrap.sh
+script:
+  - ./bootstrap.sh
