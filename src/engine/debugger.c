@@ -1886,6 +1886,14 @@ static void debug_mi_stack_list_frames( int argc, const char * * argv )
     OBJECT * depth_str;
     int depth;
     int i;
+    
+    if ( debug_state == DEBUG_NO_CHILD )
+    {
+        debug_mi_format_token();
+        printf( "^error,msg=\"No child\"\n(gdb) \n" );
+        return;
+    }
+
     new_args[ 0 ] = "info";
     new_args[ 1 ] = "frame";
 
