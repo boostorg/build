@@ -10,6 +10,7 @@
 #include "strings.h"
 #include "pathsys.h"
 #include "cwd.h"
+#include "function.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -55,6 +56,7 @@ static int debug_line;
 static FRAME * debug_frame;
 LIST * debug_print_result;
 static int current_token;
+static int debug_selected_frame_number;
 
 struct command_elem
 {
@@ -68,6 +70,51 @@ static void debug_listen( void );
 static int read_command( int report_error );
 static int is_same_file( OBJECT * file1, OBJECT * file2 );
 static void debug_mi_format_token( void );
+
+static void debug_object_write( FILE * out, OBJECT * data )
+{
+    fprintf( out, "%s", object_str( data ) );
+    fputc( '\0', out );
+}
+
+static OBJECT * debug_object_read( FILE * in )
+{
+    string buf[ 1 ];
+    int ch;
+    OBJECT * result;
+    string_new( buf );
+    while( ( ch = fgetc( in ) ) > 0 )
+    {
+        string_push_back( buf, (char)ch );
+    }
+    result = object_new( buf->value );
+    string_free( buf );
+    return result;
+}
+
+static void debug_list_write( FILE * out, LIST * l )
+{
+    LISTITER iter = list_begin( l ), end = list_end( l );
+    fprintf( out, "%d\n", list_length( l ) );
+    for ( ; iter != end; iter = list_next( iter ) )
+    {
+        debug_object_write( out, list_item( iter ) );
+    }
+}
+
+static LIST * debug_list_read( FILE * in )
+{
+    int len;
+    int i;
+    LIST * result = L0;
+    fscanf( in, "%d", &len );
+    assert( fgetc( in ) == '\n' );
+    for ( i = 0; i < len; ++i )
+    {
+        result = list_push_back( result, debug_object_read( in ) );
+    }
+    return result;
+}
 
 static void add_breakpoint( struct breakpoint elem )
 {
@@ -489,9 +536,19 @@ static void debug_child_backtrace( int argc, const char * * argv )
 
 static void debug_child_print( int argc, const char * * argv )
 {
+    FRAME * saved_frame;
+    OBJECT * saved_file;
+    int saved_line;
     string buf[ 1 ];
     const char * lines[ 2 ];
     int i;
+    FRAME new_frame = *debug_frame;
+    /* Save the current file/line, since running parse_string
+     * will likely change it.
+     */
+    saved_frame = debug_frame;
+    saved_file = debug_file;
+    saved_line = debug_line;
     string_new( buf );
     string_append( buf, "__DEBUG_PRINT_HELPER__" );
     for ( i = 1; i < argc; ++i )
@@ -502,30 +559,88 @@ static void debug_child_print( int argc, const char * * argv )
     string_append( buf, " ;\n" );
     lines[ 0 ] = buf->value;
     lines[ 1 ] = NULL;
-    parse_string( constant_builtin, lines, debug_frame );
+    parse_string( constant_builtin, lines, &new_frame );
     string_free( buf );
     list_print( debug_print_result );
 #if defined( CONSOLE_INTERPRETER )
     printf( "\n" );
 #endif
     fflush(stdout);
+    debug_frame = saved_frame;
+    debug_file = saved_file;
+    debug_line = saved_line;
 }
 
 static void debug_child_frame( int argc, const char * * argv )
 {
-    FRAME base = *debug_frame;
-    base.file = debug_file;
-    base.line = debug_line;
-    debug_mi_print_frame( &base );
-    fflush( stdout );
+    if ( argc == 1 )
+    {
+        int i;
+        FRAME base = *debug_frame;
+        FRAME * frame = &base;
+        base.file = debug_file;
+        base.line = debug_line;
+        for ( i = 0; i < debug_selected_frame_number; ++i ) frame = frame->prev;
+        debug_mi_print_frame( frame );
+        fflush( stdout );
+    }
+    else
+    {
+        debug_selected_frame_number = atoi( argv[ 1 ] );
+    }
 }
 
 static void debug_child_info( int argc, const char * * argv )
 {
     if ( strcmp( argv[ 1 ], "locals" ) == 0 )
     {
-        fprintf( command_output, );
+        LIST * locals = L0;
+        if ( debug_frame->function )
+        {
+            locals = function_get_variables( debug_frame->function );
+        }
+        debug_list_write( command_output, locals );
+        fflush( command_output );
+        list_free( locals );
     }
+    else if ( strcmp( argv[ 1 ], "frame" ) == 0 )
+    {
+        int frame_number = debug_selected_frame_number;
+        int i;
+        OBJECT * fullname;
+        FRAME base = *debug_frame;
+        FRAME * frame = &base;
+        base.file = debug_file;
+        base.line = debug_line;
+        if ( argc == 3 ) frame_number = atoi( argv[ 2 ] );
+
+        for ( i = 0; i < frame_number; ++i ) frame = frame->prev;
+
+        fullname = make_absolute_path( frame->file );
+
+        printf( "frame={level=\"%d\",func=\"%s\",file=\"%s\",fullname=\"%s\",line=\"%d\"}",
+            frame_number, base.rulename, object_str( frame->file ), object_str( fullname ), frame->line );
+        fflush( stdout );
+
+        object_free( fullname );
+    }
+    else if ( strcmp( argv[ 1 ], "depth" ) == 0 )
+    {
+        int result = 0;
+        FRAME * frame = debug_frame;
+        while ( frame )
+        {
+            frame = frame->prev;
+            ++result;
+        }
+        fprintf( command_output, "%d", result );
+        fputc( '\0', command_output );
+        fflush( command_output );
+    }
+}
+
+static void debug_child_mi_list_frames( int argc, const char * * argv )
+{
 }
 
 /* Commands for the parent. */
@@ -569,6 +684,7 @@ static struct command_elem child_commands[] =
     { "print", &debug_child_print },
     { "backtrace", &debug_child_backtrace },
     { "frame", &debug_child_frame },
+    { "info", &debug_child_info },
     { NULL, NULL }
 };
 
@@ -1045,6 +1161,10 @@ static void debug_mi_file_list_exec_source_file( int argc, const char * * argv )
 static void debug_mi_thread_info( int argc, const char * * argv );
 static void debug_mi_thread_select( int argc, const char * * argv );
 static void debug_mi_stack_info_frame( int argc, const char * * argv );
+static void debug_mi_stack_select_frame( int argc, const char * * argv );
+static void debug_mi_stack_list_variables( int argc, const char * * argv );
+static void debug_mi_stack_list_locals( int argc, const char * * argv );
+static void debug_mi_stack_list_frames( int argc, const char * * argv );
 static void debug_mi_list_target_features( int argc, const char * * argv );
 static void debug_mi_exec_run( int argc, const char * * argv );
 static void debug_mi_exec_continue( int argc, const char * * argv );
@@ -1085,6 +1205,10 @@ static struct command_elem parent_commands[] =
     { "-thread-info", &debug_mi_thread_info },
     { "-thread-select", &debug_mi_thread_select },
     { "-stack-info-frame", &debug_mi_stack_info_frame },
+    { "-stack-select-frame", &debug_mi_stack_select_frame },
+    { "-stack-list-variables", &debug_mi_stack_list_variables },
+    { "-stack-list-locals", &debug_mi_stack_list_locals },
+    { "-stack-list-frames", &debug_mi_stack_list_frames },
     { "-list-target-features", &debug_mi_list_target_features },
     { "-exec-run", &debug_mi_exec_run },
     { "-exec-continue", &debug_mi_exec_continue },
@@ -1516,6 +1640,24 @@ static void debug_mi_thread_select( int argc, const char * * argv )
     }
 }
 
+static void debug_mi_stack_select_frame( int argc, const char * * argv )
+{
+    if ( debug_state == DEBUG_NO_CHILD )
+    {
+        debug_mi_format_token();
+        printf( "^error,msg=\"No child\"\n(gdb) \n" );
+    }
+    else
+    {
+        const char * new_args[ 2 ];
+        new_args[ 0 ] = "frame";
+        new_args[ 1 ] = argv[ 1 ];
+        debug_parent_forward( 2, new_args, 0, 0 );
+        debug_mi_format_token();
+        printf( "^done\n(gdb) \n" );
+    }
+}
+
 static void debug_mi_stack_info_frame( int argc, const char * * argv )
 {
     if ( debug_state == DEBUG_NO_CHILD )
@@ -1550,7 +1692,13 @@ static void debug_mi_stack_list_variables( int argc, const char * * argv )
     ++argv;
     for ( ; argc; --argc, ++argv )
     {
-        if ( strcmp( *argv, "--no-values" ) == 0 )
+        if ( strcmp( *argv, "--thread" ) == 0 )
+        {
+            /* Only one thread. */
+            --argc;
+            ++argv;
+        }
+        else if ( strcmp( *argv, "--no-values" ) == 0 )
         {
             print_values = DEBUG_PRINT_VARIABLES_NO_VALUES;
         }
@@ -1568,7 +1716,7 @@ static void debug_mi_stack_list_variables( int argc, const char * * argv )
             ++argv;
             break;
         }
-        else if ( argv[ 0 ][ 0 ] == "-" )
+        else if ( argv[ 0 ][ 0 ] == '-' )
         {
             debug_mi_format_token();
             printf( "^error,msg=\"Unknown argument %s\"\n(gdb) \n", *argv );
@@ -1586,9 +1734,184 @@ static void debug_mi_stack_list_variables( int argc, const char * * argv )
         return;
     }
     
+    {
+        LIST * vars;
+        LISTITER iter, end;
+        int first = 1;
+        fprintf( command_output, "info locals\n" );
+        fflush( command_output );
+        vars = debug_list_read( command_child );
+        debug_parent_wait( 0 );
+        debug_mi_format_token();
+        printf( "^done,variables=[" );
+        for ( iter = list_begin( vars ), end = list_end( vars ); iter != end; iter = list_next( iter ) )
+        {
+            OBJECT * varname = list_item( iter );
+            string varbuf[1];
+            const char * new_args[2];
+            if ( first )
+            {
+                first = 0;
+            }
+            else
+            {
+                printf( "," );
+            }
+            printf( "{name=\"%s\",value=\"", object_str( varname ) );
+            fflush( stdout );
+            string_new( varbuf );
+            string_append( varbuf, "$(" );
+            string_append( varbuf, object_str( varname ) );
+            string_append( varbuf, ")" );
+            new_args[ 0 ] = "print";
+            new_args[ 1 ] = varbuf->value;
+            debug_parent_forward( 2, new_args, 0, 0 );
+            string_free( varbuf );
+            printf( "\"}" );
+        }
+        printf( "]\n(gdb) \n" );
+        fflush( stdout );
+        list_free( vars );
+    }
+}
+
+static void debug_mi_stack_list_locals( int argc, const char * * argv )
+{
+    int print_values = 0;
+#define DEBUG_PRINT_VARIABLES_NO_VALUES     1
+#define DEBUG_PRINT_VARIABLES_ALL_VALUES    2
+#define DEBUG_PRINT_VARIABLES_SIMPLE_VALUES 3
+    if ( debug_state == DEBUG_NO_CHILD )
+    {
+        debug_mi_format_token();
+        printf( "^error,msg=\"No child\"\n(gdb) \n" );
+        return;
+    }
+    --argc;
+    ++argv;
+    for ( ; argc; --argc, ++argv )
+    {
+        if ( strcmp( *argv, "--thread" ) == 0 )
+        {
+            /* Only one thread. */
+            --argc;
+            ++argv;
+            if ( argc == 0 )
+            {
+                debug_mi_format_token();
+                printf( "^error,msg=\"Argument required for --thread.\"" );
+                return;
+            }
+        }
+        else if ( strcmp( *argv, "--no-values" ) == 0 )
+        {
+            print_values = DEBUG_PRINT_VARIABLES_NO_VALUES;
+        }
+        else if ( strcmp( *argv, "--all-values" ) == 0 )
+        {
+            print_values = DEBUG_PRINT_VARIABLES_ALL_VALUES;
+        }
+        else if ( strcmp( *argv, "--simple-values" ) == 0 )
+        {
+            print_values = DEBUG_PRINT_VARIABLES_SIMPLE_VALUES;
+        }
+        else if ( strcmp( *argv, "--" ) == 0 )
+        {
+            --argc;
+            ++argv;
+            break;
+        }
+        else if ( argv[ 0 ][ 0 ] == '-' )
+        {
+            debug_mi_format_token();
+            printf( "^error,msg=\"Unknown argument %s\"\n(gdb) \n", *argv );
+            return;
+        }
+        else
+        {
+            break;
+        }
+    }
+    if ( argc != 0 )
+    {
+        debug_mi_format_token();
+        printf( "^error,msg=\"Too many arguments for -stack-list-variables\"\n(gdb) \n" );
+        return;
+    }
+    
+    {
+        LIST * vars;
+        LISTITER iter, end;
+        int first = 1;
+        fprintf( command_output, "info locals\n" );
+        fflush( command_output );
+        vars = debug_list_read( command_child );
+        debug_parent_wait( 0 );
+        debug_mi_format_token();
+        printf( "^done,locals=[" );
+        for ( iter = list_begin( vars ), end = list_end( vars ); iter != end; iter = list_next( iter ) )
+        {
+            OBJECT * varname = list_item( iter );
+            string varbuf[1];
+            const char * new_args[2];
+            if ( first )
+            {
+                first = 0;
+            }
+            else
+            {
+                printf( "," );
+            }
+            printf( "{name=\"%s\",type=\"list\",value=\"", object_str( varname ) );
+            fflush( stdout );
+            string_new( varbuf );
+            string_append( varbuf, "$(" );
+            string_append( varbuf, object_str( varname ) );
+            string_append( varbuf, ")" );
+            new_args[ 0 ] = "print";
+            new_args[ 1 ] = varbuf->value;
+            debug_parent_forward( 2, new_args, 0, 0 );
+            string_free( varbuf );
+            printf( "\"}" );
+        }
+        printf( "]\n(gdb) \n" );
+        fflush( stdout );
+        list_free( vars );
+    }
+}
+
+static void debug_mi_stack_list_frames( int argc, const char * * argv )
+{
+    const char * new_args[ 3 ];
+    OBJECT * depth_str;
+    int depth;
+    int i;
     new_args[ 0 ] = "info";
-    new_args[ 1 ] = "locals";
-    fprintf( command_output, "info locals\n" );
+    new_args[ 1 ] = "frame";
+
+    fprintf( command_output, "info depth\n" );
+    fflush( command_output );
+    depth_str = debug_object_read( command_child );
+    depth = atoi( object_str( depth_str ) );
+    object_free( depth_str );
+    debug_parent_wait( 0 );
+
+    debug_mi_format_token();
+    printf( "^done,stack=[" );
+    for ( i = 0; i < depth; ++i )
+    {
+        char buf[ 16 ];
+        sprintf( buf, "%d", i );
+        new_args[ 2 ] = buf;
+        if ( i != 0 )
+        {
+            printf( "," );
+        }
+        fflush( stdout );
+        debug_parent_forward( 3, new_args, 0, 0 );
+    }
+    printf( "]\n(gdb) \n" );
+    fflush( stdout );
 }
 
 static void debug_mi_list_target_features( int argc, const char * * argv )
@@ -1842,7 +2165,7 @@ static int read_command( int report_error )
     result = process_command( line->value );
     if ( !result && report_error )
     {
-        /* printf( "Unknown command: %s\n", line->value ); */
+        /* printf( "~\"Unknown command: %s\\n\"\n", line->value ); */
         debug_mi_format_token();
         printf( "^error,msg=\"Unknown command: %s\"\n(gdb) \n", line->value );
     }
@@ -1864,6 +2187,7 @@ static void debug_listen( void )
         /* assume that the parent has already validated the input */
         read_command( 0 );
     }
+    debug_selected_frame_number = 0;
 }
 
 struct debug_child_data_t debug_child_data;

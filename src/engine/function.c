@@ -3571,6 +3571,71 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
     }
 }
 
+LIST * function_get_variables( FUNCTION * f )
+{
+    if ( f->type == FUNCTION_BUILTIN )
+        return L0;
+#ifdef HAVE_PYTHON
+    if ( f->type == FUNCTION_PYTHON )
+        return L0;
+#endif
+    {
+        JAM_FUNCTION * func = (JAM_FUNCTION *)f;
+        LIST * result = L0;
+        instruction * code;
+        int i;
+        assert( f->type == FUNCTION_JAM );
+        if ( func->generic ) func = ( JAM_FUNCTION * )func->generic;
+
+        for ( i = 0; ; ++i )
+        {
+            OBJECT * var;
+            code = func->code + i;
+            switch ( code->op_code )
+            {
+            case INSTR_PUSH_LOCAL: break;
+            case INSTR_RETURN: return result;
+            case INSTR_CALL_MEMBER_RULE:
+            case INSTR_CALL_RULE: ++i; continue;
+            case INSTR_PUSH_MODULE:
+                {
+                    int depth = 1;
+                    ++i;
+                    while ( depth > 0 )
+                    {
+                        code = func->code + i;
+                        switch ( code->op_code )
+                        {
+                        case INSTR_PUSH_MODULE:
+                        case INSTR_CLASS:
+                            ++depth;
+                            break;
+                        case INSTR_POP_MODULE:
+                            --depth;
+                            break;
+                        case INSTR_CALL_RULE:
+                            ++i;
+                            break;
+                        }
+                        ++i;
+                    }
+                    --i;
+                }
+            default: continue;
+            }
+            var = func->constants[ code->arg ];
+            if ( !( object_equal( var, constant_TMPDIR ) ||
+                    object_equal( var, constant_TMPNAME ) ||
+                    object_equal( var, constant_TMPFILE ) ||
+                    object_equal( var, constant_STDOUT ) ||
+                    object_equal( var, constant_STDERR ) ) )
+            {
+                result = list_push_back( result, var );
+            }
+        }
+    }
+}
+
 void function_refer( FUNCTION * func )
 {
     ++func->reference_count;
@@ -3679,6 +3744,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
     LIST * r;
     LIST * result = L0;
     void * saved_stack = s->data;
+
+#ifdef JAM_DEBUGGER
+    frame->function = function_;
+#endif
 
     if ( function_->type == FUNCTION_BUILTIN )
     {
@@ -4465,6 +4534,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 popsettings( root_module(), t->settings );
 
                 parse_file( t->boundname, frame );
+#ifdef JAM_DEBUGGER
+                frame->function = function_;
+#endif
             }
             break;
         }
