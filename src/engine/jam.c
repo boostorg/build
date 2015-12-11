@@ -234,6 +234,8 @@ int main( int argc, char * * argv, char * * arg_environ )
     InitGraf( &qd.thePort );
 #endif
 
+    cwd_init();
+
 #ifdef JAM_DEBUGGER
 
 #if NT
@@ -388,7 +390,6 @@ int main( int argc, char * * argv, char * * arg_environ )
     }
 
     constants_init();
-    cwd_init();
 
     {
         PROFILE_ENTER( MAIN );

@@ -477,6 +477,37 @@ static void debug_child_break( int argc, const char * * argv )
     }
 }
 
+static int get_breakpoint_by_name( const char * name )
+{
+    int result;
+    const char * file_ptr = name;
+    const char * ptr = strrchr( file_ptr, ':' );
+    if ( ptr )
+    {
+        char * end;
+        long line = strtoul( ptr + 1, &end, 10 );
+        if ( line > 0 && line <= INT_MAX && end != ptr + 1 && *end == 0 )
+        {
+            OBJECT * file = object_new_range( file_ptr,  ptr - file_ptr );
+            result = handle_line_breakpoint( file, line );
+            object_free( file );
+        }
+        else
+        {
+            OBJECT * name = object_new( file_ptr );
+            result = handle_function_breakpoint( name );
+            object_free( name );
+        }
+    }
+    else
+    {
+        OBJECT * name = object_new( file_ptr );
+        result = handle_function_breakpoint( name );
+        object_free( name );
+    }
+    return result;
+}
+
 static void debug_child_disable( int argc, const char * * argv )
 {
     if ( argc == 2 )
@@ -1096,6 +1127,29 @@ static void debug_parent_delete( int argc, const char * * argv )
 #endif
 }
 
+static void debug_parent_clear( int argc, const char * * argv )
+{
+    char buf[ 16 ];
+    const char * new_args[ 2 ];
+    int id;
+    if ( argc != 2 )
+    {
+        /* FIXME: handle error. */
+        return;
+    }
+    id = get_breakpoint_by_name( argv[ 1 ] );
+    if ( id == -1 )
+    {
+        printf( "^error,msg=\"Unknown breakpoint\"\n(gdb) \n" );
+        return;
+    }
+    
+    sprintf( buf, "%d", id );
+    new_args[ 0 ] = "delete";
+    new_args[ 1 ] = buf;
+    debug_parent_delete( 2, new_args );
+}
+
 static void debug_parent_print( int argc, const char * * argv )
 {
 #if ! defined( CONSOLE_INTERPRETER )
@@ -1187,6 +1241,7 @@ static struct command_elem parent_commands[] =
     { "disable", &debug_parent_disable },
     { "enable", &debug_parent_enable },
     { "delete", &debug_parent_delete },
+    { "clear", &debug_parent_clear },
     { "print", &debug_parent_print },
     { "backtrace", &debug_parent_backtrace },
     { "quit", &debug_parent_quit },
