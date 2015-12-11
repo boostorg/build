@@ -505,7 +505,9 @@ static void debug_child_print( int argc, const char * * argv )
     parse_string( constant_builtin, lines, debug_frame );
     string_free( buf );
     list_print( debug_print_result );
+#if defined( CONSOLE_INTERPRETER )
     printf( "\n" );
+#endif
     fflush(stdout);
 }
 
@@ -516,6 +518,14 @@ static void debug_child_frame( int argc, const char * * argv )
     base.line = debug_line;
     debug_mi_print_frame( &base );
     fflush( stdout );
+}
+
+static void debug_child_info( int argc, const char * * argv )
+{
+    if ( strcmp( argv[ 1 ], "locals" ) == 0 )
+    {
+        fprintf( command_output, );
+    }
 }
 
 /* Commands for the parent. */
@@ -972,7 +982,16 @@ static void debug_parent_delete( int argc, const char * * argv )
 
 static void debug_parent_print( int argc, const char * * argv )
 {
+#if ! defined( CONSOLE_INTERPRETER )
+    printf( "~\"$1 = " );
+    fflush( stdout );
+#endif
     debug_parent_forward( argc, argv, 1, 1 );
+#if ! defined( CONSOLE_INTERPRETER )
+    printf( "\"\n~\"\\n\"\n" );
+    debug_mi_format_token();
+    printf( "^done\n(gdb) \n" );
+#endif
 }
 
 static void debug_parent_backtrace( int argc, const char * * argv )
@@ -1033,6 +1052,7 @@ static void debug_mi_exec_step( int argc, const char * * argv );
 static void debug_mi_exec_next( int argc, const char * * argv );
 static void debug_mi_exec_finish( int argc, const char * * argv );
 static void debug_mi_data_list_register_names( int argc, const char * * argv );
+static void debug_mi_data_evaluate_expression( int argc, const char * * argv );
 static void debug_mi_interpreter_exec( int argc, const char * * argv );
 
 static struct command_elem parent_commands[] =
@@ -1072,6 +1092,7 @@ static struct command_elem parent_commands[] =
     { "-exec-next", &debug_mi_exec_next },
     { "-exec-finish", &debug_mi_exec_finish },
     { "-data-list-register-names", &debug_mi_data_list_register_names },
+    { "-data-evaluate-expression", &debug_mi_data_evaluate_expression },
     { "-interpreter-exec", &debug_mi_interpreter_exec },
     { NULL, NULL }
 };
@@ -1513,6 +1534,63 @@ static void debug_mi_stack_info_frame( int argc, const char * * argv )
     }
 }
 
+static void debug_mi_stack_list_variables( int argc, const char * * argv )
+{
+    int print_values = 0;
+#define DEBUG_PRINT_VARIABLES_NO_VALUES     1
+#define DEBUG_PRINT_VARIABLES_ALL_VALUES    2
+#define DEBUG_PRINT_VARIABLES_SIMPLE_VALUES 3
+    if ( debug_state == DEBUG_NO_CHILD )
+    {
+        debug_mi_format_token();
+        printf( "^error,msg=\"No child\"\n(gdb) \n" );
+        return;
+    }
+    --argc;
+    ++argv;
+    for ( ; argc; --argc, ++argv )
+    {
+        if ( strcmp( *argv, "--no-values" ) == 0 )
+        {
+            print_values = DEBUG_PRINT_VARIABLES_NO_VALUES;
+        }
+        else if ( strcmp( *argv, "--all-values" ) == 0 )
+        {
+            print_values = DEBUG_PRINT_VARIABLES_ALL_VALUES;
+        }
+        else if ( strcmp( *argv, "--simple-values" ) == 0 )
+        {
+            print_values = DEBUG_PRINT_VARIABLES_SIMPLE_VALUES;
+        }
+        else if ( strcmp( *argv, "--" ) == 0 )
+        {
+            --argc;
+            ++argv;
+            break;
+        }
+        else if ( argv[ 0 ][ 0 ] == "-" )
+        {
+            debug_mi_format_token();
+            printf( "^error,msg=\"Unknown argument %s\"\n(gdb) \n", *argv );
+            return;
+        }
+        else
+        {
+            break;
+        }
+    }
+    if ( argc != 0 )
+    {
+        debug_mi_format_token();
+        printf( "^error,msg=\"Too many arguments for -stack-list-variables\"\n(gdb) \n" );
+        return;
+    }
+    
+    new_args[ 0 ] = "info";
+    new_args[ 1 ] = "locals";
+    fprintf( command_output, "info locals\n" );
+}
+
 static void debug_mi_list_target_features( int argc, const char * * argv )
 {
     /* FIXME: implement this for real */
@@ -1599,6 +1677,29 @@ static void debug_mi_data_list_register_names( int argc, const char * * argv )
     printf( "^done,register-names=[]\n(gdb) \n" );
 }
 
+static void debug_mi_data_evaluate_expression( int argc, const char * * argv )
+{
+    if ( argc < 2 )
+    {
+        printf( "^error,msg=\"Not enough arguments for -data-evaluate-expression\"\n(gdb) \n" );
+    }
+    if ( debug_state == DEBUG_NO_CHILD )
+    {
+        printf( "^error,msg=\"No child\"\n(gdb) \n" );
+    }
+    else
+    {
+        const char * new_args[ 2 ];
+        debug_mi_format_token();
+        printf( "^done,value=\"" );
+        fflush( stdout );
+        new_args[ 0 ] = "print";
+        new_args[ 1 ] = argv[ 1 ];
+        debug_parent_forward( 2, new_args, 1, 0 );
+        printf( "\"\n(gdb) \n" );
+    }
+}
+
 static int process_command( char * command );
 
 static void debug_mi_interpreter_exec( int argc, const char * * argv )
@@ -1643,7 +1744,7 @@ static int run_command( int argc, const char * * argv )
     const char * command_name;
     if ( argc == 0 )
     {
-        return 0;
+        return 1;
     }
     command_name = argv[ 0 ];
     /* Skip the GDB/MI token when choosing the command to run. */
