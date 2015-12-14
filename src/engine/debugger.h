@@ -29,6 +29,10 @@ struct debug_child_data_t
 extern struct debug_child_data_t debug_child_data;
 extern LIST * debug_print_result;
 extern const char debugger_opt[];
+extern int debug_interface;
+
+#define DEBUG_INTERFACE_CONSOLE 1
+#define DEBUG_INTERFACE_MI 2
 
 #if NT
 

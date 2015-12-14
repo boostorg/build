@@ -213,6 +213,29 @@ void regex_done();
 
 char const * saved_argv0;
 
+static void usage( const char * progname )
+{
+    printf( "\nusage: %s [ options ] targets...\n\n", progname );
+
+    printf( "-a      Build all targets, even if they are current.\n" );
+    printf( "-dx     Set the debug level to x (0-9).\n" );
+    printf( "-fx     Read x instead of Jambase.\n" );
+    /* printf( "-g      Build from newest sources first.\n" ); */
+    printf( "-jx     Run up to x shell commands concurrently.\n" );
+    printf( "-lx     Limit actions to x number of seconds after which they are stopped.\n" );
+    printf( "-mx     Maximum target output saved (kb), default is to save all output.\n" );
+    printf( "-n      Don't actually execute the updating actions.\n" );
+    printf( "-ox     Write the updating actions to file x.\n" );
+    printf( "-px     x=0, pipes action stdout and stderr merged into action output.\n" );
+    printf( "-q      Quit quickly as soon as a target fails.\n" );
+    printf( "-sx=y   Set variable x=y, overriding environment.\n" );
+    printf( "-tx     Rebuild x, even if it is up-to-date.\n" );
+    printf( "-v      Print the version of jam and exit.\n" );
+    printf( "--x     Option is ignored.\n\n" );
+
+    exit( EXITBAD );
+}
+
 int main( int argc, char * * argv, char * * arg_environ )
 {
     int                     n;
@@ -238,17 +261,35 @@ int main( int argc, char * * argv, char * * arg_environ )
 
 #ifdef JAM_DEBUGGER
 
+    is_debugger = 0;
+    
+    if ( getoptions( argc - 1, argv + 1, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
+        usage( progname );
+
+    if ( s = getoptval( optv, 'd', 0 ) )
+    {
+        if ( strcmp( s, "mi" ) == 0 )
+        {
+            debug_interface = DEBUG_INTERFACE_MI;
+            is_debugger = 1;
+        }
+        else if ( strcmp( s, "console" ) == 0 )
+        {
+            debug_interface = DEBUG_INTERFACE_CONSOLE;
+            is_debugger = 1;
+        }
+    }
+
 #if NT
 
-    is_debugger = 1;
     if ( argc >= 3 )
     {
+        /* Check whether this instance is being run by the debugger. */
         size_t opt_len = strlen( debugger_opt );
         if ( strncmp( argv[ 1 ], debugger_opt, opt_len ) == 0 &&
             strncmp( argv[ 2 ], debugger_opt, opt_len ) == 0 )
         {
             debug_init_handles( argv[ 1 ] + opt_len, argv[ 2 ] + opt_len );
-            is_debugger = 0;
             /* Fix up argc/argv to hide the internal options */
             arg_c = argc = (argc - 2);
             argv[ 2 ] = argv[ 0 ];
@@ -263,14 +304,17 @@ int main( int argc, char * * argv, char * * arg_environ )
 
 #else
 
-    if ( setjmp( debug_child_data.jmp ) != 0 )
+    if ( is_debugger )
     {
-        arg_c = argc = debug_child_data.argc;
-        arg_v = argv = (char * *)debug_child_data.argv;
-    }
-    else
-    {
-        return debugger();
+        if ( setjmp( debug_child_data.jmp ) != 0 )
+        {
+            arg_c = argc = debug_child_data.argc;
+            arg_v = argv = (char * *)debug_child_data.argv;
+        }
+        else
+        {
+            return debugger();
+        }
     }
 
 #endif
@@ -282,25 +326,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 
     if ( getoptions( argc, argv, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
     {
-        printf( "\nusage: %s [ options ] targets...\n\n", progname );
-
-        printf( "-a      Build all targets, even if they are current.\n" );
-        printf( "-dx     Set the debug level to x (0-9).\n" );
-        printf( "-fx     Read x instead of Jambase.\n" );
-        /* printf( "-g      Build from newest sources first.\n" ); */
-        printf( "-jx     Run up to x shell commands concurrently.\n" );
-        printf( "-lx     Limit actions to x number of seconds after which they are stopped.\n" );
-        printf( "-mx     Maximum target output saved (kb), default is to save all output.\n" );
-        printf( "-n      Don't actually execute the updating actions.\n" );
-        printf( "-ox     Write the updating actions to file x.\n" );
-        printf( "-px     x=0, pipes action stdout and stderr merged into action output.\n" );
-        printf( "-q      Quit quickly as soon as a target fails.\n" );
-        printf( "-sx=y   Set variable x=y, overriding environment.\n" );
-        printf( "-tx     Rebuild x, even if it is up-to-date.\n" );
-        printf( "-v      Print the version of jam and exit.\n" );
-        printf( "--x     Option is ignored.\n\n" );
-
-        exit( EXITBAD );
+        usage( progname );
     }
 
     /* Version info. */

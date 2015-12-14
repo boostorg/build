@@ -92,6 +92,20 @@ static OBJECT * debug_object_read( FILE * in )
     return result;
 }
 
+static void debug_int_write( FILE * out, int i )
+{
+    fprintf( out, "%d", i );
+    fputc( '\0', out );
+}
+
+static int debug_int_read( FILE * in )
+{
+    OBJECT * str = debug_object_read( in );
+    int result = atoi( object_str( str ) );
+    object_free( str );
+    return result;
+}
+
 static void debug_list_write( FILE * out, LIST * l )
 {
     LISTITER iter = list_begin( l ), end = list_end( l );
@@ -721,29 +735,44 @@ static struct command_elem child_commands[] =
 
 static void debug_parent_child_exited( int pid, int exit_code )
 {
-#if defined( CONSOLE_INTERPRETER )
-    printf( "Child %d exited with status %d\n", (int)child_pid, (int)exit_code );
-#else
-    if ( exit_code == 0 )
-        printf( "*stopped,reason=\"exited-normally\"\n(gdb) \n" );
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
+    {
+        printf( "Child %d exited with status %d\n", (int)child_pid, (int)exit_code );
+    }
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        if ( exit_code == 0 )
+            printf( "*stopped,reason=\"exited-normally\"\n(gdb) \n" );
+        else
+            printf( "*stopped,reason=\"exited\",exit-code=\"%d\"\n(gdb) \n", exit_code );
+    }
     else
-        printf( "*stopped,reason=\"exited\",exit-code=\"%d\"\n(gdb) \n", exit_code );
-#endif
+    {
+        assert( !"Wrong value of debug_interface." );
+    }
 }
 
 static void debug_parent_child_signalled( int pid, int sigid )
 {
-#if defined( CONSOLE_INTERPRETER )
-    printf( "Child %d exited on signal %d\n", child_pid, sigid );
-#else
-    const char * name = "unknown";
-    const char * meaning = "unknown";
-    switch( sigid )
+    
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
-    case SIGINT: name = "SIGINT"; meaning = "Interrupt"; break;
+        printf( "Child %d exited on signal %d\n", child_pid, sigid );
     }
-    printf("*stopped,reason=\"exited-signalled\",signal-name=\"%s\",signal-meaning=\"%s\"\n(gdb) \n");
-#endif
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        const char * name = "unknown";
+        const char * meaning = "unknown";
+        switch( sigid )
+        {
+        case SIGINT: name = "SIGINT"; meaning = "Interrupt"; break;
+        }
+        printf("*stopped,reason=\"exited-signalled\",signal-name=\"%s\",signal-meaning=\"%s\"\n(gdb) \n");
+    }
+    else
+    {
+        assert( !"Wrong value of debug_interface." );
+    }
 }
 
 /* Waits for events from the child. */
@@ -1008,11 +1037,12 @@ static void debug_start_child( int argc, const char * * argv )
 static void debug_parent_run( int argc, const char * * argv )
 {
     debug_parent_run_print( argc, argv );
-#if ! defined( CONSOLE_INTERPRETER )
-    printf( "=thread-created,id=\"1\",group-id=\"i1\"\n" );
-    debug_mi_format_token();
-    printf( "^running\n(gdb) \n" );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        printf( "=thread-created,id=\"1\",group-id=\"i1\"\n" );
+        debug_mi_format_token();
+        printf( "^running\n(gdb) \n" );
+    }
     debug_start_child( argc, argv );
     debug_parent_wait( 1 );
 }
@@ -1039,51 +1069,56 @@ static void debug_parent_forward( int argc, const char * * argv, int print_messa
 
 static void debug_parent_continue( int argc, const char * * argv )
 {
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^running\n(gdb) \n" );
-    fflush( stdout );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^running\n(gdb) \n" );
+        fflush( stdout );
+    }
     debug_parent_forward( 1, argv, 1, 1 );
 }
 
 static void debug_parent_kill( int argc, const char * * argv )
 {
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^running\n(gdb) \n" );
-    fflush( stdout );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^running\n(gdb) \n" );
+        fflush( stdout );
+    }
     debug_parent_forward( 1, argv, 0, 1 );
 }
 
 static void debug_parent_step( int argc, const char * * argv )
 {
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^running\n(gdb) \n" );
-    fflush( stdout );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^running\n(gdb) \n" );
+        fflush( stdout );
+    }
     debug_parent_forward( 1, argv, 1, 1 );
 }
 
 static void debug_parent_next( int argc, const char * * argv )
 {
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^running\n(gdb) \n" );
-    fflush( stdout );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^running\n(gdb) \n" );
+        fflush( stdout );
+    }
     debug_parent_forward( 1, argv, 1, 1 );
 }
 
 static void debug_parent_finish( int argc, const char * * argv )
 {
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^running\n(gdb) \n" );
-    fflush( stdout );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^running\n(gdb) \n" );
+        fflush( stdout );
+    }
     debug_parent_forward( 1, argv, 1, 1 );
 }
 
@@ -1091,40 +1126,44 @@ static void debug_parent_break( int argc, const char * * argv )
 {
     debug_child_break( argc, argv );
     debug_parent_forward( argc, argv, 1, 0 );
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^done\n(gdb) \n" );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^done\n(gdb) \n" );
+    }
 }
 
 static void debug_parent_disable( int argc, const char * * argv )
 {
     debug_child_disable( argc, argv );
     debug_parent_forward( 1, argv, 1, 0 );
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^done\n(gdb) \n" );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^done\n(gdb) \n" );
+    }
 }
 
 static void debug_parent_enable( int argc, const char * * argv )
 {
     debug_child_enable( argc, argv );
     debug_parent_forward( 1, argv, 1, 0 );
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^done\n(gdb) \n" );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^done\n(gdb) \n" );
+    }
 }
 
 static void debug_parent_delete( int argc, const char * * argv )
 {
     debug_child_delete( argc, argv );
     debug_parent_forward( 1, argv, 1, 0 );
-#if ! defined( CONSOLE_INTERPRETER )
-    debug_mi_format_token();
-    printf( "^done\n(gdb) \n" );
-#endif
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_format_token();
+        printf( "^done\n(gdb) \n" );
+    }
 }
 
 static void debug_parent_clear( int argc, const char * * argv )
@@ -2102,24 +2141,16 @@ int debugger( void )
 {
     command_array = parent_commands;
     command_input = stdin;
-    printf( "=thread-group-added,id=\"i1\"\n" );
-    printf( "(gdb) \n" );
+    if ( debug_interface == DEBUG_INTERFACE_MI )
+        printf( "=thread-group-added,id=\"i1\"\n(gdb) \n" );
     while ( 1 )
     {
-#ifdef CONSOLE_INTERPRETER
-        printf("(b2db) ");
-#endif
+        if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
+            printf("(b2db) ");
         fflush( stdout );
         read_command( 1 );
     }
     return 0;
-    /* commands: */
-    "frame";
-    "ignore";
-    "condition";
-    "watch";
-    "skip";
-    "clear";
 }
 
 
@@ -2255,3 +2286,4 @@ static void debug_listen( void )
 
 struct debug_child_data_t debug_child_data;
 const char debugger_opt[] = "--b2db-internal-debug-handle=";
+int debug_interface;
