@@ -1,4 +1,8 @@
-language: c
-compiler:
-  - gcc
-script: ./bootstrap.sh
+sudo: false
+os:
+  - linux
+env:
+  - TOOLSET=gcc
+  - TOOLSET=clang
+script:
+  - ./bootstrap.sh --with-toolset=${TOOLSET}
