@@ -164,17 +164,21 @@ static char as_path_delim( char const c )
 
 void path_build( PATHNAME * f, string * file )
 {
+    int check_f;
+    int check_f_pos;
+
     file_build1( f, file );
 
     /* Do not prepend root if it is '.' or the directory is rooted. */
-    if ( f->f_root.len
-        && !( f->f_root.len == 1 && f->f_root.ptr[ 0 ] == '.' )
-        && !( f->f_dir.len && f->f_dir.ptr[ 0 ] == '/' )
+    check_f = (f->f_root.len
+               && !( f->f_root.len == 1 && f->f_root.ptr[ 0 ] == '.')
+               && !( f->f_dir.len && f->f_dir.ptr[ 0 ] == '/' ));
 #if PATH_DELIM == '\\'
-        && !( f->f_dir.len && f->f_dir.ptr[ 0 ] == '\\' )
-        && !( f->f_dir.len && f->f_dir.ptr[ 1 ] == ':' )
+    check_f = (check_f
+               && !( f->f_dir.len && f->f_dir.ptr[ 0 ] == '\\' )
+               && !( f->f_dir.len && f->f_dir.ptr[ 1 ] == ':' ));
 #endif
-    )
+    if (check_f)
     {
         string_append_range( file, f->f_root.ptr, f->f_root.ptr + f->f_root.len
             );
@@ -190,11 +194,12 @@ void path_build( PATHNAME * f, string * file )
 
     /* Put path separator between dir and file. */
     /* Special case for root dir: do not add another path separator. */
-    if ( f->f_dir.len && ( f->f_base.len || f->f_suffix.len )
+    check_f_pos = (f->f_dir.len && ( f->f_base.len || f->f_suffix.len ));
 #if PATH_DELIM == '\\'
-        && !( f->f_dir.len == 3 && f->f_dir.ptr[ 1 ] == ':' )
+    check_f_pos = (check_f_pos && !( f->f_dir.len == 3 && f->f_dir.ptr[ 1 ] == ':' ));
 #endif
-        && !( f->f_dir.len == 1 && is_path_delim( f->f_dir.ptr[ 0 ] ) ) )
+    check_f_pos = (check_f_pos && !( f->f_dir.len == 1 && is_path_delim( f->f_dir.ptr[ 0 ])));
+    if (check_f_pos)
         string_push_back( file, as_path_delim( f->f_dir.ptr[ f->f_dir.len ] ) );
 
     if ( f->f_base.len )
