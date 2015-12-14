@@ -8,6 +8,7 @@ env:
 #  - TOOLSET=clang TEST_ALL_EXTRAS=--extras
 language: python
 python:
+  - 2.7
   - 2.6
 script:
   - ./bootstrap.sh --with-toolset=${TOOLSET}
