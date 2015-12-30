@@ -89,7 +89,18 @@ rule html ( target : source : properties *  )
         
         if $(RST2XXX_PY)
         {
-            RST2XXX on $(target) = $(python-cmd:G=:E="python") $(RST2XXX_PY) ;
+            if $(RST2XXX_PY:D)
+            {
+                # If we have a path to the rst2html.py script, we need to use
+                # the python interpreter to load it up.
+                RST2XXX on $(target) = $(python-cmd:G=:E="python") $(RST2XXX_PY) ;
+            }
+            else
+            {
+                # Otherwise, bare rst2html.py, we can just exec that directly.
+                # This work for both Nix, and the standard Windows Python installs.
+                RST2XXX on $(target) = $(RST2XXX_PY) ;
+            }
         }
         else
         {
