@@ -50,6 +50,13 @@ if [ qt5.initialized ]
 
       [ run qtlocation.cpp  /qt5//QtLocation  ]
 
+      [ run qtcharts.cpp  /qt5//QtCharts  ]
+
+      [ run qt3dcore.cpp   /qt5//Qt3DCore ]
+      [ run qt3drender.cpp /qt5//Qt3DRender ]
+      [ run qt3dinput.cpp  /qt5//Qt3DInput ]
+      [ run qt3dlogic.cpp  /qt5//Qt3DLogic ]
+
       # Help systems.
       [ link qthelp.cpp      /qt5//QtHelp ]
 
