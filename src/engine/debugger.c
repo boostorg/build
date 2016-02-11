@@ -51,6 +51,7 @@ static int breakpoints_capacity;
 
 #define DEBUG_MSG_BREAKPOINT   1
 #define DEBUG_MSG_END_STEPPING 2
+#define DEBUG_MSG_SETUP        3
 #define DEBUG_MSG_DONE         32
 
 static int debug_state;
@@ -61,6 +62,13 @@ static FRAME * debug_frame;
 LIST * debug_print_result;
 static int current_token;
 static int debug_selected_frame_number;
+
+/* Commands are read from this stream. */
+static FILE * command_input;
+/* Where to send output from commands. */
+static FILE * command_output;
+/* Only valid in the parent.  Reads command output from the child. */
+static FILE * command_child;
 
 struct command_elem
 {
@@ -74,6 +82,7 @@ static void debug_listen( void );
 static int read_command( int report_error );
 static int is_same_file( OBJECT * file1, OBJECT * file2 );
 static void debug_mi_format_token( void );
+static OBJECT * make_absolute_path( OBJECT * filename );
 
 static void debug_string_write( FILE * out, const char * data )
 {
@@ -144,9 +153,11 @@ static LIST * debug_list_read( FILE * in )
 {
     int len;
     int i;
+    int ch;
     LIST * result = L0;
     fscanf( in, "%d", &len );
-    assert( fgetc( in ) == '\n' );
+    ch = fgetc( in );
+    assert( ch == '\n' );
     for ( i = 0; i < len; ++i )
     {
         result = list_push_back( result, debug_object_read( in ) );
@@ -167,6 +178,7 @@ static void debug_lol_write( FILE * out, LOL * lol )
 static void debug_lol_read( FILE * in, LOL * lol )
 {
     int count, i;
+    lol_init( lol );
     count = debug_int_read( in );
     for ( i = 0; i < count; ++i )
     {
@@ -176,28 +188,44 @@ static void debug_lol_read( FILE * in, LOL * lol )
 
 static void debug_frame_write( FILE * out, FRAME * frame )
 {
-    debug_object_write( frame->file );
-    debug_int_write( frame->line );
-    debug_lol_write( frame->args );
-    debug_string_write( frame->rulename );
+    OBJECT * fullname = make_absolute_path( frame->file );
+    debug_object_write( out, frame->file );
+    debug_int_write( out, frame->line );
+    debug_object_write( out, fullname );
+    debug_lol_write( out, frame->args );
+    debug_string_write( out, frame->rulename );
+    object_free( fullname );
 }
 
-static void debug_frame_read( FILE * in, FRAME * frame )
+/*
+ * The information passed to the debugger for
+ * a frame is slightly different from the FRAME
+ * struct.
+ */
+typedef struct _frame_info
 {
-    frame_init( frame );
-    frame->file = debug_object_read( in );
-    frame->line = debug_int_read( in );
-    debug_lol_read( in, frame->args );
-    frame->rulename = debug_string_read( in );
-}
+    OBJECT * file;
+    int line;
+    OBJECT * fullname;
+    LOL args[ 1 ];
+    char * rulename;
+} FRAME_INFO;
 
-/* Since these frames are created in an abnormal
-   way, more of the fields need to be cleaned up. */
-static void debug_frame_free( FRAME * frame )
+static void debug_frame_info_free( FRAME_INFO * frame )
 {
     object_free( frame->file );
+    object_free( frame->fullname );
+    lol_free( frame->args );
     free( frame->rulename );
-    frame_free( frame );
+}
+
+static void debug_frame_read( FILE * in, FRAME_INFO * frame )
+{
+    frame->file = debug_object_read( in );
+    frame->line = debug_int_read( in );
+    frame->fullname = debug_object_read( in );
+    debug_lol_read( in, frame->args );
+    frame->rulename = debug_string_read( in );
 }
 
 static void add_breakpoint( struct breakpoint elem )
@@ -387,46 +415,46 @@ static void debug_mi_print_frame( FRAME * frame )
     object_free( fullname );
 }
 
+static void debug_print_frame_info( FRAME_INFO * frame )
+{
+    OBJECT * file = frame->file;
+    if ( file == NULL ) file = constant_builtin;
+    printf( "%s ", frame->rulename );
+    if ( strcmp( frame->rulename, "module scope" ) != 0 )
+    {
+        printf( "( ", frame->rulename );
+        if ( frame->args->count )
+        {
+            lol_print( frame->args );
+            printf( " " );
+        }
+        printf( ") " );
+    }
+    printf( "at %s:%d", object_str( file ), frame->line );
+}
+
+static void debug_mi_print_frame_info( FRAME_INFO * frame )
+{
+    printf( "frame={func=\"%s\",args=[],file=\"%s\",fullname=\"%s\",line=\"%d\"}",
+        frame->rulename,
+        object_str( frame->file ),
+        object_str( frame->fullname ),
+        frame->line );
+}
+
 static void debug_on_breakpoint( int id )
 {
-    fputc( DEBUG_MSG_STDOUT, command_output );
+    fputc( DEBUG_MSG_BREAKPOINT, command_output );
     debug_int_write( command_output, id );
     fflush( command_output );
-#if 0
-    FRAME base;
-    base = *debug_frame;
-    base.file = debug_file;
-    base.line = debug_line;
-#if defined( CONSOLE_INTERPRETER )
-    printf( "Breakpoint %d, ", id );
-    debug_print_frame( &base );
-    printf( "\n" );
-    debug_print_source( debug_file, debug_line );
-#else
-    printf( "*stopped,reason=\"breakpoint-hit\",bkptno=\"%d\",disp=\"keep\",", id );
-    debug_mi_print_frame( &base );
-    printf( ",thread-id=\"1\",stopped-threads=\"all\"" );
-    printf( "\n" );
-#endif
-    fflush( stdout );
-#endif
+    debug_listen();
 }
 
 static void debug_end_stepping( void )
 {
-#if defined( CONSOLE_INTERPRETER )
-    debug_print_source( debug_file, debug_line );
-#else
-    FRAME base;
-    base = *debug_frame;
-    base.file = debug_file;
-    base.line = debug_line;
-    printf( "*stopped,reason=\"end-stepping-range\"," );
-    debug_mi_print_frame( &base );
-    printf( ",thread-id=\"1\"" );
-    printf( "\n" );
-#endif
-    fflush( stdout );
+    fputc( DEBUG_MSG_END_STEPPING, command_output );
+    fflush( command_output );
+    debug_listen();
 }
 
 void debug_on_instruction( FRAME * frame, OBJECT * file, int line )
@@ -438,7 +466,6 @@ void debug_on_instruction( FRAME * frame, OBJECT * file, int line )
         debug_line = line;
         debug_frame = frame;
         debug_end_stepping();
-        debug_listen();
     }
     else if ( debug_state == DEBUG_STEP && debug_line != line )
     {
@@ -446,7 +473,6 @@ void debug_on_instruction( FRAME * frame, OBJECT * file, int line )
         debug_line = line;
         debug_frame = frame;
         debug_end_stepping();
-        debug_listen();
     }
     else if ( debug_state == DEBUG_FINISH && debug_depth <= 0 )
     {
@@ -454,7 +480,6 @@ void debug_on_instruction( FRAME * frame, OBJECT * file, int line )
         debug_line = line;
         debug_frame = frame;
         debug_end_stepping();
-        debug_listen();
     }
     else if ( ( debug_file == NULL || ! object_equal( file, debug_file ) || line != debug_line ) &&
         ( breakpoint_id = handle_line_breakpoint( file, line ) ) )
@@ -463,7 +488,6 @@ void debug_on_instruction( FRAME * frame, OBJECT * file, int line )
         debug_line = line;
         debug_frame = frame;
         debug_on_breakpoint( breakpoint_id );
-        debug_listen();
     }
 }
 
@@ -476,7 +500,6 @@ void debug_on_enter_function( FRAME * frame, OBJECT * name, OBJECT * file, int l
         debug_line = line;
         debug_frame = frame;
         debug_end_stepping();
-        debug_listen();
     }
     else if ( ( breakpoint_id = handle_function_breakpoint( name ) ) ||
         ( breakpoint_id = handle_line_breakpoint( file, line ) ) )
@@ -485,7 +508,6 @@ void debug_on_enter_function( FRAME * frame, OBJECT * name, OBJECT * file, int l
         debug_line = line;
         debug_frame = frame;
         debug_on_breakpoint( breakpoint_id );
-        debug_listen();
     }
     else if ( debug_state == DEBUG_NEXT || debug_state == DEBUG_FINISH )
     {
@@ -507,13 +529,6 @@ static DWORD child_pid;
 #else
 static int child_pid;
 #endif
-
-/* Commands are read from this stream. */
-static FILE * command_input;
-/* Where to send output from commands. */
-static FILE * command_output;
-/* Only valid in the parent.  Reads command output from the child. */
-static FILE * command_child;
 
 static void debug_child_continue( int argc, const char * * argv )
 {
@@ -686,11 +701,8 @@ static void debug_child_print( int argc, const char * * argv )
     lines[ 1 ] = NULL;
     parse_string( constant_builtin, lines, &new_frame );
     string_free( buf );
-    list_print( debug_print_result );
-#if defined( CONSOLE_INTERPRETER )
-    printf( "\n" );
-#endif
-    fflush(stdout);
+    debug_list_write( command_output, debug_print_result );
+    fflush( command_output );
     debug_frame = saved_frame;
     debug_file = saved_file;
     debug_line = saved_line;
@@ -741,7 +753,7 @@ static void debug_child_info( int argc, const char * * argv )
 
         for ( i = 0; i < frame_number; ++i ) frame = frame->prev;
 
-        debug_frame_write( frame );
+        debug_frame_write( command_output, frame );
 #if 0
 
         fullname = make_absolute_path( frame->file );
@@ -862,7 +874,7 @@ static void debug_parent_child_signalled( int pid, int sigid )
 
 static void debug_parent_on_breakpoint( void )
 {
-    FRAME base;
+    FRAME_INFO base;
     int id;
     id = debug_int_read( command_child );
     fprintf( command_output, "info frame\n" );
@@ -871,20 +883,40 @@ static void debug_parent_on_breakpoint( void )
     if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "Breakpoint %d, ", id );
-        debug_print_frame( &base );
+        debug_print_frame_info( &base );
         printf( "\n" );
-        debug_print_source( debug_file, debug_line );
+        debug_print_source( base.file, base.line );
     }
     else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         printf( "*stopped,reason=\"breakpoint-hit\",bkptno=\"%d\",disp=\"keep\",", id );
-        debug_mi_print_frame( &base );
+        debug_mi_print_frame_info( &base );
         printf( ",thread-id=\"1\",stopped-threads=\"all\"" );
         printf( "\n" );
     }
     else
     {
         assert( !"Wrong value if debug_interface" );
+    }
+    fflush( stdout );
+}
+
+static void debug_parent_on_end_stepping( void )
+{
+    FRAME_INFO base;
+    fprintf( command_output, "info frame\n" );
+    fflush( command_output );
+    debug_frame_read( command_child, &base );
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
+    {
+        debug_print_source( base.file, base.line );
+    }
+    else
+    {
+        printf( "*stopped,reason=\"end-stepping-range\"," );
+        debug_mi_print_frame_info( &base );
+        printf( ",thread-id=\"1\"" );
+        printf( "\n" );
     }
     fflush( stdout );
 }
@@ -896,6 +928,16 @@ static void debug_parent_wait( int print_message )
     if ( ch == DEBUG_MSG_BREAKPOINT )
     {
         debug_parent_on_breakpoint();
+    }
+    else if ( ch == DEBUG_MSG_END_STEPPING )
+    {
+        debug_parent_on_end_stepping();
+    }
+    else if ( ch == DEBUG_MSG_SETUP )
+    {
+        /* FIXME: This is handled in the caller, but it would make
+           more sense to handle it here. */
+        return;
     }
     else if ( ch == EOF )
     {
@@ -964,6 +1006,8 @@ void debug_init_handles( const char * in, const char * out )
     command_array = child_commands;
 
     /* Handle the initial setup */
+    /* wake up the parent */
+    fputc( DEBUG_MSG_SETUP, command_output );
     debug_listen();
 }
 
@@ -1166,14 +1210,14 @@ static void debug_parent_run( int argc, const char * * argv )
     debug_parent_wait( 1 );
 }
 
-static void debug_parent_forward( int argc, const char * * argv, int print_message, int require_child )
+static int debug_parent_forward_nowait( int argc, const char * * argv, int print_message, int require_child )
 {
     int i;
     if ( debug_state == DEBUG_NO_CHILD )
     {
         if ( require_child )
             printf( "The program is not being run.\n" );
-        return;
+        return 1;
     }
     fputs( argv[ 0 ], command_output );
     for( i = 1; i < argc; ++i )
@@ -1183,6 +1227,16 @@ static void debug_parent_forward( int argc, const char * * argv, int print_messa
     }
     fputc( '\n', command_output );
     fflush( command_output );
+    return 0;
+}
+
+/* FIXME: This function should be eliminated when I finish all stdout to the parent. */
+static void debug_parent_forward( int argc, const char * * argv, int print_message, int require_child )
+{
+    if ( debug_parent_forward_nowait( argc, argv, print_message, require_child ) != 0 )
+    {
+        return;
+    }
     debug_parent_wait( print_message );
 }
 
@@ -1310,16 +1364,26 @@ static void debug_parent_clear( int argc, const char * * argv )
 
 static void debug_parent_print( int argc, const char * * argv )
 {
-#if ! defined( CONSOLE_INTERPRETER )
-    printf( "~\"$1 = " );
-    fflush( stdout );
-#endif
-    debug_parent_forward( argc, argv, 1, 1 );
-#if ! defined( CONSOLE_INTERPRETER )
-    printf( "\"\n~\"\\n\"\n" );
-    debug_mi_format_token();
-    printf( "^done\n(gdb) \n" );
-#endif
+    LIST * result;
+    if ( debug_parent_forward_nowait( argc, argv, 1, 1 ) != 0 )
+    {
+        return;
+    }
+    result = debug_list_read( command_child );
+
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
+    {
+        list_print( result );
+        printf( "\n" );
+    }
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        printf( "~\"$1 = " );
+        list_print( result );
+        printf( "\"\n~\"\\n\"\n" );
+        debug_mi_format_token();
+        printf( "^done\n(gdb) \n" );
+    }
 }
 
 static void debug_parent_backtrace( int argc, const char * * argv )
@@ -2394,8 +2458,6 @@ static void debug_listen( void )
         if ( feof( command_input ) )
             exit( 1 );
         fflush(stdout);
-        /* wake up the parent */
-        fputc( ' ', command_output );
         fflush( command_output );
         /* assume that the parent has already validated the input */
         read_command( 0 );
