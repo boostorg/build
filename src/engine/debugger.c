@@ -228,7 +228,7 @@ static void debug_frame_read( FILE * in, FRAME_INFO * frame )
     frame->rulename = debug_string_read( in );
 }
 
-static void add_breakpoint( struct breakpoint elem )
+static int add_breakpoint( struct breakpoint elem )
 {
     if ( num_breakpoints == breakpoints_capacity )
     {
@@ -238,26 +238,27 @@ static void add_breakpoint( struct breakpoint elem )
         breakpoints_capacity = new_capacity;
     }
     breakpoints[ num_breakpoints++ ] = elem;
+    return num_breakpoints;
 }
 
-static void add_line_breakpoint( OBJECT * file, int line )
+static int add_line_breakpoint( OBJECT * file, int line )
 {
     struct breakpoint elem;
     elem.file = file;
     elem.bound_file = NULL;
     elem.line = line;
     elem.status = BREAKPOINT_ENABLED;
-    add_breakpoint( elem );
+    return add_breakpoint( elem );
 }
 
-static void add_function_breakpoint( OBJECT * name )
+static int add_function_breakpoint( OBJECT * name )
 {
     struct breakpoint elem;
     elem.file = name;
     elem.bound_file = object_copy( name );
     elem.line = -1;
     elem.status = BREAKPOINT_ENABLED;
-    add_breakpoint( elem );
+    return add_breakpoint( elem );
 }
 
 /*
@@ -557,32 +558,37 @@ static void debug_child_kill( int argc, const char * * argv )
     exit( 0 );
 }
 
-static void debug_child_break( int argc, const char * * argv )
+static int debug_add_breakpoint( const char * name )
 {
-    if ( argc == 2 )
+    const char * file_ptr = name;
+    const char * ptr = strrchr( file_ptr, ':' );
+    if ( ptr )
     {
-        const char * file_ptr = argv[ 1 ];
-        const char * ptr = strrchr( file_ptr, ':' );
-        if ( ptr )
+        char * end;
+        long line = strtoul( ptr + 1, &end, 10 );
+        if ( line > 0 && line <= INT_MAX && end != ptr + 1 && *end == 0 )
         {
-            char * end;
-            long line = strtoul( ptr + 1, &end, 10 );
-            if ( line > 0 && line <= INT_MAX && end != ptr + 1 && *end == 0 )
-            {
-                OBJECT * file = object_new_range( file_ptr,  ptr - file_ptr );
-                add_line_breakpoint( file, line );
-            }
-            else
-            {
-                OBJECT * name = object_new( file_ptr );
-                add_function_breakpoint( name );
-            }
+            OBJECT * file = object_new_range( file_ptr,  ptr - file_ptr );
+            return add_line_breakpoint( file, line );
         }
         else
         {
             OBJECT * name = object_new( file_ptr );
-            add_function_breakpoint( name );
+            return add_function_breakpoint( name );
         }
+    }
+    else
+    {
+        OBJECT * name = object_new( file_ptr );
+        return add_function_breakpoint( name );
+    }
+}
+
+static void debug_child_break( int argc, const char * * argv )
+{
+    if ( argc == 2 )
+    {
+        debug_add_breakpoint( argv[ 1 ] );
     }
 }
 
@@ -829,6 +835,24 @@ static struct command_elem child_commands[] =
     { "info", &debug_child_info },
     { NULL, NULL }
 };
+
+static void debug_mi_error( const char * message )
+{
+    debug_mi_format_token();
+    printf( "^error,msg=\"%s\"\n(gdb) \n", message );
+}
+
+static void debug_error( const char * message )
+{
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
+    {
+        printf( "%s", message );
+    }
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
+    {
+        debug_mi_error( message );
+    }
+}
 
 static void debug_parent_child_exited( int pid, int exit_code )
 {
@@ -1297,12 +1321,29 @@ static void debug_parent_finish( int argc, const char * * argv )
 
 static void debug_parent_break( int argc, const char * * argv )
 {
-    debug_child_break( argc, argv );
+    int id;
+    if ( argc < 2 )
+    {
+        debug_error( "Missing argument to break." );
+        return;
+    }
+    else if ( argc > 2 )
+    {
+    }
+    id = debug_add_breakpoint( argv[ 1 ] );
     debug_parent_forward( argc, argv, 1, 0 );
-    if ( debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
+    {
+        printf( "Breakpoint %d set at %s\n", id, argv[ 1 ] );
+    }
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
+    }
+    else
+    {
+        assert( !"wrong value of debug_interface." );
     }
 }
 
@@ -1529,12 +1570,6 @@ static void debug_mi_format_breakpoint( int id )
     /* times */
     printf( "" );
     printf( "}" );
-}
-
-static void debug_mi_error( const char * message )
-{
-    debug_mi_format_token();
-    printf( "^error,msg=\"%s\"\n(gdb) \n", message );
 }
 
 static int breakpoint_id_parse( const char * name )
