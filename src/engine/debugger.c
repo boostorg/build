@@ -1373,10 +1373,18 @@ static void debug_parent_delete( int argc, const char * * argv )
 {
     debug_child_delete( argc, argv );
     debug_parent_forward( 1, argv, 1, 0 );
-    if ( debug_interface == DEBUG_INTERFACE_MI )
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
+    {
+        printf( "Deleted breakpoint %s\n", argv[ 1 ] );
+    }
+    else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
+    }
+    else
+    {
+        assert( !"Wrong value if debug_interface." );
     }
 }
 
@@ -1393,7 +1401,7 @@ static void debug_parent_clear( int argc, const char * * argv )
     id = get_breakpoint_by_name( argv[ 1 ] );
     if ( id == -1 )
     {
-        printf( "^error,msg=\"Unknown breakpoint\"\n(gdb) \n" );
+        debug_error( "Unknown breakpoint" );
         return;
     }
     
@@ -1429,7 +1437,39 @@ static void debug_parent_print( int argc, const char * * argv )
 
 static void debug_parent_backtrace( int argc, const char * * argv )
 {
-    debug_parent_forward( argc, argv, 1, 0 );
+    const char * new_args[ 3 ];
+    OBJECT * depth_str;
+    int depth;
+    int i;
+    FRAME_INFO frame;
+    
+    if ( debug_state == DEBUG_NO_CHILD )
+    {
+        debug_error( "No child" );
+        return;
+    }
+
+    new_args[ 0 ] = "info";
+    new_args[ 1 ] = "frame";
+
+    fprintf( command_output, "info depth\n" );
+    fflush( command_output );
+    depth_str = debug_object_read( command_child );
+    depth = atoi( object_str( depth_str ) );
+    object_free( depth_str );
+
+    for ( i = 0; i < depth; ++i )
+    {
+        char buf[ 16 ];
+        sprintf( buf, "%d", i );
+        new_args[ 2 ] = buf;
+        debug_parent_forward_nowait( 3, new_args, 0, 0 );
+        debug_frame_read( command_child, &frame );
+        printf( "#%d  in ", i );
+        debug_print_frame_info( &frame );
+        printf( "\n" );
+    }
+    fflush( stdout );
 }
 
 static void debug_parent_quit( int argc, const char * * argv )
