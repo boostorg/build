@@ -280,13 +280,6 @@ toolset kylix bc++ : -o : -D
         [ opt --debug : -runtime ssd ]
         : $(--python-lib[1]) ;
 }
-## MINGW GCC
-toolset mingw gcc : "-o " : -D
-    :
-    [ opt --release : -s -O3 -finline-functions ]
-    [ opt --debug : -g -O0 -fno-inline -pg ]
-    -I$(--python-include) -I$(--extra-include)
-    : $(--python-lib[2]) ;
 ## MIPS Pro
 toolset mipspro cc : "-o " : -D
     :
