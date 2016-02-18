@@ -9,6 +9,75 @@
 import BoostBuild
 import TestCmd
 
+def make_tester():
+    return BoostBuild.Tester(["-dconsole"], pass_toolset=False, pass_d0=False,
+        use_test_config=False, ignore_toolset_requirements=False, match=TestCmd.match_re)
+
+def test_run():
+    t = make_tester()
+    t.write("test.jam", """\
+        UPDATE ;
+    """)
+    t.run_build_system(stdin="""\
+        run -ftest.jam
+        quit
+    """, stdout=r"""\(b2db\) Starting program: .*bjam -ftest\.jam
+Child \d+ exited with status 0
+\(b2db\) """)
+    t.cleanup()
+
+def test_exit_status():
+    t = make_tester()
+    t.write("test.jam", """\
+        EXIT : 1 ;
+    """)
+    t.run_build_system(stdin="""\
+        run -ftest.jam
+        quit
+    """, stdout=r"""\(b2db\) Starting program: .*bjam -ftest\.jam
+
+Child \d+ exited with status 1
+\(b2db\) """)
+    t.cleanup()
+
+def test_step():
+    t = make_tester()
+    t.write("test.jam", """\
+        rule g ( )
+        {
+            local a = 1 ;
+            local b = 2 ;
+        }
+        rule f ( )
+        {
+            g ;
+            local c = 3 ;
+        }
+        f ;
+    """)
+    t.run_build_system(stdin="""\
+        break f
+        run -ftest.jam
+        step
+        step
+        step
+        step
+        quit
+    """, stdout=r"""\(b2db\) Breakpoint 1 set at f
+\(b2db\) Starting program: .*bjam -ftest\.jam
+Breakpoint 1, f \( \) at test.jam:8
+8	            g ;
+\(b2db\) 3	            local a = 1 ;
+\(b2db\) 4	            local b = 2 ;
+\(b2db\) 5	        }
+\(b2db\) 9	            local c = 3 ;
+\(b2db\) """)
+    t.cleanup()
+
+test_run()
+test_exit_status()
+test_step()
+
 t = BoostBuild.Tester(["-dconsole"], pass_toolset=False, pass_d0=False,
     use_test_config=False, ignore_toolset_requirements=False)
 
