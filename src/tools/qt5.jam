@@ -435,6 +435,8 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
     add-shared-library QtPrintSupport : QtGui : QT_PRINTSUPPORT_LIB : $(target-requirements) ;
     add-shared-library QtConcurrent : QtCore : QT_CONCURRENT_LIB : $(target-requirements) ;
 
+    add-shared-library QtPositioning : QtCore : QT_POSITIONING_LIB : $(target-requirements) ;
+
     add-shared-library QtOpenGL : QtGui : QT_OPENGL_LIB : $(target-requirements) ;
     add-shared-library QtSvg : QtXml QtOpenGL : QT_SVG_LIB : $(target-requirements) ;
 
@@ -472,6 +474,18 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
     add-shared-library QtQuick          : QtQml : QT_QUICK_LIB : $(target-requirements) ;
     add-shared-library QtQuickParticles : QtQml : : $(target-requirements) ;
     add-shared-library QtQuickTest      : QtQml : : $(target-requirements) ;
+
+    # QtLocation (since 5.4)
+    add-shared-library QtLocation : QtQuick QtPositioning : QT_LOCATION_LIB : $(target-requirements) ;
+
+    # Qt3d libraries (since 5.6)
+    add-shared-library Qt3DCore   : QtGui                 : QT_3DCORE_LIB   : $(target-requirements) ;
+    add-shared-library Qt3DRender : Qt3DCore QtConcurrent : QT_3DRENDER_LIB : $(target-requirements) ;
+    add-shared-library Qt3DLogic  : Qt3DCore              : QT_3DLOGIC_LIB  : $(target-requirements) ;
+    add-shared-library Qt3DInput  : Qt3DRender            : QT_3DINPUT_LIB  : $(target-requirements) ;
+
+    # QtCharts (since 5.7)
+    add-shared-library QtCharts : QtWidgets : QT_CHARTS_LIB : $(target-requirements) ;
 
     # Regular expression support
     add-shared-library QtV8 : QtCore : : $(target-requirements) ;

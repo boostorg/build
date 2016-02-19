@@ -71,7 +71,7 @@ cd /jam source location/
 sh ./build.sh
 ]
 
-For the Boost.Jam source included with the Boost distribution the /jam source location/ is =BOOST_ROOT/tools/build/v2/engine=.
+For the Boost.Jam source included with the Boost distribution the /jam source location/ is =BOOST_ROOT/tools/build/src/engine=.
 
 If the scripts fail to detect an appropriate toolset to build with your particular toolset may not be auto-detectable. In that case, you can specify the toolset as the first argument, this assumes that the toolset is readily available in the =PATH=.
 
@@ -421,7 +421,7 @@ This facility is useful for correct header file scanning, since many compilers w
 
 The basic =b2= language entity is called a rule. A rule is defined in two parts: the procedure and the actions. The procedure is a body of jam statements to be run when the rule is invoked; the actions are the OS shell commands to execute when updating the built targets of the rule.
 
-Rules can return values, which can be expanded into a list with "[ /rule/ /args/ ... ]". A rule's value is the value of its last statement, though only the following statements have values: 'if' (value of the leg chosen), 'switch' (value of the case chosen), set (value of the resulting variable), and 'return' (value of its arguments). Note that 'return' doesn't actually cause a return, i.e., is a no-op unless it is the last statement of the last block executed within rule body.
+Rules can return values, which can be expanded into a list with "[ /rule/ /args/ ... ]". A rule's value is the value of its last statement, though only the following statements have values: 'if' (value of the leg chosen), 'switch' (value of the case chosen), set (value of the resulting variable), and 'return' (value of its arguments).
 
 The =b2= statements for defining and invoking rules are as follows:
 
@@ -727,7 +727,23 @@ rule GLOB ( /directories/ * : /patterns/ * : /downcase-opt/ ? )
 
 Using the same wildcards as for the patterns in the switch statement. It is invoked by being used as an argument to a rule invocation inside of "=[ ]=". For example: "[^FILES = \[ GLOB dir1 dir2 : *.c *.h \]]" sets =FILES= to the list of C source and header files in =dir1= and =dir2=. The resulting filenames are the full pathnames, including the directory, but the pattern is applied only to the file name without the directory.
 
-If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, filenames are always downcased before matching.
+If /downcase-opt/ is supplied, filenames are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT and Cygwin, and OpenVMS, filenames are always downcased before matching.
+
+[endsect]
+
+[section =GLOB_ARCHIVE= ]
+
+The =GLOB_ARCHIVE= rule does name globbing of object archive members.
+
+[pre
+rule GLOB_ARCHIVE ( /archives/ * : /member-patterns/ * : /downcase-opt/ ? : /symbol-patterns/ ? )
+]
+
+Similarly to =GLOB=, this rule is used to match names of member files in an archive (static object library). List of successfully matched members is returned or null otherwise. The resulting member names are qualified with pathname of the containing archive in the form =archive-path(member-name)=. Member patterns are for matching member name only; when no wildcards specified -- an exact match is assumed. Member names generally correspond to object file names and as such are platform-specific -- use of platform-defined object suffix in the matching patterns can allow for portability.
+
+If /downcase-opt/ is supplied, the member names are converted to all-lowercase before matching against the pattern; you can use this to do case-insensitive matching using lowercase patterns. The paths returned will still have mixed case if the OS supplies them. On Windows NT, Cygwin, and OpenVMS, filenames are always downcased before matching.
+
+Additionally, members can be matched with symbol/function patterns on supported platforms (currently, OpenVMS only). In this case, members containing the matching symbols are returned. Member and symbol patterns are applied as OR conditions, with member patterns taking precedence. On unsupported platforms, null is returned when any symbol patterns are specified.
 
 [endsect]
 
@@ -841,6 +857,7 @@ rule SHELL ( /command/ : * )
 [variablelist
     [[=exit-status=] [In addition to the output the result status of the executed command is returned as a second element of the result.]]
     [[=no-output=] [Don't capture the output of the command. Instead an empty ("") string value is returned in place of the output.]]
+    [[=strip-eol=] [Remove trailing end-of-line character from output, if any.]]
 ]
 
 Because the Perforce/Jambase defines a =SHELL= rule which hides the
@@ -1000,7 +1017,7 @@ Creates new /vars/ inside to the enclosing ={}= block, obscuring any previous va
 return /values/ ;
 ]
 
-Within a rule body, the return statement sets the return value for an invocation of the rule. It does *not* cause the rule to return; a rule's value is actually the value of the last statement executed, so a return should be the last statement executed before the rule "naturally" returns.
+Within a rule body, the return statement sets the return value for an invocation of the rule and returns to the caller.
 
 [pre
 switch /value/
@@ -1037,6 +1054,18 @@ while /cond/ { /statements/ }
 ]
 
 Repeatedly execute /statements/ while /cond/ remains true upon entry. (See the description of /cond/ expression syntax under if, above).
+
+[pre
+break ;
+]
+
+Immediately exits the nearest enclosing while or for loop.
+
+[pre
+continue ;
+]
+
+Jumps to the top of the nearest enclosing while or for loop.
 
 [endsect]
 
@@ -1149,12 +1178,19 @@ prints [^"C:/Program Files/Borland"]
   it can be important to pass them true windows-style paths. The =:W=
   modifier, *under Cygwin only*, turns a cygwin path into a Win32 path using
  the  [@http://www.cygwin.com/cygwin-api/func-cygwin-conv-to-win32-path.html
- =cygwin_conv_to_win32_path=] function. On other platforms, the string is
- unchanged. For example
+ =cygwin_conv_to_win32_path=] function. For example
 ``
  x = "/cygdrive/c/Program Files/Borland" ; ECHO $(x:W) ;
 ``
 prints [^"C:\\Program Files\\Borland"] on Cygwin
+
+Similarly, when used on OpenVMS, the =:W= modifier translates a POSIX-style path into native VMS-style format using =decc$to_vms= CRTL function. This modifier is generally used inside action blocks to properly specify file paths in VMS-specific commands. For example
+``
+ x = "subdir/filename.c" ; ECHO $(x:W) ;
+``
+prints [^"\[.subdir\]filename.c"] on OpenVMS
+
+On other platforms, the string is unchanged.
 ]]
 
 [[[^:['chars]]]

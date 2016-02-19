@@ -20,20 +20,12 @@
 #include "rules.h"
 #include "search.h"
 #include "variable.h"
+#include "output.h"
 
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#ifdef OS_CYGWIN
-# include <cygwin/version.h>
-# include <sys/cygwin.h>
-# ifdef CYGWIN_VERSION_CYGWIN_CONV
-#  include <errno.h>
-# endif
-# include <windows.h>
-#endif
 
 int glob( char const * s, char const * c );
 void backtrace( FRAME * );
@@ -121,6 +113,7 @@ void backtrace_line( FRAME * );
 #define INSTR_OUTPUT_STRINGS               55
 
 #define INSTR_DEBUG_LINE                   67
+#define INSTR_FOR_POP                      70
 
 typedef struct instruction
 {
@@ -452,7 +445,7 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     if ( list_empty( first ) )
     {
         backtrace_line( frame );
-        printf( "warning: rulename %s expands to empty string\n", unexpanded );
+        out_printf( "warning: rulename %s expands to empty string\n", unexpanded );
         backtrace( frame );
         list_free( first );
         for ( i = 0; i < n_args; ++i )
@@ -504,11 +497,11 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 
     frame->file = file;
     frame->line = line;
-    
+
     if ( list_empty( first ) )
     {
         backtrace_line( frame );
-        printf( "warning: object is empty\n" );
+        out_printf( "warning: object is empty\n" );
         backtrace( frame );
 
         list_free( first );
@@ -754,74 +747,30 @@ static void var_edit_file( char const * in, string * out, VAR_EDITS * edits )
         string_append( out, in );
 }
 
+
 /*
- * var_edit_cyg2win() - conversion of a cygwin to a Windows path.
- *
- * FIXME: skip grist
+ * var_edit_translate_path() - translate path to os native format.
  */
 
-#ifdef OS_CYGWIN
-static void var_edit_cyg2win( string * out, size_t pos, VAR_EDITS * edits )
+static void var_edit_translate_path( string * out, size_t pos, VAR_EDITS * edits )
 {
     if ( edits->to_windows )
     {
-    #ifdef CYGWIN_VERSION_CYGWIN_CONV
-        /* Use new Cygwin API added with Cygwin 1.7. Old one had no error
-         * handling and has been deprecated.
-         */
-        char * dynamicBuffer = 0;
-        char buffer[ MAX_PATH + 1001 ];
-        char const * result = buffer;
-        cygwin_conv_path_t const conv_type = CCP_POSIX_TO_WIN_A | CCP_RELATIVE;
-        ssize_t const apiResult = cygwin_conv_path( conv_type, out->value + pos,
-            buffer, sizeof( buffer ) / sizeof( *buffer ) );
-        assert( apiResult == 0 || apiResult == -1 );
-        assert( apiResult || strlen( result ) < sizeof( buffer ) / sizeof(
-            *buffer ) );
-        if ( apiResult )
-        {
-            result = 0;
-            if ( errno == ENOSPC )
-            {
-                ssize_t const size = cygwin_conv_path( conv_type, out->value +
-                    pos, NULL, 0 );
-                assert( size >= -1 );
-                if ( size > 0 )
-                {
-                    dynamicBuffer = (char *)BJAM_MALLOC_ATOMIC( size );
-                    if ( dynamicBuffer )
-                    {
-                        ssize_t const apiResult = cygwin_conv_path( conv_type,
-                            out->value + pos, dynamicBuffer, size );
-                        assert( apiResult == 0 || apiResult == -1 );
-                        if ( !apiResult )
-                        {
-                            result = dynamicBuffer;
-                            assert( strlen( result ) < size );
-                        }
-                    }
-                }
-            }
-        }
-    #else  /* CYGWIN_VERSION_CYGWIN_CONV */
-        /* Use old Cygwin API deprecated with Cygwin 1.7. */
-        char result[ MAX_PATH + 1 ];
-        cygwin_conv_to_win32_path( out->value + pos, result );
-        assert( strlen( result ) <= MAX_PATH );
-    #endif  /* CYGWIN_VERSION_CYGWIN_CONV */
-        if ( result )
+        string result[ 1 ];
+        int translated;
+
+        /* Translate path to os native format. */
+        translated = path_translate_to_os( out->value + pos, result );
+        if ( translated )
         {
             string_truncate( out, pos );
-            string_append( out, result );
+            string_append( out, result->value );
             edits->to_slashes = 0;
         }
-    #ifdef CYGWIN_VERSION_CYGWIN_CONV
-        if ( dynamicBuffer )
-            BJAM_FREE( dynamicBuffer );
-    #endif
+
+        string_free( result );
     }
 }
-#endif  /* OS_CYGWIN */
 
 
 /*
@@ -830,8 +779,8 @@ static void var_edit_cyg2win( string * out, size_t pos, VAR_EDITS * edits )
 
 static void var_edit_shift( string * out, size_t pos, VAR_EDITS * edits )
 {
-#ifdef OS_CYGWIN
-    var_edit_cyg2win( out, pos, edits );
+#if defined( OS_CYGWIN ) || defined( OS_VMS )
+    var_edit_translate_path( out, pos, edits );
 #endif
 
     if ( edits->upshift || edits->downshift || edits->to_slashes )
@@ -1316,7 +1265,7 @@ static void dynamic_array_push_impl( struct dynamic_array * const array,
 
 #define dynamic_array_push( array, value ) (dynamic_array_push_impl(array, &value, sizeof(value)))
 #define dynamic_array_at( type, array, idx ) (((type *)(array)->data)[idx])
-
+#define dynamic_array_pop( array ) (--(array)->size)
 
 /*
  * struct compiler
@@ -1326,6 +1275,16 @@ struct label_info
 {
     int absolute_position;
     struct dynamic_array uses[ 1 ];
+};
+
+#define LOOP_INFO_BREAK 0
+#define LOOP_INFO_CONTINUE 1
+
+struct loop_info
+{
+    int type;
+    int label;
+    int cleanup_depth;
 };
 
 struct stored_rule
@@ -1344,6 +1303,8 @@ typedef struct compiler
     struct dynamic_array labels[ 1 ];
     struct dynamic_array rules[ 1 ];
     struct dynamic_array actions[ 1 ];
+    struct dynamic_array cleanups[ 1 ];
+    struct dynamic_array loop_scopes[ 1 ];
 } compiler;
 
 static void compiler_init( compiler * c )
@@ -1353,6 +1314,8 @@ static void compiler_init( compiler * c )
     dynamic_array_init( c->labels );
     dynamic_array_init( c->rules );
     dynamic_array_init( c->actions );
+    dynamic_array_init( c->cleanups );
+    dynamic_array_init( c->loop_scopes );
 }
 
 static void compiler_free( compiler * c )
@@ -1366,6 +1329,8 @@ static void compiler_free( compiler * c )
     dynamic_array_free( c->labels );
     dynamic_array_free( c->constants );
     dynamic_array_free( c->code );
+    dynamic_array_free( c->cleanups );
+    dynamic_array_free( c->loop_scopes );
 }
 
 static void compile_emit_instruction( compiler * c, instruction instr )
@@ -1429,6 +1394,82 @@ static int compile_emit_constant( compiler * c, OBJECT * value )
     OBJECT * copy = object_copy( value );
     dynamic_array_push( c->constants, copy );
     return c->constants->size - 1;
+}
+
+static void compile_push_cleanup( compiler * c, unsigned int op_code, int arg )
+{
+    instruction instr;
+    instr.op_code = op_code;
+    instr.arg = arg;
+    dynamic_array_push( c->cleanups, instr );
+}
+
+static void compile_pop_cleanup( compiler * c )
+{
+    dynamic_array_pop( c->cleanups );
+}
+
+static void compile_emit_cleanups( compiler * c, int end )
+{
+    int i;
+    for ( i = c->cleanups->size; --i >= end; )
+    {
+        compile_emit_instruction( c, dynamic_array_at( instruction, c->cleanups, i ) );
+    }
+}
+
+static void compile_emit_loop_jump( compiler * c, int type )
+{
+    struct loop_info * info = NULL;
+    int i;
+    for ( i = c->loop_scopes->size; --i >= 0; )
+    {
+        struct loop_info * elem = &dynamic_array_at( struct loop_info, c->loop_scopes, i );
+        if ( elem->type == type )
+        {
+            info = elem;
+            break;
+        }
+    }
+    if ( info == NULL )
+    {
+        printf( "warning: ignoring break statement used outside of loop\n" );
+        return;
+    }
+    compile_emit_cleanups( c, info->cleanup_depth );
+    compile_emit_branch( c, INSTR_JUMP, info->label );
+}
+
+static void compile_push_break_scope( compiler * c, int label )
+{
+    struct loop_info info;
+    info.type = LOOP_INFO_BREAK;
+    info.label = label;
+    info.cleanup_depth = c->cleanups->size;
+    dynamic_array_push( c->loop_scopes, info );
+}
+
+static void compile_push_continue_scope( compiler * c, int label )
+{
+    struct loop_info info;
+    info.type = LOOP_INFO_CONTINUE;
+    info.label = label;
+    info.cleanup_depth = c->cleanups->size;
+    dynamic_array_push( c->loop_scopes, info );
+}
+
+static void compile_pop_break_scope( compiler * c )
+{
+    assert( c->loop_scopes->size > 0 );
+    assert( dynamic_array_at( struct loop_info, c->loop_scopes, c->loop_scopes->size - 1 ).type == LOOP_INFO_BREAK );
+    dynamic_array_pop( c->loop_scopes );
+}
+
+static void compile_pop_continue_scope( compiler * c )
+{
+    assert( c->loop_scopes->size > 0 );
+    assert( dynamic_array_at( struct loop_info, c->loop_scopes, c->loop_scopes->size - 1 ).type == LOOP_INFO_CONTINUE );
+    dynamic_array_pop( c->loop_scopes );
 }
 
 static int compile_emit_rule( compiler * c, OBJECT * name, PARSE * parse,
@@ -1994,7 +2035,7 @@ static int current_line;
 
 static void parse_error( char const * message )
 {
-    printf( "%s:%d: %s\n", current_file, current_line, message );
+    out_printf( "%s:%d: %s\n", current_file, current_line, message );
 }
 
 
@@ -2403,7 +2444,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             int f = compile_new_label( c );
             int end = compile_new_label( c );
 
-            printf( "%s:%d: Conditional used as list (check operator "
+            out_printf( "%s:%d: Conditional used as list (check operator "
                 "precedence).\n", object_str( parse->file ), parse->line );
 
             /* Emit the condition */
@@ -2422,6 +2463,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         int var = compile_emit_constant( c, parse->string );
         int top = compile_new_label( c );
         int end = compile_new_label( c );
+        int continue_ = compile_new_label( c );
 
         /*
          * Evaluate the list.
@@ -2434,6 +2476,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             compile_emit( c, INSTR_PUSH_EMPTY, 0 );
             compile_emit( c, INSTR_PUSH_LOCAL, var );
             compile_emit( c, INSTR_SWAP, 1 );
+            compile_push_cleanup( c, INSTR_POP_LOCAL, var );
         }
 
         compile_emit( c, INSTR_FOR_INIT, 0 );
@@ -2441,14 +2484,26 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         compile_emit_branch( c, INSTR_FOR_LOOP, end );
         compile_emit( c, INSTR_SET, var );
 
+        compile_push_break_scope( c, end );
+        compile_push_cleanup( c, INSTR_FOR_POP, 0 );
+        compile_push_continue_scope( c, continue_ );
+
         /* Run the loop body */
         compile_parse( parse->right, c, RESULT_NONE );
 
+        compile_pop_continue_scope( c );
+        compile_pop_cleanup( c );
+        compile_pop_break_scope( c );
+
+        compile_set_label( c, continue_ );
         compile_emit_branch( c, INSTR_JUMP, top );
         compile_set_label( c, end );
 
         if ( parse->num )
+        {
+            compile_pop_cleanup( c );
             compile_emit( c, INSTR_POP_LOCAL, var );
+        }
 
         adjust_result( c, RESULT_NONE, result_location);
     }
@@ -2479,6 +2534,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             : RESULT_RETURN;
         int test = compile_new_label( c );
         int top = compile_new_label( c );
+        int end = compile_new_label( c );
         /* Make sure that we return an empty list if the loop runs zero times.
          */
         adjust_result( c, RESULT_NONE, nested_result );
@@ -2486,10 +2542,15 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         compile_emit_branch( c, INSTR_JUMP, test );
         compile_set_label( c, top );
         /* Emit the loop body. */
+        compile_push_break_scope( c, end );
+        compile_push_continue_scope( c, test );
         compile_parse( parse->right, c, nested_result );
+        compile_pop_continue_scope( c );
+        compile_pop_break_scope( c );
         /* Emit the condition. */
         compile_set_label( c, test );
         compile_condition( parse->left, c, 1, top );
+        compile_set_label( c, end );
 
         adjust_result( c, nested_result, result_location );
     }
@@ -2507,7 +2568,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             : RESULT_RETURN;
         compile_parse( parse->left, c, RESULT_STACK );
         compile_emit( c, INSTR_PUSH_MODULE, 0 );
+        compile_push_cleanup( c, INSTR_POP_MODULE, 0 );
         compile_parse( parse->right, c, nested_result );
+        compile_pop_cleanup( c );
         compile_emit( c, INSTR_POP_MODULE, 0 );
         adjust_result( c, nested_result, result_location );
     }
@@ -2521,8 +2584,10 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         else
             compile_emit( c, INSTR_PUSH_EMPTY, 0 );
         compile_emit( c, INSTR_CLASS, 0 );
+        compile_push_cleanup( c, INSTR_POP_MODULE, 0 );
         compile_parse( parse->right, c, RESULT_NONE );
         compile_emit( c, INSTR_BIND_MODULE_VARIABLES, 0 );
+        compile_pop_cleanup( c );
         compile_emit( c, INSTR_POP_MODULE, 0 );
 
         adjust_result( c, RESULT_NONE, result_location );
@@ -2572,7 +2637,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
                 compile_emit( c, INSTR_PUSH_LOCAL, name );
+                compile_push_cleanup( c, INSTR_POP_LOCAL, name );
                 compile_parse( parse->third, c, nested_result );
+                compile_pop_cleanup( c );
                 compile_emit( c, INSTR_POP_LOCAL, name );
             }
             else
@@ -2581,7 +2648,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
                 compile_emit( c, INSTR_PUSH_LOCAL_GROUP, 0 );
+                compile_push_cleanup( c, INSTR_POP_LOCAL_GROUP, 0 );
                 compile_parse( parse->third, c, nested_result );
+                compile_pop_cleanup( c );
                 compile_emit( c, INSTR_POP_LOCAL_GROUP, 0 );
             }
         }
@@ -2590,7 +2659,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             compile_parse( parse->left, c, RESULT_STACK );
             compile_parse( parse->right, c, RESULT_STACK );
             compile_emit( c, INSTR_PUSH_LOCAL_GROUP, 0 );
+            compile_push_cleanup( c, INSTR_POP_LOCAL_GROUP, 0 );
             compile_parse( parse->third, c, nested_result );
+            compile_pop_cleanup( c );
             compile_emit( c, INSTR_POP_LOCAL_GROUP, 0 );
         }
         adjust_result( c, nested_result, result_location );
@@ -2638,7 +2709,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 int end = compile_new_label( c );
                 compile_parse( parse->left, c, RESULT_STACK );
                 compile_emit_branch( c, INSTR_PUSH_ON, end );
+                compile_push_cleanup( c, INSTR_POP_ON, 0 );
                 var_parse_group_compile( group, c );
+                compile_pop_cleanup( c );
                 compile_emit( c, INSTR_POP_ON, 0 );
                 compile_set_label( c, end );
             }
@@ -2649,7 +2722,9 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             int end = compile_new_label( c );
             compile_parse( parse->left, c, RESULT_STACK );
             compile_emit_branch( c, INSTR_PUSH_ON, end );
+            compile_push_cleanup( c, INSTR_POP_ON, 0 );
             compile_parse( parse->right, c, RESULT_STACK );
+            compile_pop_cleanup( c );
             compile_emit( c, INSTR_POP_ON, 0 );
             compile_set_label( c, end );
         }
@@ -2815,6 +2890,20 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         adjust_result( c, RESULT_NONE, result_location );
         compile_set_label( c, switch_end );
     }
+    else if ( parse->type == PARSE_RETURN )
+    {
+        compile_parse( parse->left, c, RESULT_RETURN );
+        compile_emit_cleanups( c, 0 );
+        compile_emit( c, INSTR_RETURN, 0 );
+    }
+    else if ( parse->type == PARSE_BREAK )
+    {
+        compile_emit_loop_jump( c, LOOP_INFO_BREAK );
+    }
+    else if ( parse->type == PARSE_CONTINUE )
+    {
+        compile_emit_loop_jump( c, LOOP_INFO_CONTINUE );
+    }
     else if ( parse->type == PARSE_NULL )
         adjust_result( c, RESULT_NONE, result_location );
     else
@@ -2931,17 +3020,17 @@ static void argument_error( char const * message, FUNCTION * procedure,
     extern void print_source_line( FRAME * );
     LOL * actual = frame->args;
     backtrace_line( frame->prev );
-    printf( "*** argument error\n* rule %s ( ", frame->rulename );
+    out_printf( "*** argument error\n* rule %s ( ", frame->rulename );
     argument_list_print( procedure->formal_arguments,
         procedure->num_formal_arguments );
-    printf( " )\n* called with: ( " );
+    out_printf( " )\n* called with: ( " );
     lol_print( actual );
-    printf( " )\n* %s %s\n", message, arg ? object_str ( arg ) : "" );
+    out_printf( " )\n* %s %s\n", message, arg ? object_str ( arg ) : "" );
     function_location( procedure, &frame->file, &frame->line );
     print_source_line( frame );
-    printf( "see definition of rule '%s' being called\n", frame->rulename );
+    out_printf( "see definition of rule '%s' being called\n", frame->rulename );
     backtrace( frame->prev );
-    exit( 1 );
+    exit( EXITBAD );
 }
 
 static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
@@ -3232,9 +3321,9 @@ static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg,
 
         if ( is_type_name( object_str( arg ) ) )
         {
-            printf( "%s:%d: missing argument name before type name: %s\n",
+            err_printf( "%s:%d: missing argument name before type name: %s\n",
                 object_str( file ), line, object_str( arg ) );
-            exit( 1 );
+            exit( EXITBAD );
         }
 
         c->arg.arg_name = object_copy( arg );
@@ -3280,9 +3369,9 @@ static struct arg_list arg_compile_impl( struct argument_compiler * c,
     case ARGUMENT_COMPILER_DONE:
         break;
     case ARGUMENT_COMPILER_FOUND_TYPE:
-        printf( "%s:%d: missing argument name after type name: %s\n",
+        err_printf( "%s:%d: missing argument name after type name: %s\n",
             object_str( file ), line, object_str( c->arg.type_name ) );
-        exit( 1 );
+        exit( EXITBAD );
     case ARGUMENT_COMPILER_FOUND_OBJECT:
         dynamic_array_push( c->args, c->arg );
         break;
@@ -3404,19 +3493,19 @@ static void argument_list_print( struct arg_list * args, int num_args )
         for ( i = 0; i < num_args; ++i )
         {
             int j;
-            if ( i ) printf( " : " );
+            if ( i ) out_printf( " : " );
             for ( j = 0; j < args[ i ].size; ++j )
             {
                 struct argument * formal_arg = &args[ i ].args[ j ];
-                if ( j ) printf( " " );
+                if ( j ) out_printf( " " );
                 if ( formal_arg->type_name )
-                    printf( "%s ", object_str( formal_arg->type_name ) );
-                printf( "%s", object_str( formal_arg->arg_name ) );
+                    out_printf( "%s ", object_str( formal_arg->type_name ) );
+                out_printf( "%s", object_str( formal_arg->arg_name ) );
                 switch ( formal_arg->flags )
                 {
-                case ARG_OPTIONAL: printf( " ?" ); break;
-                case ARG_PLUS:     printf( " +" ); break;
-                case ARG_STAR:     printf( " *" ); break;
+                case ARG_OPTIONAL: out_printf( " ?" ); break;
+                case ARG_PLUS:     out_printf( " +" ); break;
+                case ARG_STAR:     out_printf( " *" ); break;
                 }
             }
         }
@@ -3960,6 +4049,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             break;
         }
 
+        case INSTR_FOR_POP:
+        {
+            stack_deallocate( s, sizeof( LISTITER ) );
+            list_free( stack_pop( s ) );
+            break;
+        }
+
         /*
          * Switch
          */
@@ -4008,7 +4104,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 frame->file = function->file;
                 frame->line = function->line;
                 backtrace_line( frame );
-                printf( "error: stack check failed.\n" );
+                out_printf( "error: stack check failed.\n" );
                 backtrace( frame );
                 assert( saved_stack == s->data );
             }
@@ -4614,17 +4710,46 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             {
                 int err_redir = strcmp( "STDERR", out ) == 0;
                 string result[ 1 ];
+
                 tmp_filename = path_tmpfile();
-                string_new( result );
+
+                /* Construct os-specific cat command. */
+                {
+                    char * command = "cat";
+                    char * quote = "\"";
+                    char * redirect = "1>&2";
+
                 #ifdef OS_NT
-                string_append( result, "type \"" );
-                #else
-                string_append( result, "cat \"" );
+                    command = "type";
+                    quote = "\"";
+                #elif defined( OS_VMS )
+                    command = "pipe type";
+                    quote = "";
+
+                    /* Get tmp file name is os-format. */
+                    {
+                        string os_filename[ 1 ];
+
+                        string_new( os_filename );
+                        path_translate_to_os( object_str( tmp_filename ), os_filename );
+                        object_free( tmp_filename );
+                        tmp_filename = object_new( os_filename->value );
+                        string_free( os_filename );
+                    }
                 #endif
-                string_append( result, object_str( tmp_filename ) );
-                string_push_back( result, '\"' );
-                if ( err_redir )
-                    string_append( result, " 1>&2" );
+
+                    string_new( result );
+                    string_append( result, command );
+                    string_append( result, " " );
+                    string_append( result, quote );
+                    string_append( result, object_str( tmp_filename ) );
+                    string_append( result, quote );
+                    if ( err_redir )
+                    {
+                        string_append( result, " " );
+                        string_append( result, redirect );
+                    }
+                }
 
                 /* Replace STDXXX with the temporary file. */
                 list_free( stack_pop( s ) );
@@ -4653,16 +4778,16 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 if ( !out_file )
                 {
-                    printf( "failed to write output file '%s'!\n",
+                    err_printf( "failed to write output file '%s'!\n",
                         out_name->value );
                     exit( EXITBAD );
                 }
                 string_free( out_name );
             }
 
-            if ( out_debug ) printf( "\nfile %s\n", out );
+            if ( out_debug ) out_printf( "\nfile %s\n", out );
             if ( out_file ) fputs( buf->value, out_file );
-            if ( out_debug ) fputs( buf->value, stdout );
+            if ( out_debug ) out_puts( buf->value );
             if ( out_file )
             {
                 fflush( out_file );
@@ -4672,7 +4797,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             if ( tmp_filename )
                 object_free( tmp_filename );
 
-            if ( out_debug ) fputc( '\n', stdout );
+            if ( out_debug ) out_putc( '\n' );
             break;
         }
 
@@ -4926,7 +5051,7 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
             {
                 OBJECT * s = python_to_string( PyList_GetItem( py_result, i ) );
                 if ( !s )
-                    fprintf( stderr,
+                    err_printf(
                         "Non-string object returned by Python call.\n" );
                 else
                     result = list_push_back( result, s );
@@ -4957,7 +5082,7 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
     else
     {
         PyErr_Print();
-        fprintf( stderr, "Call failed\n" );
+        err_printf( "Call failed\n" );
     }
 
     return result;

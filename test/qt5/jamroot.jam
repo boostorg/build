@@ -31,6 +31,8 @@ if [ qt5.initialized ]
       [ run qtscripttools.cpp  /qt5//QtScriptTools  ]
       [ run qtxmlpatterns.cpp  /qt5//QtXmlPatterns  ]
 
+      [ run qtpositioning.cpp  /qt5//QtPositioning  ]
+
       # ToDo: runable example code
       [ link qtsvg.cpp /qt5//QtSvg ]
       [ link qtwidgets.cpp /qt5//QtWidgets ]
@@ -44,7 +46,16 @@ if [ qt5.initialized ]
       [ link qtdeclarative.cpp /qt5//QtDeclarative ]
 
       # QtQuick version2
-      [ run qtquick.cpp /qt5//QtQuick : -platform offscreen : $(CWD)/qtquick.qml ]
+      [ run qtquick.cpp /qt5//QtQuick : "--" -platform offscreen : $(CWD)/qtquick.qml ]
+
+      [ run qtlocation.cpp  /qt5//QtLocation  ]
+
+      [ run qtcharts.cpp  /qt5//QtCharts  ]
+
+      [ run qt3dcore.cpp   /qt5//Qt3DCore ]
+      [ run qt3drender.cpp /qt5//Qt3DRender ]
+      [ run qt3dinput.cpp  /qt5//Qt3DInput ]
+      [ run qt3dlogic.cpp  /qt5//Qt3DLogic ]
 
       # Help systems.
       [ link qthelp.cpp      /qt5//QtHelp ]

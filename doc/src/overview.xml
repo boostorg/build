@@ -728,7 +728,7 @@ b2 toolset=gcc variant=debug optimization=space
           <varlistentry>
             <term><option>-n</option></term>
             <listitem>
-              <para>Do no execute the commands, only print them.</para>
+              <para>Do not execute the commands, only print them.</para>
             </listitem>
           </varlistentry>
 
@@ -775,7 +775,7 @@ b2 toolset=gcc variant=debug optimization=space
           <varlistentry>
             <term><option>-d0</option></term>
             <listitem>
-              <para>Supress all informational messages.</para>
+              <para>Suppress all informational messages.</para>
             </listitem>
           </varlistentry>
 
