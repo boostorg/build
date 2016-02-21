@@ -1331,7 +1331,7 @@ static void debug_parent_break( int argc, const char * * argv )
     {
     }
     id = debug_add_breakpoint( argv[ 1 ] );
-    debug_parent_forward( argc, argv, 1, 0 );
+    debug_parent_forward_nowait( argc, argv, 1, 0 );
     if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "Breakpoint %d set at %s\n", id, argv[ 1 ] );
@@ -1350,7 +1350,7 @@ static void debug_parent_break( int argc, const char * * argv )
 static void debug_parent_disable( int argc, const char * * argv )
 {
     debug_child_disable( argc, argv );
-    debug_parent_forward( 1, argv, 1, 0 );
+    debug_parent_forward_nowait( 2, argv, 1, 0 );
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
@@ -1361,7 +1361,7 @@ static void debug_parent_disable( int argc, const char * * argv )
 static void debug_parent_enable( int argc, const char * * argv )
 {
     debug_child_enable( argc, argv );
-    debug_parent_forward( 1, argv, 1, 0 );
+    debug_parent_forward_nowait( 2, argv, 1, 0 );
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
@@ -1372,19 +1372,11 @@ static void debug_parent_enable( int argc, const char * * argv )
 static void debug_parent_delete( int argc, const char * * argv )
 {
     debug_child_delete( argc, argv );
-    debug_parent_forward( 1, argv, 1, 0 );
-    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
-    {
-        printf( "Deleted breakpoint %s\n", argv[ 1 ] );
-    }
-    else if ( debug_interface == DEBUG_INTERFACE_MI )
+    debug_parent_forward_nowait( 2, argv, 1, 0 );
+    if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
-    }
-    else
-    {
-        assert( !"Wrong value if debug_interface." );
     }
 }
 
@@ -1403,6 +1395,11 @@ static void debug_parent_clear( int argc, const char * * argv )
     {
         debug_error( "Unknown breakpoint" );
         return;
+    }
+
+    if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
+    {
+        printf( "Deleted breakpoint %d\n", id );
     }
     
     sprintf( buf, "%d", id );

@@ -187,7 +187,6 @@ def match_exact(lines=None, matches=None):
     if len(lines) != len(matches):
         return
     for i in range(len(lines)):
-        print "failed", matches[i], lines[i]
         if lines[i] != matches[i]:
             return
     return 1
@@ -205,11 +204,9 @@ def match_re(lines=None, res=None):
     if not type(res) is ListType:
         res = split(res, "\n")
     if len(lines) != len(res):
-        print "failed", len(res), len(lines)
         return
     for i in range(len(lines)):
         if not re.compile("^" + res[i] + "$").search(lines[i]):
-            print "failed", res[i], lines[i]
             return
     return 1
 
