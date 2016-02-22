@@ -8,6 +8,28 @@
 
 import BoostBuild
 import TestCmd
+import re
+
+def split_stdin_stdout(text):
+    """stdin is all text after the prompt up to and including
+    the next newline.  Everything else is stdout.  stdout
+    may contain regular expressions enclosed in {{}}."""
+    prompt = re.escape('(b2db) ')
+    pattern = re.compile('(?<=%s)(.*\n)' % prompt)
+    stdin = ''.join(re.findall(pattern, text))
+    stdout = re.sub(pattern, '', text)
+    outside_pattern = re.compile(r'(?:\A|(?<=\}\}))(?:[^\{]|(?:\{(?!\{)))*(?:(?=\{\{)|\Z)')
+
+    def escape_line(line):
+        line = re.sub(outside_pattern, lambda m: re.escape(m.group(0)), line)
+        return re.sub(r'\{\{|\}\}', '', line)
+
+    stdout = '\n'.join([escape_line(line) for line in stdout.split('\n')])
+    return (stdin,stdout)
+
+def run(tester, io):
+    (input,output) = split_stdin_stdout(io)
+    tester.run_build_system(stdin=input, stdout=output, match=TestCmd.match_re)
 
 def make_tester():
     return BoostBuild.Tester(["-dconsole"], pass_toolset=False, pass_d0=False,
@@ -18,12 +40,14 @@ def test_run():
     t.write("test.jam", """\
         UPDATE ;
     """)
-    t.run_build_system(stdin="""\
-        run -ftest.jam
-        quit
-    """, stdout=r"""\(b2db\) Starting program: .*bjam -ftest\.jam
-Child \d+ exited with status 0
-\(b2db\) """)
+
+    run(t, """\
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Child {{\d+}} exited with status 0
+(b2db) quit
+""")
+
     t.cleanup()
 
 def test_exit_status():
@@ -31,13 +55,13 @@ def test_exit_status():
     t.write("test.jam", """\
         EXIT : 1 ;
     """)
-    t.run_build_system(stdin="""\
-        run -ftest.jam
-        quit
-    """, stdout=r"""\(b2db\) Starting program: .*bjam -ftest\.jam
+    run(t, """\
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
 
-Child \d+ exited with status 1
-\(b2db\) """)
+Child {{\d+}} exited with status 1
+(b2db) quit
+""")
     t.cleanup()
 
 def test_step():
@@ -312,6 +336,34 @@ Breakpoint 1, module scope at test\.jam:14
 \(b2db\) """)
     t.cleanup()
 
+def test_backtrace():
+    t = make_tester()
+    t.write("test.jam", """\
+        rule f ( x * : y * : z * )
+        {
+            return $(x) ;
+        }
+        rule g ( x * : y * : z * )
+        {
+            return [ f $(x) : $(y) : $(z) ] ;
+        }
+        g 1 : 2 : 3 ;
+    """)
+    run(t, """\
+(b2db) break f
+Breakpoint 1 set at f
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, f ( 1 : 2 : 3 ) at test.jam:3
+3	            return $(x) ;
+(b2db) backtrace
+#0  in f ( 1 : 2 : 3 ) at test.jam:3
+#1  in g ( 1 : 2 : 3 ) at test.jam:7
+#2  in module scope at test.jam:9
+(b2db) quit
+""")
+    t.cleanup()
+
 test_run()
 test_exit_status()
 test_step()
@@ -319,3 +371,4 @@ test_next()
 test_finish()
 test_breakpoints()
 test_breakpoints_running()
+test_backtrace()
