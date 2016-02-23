@@ -931,6 +931,30 @@ using gcc : &toolset_ops; ;</programlisting>
                         parse="xml"/>
 
             <varlistentry>
+              <term><literal>archiver</literal></term>
+
+              <listitem>
+                <para>Specifies the archiver command that is used to produce static
+                libraries. Normally, it is autodetected using gcc
+                <command>-print-prog-name</command> option or defaulted to <command>ar</command>,
+                 but in some cases you might want to override it, for example to expliitly
+                 use a system version instead of one included with gcc.
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
+              <term><literal>ranlib</literal></term>
+
+              <listitem>
+                <para>Specifies the ranlib command that is used to generated symbol table
+                for static libraries. Normally, it is autodetected using gcc
+                <command>-print-prog-name</command> option or defaulted to <command>ranlib</command>,
+                 but in some cases you might want to override it, for example to expliitly
+                 use a system version instead of one included with gcc.
+              </listitem>
+            </varlistentry>
+
+            <varlistentry>
               <term><literal>rc</literal></term>
 
               <listitem>
