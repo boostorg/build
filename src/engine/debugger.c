@@ -1493,6 +1493,7 @@ static void debug_parent_help( int argc, const char * * argv )
             "disable   - Disable a breakpoint\n"
             "enable    - Enable a breakpoint\n"
             "delete    - Delete a breakpoint\n"
+            "clear     - Delete a breakpoint by location\n"
             "print     - Display an expression\n"
             "backtrace - Display the call stack\n"
             "kill      - Terminate the child\n"
