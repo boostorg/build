@@ -888,7 +888,7 @@ static void debug_parent_child_signalled( int pid, int sigid )
         {
         case SIGINT: name = "SIGINT"; meaning = "Interrupt"; break;
         }
-        printf("*stopped,reason=\"exited-signalled\",signal-name=\"%s\",signal-meaning=\"%s\"\n(gdb) \n");
+        printf("*stopped,reason=\"exited-signalled\",signal-name=\"%s\",signal-meaning=\"%s\"\n(gdb) \n", name, meaning);
     }
     else
     {
@@ -1046,17 +1046,14 @@ static void init_parent_handles( HANDLE out, HANDLE in )
 static void debug_parent_copy_breakpoints( void )
 {
     int i;
-    int commands = 0;
     for ( i = 0; i < num_breakpoints; ++i )
     {
-        fprintf( command_output, "break %s", breakpoints[ i ].file );
+        fprintf( command_output, "break %s", object_str( breakpoints[ i ].file ) );
         if ( breakpoints[ i ].line != -1 )
         {
             fprintf( command_output, ":%d", breakpoints[ i ].line );
         }
         fprintf( command_output, "\n" );
-        ++commands;
-
 
         switch ( breakpoints[ i ].status )
         {
@@ -1064,22 +1061,15 @@ static void debug_parent_copy_breakpoints( void )
             break;
         case BREAKPOINT_DISABLED:
             fprintf( command_output, "disable %d\n", i + 1 );
-            ++commands;
             break;
         case BREAKPOINT_DELETED:
             fprintf( command_output, "delete %d\n", i + 1 );
-            ++commands;
             break;
         default:
             assert( !"Wrong breakpoint status." );
         }
     }
     fflush( command_output );
-
-    while ( commands-- )
-    {
-        debug_parent_wait( 1 );
-    }
 }
 
 #endif
@@ -1596,7 +1586,7 @@ static void debug_mi_format_breakpoint( int id )
     /* addr */
     if ( ptr->line == -1 )
     {
-        printf( ",func=\"%s\"", ptr->file );
+        printf( ",func=\"%s\"", object_str( ptr->file ) );
     }
     else
     {
@@ -2476,7 +2466,7 @@ static int process_command( char * line )
         /* resize the buffer if necessary */
         if ( current == buffer + capacity )
         {
-            buffer = realloc( buffer, capacity * 2 * sizeof( const char * ) );
+            buffer = realloc( (void *)buffer, capacity * 2 * sizeof( const char * ) );
             current = buffer + capacity;
         }
         /* append the token to the buffer */
