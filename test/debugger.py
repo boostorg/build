@@ -79,21 +79,21 @@ def test_step():
         }
         f ;
     """)
-    t.run_build_system(stdin="""\
-        break f
-        run -ftest.jam
-        step
-        step
-        step
-        quit
-    """, stdout=r"""\(b2db\) Breakpoint 1 set at f
-\(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, f \( \) at test.jam:8
+    run(t, """\
+(b2db) break f
+Breakpoint 1 set at f
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, f ( ) at test.jam:8
 8	            g ;
-\(b2db\) 3	            a = 1 ;
-\(b2db\) 4	            b = 2 ;
-\(b2db\) 9	            c = 3 ;
-\(b2db\) """)
+(b2db) step
+3	            a = 1 ;
+(b2db) step
+4	            b = 2 ;
+(b2db) step
+9	            c = 3 ;
+(b2db) quit
+""")
     t.cleanup()
 
 def test_next():
@@ -117,23 +117,23 @@ def test_next():
         h ;
         d = 4 ;
     """)
-    t.run_build_system(stdin="""\
-        break f
-        run -ftest.jam
-        next
-        next
-        next
-        next
-        quit
-    """, stdout=r"""\(b2db\) Breakpoint 1 set at f
-\(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, f \( \) at test.jam:7
+    run(t, """\
+(b2db) break f
+Breakpoint 1 set at f
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, f ( ) at test.jam:7
 7	            g ;
-\(b2db\) 8	            b = 2 ;
-\(b2db\) 9	            c = 3 ;
-\(b2db\) 14	            g ;
-\(b2db\) 17	        d = 4 ;
-\(b2db\) """)
+(b2db) next
+8	            b = 2 ;
+(b2db) next
+9	            c = 3 ;
+(b2db) next
+14	            g ;
+(b2db) next
+17	        d = 4 ;
+(b2db) quit
+""")
     t.cleanup()
 
 def test_finish():
@@ -161,21 +161,21 @@ def test_finish():
         h ;
         d = 4 ;
     """)
-    t.run_build_system(stdin="""\
-        break f
-        run -ftest.jam
-        finish
-        finish
-        finish
-        quit
-    """, stdout=r"""\(b2db\) Breakpoint 1 set at f
-\(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, f \( \) at test.jam:3
+    run(t, """\
+(b2db) break f
+Breakpoint 1 set at f
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, f ( ) at test.jam:3
 3	            a = 1 ;
-\(b2db\) 8	            b = 2 ;
-\(b2db\) 14	            i ;
-\(b2db\) 21	        d = 4 ;
-\(b2db\) """)
+(b2db) finish
+8	            b = 2 ;
+(b2db) finish
+14	            i ;
+(b2db) finish
+21	        d = 4 ;
+(b2db) quit
+""")
     t.cleanup()
     
 def test_breakpoints():
@@ -201,50 +201,50 @@ def test_breakpoints():
         h ;
         UPDATE ;
     """)
-    t.run_build_system(stdin="""\
-        break f
-        run -ftest.jam
-        kill
-        break g
-        disable 1
-        run -ftest.jam
-        kill
-        enable 1
-        run -ftest.jam
-        kill
-        delete 1
-        run -ftest.jam
-        kill
-        break test.jam:12
-        clear g
-        run -ftest.jam
-        kill
-        clear test.jam:12
-        run -ftest.jam
-        quit
-    """, stdout=r"""\(b2db\) Breakpoint 1 set at f
-\(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, f \( \) at test.jam:3
+    run(t, """\
+(b2db) break f
+Breakpoint 1 set at f
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, f ( ) at test.jam:3
 3	            a = 1 ;
-\(b2db\) \(b2db\) Breakpoint 2 set at g
-\(b2db\) \(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 2, g \( \) at test.jam:7
+(b2db) kill
+(b2db) break g
+Breakpoint 2 set at g
+(b2db) disable 1
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 2, g ( ) at test.jam:7
 7	            b = 2 ;
-\(b2db\) \(b2db\) \(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, f \( \) at test.jam:3
+(b2db) kill
+(b2db) enable 1
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, f ( ) at test.jam:3
 3	            a = 1 ;
-\(b2db\) \(b2db\) \(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 2, g \( \) at test.jam:7
+(b2db) kill
+(b2db) delete 1
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 2, g ( ) at test.jam:7
 7	            b = 2 ;
-\(b2db\) \(b2db\) Breakpoint 3 set at test\.jam:12
-\(b2db\) Deleted breakpoint 2
-\(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 3, h \( \) at test.jam:12
+(b2db) kill
+(b2db) break test.jam:12
+Breakpoint 3 set at test.jam:12
+(b2db) clear g
+Deleted breakpoint 2
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 3, h ( ) at test.jam:12
 12	            d = 4 ;
-\(b2db\) \(b2db\) Deleted breakpoint 3
-\(b2db\) Starting program: .*bjam -ftest\.jam
-Child \d+ exited with status 0
-\(b2db\) """)
+(b2db) kill
+(b2db) clear test.jam:12
+Deleted breakpoint 3
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Child {{\d+}} exited with status 0
+(b2db) quit
+""")
     t.cleanup()
     
 def test_breakpoints_running():
@@ -270,70 +270,70 @@ def test_breakpoints_running():
         h ;
         UPDATE ;
     """)
-    t.run_build_system(stdin="""\
-        break test.jam:14
-        run -ftest.jam
-        break f
-        continue
-        kill
-        run -ftest.jam
-        break g
-        disable 2
-        continue
-        kill
-        run -ftest.jam
-        enable 2
-        continue
-        kill
-        run -ftest.jam
-        delete 2
-        continue
-        kill
-        run -ftest.jam
-        break test.jam:12
-        clear g
-        continue
-        kill
-        run -ftest.jam
-        clear test.jam:12
-        continue
-        quit
-    """, stdout=r"""\(b2db\) Breakpoint 1 set at test.jam:14
-\(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, module scope at test\.jam:14
+    run(t, """\
+(b2db) break test.jam:14
+Breakpoint 1 set at test.jam:14
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:14
 14	        f ;
-\(b2db\) Breakpoint 2 set at f
-\(b2db\) Breakpoint 2, f \( \) at test\.jam:3
+(b2db) break f
+Breakpoint 2 set at f
+(b2db) continue
+Breakpoint 2, f ( ) at test.jam:3
 3	            a = 1 ;
-\(b2db\) \(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, module scope at test\.jam:14
+(b2db) kill
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:14
 14	        f ;
-\(b2db\) Breakpoint 3 set at g
-\(b2db\) \(b2db\) Breakpoint 3, g \( \) at test\.jam:7
+(b2db) break g
+Breakpoint 3 set at g
+(b2db) disable 2
+(b2db) continue
+Breakpoint 3, g ( ) at test.jam:7
 7	            b = 2 ;
-\(b2db\) \(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, module scope at test\.jam:14
+(b2db) kill
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:14
 14	        f ;
-\(b2db\) \(b2db\) Breakpoint 2, f \( \) at test\.jam:3
+(b2db) enable 2
+(b2db) continue
+Breakpoint 2, f ( ) at test.jam:3
 3	            a = 1 ;
-\(b2db\) \(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, module scope at test\.jam:14
+(b2db) kill
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:14
 14	        f ;
-\(b2db\) \(b2db\) Breakpoint 3, g \( \) at test\.jam:7
+(b2db) delete 2
+(b2db) continue
+Breakpoint 3, g ( ) at test.jam:7
 7	            b = 2 ;
-\(b2db\) \(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, module scope at test\.jam:14
+(b2db) kill
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:14
 14	        f ;
-\(b2db\) Breakpoint 4 set at test\.jam:12
-\(b2db\) Deleted breakpoint 3
-\(b2db\) Breakpoint 4, h \( \) at test\.jam:12
+(b2db) break test.jam:12
+Breakpoint 4 set at test.jam:12
+(b2db) clear g
+Deleted breakpoint 3
+(b2db) continue
+Breakpoint 4, h ( ) at test.jam:12
 12	            d = 4 ;
-\(b2db\) \(b2db\) Starting program: .*bjam -ftest\.jam
-Breakpoint 1, module scope at test\.jam:14
+(b2db) kill
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:14
 14	        f ;
-\(b2db\) Deleted breakpoint 4
-\(b2db\) Child \d+ exited with status 0
-\(b2db\) """)
+(b2db) clear test.jam:12
+Deleted breakpoint 4
+(b2db) continue
+Child {{\d+}} exited with status 0
+(b2db) quit
+""")
     t.cleanup()
 
 def test_backtrace():
