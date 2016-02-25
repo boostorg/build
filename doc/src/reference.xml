@@ -938,7 +938,7 @@ using gcc : &toolset_ops; ;</programlisting>
                 libraries. Normally, it is autodetected using gcc
                 <command>-print-prog-name</command> option or defaulted to <command>ar</command>,
                  but in some cases you might want to override it, for example to expliitly
-                 use a system version instead of one included with gcc.
+                 use a system version instead of one included with gcc.</para>
               </listitem>
             </varlistentry>
 
@@ -950,7 +950,7 @@ using gcc : &toolset_ops; ;</programlisting>
                 for static libraries. Normally, it is autodetected using gcc
                 <command>-print-prog-name</command> option or defaulted to <command>ranlib</command>,
                  but in some cases you might want to override it, for example to expliitly
-                 use a system version instead of one included with gcc.
+                 use a system version instead of one included with gcc.</para>
               </listitem>
             </varlistentry>
 
