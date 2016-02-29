@@ -77,6 +77,7 @@ Guess_Toolset ()
           BOOST_JAM_TOOLSET=vacpp
        fi
     elif test_uname AIX && test_path xlc; then BOOST_JAM_TOOLSET=vacpp    
+    elif test_uname FreeBSD && test_path freebsd-version; then BOOST_JAM_TOOLSET=clang
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
     elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
