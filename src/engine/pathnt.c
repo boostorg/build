@@ -345,7 +345,8 @@ static int translate_path_cyg2win( string * path )
 
     if ( result )
     {
-        string_copy( path, result );
+        string_truncate( path, 0 );
+        string_append( path, result );
         translated = 1;
     }
 
