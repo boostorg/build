@@ -20,6 +20,9 @@ import path ;
 import modules ;
 import errors ;
 import indirect ;
+import make ;
+import os ;
+import print ;
 import property ;
 import property-set ;
 
@@ -167,6 +170,7 @@ rule init (
             tag = [ indirect.make $(tag) : [ $(caller).project-module ] ] ;
         }
         sources = [ path.glob $(source-path) : $(sources) ] ;
+        def-file = [ path.glob $(source-path) : libbz2.def ] ;
         if $(.debug)
         {
             ECHO "notice: [bzip2] Building bzip from source as $(build-name)" ;
@@ -184,7 +188,15 @@ rule init (
             }
         }
         local target ;
-        if $(sources) {
+        if $(sources)
+        {
+            if ! $(.def-file-target)
+            {
+                .def-file-target = [ targets.create-metatarget make-target-class
+                  : $(.project) : libbz2.def : $(def-file)
+                  : <action>@bzip2.make-bz2-def-file ]
+                  ;
+            }
             target = [ targets.create-typed-target LIB : $(.project)
               : $(build-name).$(library-id)
               : $(sources)
@@ -193,7 +205,7 @@ rule init (
                 <include>$(source-path)
                 <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
                 <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
-                <link>shared:<define>BZIP2_DLL
+                <link>shared:<def-file>libbz2.def
               :
               : <include>$(source-path) ] ;
         }
@@ -223,4 +235,38 @@ rule init (
         targets.main-target-alternative $(mt) ;
     }
     .configured.$(condition) = true ;
+}
+
+if [ os.name ] = NT
+{
+    local rule read-file ( file )
+    {
+        return [ SPLIT_BY_CHARACTERS [ SHELL "type \"$(file:G=)\" 2>nul" ] : "\n" ] ;
+    }
+}
+else if [ os.name ] = VMS
+{
+    local rule read-file ( file )
+    {
+        return [ SPLIT_BY_CHARACTERS [ SHELL "PIPE TYPE $(file:W) 2>NL:" ] : "\n" ] ;
+    }
+}
+else
+{
+    local rule read-file ( file )
+    {
+        return [ SPLIT_BY_CHARACTERS [ SHELL "cat \"$(file:G=)\" 2>/dev/null" ]  : "\n" ] ;
+    }
+}
+
+rule make-bz2-def-file ( target : source : properties * )
+{
+    print.output $(target) ;
+    for local line in [ read-file $(source) ]
+    {
+        if ! [ MATCH "(LIBRARY[ \t]+LIBBZ2)" : $(line) ]
+        {
+            print.text $(line) : yes ;
+        }
+    }
 }
