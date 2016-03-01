@@ -16,8 +16,8 @@
  * pathnt.c - NT specific path manipulation support
  */
 
+#include "jam.h"
 #include "pathsys.h"
-
 #include "hash.h"
 
 #define WIN32_LEAN_AND_MEAN
