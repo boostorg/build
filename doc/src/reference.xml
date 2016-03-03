@@ -286,7 +286,11 @@ path-constant DATA : data/a.txt ;
         <listitem><para>This rule is deprecated and equivalent to
         <code>alias</code>.</para></listitem>
       </varlistentry>
+      <varlistentry>
+        <term><literal>outline</literal></term>
 
+        <listitem><para>Reads the outline of a binary and writes it into the file.</para></listitem>
+      </varlistentry>
     </variablelist>
 
   </section>
@@ -982,7 +986,13 @@ using gcc : &toolset_ops; ;</programlisting>
                 <para>Specifies a linker script to be used for linking. Several are allowed and each file must have the extension <code>.ld</code>
               </listitem>
             </varlistentry>
+            <varlistentry>
+              <term><literal>demangle</literal></term>
 
+              <listitem>
+                <para>Can be used to enable demangled when reading the outline.
+              </listitem>
+            </varlistentry>
           </variablelist>
 
           <indexterm><primary>64-bit compilation</primary>

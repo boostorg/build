@@ -15,6 +15,14 @@ import type ;
 import set ;
 import order ;
 import builtin ;
+import toolset ;
+
+
+# used for nm
+feature.feature demangle : off on : propagated ;
+
+
+toolset.flags unix.outline DEMANGLE <demangle>on : --demangle ;
 
 class unix-linking-generator : linking-generator
 {
@@ -155,6 +163,9 @@ generators.register [ new unix-searched-lib-generator
    unix.searched-lib-generator : : SEARCHED_LIB : <toolset>unix ] ;
 
 
+generators.register-standard unix.outline : LIB OBJ EXE : OUTLINE : <toolset>unix ;
+
+
 # The derived toolset must specify their own actions.
 actions link {
 }
@@ -171,7 +182,10 @@ actions searched-lib-generator {
 actions prebuilt {
 }
 
-    
+# simple implementation here, because clang also uses nm.
+actions outline {
+    nm $(>:T) $(DEMANGLE) > $(<:T)
+}     
 
 
 

@@ -53,6 +53,9 @@ type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
 feature.feature linker-script : : free dependency ;
 type.register LINKERSCRIPT : ld : <toolset>gcc ;
 
+
+
+
 # Initializes the gcc toolset for the given version. If necessary, command may
 # be used to specify where the compiler is located. The parameter 'options' is a
 # space-delimited list of options, each one specified as
@@ -275,6 +278,19 @@ rule init ( version ? : command * : options * )
         rc-type = null ;
     }
     rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
+
+    # NM, outline read
+    local nm = [ common.get-invocation-command gcc
+        : [ .get-prog-name $(command-string) : nm : $(flavor) ]
+        : [ feature.get-values <nm> : $(options) ]
+        : $(bin)
+        : search-path ] ;
+    
+    if ! $(nm)
+    {
+        $(nm) = nm ;
+    }
+    toolset.flags gcc.outline .NM $(condition) : $(nm) ;
 }
 
 if [ os.name ] = NT
@@ -1098,6 +1114,12 @@ local rule cpu-flags ( toolset variable : architecture : instruction-set + :
         : $(values) ;
 }
 
+
+
+# Outline
+actions outline {
+    $(.NM) $(>:T) $(DEMANGLE) > $(<:T)
+}    
 
 # Set architecture/instruction-set options.
 #
