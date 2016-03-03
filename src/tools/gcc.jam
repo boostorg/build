@@ -49,6 +49,9 @@ type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
 type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>windows : o ;
 type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
 
+# Add Gnu linker scripts
+feature.feature linker-script : : free dependency ;
+type.register LINKERSCRIPT : ld : <toolset>gcc ;
 
 # Initializes the gcc toolset for the given version. If necessary, command may
 # be used to specify where the compiler is located. The parameter 'options' is a
@@ -668,6 +671,16 @@ class gcc-linking-generator : unix-linking-generator
         }
 
         local properties = [ $(property-set).raw ] ;
+
+        # get all the linker-scripts
+        local .linker-scripts = [ $(property-set).get <linker-script> ] ;
+        for local ld in $(.linker-scripts)
+        {
+            # and now add them as linkflags
+            local tmp = [ $(ld).name ] ;
+            property-set = [ $(property-set).add-raw <linkflags>-T$(tmp) <dependency>$(ld) ] ;
+        }
+
         local reason ;
         if $(no-static-link) && <runtime-link>static in $(properties)
         {
@@ -689,6 +702,7 @@ class gcc-linking-generator : unix-linking-generator
                 }
             }
         }
+
         if $(reason)
         {
             ECHO warning: $(reason) ;

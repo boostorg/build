@@ -975,6 +975,13 @@ using gcc : &toolset_ops; ;</programlisting>
                 or <code>rc</code> for borland's resource compiler.</para>
               </listitem>
             </varlistentry>
+            <varlistentry>
+              <term><literal>linker-script</literal></term>
+
+              <listitem>
+                <para>Specifies a linker script to be used for linking. Several are allowed and each file must have the extension <code>.ld</code>
+              </listitem>
+            </varlistentry>
 
           </variablelist>
 
