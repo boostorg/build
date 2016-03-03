@@ -672,15 +672,6 @@ class gcc-linking-generator : unix-linking-generator
 
         local properties = [ $(property-set).raw ] ;
 
-        # get all the linker-scripts
-        local .linker-scripts = [ $(property-set).get <linker-script> ] ;
-        for local ld in $(.linker-scripts)
-        {
-            # and now add them as linkflags
-            local tmp = [ $(ld).name ] ;
-            property-set = [ $(property-set).add-raw <linkflags>-T$(tmp) <dependency>$(ld) ] ;
-        }
-
         local reason ;
         if $(no-static-link) && <runtime-link>static in $(properties)
         {
@@ -714,6 +705,20 @@ class gcc-linking-generator : unix-linking-generator
             return [ unix-linking-generator.run $(project) $(name) :
                 $(property-set) : $(sources) ] ;
         }
+    }
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        # get all the linker-scripts
+        local .linker-scripts = [ $(property-set).get <linker-script> ] ;
+        for local ld in $(.linker-scripts)
+        {
+            # and now add them as linkflags
+            local tmp = [ $(ld).name ] ;
+            property-set = [ $(property-set).add-raw <linkflags>-T$(tmp) <dependency>$(ld) ] ;
+        }
+
+
+        return [ unix-linking-generator.generated-targets $(sources) : $(property-set) : $(project) $(name) ] ;
     }
 }
 
