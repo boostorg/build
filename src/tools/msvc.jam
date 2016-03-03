@@ -1396,9 +1396,7 @@ local rule register-toolset-really ( )
         generators.register [ new msvc-pch-generator msvc.compile.c.pch   : H :   C_PCH OBJ : <pch>on <toolset>msvc ] ;
         generators.register [ new msvc-pch-generator msvc.compile.c++.pch : H : CPP_PCH OBJ : <pch>on <toolset>msvc ] ;
 
-        generators.register-standard msvc.outline : LIB  : OUTLINE : <toolset>msvc ;
-        generators.register-standard msvc.outline : EXE  : OUTLINE : <toolset>msvc ;
-        generators.register-standard msvc.outline : OBJ  : OUTLINE : <toolset>msvc ;
+        generators.register-composing msvc.outline : LIB OBJ EXE : OUTLINE : <toolset>msvc ;
 
         generators.override msvc.compile.c.pch   : pch.default-c-pch-generator ;
         generators.override msvc.compile.c++.pch : pch.default-cpp-pch-generator ;

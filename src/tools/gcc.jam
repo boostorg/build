@@ -1118,7 +1118,7 @@ local rule cpu-flags ( toolset variable : architecture : instruction-set + :
 
 # Outline
 actions outline {
-    $(.NM) $(>:T) $(DEMANGLE) > $(<:T)
+    $(.NM) $(DEMANGLE) $(>:T) > $(<:T)
 }    
 
 # Set architecture/instruction-set options.

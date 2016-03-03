@@ -163,7 +163,7 @@ generators.register [ new unix-searched-lib-generator
    unix.searched-lib-generator : : SEARCHED_LIB : <toolset>unix ] ;
 
 
-generators.register-standard unix.outline : LIB OBJ EXE : OUTLINE : <toolset>unix ;
+generators.register-composing unix.outline : LIB EXE OBJ : OUTLINE : <toolset>unix ;
 
 
 # The derived toolset must specify their own actions.
@@ -184,7 +184,7 @@ actions prebuilt {
 
 # simple implementation here, because clang also uses nm.
 actions outline {
-    nm $(>:T) $(DEMANGLE) > $(<:T)
+    nm $(DEMANGLE) $(>:T) > $(<:T)
 }     
 
 
