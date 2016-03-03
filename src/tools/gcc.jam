@@ -53,6 +53,9 @@ type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
 feature.feature linker-script : : free dependency ;
 type.register LINKERSCRIPT : ld : <toolset>gcc ;
 
+# Add the size
+type.register SIZE ;
+type.register HEX : hex ; 
 
 
 
@@ -279,7 +282,7 @@ rule init ( version ? : command * : options * )
     }
     rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
 
-    # NM, outline read
+    # NM, fg read
     local nm = [ common.get-invocation-command gcc
         : [ .get-prog-name $(command-string) : nm : $(flavor) ]
         : [ feature.get-values <nm> : $(options) ]
@@ -291,6 +294,33 @@ rule init ( version ? : command * : options * )
         $(nm) = nm ;
     }
     toolset.flags gcc.outline .NM $(condition) : $(nm) ;
+
+    # Objsize create hexfile
+    local size = [ common.get-invocation-command gcc
+        : [ .get-prog-name $(command-string) : size : $(flavor) ]
+        : [ feature.get-values <size> : $(options) ]
+        : $(bin)
+        : search-path ] ;
+    
+    if ! $(size)
+    {
+        $(size) = size ;
+    }
+    toolset.flags gcc.objsize .SIZE $(condition) : $(size) ;
+
+    # Objcopy, create hexfile
+    local objcopy = [ common.get-invocation-command gcc
+        : [ .get-prog-name $(command-string) : objcopy : $(flavor) ]
+        : [ feature.get-values <objcopy> : $(options) ]
+        : $(bin)
+        : search-path ] ;
+    
+    if ! $(objcopy)
+    {
+        $(objcopy) = objcopy ;
+    }
+    toolset.flags gcc.objcopy .OBJCOPY $(condition) : $(objcopy) ;
+    toolset.flags gcc.objcopy .SIZE $(condition) : $(size) ;
 }
 
 if [ os.name ] = NT
@@ -320,6 +350,10 @@ generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
 generators.register-fortran-compiler gcc.compile.fortran : FORTRAN FORTRAN90 : OBJ : <toolset>gcc ;
+
+
+generators.register-standard gcc.objcopy : EXE : HEX : <toolset>gcc ;
+generators.register-standard gcc.objsize : EXE : SIZE : <toolset>gcc ;
 
 # pch support
 
@@ -1120,6 +1154,20 @@ local rule cpu-flags ( toolset variable : architecture : instruction-set + :
 actions outline {
     $(.NM) $(DEMANGLE) $(>:T) > $(<:T)
 }    
+
+
+# Objcopy
+actions objcopy
+{   
+    $(.OBJCOPY) ./$(>:T) ./$(<:T) 
+    $(.SIZE) ./$(>:T)
+}
+
+# Obj size
+actions objsize
+{   
+    $(.SIZE) ./$(>:T) > ./$(<:T)
+}
 
 # Set architecture/instruction-set options.
 #
