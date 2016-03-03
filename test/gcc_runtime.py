@@ -11,7 +11,7 @@
 import BoostBuild
 
 t = BoostBuild.Tester()
-t.write("jamroot.jam", "lib hello : hello.cpp ; outline mangled : hello ; outline demangled : hello : <demangle>on ;")
+t.write("jamroot.jam", "exe hello : hello.cpp ; outline mangled : hello ; outline demangled : hello : <demangle>on ;")
 t.write("hello.cpp", "extern \"C\" int i; int main() { i = 42; return 0;}\n") 
 t.write("script.ld", "i = 42")
 
