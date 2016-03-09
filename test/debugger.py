@@ -364,6 +364,39 @@ Breakpoint 1, f ( 1 : 2 : 3 ) at test.jam:3
 """)
     t.cleanup()
 
+def test_print():
+    t = make_tester()
+    t.write("test.jam", """\
+        rule f ( args * )
+        {
+            return $(args) ;
+        }
+        f x ;
+        f x y ;
+    """)
+
+    run(t, """\
+(b2db) break f
+Breakpoint 1 set at f
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, f ( x ) at test.jam:3
+3	            return $(args) ;
+(b2db) print $(args)
+x
+(b2db) continue
+Breakpoint 1, f ( x y ) at test.jam:3
+3	            return $(args) ;
+(b2db) print $(args)
+x y
+(b2db) disable 1
+(b2db) print [ f z ]
+z
+(b2db) quit
+""")
+
+    t.cleanup()
+
 test_run()
 test_exit_status()
 test_step()
@@ -372,3 +405,4 @@ test_finish()
 test_breakpoints()
 test_breakpoints_running()
 test_backtrace()
+test_print()
