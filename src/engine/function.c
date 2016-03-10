@@ -574,9 +574,9 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
         }
     }
 
+    list_free( first );
     result = evaluate_rule( rule, real_rulename, inner );
     frame_free( inner );
-    object_free( rulename );
     object_free( real_rulename );
     return result;
 }
@@ -4230,6 +4230,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                     result = var_get( frame->module, varname ) ;
                 }
             }
+            list_free( targets );
             stack_push( s, list_copy( result ) );
             break;
         }

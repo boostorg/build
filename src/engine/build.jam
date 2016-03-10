@@ -304,7 +304,7 @@ toolset qcc qcc : "-o " : -D
 ## Qlogic Pathscale 2.4
 toolset pathscale pathcc : "-o " : -D
     :
-    [ opt --release : -s -Ofast -O3 ]
+    [ opt --release : -s -O3 ]
     [ opt --debug : -g ]
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
