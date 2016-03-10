@@ -202,6 +202,7 @@ tests = ["absolute_sources",
          "core_variables_in_actions",
          "custom_generator",
          "debugger",
+         "debugger-mi",
          "default_build",
          "default_features",
 # This test is known to be broken itself.

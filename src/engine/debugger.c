@@ -1498,6 +1498,7 @@ static void debug_mi_break_enable( int argc, const char * * argv );
 static void debug_mi_break_info( int argc, const char * * argv );
 static void debug_mi_break_list( int argc, const char * * argv );
 static void debug_mi_inferior_tty_set( int argc, const char * * argv );
+static void debug_mi_gdb_exit( int argc, const char * * argv );
 static void debug_mi_gdb_set( int argc, const char * * argv );
 static void debug_mi_gdb_show( int argc, const char * * argv );
 static void debug_mi_not_implemented( int argc, const char * * argv );
@@ -1543,6 +1544,7 @@ static struct command_elem parent_commands[] =
     { "-break-info", &debug_mi_break_info },
     { "-break-list", &debug_mi_break_list },
     { "-inferior-tty-set", &debug_mi_inferior_tty_set },
+    { "-gdb-exit", &debug_mi_gdb_exit },
     { "-gdb-set", &debug_mi_gdb_set },
     { "-gdb-show", &debug_mi_gdb_show },
     { "-enable-pretty-printing", &debug_mi_not_implemented },
@@ -1738,13 +1740,9 @@ static void debug_mi_break_insert( int argc, const char * * argv )
     }
     inner_argv[ 0 ] = "break";
     inner_argv[ 1 ] = location;
-    /*
-     * FIXME: Setting the breakpoint should return the id of the
-     * new breakpoint.  Factor the breakpoint setting code out
-     * of the interface code.
-     */
-    debug_parent_break( 2, inner_argv );
-    id = num_breakpoints;
+
+    id = debug_add_breakpoint( location );
+    debug_parent_forward_nowait( 2, inner_argv, 1, 0 );
 
     if ( disabled )
     {
@@ -1752,7 +1750,8 @@ static void debug_mi_break_insert( int argc, const char * * argv )
         sprintf( buf, "%d", num_breakpoints );
         inner_argv[ 0 ] = "disable";
         inner_argv[ 1 ] = buf;
-        debug_parent_disable( 2, inner_argv );
+        debug_child_disable( 2, inner_argv );
+        debug_parent_forward_nowait( 2, inner_argv, 1, 0 );
     }
 
     debug_mi_format_token();
@@ -1904,6 +1903,18 @@ static void debug_mi_inferior_tty_set( int argc, const char * * argv )
     /* FIXME: implement this for real */
     debug_mi_format_token();
     printf( "^done\n(gdb) \n" );
+}
+
+static void debug_mi_gdb_exit( int argc, const char * * argv )
+{
+    if ( debug_state == DEBUG_RUN )
+    {
+        const char * kill_args[] = { "kill" };
+        debug_parent_kill( 1, kill_args );
+    }
+    debug_mi_format_token();
+    printf( "^exit\n" );
+    exit( EXIT_SUCCESS );
 }
 
 static void debug_mi_gdb_set( int argc, const char * * argv )
@@ -2274,6 +2285,7 @@ static void debug_mi_exec_run( int argc, const char * * argv )
     printf( "=thread-created,id=\"1\",group-id=\"i1\"\n" );
     debug_mi_format_token();
     printf( "^running\n(gdb) \n" );
+    fflush( stdout );
     debug_start_child( argc, argv );
     debug_parent_wait( 1 );
 }
