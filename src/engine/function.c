@@ -2889,7 +2889,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     {
         compile_parse( parse->left, c, RESULT_RETURN );
         compile_emit_cleanups( c, 0 );
-        compile_emit( c, INSTR_RETURN, 0 );
+        compile_emit( c, INSTR_RETURN, 0 ); /* 0 for return in the middle of a function. */
     }
     else if ( parse->type == PARSE_BREAK )
     {
@@ -2961,7 +2961,7 @@ FUNCTION * function_compile( PARSE * parse )
     JAM_FUNCTION * result;
     compiler_init( c );
     compile_parse( parse, c, RESULT_RETURN );
-    compile_emit( c, INSTR_RETURN, 0 );
+    compile_emit( c, INSTR_RETURN, 1 );
     result = compile_to_function( c );
     compiler_free( c );
     result->file = object_copy( parse->file );
@@ -2981,7 +2981,7 @@ FUNCTION * function_compile_actions( char const * actions, OBJECT * file,
     compiler_init( c );
     var_parse_actions_compile( parse, c );
     var_parse_actions_free( parse );
-    compile_emit( c, INSTR_RETURN, 0 );
+    compile_emit( c, INSTR_RETURN, 1 );
     result = compile_to_function( c );
     compiler_free( c );
     result->file = object_copy( file );
@@ -3612,7 +3612,9 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
             case INSTR_SET: op_code = INSTR_SET_FIXED; break;
             case INSTR_APPEND: op_code = INSTR_APPEND_FIXED; break;
             case INSTR_DEFAULT: op_code = INSTR_DEFAULT_FIXED; break;
-            case INSTR_RETURN: return (FUNCTION *)new_func;
+            case INSTR_RETURN:
+                if( code->arg == 1 ) return (FUNCTION *)new_func;
+                else continue;
             case INSTR_CALL_MEMBER_RULE:
             case INSTR_CALL_RULE: ++i; continue;
             case INSTR_PUSH_MODULE:
