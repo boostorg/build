@@ -135,13 +135,11 @@ rule init (
                 [ property.select <search> <include> <name> : $(options) ] "and"
                 [ property.select <source> <tag> <build-name> : $(options) ] ;
         }
-        else
-        {
-            no-build-from-source = true ;
-        }
     }
-
-    source-path ?= [ modules.peek : ZLIB_SOURCE ] ;
+    else
+    {
+        source-path ?= [ modules.peek : ZLIB_SOURCE ] ;
+    }
 
     if $(.configured.$(condition))
     {
@@ -158,7 +156,7 @@ rule init (
         }
         return ;
     }
-    else if $(source-path) && ! $(no-build-from-source)
+    else if $(source-path)
     {
         build-name ?= z ;
         library-id = [ CALC $(library-id) + 1 ] ;
@@ -185,7 +183,8 @@ rule init (
             }
         }
         local target ;
-        if $(sources) {
+        if $(sources)
+        {
             target = [ targets.create-typed-target LIB : $(.project)
               : $(build-name).$(library-id)
               : $(sources)
@@ -207,7 +206,9 @@ rule init (
             $(mt).set-target $(target) ;
         }
         targets.main-target-alternative $(mt) ;
-    } else {
+    }
+    else
+    {
         if $(.debug)
         {
             ECHO "notice: [zlib] Using pre-installed library" ;
@@ -218,7 +219,7 @@ rule init (
         }
 
         local mt = [ new ac-library zlib : $(.project) : $(condition) :
-            $(include-path) : $(library-path) : $(library-name) : $(root) ] ;
+            $(include-path) : $(library-path) : $(library-name) ] ;
         $(mt).set-header $(header) ;
         $(mt).set-default-names $(names) ;
         targets.main-target-alternative $(mt) ;
