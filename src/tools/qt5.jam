@@ -370,8 +370,8 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
            .infix_version = "5" ;
        }
 
-        local host_os = [ modules.peek : OS ] ;
-        if $(host_os) = MACOSX
+        local host-os = [ modules.peek : OS ] ;
+        if $(host-os) = MACOSX
         {
             alias QtCore : qtmain
                : # requirements
@@ -406,7 +406,7 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
        {
            debug-message Configure debug libraries with suffix '$(.suffix_debug)' ;
 
-            if $(host_os) = MACOSX
+            if $(host-os) = MACOSX
             {
                 alias QtCore : qtmain
                    : # requirements
@@ -722,7 +722,7 @@ rule add-static-library ( lib-name : depends-on * : usage-defines * : requiremen
 # - include non-canonical include path. The canonical path is $(.incprefix)/$(lib-name).
 rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requirements * : include ? )
 {
-    local host_os = [ modules.peek : OS ] ;
+    local host-os = [ modules.peek : OS ] ;
 
     if $(.bjam-qt)
     {
@@ -742,7 +742,7 @@ rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requi
 
         local real_name = [ MATCH ^Qt(.*) : $(lib-name) ] ;
 
-        if $(host_os) = MACOSX
+        if $(host-os) = MACOSX
         {
             alias $(lib-name)
                : # sources
@@ -775,7 +775,7 @@ rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requi
 
         if $(.have_separate_debug) = TRUE
         {
-            if $(host_os) = MACOSX
+            if $(host-os) = MACOSX
             {
                 alias $(lib-name)
                    : # sources
