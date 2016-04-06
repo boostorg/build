@@ -370,33 +370,72 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
            .infix_version = "5" ;
        }
 
-       lib QtCore : qtmain
-           : # requirements
-             <name>Qt$(.infix_version)Core
-             $(target-requirements)
-           : # default-build
-           : # usage-requirements
-             <define>QT_CORE_LIB
-             <define>QT_NO_DEBUG
-             <include>$(.incprefix)/QtCore
-             $(usage-requirements)
-           ;
+        local host_os = [ modules.peek : OS ] ;
+        if $(host_os) = MACOSX
+        {
+            alias QtCore : qtmain
+               : # requirements
+                 <name>Qt$(.infix_version)Core
+                 $(target-requirements)
+               : # default-build
+               : # usage-requirements
+                 <define>QT_CORE_LIB
+                 <define>QT_NO_DEBUG
+                 <include>$(.incprefix)/QtCore
+                 <linkflags>"-F$(.prefix)/lib"
+                 <linkflags>"-framework QtCore"
+                 $(usage-requirements)
+               ;
+        }
+        else
+        {
+            lib QtCore : qtmain
+               : # requirements
+                 <name>Qt$(.infix_version)Core
+                 $(target-requirements)
+               : # default-build
+               : # usage-requirements
+                 <define>QT_CORE_LIB
+                 <define>QT_NO_DEBUG
+                 <include>$(.incprefix)/QtCore
+                 $(usage-requirements)
+               ;
+        }
 
        if $(.have_separate_debug) = TRUE
        {
            debug-message Configure debug libraries with suffix '$(.suffix_debug)' ;
 
-           lib QtCore : $(main)
-               : # requirements
-                 <name>Qt$(.infix_version)Core$(.suffix_debug)
-                 <variant>debug
-                 $(target-requirements)
-               : # default-build
-               : # usage-requirements
-                 <define>QT_CORE_LIB
-                 <include>$(.incprefix)/QtCore
-                 $(usage-requirements)
-               ;
+            if $(host_os) = MACOSX
+            {
+                alias QtCore : qtmain
+                   : # requirements
+                     <name>Qt$(.infix_version)Core$(.suffix_debug)
+                     <variant>debug
+                     $(target-requirements)
+                   : # default-build
+                   : # usage-requirements
+                     <define>QT_CORE_LIB
+                     <include>$(.incprefix)/QtCore
+                     <linkflags>"-F$(.prefix)/lib"
+                     <linkflags>"-framework $(lib-name)"
+                     $(usage-requirements)
+                   ;
+            }
+            else
+            {
+                lib QtCore : $(main)
+                   : # requirements
+                     <name>Qt$(.infix_version)Core$(.suffix_debug)
+                     <variant>debug
+                     $(target-requirements)
+                   : # default-build
+                   : # usage-requirements
+                     <define>QT_CORE_LIB
+                     <include>$(.incprefix)/QtCore
+                     $(usage-requirements)
+                   ;
+            }
         }
     }
 
@@ -683,6 +722,8 @@ rule add-static-library ( lib-name : depends-on * : usage-defines * : requiremen
 # - include non-canonical include path. The canonical path is $(.incprefix)/$(lib-name).
 rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requirements * : include ? )
 {
+    local host_os = [ modules.peek : OS ] ;
+
     if $(.bjam-qt)
     {
         # Import Qt module
@@ -701,32 +742,71 @@ rule add-library ( lib-name : version ? : depends-on * : usage-defines * : requi
 
         local real_name = [ MATCH ^Qt(.*) : $(lib-name) ] ;
 
-        lib $(lib-name)
-           : # sources
-             $(depends-on)
-           : # requirements
-             <name>Qt$(version)$(real_name)
-             $(requirements)
-           : # default-build
-           : # usage-requirements
-             <define>$(usage-defines)
-             <include>$(.incprefix)/$(real_include)
-           ;
-
-        if $(.have_separate_debug) = TRUE
+        if $(host_os) = MACOSX
+        {
+            alias $(lib-name)
+               : # sources
+                 $(depends-on)
+               : # requirements
+                 <name>Qt$(version)$(real_name)
+                 $(requirements)
+               : # default-build
+               : # usage-requirements
+                 <define>$(usage-defines)
+                 <include>$(.incprefix)/$(real_include)
+                 <linkflags>"-F$(.prefix)/lib"
+                 <linkflags>"-framework $(lib-name)"
+               ;
+        }
+        else
         {
             lib $(lib-name)
                : # sources
                  $(depends-on)
                : # requirements
-                 <name>Qt$(version)$(real_name)$(.suffix_debug)
+                 <name>Qt$(version)$(real_name)
                  $(requirements)
-                 <variant>debug
                : # default-build
                : # usage-requirements
                  <define>$(usage-defines)
                  <include>$(.incprefix)/$(real_include)
                ;
+        }
+
+        if $(.have_separate_debug) = TRUE
+        {
+            if $(host_os) = MACOSX
+            {
+                alias $(lib-name)
+                   : # sources
+                     $(depends-on)
+                   : # requirements
+                     <name>Qt$(version)$(real_name)$(.suffix_debug)
+                     $(requirements)
+                     <variant>debug
+                   : # default-build
+                   : # usage-requirements
+                     <define>$(usage-defines)
+                     <include>$(.incprefix)/$(real_include)
+                     <linkflags>"-F$(.prefix)/lib"
+                     <linkflags>"-framework $(lib-name)"
+                   ;
+            }
+            else
+            {
+                lib $(lib-name)
+                   : # sources
+                     $(depends-on)
+                   : # requirements
+                     <name>Qt$(version)$(real_name)$(.suffix_debug)
+                     $(requirements)
+                     <variant>debug
+                   : # default-build
+                   : # usage-requirements
+                     <define>$(usage-defines)
+                     <include>$(.incprefix)/$(real_include)
+                   ;
+            }
         }
     }
 
