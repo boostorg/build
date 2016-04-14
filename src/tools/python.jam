@@ -797,13 +797,11 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         }
     }
 
-    # Anything left to compute?
+    # Check whether configuration succeeded.
     if ! ( $(includes) && $(libraries) )
     {
-        version ?= $(fallback-version) ;
-        version ?= 2.5 ;
-        exec-prefix ?= $(prefix) ;
-        compute-default-paths $(target-os) : $(version) : $(prefix:E=) ;
+        debug-message Python headers and libraries not found. ;
+        return ;
     }
     
     .configured = true ;
