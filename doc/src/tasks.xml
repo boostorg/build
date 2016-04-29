@@ -530,7 +530,7 @@ unit-test helpers_test
 </programlisting>
             The command used to run the executable will be:
 <screen>
-<emphasis role="bold">valgrind</emphasis> bin.v2/$toolset/debug/helpers_test
+<emphasis role="bold">valgrind</emphasis> bin/$toolset/debug/helpers_test
 </screen>
           </para>
         </listitem>

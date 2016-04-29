@@ -678,7 +678,7 @@ b2 toolset=gcc variant=debug optimization=space
               The build directory for the project root will be computed by concatenating
               the value of the <option>--build-dir</option> option, the project name
               specified in Jamroot, and the build dir specified in Jamroot
-              (or <literal>bin.v2</literal>, if none is specified).
+              (or <literal>bin</literal>, if none is specified).
               </para>
 
               <para>The option is primarily useful when building from read-only

@@ -688,8 +688,8 @@ path-constant DATA : data/a.txt ;
         <listitem>
           <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
 
-          <para>The <literal>runtime-debugging</literal> feature specifies that,
-          if produced, object files, executables, and libraries should include
+          <para>The <literal>runtime-debugging</literal> feature specifies
+          whether produced object files, executables, and libraries should include
           behaviour useful only for debugging, such as asserts.
           Typically, the value of this feature is implicitly set by the
           <literal>variant</literal> feature, but it can be explicitly
