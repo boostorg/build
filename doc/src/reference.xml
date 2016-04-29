@@ -561,15 +561,13 @@ path-constant DATA : data/a.txt ;
       <varlistentry>
         <term><literal>cflags</literal></term>
         <term><literal>cxxflags</literal></term>
-        <term><literal>compileflags</literal></term>
         <term><literal>linkflags</literal></term>
 
         <listitem>
           <simpara>
             The value of those features is passed without modification to the
-            corresponding tools. For <code>cflags</code> that is C compiler,
-            for <code>cxxflags</code> that is the C++ compiler,
-            for <code>compileflags</code> that is both the C and C++ compilers,
+            corresponding tools. For <code>cflags</code> that is both the C and
+            C++ compilers, for <code>cxxflags</code> that is the C++ compiler,
             and for <code>linkflags</code> that is the linker. The features are
             handy when you are trying to do something special that cannot be
             achieved by a higher-level feature in Boost.Build.
