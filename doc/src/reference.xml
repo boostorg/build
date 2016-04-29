@@ -50,7 +50,7 @@ boost-build build-system ;
         automatically find the build system.</para>
 
       <para>The default <filename>bootstrap.jam</filename>, after loading some standard
-        definitions, loads two <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.</para>
+        definitions, loads both <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.</para>
 
     </section>
 
@@ -165,7 +165,7 @@ lib tools : [ glob *.cpp ] ;
         </programlisting>
         It is possible to also pass a second argument&#x2014;the list of
         exclude patterns. The result will then include the list of
-        files patching any of include patterns, and not matching any
+        files matching any of include patterns, and not matching any
         of the exclude patterns. For example:
         <programlisting>
 lib tools : [ glob *.cpp : file_to_exclude.cpp bad*.cpp ] ;
@@ -561,13 +561,15 @@ path-constant DATA : data/a.txt ;
       <varlistentry>
         <term><literal>cflags</literal></term>
         <term><literal>cxxflags</literal></term>
+        <term><literal>compileflags</literal></term>
         <term><literal>linkflags</literal></term>
 
         <listitem>
           <simpara>
             The value of those features is passed without modification to the
-            corresponding tools. For <code>cflags</code> that is both the C and
-            C++ compilers, for <code>cxxflags</code> that is the C++ compiler
+            corresponding tools. For <code>cflags</code> that is C compiler,
+            for <code>cxxflags</code> that is the C++ compiler,
+            for <code>compileflags</code> that is both the C and C++ compilers,
             and for <code>linkflags</code> that is the linker. The features are
             handy when you are trying to do something special that cannot be
             achieved by a higher-level feature in Boost.Build.
@@ -672,7 +674,7 @@ path-constant DATA : data/a.txt ;
           <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
 
           <para>The <literal>debug-symbols</literal> feature specifies if
-          produced object files, executables and libraries should include
+          produced object files, executables, and libraries should include
           debug information.
           Typically, the value of this feature is implicitly set by the
           <literal>variant</literal> feature, but it can be explicitly
@@ -686,8 +688,8 @@ path-constant DATA : data/a.txt ;
         <listitem>
           <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
 
-          <para>The <literal>runtime-debugging</literal> feature specifies if
-          produced object files, executables and libraries should include
+          <para>The <literal>runtime-debugging</literal> feature specifies that,
+          if produced, object files, executables, and libraries should include
           behaviour useful only for debugging, such as asserts.
           Typically, the value of this feature is implicitly set by the
           <literal>variant</literal> feature, but it can be explicitly
@@ -937,7 +939,7 @@ using gcc : &toolset_ops; ;</programlisting>
                 <para>Specifies the archiver command that is used to produce static
                 libraries. Normally, it is autodetected using gcc
                 <command>-print-prog-name</command> option or defaulted to <command>ar</command>,
-                 but in some cases you might want to override it, for example to expliitly
+                 but in some cases you might want to override it, for example to explicitly
                  use a system version instead of one included with gcc.</para>
               </listitem>
             </varlistentry>
@@ -949,7 +951,7 @@ using gcc : &toolset_ops; ;</programlisting>
                 <para>Specifies the ranlib command that is used to generated symbol table
                 for static libraries. Normally, it is autodetected using gcc
                 <command>-print-prog-name</command> option or defaulted to <command>ranlib</command>,
-                 but in some cases you might want to override it, for example to expliitly
+                 but in some cases you might want to override it, for example to explicitly
                  use a system version instead of one included with gcc.</para>
               </listitem>
             </varlistentry>
@@ -1021,6 +1023,9 @@ using gcc : &toolset_ops; ;</programlisting>
           C++</ulink> command-line tools on Microsoft Windows. The supported
           products and versions of command line tools are listed below:</para>
           <itemizedlist>
+            <listitem><para>Visual Studio 2015&#x2014;14.0</para></listitem>
+            <listitem><para>Visual Studio 2013&#x2014;12.0</para></listitem>
+            <listitem><para>Visual Studio 2012&#x2014;11.0</para></listitem>
             <listitem><para>Visual Studio 2010&#x2014;10.0</para></listitem>
             <listitem><para>Visual Studio 2008&#x2014;9.0</para></listitem>
             <listitem><para>Visual Studio 2005&#x2014;8.0</para></listitem>
@@ -1058,7 +1063,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that compiles assembler sources. If
               not specified, <command>ml</command> will be used. The command
               will be invoked after the setup script was executed and adjusted
-              the <envar>PATH</envar> variable.</para></listitem>
+              by the <envar>PATH</envar> variable.</para></listitem>
             </varlistentry>
 
             <varlistentry>
@@ -1067,7 +1072,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that compiles C and C++ sources. If
               not specified, <command>cl</command> will be used. The command
               will be invoked after the setup script was executed and adjusted
-              the <envar>PATH</envar> variable.</para></listitem>
+              by the <envar>PATH</envar> variable.</para></listitem>
             </varlistentry>
 
             <varlistentry>
@@ -1084,7 +1089,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that compiles Microsoft COM interface
               definition files. If not specified, <command>midl</command> will
               be used. The command will be invoked after the setup script was
-              executed and adjusted the <envar>PATH</envar> variable.</para>
+              executed and adjusted by the <envar>PATH</envar> variable.</para>
               </listitem>
             </varlistentry>
 
@@ -1094,7 +1099,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that links executables and dynamic
               libraries. If not specified, <command>link</command> will be used.
               The command will be invoked after the setup script was executed
-              and adjusted the <envar>PATH</envar> variable.</para></listitem>
+              and adjusted by the <envar>PATH</envar> variable.</para></listitem>
             </varlistentry>
 
             <varlistentry>
@@ -1103,7 +1108,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that compiles Microsoft message
               catalog files. If not specified, <command>mc</command> will be
               used. The command will be invoked after the setup script was
-              executed and adjusted the <envar>PATH</envar> variable.</para>
+              executed and adjusted by the <envar>PATH</envar> variable.</para>
               </listitem>
             </varlistentry>
 
@@ -1112,7 +1117,7 @@ using msvc : &toolset_ops; ;
 
               <listitem><para>The command that compiles resource files. If not
               specified, <command>rc</command> will be used. The command will be
-              invoked after the setup script was executed and adjusted the
+              invoked after the setup script was executed and adjusted by the
               <envar>PATH</envar> variable.</para></listitem>
             </varlistentry>
 
@@ -1443,7 +1448,7 @@ using cw : &toolset_ops; ;</programlisting>
               <listitem><para>The command that compiles C and C++ sources.
               If not specified, <command>mwcc</command> will be used. The
               command will be invoked after the setup script was
-              executed and adjusted the <envar>PATH</envar> variable.</para>
+              executed and adjusted by the <envar>PATH</envar> variable.</para>
               </listitem>
             </varlistentry>
 
@@ -1454,7 +1459,7 @@ using cw : &toolset_ops; ;</programlisting>
               libraries.
               If not specified, <command>mwld</command> will be used. The
               command will be invoked after the setup script was
-              executed and adjusted the <envar>PATH</envar> variable.</para>
+              executed and adjusted by the <envar>PATH</envar> variable.</para>
               </listitem>
             </varlistentry>
 
