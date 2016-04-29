@@ -1063,7 +1063,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that compiles assembler sources. If
               not specified, <command>ml</command> will be used. The command
               will be invoked after the setup script was executed and adjusted
-              by the <envar>PATH</envar> variable.</para></listitem>
+              the <envar>PATH</envar> variable.</para></listitem>
             </varlistentry>
 
             <varlistentry>
@@ -1072,7 +1072,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that compiles C and C++ sources. If
               not specified, <command>cl</command> will be used. The command
               will be invoked after the setup script was executed and adjusted
-              by the <envar>PATH</envar> variable.</para></listitem>
+              the <envar>PATH</envar> variable.</para></listitem>
             </varlistentry>
 
             <varlistentry>
@@ -1089,7 +1089,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that compiles Microsoft COM interface
               definition files. If not specified, <command>midl</command> will
               be used. The command will be invoked after the setup script was
-              executed and adjusted by the <envar>PATH</envar> variable.</para>
+              executed and adjusted the <envar>PATH</envar> variable.</para>
               </listitem>
             </varlistentry>
 
@@ -1099,7 +1099,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that links executables and dynamic
               libraries. If not specified, <command>link</command> will be used.
               The command will be invoked after the setup script was executed
-              and adjusted by the <envar>PATH</envar> variable.</para></listitem>
+              and adjusted the <envar>PATH</envar> variable.</para></listitem>
             </varlistentry>
 
             <varlistentry>
@@ -1108,7 +1108,7 @@ using msvc : &toolset_ops; ;
               <listitem><para>The command that compiles Microsoft message
               catalog files. If not specified, <command>mc</command> will be
               used. The command will be invoked after the setup script was
-              executed and adjusted by the <envar>PATH</envar> variable.</para>
+              executed and adjusted the <envar>PATH</envar> variable.</para>
               </listitem>
             </varlistentry>
 
@@ -1117,7 +1117,7 @@ using msvc : &toolset_ops; ;
 
               <listitem><para>The command that compiles resource files. If not
               specified, <command>rc</command> will be used. The command will be
-              invoked after the setup script was executed and adjusted by the
+              invoked after the setup script was executed and adjusted the
               <envar>PATH</envar> variable.</para></listitem>
             </varlistentry>
 
@@ -1448,7 +1448,7 @@ using cw : &toolset_ops; ;</programlisting>
               <listitem><para>The command that compiles C and C++ sources.
               If not specified, <command>mwcc</command> will be used. The
               command will be invoked after the setup script was
-              executed and adjusted by the <envar>PATH</envar> variable.</para>
+              executed and adjusted the <envar>PATH</envar> variable.</para>
               </listitem>
             </varlistentry>
 
@@ -1459,7 +1459,7 @@ using cw : &toolset_ops; ;</programlisting>
               libraries.
               If not specified, <command>mwld</command> will be used. The
               command will be invoked after the setup script was
-              executed and adjusted by the <envar>PATH</envar> variable.</para>
+              executed and adjusted the <envar>PATH</envar> variable.</para>
               </listitem>
             </varlistentry>
 
