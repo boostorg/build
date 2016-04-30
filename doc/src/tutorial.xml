@@ -280,8 +280,8 @@ top/
       in their requirements, too.  Of course, any project can add
       include paths to those specified by its parents. <footnote>
       <para>Many
-      features will be overridden in,
-      rather than added-to, subprojects.  See <xref
+      features will be overridden,
+      rather than added-to, in subprojects.  See <xref
       linkend="bbv2.reference.features.attributes"/> for more
       information</para>
     </footnote>
