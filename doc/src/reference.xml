@@ -2661,7 +2661,7 @@ exe hello : hello.cpp : &lt;os&gt;NT,&lt;toolset&gt;gcc:&lt;link&gt;static ;
         target. The syntax is:</para>
 
 <programlisting>
-target-id -&gt; (project-id | target-name | file-name )
+target-id -&gt; (target-name | file-name | project-id | directory-name)
               | (project-id | directory-name) "//" target-name
 project-id -&gt; path
 target-name -&gt; path
@@ -2675,12 +2675,6 @@ directory-name -&gt; path
         <itemizedlist>
           <listitem>
             <simpara>
-              project id (at this point, all project ids start with slash).
-            </simpara>
-          </listitem>
-
-          <listitem>
-            <simpara>
               name of target declared in current Jamfile (note that target
               names may include slash).
             </simpara>
@@ -2692,17 +2686,30 @@ directory-name -&gt; path
               project's sources location.
             </simpara>
           </listitem>
+
+          <listitem>
+            <simpara>
+              project id (at this point, all project ids start with slash).
+            </simpara>
+          </listitem>
+
+          <listitem>
+            <simpara>
+              the directory of another project, denoted by absolute name
+              or name relative to the current project's location.
+            </simpara>
+          </listitem>
         </itemizedlist>
 
-        To determine the real meaning a check is made if project-id
-        by the specified name exists, and then if main target of that
-        name exists. For example, valid target ids might be:
+        To determine the real meaning the possible interpretations
+        are checked in this order. For example, valid target ids might be:
 
 <screen>
 a                                    -- target in current project
 lib/b.cpp                            -- regular file
 /boost/thread                        -- project "/boost/thread"
 /home/ghost/build/lr_library//parser -- target in specific project
+../boost_1_61_0                      -- project in specific directory
 </screen>
 
       </para>
