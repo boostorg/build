@@ -107,7 +107,7 @@ a.o: a.c
 <programlisting>
 add_program ("a", "a.c")
 </programlisting>
-        This is a function call that creates the targets necessary to create a executable file
+        This is a function call that creates the targets necessary to create an executable file
         from the source file <filename>a.c</filename>. Depending on configured properties,
         different command lines may be used. However, <code>add_program</code> is higher-level,
         but rather thin level. All targets are created immediately when the build description
@@ -675,7 +675,7 @@ b2 toolset=gcc variant=debug optimization=space
             <listitem>
               <para>Changes the build directories for all project roots being built. When
               this option is specified, all Jamroot files must declare a project name.
-              The build directory for the project root will be computed by concatanating
+              The build directory for the project root will be computed by concatenating
               the value of the <option>--build-dir</option> option, the project name
               specified in Jamroot, and the build dir specified in Jamroot
               (or <literal>bin</literal>, if none is specified).
@@ -782,12 +782,12 @@ b2 toolset=gcc variant=debug optimization=space
           <varlistentry>
             <term><option>-d <replaceable>N</replaceable></option></term>
             <listitem>
-              <para>Enable cummulative debugging levels from 1 to n. Values are:
+              <para>Enable cumulative debugging levels from 1 to n. Values are:
               <orderedlist>
                 <listitem>Show the actions taken for building targets, as they are executed (the default).</listitem>
                 <listitem>Show "quiet" actions and display all action text, as they are executed.</listitem>
                 <listitem>Show dependency analysis, and target/source timestamps/paths.</listitem>
-                <listitem>Show arguments and timming of shell invocations.</listitem>
+                <listitem>Show arguments and timing of shell invocations.</listitem>
                 <listitem>Show rule invocations and variable expansions.</listitem>
                 <listitem>Show directory/header file/archive scans, and attempts at binding to targets.</listitem>
                 <listitem>Show variable settings.</listitem>
@@ -1595,7 +1595,7 @@ b2 app1 lib1//lib1 gcc debug optimization=full
           <listitem><para>Selecting the main target alternative to use. For
               each alternative we look how many properties are present both in
               alternative's requirements, and in build request. The
-              alternative with large number of matching properties is selected.
+              alternative with largest number of matching properties is selected.
             </para></listitem>
 
           <listitem><para>Determining "common" properties.
