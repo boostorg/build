@@ -1224,8 +1224,10 @@ rule capture-output ( target : sources * : properties * )
     PYTHONPATH += [ feature.get-values pythonpath : $(properties) ] ;
 
     # After test is run, we remove the Python module, but not the Python script.
+    local targets-to-remove = $(sources[2-]) ;
+    targets-to-remove ?= none ;
     testing.capture-output $(target) : $(sources[1]) : $(properties) :
-        $(sources[2-]) ;
+        $(targets-to-remove) ;
 
     # PYTHONPATH is different; it will be interpreted by whichever Python is
     # invoked and so must follow path rules for the target os. The only OSes
