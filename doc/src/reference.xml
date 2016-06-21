@@ -711,7 +711,7 @@ path-constant DATA : data/a.txt ;
           </para>
 
           <para>The complete list of possible values for this feature is: 
-            aix, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
+            aix, appletv, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
             openbsd, osf, qnx, qnxnto, sgi, solaris, unix, unixware, windows.
           </para>
 
