@@ -23,6 +23,12 @@ void out_action(
     int const exit_reason
 );
 
+void out_compile_database(
+    char const * const action,
+    char const * const source,
+    char const * const command
+);
+
 void out_flush();
 void err_flush();
 void out_puts(char const * const s);

@@ -813,6 +813,8 @@ static void make1c_closure
     CMD * const cmd = (CMD *)t->cmds;
     char const * rule_name = 0;
     char const * target_name = 0;
+    char const * source_name = 0;
+    LIST* sources = 0;
 
     assert( cmd );
 
@@ -849,6 +851,18 @@ static void make1c_closure
 
     out_action( rule_name, target_name, cmd->buf->value, cmd_stdout, cmd_stderr,
         cmd_exit_reason );
+
+    if ( globs.comp_db != NULL )
+    {
+       rule_name = object_str( cmd->rule->name );
+       target_name = object_str( list_front( lol_get( (LOL *)&cmd->args, 0 ) )
+          );
+       sources = lol_get( (LOL *)&cmd->args, 1);
+       if (sources != NULL)
+          source_name = object_str( list_front( lol_get(
+             (LOL *)&cmd->args, 1 ) ) );
+        out_compile_database( rule_name, source_name, cmd->buf->value );
+    }
 
     if ( !globs.noexec )
     {

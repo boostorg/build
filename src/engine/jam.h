@@ -469,6 +469,7 @@ struct globs
     int    pipe_action;
     char   debug[ DEBUG_MAX ];
     FILE * out;                 /* mirror output here */
+    FILE * comp_db;             /* output compilation db here */
     long   timeout;             /* number of seconds to limit actions to,
                                  * default 0 for no limit.
                                  */
