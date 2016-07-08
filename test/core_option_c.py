@@ -11,7 +11,7 @@ import BoostBuild
 import MockToolset
 
 t = BoostBuild.Tester(arguments=['toolset=mock', '--ignore-site-config',
-    '--user-config='], pass_toolset=0)
+    '--user-config='], pass_toolset=0, pass_d0=0)
 
 MockToolset.create(t)
 MockToolset.set_expected(t, '''
@@ -22,7 +22,7 @@ action('bin/mock/debug/hello.o -o bin/mock/debug/hello')
 t.write("hello.cpp", 'int main() { return 0; }\n')
 t.write("Jamroot.jam", "exe test : hello.cpp ;\n")
 
-t.run_build_system(['-ca'])
+t.run_build_system(['-can'])
 t.ignore("bin")
 
 t.expect_addition("compile_commands.json")
