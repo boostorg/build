@@ -292,7 +292,6 @@ local rule init-sdk ( condition * : root ? : version + : version-feature ? )
                 flags darwin.link OPTIONS <macosx-version-min>$(version-feature)
                     : -mtvos-version-min=$(version[2-]:J=.) ;
             }
-            
 
             case iphonesim* :
             {
