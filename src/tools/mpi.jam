@@ -245,15 +245,47 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
 
   if ! $(mpicxx) && [ os.on-windows ]
   {
-    # Try to auto-configure to the Microsoft Compute Cluster Pack
+    # Paths for Microsoft MPI
+    local ms_mpi_path_native = "C:\\Program Files\\Microsoft MPI" ;
+    local ms_mpi_sdk_path_native = "C:\\Program Files (x86)\\Microsoft SDKs\\MPI" ;
+
+    # Path for Microsoft Compute Cluster Pack
     local cluster_pack_path_native = "C:\\Program Files\\Microsoft Compute Cluster Pack" ;
-    local cluster_pack_path = [ path.make $(cluster_pack_path_native) ] ;
-    if [ GLOB $(cluster_pack_path_native)\\Include : mpi.h ]
+
+    # Try to auto-configure Microsoft MPI
+    if [ GLOB $(ms_mpi_path_native)\\Bin : mpiexec.exe ] &&
+        [ GLOB $(ms_mpi_sdk_path_native)\\Include : mpi.h ]
+    {
+      if $(.debug-configuration)
+      {
+        ECHO "Found Microsoft MPI: $(ms_mpi_path_native)" ;
+        ECHO "Found Microsoft MPI SDK: $(ms_mpi_sdk_path_native)" ;
+      }
+
+      local ms_mpi_sdk_path = [ path.make $(ms_mpi_sdk_path_native) ] ;
+
+      # Pick up either the 32-bit or 64-bit library, depending on which address
+      # model the user has selected. Default to 32-bit.
+      options = <include>$(ms_mpi_sdk_path)/Include
+                <address-model>64:<library-path>$(ms_mpi_sdk_path)/Lib/x64
+                <library-path>$(ms_mpi_sdk_path)/Lib/x86
+                <find-static-library>msmpi
+                <toolset>msvc:<define>_SECURE_SCL=0
+              ;
+
+      # Setup the "mpirun" equivalent (mpiexec)
+      .mpirun = "\"$(ms_mpi_path_native)\\Bin\\mpiexec.exe"\" ;
+      .mpirun_flags = -n ;
+    }
+    # Try to auto-configure to the Microsoft Compute Cluster Pack
+    else if [ GLOB $(cluster_pack_path_native)\\Include : mpi.h ]
     {
       if $(.debug-configuration)
       {
         ECHO "Found Microsoft Compute Cluster Pack: $(cluster_pack_path_native)" ;
       }
+
+      local cluster_pack_path = [ path.make $(cluster_pack_path_native) ] ;
 
       # Pick up either the 32-bit or 64-bit library, depending on which address
       # model the user has selected. Default to 32-bit.
@@ -270,6 +302,8 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
     }
     else if $(.debug-configuration)
     {
+      ECHO "Did not find Microsoft MPI in $(ms_mpi_path_native)" ;
+      ECHO "      and/or Microsoft MPI SDK in $(ms_mpi_sdk_path_native)." ;
       ECHO "Did not find Microsoft Compute Cluster Pack in $(cluster_pack_path_native)." ;
     }
   }
