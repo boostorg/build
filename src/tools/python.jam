@@ -902,6 +902,17 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     toolset.add-requirements
         $(target-requirements:J=,):<python.interpreter>$(interpreter-cmd) ;
 
+    # We also set a default requirement that assigns the first python configured
+    # for a particular target OS as the default. This makes it so that we can
+    # select a python interpreter with only knowledge of the target OS. And hence
+    # can configure different Pythons based on the target OS only.
+    local toolset-requirements = [ toolset.requirements ] ;
+    local default-python-requirement = <target-os>$(target-os):<python>$(version:E=default) ;
+    if ! [ $(toolset-requirements).contains-raw $(default-python-requirement) ]
+    {
+        toolset.add-requirements $(default-python-requirement) ;
+    }
+
     # Register the right suffix for extensions.
     register-extension-suffix $(extension-suffix) : $(target-requirements) ;
 
