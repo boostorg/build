@@ -54,6 +54,7 @@ toolset.inherit-flags emscripten : gcc
 
 type.set-generated-target-suffix EXE : <toolset>emscripten : "js" ;
 type.set-generated-target-suffix OBJ : <toolset>emscripten : "bc" ;
+type.set-generated-target-suffix STATIC_LIB : <toolset>emscripten : "bc" ;
 
 toolset.flags emscripten.compile OPTIONS <flags> ;
 toolset.flags emscripten.compile OPTIONS <cflags> ;
@@ -81,7 +82,7 @@ toolset.flags emscripten OPTIONS <debug-symbols>off : -g0 ;
 toolset.flags emscripten OPTIONS <debug-symbols>on : -g4 ;
 toolset.flags emscripten OPTIONS <rtti>off : -fno-rtti ;
 
-toolset.flags emscripten OPTIONS <embind>on : --bind ;
+toolset.flags emscripten.link OPTIONS <embind>on : --bind ;
 toolset.flags emscripten.link OPTIONS <closure>on : --closure 1 ;
 toolset.flags emscripten.link OPTIONS <closure>full : --closure 2 ;
 toolset.flags emscripten.link OPTIONS <link-optimization>off : --llvm-lto 0 ;
@@ -96,6 +97,11 @@ actions compile.c
 actions compile.c++
 {
     "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+actions archive
+{
+    "$(CONFIG_COMMAND)" $(AROPTIONS) -o "$(<)" "$(>)"
 }
 
 toolset.flags emscripten.link USER_OPTIONS <linkflags> ;
