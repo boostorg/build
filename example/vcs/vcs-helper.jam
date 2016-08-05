@@ -1,0 +1,40 @@
+import path ;
+import errors ;
+
+import vcs ;
+
+# fetch, checkout, and analyze a vcs repository
+rule execute ( vcs : root-url : symbolic-ref : path )
+{
+  echo "------------------------------------------------------------------------------" ;
+
+  # a place to put the test repositories
+  local tmp = repositories/$(vcs) ;
+
+  local desired-url = $(root-url) ;
+  local desired-symbolic-ref = $(symbolic-ref) ;
+  local desired-dir = $(tmp)/$(path) ;
+
+  if ! [ path.exists $(desired-dir) ]
+  {
+    vcs.fetch $(vcs) : $(desired-url) : $(desired-dir) ;
+  }
+  else
+  {
+    echo "info: path '$(desired-dir)' exists, skipping fetch" ;
+  }
+  vcs.checkout $(desired-dir) : $(desired-symbolic-ref) ;
+
+  local actual-vcs = [ vcs.type $(desired-dir) ] ;
+  local actual-root-url = [ vcs.root-url $(desired-dir) ] ;
+  local actual-head-ref = [ vcs.ref $(desired-dir) ] ;
+  local actual-symbolic-ref = [ vcs.ref $(desired-dir) : $(desired-symbolic-ref) ] ;
+  local actual-version-string = [ vcs.generate-version-string $(desired-dir) ] ;
+
+  echo "info: analyzing $(desired-dir):" ;
+  echo "  type: $(actual-vcs)" ;
+  echo "  root URL: $(actual-root-url)" ;
+  echo "  head reference: $(actual-head-ref)" ;
+  echo "  symbolic reference: $(actual-symbolic-ref)" ;
+  echo "  generated version string: $(actual-version-string)" ;
+}

@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE section PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
+
+<section id="bbv2.reference.modules.vcs"
+         xmlns:xi="http://www.w3.org/2001/XInclude">
+
+  <title>vcs</title>
+  <indexterm>
+    <primary>vcs</primary>
+    <secondary>module</secondary>
+  </indexterm>
+
+  <section>
+    <title>Overview</title>
+    <para>
+      The Boost.Build <code>vcs</code> module exposes a limited subset
+      of version control system functionality to Boost.Build projects
+      for a set of supported version control system back ends.
+      Currently, Boost.Build <code>vcs</code> supports Subversion and
+      Git.  Other systems should be straightforward to implement.
+    </para>
+  </section>
+
+  <section>
+    <title>Overview</title>
+    <para>
+      The Boost.Build <code>vcs</code> module depends on separate
+      backends to implement the interface.  The backend file should be
+      named <code>vcs-BACKEND.jam</code> where BACKEND is the name of
+      the backend and should contain implementations for each of the
+      functions defined below.
+    </para>
+  </section>
+
+  <section>
+    <title>Usage</title>
+    <para>
+      An example Boost.Build project illustrating the vcs interface is shown
+      below.
+    </para>
+
+    <para>
+      <example>
+        <title>jamroot.jam</title>
+        <programlisting>
+import vcs ;
+
+import assert ;
+
+# print the type of version control system and the generated
+# version string for this project
+echo [ vcs.type . ]
+echo [ vcs.generate-version-string . ] ;
+
+# fetch and checkout the 1.0 reference of a project kept in the Git
+# version control system
+vcs.get git : https://example.com/git/path/to/project/root : /path/to/desired/root ;
+vcs.checkout : /path/to/desired/root : 1.0 ;
+
+# verify that the URL and reference matches the desired
+assert.equal [ vcs.root-url /path/to/desired/root ] : https://example.com/git/path/to/desired/root ;
+assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root : 1.0 ] ;
+        </programlisting>
+      </example>
+    </para>
+
+    <para>
+      Also, see <code>example/vcs</code> in the source repository for
+      an exhaustive example.
+    </para>
+
+  </section>
+
+  <section>
+    <title>Design</title>
+    <para>
+      Note that the only rule that requires that that the type of
+      version control system is specified is the <code>fetch</code>
+      rule.  The rest detect the version control system from querying
+      the given directory.
+    </para>
+
+    <para>
+      Currently, there are two supported backends:
+
+      <orderedlist>
+        <listitem><para>Git</para></listitem>
+        <listitem><para>Subversion</para></listitem>
+      </orderedlist>
+    </para>
+  </section>
+
+  <orderedlist>
+
+    <listitem id="bbv2.reference.modules.vcs.type">
+      <indexterm zone="bbv2.reference.modules.vcs.type">
+        <primary>type</primary>
+        <secondary>vcs</secondary>
+      </indexterm>
+      <code language="jam">rule type ( directory )</code>
+      <para>
+        Returns the type of version control system for the indicated
+        directory, or the empty string if none was detected.
+      </para>
+    </listitem>
+
+    <listitem id="bbv2.reference.modules.vcs.generate-version-string">
+      <indexterm zone="bbv2.reference.modules.vcs.generate-version-string">
+        <primary>generate-version-string</primary>
+        <secondary>vcs</secondary>
+      </indexterm>
+      <code language="jam">rule generate-version-string ( directory )</code>
+      <para>
+        Returns a string uniquely describing the state of the
+        repository at the given directory.
+
+        <orderedlist>
+          <listitem>
+            <para>
+              When on a tag, all version control systems will return
+              the tag name.
+            </para>
+          </listitem>
+
+          <listitem>
+            <para>
+              Otherwise:
+              <orderedlist>
+                <listitem>
+                  <para>
+                    Git: &lt;nearest-tag-name&gt;-&lt;branch-name&gt;-&lt;commits-since-nearest-tag&gt;-g&lt;commit-id&gt;
+                  </para>
+                </listitem>
+                <listitem>
+                  <para>
+                    Subversion: -&lt;URL&gt;--s&lt;REV&gt;
+                  </para>
+                </listitem>
+              </orderedlist>
+            </para>
+          </listitem>
+        </orderedlist>
+      </para>
+
+      <para>
+        The <code>generate-version-string</code> rule can be used to
+        generate a version string for a program dynamically.  The
+        example below shows how to use this to create a
+        <code>version_string.cpp</code> file containing the version
+        string.  The <code>print</code> module provides a mechanism to
+        ensure that the generated file is only modified when the
+        version string actually changes.
+      </para>
+
+      <para>
+        Also, see the example
+        <code>example/vcs-generate-version-string</code> in the source
+        repository for an complete example.
+      </para>
+
+      <para>
+        <example>
+          <title>jamroot.jam</title>
+          <programlisting>
+            <xi:include
+                href="../../example/vcs-generate-version-string/jamroot.jam"
+                parse="text">
+            </xi:include>
+          </programlisting>
+        </example>
+      </para>
+
+      <para>
+        <programlisting>
+          <title>main.cpp</title>
+          <xi:include
+              href="../../example/vcs-generate-version-string/main.cpp"
+              parse="text">
+          </xi:include>
+          </programlisting>
+    </para>
+
+    </listitem>
+
+    <listitem id="bbv2.reference.modules.vcs.fetch">
+      <indexterm zone="bbv2.reference.modules.vcs.fetch">
+        <primary>fetch</primary>
+        <secondary>vcs</secondary>
+      </indexterm>
+      <code language="jam">rule fetch ( vcs : root-url : directory )</code>
+      <para>
+        Fetches the from the URL to the root of the vcs project to the
+        indicated directory using vcs.
+      </para>
+    </listitem>
+
+    <listitem id="bbv2.reference.modules.vcs.checkout">
+      <indexterm zone="bbv2.reference.modules.vcs.checkout">
+        <primary>checkout</primary>
+        <secondary>vcs</secondary>
+      </indexterm>
+      <code language="jam">rule checkout ( directory : symbolic-ref )</code>
+      <para>
+        Checks out the indicated symbolic reference from the
+        repository located at the indicated directory.
+      </para>
+    </listitem>
+
+    <listitem id="bbv2.reference.modules.vcs.root-url">
+      <indexterm zone="bbv2.reference.modules.vcs.root-url">
+        <primary>root-url</primary>
+        <secondary>vcs</secondary>
+      </indexterm>
+      <code language="jam">rule root-url ( directory )</code>
+      <para>
+        Returns the URL to the root of the vcs project located at the
+        indicated directory.
+      </para>
+    </listitem>
+
+    <listitem id="bbv2.reference.modules.vcs.ref">
+      <indexterm zone="bbv2.reference.modules.vcs.ref">
+        <primary>ref</primary>
+        <secondary>vcs</secondary>
+      </indexterm>
+      <code language="jam">rule ref ( directory : symbolic-ref ? )</code>
+      <para>
+        Returns a unique identifier representing the current state of
+        the vcs project located at directory.  If the symbolic
+        reference is given, the rule returns the reference of that
+        symbolic reference, not the current state of the project.
+      </para>
+    </listitem>
+
+  </orderedlist>
+
+</section>

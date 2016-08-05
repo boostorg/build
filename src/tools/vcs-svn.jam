@@ -1,0 +1,262 @@
+# Copyright 2016
+#
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+# Version Control System - Subversion
+#
+# @todo detect if svn is available
+# @todo detect if the current repository is a Subversion repository
+
+import path ;
+import errors ;
+import assert ;
+
+# Generates a version string from the Subversion repository assuming a
+# standard repository layout.
+#
+# If on a tag:
+#
+#    <tag-name>
+#
+# If not on a tag:
+#
+# @todo work to match the Git format, missing nearest tag and commits
+# since nearest tag
+#
+#    -<URL>--s<REV>
+#
+# If the repository is dirty, "-dirty" will be appended.
+#
+rule generate-version-string
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  local v = "" ;
+
+  if ! [ executable-exists ]
+  {
+    errors.user-error "vcs-svn: Subversion executable is not installed" ;
+  }
+
+  if ! [ is-repository $(directory) ]
+  {
+    errors.user-error "vcs-svn: $(directory) is not a Subversion repository." ;
+  }
+
+  local tag = "" ;
+  local branch = "" ;
+  local commits = "0" ;
+  local revision = "" ;
+
+  local url = "" ;
+  local exact_match = "" ;
+
+  local lines = [ SHELL "svn info $(directory)" ] ;
+
+  lines = [ SPLIT_BY_CHARACTERS $(lines) : "\n" ] ;
+
+  for local line in $(lines)
+  {
+    local urlm = [ MATCH "^URL: (.+)\n$" : $(line) ] ;
+    if $(urlm)
+    {
+      url = $(urlm[1]) ;
+    }
+    local revisionm = [ MATCH "^Revision: ([0-9]+)\n$" : $(line) ] ;
+    if $(revisionm)
+    {
+      revision = $(revisionm[1]) ;
+    }
+  }
+
+  if $(url) != ""
+  {
+    tagm = [ MATCH "^.*/tags/(.+)$" : $(url) ] ;
+    if $(tagm)
+    {
+      exact_match = "exact_match" ;
+
+      tag = $(tagm[1]) ;
+    }
+
+    branchm = [ MATCH "^.*/branches/(.+)$" : $(url) ] ;
+    if $(branchm)
+    {
+      branch = $(branchm[1]) ;
+    }
+    else
+    {
+      trunkm = [ MATCH "^.*/(trunk)$" : $(url) ] ;
+      if $(trunkm)
+      {
+        branch = $(trunkm[1]) ;
+      }
+    }
+  }
+
+  # create the version string
+  if $(exact_match) = "exact_match"
+  {
+    v = $(tag) ;
+  }
+  else
+  {
+    v = $(tag)-$(branch)-$(commits)-s$(revision) ;
+  }
+
+  # check if the working copy is dirty
+  if [ SHELL "cd $(directory) && svn diff" ] != ""
+  {
+    v = "$(v)-dirty" ;
+  }
+
+  return $(v) ;
+}
+
+# Fetches from the given url to the given directory.
+#
+#   svn checkout $(root-url)/trunk $(directory)
+#
+rule fetch
+(
+  root-url : # The root URL of the repository from which to fetch.
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  # @todo check results
+
+  # @todo there may not be a trunk, what to do?
+  local r = [ SHELL "svn checkout $(root-url)/trunk $(directory)" ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(directory) ;
+}
+
+# Checks out the indicated symbolic reference for the Subversion
+# repository at directory.
+#
+# A symbolic reference for Subversion is a URI based off the root URL.
+#
+#    trunk
+#    tags/1.1.1
+#    branches/devel-fixes
+#
+rule checkout
+(
+  directory : # A directory resulting from a Subversion fetch or checkout.
+  symbolic-ref ? # An optional Subversion-specific symbolic reference.
+)
+{
+  # check errors, etc.
+  local ru = [ root-url $(directory) ] ;
+
+  local r = [ SHELL "( cd $(directory) && svn switch $(ru)/$(symbolic-ref) )" ] ;
+}
+
+# Returns the root URL of the Subversion repository at the given
+# directory.
+#
+rule root-url
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  local u = ;
+
+  local output = [ SHELL "( cd $(directory) && svn info )" ] ;
+  local lines = [ SPLIT_BY_CHARACTERS $(output) : "\n" ] ;
+  for local line in $(lines)
+  {
+    m = [ MATCH "^Repository Root: (.+)" : $(line) ] ;
+    if $(m)
+    {
+      assert.equal $(u) : ;
+
+      u = $(m[0]) ;
+    }
+  }
+
+  assert.variable-not-empty u ;
+
+  return $(u) ;
+}
+
+# Returns the reference for the symbol reference if it is not empty or
+# HEAD for the Subversion repository at directory.
+#
+# For a Subversion repository, a reference is the URL fragment beyond
+# the root and the last changed revision.
+#
+#    tags/1.1.1@12345
+#
+rule ref
+(
+  directory : # A directory resulting from a fetch or checkout.
+  symbolic-ref ? # An optional Subversion-specific symbolic reference.
+)
+{
+  local ru = [ root-url $(directory) ] ;
+
+  local lines = ;
+  if ! $(symbolic-ref)
+  {
+    lines = [ SHELL "( cd $(directory) && svn info )" ] ;
+  }
+  else
+  {
+    lines = [ SHELL "svn info $(ru)/$(symbolic-ref)" ] ;
+  }
+
+  assert.variable-not-empty lines ;
+
+  local r = ;
+  local sr = ;
+
+  for local line in $(lines)
+  {
+    line = [ SPLIT_BY_CHARACTERS $(line) : "\n" ] ;
+
+    m0 = [ MATCH "^Last Changed Rev: (.+)" : $(line) ] ;
+    if $(m0)
+    {
+      assert.equal $(r) : ;
+
+      r = $(m0[0]) ;
+    }
+
+    m1 = [ MATCH "^URL: $(ru)/(.+)" : $(line) ] ;
+    if $(m1)
+    {
+      assert.equal $(sr) : ;
+
+      sr = $(m1[0]) ;
+    }
+  }
+
+  assert.variable-not-empty r ;
+  assert.variable-not-empty sr ;
+
+  return $(sr)@$(r) ;
+}
+
+# Returns true if the given directory is a Subversion repository.
+#
+rule is-repository
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  # @todo is there a better way?
+  return [ path.exists "$(directory)/.svn" ] ;
+}
+
+# Return true if the Subversion executable exists.
+#
+rule executable-exists ( )
+{
+  # @todo always say true for now
+  return 1 == 1 ;
+}

@@ -1,0 +1,216 @@
+# Copyright 2016
+#
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+# Version Control System - Git
+#
+# @todo detect if git is available
+# @todo detect if the current repository is a git repository
+
+import path ;
+import errors ;
+import assert ;
+
+# Returns a version string representing the version of the Git
+# repository.
+#
+# If on a tag:
+#
+#    <tag-name>
+#
+# If not on a tag:
+#
+#    <nearest-tag-name>-<branch-name>-<commits-since-nearest-tag>-g<commit-id>
+#
+# If the repository is dirty, "-dirty" will be appended.
+#
+rule generate-version-string
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  local v = "" ;
+
+  if ! [ executable-exists ]
+  {
+    errors.user-error "vcs-git: Git executable is not installed" ;
+  }
+
+  if ! [ is-repository $(directory) ]
+  {
+    errors.user-error "vcs-git: $(directory) is not a Git repository." ;
+  }
+
+  v = [ SHELL "(cd $(directory) && git describe --tags --exact-match --dirty)" ] ;
+  v = [ SPLIT_BY_CHARACTERS $(v) : "\n" ] ;
+
+  if $(v) != ""
+  {
+    local m = [ MATCH "^(.+)$" : $(v) ] ;
+    if $(m)
+    {
+      v = $(m[1]) ;
+    }
+  }
+  else
+  {
+    local v0 = [ SHELL "(cd $(directory) && git describe --tags --long --dirty)" ] ;
+    v0 = [ SPLIT_BY_CHARACTERS $(v0) : "\n" ] ;
+    local m0 = [ MATCH "^(.+)-([0-9]+)-g([0-9a-fA-F]+)(-dirty)?$" : $(v0) ] ;
+    if ! $(m0)
+    {
+      m0 = "" "" ;
+    }
+
+    local v1 = [ SHELL "(cd $(directory) && git describe --all --long --dirty)" ] ;
+    v1 = [ SPLIT_BY_CHARACTERS $(v1) : "\n" ] ;
+    local m1 = [ MATCH "^(heads|remotes/.+)/(.+)-([0-9]+)-g([0-9a-fA-F]+)(-dirty)?$" : $(v1) ] ;
+    assert.variable-not-empty m1 ;
+
+    v = "$(m0[1])-$(m0[2])-$(m1[2])-g$(m1[4])" ;
+    if $(m1[5])
+    {
+      v = "$(v)-dirty" ;
+    }
+  }
+
+  return $(v) ;
+}
+
+# Fetches from the given url to the given directory.
+#
+#   git clone --recurse-submodules $(root-url) $(directory)
+#
+rule fetch
+(
+  root-url : # The root URL of the repository from which to fetch.
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  # @todo check results
+  local r = [ SHELL "git clone --quiet $(root-url) $(directory)" ] ;
+
+  # @todo should work, but doesn't
+  # assert.true path.exists $(directory) ;
+}
+
+# Checks out the indicated symbolic reference for the Git
+# repository at directory.
+#
+# A symbolic reference for Git is a URI based off the 'refs/' base or
+# anything else that looks like a reference or a commit.
+#
+#    refs/heads/master
+#    refs/tags/1.1.1
+#    refs/heads/devel-fixes
+#
+rule checkout
+(
+  directory : # A directory resulting from a Git fetch or checkout.
+  symbolic-ref ? # An optional Git-specific symbolic reference.
+)
+{
+  symbolic-ref = [ normalize-symbolic-ref $(symbolic-ref) ] ;
+
+  # check errors, etc.
+  local r = [ SHELL "(cd $(directory) && git checkout --quiet $(symbolic-ref))" ] ;
+  local s = [ SHELL "(cd $(directory) && git submodule --quiet update --init --recursive)" ] ;
+}
+
+# Returns the root URL of the Git repository at the given directory.
+#
+rule root-url
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  local u = ;
+
+  local output = [ SHELL "(cd $(directory) && git remote -v)" ] ;
+  local lines = [ SPLIT_BY_CHARACTERS $(output) : "\n" ] ;
+  for local line in $(lines)
+  {
+    local m = [ MATCH "^origin[ 	]+(.+) .fetch." : $(line) ] ;
+    if $(m)
+    {
+      assert.equal $(u) : ;
+
+      u = $(m[0]) ;
+    }
+  }
+
+  assert.variable-not-empty u ;
+
+  return $(u) ;
+}
+
+# Returns the reference for the symbolic reference requested or HEAD
+# if it is empty for the git repository at directory.
+#
+# For a Git repository, a reference is the SHA-1.
+#
+#    deed12131a3334df4322
+#
+rule ref
+(
+  directory : # A directory resulting from a fetch  or checkout.
+  symbolic-ref ? # An optional Git-specific symbolic reference.
+)
+{
+  if ! $(symbolic-ref)
+  {
+    symbolic-ref = HEAD ;
+  }
+  symbolic-ref = [ normalize-symbolic-ref $(symbolic-ref) ] ;
+
+  return [ SHELL "(cd $(directory) && git log -n 1 --pretty=format:\"%H\" $(symbolic-ref))" ] ;
+}
+
+# Returns true if the given directory is a Git repository.
+#
+rule is-repository
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  # @todo is there a better way?
+  return [ path.exists "$(directory)/.git" ] ;
+}
+
+# Return true if the Git executable exists.
+#
+rule executable-exists ( )
+{
+  # @todo always say true for now
+  return 1 == 1 ;
+}
+
+# Returns a normalized symbolic reference.
+#
+#    refs/heads/* -> origin/*
+#
+#    refs/tags/* -> *
+#
+local rule normalize-symbolic-ref
+(
+  symbolic-ref # A Git-specific symbolic reference.
+)
+{
+  local m0 = [ MATCH "^(refs/)?tags/(.+)$" : $(symbolic-ref) ] ;
+  if $(m0)
+  {
+    symbolic-ref = $(m0[2]) ;
+  }
+  else
+  {
+    local m1 = [ MATCH "^(refs/)?heads/(.+)$" : $(symbolic-ref) ] ;
+    if $(m1)
+    {
+      symbolic-ref = origin/$(m1[2]) ;
+    }
+  }
+
+  return $(symbolic-ref) ;
+}

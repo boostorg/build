@@ -1,0 +1,253 @@
+# Copyright 2016
+#
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+# Version Control System module
+#
+# Overview
+#
+# The Boost.Build ``vcs`` module exposes a limited subset of version
+# control system functionality to Boost.Build projects for a set of
+# supported version control system back ends.  Currently, Boost.Build
+# ``vcs`` supports Subversion and Git.  Other systems should be
+# straightforward to implement.
+#
+# Usage
+#
+# An example Boost.Build project illustrating the vcs interface is shown
+# below.
+#
+# ::
+#
+#    import vcs ;
+#
+#    import assert ;
+#
+#    # print the type of version control system and the generated
+#    # version string for this project
+#    echo [ vcs.type . ]
+#    echo [ vcs.generate-version-string . ] ;
+#
+#    # fetch and checkout the 1.0 reference of a project kept in the Git
+#    # version control system
+#    vcs.get git : https://example.com/git/path/to/project/root : /path/to/desired/root ;
+#    vcs.checkout : /path/to/desired/root : 1.0 ;
+#
+#    # verify that the URL and reference matches the desired
+#    assert.equal [ vcs.root-url /path/to/desired/root ] : https://example.com/git/path/to/desired/root ;
+#    assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root : 1.0 ] ;
+#
+# Also, see the `example <../../example/vcs>`_ for an exhaustive example.
+
+import path ;
+import errors ;
+import assert ;
+
+debugging-enable = ;
+
+# The list of version control systems supported by this module.
+#
+supported-vcs = git svn ;
+
+for vcs in $(supported-vcs)
+{
+  import vcs-$(vcs) ;
+}
+
+# Returns the type of version control system for the indicated
+# directory, or the empty string if none was detected.
+#
+rule type
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  t = ;
+  for vcs in $(supported-vcs)
+  {
+    if ! $(t) && [ vcs-$(vcs).is-repository $(directory) ]
+    {
+      t = $(vcs) ;
+    }
+  }
+
+  if ! $(t)
+  {
+    errors.error "unknown vcs system at $(directory)" ;
+  }
+
+  return $(t) ;
+}
+
+# Returns a string uniquely describing the state of the repository at
+# the given directory.
+#
+# - When on a tag, all version control systems will return the tag
+#   name
+#
+# - Otherwise
+#
+#    - Git: <nearest-tag-name>-<branch-name>-<commits-since-nearest-tag>-g<commit-id>
+#
+#    - Subversion: -<URL>--s<REV>
+#
+# The ``generate-version-string`` rule can be used to generate a version
+# string for a program dynamically.  The example below shows how to use
+# this to create a ``version_string.cpp`` file containing the version
+# string.  The ``print`` module provides a mechanism to ensure that the
+# generated file is only modified when the version string actually
+# changes.
+#
+# Also, see the `example <../../example/vcs-generate-version-string>`_ for
+# an complete example.
+#
+# ::
+#
+#    # A Jamroot to run a program that prints a generated version string.
+#
+#    import testing ;
+#
+#    import vcs ;
+#    import print ;
+#
+#    path-constant working-directory-root : ../.. ;
+#
+#    # run it to see the output
+#    run versioned : : : : versioned-run ;
+#
+#    # note that version_string.cpp is generated below
+#    exe versioned : main.cpp version_string.cpp ;
+#
+#    # generate the version_string.cpp file
+#    make version_string.cpp : : @generate-file ;
+#    rule generate-file ( target : sources * : properties * )
+#    {
+#      local v = [ vcs.generate-version-string $(working-directory-root) ] ;
+#
+#      print.output $(target) ;
+#      print.text "const char * version_string = \"$(v)\";" : true ;
+#      print.text "" ;
+#    }
+#
+# ::
+#
+#    // A program to print the version string.
+#
+#    #include <iostream>
+#
+#    extern const char * version_string;
+#
+#    int
+#    main ()
+#    {
+#       std::cout << "generated version is '" << version_string << "'\n";
+#
+#       return 0;
+#    }
+#
+rule generate-version-string
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  # @todo need to fix this
+  # if ! [ path.exists $(directory) ]
+  # {
+  #   errors.user-error "$(directory) does not exist." ;
+  # }
+
+  vcs = [ type $(directory) ] ;
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  return [ vcs-$(vcs).generate-version-string $(directory) ] ;
+}
+
+# Fetches from the URL to the root of the vcs project to the
+# indicated directory using vcs.
+#
+rule fetch
+(
+  vcs : # The VCS system to use to fetch the root URL.
+  root-url : # The root URL of the repository from which to fetch.
+  directory # The directory into which to fetch the root URL.
+)
+{
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  if [ path.exists $(directory) ]
+  {
+    assert.true type $(directory) : $(vcs) ;
+
+    local current-url = [ vcs-$(vcs).root-url $(directory) ] ;
+
+    if $(current-url) != $(root-url)
+    {
+      errors.error "vcs:$(vcs): $(directory) is at $(current-url) not $(root-url)" ;
+    }
+  }
+  else
+  {
+    if $(debugging-enable)
+    {
+      echo "vcs: fetching $(root-url) to $(directory)" ;
+    }
+
+    local r1 = [ vcs-$(vcs).fetch $(root-url) : $(directory) ] ;
+  }
+}
+
+# Checks out the indicated symbolic reference from the repository
+# located at the indicated directory.
+#
+rule checkout
+(
+  directory # A directory resulting from a fetch or checkout.
+  symbolic-ref # The VCS-specific symbolic reference to check out.
+)
+{
+  local vcs = [ type $(directory) ] ;
+
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  if $(debugging-enable)
+  {
+    echo "vcs: checking out $(symbolic-ref) at $(directory)" ;
+  }
+
+  local r = [ vcs-$(vcs).checkout $(directory) : $(symbolic-ref) ] ;
+}
+
+# Returns the URL to the root of the vcs project located at the
+# indicated directory.
+#
+rule root-url
+(
+  directory # A directory resulting from a fetch or checkout.
+)
+{
+  local vcs = [ type $(directory) ] ;
+
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  return [ vcs-$(vcs).root-url $(directory) ] ;
+}
+
+# Returns a unique identifier representing the current state of the
+# vcs project located at directory.  If the symbolic reference is
+# given, the rule returns the reference of that symbolic reference,
+# not the current state of the project.
+#
+rule ref
+(
+  directory : # A directory resulting from a fetch or checkout.
+  symbolic-ref ? # An optional VCS-specific symbolic reference.
+)
+{
+  local vcs = [ type $(directory) ] ;
+
+  assert.in $(vcs) : $(supported-vcs) ;
+
+  return [ vcs-$(vcs).ref $(directory) : $(symbolic-ref) ] ;
+}
