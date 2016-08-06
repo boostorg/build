@@ -79,7 +79,7 @@ toolset.flags emscripten.compile OPTIONS <warnings>all : -Wall -pedantic ;
 toolset.flags emscripten.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
 toolset.flags emscripten OPTIONS <debug-symbols>off : -g0 ;
-toolset.flags emscripten OPTIONS <debug-symbols>on : -g4 ;
+toolset.flags emscripten OPTIONS <debug-symbols>on : -g4 -s DEMANGLE_SUPPORT=1 ;
 toolset.flags emscripten OPTIONS <rtti>off : -fno-rtti ;
 
 toolset.flags emscripten.link OPTIONS <embind>on : --bind ;
