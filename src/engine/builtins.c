@@ -450,7 +450,7 @@ void load_builtins()
         char const * args [] = { "path", 0 };
         bind_builtin( "MAKEDIR", builtin_makedir, 0, args );
     }
-    
+
     {
         const char * args [] = { "path", 0 };
         bind_builtin( "READLINK", builtin_readlink, 0, args );
@@ -1981,7 +1981,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         bufsize *= 2;
         buf = BJAM_MALLOC( bufsize );
     }
-    
+
     if ( buf != static_buf )
         BJAM_FREE( buf );
 
@@ -2460,15 +2460,6 @@ PyObject * bjam_caller( PyObject * self, PyObject * args )
 #endif  /* defined(_MSC_VER) || defined(__BORLANDC__) */
 
 
-static char * rtrim( char * const s )
-{
-    char * p = s;
-    while ( *p ) ++p;
-    for ( --p; p >= s && isspace( *p ); *p-- = 0 );
-    return s;
-}
-
-
 LIST * builtin_shell( FRAME * frame, int flags )
 {
     LIST   * command = lol_get( frame->args, 0 );
@@ -2515,14 +2506,15 @@ LIST * builtin_shell( FRAME * frame, int flags )
         buffer[ ret ] = 0;
         if ( !no_output_opt )
         {
-            if ( strip_eol_opt )
-                rtrim( buffer );
             string_append( &s, buffer );
         }
 
         /* Explicit EOF check for systems with broken fread */
         if ( feof( p ) ) break;
     }
+
+    if ( strip_eol_opt )
+        string_rtrim( &s );
 
     exit_status = pclose( p );
 
