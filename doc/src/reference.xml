@@ -50,7 +50,7 @@ boost-build build-system ;
         automatically find the build system.</para>
 
       <para>The default <filename>bootstrap.jam</filename>, after loading some standard
-        definitions, loads two <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.</para>
+        definitions, loads both <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.</para>
 
     </section>
 
@@ -165,7 +165,7 @@ lib tools : [ glob *.cpp ] ;
         </programlisting>
         It is possible to also pass a second argument&#x2014;the list of
         exclude patterns. The result will then include the list of
-        files patching any of include patterns, and not matching any
+        files matching any of include patterns, and not matching any
         of the exclude patterns. For example:
         <programlisting>
 lib tools : [ glob *.cpp : file_to_exclude.cpp bad*.cpp ] ;
@@ -567,7 +567,7 @@ path-constant DATA : data/a.txt ;
           <simpara>
             The value of those features is passed without modification to the
             corresponding tools. For <code>cflags</code> that is both the C and
-            C++ compilers, for <code>cxxflags</code> that is the C++ compiler
+            C++ compilers, for <code>cxxflags</code> that is the C++ compiler,
             and for <code>linkflags</code> that is the linker. The features are
             handy when you are trying to do something special that cannot be
             achieved by a higher-level feature in Boost.Build.
@@ -672,7 +672,7 @@ path-constant DATA : data/a.txt ;
           <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
 
           <para>The <literal>debug-symbols</literal> feature specifies if
-          produced object files, executables and libraries should include
+          produced object files, executables, and libraries should include
           debug information.
           Typically, the value of this feature is implicitly set by the
           <literal>variant</literal> feature, but it can be explicitly
@@ -686,8 +686,8 @@ path-constant DATA : data/a.txt ;
         <listitem>
           <para><emphasis role="bold">Allowed values:</emphasis> <literal>on</literal>, <literal>off</literal>.</para>
 
-          <para>The <literal>runtime-debugging</literal> feature specifies if
-          produced object files, executables and libraries should include
+          <para>The <literal>runtime-debugging</literal> feature specifies
+          whether produced object files, executables, and libraries should include
           behaviour useful only for debugging, such as asserts.
           Typically, the value of this feature is implicitly set by the
           <literal>variant</literal> feature, but it can be explicitly
@@ -711,7 +711,7 @@ path-constant DATA : data/a.txt ;
           </para>
 
           <para>The complete list of possible values for this feature is: 
-            aix, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
+            aix, appletv, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
             openbsd, osf, qnx, qnxnto, sgi, solaris, unix, unixware, windows.
           </para>
 
@@ -937,7 +937,7 @@ using gcc : &toolset_ops; ;</programlisting>
                 <para>Specifies the archiver command that is used to produce static
                 libraries. Normally, it is autodetected using gcc
                 <command>-print-prog-name</command> option or defaulted to <command>ar</command>,
-                 but in some cases you might want to override it, for example to expliitly
+                 but in some cases you might want to override it, for example to explicitly
                  use a system version instead of one included with gcc.</para>
               </listitem>
             </varlistentry>
@@ -949,7 +949,7 @@ using gcc : &toolset_ops; ;</programlisting>
                 <para>Specifies the ranlib command that is used to generated symbol table
                 for static libraries. Normally, it is autodetected using gcc
                 <command>-print-prog-name</command> option or defaulted to <command>ranlib</command>,
-                 but in some cases you might want to override it, for example to expliitly
+                 but in some cases you might want to override it, for example to explicitly
                  use a system version instead of one included with gcc.</para>
               </listitem>
             </varlistentry>
@@ -1021,6 +1021,9 @@ using gcc : &toolset_ops; ;</programlisting>
           C++</ulink> command-line tools on Microsoft Windows. The supported
           products and versions of command line tools are listed below:</para>
           <itemizedlist>
+            <listitem><para>Visual Studio 2015&#x2014;14.0</para></listitem>
+            <listitem><para>Visual Studio 2013&#x2014;12.0</para></listitem>
+            <listitem><para>Visual Studio 2012&#x2014;11.0</para></listitem>
             <listitem><para>Visual Studio 2010&#x2014;10.0</para></listitem>
             <listitem><para>Visual Studio 2008&#x2014;9.0</para></listitem>
             <listitem><para>Visual Studio 2005&#x2014;8.0</para></listitem>
@@ -2661,7 +2664,7 @@ exe hello : hello.cpp : &lt;os&gt;NT,&lt;toolset&gt;gcc:&lt;link&gt;static ;
         target. The syntax is:</para>
 
 <programlisting>
-target-id -&gt; (project-id | target-name | file-name )
+target-id -&gt; (target-name | file-name | project-id | directory-name)
               | (project-id | directory-name) "//" target-name
 project-id -&gt; path
 target-name -&gt; path
@@ -2675,12 +2678,6 @@ directory-name -&gt; path
         <itemizedlist>
           <listitem>
             <simpara>
-              project id (at this point, all project ids start with slash).
-            </simpara>
-          </listitem>
-
-          <listitem>
-            <simpara>
               name of target declared in current Jamfile (note that target
               names may include slash).
             </simpara>
@@ -2692,17 +2689,30 @@ directory-name -&gt; path
               project's sources location.
             </simpara>
           </listitem>
+
+          <listitem>
+            <simpara>
+              project id (at this point, all project ids start with slash).
+            </simpara>
+          </listitem>
+
+          <listitem>
+            <simpara>
+              the directory of another project, denoted by absolute name
+              or name relative to the current project's location.
+            </simpara>
+          </listitem>
         </itemizedlist>
 
-        To determine the real meaning a check is made if project-id
-        by the specified name exists, and then if main target of that
-        name exists. For example, valid target ids might be:
+        To determine the real meaning the possible interpretations
+        are checked in this order. For example, valid target ids might be:
 
 <screen>
 a                                    -- target in current project
 lib/b.cpp                            -- regular file
 /boost/thread                        -- project "/boost/thread"
 /home/ghost/build/lr_library//parser -- target in specific project
+../boost_1_61_0                      -- project in specific directory
 </screen>
 
       </para>

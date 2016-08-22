@@ -520,7 +520,7 @@ unit-test helpers_test
           <para>
             By default, the executable is run directly. Sometimes, it is
             desirable to run the executable using some helper command. You
-            should use the this property to specify the name of the helper
+            should use this property to specify the name of the helper
             command. For example, if you write:
 <programlisting>
 unit-test helpers_test
@@ -575,7 +575,7 @@ unit-test helpers_test
       Boost.Build's virtual targets. This is higher-level than the file names that
       the <code language="jam">make</code> rule operates with and allows you to
       create more than one target, create differently named targets depending on
-      properties or use more than one tool.
+      properties, or use more than one tool.
     </para>
 
     <para>
@@ -764,7 +764,7 @@ exe main : main.cpp pch ;
       "parser.y". The latter source is converted into "parser.c" and "parser.h".
       Then, if "app.cpp" includes "parser.h", Boost.Build will detect this
       dependency. Moreover, since "parser.h" will be generated into a build
-      directory, the path to that directory will automatically added to include
+      directory, the path to that directory will automatically be added to the include
       path.
     </para>
 
@@ -800,14 +800,14 @@ using gcc : arm : arm-none-linux-gnueabi-g++ ;
 </programlisting>
     <para>
       After that, if the host and target os are the same, for example Linux, you can
-      just request that this compiler version to be used:
+      just request that this compiler version be used:
     </para>
 <screen>
 b2 toolset=gcc-arm
 </screen>
 
     <para>
-      If you want to target different operating system from the host, you need
+      If you want to target a different operating system from the host, you need
       to additionally specify the value for the <code>target-os</code> feature, for
       example:
     </para>
@@ -823,7 +823,7 @@ b2 toolset=gcc-mingw <emphasis role="bold">target-os=windows</emphasis>
     </para>
 
     <para>
-      When using the msvc compiler, it's only possible to cross-compiler to a 64-bit system
+      When using the msvc compiler, it's only possible to cross-compile to a 64-bit system
       on a 32-bit host. Please see <xref linkend="v2.reference.tools.compiler.msvc.64"/> for
       details.
     </para>
