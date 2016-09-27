@@ -3780,10 +3780,12 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
     if ( function_->type == FUNCTION_BUILTIN )
     {
+        PROFILE_ENTER_LOCAL(function_run_FUNCTION_BUILTIN);
         BUILTIN_FUNCTION const * const f = (BUILTIN_FUNCTION *)function_;
         if ( function_->formal_arguments )
             argument_list_check( function_->formal_arguments,
                 function_->num_formal_arguments, function_, frame );
+        PROFILE_EXIT_LOCAL(function_run_FUNCTION_BUILTIN);
         PROFILE_EXIT_LOCAL(function_run);
         return f->func( frame, f->flags );
     }
@@ -3791,7 +3793,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 #ifdef HAVE_PYTHON
     else if ( function_->type == FUNCTION_PYTHON )
     {
+        PROFILE_ENTER_LOCAL(function_run_FUNCTION_PYTHON);
         PYTHON_FUNCTION * f = (PYTHON_FUNCTION *)function_;
+        PROFILE_EXIT_LOCAL(function_run_FUNCTION_PYTHON);
         PROFILE_EXIT_LOCAL(function_run);
         return call_python_function( f, frame );
     }
