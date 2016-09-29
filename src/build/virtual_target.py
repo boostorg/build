@@ -117,7 +117,7 @@ class VirtualTargetRegistry:
             signature = "-" + target.name()
 
         result = None
-        if not self.cache_.has_key (signature):
+        if signature not in self.cache_:
             self.cache_ [signature] = []
 
         for t in self.cache_ [signature]:
@@ -166,7 +166,7 @@ class VirtualTargetRegistry:
         path = os.path.join(os.getcwd(), file_location, file)
         path = os.path.normpath(path)
 
-        if self.files_.has_key (path):
+        if path in self.files_:
             return self.files_ [path]
 
         file_type = b2.build.type.type (file)
@@ -200,7 +200,7 @@ class VirtualTargetRegistry:
     def register_actual_name (self, actual_name, virtual_target):
         assert isinstance(actual_name, basestring)
         assert isinstance(virtual_target, VirtualTarget)
-        if self.actual_.has_key (actual_name):
+        if actual_name in self.actual_:
             cs1 = self.actual_ [actual_name].creating_subvariant ()
             cs2 = virtual_target.creating_subvariant ()
             cmt1 = cs1.main_target ()
@@ -334,7 +334,7 @@ class VirtualTarget:
 
             name = replace_grist (actual_name, '<' + g + '>')
 
-            if not self.made_.has_key (name):
+            if name not in self.made_:
                 self.made_ [name] = True
 
                 self.project_.manager ().engine ().add_dependency (name, actual_name)

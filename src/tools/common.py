@@ -204,7 +204,7 @@ def check_init_parameters(toolset, requirement, *args):
         ### if $(value)-is-not-empty
         if value is not None:
             condition = condition + '-' + value
-            if __had_unspecified_value.has_key(str_toolset_name):
+            if str_toolset_name in __had_unspecified_value:
                 raise BaseException("'%s' initialization: parameter '%s' inconsistent\n" \
                 "no value was specified in earlier initialization\n" \
                 "an explicit value is specified now" % (toolset, name))
@@ -220,8 +220,8 @@ def check_init_parameters(toolset, requirement, *args):
             if m:
                 t = m.group(1)
 
-            if not __had_value.has_key(str_toolset_name):
-                if not __declared_subfeature.has_key(str((t, name))):
+            if str_toolset_name not in __had_value:
+                if str((t, name)) not in __declared_subfeature:
                     feature.subfeature('toolset', t, name, [], ['propagated'])
                     __declared_subfeature[str((t, name))] = True
 
@@ -231,7 +231,7 @@ def check_init_parameters(toolset, requirement, *args):
             subcondition += ['<toolset-' + t + ':' + name + '>' + value ]
 
         else:
-            if __had_value.has_key(str_toolset_name):
+            if str_toolset_name in __had_value:
                 raise BaseException ("'%s' initialization: parameter '%s' inconsistent\n" \
                 "an explicit value was specified in an earlier initialization\n" \
                 "no value is specified now" % (toolset, name))
@@ -247,7 +247,7 @@ def check_init_parameters(toolset, requirement, *args):
     if requirement:
         sig += '-' + '-'.join(requirement)
 
-    if __all_signatures.has_key(sig):
+    if sig in __all_signatures:
         message = "duplicate initialization of '%s' with the following parameters: " % toolset
 
         for arg in args:

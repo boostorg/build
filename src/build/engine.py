@@ -206,7 +206,7 @@ class Engine:
         # action is already registered.
         assert isinstance(action_name, basestring)
         assert function is None or callable(function)
-        if not self.actions.has_key(action_name):
+        if action_name not in self.actions:
             self.actions[action_name] = BjamNativeAction(action_name, function)
 
     # Overridables

@@ -344,7 +344,7 @@ class SetupAction:
 
 def register_setup_action(action_name,setup_function,function=None):
     global engine
-    if engine.actions.has_key(action_name):
+    if action_name in engine.actions:
         raise "Bjam action %s is already defined" % action_name
     engine.actions[action_name] = SetupAction(setup_function, function)
 

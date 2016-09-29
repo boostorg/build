@@ -51,7 +51,7 @@ def create (raw_properties = []):
     # hash value of the list?
     key = tuple(x)
 
-    if not __cache.has_key (key):
+    if key not in __cache:
         __cache [key] = PropertySet(x)
 
     return __cache [key]
@@ -294,7 +294,7 @@ class PropertySet:
         """ Refines this set's properties using the requirements passed as an argument.
         """
         assert isinstance(requirements, PropertySet)
-        if not self.refined_.has_key (requirements):
+        if requirements not in self.refined_:
             r = property.refine(self.all_, requirements.all_)
 
             self.refined_[requirements] = create(r)
@@ -317,7 +317,7 @@ class PropertySet:
         if not context:
             context = self
 
-        if not self.evaluated_.has_key(context):
+        if context not in self.evaluated_:
             # FIXME: figure why the call messes up first parameter
             self.evaluated_[context] = create(
                 property.evaluate_conditionals_in_context(self.all(), context))
@@ -421,7 +421,7 @@ class PropertySet:
             plus the ones of the property set passed as argument.
         """
         assert isinstance(ps, PropertySet)
-        if not self.added_.has_key(ps):
+        if ps not in self.added_:
             self.added_[ps] = create(self.all_ + ps.all())
         return self.added_[ps]
 
@@ -445,7 +445,7 @@ class PropertySet:
             self.feature_map_ = {}
 
             for v in self.all_:
-                if not self.feature_map_.has_key(v.feature()):
+                if v.feature() not in self.feature_map_:
                     self.feature_map_[v.feature()] = []
                 self.feature_map_[v.feature()].append(v.value())
 

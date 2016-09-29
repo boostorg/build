@@ -65,7 +65,7 @@ def register(scanner_class, relevant_properties):
 def registered(scanner_class):
     """ Returns true iff a scanner of that class is registered
     """
-    return __scanners.has_key(str(scanner_class))
+    return str(scanner_class) in __scanners
 
 def get(scanner_class, properties):
     """ Returns an instance of previously registered scanner
@@ -83,7 +83,7 @@ def get(scanner_class, properties):
 
     scanner_id = scanner_name + '.' + '-'.join(r)
 
-    if not __scanner_cache.has_key(scanner_id):
+    if scanner_id not in __scanner_cache:
         __scanner_cache[scanner_id] = scanner_class(r)
 
     return __scanner_cache[scanner_id]
@@ -141,7 +141,7 @@ class ScannerRegistry:
         assert isinstance(vtarget, basestring)
         engine = self.manager_.engine()
         engine.set_target_variable(target, "HDRSCAN", scanner.pattern())
-        if not self.exported_scanners_.has_key(scanner):
+        if scanner not in self.exported_scanners_:
             exported_name = "scanner_" + str(self.count_)
             self.count_ = self.count_ + 1
             self.exported_scanners_[scanner] = exported_name

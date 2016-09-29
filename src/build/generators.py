@@ -138,7 +138,7 @@ def invalidate_extendable_viable_source_target_type_cache():
     __vstg_cached_generators = []
 
     for g in generators_with_cached_source_types:
-        if __viable_source_types_cache.has_key(g):
+        if g in __viable_source_types_cache:
             if __viable_source_types_cache[g] == ["*"]:
                 __vstg_cached_generators.append(g)
             else:
@@ -148,7 +148,7 @@ def invalidate_extendable_viable_source_target_type_cache():
     types_with_cached_sources_types = __vst_cached_types
     __vst_cached_types = []
     for t in types_with_cached_sources_types:
-        if __viable_source_types_cache.has_key(t):
+        if t in __viable_source_types_cache:
             if __viable_source_types_cache[t] == ["*"]:
                 __vst_cached_types.append(t)
             else:
@@ -831,7 +831,7 @@ def viable_source_types (target_type):
     """ Helper rule, caches the result of '__viable_source_types_real'.
     """
     assert isinstance(target_type, basestring)
-    if not __viable_source_types_cache.has_key(target_type):
+    if target_type not in __viable_source_types_cache:
         __vst_cached_types.append(target_type)
         __viable_source_types_cache [target_type] = __viable_source_types_real (target_type)
     return __viable_source_types_cache [target_type]
@@ -867,7 +867,7 @@ def viable_source_types_for_generator (generator):
     """ Caches the result of 'viable_source_types_for_generator'.
     """
     assert isinstance(generator, Generator)
-    if not __viable_source_types_cache.has_key(generator):
+    if generator not in __viable_source_types_cache:
         __vstg_cached_generators.append(generator)
         __viable_source_types_cache[generator] = viable_source_types_for_generator_real (generator)
 

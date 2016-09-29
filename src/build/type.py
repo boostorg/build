@@ -71,7 +71,7 @@ def register (type, suffixes = [], base_type = None):
     if __re_hyphen.search (type):
         raise BaseException ('type name "%s" contains a hyphen' % type)
 
-    if __types.has_key (type):
+    if type in __types:
         raise BaseException ('Type "%s" is already registered.' % type)
 
     entry = {}
@@ -122,7 +122,7 @@ def register_suffixes (suffixes, type):
     assert is_iterable_typed(suffixes, basestring)
     assert isinstance(type, basestring)
     for s in suffixes:
-        if __suffixes_to_types.has_key (s):
+        if s in __suffixes_to_types:
             old_type = __suffixes_to_types [s]
             if old_type != type:
                 raise BaseException ('Attempting to specify type for suffix "%s"\nOld type: "%s", New type "%s"' % (s, old_type, type))
@@ -133,7 +133,7 @@ def registered (type):
     """ Returns true iff type has been registered.
     """
     assert isinstance(type, basestring)
-    return __types.has_key (type)
+    return type in __types
 
 def validate (type):
     """ Issues an error if 'type' is unknown.
@@ -349,7 +349,7 @@ def type(filename):
         if not suffix: return None
         suffix = suffix[1:]
 
-        if __suffixes_to_types.has_key(suffix):
+        if suffix in __suffixes_to_types:
             return __suffixes_to_types[suffix]
 
 # NOTE: moved from tools/types/register

@@ -210,7 +210,7 @@ def refine (properties, requirements):
         elif p.feature().free():
             result.add(p)
         else:
-            if required.has_key(p.feature()):
+            if p.feature() in required:
                 result.add(required[p.feature()])
             else:
                 result.add(p)

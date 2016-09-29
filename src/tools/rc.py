@@ -91,7 +91,7 @@ class RCAction:
 # FIXME: What is the proper way to dispatch actions?
 def rc_register_action(action_name, function = None):
     global engine
-    if engine.actions.has_key(action_name):
+    if action_name in engine.actions:
         raise AlreadyDefined("Bjam action %s is already defined" % action_name)
     engine.actions[action_name] = RCAction(action_name, function)
 

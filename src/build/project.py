@@ -452,7 +452,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             # If it's jamroot, inherit from user-config.
             if location:
                 # If project-config module exist, inherit from it.
-                if self.module2attributes.has_key("project-config"):
+                if "project-config" in self.module2attributes:
                     parent_module = "project-config"
                 else:
                     parent_module = "user-config" ;
@@ -470,7 +470,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         if parent_module:
             parent = self.target(parent_module)
 
-        if not self.module2target.has_key(module_name):
+        if module_name not in self.module2target:
             target = b2.build.targets.ProjectTarget(self.manager,
                 module_name, module_name, parent,
                 self.attribute(module_name, "requirements"),
@@ -577,7 +577,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
     def target(self, project_module):
         """Returns the project target corresponding to the 'project-module'."""
         assert isinstance(project_module, basestring)
-        if not self.module2target.has_key(project_module):
+        if project_module not in self.module2target:
             self.module2target[project_module] = \
                 b2.build.targets.ProjectTarget(project_module, project_module,
                               self.attribute(project_module, "requirements"))
@@ -595,7 +595,7 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
         if not declared_id or declared_id != id:
             # The project at 'location' either have no id or
             # that id is not equal to the 'id' parameter.
-            if self.id2module.has_key(id) and self.id2module[id] != project_module:
+            if id in self.id2module and self.id2module[id] != project_module:
                 self.manager.errors()(
 """Attempt to redeclare already existing project id '%s' at location '%s'""" % (id, location))
             self.id2module[id] = project_module
@@ -1167,7 +1167,7 @@ attribute is allowed only for top-level 'project' invocations""")
         location = current.get('location')
 
         m = self.registry.load_module(toolset[0], [location])
-        if not m.__dict__.has_key("init"):
+        if "init" not in m.__dict__:
             self.registry.manager.errors()(
                 "Tool module '%s' does not define the 'init' method" % toolset[0])
         m.init(*args)

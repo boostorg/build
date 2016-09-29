@@ -202,7 +202,7 @@ class TargetRegistry:
         """ Helper rules to detect cycles in main target references.
         """
         assert isinstance(main_target_instance, MainTarget)
-        if self.targets_being_built_.has_key(id(main_target_instance)):
+        if id(main_target_instance) in self.targets_being_built_:
             names = []
             for t in self.targets_being_built_.values() + [main_target_instance]:
                 names.append (t.full_name())
@@ -213,7 +213,7 @@ class TargetRegistry:
 
     def end_building (self, main_target_instance):
         assert isinstance(main_target_instance, MainTarget)
-        assert (self.targets_being_built_.has_key (id (main_target_instance)))
+        assert (id(main_target_instance) in self.targets_being_built_)
         del self.targets_being_built_ [id (main_target_instance)]
 
     def create_typed_target (self, type, project, name, sources, requirements, default_build, usage_requirements):
@@ -499,7 +499,7 @@ class ProjectTarget (AbstractTarget):
         if not self.built_main_targets_:
             self.build_main_targets()
 
-        return self.main_target_.has_key(name)
+        return name in self.main_target_
 
     def create_main_target (self, name):
         """ Returns a 'MainTarget' class instance corresponding to the 'name'.
@@ -595,7 +595,7 @@ class ProjectTarget (AbstractTarget):
 
         for a in self.alternatives_:
             name = a.name ()
-            if not self.main_target_.has_key (name):
+            if name not in self.main_target_:
                 t = MainTarget (name, self.project_)
                 self.main_target_ [name] = t
 
@@ -962,7 +962,7 @@ class BasicTarget (AbstractTarget):
         other = property_set.create(other)
 
         key = (build_request, other)
-        if not self.request_cache.has_key(key):
+        if key not in self.request_cache:
             self.request_cache[key] = self.__common_properties2 (build_request, other)
 
         return self.request_cache[key].add_raw(free_unconditional)
@@ -1179,7 +1179,7 @@ class BasicTarget (AbstractTarget):
 
         self.manager().targets().push_target(self)
 
-        if not self.generated_.has_key(ps):
+        if ps not in self.generated_:
 
             # Apply free features form the command line.  If user
             # said

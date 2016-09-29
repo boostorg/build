@@ -260,12 +260,12 @@ def is_implicit_value (value_string):
     of an implicit feature.
     """
     assert isinstance(value_string, basestring)
-    if __implicit_features.has_key(value_string):
+    if value_string in __implicit_features:
         return __implicit_features[value_string]
 
     v = value_string.split('-')
 
-    if not __implicit_features.has_key(v[0]):
+    if v[0] not in __implicit_features:
         return False
 
     feature = __implicit_features[v[0]]
@@ -282,7 +282,7 @@ def implied_feature (implicit_value):
     assert isinstance(implicit_value, basestring)
     components = implicit_value.split('-')
 
-    if not __implicit_features.has_key(components[0]):
+    if components[0] not in __implicit_features:
         raise InvalidValue ("'%s' is not a value of an implicit feature" % implicit_value)
 
     return __implicit_features[components[0]]
@@ -318,7 +318,7 @@ def validate_feature (name):
     """ Checks if all name is a valid feature. Otherwise, raises an exception.
     """
     assert isinstance(name, basestring)
-    if not __all_features.has_key(name):
+    if name not in __all_features:
         raise InvalidFeature ("'%s' is not a valid feature name" % name)
     else:
         return __all_features[name]
@@ -432,7 +432,7 @@ def extend (name, values):
 
     if feature.implicit():
         for v in values:
-            if __implicit_features.has_key(v):
+            if v in __implicit_features:
                 raise BaseException ("'%s' is already associated with the feature '%s'" % (v, __implicit_features [v]))
 
             __implicit_features[v] = feature
@@ -503,11 +503,11 @@ def extend_subfeature (feature_name, value_string, subfeature_name, subvalues):
 
     if value_string == None: value_string = ''
 
-    if not __subfeature_from_value.has_key(feature):
-        __subfeature_from_value [feature] = {}
+    if feature not in __subfeature_from_value:
+        __subfeature_from_value[feature] = {}
 
-    if not __subfeature_from_value[feature].has_key(value_string):
-        __subfeature_from_value [feature][value_string] = {}
+    if value_string not in __subfeature_from_value[feature]:
+        __subfeature_from_value[feature][value_string] = {}
 
     for subvalue in subvalues:
         __subfeature_from_value [feature][value_string][subvalue] = subfeature
@@ -564,7 +564,7 @@ def compose (composite_property_s, component_properties_s):
     if not f.composite():
         raise BaseException ("'%s' is not a composite feature" % f)
 
-    if __composite_properties.has_key(property):
+    if property in __composite_properties:
         raise BaseException ('components of "%s" already set: %s' % (composite_property, str (__composite_properties[composite_property])))
 
     if composite_property in component_properties:
@@ -578,7 +578,7 @@ def expand_composite(property_):
         from .property import Property
         assert isinstance(property_, Property)
     result = [ property_ ]
-    if __composite_properties.has_key(property_):
+    if property_ in __composite_properties:
         for p in __composite_properties[property_]:
             result.extend(expand_composite(p))
     return result
@@ -776,7 +776,7 @@ def minimize (properties):
     # remove properties implied by composite features
     components = []
     for property in properties:
-        if __composite_properties.has_key (property):
+        if property in __composite_properties:
             components.extend(__composite_properties[property])
     properties = b2.util.set.difference (properties, components)
 
@@ -935,7 +935,7 @@ def __validate_feature (feature):
     """ Generates an error if the feature is unknown.
     """
     assert isinstance(feature, basestring)
-    if not __all_features.has_key (feature):
+    if feature not in __all_features:
         raise BaseException ('unknown feature "%s"' % feature)
 
 
