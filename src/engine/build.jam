@@ -97,6 +97,10 @@ if $(with-python)
         {
             local inc = [ GLOB [ .path $(python-location) include ] : python$(v) ] ;
             local lib = [ GLOB [ .path $(python-location) lib ] : libpython$(v)* ] ;
+            if ! $(lib)
+            {
+                lib = [ GLOB [ .path $(python-location) lib x86_64-linux-gnu ] : libpython$(v)* ] ;
+            }
             if $(inc) && $(lib)
             {
                 --python-include ?= $(inc) ;
