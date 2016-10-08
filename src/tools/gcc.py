@@ -103,11 +103,13 @@ def init(version = None, command = None, options = None):
     #   The command.
     command = to_seq(common.get_invocation_command('gcc', 'g++', command))
     #   The root directory of the tool install.
-    root = feature.get_values('<root>', options) ;
+    root = feature.get_values('<root>', options)
+    root = root[0] if root else ''
     #   The bin directory where to find the command to execute.
     bin = None
     #   The flavor of compiler.
     flavor = feature.get_values('<flavor>', options)
+    flavor = flavor[0] if flavor else ''
     #   Autodetect the root and bin dir if not given.
     if command:
         if not bin:
