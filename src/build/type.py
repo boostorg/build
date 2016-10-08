@@ -255,16 +255,23 @@ def generated_target_suffix(type, properties):
         assert isinstance(properties, PropertySet)
     return generated_target_ps(1, type, properties)
 
-# Sets a target prefix that should be used when generating targets of 'type'
-# with the specified properties. Can be called with empty properties if no
-# prefix for 'type' has been specified yet.
-#
-# The 'prefix' parameter can be empty string ("") to indicate that no prefix
-# should be used.
-#
-# Usage example: library names use the "lib" prefix on unix.
-@bjam_signature((["type"], ["properties", "*"], ["suffix"]))
+
+@bjam_signature((["type"], ["properties", "*"], ["prefix"]))
 def set_generated_target_prefix(type, properties, prefix):
+    """
+    Sets a file prefix to be used when generating a target of 'type' with the
+    specified properties. Can be called with no properties if no prefix has
+    already been specified for the 'type'. The 'prefix' parameter can be an empty
+    string ("") to indicate that no prefix should be used.
+
+    Note that this does not cause files with 'prefix' to be automatically
+    recognized as being of 'type'. Two different types can use the same prefix for
+    their generated files but only one type can be auto-detected for a file with
+    that prefix. User should explicitly specify which one using the
+    register-prefixes rule.
+
+    Usage example: library names use the "lib" prefix on unix.
+    """
     set_generated_target_ps(0, type, properties, prefix)
 
 # Change the prefix previously registered for this type/properties combination.
