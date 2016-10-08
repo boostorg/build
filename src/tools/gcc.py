@@ -200,7 +200,7 @@ def init(version = None, command = None, options = None):
         # objects, so configure that.
         rc_command = common.get_invocation_command('gcc', 'as', [], [bin], path_last=True)
         rc_type = 'null'
-    rc.configure(rc_command, condition, '<rc-type>' + rc_type)
+    rc.configure([rc_command], condition, ['<rc-type>' + rc_type])
 
 ###if [ os.name ] = NT
 ###{
