@@ -581,10 +581,7 @@ def mkdir(engine, target):
         __mkdir_set.add(target)
 
         # Schedule the mkdir build action.
-        if os_name() == 'NT':
-            engine.set_update_action("common.MkDir1-quick-fix-for-windows", target, [])
-        else:
-            engine.set_update_action("common.MkDir1-quick-fix-for-unix", target, [])
+        engine.set_update_action("common.MkDir", target, [])
 
         # Prepare a Jam 'dirs' target that can be used to make the build only
         # construct all the target directories.
@@ -822,62 +819,37 @@ def runtime_tag(name, target_type, prop_set ):
     return tag
 
 
-## TODO:
-##rule __test__ ( )
-##{
-##    import assert ;
-##
-##    local nl = "
-##" ;
-##
-##    local save-os = [ modules.peek os : .name ] ;
-##
-##    modules.poke os : .name : LINUX ;
-##
-##    assert.result "PATH=foo:bar:baz$(nl)export PATH$(nl)"
-##        : path-variable-setting-command PATH : foo bar baz ;
-##
-##    assert.result "PATH=foo:bar:$PATH$(nl)export PATH$(nl)"
-##        : prepend-path-variable-command PATH : foo bar ;
-##
-##    modules.poke os : .name : NT ;
-##
-##    assert.result "set PATH=foo;bar;baz$(nl)"
-##        : path-variable-setting-command PATH : foo bar baz ;
-##
-##    assert.result "set PATH=foo;bar;%PATH%$(nl)"
-##        : prepend-path-variable-command PATH : foo bar ;
-##
-##    modules.poke os : .name : $(save-os) ;
-##}
-
 def init(manager):
+    global __RM, __CP, __IGNORE, __LN
     engine = manager.engine()
 
-    engine.register_action("common.MkDir1-quick-fix-for-unix", 'mkdir -p "$(<)"')
-    engine.register_action("common.MkDir1-quick-fix-for-windows", 'if not exist "$(<)\\" mkdir "$(<)"')
-
+    # register the make() and alias() rules globally
     import b2.tools.make
     import b2.build.alias
 
-    global __RM, __CP, __IGNORE, __LN
+    windows_hack = ''
     # ported from trunk@47281
     if os_name() == 'NT':
         __RM = 'del /f /q'
-        __CP = 'copy'
+        __CP = 'copy /b'
+        windows_hack = '+ this-file-does-not-exist-A698EE7806899E69'
         __IGNORE = '2>nul >nul & setlocal'
         __LN = __CP
         #if not __LN:
         #    __LN = CP
+        MKDIR = 'if not exist "$(<)\\" mkdir "$(<)"'
     else:
         __RM = 'rm -f'
         __CP = 'cp'
         __IGNORE = ''
         __LN = 'ln'
+        MKDIR = 'mkdir -p "$(<)"'
 
-    engine.register_action("common.Clean", __RM + ' "$(>)"',
-                           flags=['piecemeal', 'together', 'existing'])
-    engine.register_action("common.copy", __CP + ' "$(>)" "$(<)"')
+    engine.register_action("common.MkDir", MKDIR + __IGNORE)
+
+    engine.register_action(
+        "common.Clean", __RM + ' "$(>)"', flags=['piecemeal', 'together', 'existing'])
+    engine.register_action("common.copy", '{} "$(>)" {}  "$(<)"'.format(__CP, windows_hack))
     engine.register_action("common.RmTemps", __RM + ' "$(>)" ' + __IGNORE,
                            flags=['quietly', 'updated', 'piecemeal', 'together'])
 
