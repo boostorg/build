@@ -53,6 +53,7 @@ import os.path
 
 from virtual_target import Subvariant
 from . import virtual_target, type, property_set, property
+from b2.exceptions import BaseBoostBuildException
 from b2.util.logger import *
 from b2.util.utility import *
 from b2.util import set as set_, is_iterable_typed, is_iterable
@@ -157,6 +158,13 @@ def invalidate_extendable_viable_source_target_type_cache():
 def dout(message):
     if debug():
         print __indent + message
+
+
+class InvalidTargetSource(BaseBoostBuildException):
+    """
+    Should be raised when a target contains a source that is invalid.
+    """
+
 
 class Generator:
     """ Creates a generator.
@@ -336,10 +344,15 @@ class Generator:
             assert isinstance(name, basestring) or name is None
             assert isinstance(prop_set, property_set.PropertySet)
             assert is_iterable_typed(sources, virtual_target.VirtualTarget)
-
         if project.manager ().logger ().on ():
             project.manager ().logger ().log (__name__, "  generator '%s'" % self.id_)
             project.manager ().logger ().log (__name__, "  composing: '%s'" % self.composing_)
+
+        if not sources:
+            s = 'An empty source list was passed in to the "{}" generator'.format(self.id_)
+            if name:
+                s += ' for target "{}"'.format(name)
+            raise InvalidTargetSource(s)
 
         if not self.composing_ and len (sources) > 1 and len (self.source_types_) > 1:
             raise BaseException ("Unsupported source/source_type combination")
