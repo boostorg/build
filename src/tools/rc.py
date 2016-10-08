@@ -68,7 +68,7 @@ def configure (command = None, condition = None, options = None):
 
     if command and condition and rc_type:
         flags('rc.compile.resource', '.RC', condition, command)
-        flags('rc.compile.resource', '.RC_TYPE', condition, rc_type.lower())
+        flags('rc.compile.resource', '.RC_TYPE', condition, [rc_type.lower()])
         flags('rc.compile.resource', 'DEFINES', [], ['<define>'])
         flags('rc.compile.resource', 'INCLUDES', [], ['<include>'])
         if debug():
