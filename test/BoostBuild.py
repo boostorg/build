@@ -453,6 +453,8 @@ class Tester(TestCmd.TestCmd):
                 kw["program"].append("--ignore-toolset-requirements")
             if "--python" in sys.argv:
                 kw["program"].append("--python")
+            if "--stacktrace" in sys.argv:
+                kw["program"].append("--stacktrace")
             kw["chdir"] = subdir
             self.last_program_invocation = kw["program"]
             build_time_start = time.time()
