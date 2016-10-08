@@ -367,11 +367,21 @@ class CScanner (scanner.Scanner):
         return r'#[ \t]*include[ ]*(<(.*)>|"(.*)")'
 
     def process (self, target, matches, binding):
+        # since it's possible for this function to be called
+        # thousands to millions of times (depending on how many
+        # header files there are), as such, there are some
+        # optimizations that have been used here. Anything that
+        # is slightly out of the ordinary for Python code
+        # has been commented.
+        angle = []
+        quoted = []
+        for match in matches:
+            if '<' in match:
+                angle.append(match.strip('<>'))
+            elif '"' in match:
+                quoted.append(match.strip('"'))
 
-        angle = regex.transform (matches, "<(.*)>")
-        quoted = regex.transform (matches, '"(.*)"')
-
-        g = str(id(self))
+        g = id(self)
         b = os.path.normpath(os.path.dirname(binding[0]))
 
         # Attach binding of including file to included targets.
@@ -382,23 +392,32 @@ class CScanner (scanner.Scanner):
         # We don't need this extra information for angle includes,
         # since they should not depend on including file (we can't
         # get literal "." in include path).
-        g2 = g + "#" + b
+        # Note: string interpolation is slightly faster
+        # than .format()
+        g2 = '<%s#%s>' % (g, b)
+        g = "<%s>" % g
 
-        g = "<" + g + ">"
-        g2 = "<" + g2 + ">"
         angle = [g + x for x in angle]
         quoted = [g2 + x for x in quoted]
 
         all = angle + quoted
         bjam.call("mark-included", target, all)
 
+        # each include in self.includes_ looks something like this:
+        #     <include>path/to/somewhere
+        # calling get_value(include) is super slow,
+        # calling .replace('<include>', '') is much faster
+        # however, i[9:] is the fastest way of stripping off the "<include>"
+        # substring.
+        include_paths = [i[9:] for i in self.includes_]
+
         engine = get_manager().engine()
-        engine.set_target_variable(angle, "SEARCH", get_value(self.includes_))
-        engine.set_target_variable(quoted, "SEARCH", [b] + get_value(self.includes_))
+        engine.set_target_variable(angle, "SEARCH", include_paths)
+        engine.set_target_variable(quoted, "SEARCH", [b] + include_paths)
 
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners.
-        get_manager().scanners().propagate(self, angle + quoted)
+        get_manager().scanners().propagate(self, all)
 
 scanner.register (CScanner, 'include')
 type.set_scanner ('CPP', CScanner)
