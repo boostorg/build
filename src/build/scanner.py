@@ -28,11 +28,9 @@
 #  but different instances, and lead in unneeded duplication of
 #  actual targets. However, actions can also create scanners in a special
 #  way, instead of relying on just target type.
-
 import property
 import bjam
 import os
-from b2.exceptions import *
 from b2.manager import get_manager
 from b2.util import is_iterable_typed
 
@@ -99,7 +97,7 @@ class Scanner:
         """
         raise BaseException ("method must be overriden")
 
-    def process (self, target, matches):
+    def process (self, target, matches, binding):
         """ Establish necessary relationship between targets,
             given actual target beeing scanned, and a list of
             pattern matches in that file.
