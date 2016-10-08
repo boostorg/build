@@ -211,6 +211,8 @@ def init(version = None, command = None, options = None):
 
 #FIXME: when register_c_compiler is moved to
 # generators, these should be updated
+builtin.register_c_compiler('gcc.compile.c++.preprocess', ['CPP'], ['PREPROCESSED_CPP'], ['<toolset>gcc'])
+builtin.register_c_compiler('gcc.compile.c.preprocess', ['C'], ['PREPROCESSED_C'], ['<toolset>gcc'])
 builtin.register_c_compiler('gcc.compile.c++', ['CPP'], ['OBJ'], ['<toolset>gcc'])
 builtin.register_c_compiler('gcc.compile.c', ['C'], ['OBJ'], ['<toolset>gcc'])
 builtin.register_c_compiler('gcc.compile.asm', ['ASM'], ['OBJ'], ['<toolset>gcc'])
@@ -377,6 +379,24 @@ engine.register_action(
         '-I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"',
     function=gcc_compile_c,
     bound_list=['PCH_FILE'])
+
+engine.register_action(
+    'gcc.compile.c++.preprocess',
+    function=gcc_compile_cpp,
+    bound_list=['PCH_FILE'],
+    command="""
+    $(CONFIG_COMMAND) $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" "$(>:W)" -E >"$(<:W)"
+    """
+)
+
+engine.register_action(
+    'gcc.compile.c.preprocess',
+    function=gcc_compile_c,
+    bound_list=['PCH_FILE'],
+    command="""
+    $(CONFIG_COMMAND) $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" "$(>)" -E >$(<)
+    """
+)
 
 def gcc_compile_asm(targets, sources, properties):
     get_manager().engine().set_target_variable(targets, 'LANG', '-x assembler-with-cpp')
