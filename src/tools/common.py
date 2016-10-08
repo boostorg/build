@@ -541,9 +541,16 @@ def prepend_path_variable_command(variable, paths):
     """
     assert isinstance(variable, basestring)
     assert is_iterable_typed(paths, basestring)
+    return path_variable_setting_command(
+        variable, paths + [expand_variable(variable)])
 
-    return path_variable_setting_command(variable,
-        paths + os.environ.get(variable, "").split(os.pathsep))
+
+def expand_variable(variable):
+    """Produce a string that expands the shell variable."""
+    if os.name == 'nt':
+        return '%{}%'.format(variable)
+    return '${%s}' % variable
+
 
 def file_creation_command():
     """
