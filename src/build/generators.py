@@ -381,24 +381,22 @@ class Generator:
             assert isinstance(prop_set, property_set.PropertySet)
             assert is_iterable_typed(sources, virtual_target.VirtualTarget)
         # consumed: Targets that this generator will consume directly.
-        # bypassed: Targets that can't be consumed and will be returned as-is.
 
         if self.composing_:
-            (consumed, bypassed) = self.convert_multiple_sources_to_consumable_types (project, prop_set, sources)
+            consumed = self.convert_multiple_sources_to_consumable_types (project, prop_set, sources)
         else:
-            (consumed, bypassed) = self.convert_to_consumable_types (project, name, prop_set, sources)
+            consumed = self.convert_to_consumable_types (project, name, prop_set, sources)
 
         result = []
         if consumed:
             result = self.construct_result (consumed, project, name, prop_set)
-            result.extend (bypassed)
 
         if result:
             if project.manager ().logger ().on ():
                 project.manager ().logger ().log (__name__, "  SUCCESS: ", result)
 
         else:
-                project.manager ().logger ().log (__name__, "  FAILURE")
+            project.manager ().logger ().log (__name__, "  FAILURE")
 
         return result
 
@@ -425,12 +423,9 @@ class Generator:
         if len (self.source_types_) < 2 and not self.composing_:
 
             for r in consumed:
-                result.extend (self.generated_targets ([r], prop_set, project, name))
-
-        else:
-
-            if consumed:
-                result.extend (self.generated_targets (consumed, prop_set, project, name))
+                result.extend(self.generated_targets([r], prop_set, project, name))
+        elif consumed:
+            result.extend(self.generated_targets(consumed, prop_set, project, name))
 
         return result
 
@@ -540,7 +535,6 @@ class Generator:
 
             Returns a pair:
                 consumed: all targets that can be consumed.
-                bypassed: all targets that cannot be consumed.
         """
         if __debug__:
             from .targets import ProjectTarget
@@ -550,7 +544,6 @@ class Generator:
             assert is_iterable_typed(sources, virtual_target.VirtualTarget)
             assert isinstance(only_one, bool)
         consumed = []
-        bypassed = []
         missing_types = []
 
         if len (sources) > 1:
@@ -587,59 +580,45 @@ class Generator:
                 if t.type() in missing_types:
                     consumed.append(t)
 
-                else:
-                    bypassed.append(t)
-
         consumed = unique(consumed)
-        bypassed = unique(bypassed)
 
-        # remove elements of 'bypassed' that are in 'consumed'
-
-        # Suppose the target type of current generator, X is produced from
-        # X_1 and X_2, which are produced from Y by one generator.
-        # When creating X_1 from Y, X_2 will be added to 'bypassed'
-        # Likewise, when creating X_2 from Y, X_1 will be added to 'bypassed'
-        # But they are also in 'consumed'. We have to remove them from
-        # bypassed, so that generators up the call stack don't try to convert
-        # them.
-
-        # In this particular case, X_1 instance in 'consumed' and X_1 instance
-        # in 'bypassed' will be the same: because they have the same source and
-        # action name, and 'virtual-target.register' won't allow two different
-        # instances. Therefore, it's OK to use 'set.difference'.
-
-        bypassed = set.difference(bypassed, consumed)
-
-        return (consumed, bypassed)
+        return consumed
 
 
     def convert_multiple_sources_to_consumable_types (self, project, prop_set, sources):
         """ Converts several files to consumable types.
         """
-        consumed = []
-        bypassed = []
         if __debug__:
             from .targets import ProjectTarget
 
             assert isinstance(project, ProjectTarget)
             assert isinstance(prop_set, property_set.PropertySet)
             assert is_iterable_typed(sources, virtual_target.VirtualTarget)
+        if not self.source_types_:
+            return list(sources)
 
-        assert isinstance(project, ProjectTarget)
-        assert isinstance(prop_set, property_set.PropertySet)
-        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
-        # We process each source one-by-one, trying to convert it to
-        # a usable type.
-        for s in sources:
-            # TODO: need to check for failure on each source.
-            (c, b) = self.convert_to_consumable_types (project, None, prop_set, [s], True)
-            if not c:
-                project.manager ().logger ().log (__name__, " failed to convert ", s)
+        acceptable_types = set()
+        for t in self.source_types_:
+            acceptable_types.update(type.all_derived(t))
 
-            consumed.extend (c)
-            bypassed.extend (b)
+        result = []
+        for source in sources:
+            if source.type() not in acceptable_types:
+                transformed = construct_types(
+                    project, None,self.source_types_, prop_set, [source])
+                # construct_types returns [prop_set, [targets]]
+                for t in transformed[1]:
+                    if t.type() in self.source_types_:
+                        result.append(t)
+                if not transformed:
+                    project.manager().logger().log(__name__, "  failed to convert ", source)
+            else:
+                result.append(source)
 
-        return (consumed, bypassed)
+        result = sequence.unique(result, stable=True)
+        return result
+
+
 
     def consume_directly (self, source):
         assert isinstance(source, virtual_target.VirtualTarget)
@@ -655,7 +634,7 @@ class Generator:
         for st in source_types:
             # The 'source' if of right type already)
             if real_source_type == st or type.is_derived (real_source_type, st):
-                consumed.append (source)
+                consumed = [source]
 
             else:
                missing_types.append (st)
