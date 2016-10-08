@@ -403,6 +403,8 @@ class CScanner (scanner.Scanner):
 scanner.register (CScanner, 'include')
 type.set_scanner ('CPP', CScanner)
 type.set_scanner ('C', CScanner)
+type.set_scanner('H', CScanner)
+type.set_scanner('HPP', CScanner)
 
 # Ported to trunk@47077
 class LibGenerator (generators.Generator):
