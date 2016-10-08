@@ -136,8 +136,11 @@ class Engine:
         assert isinstance(variable, basestring)
         assert is_iterable(value)
 
-        for target in targets:
-            self.do_set_target_variable (target, variable, value, append)
+        if targets:
+            if append:
+                bjam_interface.call("set-target-variable", targets, variable, value, "true")
+            else:
+                bjam_interface.call("set-target-variable", targets, variable, value)
 
     def set_update_action (self, action_name, targets, sources, properties=None):
         """ Binds a target to the corresponding update action.
