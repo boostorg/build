@@ -380,12 +380,12 @@ def setup_preprocess_c_cpp_action(targets, sources, properties):
     return 'preprocess-c-c++'
 
 register_setup_action(
-    'msvc.preprocess.c',
+    'msvc.compile.c.preprocess',
     setup_preprocess_c_cpp_action,
     function=compile_c_preprocess)
 
 register_setup_action(
-    'msvc.preprocess.c++',
+    'msvc.compile.c++.preprocess',
     setup_preprocess_c_cpp_action,
     function=compile_cpp_preprocess)
 
