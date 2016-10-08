@@ -314,9 +314,8 @@ def get_invocation_command_nodefault(
             #FIXME
             #ECHO "warning: initialized from" [ errors.nearest-user-location ]
             command = []
-        command = ' '.join(command)
-
-    assert(isinstance(command, str))
+        if command:
+            command = ' '.join(command)
 
     return command
 
