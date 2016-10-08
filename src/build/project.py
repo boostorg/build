@@ -1138,8 +1138,8 @@ attribute is allowed only for top-level 'project' invocations""")
         assert is_iterable_typed(name, basestring)
         assert is_iterable_typed(value, basestring)
         if len(value) > 1:
-            self.registry.manager.error()("path constant should have one element")
-        self.registry.current().add_constant(name[0], value[0], path=1)
+            self.registry.manager.errors()("path constant should have one element")
+        self.registry.current().add_constant(name[0], value, path=1)
 
     def use_project(self, id, where):
         # See comment in 'load' for explanation why we record the
@@ -1162,7 +1162,7 @@ attribute is allowed only for top-level 'project' invocations""")
 
     def always(self, target_names):
         assert is_iterable_typed(target_names, basestring)
-        self.registry.current().mark_targets_as_alays(target_names)
+        self.registry.current().mark_targets_as_always(target_names)
 
     def glob(self, wildcards, excludes=None):
         assert is_iterable_typed(wildcards, basestring)
