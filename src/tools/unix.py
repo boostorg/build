@@ -46,8 +46,13 @@ class UnixArchiveGenerator (builtin.ArchiveGenerator):
         builtin.ArchiveGenerator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
 
     def run (self, project, name, prop_set, sources):
+        from b2.build.property_set import PropertySet
         result = builtin.ArchiveGenerator.run(self, project, name, prop_set, sources)
-        set_library_order(project.manager(), sources, prop_set, result)
+        if result and isinstance(result[0], PropertySet):
+            _, targets = result
+        else:
+            targets = result
+        set_library_order(project.manager(), sources, prop_set, targets)
         return result
 
 class UnixSearchedLibGenerator (builtin.SearchedLibGenerator):
