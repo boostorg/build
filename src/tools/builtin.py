@@ -600,6 +600,8 @@ class LinkingGenerator (generators.Generator):
         assert isinstance(prop_set, property_set.PropertySet)
         assert is_iterable_typed(sources, virtual_target.VirtualTarget)
 
+        # create a copy since sources is being modified
+        sources = list(sources)
         sources.extend(prop_set.get('<library>'))
 
         # Add <library-path> properties for all searched libraries
