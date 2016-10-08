@@ -1039,7 +1039,7 @@ def register_toolset_really():
     feature.extend('toolset', ['msvc'])
 
     # Intel and msvc supposedly have link-compatible objects.
-    feature.subfeature( 'toolset', 'msvc', 'vendor', 'intel', ['propagated', 'optional'])
+    feature.subfeature( 'toolset', 'msvc', 'vendor', ['intel'], ['propagated', 'optional'])
 
     # Inherit MIDL flags.
     toolset.inherit_flags('msvc', 'midl')
