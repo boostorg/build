@@ -733,11 +733,27 @@ class ArchiveGenerator (generators.Generator):
         generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
 
     def run (self, project, name, prop_set, sources):
-        sources += prop_set.get ('<library>')
+        assert isinstance(project, targets.ProjectTarget)
+        assert isinstance(name, basestring) or name is None
+        assert isinstance(prop_set, property_set.PropertySet)
+        assert is_iterable_typed(sources, virtual_target.VirtualTarget)
+
+        # create a copy since this modifies the sources list
+        sources = list(sources)
+        sources.extend(prop_set.get('<library>'))
 
         result = generators.Generator.run (self, project, name, prop_set, sources)
 
-        return result
+        usage_requirements = []
+        link = prop_set.get('<link>')
+        if 'static' in link:
+            for t in sources:
+                if type.is_derived(t.type(), 'LIB'):
+                    usage_requirements.append(property.Property('<library>', t))
+
+        usage_requirements = property_set.create(usage_requirements)
+
+        return usage_requirements, result
 
 
 def register_archiver(id, source_types, target_types, requirements):
