@@ -364,7 +364,7 @@ The arguments starting with the "=--option=" forms are passed to the =build.jam=
     [[[literal --gc]]
         [Enables use of the Boehm Garbage Collector. The build will look for the Boehm-GC source in a "boehm_gc" subdirectory from the =b2= sources.]]
     [[[literal --duma]]
-        [Enables use of the DUMA (Detect Uintended Memory Access) debugging memory allocator. The build expects to find the DUMA source files in a "duma" subdirectory from the =b2= sources.]]
+        [Enables use of the DUMA (Detect Unintended Memory Access) debugging memory allocator. The build expects to find the DUMA source files in a "duma" subdirectory from the =b2= sources.]]
     [[[literal --toolset-root=/path/]]
         [Indicates where the toolset used to build is located. This option is passed in by the bootstrap (=build.bat= or =build.sh=) script.]]
     [[[literal --show-locate-target]]
