@@ -147,7 +147,7 @@ def register_globals ():
     feature.feature ('exception-handling', ['on', 'off'], ['propagated'])
 
     # Whether there is support for asynchronous EH (e.g. catching SEGVs).
-    feature.feature ('asynch-exceptions', ['on', 'off'], ['propagated'])
+    feature.feature ('asynch-exceptions', ['off', 'on'], ['propagated'])
 
     # Whether all extern "C" functions are considered nothrow by default.
     feature.feature ('extern-c-nothrow', ['off', 'on'], ['propagated'])
