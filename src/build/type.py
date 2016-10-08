@@ -71,14 +71,19 @@ def register (type, suffixes = [], base_type = None):
     if __re_hyphen.search (type):
         raise BaseException ('type name "%s" contains a hyphen' % type)
 
-    if type in __types:
+    # it's possible for a type to be registered with a
+    # base type that hasn't been registered yet. in the
+    # check for base_type below and the following calls to setdefault()
+    # the key `type` will be added to __types. When the base type
+    # actually gets registered, it would fail after the simple check
+    # of "type in __types"; thus the check for "'base' in __types[type]"
+    if type in __types and 'base' in __types[type]:
         raise BaseException ('Type "%s" is already registered.' % type)
 
-    entry = {}
-    entry ['base'] = base_type
-    entry ['derived'] = []
-    entry ['scanner'] = None
-    __types [type] = entry
+    entry = __types.setdefault(type, {})
+    entry['base'] = base_type
+    entry.setdefault('derived', [])
+    entry.setdefault('scanner', None)
 
     if base_type:
         __types.setdefault(base_type, {}).setdefault('derived', []).append(type)
