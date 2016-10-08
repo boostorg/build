@@ -9,6 +9,7 @@
 
 """ Support for toolset definition.
 """
+import sys
 
 import feature, property, generators, property_set
 import b2.util.set
@@ -23,6 +24,7 @@ __re_split_last_segment = re.compile (r'^(.+)\.([^\.])*')
 __re_two_ampersands = re.compile ('(&&)')
 __re_first_segment = re.compile ('([^.]*).*')
 __re_first_group = re.compile (r'[^.]*\.(.*)')
+_ignore_toolset_requirements = '--ignore-toolset-requirements' not in sys.argv
 
 # Flag is a mechanism to set a value
 # A single toolset flag. Specifies that when certain
@@ -393,10 +395,9 @@ def add_requirements(requirements):
     be conditional or indirect conditional."""
     assert is_iterable_typed(requirements, basestring)
 
-    #if ! $(.ignore-requirements)
-    #{
-    __requirements.extend(requirements)
-    #}
+    if _ignore_toolset_requirements:
+        __requirements.extend(requirements)
+
 
 # Make toolset 'toolset', defined in a module of the same name,
 # inherit from 'base'
