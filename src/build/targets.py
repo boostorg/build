@@ -156,6 +156,8 @@ class TargetRegistry:
          'project' is the project where the main taret is to be declared."""
         assert is_iterable_typed(specification, basestring)
         assert isinstance(project, ProjectTarget)
+        # create a copy since the list is being modified
+        specification = list(specification)
         specification.extend(toolset.requirements())
 
         requirements = property_set.refine_from_user_input(
@@ -529,8 +531,16 @@ class ProjectTarget (AbstractTarget):
         target_part = None
 
         if split:
-            project_part = split.group (1)
-            target_part = split.group (2)
+            project_part = split.group(1)
+            target_part = split.group(2)
+            if not target_part:
+                get_manager().errors()(
+                    'Project ID, "{}", is not a valid target reference. There should '
+                    'be either a target name after the "//" or the "//" should be removed '
+                    'from the target reference.'
+                    .format(id)
+                )
+
 
         project_registry = self.project_.manager ().projects ()
 
@@ -615,7 +625,7 @@ class ProjectTarget (AbstractTarget):
         to the location of project.
         """
         assert isinstance(name, basestring)
-        assert isinstance(value, basestring)
+        assert is_iterable_typed(value, basestring)
         assert isinstance(path, int)  # will also match bools
         if path:
             l = self.location_
@@ -627,10 +637,10 @@ class ProjectTarget (AbstractTarget):
                 # targets in config files, but that's for later.
                 l = self.get('source-location')
 
-            value = os.path.join(l, value)
+            value = os.path.join(l, value[0])
             # Now make the value absolute path. Constants should be in
             # platform-native form.
-            value = os.path.normpath(os.path.join(os.getcwd(), value))
+            value = [os.path.normpath(os.path.join(os.getcwd(), value))]
 
         self.constants_[name] = value
         bjam.call("set-variable", self.project_module(), name, value)
