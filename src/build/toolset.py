@@ -17,7 +17,7 @@ import bjam
 
 from b2.util import cached, qualify_jam_action, is_iterable_typed, is_iterable
 from b2.util.utility import *
-from b2.util import bjam_signature
+from b2.util import bjam_signature, sequence
 from b2.manager import get_manager
 
 __re_split_last_segment = re.compile (r'^(.+)\.([^\.])*')
@@ -356,11 +356,11 @@ def __handle_flag_value (manager, value, ps):
                 else:
                     result.extend(value.split ('&&'))
             else:
-                result.append (ungristed)
+                result.append (value)
     else:
         result.append (value)
 
-    return result
+    return sequence.unique(result, stable=True)
 
 def __add_flag (rule_or_module, variable_name, condition, values):
     """ Adds a new flag setting with the specified values.
