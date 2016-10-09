@@ -82,6 +82,7 @@ from virtual_target import Subvariant
 from b2.exceptions import *
 from b2.util.sequence import unique
 from b2.util import path, bjam_signature, safe_isinstance, is_iterable_typed
+from b2.build import errors
 from b2.build.errors import user_error_checkpoint
 
 import b2.build.build_request as build_request
@@ -308,6 +309,7 @@ class AbstractTarget:
 
         self.name_ = name
         self.project_ = project
+        self.location_ = errors.nearest_user_location()
 
     def manager (self):
         return self.manager_
