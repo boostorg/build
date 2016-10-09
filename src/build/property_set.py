@@ -155,16 +155,13 @@ class PropertySet:
         - several operations, like and refine and as_path are provided. They all use
           caching whenever possible.
     """
-    def __init__ (self, properties = []):
+    def __init__ (self, properties=None):
+        if properties is None:
+            properties = []
         assert is_iterable_typed(properties, property.Property)
 
-        raw_properties = []
-        for p in properties:
-            raw_properties.append(p.to_raw())
-
         self.all_ = properties
-        self.all_raw_ = raw_properties
-        self.all_set_ = set(properties)
+        self._all_set = {p.id for p in properties}
 
         self.incidental_ = []
         self.free_ = []
@@ -216,18 +213,6 @@ class PropertySet:
         # first before returning.
         self.lazy_properties = []
 
-        for p in raw_properties:
-            if not get_grist (p):
-                raise BaseException ("Invalid property: '%s'" % p)
-
-            att = feature.attributes (get_grist (p))
-
-            if 'propagated' in att:
-                self.propagated_.append (p)
-
-            if 'link_incompatible' in att:
-                self.link_incompatible.append (p)
-
         for p in properties:
             f = p.feature
             if isinstance(p, property.LazyProperty):
@@ -251,6 +236,11 @@ class PropertySet:
             elif not isinstance(p, property.LazyProperty):
                 self.non_dependency_.append (p)
 
+            if f.propagated:
+                self.propagated_.append(p)
+            if f.link_incompatible:
+                self.link_incompatible.append(p)
+
 
     def all(self):
         return self.all_
@@ -263,10 +253,10 @@ class PropertySet:
         # true Property(). This approach is being
         # taken since calculations should not be using
         # PropertySet.raw()
-        return [p.to_raw() for p in self.all_]
+        return [p._to_raw for p in self.all_]
 
     def __str__(self):
-        return ' '.join(str(p) for p in self.all_)
+        return ' '.join(p._to_raw for p in self.all_)
 
     def base (self):
         """ Returns properties that are neither incidental nor free.
@@ -494,7 +484,7 @@ class PropertySet:
         return result
 
     def __contains__(self, item):
-        return item in self.all_set_
+        return item.id in self._all_set
 
 def hash(p):
     m = hashlib.md5()
