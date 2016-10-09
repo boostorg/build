@@ -207,6 +207,14 @@ class PropertySet:
         # A cache for already evaluated sets.
         self.evaluated_ = {}
 
+        # stores the list of LazyProperty instances.
+        # these are being kept separate from the normal
+        # Property instances so that when this PropertySet
+        # tries to return one of its attributes, it
+        # will then try to evaluate the LazyProperty instances
+        # first before returning.
+        self.lazy_properties = []
+
         for p in raw_properties:
             if not get_grist (p):
                 raise BaseException ("Invalid property: '%s'" % p)
@@ -220,7 +228,8 @@ class PropertySet:
                 self.link_incompatible.append (p)
 
         for p in properties:
-
+            if isinstance(p, property.LazyProperty):
+                self.lazy_properties.append(p)
             # A feature can be both incidental and free,
             # in which case we add it to incidental.
             if p.feature().incidental():
@@ -237,7 +246,7 @@ class PropertySet:
 
             if p.feature().dependency():
                 self.dependency_.append (p)
-            else:
+            elif not isinstance(p, property.LazyProperty):
                 self.non_dependency_.append (p)
 
 
@@ -247,7 +256,12 @@ class PropertySet:
     def raw (self):
         """ Returns the list of stored properties.
         """
-        return self.all_raw_
+        # create a new list due to the LazyProperties.
+        # this gives them a chance to evaluate to their
+        # true Property(). This approach is being
+        # taken since calculations should not be using
+        # PropertySet.raw()
+        return [p.to_raw() for p in self.all_]
 
     def __str__(self):
         return ' '.join(str(p) for p in self.all_)
@@ -255,25 +269,35 @@ class PropertySet:
     def base (self):
         """ Returns properties that are neither incidental nor free.
         """
-        return self.base_
+        result = [p for p in self.lazy_properties
+                  if not(p.feature().incidental() or p.feature().free())]
+        result.extend(self.base_)
+        return result
 
     def free (self):
         """ Returns free properties which are not dependency properties.
         """
-        return self.free_
+        result = [p for p in self.lazy_properties
+                  if not p.feature().incidental() and p.feature().free()]
+        result.extend(self.free_)
+        return result
 
     def non_free(self):
-        return self.base_ + self.incidental_
+        return self.base() + self.incidental()
 
     def dependency (self):
         """ Returns dependency properties.
         """
+        result = [p for p in self.lazy_properties if p.feature().dependency()]
+        result.extend(self.dependency_)
         return self.dependency_
 
     def non_dependency (self):
         """ Returns properties that are not dependencies.
         """
-        return self.non_dependency_
+        result = [p for p in self.lazy_properties if not p.feature().dependency()]
+        result.extend(self.non_dependency_)
+        return result
 
     def conditional (self):
         """ Returns conditional properties.
@@ -288,7 +312,9 @@ class PropertySet:
     def incidental (self):
         """ Returns incidental properties.
         """
-        return self.incidental_
+        result = [p for p in self.lazy_properties if p.feature().incidental()]
+        result.extend(self.incidental_)
+        return result
 
     def refine (self, requirements):
         """ Refines this set's properties using the requirements passed as an argument.

@@ -9,11 +9,13 @@
 
 import re
 import sys
+
 from b2.util.utility import *
 from b2.build import feature
 from b2.util import sequence, qualify_jam_action, is_iterable_typed
 import b2.util.set
 from b2.manager import get_manager
+
 
 __re_two_ampersands = re.compile ('&&')
 __re_comma = re.compile (',')
@@ -23,14 +25,38 @@ __re_colon = re.compile (':')
 __re_has_condition = re.compile (r':<')
 __re_separate_condition_and_property = re.compile (r'(.*):(<.*)')
 
-__not_applicable_feature='not-applicable-in-this-context'
-feature.feature(__not_applicable_feature, [], ['free'])
+_not_applicable_feature='not-applicable-in-this-context'
+feature.feature(_not_applicable_feature, [], ['free'])
 
 __abbreviated_paths = False
 
+
+class PropertyMeta(type):
+    """
+    This class exists to implement the isinstance() and issubclass()
+    hooks for the Property class. Since we've introduce the concept of
+    a LazyProperty, isinstance(p, Property) will fail when p is a LazyProperty.
+    Implementing both __instancecheck__ and __subclasscheck__ will allow
+    LazyProperty instances to pass the isinstance() and issubclass check for
+    the Property class.
+    """
+    @staticmethod
+    def check(obj):
+        return (hasattr(obj, 'feature') and
+                hasattr(obj, 'value') and
+                hasattr(obj, 'condition'))
+
+    def __instancecheck__(self, instance):
+        return self.check(instance)
+
+    def __subclasscheck__(self, subclass):
+        return self.check(subclass)
+
+
 class Property(object):
 
-    __slots__ = ('_feature', '_value', '_condition')
+    __slots__ = ('_feature', '_value', '_condition', '_to_raw', '_hash')
+    __metaclass__ = PropertyMeta
 
     def __init__(self, f, value, condition = []):
         if type(f) == type(""):
@@ -69,6 +95,38 @@ class Property(object):
                    (other._feature.name(), other._value, other._condition))
 
 
+class LazyProperty(object):
+    def __init__(self, feature_name, value, condition=None):
+        if condition is None:
+            condition = []
+
+        self.__property = Property(
+            feature.get(_not_applicable_feature), feature_name + value, condition=condition)
+        self.__name = feature_name
+        self.__value = value
+        self.__condition = condition
+        self.__feature = None
+
+    def __getattr__(self, item):
+        if self.__feature is None:
+            try:
+                self.__feature = feature.get(self.__name)
+                self.__property = Property(self.__feature, self.__value, self.__condition)
+            except KeyError:
+                pass
+        return getattr(self.__property, item)
+
+    def __hash__(self):
+        return hash(self.__property)
+
+    def __str__(self):
+        return self.__property._to_raw
+
+    def __cmp__(self, other):
+        return cmp((self._feature.name(), self._value, self._condition),
+                   (other._feature.name(), other._value, other._condition))
+
+
 def create_from_string(s, allow_condition=False,allow_missing_value=False):
     assert isinstance(s, basestring)
     assert isinstance(allow_condition, bool)
@@ -89,17 +147,24 @@ def create_from_string(s, allow_condition=False,allow_missing_value=False):
     # FIXME: break dependency cycle
     from b2.manager import get_manager
 
+    if condition:
+        condition = [create_from_string(x) for x in condition.split(',')]
+
     feature_name = get_grist(s)
     if not feature_name:
         if feature.is_implicit_value(s):
             f = feature.implied_feature(s)
             value = s
+            p = Property(f, value, condition=condition)
         else:
             raise get_manager().errors()("Invalid property '%s' -- unknown feature" % s)
     else:
+        value = get_value(s)
+        if not value and not allow_missing_value:
+            get_manager().errors()("Invalid property '%s' -- no value specified" % s)
+
         if feature.valid(feature_name):
-            f = feature.get(feature_name)
-            value = get_value(s)
+            p = Property(feature.get(feature_name), value, condition=condition)
         else:
             # In case feature name is not known, it is wrong to do a hard error.
             # Feature sets change depending on the toolset. So e.g.
@@ -112,17 +177,9 @@ def create_from_string(s, allow_condition=False,allow_missing_value=False):
             # The underlying cause for this problem is that python port Property
             # is more strict than its Jam counterpart and must always reference
             # a valid feature.
-            f = feature.get(__not_applicable_feature)
-            value = s
+            p = LazyProperty(feature_name, value, condition=condition)
 
-        if not value and not allow_missing_value:
-            get_manager().errors()("Invalid property '%s' -- no value specified" % s)
-
-
-    if condition:
-        condition = [create_from_string(x) for x in condition.split(',')]
-
-    return Property(f, value, condition)
+    return p
 
 def create_from_strings(string_list, allow_condition=False):
     assert is_iterable_typed(string_list, basestring)
@@ -279,17 +336,20 @@ def expand_subfeatures_in_conditions (properties):
         else:
             expanded = []
             for c in p.condition():
+                # It common that condition includes a toolset which
+                # was never defined, or mentiones subfeatures which
+                # were never defined. In that case, validation will
+                # only produce an spirious error, so don't validate.
+                expanded.extend(feature.expand_subfeatures ([c], True))
 
-                if c.feature().name().startswith("toolset") or c.feature().name() == "os":
-                    # It common that condition includes a toolset which
-                    # was never defined, or mentiones subfeatures which
-                    # were never defined. In that case, validation will
-                    # only produce an spirious error, so don't validate.
-                    expanded.extend(feature.expand_subfeatures ([c], True))
-                else:
-                    expanded.extend(feature.expand_subfeatures([c]))
-
-            result.append(Property(p.feature(), p.value(), expanded))
+            # we need to keep LazyProperties lazy
+            if isinstance(p, LazyProperty):
+                value = p.value()
+                feature_name = get_grist(value)
+                value = value.replace(feature_name, '')
+                result.append(LazyProperty(feature_name, value, condition=expanded))
+            else:
+                result.append(Property(p.feature(), p.value(), expanded))
 
     return result
 
