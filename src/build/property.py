@@ -9,6 +9,7 @@
 
 import re
 import sys
+from functools import total_ordering
 
 from b2.util.utility import *
 from b2.build import feature
@@ -53,39 +54,53 @@ class PropertyMeta(type):
         return self.check(subclass)
 
 
+@total_ordering
 class Property(object):
 
-    __slots__ = ('feature', 'value', 'condition', '_to_raw', '_hash')
+    __slots__ = ('feature', 'value', 'condition', '_to_raw', '_hash', 'id')
     __metaclass__ = PropertyMeta
 
-    def __init__(self, f, value, condition = []):
-        if type(f) == type(""):
-            f = feature.get(f)
-        # At present, single property has a single value.
-        assert type(value) != type([])
-        assert(f.free() or value.find(':') == -1)
+    def __init__(self, f, value, condition=None):
+        assert(f.free or ':' not in value)
+        if condition is None:
+            condition = []
+
         self.feature = f
         self.value = value
         self.condition = condition
+        self._hash = hash((self.feature, self.value) + tuple(sorted(self.condition)))
+        self.id = PropertyMeta.current_id
+        # increment the id counter by bit shifting.
+        # this allows us to take a list of Property
+        # instances and add their IDs together to create
+        # a unique key for that "PropertySet".
+        PropertyMeta.current_id += 1
+
+        condition_str = ''
+        if condition:
+            condition_str = ",".join(str(p) for p in self.condition) + ':'
+
+        self._to_raw = '{}<{}>{}'.format(condition_str, f.name, value)
 
     def to_raw(self):
-        result = "<" + self.feature.name + ">" + str(self.value)
-        if self.condition:
-            result = ",".join(str(p) for p in self.condition) + ':' + result
-        return result
+        return self._to_raw
 
     def __str__(self):
-        return self.to_raw()
+
+        return self._to_raw
 
     def __hash__(self):
         # FIXME: consider if this class should be value-is-identity one
-        return hash((self.feature, self.value, tuple(self.condition)))
+        return self._hash
 
-    def __cmp__(self, other):
-        return cmp((self.feature.name, self.value, self.condition),
-                   (other.feature.name, other.value, other.condition))
+    def __eq__(self, other):
+        return self._hash == other._hash
+
+    def __lt__(self, other):
+        return (self.feature.name, self.value) < (other.feature.name, other.value)
 
 
+@total_ordering
 class LazyProperty(object):
     def __init__(self, feature_name, value, condition=None):
         if condition is None:
@@ -113,9 +128,11 @@ class LazyProperty(object):
     def __str__(self):
         return self.__property._to_raw
 
-    def __cmp__(self, other):
-        return cmp((self.feature.name, self.value, self.condition),
-                   (other.feature.name, other.value, other.condition))
+    def __eq__(self, other):
+        return self.__property == other
+
+    def __lt__(self, other):
+        return (self.feature.name, self.value) < (other.feature.name, other.value)
 
 
 def create_from_string(s, allow_condition=False,allow_missing_value=False):
