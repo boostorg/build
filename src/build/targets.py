@@ -670,6 +670,7 @@ class MainTarget (AbstractTarget):
     def __init__ (self, name, project):
         AbstractTarget.__init__ (self, name, project)
         self.alternatives_ = []
+        self.best_alternative = None
         self.default_build_ = property_set.empty ()
 
     def add_alternative (self, target):
@@ -781,6 +782,7 @@ class MainTarget (AbstractTarget):
         """
         assert isinstance(prop_set, property_set.PropertySet)
         best_alternative = self.__select_alternatives (prop_set, debug=0)
+        self.best_alternative = best_alternative
 
         if not best_alternative:
             # FIXME: revive.
