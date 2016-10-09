@@ -593,7 +593,7 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         try:
             return self.module2attributes[project].get(attribute)
         except:
-            raise BaseException("No attribute '%s' for project" % (attribute, project))
+            raise BaseException("No attribute '%s' for project %s" % (attribute, project))
 
     def attributeDefault(self, project, attribute, default):
         """Returns the value of the specified attribute in the
