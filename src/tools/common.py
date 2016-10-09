@@ -182,7 +182,7 @@ def check_init_parameters(toolset, requirement, *args):
         The return value from this rule is a condition to be used for flags settings.
     """
     assert isinstance(toolset, basestring)
-    assert is_iterable_typed(requirement, basestring)
+    assert is_iterable_typed(requirement, basestring) or requirement is None
     from b2.build import toolset as b2_toolset
     if requirement is None:
         requirement = []

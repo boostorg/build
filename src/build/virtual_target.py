@@ -952,9 +952,9 @@ class NonScanningAction(Action):
         #be removed? -- Steven Watanabe
         Action.__init__(self, b2.manager.get_manager(), sources, action_name, property_set)
 
-    def actualize_source_type(self, sources, property_set):
+    def actualize_source_type(self, sources, ps=None):
         assert is_iterable_typed(sources, VirtualTarget)
-        assert isinstance(property_set, property_set.PropertySet)
+        assert isinstance(ps, property_set.PropertySet) or ps is None
         result = []
         for s in sources:
             result.append(s.actualize())

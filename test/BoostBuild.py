@@ -452,7 +452,10 @@ class Tester(TestCmd.TestCmd):
             if ignore_toolset_requirements:
                 kw["program"].append("--ignore-toolset-requirements")
             if "--python" in sys.argv:
-                kw["program"].append("--python")
+                # -z disables Python optimization mode.
+                # this enables type checking (all assert
+                # and if __debug__ statements).
+                kw["program"].extend(["--python", "-z"])
             if "--stacktrace" in sys.argv:
                 kw["program"].append("--stacktrace")
             kw["chdir"] = subdir
