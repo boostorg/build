@@ -56,7 +56,7 @@ from . import virtual_target, type, property_set, property
 from b2.exceptions import BaseBoostBuildException
 from b2.util.logger import *
 from b2.util.utility import *
-from b2.util import set as set_, is_iterable_typed, is_iterable
+from b2.util import set as set_, is_iterable_typed, is_iterable, bjam_signature
 from b2.util.sequence import unique
 import b2.util.sequence as sequence
 from b2.manager import get_manager
@@ -718,6 +718,7 @@ def check_register_types(fn):
     return wrapper
 
 
+@bjam_signature([['id'], ['source_types', '*'], ['target_types', '*'], ['requirements', '*']])
 @check_register_types
 def register_standard (id, source_types, target_types, requirements = []):
     """ Creates new instance of the 'generator' class and registers it.
