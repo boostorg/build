@@ -1,8 +1,10 @@
-*.pyc
+*.py[co]
 /doc/bin
 /doc/html
 /b2
 /bjam
+/b2.exe
+/bjam.exe
 /bin
 /bootstrap.log
 /test/test_results.txt
