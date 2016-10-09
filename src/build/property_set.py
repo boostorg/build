@@ -44,12 +44,13 @@ def create (raw_properties = []):
         x = raw_properties
     else:
         x = [property.create_from_string(ps) for ps in raw_properties]
-    x.sort()
-    x = unique(x, stable=True)
 
-    # FIXME: can we do better, e.g. by directly computing
-    # hash value of the list?
-    key = tuple(x)
+    # these two lines of code are optimized to the current state
+    # of the Property class. since this function acts as the caching
+    # frontend to the PropertySet class modifying these two lines
+    # could have a severe performance penalty. be careful
+    x = sorted(set(x), key=lambda p: p.id)
+    key = tuple(p.id for p in x)
 
     if key not in __cache:
         __cache [key] = PropertySet(x)

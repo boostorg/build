@@ -40,7 +40,32 @@ class PropertyMeta(type):
     Implementing both __instancecheck__ and __subclasscheck__ will allow
     LazyProperty instances to pass the isinstance() and issubclass check for
     the Property class.
+
+    Additionally, the __call__ method intercepts the call to the Property
+    constructor to ensure that calling Property with the same arguments
+    will always return the same Property instance.
     """
+    _registry = {}
+    current_id = 1
+
+    def __call__(mcs, f, value, condition=None):
+        """
+        This intercepts the call to the Property() constructor.
+
+        This exists so that the same arguments will always return the same Property
+        instance. This allows us to give each instance a unique ID.
+        """
+        from b2.build.feature import Feature
+        if not isinstance(f, Feature):
+            f = feature.get(f)
+        if condition is None:
+            condition = []
+        key = (f, value) + tuple(sorted(condition))
+        if key not in mcs._registry:
+            instance = super(PropertyMeta, mcs).__call__(f, value, condition)
+            mcs._registry[key] = instance
+        return mcs._registry[key]
+
     @staticmethod
     def check(obj):
         return (hasattr(obj, 'feature') and
@@ -70,10 +95,11 @@ class Property(object):
         self.condition = condition
         self._hash = hash((self.feature, self.value) + tuple(sorted(self.condition)))
         self.id = PropertyMeta.current_id
-        # increment the id counter by bit shifting.
+        # increment the id counter.
         # this allows us to take a list of Property
-        # instances and add their IDs together to create
-        # a unique key for that "PropertySet".
+        # instances and use their unique integer ID
+        # to create a key for PropertySet caching. This is
+        # much faster than string comparison.
         PropertyMeta.current_id += 1
 
         condition_str = ''
@@ -90,7 +116,6 @@ class Property(object):
         return self._to_raw
 
     def __hash__(self):
-        # FIXME: consider if this class should be value-is-identity one
         return self._hash
 
     def __eq__(self, other):
