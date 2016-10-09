@@ -420,7 +420,7 @@ def expand_subfeatures(properties, dont_validate = False):
 # Now, the specific rule must be called, depending on the desired operation:
 #   extend_feature
 #   extend_subfeature
-
+@bjam_signature([['name'], ['values', '*']])
 def extend (name, values):
     """ Adds the given values to the given feature.
     """
