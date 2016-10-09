@@ -218,10 +218,12 @@ class VirtualTargetRegistry:
                 p2 = p2.raw ()
 
                 properties_removed = set.difference (p1, p2)
-                if not properties_removed: properties_removed = "none"
+                if not properties_removed:
+                    properties_removed = ["none"]
 
                 properties_added = set.difference (p2, p1)
-                if not properties_added: properties_added = "none"
+                if not properties_added:
+                    properties_added = ["none"]
 
             # FIXME: Revive printing of real location.
             get_manager().errors()(
@@ -230,13 +232,14 @@ class VirtualTargetRegistry:
                 "created from '%s'\n"
                 "another virtual target '%s'\n"
                 "created from '%s'\n"
-                "added properties: '%s'\n"
-                "removed properties: '%s'\n"
+                "added properties:\n%s\n"
+                "removed properties:\n%s\n"
                 % (actual_name,
-                   self.actual_ [actual_name], "loc", #cmt1.location (),
+                   self.actual_ [actual_name], cmt1.project().location(),
                    virtual_target,
-                   "loc", #cmt2.location (),
-                   properties_added, properties_removed))
+                   cmt2.project().location(),
+                   '\n'.join('\t' + p for p in properties_added),
+                   '\n'.join('\t' + p for p in properties_removed)))
 
         else:
             self.actual_ [actual_name] = virtual_target
