@@ -198,6 +198,9 @@ reset ()
 
 def set_abbreviated_paths(on=True):
     global __abbreviated_paths
+    if on == 'off':
+        on = False
+    on = bool(on)
     __abbreviated_paths = on
 
 
