@@ -78,8 +78,10 @@ reset ()
 
 # FIXME: --ignore-toolset-requirements
 def using(toolset_module, *args):
-     loaded_toolset_module= get_manager().projects().load_module(toolset_module, [os.getcwd()]);
-     loaded_toolset_module.init(*args)
+    if isinstance(toolset_module, (list, tuple)):
+        toolset_module = toolset_module[0]
+    loaded_toolset_module= get_manager().projects().load_module(toolset_module, [os.getcwd()]);
+    loaded_toolset_module.init(*args)
 
 # FIXME push-checking-for-flags-module ....
 # FIXME: investigate existing uses of 'hack-hack' parameter

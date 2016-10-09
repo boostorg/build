@@ -147,7 +147,7 @@ rule init ( version ? ) { }
 from b2.build import feature
 feature.extend('toolset', ["%(toolset)s"])
 feature.subfeature('toolset', "%(toolset)s", "version", ['0','1'])
-def init ( version ): pass
+def init (version=''): pass
 """ % {"toolset": toolset})
 
     t.write("jamroot.jam", """\
