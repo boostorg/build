@@ -1447,12 +1447,16 @@ def apply_default_build(property_set_, default_build):
         # be an indication that
         # build_request.expand-no-defaults is the wrong rule
         # to use here.
-        properties = build_request.expand_no_defaults([property_set.create(
-            feature.compress_subproperties(property_set_.all() + defaults_to_apply))])
+        properties = build_request.expand_no_defaults(
+            [property_set.create([p]) for p in
+             feature.compress_subproperties(property_set_.all()) + defaults_to_apply]
+        )
 
         if properties:
             for p in properties:
                 result.append(property_set.create(feature.expand(p.all())))
+        else:
+            result = [property_set.empty()]
 
     else:
         result.append (property_set_)
