@@ -184,16 +184,14 @@ def find_satisfied_condition(conditions, ps):
     'properties', or an empty list if no such element exists."""
     assert is_iterable_typed(conditions, property_set.PropertySet)
     assert isinstance(ps, property_set.PropertySet)
-    features = set(p.feature() for p in ps.all())
 
     for condition in conditions:
 
         found_all = True
         for i in condition.all():
 
-            found = False
-            if i.value():
-                found = i.value() in ps.get(i.feature())
+            if i.value:
+                found = i.value in ps.get(i.feature)
             else:
                 # Handle value-less properties like '<architecture>' (compare with
                 # '<architecture>x86').
@@ -206,7 +204,7 @@ def find_satisfied_condition(conditions, ps):
                 # <a> <b>foo      <a>foo <b>foo    no match
                 # <a>foo <b>foo   <b>foo           no match
                 # <a>foo <b>foo   <a>foo <b>foo    match
-                found = not i.feature() in features
+                found = not ps.get(i.feature)
 
             found_all = found_all and found
 
@@ -339,12 +337,12 @@ def __handle_flag_value (manager, value, ps):
 
         for value in values:
 
-            if f.dependency():
+            if f.dependency:
                 # the value of a dependency feature is a target
                 # and must be actualized
                 result.append(value.actualize())
 
-            elif f.path() or f.free():
+            elif f.path or f.free:
 
                 # Treat features with && in the value
                 # specially -- each &&-separated element is considered

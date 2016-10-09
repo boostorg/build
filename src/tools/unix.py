@@ -135,7 +135,7 @@ def set_library_order (manager, sources, prop_set, result):
     used_libraries = []
     deps = prop_set.dependency ()
 
-    sources.extend(d.value() for d in deps)
+    sources.extend(d.value for d in deps)
     sources = sequence.unique(sources)
 
     for l in sources:

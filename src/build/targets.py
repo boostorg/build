@@ -969,7 +969,7 @@ class BasicTarget (AbstractTarget):
         free_unconditional = []
         other = []
         for p in requirements.all():
-            if p.feature().free() and not p.condition() and p.feature().name() != 'conditional':
+            if p.feature.free and not p.condition and p.feature.name != 'conditional':
                 free_unconditional.append(p)
             else:
                 other.append(p)
@@ -1157,10 +1157,10 @@ class BasicTarget (AbstractTarget):
         usage_requirements = []
         for p in properties:
 
-            result = generate_from_reference(p.value(), self.project_, ps)
+            result = generate_from_reference(p.value, self.project_, ps)
 
             for t in result.targets():
-                result_properties.append(property.Property(p.feature(), t))
+                result_properties.append(property.Property(p.feature, t))
 
             usage_requirements += result.usage_requirements().all()
 
@@ -1327,9 +1327,18 @@ class BasicTarget (AbstractTarget):
         # they are propagated only to direct dependents. We might need
         # a more general mechanism, but for now, only those two
         # features are special.
-        removed_pch = filter(lambda prop: prop.feature().name() not in ['<pch-header>', '<pch-file>'], subvariant.sources_usage_requirements().all())
-        result = result.add(property_set.PropertySet(removed_pch))
+        properties = []
+        for p in subvariant.sources_usage_requirements().all():
+            if p.feature.name not in ('pch-header', 'pch-file'):
+                properties.append(p)
+        if 'shared' in rproperties.get('link'):
+            new_properties = []
+            for p in properties:
+                if p.feature.name != 'library':
+                    new_properties.append(p)
+            properties = new_properties
 
+        result = result.add_raw(properties)
         return result
 
     def create_subvariant (self, root_targets, all_targets,
@@ -1412,11 +1421,9 @@ def apply_default_build(property_set_, default_build):
     assert isinstance(property_set_, property_set.PropertySet)
     assert isinstance(default_build, property_set.PropertySet)
 
-    specified_features = set(p.feature() for p in property_set_.all())
-
     defaults_to_apply = []
     for d in default_build.all():
-        if not d.feature() in specified_features:
+        if not property_set_.get(d.feature):
             defaults_to_apply.append(d)
 
     # 2. If there's any defaults to be applied, form the new

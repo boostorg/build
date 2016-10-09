@@ -228,23 +228,24 @@ class PropertySet:
                 self.link_incompatible.append (p)
 
         for p in properties:
+            f = p.feature
             if isinstance(p, property.LazyProperty):
                 self.lazy_properties.append(p)
             # A feature can be both incidental and free,
             # in which case we add it to incidental.
-            if p.feature().incidental():
+            elif f.incidental:
                 self.incidental_.append(p)
-            elif p.feature().free():
+            elif f.free:
                 self.free_.append(p)
             else:
                 self.base_.append(p)
 
-            if p.condition():
+            if p.condition:
                 self.conditional_.append(p)
             else:
                 self.non_conditional_.append(p)
 
-            if p.feature().dependency():
+            if f.dependency:
                 self.dependency_.append (p)
             elif not isinstance(p, property.LazyProperty):
                 self.non_dependency_.append (p)
@@ -270,7 +271,7 @@ class PropertySet:
         """ Returns properties that are neither incidental nor free.
         """
         result = [p for p in self.lazy_properties
-                  if not(p.feature().incidental() or p.feature().free())]
+                  if not(p.feature.incidental or p.feature.free)]
         result.extend(self.base_)
         return result
 
@@ -278,7 +279,7 @@ class PropertySet:
         """ Returns free properties which are not dependency properties.
         """
         result = [p for p in self.lazy_properties
-                  if not p.feature().incidental() and p.feature().free()]
+                  if not p.feature.incidental and p.feature.free]
         result.extend(self.free_)
         return result
 
@@ -288,14 +289,14 @@ class PropertySet:
     def dependency (self):
         """ Returns dependency properties.
         """
-        result = [p for p in self.lazy_properties if p.feature().dependency()]
+        result = [p for p in self.lazy_properties if p.feature.dependency]
         result.extend(self.dependency_)
         return self.dependency_
 
     def non_dependency (self):
         """ Returns properties that are not dependencies.
         """
-        result = [p for p in self.lazy_properties if not p.feature().dependency()]
+        result = [p for p in self.lazy_properties if not p.feature.dependency]
         result.extend(self.non_dependency_)
         return result
 
@@ -312,7 +313,7 @@ class PropertySet:
     def incidental (self):
         """ Returns incidental properties.
         """
-        result = [p for p in self.lazy_properties if p.feature().incidental()]
+        result = [p for p in self.lazy_properties if p.feature.incidental]
         result.extend(self.incidental_)
         return result
 
@@ -368,13 +369,13 @@ class PropertySet:
 
             def path_order (p1, p2):
 
-                i1 = p1.feature().implicit()
-                i2 = p2.feature().implicit()
+                i1 = p1.feature.implicit
+                i2 = p2.feature.implicit
 
                 if i1 != i2:
                     return i2 - i1
                 else:
-                    return cmp(p1.feature().name(), p2.feature().name())
+                    return cmp(p1.feature.name, p2.feature.name)
 
             # trim redundancy
             properties = feature.minimize(self.base_)
@@ -384,15 +385,16 @@ class PropertySet:
 
             components = []
             for p in properties:
-                if p.feature().implicit():
-                    components.append(p.value())
+                f = p.feature
+                if f.implicit:
+                    components.append(p.value)
                 else:
-                    value = p.feature().name() + "-" + p.value()
+                    value = f.name.replace(':', '-') + "-" + p.value
                     if property.get_abbreviated_paths():
                         value = abbreviate_dashed(value)
                     components.append(value)
 
-            self.as_path_ = '/'.join (components)
+            self.as_path_ = '/'.join(components)
 
         return self.as_path_
 
@@ -467,13 +469,13 @@ class PropertySet:
             feature = b2.build.feature.get(feature)
         assert isinstance(feature, b2.build.feature.Feature)
 
-        if not self.feature_map_:
+        if self.feature_map_ is None:
             self.feature_map_ = {}
 
             for v in self.all_:
-                if v.feature() not in self.feature_map_:
-                    self.feature_map_[v.feature()] = []
-                self.feature_map_[v.feature()].append(v.value())
+                if v.feature not in self.feature_map_:
+                    self.feature_map_[v.feature] = []
+                self.feature_map_[v.feature].append(v.value)
 
         return self.feature_map_.get(feature, [])
 
@@ -486,7 +488,7 @@ class PropertySet:
 
         result = []
         for p in self.all_:
-            if p.feature() == feature:
+            if p.feature == feature:
                 result.append(p)
         return result
 

@@ -1114,7 +1114,7 @@ class Subvariant:
             if not e in result:
                 result.add(e)
                 if isinstance(e, property.Property):
-                    t = e.value()
+                    t = e.value
                 else:
                     t = e
 
