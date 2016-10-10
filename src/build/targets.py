@@ -676,7 +676,7 @@ class MainTarget (AbstractTarget):
     def add_alternative (self, target):
         """ Add a new alternative for this target.
         """
-        assert isinstance(target, AbstractTarget)
+        assert isinstance(target, BasicTarget)
         d = target.default_build ()
 
         if self.alternatives_ and self.default_build_ != d:
@@ -895,9 +895,9 @@ class BasicTarget (AbstractTarget):
     """
     def __init__ (self, name, project, sources, requirements = None, default_build = None, usage_requirements = None):
         assert is_iterable_typed(sources, basestring)
-        assert isinstance(requirements, property_set.PropertySet)
-        assert isinstance(default_build, property_set.PropertySet)
-        assert isinstance(usage_requirements, property_set.PropertySet)
+        assert isinstance(requirements, property_set.PropertySet) or requirements is None
+        assert isinstance(default_build, property_set.PropertySet) or default_build is None
+        assert isinstance(usage_requirements, property_set.PropertySet) or usage_requirements is None
         AbstractTarget.__init__ (self, name, project)
 
         for s in sources:
