@@ -1102,8 +1102,8 @@ class Subvariant:
         or as dependency properties. Targets referred with
         dependency property are returned a properties, not targets."""
         if __debug__:
-            from .targets import GenerateResult
-            assert isinstance(result, GenerateResult)
+            from .property import Property
+            assert is_iterable_typed(result, (VirtualTarget, Property))
         # Find directly referenced targets.
         deps = self.build_properties().dependency()
         all_targets = self.sources_ + deps
