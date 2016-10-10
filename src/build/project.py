@@ -298,16 +298,17 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         # See if the Jamfile is where it should be.
         is_jamroot = False
         jamfile_to_load = b2.util.path.glob([dir], self.JAMROOT)
-        if not jamfile_to_load:
-            jamfile_to_load = self.find_jamfile(dir)
-        else:
+        if jamfile_to_load:
             if len(jamfile_to_load) > 1:
-                get_manager().errors()("Multiple Jamfiles found at '%s'\n" +\
-                                       "Filenames are: %s"
-                                       % (dir, [os.path.basename(j) for j in jamfile_to_load]))
-
+                get_manager().errors()(
+                    "Multiple Jamfiles found at '{}'\n"
+                    "Filenames are: {}"
+                    .format(dir, ' '.join(os.path.basename(j) for j in jamfile_to_load))
+                )
             is_jamroot = True
             jamfile_to_load = jamfile_to_load[0]
+        else:
+            jamfile_to_load = self.find_jamfile(dir)
 
         dir = os.path.dirname(jamfile_to_load)
         if not dir:
@@ -330,7 +331,6 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
                 self.jamfile_modules[jamfile_module] = True
 
                 bjam.call("load", jamfile_module, jamfile_to_load)
-                basename = os.path.basename(jamfile_to_load)
 
                 if is_jamroot:
                     jamfile = self.find_jamfile(dir, no_errors=True)
@@ -369,7 +369,7 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
                             print "warning: specified no project id"
                             print "warning: the --build-dir option will be ignored"
 
-    def end_load(self, previous_project):
+    def end_load(self, previous_project=None):
         if not self.current_project:
             self.manager.errors()(
                 'Ending project loading requested when there was no project currently '
@@ -423,8 +423,6 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         assert isinstance(basename, basestring) or basename is None
         jamroot = False
         parent_module = None
-
-        parent_module = None;
         if module_name == "test-config":
             # No parent
             pass
@@ -558,6 +556,11 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
 
     def current(self):
         """Returns the project which is currently being loaded."""
+        if not self.current_project:
+            get_manager().errors()(
+                'Reference to the project currently being loaded requested '
+                'when there was no project module being loaded.'
+            )
         return self.current_project
 
     def set_current(self, c):
@@ -576,8 +579,10 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
         self.current_project = project
 
     def pop_current(self):
-        self.current_project = self.saved_current_project[-1]
-        del self.saved_current_project[-1]
+        if self.saved_current_project:
+            self.current_project = self.saved_current_project.pop()
+        else:
+            self.current_project = None
 
     def attributes(self, project):
         """Returns the project-attribute instance for the

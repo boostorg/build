@@ -327,6 +327,8 @@ def load_configuration_files():
         initialize_config_module('project-config', os.path.dirname(file[0]))
         load_config('project-config', "project-config.jam", [os.path.dirname(file[0])], True)
 
+    get_manager().projects().end_load()
+
 
 # Autoconfigure toolsets based on any instances of --toolset=xx,yy,...zz or
 # toolset=xx,yy,...zz in the command line. May return additional properties to
