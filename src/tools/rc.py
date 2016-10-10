@@ -97,6 +97,7 @@ def rc_register_action(action_name, function = None):
 
 def rc_compile_resource(targets, sources, properties):
     rc_type = bjam.call('get-target-variable', targets, '.RC_TYPE')
+    rc_type = rc_type[0] if rc_type else ''
     global engine
     engine.set_update_action('rc.compile.resource.' + rc_type, targets, sources, properties)
 
