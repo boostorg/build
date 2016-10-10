@@ -184,7 +184,7 @@ class ProjectRegistry:
 
         if not found:
             print "error: Could not find parent for project at '%s'" % location
-            print "error: Did not find Jamfile or project-root.jam in any parent directory."
+            print "error: Did not find Jamfile.jam or Jamroot.jam in any parent directory."
             sys.exit(1)
 
         return self.load(os.path.dirname(found[0]))
