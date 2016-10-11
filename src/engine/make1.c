@@ -854,7 +854,9 @@ static void make1c_closure
     {
         call_timing_rule( t, time );
         if ( DEBUG_EXECCMD )
-            out_printf( "%f sec system; %f sec user\n", time->system, time->user );
+            out_printf( "%f sec system; %f sec user, %f sec clock\n",
+                time->system, time->user,
+                timestamp_delta_seconds(&time->start, &time->end) );
 
         /* Assume -p0 is in effect, i.e. cmd_stdout contains merged output. */
         call_action_rule( t, status_orig, time, cmd->buf->value, cmd_stdout );
