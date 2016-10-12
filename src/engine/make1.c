@@ -689,7 +689,7 @@ static void call_timing_rule( TARGET * target, timing_info const * const time )
 
     if ( !list_empty( timing_rule ) )
     {
-        /* rule timing-rule ( args * : target : start end user system ) */
+        /* rule timing-rule ( args * : target : start end user system clock ) */
 
         /* Prepare the argument list. */
         FRAME frame[ 1 ];
@@ -703,12 +703,14 @@ static void call_timing_rule( TARGET * target, timing_info const * const time )
         /* target :: the name of the target */
         lol_add( frame->args, list_new( object_copy( target->name ) ) );
 
-        /* start end user system :: info about the action command */
-        lol_add( frame->args, list_push_back( list_push_back( list_push_back( list_new(
+        /* start end user system clock :: info about the action command */
+        lol_add( frame->args, list_push_back( list_push_back( list_push_back( list_push_back( list_new(
             outf_time( &time->start ) ),
             outf_time( &time->end ) ),
             outf_double( time->user ) ),
-            outf_double( time->system ) ) );
+            outf_double( time->system ) ),
+            outf_double( timestamp_delta_seconds(&time->start, &time->end) ) )
+            );
 
         /* Call the rule. */
         evaluate_rule( bindrule( rulename , root_module() ), rulename, frame );
@@ -854,7 +856,7 @@ static void make1c_closure
     {
         call_timing_rule( t, time );
         if ( DEBUG_EXECCMD )
-            out_printf( "%f sec system; %f sec user, %f sec clock\n",
+            out_printf( "%f sec system; %f sec user; %f sec clock\n",
                 time->system, time->user,
                 timestamp_delta_seconds(&time->start, &time->end) );
 
