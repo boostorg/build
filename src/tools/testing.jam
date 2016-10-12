@@ -771,7 +771,7 @@ rule record-time ( target : source : start end user system clock )
 # specified here. For example:
 #
 # make main.cpp : main_cpp.pro : @do-something ;
-# make main.time : main.cpp : @testing.time ;
+# time main.time : main.cpp ;
 # actions do-something
 # {
 #     sleep 2 && echo "$(<)" > "$(<)"
