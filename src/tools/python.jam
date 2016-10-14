@@ -830,6 +830,25 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     }
 
     #
+    # Discover the presence of NumPy
+    #
+    local full-cmd = "import sys; sys.stderr = sys.stdout; import numpy; print(numpy.get_include())" ;
+    local full-cmd = $(interpreter-cmd)" -c \"$(full-cmd)\"" ;
+    local result = [ SHELL $(full-cmd) : strip-eol : exit-status ] ;
+    if $(result[2]) = 0
+    {
+        .numpy = true ;
+        numpy-include = $(result[1]) ;
+    }
+    else
+    {
+        .numpy = false ;
+	debug-message "NumPy not configured. Reason:" ;
+	debug-message "  $(full-cmd) aborted with " ;
+	debug-message "  $(result[1])" ;
+    }
+
+    #
     # End autoconfiguration sequence.
     #
     local target-requirements = $(condition) ;
@@ -1010,6 +1029,11 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
 rule configured ( )
 {
      return $(.configured) ;
+}
+
+rule numpy ( )
+{
+     return $(.numpy) ;
 }
 
 
@@ -1268,5 +1292,20 @@ rule bpl-test ( name : sources * : requirements * )
         : $(requirements) : $(name) ] ;
 }
 
+# The same as bpl-test but additionally require (and link to) boost_numpy.
+# Masked whenever NumPy is not enabled.
+rule numpy-test ( name : sources * : requirements * )
+{
+    # yuk !
+    if $(.numpy) = false
+    {
+      requirements += <build>no ;
+    }
+    sources ?= $(name).py $(name).cpp ;
+    return [ testing.make-test run-pyd
+        : $(sources) /boost/python//boost_numpy /boost/python//boost_python
+        : $(requirements) : $(name) ] ;
+}
 
 IMPORT $(__name__) : bpl-test : : bpl-test ;
+IMPORT $(__name__) : numpy-test : : numpy-test ;
