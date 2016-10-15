@@ -83,7 +83,7 @@ from b2.tools import rc, common
 MANAGER = get_manager()
 ENGINE = MANAGER.engine()
 
-toolset_name = "{}"
+toolset_name = "{0}"
 
 feature.extend('toolset', [toolset_name])
 
