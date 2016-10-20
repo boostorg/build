@@ -838,11 +838,10 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     if $(result[2]) = 0
     {
         .numpy = true ;
-        numpy-include = $(result[1]) ;
+        .numpy-include = $(result[1]) ;
     }
     else
     {
-        .numpy = false ;
 	debug-message "NumPy not configured. Reason:" ;
 	debug-message "  $(full-cmd) aborted with " ;
 	debug-message "  $(result[1])" ;
@@ -1034,6 +1033,11 @@ rule configured ( )
 rule numpy ( )
 {
      return $(.numpy) ;
+}
+
+rule numpy-include ( )
+{
+     return $(.numpy-include) ;
 }
 
 
@@ -1296,6 +1300,7 @@ rule bpl-test ( name : sources * : requirements * )
 # Masked whenever NumPy is not enabled.
 rule numpy-test ( name : sources * : requirements * )
 {
+    numpy-include = [ python.numpy-include ] ;
     # yuk !
     if $(.numpy) = false
     {
@@ -1304,7 +1309,8 @@ rule numpy-test ( name : sources * : requirements * )
     sources ?= $(name).py $(name).cpp ;
     return [ testing.make-test run-pyd
         : $(sources) /boost/python//boost_numpy /boost/python//boost_python
-        : $(requirements) : $(name) ] ;
+        : $(requirements) <include>$(numpy-include)
+	: $(name) ] ;
 }
 
 IMPORT $(__name__) : bpl-test : : bpl-test ;
