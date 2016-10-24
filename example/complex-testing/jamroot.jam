@@ -1,0 +1,10 @@
+# Copyright 2016 Rene Rivera
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+
+using testing ;
+
+exe success : success.cpp ;
+
+run success : arg1 arg2 : : : success-a : ;
+run success : arg3 arg4 : : : success-b : ;
