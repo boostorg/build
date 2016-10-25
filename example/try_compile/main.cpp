@@ -4,5 +4,5 @@ using namespace std;
 
 int main()
 {
-    std::cout << "Feature: " << FEATURE << "\n";
+    std::cout << "Foo: " << FOO << "\n";
 }
