@@ -45,11 +45,14 @@ def create (raw_properties = []):
     else:
         x = [property.create_from_string(ps) for ps in raw_properties]
 
-    # these two lines of code are optimized to the current state
-    # of the Property class. since this function acts as the caching
+    # These two lines of code are optimized to the current state
+    # of the Property class. Since this function acts as the caching
     # frontend to the PropertySet class modifying these two lines
-    # could have a severe performance penalty. be careful
-    x = sorted(set(x), key=lambda p: p.id)
+    # could have a severe performance penalty. Be careful.
+    # It would be faster to sort by p.id, but some projects may rely
+    # on the fact that the properties are ordered alphabetically. So,
+    # we maintain alphabetical sorting so as to maintain backward compatibility.
+    x = sorted(set(x), key=lambda p: (p.feature.name, p.value, p.condition))
     key = tuple(p.id for p in x)
 
     if key not in __cache:
