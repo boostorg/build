@@ -1307,10 +1307,11 @@ rule numpy-test ( name : sources * : requirements * )
       requirements += <build>no ;
     }
     sources ?= $(name).py $(name).cpp ;
+    name = [ regex.replace $(name) "[/]" "~" ] ;
     return [ testing.make-test run-pyd
         : $(sources) /boost/python//boost_numpy /boost/python//boost_python
         : $(requirements) <include>$(numpy-include)
-	: $(name) ] ;
+        : $(name) ] ;
 }
 
 IMPORT $(__name__) : bpl-test : : bpl-test ;
