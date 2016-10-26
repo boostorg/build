@@ -25,5 +25,5 @@ exe main
 #    "b2 -a --reconfigure". You should see a "foo builds: no" message, and running
 #    the produced executable should show that FOO is now set to 0.
 #
-# The output from check checks is not shown on the console, instead it is
+# The output from the check is not shown on the console, instead it is
 # redirected to the bin/config.log file
