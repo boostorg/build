@@ -832,17 +832,20 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     #
     # Discover the presence of NumPy
     #
+    debug-message "Checking for NumPy..." ;
     local full-cmd = "import sys; sys.stderr = sys.stdout; import numpy; print(numpy.get_include())" ;
     local full-cmd = $(interpreter-cmd)" -c \"$(full-cmd)\"" ;
+    debug-message "running command '$(full-cmd)'" ;
     local result = [ SHELL $(full-cmd) : strip-eol : exit-status ] ;
     if $(result[2]) = 0
     {
         .numpy = true ;
         .numpy-include = $(result[1]) ;
+	debug-message "NumPy enabled" ;
     }
     else
     {
-	debug-message "NumPy not configured. Reason:" ;
+	debug-message "NumPy disabled. Reason:" ;
 	debug-message "  $(full-cmd) aborted with " ;
 	debug-message "  $(result[1])" ;
     }
