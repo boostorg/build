@@ -1098,19 +1098,6 @@ rule python-extension ( name : sources * : requirements * : default-build * :
 
 IMPORT python : python-extension : : python-extension ;
 
-rule py2to3
-{
-    common.copy $(<) : $(>) ;
-    2to3 $(<) ;
-}
-
-actions 2to3
-{
-    2to3 -wn --no-diffs "$(<)"
-    2to3 -dwn --no-diffs "$(<)"
-}
-
-
 # Support for testing.
 type.register PY : py ;
 type.register RUN_PYD_OUTPUT ;
@@ -1133,22 +1120,6 @@ class python-test-generator : generator
         local python ;
         local other-pythons ;
 
-        # Make new target that converting Python source by 2to3 when running with Python 3.
-        local rule make-2to3-source ( source )
-        {
-            if $(pyversion) >= 3.0
-            {
-                local a = [ new action $(source) : python.py2to3 : $(property-set) ] ;
-                local t =  [ utility.basename [ $(s).name ] ] ;
-                local p = [ new file-target $(t) : PY : $(project) : $(a) ] ;
-                return $(p) ;
-            }
-            else
-            {
-                return $(source) ;
-            }
-        }
-
         for local s in $(sources)
         {
             if [ $(s).type ] = PY
@@ -1156,13 +1127,13 @@ class python-test-generator : generator
                 if ! $(python)
                 {
                     # First Python source ends up on command line.
-                    python = [ make-2to3-source $(s) ] ;
+                    python = $(s) ;
 
                 }
                 else
                 {
                     # Other Python sources become dependencies.
-                    other-pythons += [ make-2to3-source $(s) ] ;
+                    other-pythons += $(s) ;
                 }
             }
         }
