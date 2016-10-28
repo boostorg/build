@@ -730,10 +730,21 @@ actual value %s""" % (jamfile_module, saved_project, self.current_project))
             module = imp.load_module(mname, f, location, description)
             self.loaded_tool_modules_[name] = module
             return module
-        except ImportError:
+        except ImportError as e:
+            # it's possible that the module being imported exists and
+            # is able to be imported, but contains an ImportError. This
+            # check makes sure that the error message pertains to the
+            # module that *we* are trying to import so that the proper
+            # error message is shown (either saying that this module
+            # doesn't exist or the module that the user is trying to import
+            # doesn't exist). Previously, the error would report that
+            # *this* module doesn't exist even though it did.
+            if "No module named {}".format(name) != e.message:
+                # the module was found, but contains an import error
+                # re-raise the original ImportError
+                raise
             # if the module is not found in the b2 package,
             # this error will be handled later
-            pass
 
         # the cache is created here due to possibly importing packages
         # that end up calling get_manager() which might fail
