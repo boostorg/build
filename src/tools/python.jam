@@ -1276,10 +1276,7 @@ rule numpy-test ( name : sources * : requirements * )
 {
     numpy-include = [ python.numpy-include ] ;
     # yuk !
-    if $(.numpy) = false
-    {
-      requirements += <build>no ;
-    }
+    if ! $(.numpy) { requirements += <build>no ; }
     sources ?= $(name).py $(name).cpp ;
     name = [ regex.replace $(name) "[/]" "~" ] ;
     return [ testing.make-test run-pyd
