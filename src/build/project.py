@@ -759,15 +759,21 @@ Please consult the documentation at 'http://boost.org/boost-build2'."""
             # find_module is used so that the pyc's can be used.
             # an ImportError is raised if not found
             f, location, description = imp.find_module(name, paths)
+        except ImportError:
+            # if the module is not found in the b2 package,
+            # this error will be handled later
+            pass
+        else:
+            # we've found the module, now let's try loading it.
+            # it's possible that the module itself contains an ImportError
+            # which is why we're loading it in this else clause so that the
+            # proper error message is shown to the end user.
+            # TODO: does this module name really need to be mangled like this?
             mname = name + "__for_jamfile"
             self.loaded_tool_module_path_[mname] = location
             module = imp.load_module(mname, f, location, description)
             self.loaded_tool_modules_[name] = module
             return module
-        except ImportError:
-            # if the module is not found in the b2 package,
-            # this error will be handled later
-            pass
 
         # the cache is created here due to possibly importing packages
         # that end up calling get_manager() which might fail
