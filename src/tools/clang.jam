@@ -3,7 +3,7 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 # This is a generic 'clang' toolset. Depending on the current system, it
-# forwards either to 'clang-unix' or 'clang-darwin' modules.
+# forwards either to 'clang-linux' or 'clang-darwin' modules.
 
 import feature ;
 import os ;
