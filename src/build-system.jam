@@ -976,7 +976,10 @@ local rule should-clean-project ( project )
             # log output target. To ensure the output records all built
             # as otherwise if could execute out-of-sequence when
             # doing parallel builds.
-            UPDATE_NOW $(.out-xml) : : ignore-minus-n ;
+            if $(.out-xml)
+            {
+                UPDATE_NOW $(.out-xml) : : ignore-minus-n ;
+            }
             if $(.post-build-hook)
             {
                 $(.post-build-hook) $(ok) ;
