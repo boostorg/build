@@ -32,7 +32,9 @@
 /* */
 
 #ifndef FUNCTION_DEBUG_PROFILE
+#undef PROFILE_ENTER_LOCAL
 #define PROFILE_ENTER_LOCAL(x)
+#undef PROFILE_EXIT_LOCAL
 #define PROFILE_EXIT_LOCAL(x)
 #endif
 
