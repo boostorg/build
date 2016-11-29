@@ -33,7 +33,7 @@
 
 #ifndef FUNCTION_DEBUG_PROFILE
 #undef PROFILE_ENTER_LOCAL
-#define PROFILE_ENTER_LOCAL(x)
+#define PROFILE_ENTER_LOCAL(x) static int unused_LOCAL_##x = 0
 #undef PROFILE_EXIT_LOCAL
 #define PROFILE_EXIT_LOCAL(x)
 #endif
