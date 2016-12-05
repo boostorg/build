@@ -1698,6 +1698,83 @@ using zlib : 1.2.7 : : &lt;toolset&gt;gcc ;
 </programlisting>
         </section>
 
+        <section id="bbv2.reference.tools.libraries.bzip2">
+          <title>bzip2</title>
+          <indexterm><primary>bzip2</primary></indexterm>
+
+          <para>Provides support for the
+          <ulink url="http://www.bzip.org">bzip2</ulink> library.  bzip2
+          can be configured either to use precompiled binaries or to
+          build the library from source.</para>
+
+          <para>bzip2 can be initialized using the following syntax</para>
+          <programlisting>
+using bzip2 : <optional><replaceable>version</replaceable></optional> : <optional><replaceable>options</replaceable></optional> : <optional><replaceable>condition</replaceable></optional> : <optional><replaceable>is-default</replaceable></optional> ;
+          </programlisting>
+          <para>Options for using a prebuilt library:</para>
+          <variablelist>
+            <varlistentry>
+              <term><literal>search</literal></term>
+              <listitem>
+                <para>The directory containing the bzip2 binaries.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>name</literal></term>
+              <listitem>
+                <para>Overrides the default library name.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>include</literal></term>
+              <listitem>
+                <para>The directory containing the bzip2 headers.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+          <para>If none of these options is specified, then the environmental
+          variables BZIP2_LIBRARY_PATH, BZIP2_NAME, and BZIP2_INCLUDE will be
+          used instead.</para>
+          <para>Options for building bzip2 from source:</para>
+          <variablelist>
+            <varlistentry>
+              <term><literal>source</literal></term>
+              <listitem>
+                <para>The bzip2 source directory.  Defaults to the
+                environmental variable BZIP2_SOURCE.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>tag</literal></term>
+              <listitem>
+                <para>Sets the <link linkend="bbv2.builtin.features.tag">tag</link>
+                property to adjust the file name of the library.  Ignored
+                when using precompiled binaries.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>build-name</literal></term>
+              <listitem>
+                <para>The base name to use for the compiled library.
+                Ignored when using precompiled binaries.</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+          <para>Examples:</para>
+          <programlisting>
+# Find bzip in the default system location
+using bzip2 ;
+# Build bzip from source
+using bzip2 : 1.0.6 : &lt;source&gt;/home/sergey/src/bzip2-1.0.6 ;
+# Find bzip in /usr/local
+using bzip2 : 1.0.6 : &lt;include&gt;/usr/local/include &lt;search&gt;/usr/local/lib ;
+# Build bzip from source for msvc and find
+# prebuilt binaries for gcc.
+using bzip2 : 1.0.6 : &lt;source&gt;C:/Devel/src/bzip2-1.0.6 : &lt;toolset&gt;msvc ;
+using bzip2 : 1.0.6 : : &lt;toolset&gt;gcc ;
+</programlisting>
+        </section>
+        
       </section>
 
       <section>
