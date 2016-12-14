@@ -393,9 +393,16 @@ rule variant ( name            # Name of the variant
 IMPORT $(__name__) : variant : : variant ;
 
 
+# In order to be used withing Visusl Studio scripting subsystem and provide
+# compatability with $(Configuration) macro variable add configuration
+# with different capitalization: Debug and Release.
 variant debug   : <optimization>off <debug-symbols>on <inlining>off
                   <runtime-debugging>on ;
+variant Debug   : <optimization>off <debug-symbols>on <inlining>off
+                  <runtime-debugging>on ;
 variant release : <optimization>speed <debug-symbols>off <inlining>full
+                  <runtime-debugging>off <define>NDEBUG ;
+variant Release : <optimization>speed <debug-symbols>off <inlining>full
                   <runtime-debugging>off <define>NDEBUG ;
 variant profile : release : <profiling>on <debug-symbols>on ;
 
