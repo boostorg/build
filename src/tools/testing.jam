@@ -39,6 +39,7 @@ import common ;
 import errors ;
 import feature ;
 import generators ;
+import msvc ;
 import os ;
 import path ;
 import project ;
@@ -317,7 +318,7 @@ generators.register-standard testing.expect-failure : EXE        : LINK_FAIL    
 generators.register-standard testing.expect-success : EXE        : LINK         ;
 
 # Generator which runs an EXE and captures output.
-generators.register-standard testing.capture-output : EXE : RUN_OUTPUT ;
+generators.register-standard testing.capture-output-wrapper : EXE : RUN_OUTPUT ;
 
 # Generator which creates a target if sources run successfully. Differs from RUN
 # in that run output is not captured. The reason why it exists is that the 'run'
@@ -440,6 +441,19 @@ if --remove-test-targets in [ modules.peek : ARGV ]
     .preserve-test-targets = off ;
 }
 
+# Wrapper around the capture-output rule, allowing rules/actions to be specified
+# easily before and/or after test execution.
+#
+rule capture-output-wrapper ( target : source : properties * : targets-to-remove * )
+{
+    # Rules/actions to happen before test execution go here.
+    if [ feature.get-values <windows-api> : $(properties) ] = store
+    {
+        msvc.remove-appcontainer-requirement $(target) : $(source) : $(properties) ;
+    }
+    
+    capture-output $(target) : $(source) : $(properties) : $(targets-to-remove) ;
+}
 
 # Runs executable 'sources' and stores stdout in file 'target'. Unless
 # --preserve-test-targets command line option has been specified, removes the
@@ -490,6 +504,12 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
         for local to-remove in $(targets-to-remove)
         {
             rmtemp-all-sources $(to-remove) ;
+        }
+        
+        # Remove additional copied over dlls if Windows Runtime.
+        if [ feature.get-values <windows-api> : $(properties) ] = store
+        {
+            msvc.remove-winrt-copied-dlls $(target) : $(source) : $(properties) ;
         }
     }
 

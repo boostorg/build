@@ -5,7 +5,7 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 import "class" : is-instance ;
-
+import string ;
 
 # For all elements of 'list' which do not already have 'suffix', add 'suffix'.
 #
@@ -141,6 +141,14 @@ rule unquote ( value ? )
         return $(value) ;
     }
 }
+
+
+# Quotes a given value and returns it. 
+# 
+rule quote ( value ) 
+{ 
+    return [ string.join "\"" $(value) "\"" ] ; 
+} 
 
 
 rule __test__ ( )
