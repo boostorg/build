@@ -106,9 +106,19 @@ if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio 15.0\VC\VCVARSALL.BAT" (
+if EXIST "%ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc15"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 15.0\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
+    goto :eof)
+call :Clear_Error
+if EXIST "%ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"  (
+    set "BOOST_JAM_TOOLSET=vc15"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\"
+    goto :eof)
+call :Clear_Error
+if EXIST "%ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"  (
+    set "BOOST_JAM_TOOLSET=vc15"
+    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\"
     goto :eof)
 call :Clear_Error
 if NOT "_%VS140COMNTOOLS%_" == "__" (
@@ -460,7 +470,7 @@ if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc15_" goto Skip_VC15
 if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     )
-if "_%VCINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%VCVARSALL.BAT" %BOOST_JAM_ARGS%
+if "_%VCINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
 if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if "_%VCINSTALLDIR%_" == "__" (
         set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"

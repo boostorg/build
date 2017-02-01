@@ -772,7 +772,7 @@ def configure_really(version=None, options=[]):
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if re.search("Microsoft Visual Studio 15", command):
+            if re.search("Microsoft Visual Studio[\/\\]2017", command):
                 version = '15.0'
             elif re.search("Microsoft Visual Studio 14", command):
                 version = '14.0'
