@@ -414,7 +414,7 @@ exe hello : hello.cpp /site-config//zlib ;
       external libraries it becomes problematic to remember which libraries are
       header only, and which ones you have to link to. However, with Boost.Build
       a header-only library can be declared as Boost.Build target and all
-      dependents can use such library without having to remeber whether it is a
+      dependents can use such library without having to remember whether it is a
       header-only library or not.
     </para>
 

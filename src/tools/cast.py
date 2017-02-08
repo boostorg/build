@@ -25,7 +25,7 @@
 # > cast, as defining a new target type + generator for that type is somewhat
 # > simpler than defining a main target rule.
 
-from b2.build import targets, virtual_target, property_set
+from b2.build import targets, virtual_target, property_set, type as type_
 
 from b2.manager import get_manager
 from b2.util import bjam_signature, is_iterable_typed
@@ -52,6 +52,7 @@ class CastTargetClass(targets.TypedTarget):
 
         return property_set.empty(), result
 
+
 @bjam_signature((["name", "type"], ["sources", "*"], ["requirements", "*"],
                  ["default_build", "*"], ["usage_requirements", "*"]))
 def cast(name, type, sources, requirements, default_build, usage_requirements):
@@ -61,8 +62,11 @@ def cast(name, type, sources, requirements, default_build, usage_requirements):
 
     project = get_manager().projects().current()
 
+    real_type = type_.type_from_rule_name(type)
+    if not real_type:
+        real_type = type
     return t.main_target_alternative(
-        CastTargetClass(name, project, type,
+        CastTargetClass(name, project, real_type,
                         t.main_target_sources(sources, name),
                         t.main_target_requirements(requirements, project),
                         t.main_target_default_build(default_build, project),

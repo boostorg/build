@@ -830,6 +830,27 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     }
 
     #
+    # Discover the presence of NumPy
+    #
+    debug-message "Checking for NumPy..." ;
+    local full-cmd = "import sys; sys.stderr = sys.stdout; import numpy; print(numpy.get_include())" ;
+    local full-cmd = $(interpreter-cmd)" -c \"$(full-cmd)\"" ;
+    debug-message "running command '$(full-cmd)'" ;
+    local result = [ SHELL $(full-cmd) : strip-eol : exit-status ] ;
+    if $(result[2]) = 0
+    {
+        .numpy = true ;
+        .numpy-include = $(result[1]) ;
+	debug-message "NumPy enabled" ;
+    }
+    else
+    {
+	debug-message "NumPy disabled. Reason:" ;
+	debug-message "  $(full-cmd) aborted with " ;
+	debug-message "  $(result[1])" ;
+    }
+
+    #
     # End autoconfiguration sequence.
     #
     local target-requirements = $(condition) ;
@@ -1012,6 +1033,16 @@ rule configured ( )
      return $(.configured) ;
 }
 
+rule numpy ( )
+{
+     return $(.numpy) ;
+}
+
+rule numpy-include ( )
+{
+     return $(.numpy-include) ;
+}
+
 
 type.register PYTHON_EXTENSION : : SHARED_LIB ;
 
@@ -1067,19 +1098,6 @@ rule python-extension ( name : sources * : requirements * : default-build * :
 
 IMPORT python : python-extension : : python-extension ;
 
-rule py2to3
-{
-    common.copy $(<) : $(>) ;
-    2to3 $(<) ;
-}
-
-actions 2to3
-{
-    2to3 -wn --no-diffs "$(<)"
-    2to3 -dwn --no-diffs "$(<)"
-}
-
-
 # Support for testing.
 type.register PY : py ;
 type.register RUN_PYD_OUTPUT ;
@@ -1102,22 +1120,6 @@ class python-test-generator : generator
         local python ;
         local other-pythons ;
 
-        # Make new target that converting Python source by 2to3 when running with Python 3.
-        local rule make-2to3-source ( source )
-        {
-            if $(pyversion) >= 3.0
-            {
-                local a = [ new action $(source) : python.py2to3 : $(property-set) ] ;
-                local t =  [ utility.basename [ $(s).name ] ] ;
-                local p = [ new file-target $(t) : PY : $(project) : $(a) ] ;
-                return $(p) ;
-            }
-            else
-            {
-                return $(source) ;
-            }
-        }
-
         for local s in $(sources)
         {
             if [ $(s).type ] = PY
@@ -1125,13 +1127,13 @@ class python-test-generator : generator
                 if ! $(python)
                 {
                     # First Python source ends up on command line.
-                    python = [ make-2to3-source $(s) ] ;
+                    python = $(s) ;
 
                 }
                 else
                 {
                     # Other Python sources become dependencies.
-                    other-pythons += [ make-2to3-source $(s) ] ;
+                    other-pythons += $(s) ;
                 }
             }
         }
@@ -1221,7 +1223,7 @@ local rule pyd-pythonpath ( source )
 # The flag settings on testing.capture-output do not apply to python.capture
 # output at the moment. Redo this explicitly.
 toolset.flags python.capture-output ARGS <testing.arg> ;
-
+toolset.flags python.capture-output INPUT_FILES <testing.input-file> ;
 
 rule capture-output ( target : sources * : properties * )
 {
@@ -1268,5 +1270,20 @@ rule bpl-test ( name : sources * : requirements * )
         : $(requirements) : $(name) ] ;
 }
 
+# The same as bpl-test but additionally require (and link to) boost_numpy.
+# Masked whenever NumPy is not enabled.
+rule numpy-test ( name : sources * : requirements * )
+{
+    numpy-include = [ python.numpy-include ] ;
+    # yuk !
+    if ! $(.numpy) { requirements += <build>no ; }
+    sources ?= $(name).py $(name).cpp ;
+    name = [ regex.replace $(name) "[/]" "~" ] ;
+    return [ testing.make-test run-pyd
+        : $(sources) /boost/python//boost_numpy /boost/python//boost_python
+        : $(requirements) <include>$(numpy-include)
+        : $(name) ] ;
+}
 
 IMPORT $(__name__) : bpl-test : : bpl-test ;
+IMPORT $(__name__) : numpy-test : : numpy-test ;
