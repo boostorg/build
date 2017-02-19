@@ -153,7 +153,7 @@ rule compile.c++.pch ( targets * : sources * : properties * ) {
 }
 
 actions compile.c++.pch {
-  rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
+  rm -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
 }
 
 rule compile.c.pch ( targets * : sources * : properties * ) {
@@ -164,7 +164,7 @@ rule compile.c.pch ( targets * : sources * : properties * ) {
 
 actions compile.c.pch
 {
-  rm -f "$(<)" && "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
+  rm -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
 }
 
 ###############################################################################
