@@ -28,7 +28,7 @@ ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
 ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin,
-ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9, vc10, vc11, vc12, vc14, vc15
+ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9, vc10, vc11, vc12, vc14, vc141
 ECHO ###
 call :Set_Error
 endlocal
@@ -102,22 +102,22 @@ if not errorlevel 1 set ProgramFiles=C:\Program Files
 
 call :Clear_Error
 if NOT "_%VS150COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc15"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
 call :Clear_Error
 if EXIST "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc15"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Enterprise\VC\"
     goto :eof)
 call :Clear_Error
 if EXIST "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc15"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Professional\VC\"
     goto :eof)
 call :Clear_Error
 if EXIST "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc15"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\"
     goto :eof)
 call :Clear_Error
@@ -466,12 +466,12 @@ set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
 :Skip_VC14
-if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc15_" goto Skip_VC15
+if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc141_" goto Skip_VC141
 if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     )
 
-REM vc15 vsvarsall requires the architecture as a parameter.
+REM vc141 vsvarsall requires the architecture as a parameter.
 set BOOST_JAM_ARCH=x86
 if NOT "_%PROCESSOR_ARCHITECTURE%_" == "__" set BOOST_JAM_ARCH=%PROCESSOR_ARCHITECTURE%
 if NOT "_%Platform%_" == "__" set BOOST_JAM_ARCH=%Platform%
@@ -487,7 +487,7 @@ set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
-:Skip_VC15
+:Skip_VC141
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto Skip_BORLAND
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     call :Test_Path bcc32.exe )
