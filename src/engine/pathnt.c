@@ -16,8 +16,8 @@
  * pathnt.c - NT specific path manipulation support
  */
 
+#include "jam.h"
 #include "pathsys.h"
-
 #include "hash.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -345,7 +345,8 @@ static int translate_path_cyg2win( string * path )
 
     if ( result )
     {
-        string_copy( path, result );
+        string_truncate( path, 0 );
+        string_append( path, result );
         translated = 1;
     }
 

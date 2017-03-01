@@ -174,15 +174,25 @@ static int translate_path_posix2vms( string * path )
              && stat(as_file->value, &statbuf ) > 0
              && ( statbuf.st_mode & S_IFREG ) )
         {
-            string_copy( path, as_file->value );
+            string_truncate( path, 0 );
+            string_append( path, as_file->value );
         }
         else
         {
-            string_copy( path, as_dir->value );
+            string_truncate( path, 0 );
+            string_append( path, as_dir->value );
         }
     }
-    else if ( file_count ) { string_copy( path, as_file->value ); }
-    else if ( dir_count  ) { string_copy( path, as_dir->value ); }
+    else if ( file_count )
+    {
+        string_truncate( path, 0 );
+        string_append( path, as_file->value );
+    }
+    else if ( dir_count  )
+    {
+        string_truncate( path, 0 );
+        string_append( path, as_dir->value );
+    }
     else
     {
         /* error: unable to translate path to native format */

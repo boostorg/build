@@ -304,7 +304,7 @@ toolset qcc qcc : "-o " : -D
 ## Qlogic Pathscale 2.4
 toolset pathscale pathcc : "-o " : -D
     :
-    [ opt --release : -s -Ofast -O3 ]
+    [ opt --release : -s -O3 ]
     [ opt --debug : -g ]
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
@@ -394,7 +394,15 @@ toolset vc12 cl : /Fe /Fe /Fd /Fo : -D
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
     -I$(--python-include) -I$(--extra-include)
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
+## Microsoft Visual C++ 2015
 toolset vc14 cl : /Fe /Fe /Fd /Fo : -D
+    : /nologo
+    [ opt --release : /GL /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
+    [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]
+    -I$(--python-include) -I$(--extra-include)
+    : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
+## Microsoft Visual C++ 2017
+toolset vc15 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
     [ opt --release : /GL /MT /O2 /Ob2 /Gy /GF /GA /wd4996 ]
     [ opt --debug : /MTd /DEBUG /Z7 /Od /Ob0 /wd4996 ]

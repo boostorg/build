@@ -227,10 +227,7 @@ int try_file_query_root( file_info_t * const info )
     }
     else if ( pathstr[ 1 ] == ':' )
     {
-        if ( !pathstr[ 2 ] )
-        {
-        }
-        else if ( !pathstr[ 2 ] || ( pathstr[ 2 ] == '\\' && !pathstr[ 3 ] ) )
+        if ( !pathstr[ 2 ] || ( pathstr[ 2 ] == '\\' && !pathstr[ 3 ] ) )
         {
             buf[ 0 ] = pathstr[ 0 ];
             buf[ 1 ] = ':';

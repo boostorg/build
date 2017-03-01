@@ -971,7 +971,15 @@ local rule should-clean-project ( project )
         DEPENDS all : $(actual-targets) ;
         if UPDATE_NOW in [ RULENAMES ]
         {
-            local ok = [ UPDATE_NOW all $(.out-xml) ] ;
+            local ok = [ UPDATE_NOW all ] ;
+            # Force sequence updating of regular targets, then the xml
+            # log output target. To ensure the output records all built
+            # as otherwise if could execute out-of-sequence when
+            # doing parallel builds.
+            if $(.out-xml)
+            {
+                UPDATE_NOW $(.out-xml) : : ignore-minus-n ;
+            }
             if $(.post-build-hook)
             {
                 $(.post-build-hook) $(ok) ;

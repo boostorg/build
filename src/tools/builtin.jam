@@ -40,7 +40,7 @@ import convert ;
 import generate ;
 
 
-.os-names = aix android bsd cygwin darwin freebsd haiku hpux iphone linux netbsd
+.os-names = aix android appletv bsd cygwin darwin freebsd haiku hpux iphone linux netbsd
     openbsd osf qnx qnxnto sgi solaris unix unixware windows vms
     elf  # Not actually an OS -- used for targeting bare metal where object
          # format is ELF.  This catches both -elf and -eabi gcc targets and well

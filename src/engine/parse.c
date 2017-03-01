@@ -55,6 +55,8 @@ static void parse_impl( FRAME * frame )
         list_free( function_run( func, frame, stack_global() ) );
         function_free( func );
     }
+
+    yyfdone();
 }
 
 

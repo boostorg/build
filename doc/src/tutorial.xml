@@ -179,7 +179,7 @@ exe hello
              See <xref linkend="bbv2.reference.features.attributes"/>
           </para>
         </footnote>
-        augments) the build request.
+        augment) the build request.
       </para>
 
       <tip>
@@ -384,7 +384,7 @@ project
 lib foo : foo.cpp ;</programlisting>
 
       Usage requirements are applied not to the target being declared but to its
-      dependants. In this case, <literal>&lt;include&gt;.</literal> will be
+      dependents. In this case, <literal>&lt;include&gt;.</literal> will be
       applied to all targets that directly depend on <filename>foo</filename>.
     </para>
 
@@ -417,7 +417,7 @@ exe app : app.cpp /library-example/foo//bar ;</programlisting>
 
     <tip>
       <para>If you want all applications in some project to link to a certain
-        library, you can avoid having to specify it directly the sources of
+        library, you can avoid having to specify directly the sources of
         every target by using the <varname>&lt;library&gt;</varname> property.
         For example, if <filename>/boost/filesystem//fs</filename> should be
         linked to all applications in your project, you can add
@@ -433,7 +433,7 @@ project
   </section>
 
   <section id="bbv2.tutorial.linkage">
-    <title>Static and shared libaries</title>
+    <title>Static and shared libraries</title>
 
     <para>
       Libraries can be either <emphasis>static</emphasis>, which means they are
@@ -621,8 +621,8 @@ lib lib2
 exe app : app.cpp ../util/lib2//lib2 ;</programlisting>
 
       As with any target, the alternative selected depends on the properties
-      propagated from <filename>lib2</filename>'s dependants. If we build the
-      release and debug versions of <filename>app</filename> will be linked
+      propagated from <filename>lib2</filename>'s dependents. If we build the
+      release and debug versions of <filename>app</filename> it will be linked
       with <filename>lib2_release.a</filename> and <filename>lib2_debug.a
       </filename>, respectively.
     </para>

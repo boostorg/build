@@ -339,6 +339,10 @@ rule get-absolute-tool-path ( command )
 #
 rule find-tool ( name : additional-paths * : path-last ? )
 {
+    if $(name:D)
+    {
+        return [ check-tool-aux $(name) ] ;
+    }
     local path = [ path.programs-path ] ;
     local match = [ path.glob $(path) : $(name) $(name).exe ] ;
     local additional-match = [ path.glob $(additional-paths) : $(name)

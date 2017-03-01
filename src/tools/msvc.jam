@@ -793,7 +793,7 @@ actions write-setup-script
 # Local helper rule to create the vcvars setup command for given architecture
 # and options.
 #
-local rule generate-setup-cmd ( version : command : parent : options * : cpu : global-setup : default-global-setup-options : default-setup )
+local rule generate-setup-cmd ( version : command : parent : options * : cpu : global-setup ? : default-global-setup-options : default-setup )
 {
     local setup-prefix = "call " ;
     local setup-suffix = " >nul"$(.nl) ;
@@ -907,7 +907,11 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(Microsoft Visual Studio 14)" : $(command) ]
+            if [ MATCH "(Microsoft Visual Studio 15)" : $(command) ]
+            {
+                version = 15.0 ;
+            }
+            else if [ MATCH "(Microsoft Visual Studio 14)" : $(command) ]
             {
                 version = 14.0 ;
             }
@@ -960,7 +964,7 @@ local rule configure-really ( version ? : options * )
         {
             cpu = i386 ;
         }
-        if $(below-11.0)
+        else if $(below-11.0)
         {
             cpu = i386 amd64 ia64 ;
         }
@@ -1591,7 +1595,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      armv7 armv7s ;
 
 # Known toolset versions, in order of preference.
-.known-versions = 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+.known-versions = 15.0 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
     7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
@@ -1604,6 +1608,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-11 = 11.0 ;
 .version-alias-12 = 12.0 ;
 .version-alias-14 = 14.0 ;
+.version-alias-15 = 15.0 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -1619,6 +1624,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-11.0-reg = "VisualStudio\\11.0\\Setup\\VC" ;
 .version-12.0-reg = "VisualStudio\\12.0\\Setup\\VC" ;
 .version-14.0-reg = "VisualStudio\\14.0\\Setup\\VC" ;
+.version-15.0-reg = "VisualStudio\\15.0\\Setup\\VC" ;
 
 # Visual C++ Toolkit 2003 does not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation

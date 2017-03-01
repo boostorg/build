@@ -28,11 +28,9 @@
 #  but different instances, and lead in unneeded duplication of
 #  actual targets. However, actions can also create scanners in a special
 #  way, instead of relying on just target type.
-
 import property
 import bjam
 import os
-from b2.exceptions import *
 from b2.manager import get_manager
 from b2.util import is_iterable_typed
 
@@ -65,7 +63,7 @@ def register(scanner_class, relevant_properties):
 def registered(scanner_class):
     """ Returns true iff a scanner of that class is registered
     """
-    return __scanners.has_key(str(scanner_class))
+    return str(scanner_class) in __scanners
 
 def get(scanner_class, properties):
     """ Returns an instance of previously registered scanner
@@ -83,7 +81,7 @@ def get(scanner_class, properties):
 
     scanner_id = scanner_name + '.' + '-'.join(r)
 
-    if not __scanner_cache.has_key(scanner_id):
+    if scanner_id not in __scanner_cache:
         __scanner_cache[scanner_id] = scanner_class(r)
 
     return __scanner_cache[scanner_id]
@@ -99,7 +97,7 @@ class Scanner:
         """
         raise BaseException ("method must be overriden")
 
-    def process (self, target, matches):
+    def process (self, target, matches, binding):
         """ Establish necessary relationship between targets,
             given actual target beeing scanned, and a list of
             pattern matches in that file.
@@ -141,7 +139,7 @@ class ScannerRegistry:
         assert isinstance(vtarget, basestring)
         engine = self.manager_.engine()
         engine.set_target_variable(target, "HDRSCAN", scanner.pattern())
-        if not self.exported_scanners_.has_key(scanner):
+        if scanner not in self.exported_scanners_:
             exported_name = "scanner_" + str(self.count_)
             self.count_ = self.count_ + 1
             self.exported_scanners_[scanner] = exported_name

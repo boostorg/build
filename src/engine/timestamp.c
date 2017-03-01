@@ -261,3 +261,11 @@ void timestamp_done()
         hashdone( bindhash );
     }
 }
+
+/*
+ * timestamp_delta_seconds() - seconds from time a to b.
+ */
+double timestamp_delta_seconds( timestamp const * const a , timestamp const * const b )
+{
+	return ((b->secs*1000000.0+b->nsecs)-(a->secs*1000000.0+a->nsecs))/1000000.0;
+}

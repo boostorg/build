@@ -51,6 +51,7 @@ void yymode( int n );
 void yyerror( char const * s );
 int yyanyerrors();
 void yyfparse( OBJECT * s );
+void yyfdone( void );
 void yysparse( OBJECT * name, const char * * lines );
 int yyline();
 int yylex();
