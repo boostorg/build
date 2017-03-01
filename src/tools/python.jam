@@ -34,6 +34,7 @@ import path ;
 import feature ;
 import set ;
 import builtin ;
+import property-set ;
 
 
 # Make this module a project.
@@ -59,6 +60,10 @@ lib rt ;
 # access Python modules that are part of the product being built, but are not
 # installed in the development system's default paths.
 feature.feature pythonpath : : free optional path ;
+
+# The best configured version of Python 2 and 3.
+py2-version = ;
+py3-version = ;
 
 # Initializes the Python toolset. Note that all parameters are optional.
 #
@@ -861,6 +866,11 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         if ! $(version) in [ feature.values python ]
         {
             feature.extend python : $(version) ;
+            py$(major-minor[1])-version ?= $(version) ;
+            if $(py$(major-minor[1])-version) < $(version)
+            {
+                py$(major-minor[1])-version = $(version) ;
+            }
         }
         target-requirements += <python>$(version:E=default) ;
     }
@@ -916,23 +926,13 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         }
     }
 
+    # In case we added duplicate requirements from what the user specified.
+    target-requirements = [ sequence.unique $(target-requirements) ] ;
+
     # Global, but conditional, requirements to give access to the interpreter
     # for general utilities, like other toolsets, that run Python scripts.
     toolset.add-requirements
         $(target-requirements:J=,):<python.interpreter>$(interpreter-cmd) ;
-
-    # We also set a default requirement that assigns the first python configured
-    # for a particular target OS as the default. This makes it so that we can
-    # select a python interpreter with only knowledge of the target OS. And hence
-    # can configure different Pythons based on the target OS only.
-    local toolset-requirements = [ toolset.requirements ] ;
-    local toolset-target-os-requirements
-        = [ property.evaluate-conditionals-in-context
-            [ $(toolset-requirements).raw ] : <target-os>$(target-os) ] ;
-    if ! <python> in $(toolset-target-os-requirements:G)
-    {
-        toolset.add-requirements <target-os>$(target-os):<python>$(version:E=default) ;
-    }
 
     # Register the right suffix for extensions.
     register-extension-suffix $(extension-suffix) : $(target-requirements) ;
@@ -1024,6 +1024,22 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
             :
             : $(usage-requirements)
             ;
+    }
+    
+}
+
+# Conditional rule specification that will prevent building of a target
+# if there is no matching python configuration available with the given
+# required properties.
+rule require-py ( properties * )
+{
+    local py-ext-target = [ $(.project).find python_for_extensions ] ;
+    local property-set = [ property-set.create $(properties) ] ;
+    property-set = [ $(property-set).expand ] ;
+    local py-ext-alternative = [ $(py-ext-target).select-alternatives $(property-set) ] ;
+    if ! $(py-ext-alternative)
+    {
+        return <build>no ;
     }
 }
 
@@ -1285,5 +1301,11 @@ rule numpy-test ( name : sources * : requirements * )
         : $(name) ] ;
 }
 
+rule py-version ( n )
+{
+    return $(py$(n)-version) ;
+}
+
 IMPORT $(__name__) : bpl-test : : bpl-test ;
 IMPORT $(__name__) : numpy-test : : numpy-test ;
+IMPORT $(__name__) : py-version : : py-version ;
