@@ -654,13 +654,13 @@ class main-target : abstract-target
     # Returns the best viable alternative for this property-set. See the
     # documentation for selection rules.
     #
-    local rule select-alternatives ( property-set debug ? )
+    rule select-alternatives ( property-set debug ? )
     {
         # When selecting alternatives we have to consider defaults, for example:
         #    lib l : l.cpp : <variant>debug ;
         #    lib l : l_opt.cpp : <variant>release ;
         # will not work unless we add default value <variant>debug.
-        property-set = [ $(p).add-defaults ] ;
+        property-set = [ $(property-set).add-defaults ] ;
 
         # The algorithm: we keep the current best viable alternative. When we
         # encounter a new best viable alternative, we compare it with the
