@@ -12,6 +12,7 @@
 #include "cwd.h"
 #include "function.h"
 #include <assert.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -663,23 +664,6 @@ static void debug_child_delete( int argc, const char * * argv )
     }
 }
 
-
-static void debug_child_backtrace( int argc, const char * * argv )
-{
-    FRAME * frame;
-    FRAME base;
-    int i;
-    base = *debug_frame;
-    base.file = debug_file;
-    base.line = debug_line;
-    for ( i = 0, frame = &base; frame; frame = frame->prev, ++i )
-    {
-        printf( "#%d  in ", i );
-        debug_print_frame( frame );
-        printf( "\n" );
-    }
-}
-
 static void debug_child_print( int argc, const char * * argv )
 {
     FRAME * saved_frame;
@@ -716,20 +700,13 @@ static void debug_child_print( int argc, const char * * argv )
 
 static void debug_child_frame( int argc, const char * * argv )
 {
-    if ( argc == 1 )
+    if ( argc == 2 )
     {
-        int i;
-        FRAME base = *debug_frame;
-        FRAME * frame = &base;
-        base.file = debug_file;
-        base.line = debug_line;
-        for ( i = 0; i < debug_selected_frame_number; ++i ) frame = frame->prev;
-        debug_mi_print_frame( frame );
-        fflush( stdout );
+        debug_selected_frame_number = atoi( argv[ 1 ] );
     }
     else
     {
-        debug_selected_frame_number = atoi( argv[ 1 ] );
+        assert( !"Wrong number of arguments to frame." );
     }
 }
 
@@ -760,17 +737,6 @@ static void debug_child_info( int argc, const char * * argv )
         for ( i = 0; i < frame_number; ++i ) frame = frame->prev;
 
         debug_frame_write( command_output, frame );
-#if 0
-
-        fullname = make_absolute_path( frame->file );
-
-        printf( "frame={level=\"%d\",func=\"%s\",file=\"%s\",fullname=\"%s\",line=\"%d\"}",
-            frame_number, base.rulename, object_str( frame->file ), object_str( fullname ), frame->line );
-        fflush( stdout );
-
-        object_free( fullname );
-
-#endif
     }
     else if ( strcmp( argv[ 1 ], "depth" ) == 0 )
     {
@@ -785,10 +751,6 @@ static void debug_child_info( int argc, const char * * argv )
         fputc( '\0', command_output );
         fflush( command_output );
     }
-}
-
-static void debug_child_mi_list_frames( int argc, const char * * argv )
-{
 }
 
 /* Commands for the parent. */
@@ -830,7 +792,6 @@ static struct command_elem child_commands[] =
     { "enable", &debug_child_enable },
     { "delete", &debug_child_delete },
     { "print", &debug_child_print },
-    { "backtrace", &debug_child_backtrace },
     { "frame", &debug_child_frame },
     { "info", &debug_child_info },
     { NULL, NULL }
@@ -842,16 +803,54 @@ static void debug_mi_error( const char * message )
     printf( "^error,msg=\"%s\"\n(gdb) \n", message );
 }
 
-static void debug_error( const char * message )
+static void debug_error_( const char * message )
 {
     if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
-        printf( "%s", message );
+        printf( "%s\n", message );
     }
     else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_error( message );
     }
+}
+
+static const char * debug_format_message( const char * format, va_list vargs )
+{
+    char * buf;
+    int result;
+    int sz = 80;
+    for(;;)
+    {
+        va_list args;
+        buf = malloc( sz );
+        if ( !buf )
+            return 0;
+        va_copy( args, vargs );
+        result = vsnprintf( buf, sz, format, args );
+        va_end( args );
+        if ( result < 0 )
+            return 0;
+        if ( result < sz ) return buf;
+        free( buf );
+        sz = result + 1;
+    }
+}
+
+static void debug_error( const char * format, ... )
+{
+    va_list args;
+    const char * msg;
+    va_start( args, format );
+    msg = debug_format_message( format, args );
+    va_end( args );
+    if ( !msg )
+    {
+        debug_error_( "Failed formatting error message." );
+        return;
+    }
+    debug_error_( msg );
+    free( ( void * )msg );
 }
 
 static void debug_parent_child_exited( int pid, int exit_code )
@@ -916,7 +915,7 @@ static void debug_parent_on_breakpoint( void )
         printf( "*stopped,reason=\"breakpoint-hit\",bkptno=\"%d\",disp=\"keep\",", id );
         debug_mi_print_frame_info( &base );
         printf( ",thread-id=\"1\",stopped-threads=\"all\"" );
-        printf( "\n" );
+        printf( "\n(gdb) \n" );
     }
     else
     {
@@ -940,7 +939,7 @@ static void debug_parent_on_end_stepping( void )
         printf( "*stopped,reason=\"end-stepping-range\"," );
         debug_mi_print_frame_info( &base );
         printf( ",thread-id=\"1\"" );
-        printf( "\n" );
+        printf( "\n(gdb) \n" );
     }
     fflush( stdout );
 }
@@ -1086,6 +1085,7 @@ static void debug_start_child( int argc, const char * * argv )
     PROCESS_INFORMATION pi = { NULL, NULL, 0, 0 };
     STARTUPINFO si = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0 };
+    assert( DEBUG_STATE == DEBUG_NO_CHILD );
     if ( ! CreatePipe( &pipe1[ 0 ], &pipe1[ 1 ], &sa, 0 ) )
     {
         printf("internal error\n");
@@ -1169,6 +1169,7 @@ static void debug_start_child( int argc, const char * * argv )
     int read_fd;
     int pid;
     int i;
+    assert( DEBUG_STATE == DEBUG_NO_CHILD );
     pipe(pipe1);
     pipe(pipe2);
     pid = fork();
@@ -1213,6 +1214,12 @@ static void debug_start_child( int argc, const char * * argv )
 
 static void debug_parent_run( int argc, const char * * argv )
 {
+    if ( debug_state == DEBUG_RUN )
+    {
+        fprintf( command_output, "kill\n" );
+        fflush( command_output );
+        debug_parent_wait( 1 );
+    }
     debug_parent_run_print( argc, argv );
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
@@ -1256,6 +1263,11 @@ static void debug_parent_forward( int argc, const char * * argv, int print_messa
 
 static void debug_parent_continue( int argc, const char * * argv )
 {
+    if ( argc > 1 )
+    {
+        debug_error( "Too many arguments to continue." );
+        return;
+    }
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
@@ -1267,6 +1279,11 @@ static void debug_parent_continue( int argc, const char * * argv )
 
 static void debug_parent_kill( int argc, const char * * argv )
 {
+    if ( argc > 1 )
+    {
+        debug_error( "Too many arguments to kill." );
+        return;
+    }
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
@@ -1278,6 +1295,11 @@ static void debug_parent_kill( int argc, const char * * argv )
 
 static void debug_parent_step( int argc, const char * * argv )
 {
+    if ( argc > 1 )
+    {
+        debug_error( "Too many arguments to step." );
+        return;
+    }
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
@@ -1289,6 +1311,11 @@ static void debug_parent_step( int argc, const char * * argv )
 
 static void debug_parent_next( int argc, const char * * argv )
 {
+    if ( argc > 1 )
+    {
+        debug_error( "Too many arguments to next." );
+        return;
+    }
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
@@ -1300,6 +1327,11 @@ static void debug_parent_next( int argc, const char * * argv )
 
 static void debug_parent_finish( int argc, const char * * argv )
 {
+    if ( argc > 1 )
+    {
+        debug_error( "Too many arguments to finish." );
+        return;
+    }
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
@@ -1319,6 +1351,8 @@ static void debug_parent_break( int argc, const char * * argv )
     }
     else if ( argc > 2 )
     {
+        debug_error( "Too many arguments to break." );
+        return;
     }
     id = debug_add_breakpoint( argv[ 1 ] );
     debug_parent_forward_nowait( argc, argv, 1, 0 );
@@ -1337,8 +1371,42 @@ static void debug_parent_break( int argc, const char * * argv )
     }
 }
 
+int check_breakpoint_fn_args( int argc, const char * * argv )
+{
+    if ( argc < 2 )
+    {
+        debug_error( "Missing argument to %s.", argv[ 0 ] );
+        return 0;
+    }
+    else if ( argc > 2 )
+    {
+        debug_error( "Too many arguments to %s.", argv[ 0 ] );
+        return 0;
+    }
+    else
+    {
+        char * end;
+        long x = strtol( argv[ 1 ], &end, 10 );
+        if ( *end )
+        {
+            debug_error( "Invalid breakpoint number %s.", argv[ 1 ] );
+            return 0;
+        }
+        if ( x < 1 || x > num_breakpoints || breakpoints[ x - 1 ].status == BREAKPOINT_DELETED )
+        {
+            debug_error( "Unknown breakpoint %s.", argv[ 1 ] );
+            return 0;
+        }
+    }
+    return 1;
+}
+
 static void debug_parent_disable( int argc, const char * * argv )
 {
+    if ( ! check_breakpoint_fn_args( argc, argv ) )
+    {
+        return;
+    }
     debug_child_disable( argc, argv );
     debug_parent_forward_nowait( 2, argv, 1, 0 );
     if ( debug_interface == DEBUG_INTERFACE_MI )
@@ -1350,6 +1418,10 @@ static void debug_parent_disable( int argc, const char * * argv )
 
 static void debug_parent_enable( int argc, const char * * argv )
 {
+    if ( ! check_breakpoint_fn_args( argc, argv ) )
+    {
+        return;
+    }
     debug_child_enable( argc, argv );
     debug_parent_forward_nowait( 2, argv, 1, 0 );
     if ( debug_interface == DEBUG_INTERFACE_MI )
@@ -1361,6 +1433,10 @@ static void debug_parent_enable( int argc, const char * * argv )
 
 static void debug_parent_delete( int argc, const char * * argv )
 {
+    if ( ! check_breakpoint_fn_args( argc, argv ) )
+    {
+        return;
+    }
     debug_child_delete( argc, argv );
     debug_parent_forward_nowait( 2, argv, 1, 0 );
     if ( debug_interface == DEBUG_INTERFACE_MI )
@@ -1383,7 +1459,7 @@ static void debug_parent_clear( int argc, const char * * argv )
     id = get_breakpoint_by_name( argv[ 1 ] );
     if ( id == -1 )
     {
-        debug_error( "Unknown breakpoint" );
+        debug_error( "No breakpoint at %s.", argv[ 1 ] );
         return;
     }
 
@@ -1432,7 +1508,7 @@ static void debug_parent_backtrace( int argc, const char * * argv )
     
     if ( debug_state == DEBUG_NO_CHILD )
     {
-        debug_error( "No child" );
+        debug_error( "The program is not being run." );
         return;
     }
 
@@ -1469,6 +1545,74 @@ static void debug_parent_quit( int argc, const char * * argv )
     exit( 0 );
 }
 
+static const char * const help_text[][2] =
+{
+    {
+        "run", 
+        "run <args>\n"
+        "Creates a new b2 child process passing <args> on the command line."
+        "  Terminates\nthe current child (if any).\n"
+    },
+    {
+        "continue",
+        "continue\nContinue debugging\n"
+    },
+    {
+        "step",
+        "step\nContinue to the next statement\n"
+    },
+    {
+        "next",
+        "next\nContinue to the next line in the current frame\n"
+    },
+    {
+        "finish",
+        "finish\nContinue to the end of the current frame\n"
+    },
+    {
+        "break",
+        "break <location>\n"
+        "Sets a breakpoint at <location>.  <location> can be either a the name of a\nfunction or <filename>:<lineno>\n"
+    },
+    {
+        "disable",
+        "disable <breakpoint>\nDisable a breakpoint\n"
+    },
+    {
+        "enable",
+        "enable <breakpoint>\nEnable a breakpoint\n"
+    },
+    {
+        "delete",
+        "delete <breakpoint>\nDelete a breakpoint\n"
+    },
+    {
+        "clear",
+        "clear <location>\nDelete the breakpoint at <location>\n"
+    },
+    {
+        "print",
+        "print <expression>\nDisplay the value of <expression>\n"
+    },
+    {
+        "backtrace",
+        "backtrace\nDisplay the call stack\n"
+    },
+    {
+        "kill",
+        "kill\nTerminate the child\n"
+    },
+    {
+        "quit",
+        "quit\nExit the debugger\n"
+    },
+    {
+        "help",
+        "help\nhelp <command>\nShow help for debugger commands.\n"
+    },
+    { 0, 0 }
+};
+
 static void debug_parent_help( int argc, const char * * argv )
 {
     if ( argc == 1 )
@@ -1484,11 +1628,27 @@ static void debug_parent_help( int argc, const char * * argv )
             "enable    - Enable a breakpoint\n"
             "delete    - Delete a breakpoint\n"
             "clear     - Delete a breakpoint by location\n"
+            );
+        printf(
             "print     - Display an expression\n"
             "backtrace - Display the call stack\n"
             "kill      - Terminate the child\n"
             "quit      - Exit the debugger\n"
+            "help      - Debugger help\n"
             );
+    }
+    else if ( argc == 2 )
+    {
+        int i;
+        for ( i = 0; help_text[ i ][ 0 ]; ++i )
+        {
+            if ( strcmp( argv[ 1 ], help_text[ i ][ 0 ] ) == 0 )
+            {
+                printf( "%s", help_text[ i ][ 1 ] );
+                return;
+            }
+        }
+        printf( "No command named %s\n", argv[ 1 ] );
     }
 }
 
@@ -1963,11 +2123,15 @@ static void debug_mi_thread_info( int argc, const char * * argv )
     }
     else
     {
-        const char * new_args[] = { "frame" };
+        const char * new_args[] = { "info", "frame" };
+        FRAME_INFO info;
+        debug_parent_forward_nowait( 2, new_args, 0, 0 );
+        debug_frame_read( command_child, &info );
+
         debug_mi_format_token();
         printf( "^done,threads=[{id=\"1\"," );
-        fflush( stdout );
-        debug_parent_forward( 1, new_args, 0, 0 );
+        debug_mi_print_frame_info( &info );
+        debug_frame_info_free( &info );
         printf( "}],current-thread-id=\"1\"\n(gdb) \n" );
     }
 }
@@ -1982,11 +2146,15 @@ static void debug_mi_thread_select( int argc, const char * * argv )
     }
     else
     {
-        const char * new_args[] = { "frame" };
+        const char * new_args[] = { "info", "frame" };
+        FRAME_INFO info;
+        debug_parent_forward_nowait( 2, new_args, 0, 0 );
+        debug_frame_read( command_child, &info );
+
         debug_mi_format_token();
         printf( "^done,new-thread-id=\"1\"," );
-        fflush( stdout );
-        debug_parent_forward( 1, new_args, 0, 0 );
+        debug_mi_print_frame_info( &info );
+        debug_frame_info_free( &info );
         printf( "\n(gdb) \n" );
     }
 }
@@ -2018,11 +2186,14 @@ static void debug_mi_stack_info_frame( int argc, const char * * argv )
     }
     else
     {
-        const char * new_args[] = { "frame" };
+        FRAME_INFO info;
+        fprintf( command_output, "info frame\n" );
+        fflush( command_output );
+        debug_frame_read( command_child, &info );
         debug_mi_format_token();
         printf( "^done," );
-        fflush( stdout );
-        debug_parent_forward( 1, new_args, 0, 0 );
+        debug_mi_print_frame_info( &info );
+        debug_frame_info_free( &info );
         printf( "\n(gdb) \n" );
     }
 }

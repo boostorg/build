@@ -225,7 +225,7 @@ static void usage( const char * progname )
 	err_printf("\nusage: %s [ options ] targets...\n\n", progname);
 
 	err_printf("-a      Build all targets, even if they are current.\n");
-	err_printf("-dx     Set the debug level to x (0-9).\n");
+	err_printf("-dx     Set the debug level to x (0-13,console,mi).\n");
 	err_printf("-fx     Read x instead of Jambase.\n");
 	/* err_printf( "-g      Build from newest sources first.\n" ); */
 	err_printf("-jx     Run up to x shell commands concurrently.\n");

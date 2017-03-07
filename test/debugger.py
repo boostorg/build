@@ -397,6 +397,105 @@ z
 
     t.cleanup()
 
+def test_run_running():
+    t = make_tester()
+    t.write("test.jam", """\
+        UPDATE ;
+    """)
+
+    run(t, """\
+(b2db) break test.jam:1
+Breakpoint 1 set at test.jam:1
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:1
+1	        UPDATE ;
+(b2db) run -ftest.jam
+Child {{\d+}} exited with status 0
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:1
+1	        UPDATE ;
+(b2db) quit
+""")
+
+    t.cleanup()
+
+def test_error_not_running():
+    t = make_tester()
+    run(t, """\
+(b2db) continue
+The program is not being run.
+(b2db) step
+The program is not being run.
+(b2db) next
+The program is not being run.
+(b2db) finish
+The program is not being run.
+(b2db) kill
+The program is not being run.
+(b2db) backtrace
+The program is not being run.
+(b2db) print 1
+The program is not being run.
+(b2db) quit
+""")
+
+    t.cleanup()
+    
+def test_bad_arguments():
+    t = make_tester()
+    t.write("test.jam", """\
+        UPDATE ;
+    """)
+
+    run(t, """\
+(b2db) break test.jam:1
+Breakpoint 1 set at test.jam:1
+(b2db) run -ftest.jam
+Starting program: {{.*}}bjam -ftest.jam
+Breakpoint 1, module scope at test.jam:1
+1	        UPDATE ;
+(b2db) continue 1
+Too many arguments to continue.
+(b2db) step 1
+Too many arguments to step.
+(b2db) next 1
+Too many arguments to next.
+(b2db) finish 1
+Too many arguments to finish.
+(b2db) break
+Missing argument to break.
+(b2db) break x y
+Too many arguments to break.
+(b2db) disable
+Missing argument to disable.
+(b2db) disable 1 2
+Too many arguments to disable.
+(b2db) disable x
+Invalid breakpoint number x.
+(b2db) disable 2
+Unknown breakpoint 2.
+(b2db) enable
+Missing argument to enable.
+(b2db) enable 1 2
+Too many arguments to enable.
+(b2db) enable x
+Invalid breakpoint number x.
+(b2db) enable 2
+Unknown breakpoint 2.
+(b2db) delete
+Missing argument to delete.
+(b2db) delete 1 2
+Too many arguments to delete.
+(b2db) delete x
+Invalid breakpoint number x.
+(b2db) delete 2
+Unknown breakpoint 2.
+(b2db) quit
+""")
+
+    t.cleanup()
+
 test_run()
 test_exit_status()
 test_step()
@@ -406,3 +505,6 @@ test_breakpoints()
 test_breakpoints_running()
 test_backtrace()
 test_print()
+test_run_running()
+test_error_not_running()
+test_bad_arguments()
