@@ -80,7 +80,7 @@ struct command_elem
 static struct command_elem * command_array;
 
 static void debug_listen( void );
-static int read_command( int report_error );
+static int read_command( void );
 static int is_same_file( OBJECT * file1, OBJECT * file2 );
 static void debug_mi_format_token( void );
 static OBJECT * make_absolute_path( OBJECT * filename );
@@ -820,7 +820,7 @@ static const char * debug_format_message( const char * format, va_list vargs )
     char * buf;
     int result;
     int sz = 80;
-    for(;;)
+    for ( ; ; )
     {
         va_list args;
         buf = malloc( sz );
@@ -1451,9 +1451,14 @@ static void debug_parent_clear( int argc, const char * * argv )
     char buf[ 16 ];
     const char * new_args[ 2 ];
     int id;
-    if ( argc != 2 )
+    if ( argc < 2 )
     {
-        /* FIXME: handle error. */
+        debug_error( "Missing argument to clear." );
+        return;
+    }
+    else if ( argc > 2 )
+    {
+        debug_error( "Too many arguments to clear" );
         return;
     }
     id = get_breakpoint_by_name( argv[ 1 ] );
@@ -2577,7 +2582,7 @@ int debugger( void )
         if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
             printf("(b2db) ");
         fflush( stdout );
-        read_command( 1 );
+        read_command();
     }
     return 0;
 }
@@ -2604,6 +2609,7 @@ static int run_command( int argc, const char * * argv )
             return 1;
         }
     }
+    debug_error( "Unknown command: %s", command_name );
     return 0;
 }
 
@@ -2665,7 +2671,7 @@ static int process_command( char * line )
     return result;
 }
 
-static int read_command( int report_error )
+static int read_command( void )
 {
     int result;
     int ch;
@@ -2684,14 +2690,7 @@ static int read_command( int report_error )
             string_push_back( line, (char)ch );
         }
     }
-    /* printf( "Running command: %s\n", line->value ); */
     result = process_command( line->value );
-    if ( !result && report_error )
-    {
-        /* printf( "~\"Unknown command: %s\\n\"\n", line->value ); */
-        debug_mi_format_token();
-        printf( "^error,msg=\"Unknown command: %s\"\n(gdb) \n", line->value );
-    }
     string_free( line );
     return result;
 }
@@ -2705,8 +2704,7 @@ static void debug_listen( void )
             exit( 1 );
         fflush(stdout);
         fflush( command_output );
-        /* assume that the parent has already validated the input */
-        read_command( 0 );
+        read_command();
     }
     debug_selected_frame_number = 0;
 }

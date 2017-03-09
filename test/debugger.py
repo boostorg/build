@@ -491,6 +491,24 @@ Too many arguments to delete.
 Invalid breakpoint number x.
 (b2db) delete 2
 Unknown breakpoint 2.
+(b2db) clear
+Missing argument to clear.
+(b2db) clear test.jam:1 test.jam:1
+Too many arguments to clear.
+(b2db) clear test.jam:2
+No breakpoint at test.jam:2.
+(b2db) quit
+""")
+
+    t.cleanup()
+
+def test_unknown_command():
+    t = make_tester()
+    run(t, """\
+(b2db) xyzzy
+Unknown command: xyzzy
+(b2db) gnusto rezrov
+Unknown command: gnusto
 (b2db) quit
 """)
 
@@ -508,3 +526,4 @@ test_print()
 test_run_running()
 test_error_not_running()
 test_bad_arguments()
+test_unknown_command()
