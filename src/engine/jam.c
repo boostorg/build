@@ -304,6 +304,7 @@ int main( int argc, char * * argv, char * * arg_environ )
             arg_c = argc = (argc - 2);
             argv[ 2 ] = argv[ 0 ];
             arg_v = argv = (argv + 2);
+            debug_interface = DEBUG_INTERFACE_CHILD;
         }
     }
 
@@ -320,6 +321,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         {
             arg_c = argc = debug_child_data.argc;
             arg_v = argv = (char * *)debug_child_data.argv;
+            debug_interface = DEBUG_INTERFACE_CHILD;
         }
         else
         {

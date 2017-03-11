@@ -27,6 +27,9 @@
 #include <errno.h>
 #endif
 
+#undef debug_on_enter_function
+#undef debug_on_exit_function
+
 struct breakpoint
 {
     OBJECT * file;
@@ -462,6 +465,7 @@ static void debug_end_stepping( void )
 void debug_on_instruction( FRAME * frame, OBJECT * file, int line )
 {
     int breakpoint_id;
+    assert( debug_is_debugging() );
     if ( debug_state == DEBUG_NEXT && debug_depth <= 0 && debug_line != line )
     {
         debug_file = file;
@@ -496,6 +500,7 @@ void debug_on_instruction( FRAME * frame, OBJECT * file, int line )
 void debug_on_enter_function( FRAME * frame, OBJECT * name, OBJECT * file, int line )
 {
     int breakpoint_id;
+    assert( debug_is_debugging() );
     if ( debug_state == DEBUG_STEP && file )
     {
         debug_file = file;
@@ -519,6 +524,7 @@ void debug_on_enter_function( FRAME * frame, OBJECT * name, OBJECT * file, int l
 
 void debug_on_exit_function( OBJECT * name )
 {
+    assert( debug_is_debugging() );
     if ( debug_state == DEBUG_NEXT || debug_state == DEBUG_FINISH )
     {
         --debug_depth;

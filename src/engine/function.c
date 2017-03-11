@@ -2437,7 +2437,8 @@ static void compile_append_chain( PARSE * parse, compiler * c )
 static void compile_parse( PARSE * parse, compiler * c, int result_location )
 {
 #ifdef JAM_DEBUGGER
-    compile_emit( c, INSTR_DEBUG_LINE, parse->line );
+    if ( debug_is_debugging() )
+        compile_emit( c, INSTR_DEBUG_LINE, parse->line );
 #endif
     if ( parse->type == PARSE_APPEND )
     {

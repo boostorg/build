@@ -33,6 +33,17 @@ extern int debug_interface;
 
 #define DEBUG_INTERFACE_CONSOLE 1
 #define DEBUG_INTERFACE_MI 2
+#define DEBUG_INTERFACE_CHILD 3
+
+#define debug_is_debugging() ( debug_interface != 0 )
+#define debug_on_enter_function( frame, name, file, line )      \
+    ( debug_is_debugging()?                                     \
+        debug_on_enter_function( frame, name, file, line ) :    \
+        (void)0 )
+#define debug_on_exit_function( name )                          \
+    ( debug_is_debugging()?                                     \
+        debug_on_exit_function( name ) :                        \
+        (void)0 )
 
 #if NT
 
@@ -45,6 +56,7 @@ void debug_init_handles( const char * in, const char * out );
 #define debug_on_instruction( frame, file, line ) ( ( void )0 )
 #define debug_on_enter_function( frame, name, file, line ) ( ( void )0 )
 #define debug_on_exit_function( name ) ( ( void )0 )
+#define debug_is_debugging() ( 0 )
 
 #endif
 
