@@ -6,6 +6,7 @@ if (-NOT (Test-Path 'Registry::HKEY_CLASSES_ROOT\CLSID\{177F0C4A-1CD3-4DE7-A32C-
 $jsonFile = '.tmp.json'
 Invoke-Expression 'powershell -NoProfile -ExecutionPolicy Unrestricted -Command "&{ Add-Type -Path GetVS2017Configuration.cs; [VisualStudioConfiguration.Main]::Query()}"' > $jsonFile
 $instPath = (Get-Content $jsonFile | ? {$_ -like "*InstallationPath*"}) -split '"' -replace '\\\\', '\' | Select-Object -skip 3 -first 1
+Remove-Item $jsonFile
 if ($args[0] -eq 'InstallationPath') { echo $instPath; exit }
 if ($env:PROCESSOR_ARCHITEW6432 -ne $null) {$filt = '*64\x64*'} else {$filt = '*86\x86*'}
 $cls = get-childitem $instPath -Include cl.exe -Recurse | ? { $_.Directory -like '*Host*' }
