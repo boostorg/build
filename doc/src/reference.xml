@@ -1021,6 +1021,7 @@ using gcc : &toolset_ops; ;</programlisting>
           C++</ulink> command-line tools on Microsoft Windows. The supported
           products and versions of command line tools are listed below:</para>
           <itemizedlist>
+            <listitem><para>Visual Studio 2017&#x2014;14.1</para></listitem>
             <listitem><para>Visual Studio 2015&#x2014;14.0</para></listitem>
             <listitem><para>Visual Studio 2013&#x2014;12.0</para></listitem>
             <listitem><para>Visual Studio 2012&#x2014;11.0</para></listitem>
@@ -1031,6 +1032,14 @@ using gcc : &toolset_ops; ;</programlisting>
             <listitem><para>Visual Studio .NET&#x2014;7.0</para></listitem>
             <listitem><para>Visual Studio 6.0, Service Pack 5&#x2014;6.5</para></listitem>
           </itemizedlist>
+
+          <para>The user would then call the boost build executable with the
+          toolset set equal to <command>msvc-[version number]</command> for 
+          example to build with Visual Studio 2017 one could run:
+          <programlisting>
+.\b2 toolset=msvc-14.1 target
+          </programlisting>
+          </para>
 
           <para>The <code>msvc</code> module is initialized using the following
           syntax:</para>
