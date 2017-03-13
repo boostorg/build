@@ -13,6 +13,7 @@ import glob
 import math
 import os
 import os.path
+import platform
 import re
 import shutil
 import StringIO
@@ -233,7 +234,10 @@ class Tester(TestCmd.TestCmd):
         if not use_default_bjam:
             jam_build_dir = ""
             if os.name == "nt":
-                jam_build_dir = "bin.ntx86"
+                if platform.machine() == "AMD64":
+                    jam_build_dir = "bin.ntx86_64"
+                else:
+                    jam_build_dir = "bin.ntx86"
             elif (os.name == "posix") and os.__dict__.has_key("uname"):
                 if os.uname()[0].lower().startswith("cygwin"):
                     jam_build_dir = "bin.cygwinx86"

@@ -15,6 +15,7 @@ if (-NOT (Test-Path 'Registry::HKEY_CLASSES_ROOT\CLSID\{177F0C4A-1CD3-4DE7-A32C-
 
 Add-Type -Path (Join-Path $PSScriptRoot GetVS2017Configuration.cs) | Out-Null
 $instPath = [VisualStudioConfiguration.Main]::Query($toolsetVersion)
+Write-Output $LASTEXITCODE
 
 if ($pathToCompiler)
 {
