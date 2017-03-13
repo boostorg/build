@@ -17,11 +17,7 @@ environment:
     TEST_ALL_EXTRAS:
 
 test_script:
-  - cd src/engine
-  - build.bat
-  - cd ../..
-  - cd src/tools/vc141helper
-  - cl141_path.cmd
-  - cd ../../..
-  - ./bootstrap.bat --with-toolset=${TOOLSET}
-  - cd test && python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
+- ps: |
+    & .\bootstrap.bat --with-toolset=${TOOLSET}
+    cd test
+    & python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
