@@ -4,6 +4,8 @@
 #
 # Copyright Rene Rivera 2015-2016.
 
+build: false
+
 image:
   - Visual Studio 2013
   - Visual Studio 2015
