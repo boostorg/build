@@ -101,9 +101,17 @@ call :Test_Empty %ProgramFiles%
 if not errorlevel 1 set "ProgramFiles=C:\Program Files"
 
 call :Clear_Error
-SET cl141cmd="%~dp0..\tools\vc141helper\cl141_path.cmd"
-for /F "tokens=*" %%A IN ('cmd /D /S /C "%cl141cmd% InstallationPath"') DO if NOT "_%%A_" == "__" (
-    if errorlevel 1 goto :eof
+if NOT "_%VS150COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
+    goto :eof)
+call :Clear_Error
+SET cl_path_cmd="%~dp0..\tools\vc141helper\cl_path.cmd"
+for /F "tokens=*" %%A IN ('cmd /D /S /C "%cl_path_cmd% 14.10"') DO if NOT "_%%A_" == "__" (
+    if errorlevel 1 (
+        call :Clear_Error
+        call :Error_Print "Could not find toolset from VS2017."
+        goto :eof)
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"
     goto :eof)

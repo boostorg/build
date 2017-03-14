@@ -7,8 +7,6 @@
 build: false
 
 image:
-  - Visual Studio 2013
-  - Visual Studio 2015
   - Visual Studio 2017
 
 environment:
@@ -17,11 +15,14 @@ environment:
     TEST_ALL_EXTRAS:
 
 test_script:
-  - cd src/engine
-  - build.bat
-  - cd ../..
-  - cd src/tools/vc141helper
-  - cl141_path.cmd
-  - cd ../../..
-  - ./bootstrap.bat --with-toolset=${TOOLSET}
-  - cd test && python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
+- ps: |
+    cd src/engine
+    & .\build.bat
+    & .\test.bat
+    cd ../..
+    cd src/tools/vc141helper
+    & .\cl_path.cmd 14.10
+    cd ../../..
+    & .\bootstrap.bat --with-toolset=${TOOLSET}
+    cd test
+    & python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
