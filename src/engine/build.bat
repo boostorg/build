@@ -111,6 +111,13 @@ if errorlevel 1 (
 )
 
 call :Clear_Error
+REM Check the variable first. This can be set manually by the user (by running the tools commmand prompt).
+if NOT "_%VS150COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%"
+    goto :eof)
+:InvalidComnTools
+call :Clear_Error
 SET cl141cmd="%~dp0..\tools\vc141helper\cl141_path.cmd"
 for /F "tokens=*" %%A IN ('cmd /D /S /C "%cl141cmd% InstallationPath"') DO if NOT "_%%A_" == "__" (
     if errorlevel 1 goto :VCFind_Error
