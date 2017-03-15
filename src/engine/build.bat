@@ -103,10 +103,11 @@ if not errorlevel 1 set "ProgramFiles=C:\Program Files"
 call :Clear_Error
 SET cl141cmd="%~dp0..\tools\vc141helper\cl141_path.cmd"
 for /F "tokens=*" %%A IN ('cmd /D /S /C "%cl141cmd% InstallationPath"') DO if NOT "_%%A_" == "__" (
-    if errorlevel 1 goto :eof
+    if errorlevel 1 goto :VCFind_Error
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"
     goto :eof)
+:VCFind_Error
 call :Clear_Error
 if EXIST "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc1410"
