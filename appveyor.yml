@@ -1,0 +1,27 @@
+# Use, modification, and distribution are
+# subject to the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+#
+# Copyright Rene Rivera 2015-2016.
+
+build: false
+
+image:
+  - Visual Studio 2013
+  - Visual Studio 2015
+  - Visual Studio 2017
+
+environment:
+  matrix:
+  - TOOLSET: msvc
+    TEST_ALL_EXTRAS:
+
+test_script:
+  - cd src/engine
+  - build.bat
+  - cd ../..
+  - cd src/tools/vc141helper
+  - cl141_path.cmd
+  - cd ../../..
+  - ./bootstrap.bat --with-toolset=${TOOLSET}
+  - cd test && python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
