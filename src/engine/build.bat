@@ -100,6 +100,16 @@ call :Clear_Error
 call :Test_Empty %ProgramFiles%
 if not errorlevel 1 set "ProgramFiles=C:\Program Files"
 
+REM Visual studio is by default installed to %ProgramFiles% on 32-bit machines and
+REM %ProgramFiles(x86)% on 64-bit machines. Making a common variable for both.
+call :Clear_Error
+call :Test_Empty %ProgramFiles(x86)%
+if errorlevel 1 (
+    set VS_ProgramFiles=%ProgramFiles(x86)%
+) else (
+    set VS_ProgramFiles=%ProgramFiles%
+)
+
 call :Clear_Error
 SET cl141cmd="%~dp0..\tools\vc141helper\cl141_path.cmd"
 for /F "tokens=*" %%A IN ('cmd /D /S /C "%cl141cmd% InstallationPath"') DO if NOT "_%%A_" == "__" (
@@ -108,19 +118,19 @@ for /F "tokens=*" %%A IN ('cmd /D /S /C "%cl141cmd% InstallationPath"') DO if NO
     set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc1410"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Enterprise\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"  (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc1410"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Professional\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"  (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc1410"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\"
     goto :eof)
 call :Clear_Error
 if NOT "_%VS140COMNTOOLS%_" == "__" (
@@ -128,9 +138,9 @@ if NOT "_%VS140COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio 14.0\VC\VCVARSALL.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 14.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc14"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 14.0\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 14.0\VC\"
     goto :eof)
 call :Clear_Error
 if NOT "_%VS120COMNTOOLS%_" == "__" (
@@ -138,9 +148,9 @@ if NOT "_%VS120COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS120COMNTOOLS%..\..\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio 12.0\VC\VCVARSALL.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc12"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 12.0\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\"
     goto :eof)
 call :Clear_Error
 if NOT "_%VS110COMNTOOLS%_" == "__" (
@@ -148,9 +158,9 @@ if NOT "_%VS110COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS110COMNTOOLS%..\..\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio 11.0\VC\VCVARSALL.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc11"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 11.0\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\"
     goto :eof)
 call :Clear_Error
 if NOT "_%VS100COMNTOOLS%_" == "__" (
@@ -158,9 +168,9 @@ if NOT "_%VS100COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS100COMNTOOLS%..\..\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\VCVARSALL.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 10.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc10"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 10.0\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 10.0\VC\"
     goto :eof)
 call :Clear_Error
 if NOT "_%VS90COMNTOOLS%_" == "__" (
@@ -168,9 +178,9 @@ if NOT "_%VS90COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS90COMNTOOLS%..\..\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\VCVARSALL.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 9.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc9"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 9.0\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 9.0\VC\"
     goto :eof)
 call :Clear_Error
 if NOT "_%VS80COMNTOOLS%_" == "__" (
@@ -178,9 +188,9 @@ if NOT "_%VS80COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS80COMNTOOLS%..\..\VC\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\VCVARSALL.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 8\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc8"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio 8\VC\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 8\VC\"
     goto :eof)
 call :Clear_Error
 if NOT "_%VS71COMNTOOLS%_" == "__" (
@@ -194,14 +204,14 @@ if NOT "_%VCINSTALLDIR%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VCINSTALLDIR%\VC7\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=vc7"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=vc7"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio .NET\VC7\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio .NET\VC7\"
     goto :eof)
 call :Clear_Error
 if NOT "_%MSVCDir%_" == "__" (
@@ -209,14 +219,14 @@ if NOT "_%MSVCDir%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=msvc"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual Studio\VC98\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\VC98\"
     goto :eof)
 call :Clear_Error
-if EXIST "%ProgramFiles%\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
+if EXIST "%VS_ProgramFiles%\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=msvc"
-    set "BOOST_JAM_TOOLSET_ROOT=%ProgramFiles%\Microsoft Visual C++\VC98\"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual C++\VC98\"
     goto :eof)
 call :Clear_Error
 call :Test_Path cl.exe
