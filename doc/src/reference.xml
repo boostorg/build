@@ -1886,7 +1886,7 @@ using python
 : C:\\Python27-32\\python.exe # Interperter/path to dir
 : C:\\Python27-32\\include # includes
 : C:\\Python27-32\\libs # libs
-: <address-model>32 <address-model> # conditions - both 32 and unspecified 
+: &lt;address-model&gt;32 &lt;address-model&gt; # conditions - both 32 and unspecified 
 ;
 
 using python
@@ -1894,7 +1894,7 @@ using python
 : C:\\Python27-64\\python.exe # Interperter/path to dir
 : C:\\Python27-64\\include # includes
 : C:\\Python27-64\\libs # libs
-: <address-model>64 # conditions
+: &lt;address-model&gt;64 # conditions
 ;
 </programlisting>
          </section>
