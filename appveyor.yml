@@ -17,9 +17,21 @@ environment:
 build_script:
 - ps: |
     & .\bootstrap.bat
-    if (Test-Path bootstrap.log) { appveyor PushArtifact bootstrap.log }
+    $BootstrapExitCode = $LastExitCode
+    if (Test-Path bootstrap.log)
+    {
+        Push-AppveyorArtifact bootstrap.log
+    }
+    if ($BootstrapExitCode -ne 0) { $host.SetShouldExit($BootstrapExitCode) }
 
 test_script:
 - ps: |
     cd test
-    & python test_all.py msvc $env:TEST_ALL_EXTRAS
+    & python test_all.py msvc $env:TEST_ALL_EXTRAS --preserve
+    $TestExitCode = $LastExitCode
+    if (Test-Path failed_test)
+    {
+        & 7z a failed_test.zip failed_test\*
+        Push-AppveyorArtifact failed_test.zip
+    }
+    if ($TestExitCode -ne 0) { $host.SetShouldExit($TestExitCode) }
