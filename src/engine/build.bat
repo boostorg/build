@@ -1,4 +1,5 @@
-@ECHO OFF
+@IF NOT DEFINED DEBUG_BATCH ECHO OFF
+@IF DEFINED DEBUG_BATCH ECHO ARGS are %*
 
 REM ~ Copyright 2002-2007 Rene Rivera.
 REM ~ Distributed under the Boost Software License, Version 1.0.
@@ -9,11 +10,13 @@ goto Start
 
 
 :Set_Error
+REM Set_Error
 color 00
 goto :eof
 
 
 :Clear_Error
+REM Clear_Error
 ver >nul
 goto :eof
 
@@ -53,6 +56,7 @@ call :Clear_Error
 setlocal
 set test=%1
 if not defined test (
+    REM inner_Test_Option
     call :Set_Error
     goto Test_Option_End
 )
@@ -72,6 +76,7 @@ call :Clear_Error
 setlocal
 set test=%1
 if not defined test (
+    REM inner_Test_Empty
     call :Clear_Error
     goto Test_Empty_End
 )
@@ -91,6 +96,7 @@ goto :eof
 
 
 :Guess_Toolset
+IF DEFINED DEBUG_BATCH ECHO Guess_Toolset
 REM Try and guess the toolset to bootstrap the build with...
 REM Sets BOOST_JAM_TOOLSET to the first found toolset.
 REM May also set BOOST_JAM_TOOLSET_ROOT to the
@@ -109,140 +115,145 @@ if errorlevel 1 (
 ) else (
     set VS_ProgramFiles=%ProgramFiles%
 )
-
 call :Clear_Error
+
 REM Check the variable first. This can be set manually by the user (by running the tools commmand prompt).
 if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%"
     goto :eof)
-:InvalidComnTools
-call :Clear_Error
+
+IF DEFINED EXPENSIVE_POWERSHELL_CALL GOTO :Skip_Powershell
+SET EXPENSIVE_POWERSHELL_CALL=1
 SET cl141cmd="%~dp0..\tools\vc141helper\cl141_path.cmd"
 for /F "tokens=*" %%A IN ('cmd /D /S /C "%cl141cmd% InstallationPath"') DO if NOT "_%%A_" == "__" (
-    if errorlevel 1 goto :VCFind_Error
+    call :Clear_Error
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"
+    IF DEFINED DEBUG_BATCH ECHO BOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
+    IF DEFINED DEBUG_BATCH ECHO BOOST_JAM_TOOLSET_ROOT=%BOOST_JAM_TOOLSET_ROOT%
+    ECHO Found VS2017
     goto :eof)
-:VCFind_Error
-call :Clear_Error
+
+:Skip_Powershell
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%VS140COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc14"
     set "BOOST_JAM_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 14.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc14"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 14.0\VC\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%VS120COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc12"
     set "BOOST_JAM_TOOLSET_ROOT=%VS120COMNTOOLS%..\..\VC\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc12"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%VS110COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc11"
     set "BOOST_JAM_TOOLSET_ROOT=%VS110COMNTOOLS%..\..\VC\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc11"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%VS100COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc10"
     set "BOOST_JAM_TOOLSET_ROOT=%VS100COMNTOOLS%..\..\VC\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 10.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc10"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 10.0\VC\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%VS90COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc9"
     set "BOOST_JAM_TOOLSET_ROOT=%VS90COMNTOOLS%..\..\VC\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 9.0\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc9"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 9.0\VC\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%VS80COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc8"
     set "BOOST_JAM_TOOLSET_ROOT=%VS80COMNTOOLS%..\..\VC\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 8\VC\VCVARSALL.BAT" (
     set "BOOST_JAM_TOOLSET=vc8"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 8\VC\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%VS71COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%VS71COMNTOOLS%\..\..\VC7\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%VCINSTALLDIR%_" == "__" (
     REM %VCINSTALLDIR% is also set for VC9 (and probably VC8)
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%VCINSTALLDIR%\VC7\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio .NET 2003\VC7\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio .NET\VC7\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=vc7"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio .NET\VC7\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%MSVCDir%_" == "__" (
     set "BOOST_JAM_TOOLSET=msvc"
     set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\VC98\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=msvc"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\VC98\"
     goto :eof)
-call :Clear_Error
+
 if EXIST "%VS_ProgramFiles%\Microsoft Visual C++\VC98\bin\VCVARS32.BAT" (
     set "BOOST_JAM_TOOLSET=msvc"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual C++\VC98\"
     goto :eof)
-call :Clear_Error
+
 call :Test_Path cl.exe
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=msvc"
     set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
 call :Clear_Error
+
 call :Test_Path vcvars32.bat
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=msvc"
@@ -250,41 +261,46 @@ if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
     goto :eof)
 call :Clear_Error
+
 if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" (
     set "BOOST_JAM_TOOLSET=borland"
     set "BOOST_JAM_TOOLSET_ROOT=C:\Borland\BCC55\"
     goto :eof)
-call :Clear_Error
+
 call :Test_Path bcc32.exe
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=borland"
     set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
 call :Clear_Error
+
 call :Test_Path icl.exe
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=intel-win32"
     set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
     goto :eof)
 call :Clear_Error
+
 if EXIST "C:\MinGW\bin\gcc.exe" (
     set "BOOST_JAM_TOOLSET=mingw"
     set "BOOST_JAM_TOOLSET_ROOT=C:\MinGW\"
     goto :eof)
-call :Clear_Error
+
 if NOT "_%CWFolder%_" == "__" (
     set "BOOST_JAM_TOOLSET=metrowerks"
     set "BOOST_JAM_TOOLSET_ROOT=%CWFolder%\"
     goto :eof )
-call :Clear_Error
+
 call :Test_Path mwcc.exe
 if not errorlevel 1 (
     set "BOOST_JAM_TOOLSET=metrowerks"
     set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\..\"
-    goto :eof)
-call :Clear_Error
+    goto :eof
+)
+
 call :Error_Print "Could not find a suitable toolset."
-goto :eof
+
+GOTO :Finish
 
 
 :Guess_Yacc
@@ -316,26 +332,33 @@ REM If no arguments guess the toolset;
 REM or if first argument is an option guess the toolset;
 REM otherwise the argument is the toolset to use.
 call :Clear_Error
+
+REM call :Test_Empty %1
 call :Test_Empty %1
 if not errorlevel 1 (
     call :Guess_Toolset
-    if not errorlevel 1 ( goto Setup_Toolset ) else ( goto Finish )
+    if errorlevel 1 Call :Finish
+    GOTO :Setup_Toolset
 )
 
 call :Clear_Error
+
+REM call :Test_Option %1
 call :Test_Option %1
 if not errorlevel 1 (
     call :Guess_Toolset
-    if not errorlevel 1 ( goto Setup_Toolset ) else ( goto Finish )
+    if not errorlevel 1 goto :Finish
+    goto :Setup_Toolset
 )
 
 call :Clear_Error
 set BOOST_JAM_TOOLSET=%1
 shift
-goto Setup_Toolset
+goto :Setup_Toolset
 
 
 :Setup_Toolset
+IF DEFINED DEBUG_BATCH ECHO Setup_Toolset
 REM Setup the toolset command and options. This bit of code
 REM needs to be flexible enough to handle both when
 REM the toolset was guessed at and found, or when the toolset
@@ -345,27 +368,32 @@ REM because in BAT variables are subsituted only once during a single
 REM command. A complete "if ... else ..."
 REM is a single command, even though it's in multiple lines here.
 :Setup_Args
-call :Clear_Error
+REM Setup_Args
+IF DEFINED DEBUG_BATCH ECHO %*
+call :Test_Empty %*
+if not errorlevel 1 goto :Config_Toolset
+
+FOR /F "usebackq" %%A IN ('%*') DO CALL :Test_Arg %%A
+goto :eof
+
+:Test_Arg
 call :Test_Empty %1
 if not errorlevel 1 goto Config_Toolset
 call :Clear_Error
 call :Test_Option %1
-if errorlevel 1 (
-    set BOOST_JAM_ARGS=%BOOST_JAM_ARGS% %1
-    shift
-    goto Setup_Args
-)
+if errorlevel 1 set BOOST_JAM_ARGS=%BOOST_JAM_ARGS% %1
+goto :eof
+
 :Config_Toolset
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_metrowerks_" goto Skip_METROWERKS
-if NOT "_%CWFolder%_" == "__" (
-    set "BOOST_JAM_TOOLSET_ROOT=%CWFolder%\"
-    )
+if NOT "_%CWFolder%_" == "__" set "BOOST_JAM_TOOLSET_ROOT=%CWFolder%\"
 set "PATH=%BOOST_JAM_TOOLSET_ROOT%Other Metrowerks Tools\Command Line Tools;%PATH%"
 set "BOOST_JAM_CC=mwcc -runtime ss -cwd include -DNT -lkernel32.lib -ladvapi32.lib -luser32.lib"
 set "BOOST_JAM_OPT_JAM=-o bootstrap\jam0.exe"
 set "BOOST_JAM_OPT_MKJAMBASE=-o bootstrap\mkjambase0.exe"
 set "BOOST_JAM_OPT_YYACC=-o bootstrap\yyacc0.exe"
 set "_known_=1"
+
 :Skip_METROWERKS
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_msvc_" goto Skip_MSVC
 if NOT "_%MSVCDir%_" == "__" (
@@ -380,6 +408,7 @@ set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
+
 :Skip_MSVC
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc7_" goto Skip_VC7
 if NOT "_%VS71COMNTOOLS%_" == "__" (
@@ -395,6 +424,7 @@ set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
+
 :Skip_VC7
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc8_" goto Skip_VC8
 if NOT "_%VS80COMNTOOLS%_" == "__" (
@@ -410,6 +440,7 @@ set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
+
 :Skip_VC8
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc9_" goto Skip_VC9
 if NOT "_%VS90COMNTOOLS%_" == "__" (
@@ -590,6 +621,7 @@ set BJAM_SOURCES=%BJAM_SOURCES% modules/order.c
 
 set BJAM_UPDATE=
 :Check_Update
+REM Check_Update
 call :Test_Empty %1
 if not errorlevel 1 goto Check_Update_End
 call :Clear_Error
@@ -603,9 +635,11 @@ if "%test%" == "--update" goto Found_Update
 endlocal & set BOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
 shift
 if not "_%BJAM_UPDATE%_" == "_update_" goto Check_Update
+
 :Found_Update
 endlocal & set BOOST_JAM_TOOLSET=%BOOST_JAM_TOOLSET%
 set BJAM_UPDATE=update
+
 :Check_Update_End
 if "_%BJAM_UPDATE%_" == "_update_" (
     if not exist ".\bootstrap\jam0.exe" (
@@ -613,66 +647,93 @@ if "_%BJAM_UPDATE%_" == "_update_" (
     )
 )
 
-@echo ON
-@if "_%BJAM_UPDATE%_" == "_update_" goto Skip_Bootstrap
+if "_%BJAM_UPDATE%_" == "_update_" goto Skip_Bootstrap
+
+ECHO if exist bootstrap rd /S /Q bootstrap
 if exist bootstrap rd /S /Q bootstrap
+
+ECHO md bootstrap
 md bootstrap
-@if not exist jamgram.y goto Bootstrap_GrammarPrep
-@if not exist jamgramtab.h goto Bootstrap_GrammarPrep
-@goto Skip_GrammarPrep
+
+if not exist jamgram.y goto Bootstrap_GrammarPrep
+if not exist jamgramtab.h goto Bootstrap_GrammarPrep
+goto Skip_GrammarPrep
+
 :Bootstrap_GrammarPrep
+ECHO %BOOST_JAM_CC% %BOOST_JAM_OPT_YYACC% %YYACC_SOURCES%
 %BOOST_JAM_CC% %BOOST_JAM_OPT_YYACC% %YYACC_SOURCES%
-@if not exist ".\bootstrap\yyacc0.exe" goto Skip_GrammarPrep
+
+if not exist ".\bootstrap\yyacc0.exe" goto Skip_GrammarPrep
+ECHO .\bootstrap\yyacc0 jamgram.y jamgramtab.h jamgram.yy
 .\bootstrap\yyacc0 jamgram.y jamgramtab.h jamgram.yy
+
 :Skip_GrammarPrep
-@if not exist jamgram.c goto Bootstrap_GrammarBuild
-@if not exist jamgram.h goto Bootstrap_GrammarBuild
-@goto Skip_GrammarBuild
+if not exist jamgram.c goto Bootstrap_GrammarBuild
+if not exist jamgram.h goto Bootstrap_GrammarBuild
+goto Skip_GrammarBuild
+
 :Bootstrap_GrammarBuild
-@echo OFF
 if "_%YACC%_" == "__" (
     call :Guess_Yacc
 )
 if errorlevel 1 goto Finish
-@echo ON
+
+ECHO %YACC% jamgram.y
 %YACC% jamgram.y
-@if errorlevel 1 goto Finish
+if errorlevel 1 goto Finish
+ECHO del /f jamgram.c
 del /f jamgram.c
+
+ECHO rename y.tab.c jamgram.c
 rename y.tab.c jamgram.c
+
+ECHO del /f jamgram.h
 del /f jamgram.h
+
+ECHO rename y.tab.h jamgram.h
 rename y.tab.h jamgram.h
+
 :Skip_GrammarBuild
-@echo ON
-@if exist jambase.c goto Skip_Jambase
+if exist jambase.c goto :Skip_Jambase
+ECHO %BOOST_JAM_CC% %BOOST_JAM_OPT_MKJAMBASE% %MKJAMBASE_SOURCES%
 %BOOST_JAM_CC% %BOOST_JAM_OPT_MKJAMBASE% %MKJAMBASE_SOURCES%
-@if not exist ".\bootstrap\mkjambase0.exe" goto Skip_Jambase
+
+if not exist ".\bootstrap\mkjambase0.exe" goto Skip_Jambase
+ECHO .\bootstrap\mkjambase0 jambase.c Jambase
 .\bootstrap\mkjambase0 jambase.c Jambase
+
 :Skip_Jambase
+ECHO %BOOST_JAM_CC% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES%
 %BOOST_JAM_CC% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES%
+
 :Skip_Bootstrap
-@if not exist ".\bootstrap\jam0.exe" goto Skip_Jam
-@set args=%*
-@echo OFF
+if not exist ".\bootstrap\jam0.exe" goto Skip_Jam
+set args=%*
+
 :Set_Args
 setlocal
-call :Test_Empty %args%
-if not errorlevel 1 goto Set_Args_End
+if "__"=="_%args%_" goto :Set_Args_End
 set test=###%args:~0,2%###
 set test=%test:"###=%
 set test=%test:###"=%
 set test=%test:###=%
 set test=%test:~0,1%
-if "-" == "%test%" goto Set_Args_End
+if "-" == "%test%" goto :Set_Args_End
 endlocal
 set args=%args:~1%
 goto Set_Args
+
 :Set_Args_End
-@echo ON
-@if "_%BJAM_UPDATE%_" == "_update_" goto Skip_Clean
+if "_%BJAM_UPDATE%_" == "_update_" goto Skip_Clean
+ECHO .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %args% clean
 .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %args% clean
+
 :Skip_Clean
+ECHO .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %args%
 .\bootstrap\jam0 -f build.jam --toolset=%BOOST_JAM_TOOLSET% "--toolset-root=%BOOST_JAM_TOOLSET_ROOT% " %args%
+
 :Skip_Jam
 
 :Finish
-exit /b %ERRORLEVEL%
+REM Finish
+EXIT
