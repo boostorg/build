@@ -28,7 +28,7 @@ ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
 ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin,
-ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9, vc10, vc11, vc12, vc14, vc1410
+ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9, vc10, vc11, vc12, vc14, vc141
 ECHO ###
 call :Set_Error
 endlocal
@@ -113,7 +113,7 @@ if errorlevel 1 (
 call :Clear_Error
 REM Check the variable first. This can be set manually by the user (by running the tools commmand prompt).
 if NOT "_%VS150COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%"
     goto :eof)
 :InvalidComnTools
@@ -121,23 +121,23 @@ call :Clear_Error
 SET cl141cmd="%~dp0..\tools\vc141helper\cl141_path.cmd"
 for /F "tokens=*" %%A IN ('cmd /D /S /C "%cl141cmd% InstallationPath"') DO if NOT "_%%A_" == "__" (
     if errorlevel 1 goto :VCFind_Error
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"
     goto :eof)
 :VCFind_Error
 call :Clear_Error
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
     goto :eof)
 call :Clear_Error
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\"
     goto :eof)
 call :Clear_Error
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\"
     goto :eof)
 call :Clear_Error
@@ -486,12 +486,12 @@ set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
 :Skip_VC14
-if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc1410_" goto Skip_VC1410
+if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc141_" goto Skip_VC141
 if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     )
 
-REM vc1410 vsvarsall requires the architecture as a parameter.
+REM vc141 vsvarsall requires the architecture as a parameter.
 set BOOST_JAM_ARCH=x86
 if NOT "_%PROCESSOR_ARCHITECTURE%_" == "__" set BOOST_JAM_ARCH=%PROCESSOR_ARCHITECTURE%
 if NOT "_%Platform%_" == "__" set BOOST_JAM_ARCH=%Platform%
@@ -507,7 +507,7 @@ set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
-:Skip_VC1410
+:Skip_VC141
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto Skip_BORLAND
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     call :Test_Path bcc32.exe )
