@@ -9,10 +9,15 @@ ECHO Bootstrapping the build engine
 if exist ".\src\engine\bin.ntx86\bjam.exe" del src\engine\bin.ntx86\bjam.exe
 if exist ".\src\engine\bin.ntx86_64\bjam.exe" del src\engine\bin.ntx86_64\bjam.exe
 
+SETLOCAL
 pushd src\engine
-call .\build.bat %* > ..\..\bootstrap.log
-@ECHO OFF
+REM Reduce the prompt for a cleaner log
+SET PROMPT=$S
+cmd /d /c .\build.bat %* > ..\..\bootstrap.log
+REM Clear ERRORLEVEL
+ver > nul
 popd
+ENDLOCAL
 
 if exist ".\src\engine\bin.ntx86\b2.exe" (
    copy .\src\engine\bin.ntx86\b2.exe . > nul
