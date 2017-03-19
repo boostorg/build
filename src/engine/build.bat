@@ -1,4 +1,5 @@
-@ECHO OFF
+@IF NOT DEFINED DEBUG_BATCH @ECHO OFF
+@IF DEFINED DEBUG_BATCH @ECHO ON
 
 REM ~ Copyright 2002-2007 Rene Rivera.
 REM ~ Distributed under the Boost Software License, Version 1.0.
@@ -221,7 +222,8 @@ md bootstrap
 @if not exist jamgram.h goto Bootstrap_GrammarBuild
 @goto Skip_GrammarBuild
 :Bootstrap_GrammarBuild
-@echo OFF
+
+@IF NOT DEFINED DEBUG_BATCH @ECHO OFF
 if "_%YACC%_" == "__" (
     call :Guess_Yacc
 )
@@ -244,7 +246,8 @@ rename y.tab.h jamgram.h
 :Skip_Bootstrap
 @if not exist ".\bootstrap\jam0.exe" goto Skip_Jam
 @set args=%*
-@echo OFF
+
+@IF NOT DEFINED DEBUG_BATCH @ECHO OFF
 :Set_Args
 setlocal
 call :Test_Empty %args%

@@ -710,14 +710,19 @@ local rule auto-detect-toolset-versions ( )
         {
             if $(i) = 14.10
             {
+                if $(.cl_path-vc1410-root-path)
+                {
+                    register-configuration $(i) : $(.cl_path-vc1410-root-path) ;
+                }
+
                 local file = [ path.make [ modules.binding $(__name__) ] ] ;
-                local cl_path = [ path.native [ path.join [ path.parent $(file) ] vc141helper cl_path.cmd ] ] ;
-                local shell_ret = [ SHELL "$(cl_path) 14.10 -PathToCompiler" ] ;
+                local vsCOMhelper_path = [ path.native [ path.join [ path.parent $(file) ] vsCOMhelper get_key_helper.cmd ] ] ;
+                local shell_ret = [ SHELL "\"$(vsCOMhelper_path)\" \"IsVcCompatible,VisualCppToolsVersionMinor=$(i)\" VisualCppTools" ] ;
                 local cl_path = $(shell_ret:D) ;
                 if $(cl_path)
                 {
-                    path = [ path.native $(cl_path) ] ;
-                    register-configuration $(i) : $(path) ;
+                    .cl_path-vc1410-root-path = [ path.native $(cl_path) ] ;
+                    register-configuration $(i) : $(.cl_path-vc1410-root-path) ;
                 }
             }
 
@@ -1662,6 +1667,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 # corresponding environment variable.
 .version-7.1toolkit-envpath = "bin" ;
 
+#
+.cl_path-vc1410-root-path = "" ;
 
 # Auto-detect all the available msvc installations on the system.
 auto-detect-toolset-versions ;

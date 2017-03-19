@@ -1,4 +1,5 @@
-@ECHO OFF
+@IF NOT DEFINED DEBUG_BATCH @ECHO OFF
+@IF DEFINED DEBUG_BATCH @ECHO ON
 
 REM ~ Copyright 2002-2007 Rene Rivera.
 REM ~ Distributed under the Boost Software License, Version 1.0.
@@ -32,11 +33,24 @@ if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
-SET cl_path_cmd="%~dp0..\tools\vc141helper\cl_path.cmd"
-for /f "tokens=*" %%A in ('cmd /D /S /C "%cl_path_cmd% 14.10"') do if NOT errorlevel 1 if NOT "_%%A_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc1410"
-    set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"
+
+IF DEFINED EXPENSIVE_POWERSHELL goto :After_vsCOMhelper
+SET EXPENSIVE_POWERSHELL=1
+SET vsCOMhelper_cmd="%~dp0..\tools\vsCOMhelper\get_key_helper.cmd" IsVcCompatible
+for /f "tokens=*" %%A in ('cmd /D /S /C "%vsCOMhelper_cmd% InstallationPath"') do call :vsCOMhelper_2 "%%A"
+IF NOT DEFINED BOOST_JAM_TOOLSET goto :After_vsCOMhelper
+IF NOT DEFINED BOOST_JAM_TOOLSET_ROOT goto :After_vsCOMhelper
+goto :eof
+
+:vsCOMhelper_2
+IF "_%~1_"=="__" goto :eof
+set "BOOST_JAM_TOOLSET_ROOT=%~1\VC\"
+for /f "tokens=*" %%A in ('cmd /D /S /C "%vsCOMhelper_cmd% VCToolsVersionCode"') do if NOT "_%%A_"=="__" (
+    set "BOOST_JAM_TOOLSET=%%A"
     goto :eof)
+goto :eof
+
+:After_vsCOMhelper
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc1410"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
