@@ -1,4 +1,4 @@
-@ECHO OFF
+@IF NOT DEFINED DEBUG_BATCH @ECHO OFF
 
 REM Copyright (C) 2009 Vladimir Prus
 REM
@@ -9,10 +9,13 @@ ECHO Bootstrapping the build engine
 if exist ".\src\engine\bin.ntx86\bjam.exe" del src\engine\bin.ntx86\bjam.exe
 if exist ".\src\engine\bin.ntx86_64\bjam.exe" del src\engine\bin.ntx86_64\bjam.exe
 
+SETLOCAL
 pushd src\engine
+SET PROMPT=$S
 call .\build.bat %* > ..\..\bootstrap.log
-@ECHO OFF
 popd
+ENDLOCAL
+@IF NOT DEFINED DEBUG_BATCH @ECHO OFF
 
 if exist ".\src\engine\bin.ntx86\b2.exe" (
    copy .\src\engine\bin.ntx86\b2.exe . > nul

@@ -229,7 +229,6 @@ tests = ["absolute_sources",
          "lib_source_property",
          "library_chain",
          "library_property",
-         "link",
          "load_order",
          "loop",
          "make_rule",
@@ -284,6 +283,7 @@ tests = ["absolute_sources",
 
 if os.name == "posix":
     tests.append("symlink")
+    tests.append("link")
     # On Windows, library order is not important, so skip this test. Besides,
     # it fails ;-). Further, the test relies on the fact that on Linux, one can
     # build a shared library with unresolved symbols. This is not true on

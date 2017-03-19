@@ -1,4 +1,5 @@
-@ECHO OFF
+@IF NOT DEFINED DEBUG_BATCH @ECHO OFF
+@IF DEFINED DEBUG_BATCH @ECHO ON
 
 REM ~ Copyright 2002-2007 Rene Rivera.
 REM ~ Distributed under the Boost Software License, Version 1.0.
