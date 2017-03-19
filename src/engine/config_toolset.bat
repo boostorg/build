@@ -165,21 +165,25 @@ if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if NOT "_%VS150COMNTOOLS%_" == "__" (
         set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     ))
-SET cl_path_cmd="%~dp0..\tools\vc141helper\cl_path.cmd"
+
+IF DEFINED EXPENSIVE_POWERSHELL2 goto :Skip_VC1410
+SET EXPENSIVE_POWERSHELL2=1
+SET vsCOMhelper_cmd="%~dp0..\tools\vsCOMhelper\get_key_helper.cmd" "IsVcCompatible,VisualCppToolsVersionMinor=14.10" "InstallationPath"
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-    for /f "tokens=*" %%A in ('cmd /D /S /C "%cl_path_cmd% 14.10"') do if NOT errorlevel 1 if NOT "_%%A_" == "__" (
+    for /f "tokens=*" %%A in ('cmd /D /S /C "%vsCOMhelper_cmd%"') do if NOT errorlevel 1 if NOT "_%%A_" == "__" (
         set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"))
 
 REM vc1410 vsvarsall requires the architecture as a parameter.
 if "_%BOOST_JAM_ARCH%_" == "__" set BOOST_JAM_ARCH=x86
 set BOOST_JAM_ARGS=%BOOST_JAM_ARGS% %BOOST_JAM_ARCH%
 
-if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
+call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
 set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
 set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
+
 :Skip_VC1410
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto Skip_BORLAND
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
