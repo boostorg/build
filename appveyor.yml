@@ -11,27 +11,28 @@ image:
   - Visual Studio 2013
 
 environment:
+  DEBUG_BATCH: "1"
   matrix:
   - TEST_ALL_EXTRAS:
 
 build_script:
 - ps: |
-    & .\bootstrap.bat
-    $BootstrapExitCode = $LastExitCode
-    if (Test-Path bootstrap.log)
-    {
-        Push-AppveyorArtifact bootstrap.log
-    }
-    if ($BootstrapExitCode -ne 0) { $host.SetShouldExit($BootstrapExitCode) }
+    .\bootstrap.bat
 
 test_script:
 - ps: |
     cd test
-    & python test_all.py msvc $env:TEST_ALL_EXTRAS --preserve
-    $TestExitCode = $LastExitCode
-    if (Test-Path failed_test)
-    {
-        & 7z a failed_test.zip failed_test\*
-        Push-AppveyorArtifact failed_test.zip
-    }
-    if ($TestExitCode -ne 0) { $host.SetShouldExit($TestExitCode) }
+    
+    python test_all.py msvc $env:TEST_ALL_EXTRAS --preserve
+
+on_finish:
+  - ps: >-
+      cd %APPVEYOR_BUILD_FOLDER%
+
+      Get-Item *.log | %{ Push-AppveyorArtifact $_.FullName}
+      
+      if (Test-Path failed_test)
+      {
+          & 7z a failed_test.zip failed_test\*
+          Push-AppveyorArtifact failed_test.zip
+      }
