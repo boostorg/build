@@ -1,14 +1,17 @@
 ﻿// Copyright 2017 - Refael Ackermann
+// Copyright 2017 - Arkady Shapkin
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace VisualStudioConfiguration
 {
+#region VS setup COM types
     [Flags]
     public enum InstanceState : uint
     {
@@ -180,88 +183,52 @@ namespace VisualStudioConfiguration
     public class SetupConfigurationClass
     {
     }
+#endregion
 
     public static class Main
     {
-
-        public static void Echo(string tmplt, params Object[] args)
+        public static string Query(string vcToolVersion)
         {
-            string str = (args.Length > 0) ? String.Format(tmplt, args) : tmplt;
-            Console.Write("    " + str + '\n');
-        }
-
-        public static void Query()
-        {
-			ISetupConfiguration query = new SetupConfiguration();
-			ISetupConfiguration2 query2 = (ISetupConfiguration2) query;
-			IEnumSetupInstances e = query2.EnumAllInstances();
-			ISetupInstance2[] rgelt = new ISetupInstance2[1];
-			int pceltFetched;
-            Echo("[");
+            ISetupConfiguration query = new SetupConfiguration();
+            ISetupConfiguration2 query2 = (ISetupConfiguration2)query;
+            IEnumSetupInstances e = query2.EnumAllInstances();
+            ISetupInstance2[] rgelt = new ISetupInstance2[1];
+            int pceltFetched;
             e.Next(1, rgelt, out pceltFetched);
-			while (pceltFetched > 0)
-			{
-                PrintInstance(rgelt[0]);
+            var instances = new List<KeyValuePair<Version, string>>();
+            while (pceltFetched > 0)
+            {
+                var inst = CheckVsInstance(rgelt[0], vcToolVersion);
+                if (inst != null)
+                    instances.Add(inst.Value);
                 e.Next(1, rgelt, out pceltFetched);
-				if (pceltFetched > 0)
-				    Echo(",");
-			}
-            Echo("]");
+            }
+
+            // find latest VC++ compiler for given version
+            var latestInst = instances.OrderByDescending(i => i.Key).FirstOrDefault();
+            return latestInst.Value;
         }
 
-        private static void PrintInstance(ISetupInstance2 setupInstance2)
+        private static KeyValuePair<Version, string>? CheckVsInstance(ISetupInstance2 setupInstance2, string vcToolVersion)
         {
-            Echo("{");
-            string[] prodParts = setupInstance2.GetProduct().GetId().Split('.');
-            Array.Reverse(prodParts);
-            string prod = prodParts[0];
-            string instPath = setupInstance2.GetInstallationPath().Replace("\\", "\\\\");
-            string installationVersion = setupInstance2.GetInstallationVersion();
             bool isComplete = setupInstance2.IsComplete();
             bool isLaunchable = setupInstance2.IsLaunchable();
-            Echo("\"Product\": \"{0}\",", prod);
-            Echo("\"Version\": \"{0}\",", installationVersion);
-            Echo("\"InstallationPath\": \"{0}\",", instPath);
-            Echo("\"IsComplete\": \"{0}\",", isComplete ? "true" : "false");
-            Echo("\"IsLaunchable\": \"{0}\",", isLaunchable ? "true" : "false");
-            String cmd = (instPath + "\\\\Common7\\\\Tools\\\\VsDevCmd.bat");
-            Echo("\"CmdPath\": \"{0}\",", cmd);
+            if (isComplete && isLaunchable)
+                return null;
+            InstanceState state = setupInstance2.GetState();
+            if ((state & InstanceState.Local) != InstanceState.Local)
+                return null;
 
-            List<string> packs = new List<String>();
-            string MSBuild = "false";
-            string VCTools = "false";
-            string Win8SDK = "0";
-            string sdk10Ver = "0";
-            foreach (ISetupPackageReference package in setupInstance2.GetPackages())
-            {
-                string id = package.GetId();
-                string ver = package.GetVersion();
-                string detail = "{\"id\": \"" + id + "\", \"version\":\"" + ver + "\"}";
-                packs.Add("    " + detail);
+            var vctools = setupInstance2.GetPackages()
+                .FirstOrDefault(item => item.GetId() == "Microsoft.VisualCpp.Tools.Core");
+            if (vctools == null)
+                return null;
+            string version = vctools.GetVersion();
+            if (!version.StartsWith(vcToolVersion + "."))
+                return null;
 
-                if (id.Contains("Component.MSBuild")) {
-                    MSBuild = detail;
-                } else if (id.Contains("VC.Tools")) {
-                    VCTools = detail;
-                } else if (id.Contains("Microsoft.Windows.81SDK")) {
-                    if (Win8SDK.CompareTo(ver) > 0) continue;
-                    Win8SDK = ver;
-                } else if (id.Contains("Win10SDK_10")) {
-                    if (sdk10Ver.CompareTo(ver) > 0) continue;
-                    sdk10Ver = ver;
-                }
-            }
-            packs.Sort();
-            string[] sdk10Parts = sdk10Ver.Split('.');
-            sdk10Parts[sdk10Parts.Length - 1] = "0";
-            Echo("\"MSBuild\": {0},", MSBuild);
-            Echo("\"VCTools\": {0},", VCTools);
-            Echo("\"SDK8\": \"{0}\",", Win8SDK);
-            Echo("\"SDK10\": \"{0}\",", sdk10Ver);
-            Echo("\"SDK\": \"{0}\",", String.Join(".", sdk10Parts));
-            Echo("\"Packages\": [\n    {0}    \n    ]", String.Join(",\n    ", packs.ToArray()));
-            Echo("}");
+            string instPath = setupInstance2.GetInstallationPath();
+            return new KeyValuePair<Version, string>(new Version(version), instPath);
         }
     }
-
 }

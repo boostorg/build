@@ -711,8 +711,8 @@ local rule auto-detect-toolset-versions ( )
             if $(i) = 14.10
             {
                 local file = [ path.make [ modules.binding $(__name__) ] ] ;
-                local cl141_path = [ path.native [ path.join [ path.parent $(file) ] vc141helper cl141_path.cmd ] ] ;
-                local shell_ret = [ SHELL $(cl141_path) ] ;
+                local cl_path = [ path.native [ path.join [ path.parent $(file) ] vc141helper cl_path.cmd ] ] ;
+                local shell_ret = [ SHELL "$(cl_path) 14.10 -PathToCompiler" ] ;
                 local cl_path = $(shell_ret:D) ;
                 if $(cl_path)
                 {
@@ -1635,7 +1635,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-11 = 11.0 ;
 .version-alias-12 = 12.0 ;
 .version-alias-14 = 14.0 ;
-.version-alias-15 = 14.10 ;
+.version-alias-14.1 = 14.10 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
