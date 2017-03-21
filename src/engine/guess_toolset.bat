@@ -29,24 +29,24 @@ goto :eof
 REM Check the variable first. This can be set manually by the user (by running the tools commmand prompt).
 call :Clear_Error
 if NOT "_%VS150COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
 SET cl_path_cmd="%~dp0..\tools\vc141helper\cl_path.cmd"
 for /f "tokens=*" %%A in ('cmd /D /S /C "%cl_path_cmd% 14.10"') do if NOT errorlevel 1 if NOT "_%%A_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"
     goto :eof)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
     goto :eof)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\"
     goto :eof)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc1410"
+    set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\"
     goto :eof)
 if NOT "_%VS140COMNTOOLS%_" == "__" (
