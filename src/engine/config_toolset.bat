@@ -160,7 +160,7 @@ set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
 :Skip_VC14
-if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc1410_" goto Skip_VC1410
+if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc141_" goto Skip_VC141
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if NOT "_%VS150COMNTOOLS%_" == "__" (
         set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
@@ -170,7 +170,7 @@ if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     for /f "tokens=*" %%A in ('cmd /D /S /C "%cl_path_cmd% 14.10"') do if NOT errorlevel 1 if NOT "_%%A_" == "__" (
         set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"))
 
-REM vc1410 vsvarsall requires the architecture as a parameter.
+REM vc141 vsvarsall requires the architecture as a parameter.
 if "_%BOOST_JAM_ARCH%_" == "__" set BOOST_JAM_ARCH=x86
 set BOOST_JAM_ARGS=%BOOST_JAM_ARGS% %BOOST_JAM_ARCH%
 
@@ -180,7 +180,7 @@ set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
-:Skip_VC1410
+:Skip_VC141
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto Skip_BORLAND
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     call :Test_Path bcc32.exe )

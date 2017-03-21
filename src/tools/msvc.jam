@@ -708,7 +708,7 @@ local rule auto-detect-toolset-versions ( )
         # Get installation paths from the registry.
         for local i in $(.known-versions)
         {
-            if $(i) = 14.10
+            if $(i) = 14.1
             {
                 local file = [ path.make [ modules.binding $(__name__) ] ] ;
                 local cl_path = [ path.native [ path.join [ path.parent $(file) ] vc141helper cl_path.cmd ] ] ;
@@ -833,11 +833,11 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.10)" : $(version) ]
+            if [ MATCH "(14.1)" : $(version) ]
             {
                 if $(.debug-configuration)
                 {
-                    ECHO 'notice: [generate-setup-cmd] $(version) is 14.10' ;
+                    ECHO 'notice: [generate-setup-cmd] $(version) is 14.1' ;
                 }
                 parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
             }
@@ -916,7 +916,7 @@ local rule configure-really ( version ? : options * )
 
         local command = [ feature.get-values <command> : $(options) ] ;
 
-        # For 14.10 we need the exact version as MS is planning rolling updates
+        # For 14.1 we need the exact version as MS is planning rolling updates
         # that will cause our `setup-cmd` to become invalid
         exact-version = [ MATCH "(14\.10\.[0-9\.]+)" : $(command) ] ;
 
@@ -933,9 +933,9 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(MSVC\\14.10)" : $(command) ]
+            if [ MATCH "(MSVC\\14.1)" : $(command) ]
             {
-                version = 14.10 ;
+                version = 14.1 ;
             }
             else if [ MATCH "(Microsoft Visual Studio 14)" : $(command) ]
             {
@@ -1623,7 +1623,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 # Known toolset versions, in order of preference.
 .known-versions = 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
-    7.1toolkit 7.0 6.0 14.10 ;
+    7.1toolkit 7.0 6.0 14.1 ;
 
 # Version aliases.
 .version-alias-6 = 6.0 ;
@@ -1635,7 +1635,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-11 = 11.0 ;
 .version-alias-12 = 12.0 ;
 .version-alias-14 = 14.0 ;
-.version-alias-14.1 = 14.10 ;
+.version-alias-14.1 = 14.1 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
