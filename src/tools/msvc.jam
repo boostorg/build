@@ -1622,8 +1622,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      armv7 armv7s ;
 
 # Known toolset versions, in order of preference.
-.known-versions = 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
-    7.1toolkit 7.0 6.0 14.1 ;
+.known-versions = 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+    7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
 .version-alias-6 = 6.0 ;
