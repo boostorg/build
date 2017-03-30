@@ -167,7 +167,7 @@ if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     ))
 SET cl_path_cmd="%~dp0..\tools\vc141helper\cl_path.cmd"
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-    for /f "tokens=*" %%A in ('cmd /D /S /C "%cl_path_cmd% 14.10"') do if NOT errorlevel 1 if NOT "_%%A_" == "__" (
+    for /f "tokens=*" %%A in ('cmd /D /S /C "%cl_path_cmd% 14.10"') do if NOT "_%%A_" == "__" (
         set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"))
 
 REM vc141 vsvarsall requires the architecture as a parameter.
