@@ -1293,7 +1293,7 @@ static void debug_parent_kill( int argc, const char * * argv )
     if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         debug_mi_format_token();
-        printf( "^running\n(gdb) \n" );
+        printf( "^done\n(gdb) \n" );
         fflush( stdout );
     }
     debug_parent_forward( 1, argv, 0, 1 );
@@ -1464,11 +1464,11 @@ static void debug_parent_clear( int argc, const char * * argv )
     }
     else if ( argc > 2 )
     {
-        debug_error( "Too many arguments to clear" );
+        debug_error( "Too many arguments to clear." );
         return;
     }
     id = get_breakpoint_by_name( argv[ 1 ] );
-    if ( id == -1 )
+    if ( id == 0 )
     {
         debug_error( "No breakpoint at %s.", argv[ 1 ] );
         return;
@@ -1550,8 +1550,9 @@ static void debug_parent_quit( int argc, const char * * argv )
 {
     if ( debug_state == DEBUG_RUN )
     {
-        const char * kill_args[] = { "kill" };
-        debug_parent_kill( 1, kill_args );
+        fprintf( command_output, "kill\n" );
+        fflush( command_output );
+        debug_parent_wait( 0 );
     }
     exit( 0 );
 }
@@ -1664,6 +1665,7 @@ static void debug_parent_help( int argc, const char * * argv )
 }
 
 static void debug_mi_break_insert( int argc, const char * * argv );
+static void debug_mi_break_delete( int argc, const char * * argv );
 static void debug_mi_break_disable( int argc, const char * * argv );
 static void debug_mi_break_enable( int argc, const char * * argv );
 static void debug_mi_break_info( int argc, const char * * argv );
@@ -1710,6 +1712,7 @@ static struct command_elem parent_commands[] =
     { "quit", &debug_parent_quit },
     { "help", &debug_parent_help },
     { "-break-insert", &debug_mi_break_insert },
+    { "-break-delete", &debug_mi_break_delete },
     { "-break-disable", &debug_mi_break_disable },
     { "-break-enable", &debug_mi_break_enable },
     { "-break-info", &debug_mi_break_info },
@@ -1931,6 +1934,28 @@ static void debug_mi_break_insert( int argc, const char * * argv )
     printf( "\n(gdb) \n" );
 }
 
+static void debug_mi_break_delete( int argc, const char * * argv )
+{
+    if ( argc < 2 )
+    {
+        debug_mi_error( "Not enough arguments for -break-delete" );
+        return;
+    }
+    for ( --argc, ++argv; argc; --argc, ++argv )
+    {
+        const char * inner_argv[ 2 ];
+        int id = breakpoint_id_parse( *argv );
+        if ( id == -1 )
+        {
+            debug_mi_error( "Not a valid breakpoint" );
+            return;
+        }
+        inner_argv[ 0 ] = "delete";
+        inner_argv[ 1 ] = *argv;
+        debug_parent_delete( 2, inner_argv );
+    }
+}
+
 static void debug_mi_break_enable( int argc, const char * * argv )
 {
     if ( argc < 2 )
@@ -1951,8 +1976,6 @@ static void debug_mi_break_enable( int argc, const char * * argv )
         inner_argv[ 1 ] = *argv;
         debug_parent_enable( 2, inner_argv );
     }
-    debug_mi_format_token();
-    printf( "^done\n(gdb) \n" );
 }
 
 static void debug_mi_break_disable( int argc, const char * * argv )
@@ -1975,8 +1998,6 @@ static void debug_mi_break_disable( int argc, const char * * argv )
         inner_argv[ 1 ] = *argv;
         debug_parent_disable( 2, inner_argv );
     }
-    debug_mi_format_token();
-    printf( "^done\n(gdb) \n" );
 }
 
 static void debug_mi_format_breakpoint_header_col( int width, int alignment, const char * col_name, const char * colhdr )
@@ -2080,8 +2101,9 @@ static void debug_mi_gdb_exit( int argc, const char * * argv )
 {
     if ( debug_state == DEBUG_RUN )
     {
-        const char * kill_args[] = { "kill" };
-        debug_parent_kill( 1, kill_args );
+        fprintf( command_output, "kill\n" );
+        fflush( command_output );
+        debug_parent_wait( 0 );
     }
     debug_mi_format_token();
     printf( "^exit\n" );
@@ -2182,7 +2204,7 @@ static void debug_mi_stack_select_frame( int argc, const char * * argv )
         const char * new_args[ 2 ];
         new_args[ 0 ] = "frame";
         new_args[ 1 ] = argv[ 1 ];
-        debug_parent_forward( 2, new_args, 0, 0 );
+        debug_parent_forward_nowait( 2, new_args, 0, 0 );
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
     }
@@ -2416,7 +2438,6 @@ static void debug_mi_stack_list_locals( int argc, const char * * argv )
 static void debug_mi_stack_list_frames( int argc, const char * * argv )
 {
     const char * new_args[ 3 ];
-    OBJECT * depth_str;
     int depth;
     int i;
     
@@ -2432,24 +2453,21 @@ static void debug_mi_stack_list_frames( int argc, const char * * argv )
 
     fprintf( command_output, "info depth\n" );
     fflush( command_output );
-    depth_str = debug_object_read( command_child );
-    depth = atoi( object_str( depth_str ) );
-    object_free( depth_str );
-    debug_parent_wait( 0 );
+    depth = debug_int_read( command_child );
 
     debug_mi_format_token();
     printf( "^done,stack=[" );
     for ( i = 0; i < depth; ++i )
     {
-        char buf[ 16 ];
-        sprintf( buf, "%d", i );
-        new_args[ 2 ] = buf;
+        FRAME_INFO frame;
+        fprintf( command_output, "info frame %d\n", i );
+        fflush( command_output );
         if ( i != 0 )
         {
             printf( "," );
         }
-        fflush( stdout );
-        debug_parent_forward( 3, new_args, 0, 0 );
+        debug_frame_read( command_child, &frame );
+        debug_mi_print_frame_info( &frame );
     }
     printf( "]\n(gdb) \n" );
     fflush( stdout );
