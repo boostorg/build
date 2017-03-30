@@ -33,7 +33,7 @@ if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
 SET cl_path_cmd="%~dp0..\tools\vc141helper\cl_path.cmd"
-for /f "tokens=*" %%A in ('cmd /D /S /C "%cl_path_cmd% 14.10"') do if NOT errorlevel 1 if NOT "_%%A_" == "__" (
+for /f "tokens=*" %%A in ('cmd /D /S /C "%cl_path_cmd% 14.10"') do if NOT "_%%A_" == "__" (
     set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%%A\VC\"
     goto :eof)
