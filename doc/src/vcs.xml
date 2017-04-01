@@ -136,12 +136,12 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
                 <orderedlist>
                   <listitem>
                     <para>
-                      Git: &lt;nearest-tag-name&gt;-&lt;branch-name&gt;-&lt;commits-since-nearest-tag&gt;-g&lt;commit-id&gt;
+                      Git: <code>&lt;nearest-tag-name&gt;-&lt;branch-name&gt;-&lt;commits-since-nearest-tag&gt;-g&lt;commit-id&gt;</code>
                     </para>
                   </listitem>
                   <listitem>
                     <para>
-                      Subversion: -&lt;URL&gt;--s&lt;REV&gt;
+                      Subversion: <code>-&lt;URL&gt;--s&lt;REV&gt;</code>
                     </para>
                   </listitem>
                 </orderedlist>
@@ -312,7 +312,7 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
     <para>
       The Boost.Build <code>vcs</code> module depends on separate backends to
       implement the interface.  The backend file should be named
-      <code>vcs-BACKEND.jam</code> where BACKEND is the name of the backend and
+      <code>vcs-BACKEND.jam</code> where <code>BACKEND</code> is the name of the backend and
       should contain implementations for each of the functions defined
       below.
     </para>

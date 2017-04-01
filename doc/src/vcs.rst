@@ -72,9 +72,9 @@ Reference
 
    - Otherwise
 
-      - Git: <nearest-tag-name>-<branch-name>-<commits-since-nearest-tag>-g<commit-id>
+      - Git: ``<nearest-tag-name>-<branch-name>-<commits-since-nearest-tag>-g<commit-id>``
 
-      - Subversion: -<URL>--s<REV>
+      - Subversion: ``-<URL>--s<REV>``
 
    The ``generate-version-string`` rule can be used to generate a version
    string for a program dynamically.
@@ -149,7 +149,7 @@ Design
 
 The Boost.Build ``vcs`` module depends on separate backends to
 implement the interface.  The backend file should be named
-``vcs-BACKEND.jam`` where BACKEND is the name of the backend and
+``vcs-BACKEND.jam`` where ``BACKEND`` is the name of the backend and
 should contain implementations for each of the functions defined
 below.
 
