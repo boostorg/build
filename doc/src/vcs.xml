@@ -25,8 +25,7 @@
   <section>
     <title>Usage</title>
     <para>
-      An example Boost.Build project illustrating the vcs interface is shown
-      below.
+      The following example illustrates the use of the <code>vcs</code> module.
     </para>
 
     <para>
@@ -55,13 +54,18 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
     </para>
 
     <para>
-      Also, see the example <code>example/vcs</code> for an exhaustive example.
+      The <code>example/vcs</code> directory in the source
+      repository contains a working example of the <code>vcs</code> module.
     </para>
 
     <para>
-      The example below shows how to use this to create a
-      <code>version_string.cpp</code> file containing the version string.  The
-      <code>print</code> module provides a mechanism to ensure that the generated
+      The
+      <code>example/vcs-generate-version-string</code> directory in the source
+      repository contains the complete source code to generate a version
+      string using the <code>vcs</code> module.  The listings below illustrate the
+      use of <code>vcs.generate-version-string</code> to create a
+      <code>version_string.cpp</code> file containing the version string.  Note that
+      the <code>print</code> module provides a mechanism to ensure that the generated
       file is only modified when the version string actually changes.
     </para>
 
@@ -87,11 +91,6 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
           </xi:include>
         </programlisting>
       </example>
-    </para>
-
-    <para>
-      Also, see the example <code>example/vcs-generate-version-string</code> for
-      an complete example.
     </para>
   </section>
 
@@ -151,8 +150,8 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
         </para>
 
         <para>
-          The <code>generate-version-string</code> rule can be used to
-          generate a version string for a program dynamically.
+          The <code>generate-version-string</code> rule can be used to generate a version
+          string for a program dynamically.
         </para>
       </listitem>
 

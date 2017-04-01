@@ -15,8 +15,7 @@ straightforward to implement.
 Usage
 -----
 
-An example Boost.Build project illustrating the vcs interface is shown
-below.
+The following example illustrates the use of the ``vcs`` module.
 
 .. code::
 
@@ -38,11 +37,16 @@ below.
    assert.equal [ vcs.root-url /path/to/desired/root ] : https://example.com/git/path/to/desired/root ;
    assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root : 1.0 ] ;
 
-Also, see the `example <../../example/vcs>`_ for an exhaustive example.
+The `example/vcs <../../example/vcs>`_ directory in the source
+repository contains a working example of the ``vcs`` module.
 
-The example below shows how to use this to create a
-``version_string.cpp`` file containing the version string.  The
-``print`` module provides a mechanism to ensure that the generated
+The `example/vcs-generate-version-string
+<../../example/vcs-generate-version-string>`_ directory in the source
+repository contains the complete source code to generate a version
+string using the ``vcs`` module.  The listings below illustrate the
+use of ``vcs.generate-version-string`` to create a
+``version_string.cpp`` file containing the version string.  Note that
+the ``print`` module provides a mechanism to ensure that the generated
 file is only modified when the version string actually changes.
 
 .. include:: ../../example/vcs-generate-version-string/jamroot.jam
@@ -50,9 +54,6 @@ file is only modified when the version string actually changes.
 
 .. include:: ../../example/vcs-generate-version-string/main.cpp
    :code:
-
-Also, see the `example <../../example/vcs-generate-version-string>`_ for
-an complete example.
 
 Reference
 ---------
@@ -158,15 +159,16 @@ Currently, there are two supported backends:
 - Git
 - Subversion
 
-Note that the only rule that requires that that the type of version
-control system is specified is the ``fetch`` rule.  The rest detect
-the version control system from querying the given directory.
+Note that the only rule that requires the type of version control
+system to be specified is the ``fetch`` rule.  The rest of the rules
+detect the version control system from querying the given directory.
 
 Implementation
 --------------
 
 Hopefully, knowing the implementation will not be required to use this
-module, but they are included here for reference.
+module, but a link to the implementation and links to the backends are
+included here for reference.
 
 ``vcs`` Interface
 ~~~~~~~~~~~~~~~~~
