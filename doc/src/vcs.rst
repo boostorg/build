@@ -90,49 +90,11 @@ Reference
    Also, see the `example <../../example/vcs-generate-version-string>`_ for
    an complete example.
 
-   .. code::
+   .. include:: ../../example/vcs-generate-version-string/jamroot.jam
+      :code:
 
-      # A Jamroot to run a program that prints a generated version string.
-
-      import testing ;
-
-      import vcs ;
-      import print ;
-
-      path-constant working-directory-root : ../.. ;
-
-      # run it to see the output
-      run versioned : : : : versioned-run ;
-
-      # note that version_string.cpp is generated below
-      exe versioned : main.cpp version_string.cpp ;
-
-      # generate the version_string.cpp file
-      make version_string.cpp : : @generate-file ;
-      rule generate-file ( target : sources * : properties * )
-      {
-        local v = [ vcs.generate-version-string $(working-directory-root) ] ;
-
-        print.output $(target) ;
-        print.text "const char * version_string = \"$(v)\";" : true ;
-        print.text "" ;
-      }
-
-   .. code::
-
-      // A program to print the version string.
-
-      #include <iostream>
-
-      extern const char * version_string;
-
-      int
-      main ()
-      {
-         std::cout << "generated version is '" << version_string << "'\n";
-
-         return 0;
-      }
+   .. include:: ../../example/vcs-generate-version-string/main.cpp
+      :code:
 
 ``fetch ( vcs : root-url : directory )``
 
