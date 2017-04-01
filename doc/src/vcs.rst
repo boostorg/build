@@ -18,7 +18,7 @@ Usage
 An example Boost.Build project illustrating the vcs interface is shown
 below.
 
-::
+.. code::
 
    import vcs ;
 
@@ -90,7 +90,7 @@ Reference
    Also, see the `example <../../example/vcs-generate-version-string>`_ for
    an complete example.
 
-   ::
+   .. code::
 
       # A Jamroot to run a program that prints a generated version string.
 
@@ -118,7 +118,7 @@ Reference
         print.text "" ;
       }
 
-   .. code:: cpp
+   .. code::
 
       // A program to print the version string.
 
