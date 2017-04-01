@@ -61,32 +61,6 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
   </section>
 
   <section>
-    <title>Design</title>
-    <para>
-      The Boost.Build <code>vcs</code> module depends on separate backends to
-      implement the interface.  The backend file should be named
-      <code>vcs-BACKEND.jam</code> where BACKEND is the name of the backend and
-      should contain implementations for each of the functions defined
-      below.
-    </para>
-
-    <para>
-      Currently, there are two supported backends:
-
-      <orderedlist>
-        <listitem><para>Git</para></listitem>
-        <listitem><para>Subversion</para></listitem>
-      </orderedlist>
-    </para>
-
-    <para>
-      Note that the only rule that requires that that the type of version
-      control system is specified is the <code>fetch</code> rule.  The rest detect
-      the version control system from querying the given directory.
-    </para>
-  </section>
-
-  <section>
     <title>Reference</title>
 
     <orderedlist>
@@ -330,7 +304,32 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
       </listitem>
 
     </orderedlist>
+  </section>
 
+  <section>
+    <title>Design</title>
+    <para>
+      The Boost.Build <code>vcs</code> module depends on separate backends to
+      implement the interface.  The backend file should be named
+      <code>vcs-BACKEND.jam</code> where BACKEND is the name of the backend and
+      should contain implementations for each of the functions defined
+      below.
+    </para>
+
+    <para>
+      Currently, there are two supported backends:
+
+      <orderedlist>
+        <listitem><para>Git</para></listitem>
+        <listitem><para>Subversion</para></listitem>
+      </orderedlist>
+    </para>
+
+    <para>
+      Note that the only rule that requires that that the type of version
+      control system is specified is the <code>fetch</code> rule.  The rest detect
+      the version control system from querying the given directory.
+    </para>
   </section>
 
   <section>

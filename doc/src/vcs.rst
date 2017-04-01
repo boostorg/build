@@ -40,24 +40,6 @@ below.
 
 Also, see the `example <../../example/vcs>`_ for an exhaustive example.
 
-Design
-------
-
-The Boost.Build ``vcs`` module depends on separate backends to
-implement the interface.  The backend file should be named
-``vcs-BACKEND.jam`` where BACKEND is the name of the backend and
-should contain implementations for each of the functions defined
-below.
-
-Currently, there are two supported backends:
-
-- Git
-- Subversion
-
-Note that the only rule that requires that that the type of version
-control system is specified is the ``fetch`` rule.  The rest detect
-the version control system from querying the given directory.
-
 Reference
 ---------
 
@@ -160,6 +142,24 @@ Backends Reference
 
    Returns true if the executable required to support the backend
    exists on the system.
+
+Design
+------
+
+The Boost.Build ``vcs`` module depends on separate backends to
+implement the interface.  The backend file should be named
+``vcs-BACKEND.jam`` where BACKEND is the name of the backend and
+should contain implementations for each of the functions defined
+below.
+
+Currently, there are two supported backends:
+
+- Git
+- Subversion
+
+Note that the only rule that requires that that the type of version
+control system is specified is the ``fetch`` rule.  The rest detect
+the version control system from querying the given directory.
 
 Implementation
 --------------
