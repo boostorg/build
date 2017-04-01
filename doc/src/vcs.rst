@@ -40,6 +40,20 @@ below.
 
 Also, see the `example <../../example/vcs>`_ for an exhaustive example.
 
+The example below shows how to use this to create a
+``version_string.cpp`` file containing the version string.  The
+``print`` module provides a mechanism to ensure that the generated
+file is only modified when the version string actually changes.
+
+.. include:: ../../example/vcs-generate-version-string/jamroot.jam
+   :code:
+
+.. include:: ../../example/vcs-generate-version-string/main.cpp
+   :code:
+
+Also, see the `example <../../example/vcs-generate-version-string>`_ for
+an complete example.
+
 Reference
 ---------
 
@@ -63,20 +77,7 @@ Reference
       - Subversion: -<URL>--s<REV>
 
    The ``generate-version-string`` rule can be used to generate a version
-   string for a program dynamically.  The example below shows how to use
-   this to create a ``version_string.cpp`` file containing the version
-   string.  The ``print`` module provides a mechanism to ensure that the
-   generated file is only modified when the version string actually
-   changes.
-
-   Also, see the `example <../../example/vcs-generate-version-string>`_ for
-   an complete example.
-
-   .. include:: ../../example/vcs-generate-version-string/jamroot.jam
-      :code:
-
-   .. include:: ../../example/vcs-generate-version-string/main.cpp
-      :code:
+   string for a program dynamically.
 
 ``fetch ( vcs : root-url : directory )``
 

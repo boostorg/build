@@ -58,6 +58,41 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
       Also, see the example <code>example/vcs</code> for an exhaustive example.
     </para>
 
+    <para>
+      The example below shows how to use this to create a
+      <code>version_string.cpp</code> file containing the version string.  The
+      <code>print</code> module provides a mechanism to ensure that the generated
+      file is only modified when the version string actually changes.
+    </para>
+
+    <para>
+      <example>
+        <title>jamroot.jam</title>
+        <programlisting>
+          <xi:include
+              href="../../example/vcs-generate-version-string/jamroot.jam"
+              parse="text">
+          </xi:include>
+        </programlisting>
+      </example>
+    </para>
+
+    <para>
+      <example>
+        <title>main.cpp</title>
+        <programlisting>
+          <xi:include
+              href="../../example/vcs-generate-version-string/main.cpp"
+              parse="text">
+          </xi:include>
+        </programlisting>
+      </example>
+    </para>
+
+    <para>
+      Also, see the example <code>example/vcs-generate-version-string</code> for
+      an complete example.
+    </para>
   </section>
 
   <section>
@@ -116,43 +151,9 @@ assert.equal [ vcs.ref /path/to/desired/root ] : [ vcs.ref /path/to/desired/root
         </para>
 
         <para>
-          The <code>generate-version-string</code> rule can be used to generate a version
-          string for a program dynamically.  The example below shows how to use
-          this to create a <code>version_string.cpp</code> file containing the version
-          string.  The <code>print</code> module provides a mechanism to ensure that the
-          generated file is only modified when the version string actually
-          changes.
+          The <code>generate-version-string</code> rule can be used to
+          generate a version string for a program dynamically.
         </para>
-
-        <para>
-          Also, see the example <code>example/vcs-generate-version-string</code> for
-          an complete example.
-        </para>
-
-        <para>
-          <example>
-            <title>jamroot.jam</title>
-            <programlisting>
-              <xi:include
-                  href="../../example/vcs-generate-version-string/jamroot.jam"
-                  parse="text">
-              </xi:include>
-            </programlisting>
-          </example>
-        </para>
-
-        <para>
-          <example>
-            <title>main.cpp</title>
-            <programlisting>
-              <xi:include
-                  href="../../example/vcs-generate-version-string/main.cpp"
-                  parse="text">
-              </xi:include>
-            </programlisting>
-          </example>
-        </para>
-
       </listitem>
 
       <listitem id="bbv2.reference.modules.vcs.fetch">
