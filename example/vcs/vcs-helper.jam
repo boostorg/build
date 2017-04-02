@@ -1,5 +1,4 @@
 import path ;
-import errors ;
 
 import vcs ;
 
@@ -18,10 +17,6 @@ rule execute ( vcs : root-url : symbolic-ref : path )
   if ! [ path.exists $(desired-dir) ]
   {
     vcs.fetch $(vcs) : $(desired-url) : $(desired-dir) ;
-  }
-  else
-  {
-    echo "info: path '$(desired-dir)' exists, skipping fetch" ;
   }
   vcs.checkout $(desired-dir) : $(desired-symbolic-ref) ;
 
