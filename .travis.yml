@@ -2,9 +2,9 @@ sudo: false
 os:
   - linux
 env:
-  - TOOLSET=gcc TEST_ALL_EXTRAS=
+  - TOOLSET=gcc TEST_ALL_EXTRAS= DO_DIFF=1
 #  - TOOLSET=gcc TEST_ALL_EXTRAS=--extras
-  - TOOLSET=clang TEST_ALL_EXTRAS=
+  - TOOLSET=clang TEST_ALL_EXTRAS= DO_DIFF=1
 #  - TOOLSET=clang TEST_ALL_EXTRAS=--extras
 language: python
 python:
