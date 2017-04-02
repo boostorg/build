@@ -5,7 +5,8 @@ import testing ;
 import vcs ;
 import print ;
 
-path-constant working-directory-root : ../.. ;
+vcs.fetch git : https://github.com/boostorg/build.git : wd-git ;
+vcs.checkout wd-git : 2016.03 ;
 
 # run it to see the output
 run versioned : : : : versioned-run ;
@@ -17,7 +18,7 @@ exe versioned : main.cpp version_string.cpp ;
 make version_string.cpp : : @generate-file ;
 rule generate-file ( target : sources * : properties * )
 {
-  local v = [ vcs.generate-version-string $(working-directory-root) ] ;
+  local v = [ vcs.generate-version-string wd-git ] ;
 
   print.output $(target) ;
   print.text "const char * version_string = \"$(v)\";" : true ;

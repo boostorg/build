@@ -2,15 +2,6 @@ import vcs ;
 
 import vcs-helper ;
 
-path-constant working-directory-root : ../.. ;
-
-# print information from vcs about this repository
-echo "the version control system used for $(working-directory-root) is:" ;
-echo "  type:" [ vcs.type $(working-directory-root) ] ;
-echo "  encoded revision:" [ vcs.generate-version-string $(working-directory-root) ] ;
-echo "  root URL:" [ vcs.root-url $(working-directory-root) ] ;
-echo "  symbolic reference:" [ vcs.ref $(working-directory-root) ] ;
-
 # fetch and checkout the Boost.Build source directory
 vcs-helper.execute git : https://github.com/boostorg/build.git : master : boost-build-master ;
 vcs-helper.execute git : https://github.com/boostorg/build.git : refs/heads/master : boost-build-refs-heads-master ;
