@@ -51,7 +51,14 @@ rule generate-version-string
     errors.user-error "vcs-git: $(directory) is not a Git repository." ;
   }
 
-  v = [ SHELL "(cd $(directory) && git describe --tags --exact-match --dirty)" ] ;
+  if [ os.name ] = NT
+  {
+    v = [ SHELL "(cd $(directory) && git describe --tags --exact-match --dirty) 2> NUL" ] ;
+  }
+  else
+  {
+    v = [ SHELL "(cd $(directory) && git describe --tags --exact-match --dirty) 2> /dev/null" ] ;
+  }
   v = [ SPLIT_BY_CHARACTERS $(v) : "\n" ] ;
 
   if $(v) != ""
