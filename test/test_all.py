@@ -299,6 +299,7 @@ tests = ["absolute_sources",
          "unused",
          "use_requirements",
          "using",
+         "vcs",
          "wrapper",
          "wrong_project",
          ]
