@@ -203,7 +203,7 @@ rule fetch
 #
 rule checkout
 (
-  directory # A directory resulting from a fetch or checkout.
+  directory : # A directory resulting from a fetch or checkout.
   symbolic-ref # The VCS-specific symbolic reference to check out.
 )
 {
