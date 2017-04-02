@@ -12,11 +12,11 @@ echo "  root URL:" [ vcs.root-url $(working-directory-root) ] ;
 echo "  symbolic reference:" [ vcs.ref $(working-directory-root) ] ;
 
 # fetch and checkout the Boost.Build source directory
-vcs-helper.execute git : https://github.com/boostorg/build : master : boost-build-master ;
-vcs-helper.execute git : https://github.com/boostorg/build : refs/heads/master : boost-build-refs-heads-master ;
-vcs-helper.execute git : https://github.com/boostorg/build : origin/master : boost-build-origin-master ;
-vcs-helper.execute git : https://github.com/boostorg/build : boost-1.55.0 : boost-build-boost-1.55.0 ;
-vcs-helper.execute git : https://github.com/boostorg/build : tags/boost-1.55.0 : boost-build-tags-boost-1.55.0 ;
-vcs-helper.execute git : https://github.com/boostorg/build : refs/tags/boost-1.55.0 : boost-build-refs-tags-boost-1.55.0 ;
-vcs-helper.execute svn : https://github.com/boostorg/build : trunk : boost-build-trunk ;
-vcs-helper.execute svn : https://github.com/boostorg/build : tags/boost-1.55.0 : boost-build-boost-tags-1.55.0 ;
+vcs-helper.execute git : https://github.com/boostorg/build.git : master : boost-build-master ;
+vcs-helper.execute git : https://github.com/boostorg/build.git : refs/heads/master : boost-build-refs-heads-master ;
+vcs-helper.execute git : https://github.com/boostorg/build.git : origin/master : boost-build-origin-master ;
+vcs-helper.execute git : https://github.com/boostorg/build.git : boost-1.55.0 : boost-build-boost-1.55.0 ;
+vcs-helper.execute git : https://github.com/boostorg/build.git : tags/boost-1.55.0 : boost-build-tags-boost-1.55.0 ;
+vcs-helper.execute git : https://github.com/boostorg/build.git : refs/tags/boost-1.55.0 : boost-build-refs-tags-boost-1.55.0 ;
+vcs-helper.execute svn : https://github.com/boostorg/build.git : trunk : boost-build-trunk ;
+vcs-helper.execute svn : https://github.com/boostorg/build.git : tags/boost-1.55.0 : boost-build-boost-tags-1.55.0 ;
