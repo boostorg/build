@@ -3,9 +3,13 @@
 import testing ;
 
 import vcs ;
+import path ;
 import print ;
 
-vcs.fetch git : https://github.com/boostorg/build.git : wd-git ;
+if ! [ path.exists wd-git ]
+{
+  vcs.fetch git : https://github.com/boostorg/build.git : wd-git ;
+}
 vcs.checkout wd-git : 2016.03 ;
 
 # run it to see the output
