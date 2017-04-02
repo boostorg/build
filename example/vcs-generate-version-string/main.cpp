@@ -6,7 +6,7 @@ extern const char * version_string;
 int
 main ()
 {
-   std::cout << "generated version is '" << version_string << "'\n";
+   std::cout << version_string << "\n";
 
    return 0;
 }
