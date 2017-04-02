@@ -9,9 +9,17 @@
 # @todo detect if git is available
 # @todo detect if the current repository is a git repository
 
+import os ;
 import path ;
 import errors ;
 import assert ;
+
+# @todo SHELL commands below need to be abstracted to support all
+# systems.
+if [ os.name ] = VMS
+{
+  errors.error "VMS is not supported at this time." ;
+}
 
 # Returns a version string representing the version of the Git
 # repository.

@@ -9,9 +9,17 @@
 # @todo detect if svn is available
 # @todo detect if the current repository is a Subversion repository
 
+import os ;
 import path ;
 import errors ;
 import assert ;
+
+# @todo SHELL commands below need to be abstracted to support all
+# systems.
+if [ os.name ] = VMS
+{
+  errors.error "VMS is not supported at this time." ;
+}
 
 # Generates a version string from the Subversion repository assuming a
 # standard repository layout.
