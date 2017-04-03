@@ -22,4 +22,5 @@ build_script:
 
 test_script:
   - cd test
+  - set DO_DIFF=1
   - python test_all.py msvc %TEST_ALL_EXTRAS% --preserve
