@@ -12,4 +12,4 @@ python:
   - 2.6
 script:
   - ./bootstrap.sh --with-toolset=${TOOLSET}
-  - cd test && python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
+  - cd test && DO_DIFF=1 python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
