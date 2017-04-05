@@ -3,7 +3,7 @@
 # Copyright (c) 2005 Alexey Pakhunov
 # Copyright (c) 2006 Bojan Resnik
 # Copyright (c) 2006 Ilya Sokolov
-# Copyright (c) 2007 Rene Rivera
+# Copyright (c) 2007-2017 Rene Rivera
 # Copyright (c) 2008 Jurko Gospodnetic
 # Copyright (c) 2014 Microsoft Corporation
 #
@@ -708,19 +708,6 @@ local rule auto-detect-toolset-versions ( )
         # Get installation paths from the registry.
         for local i in $(.known-versions)
         {
-            if $(i) = 14.10
-            {
-                local file = [ path.make [ modules.binding $(__name__) ] ] ;
-                local cl141_path = [ path.native [ path.join [ path.parent $(file) ] vc141helper cl141_path.cmd ] ] ;
-                local shell_ret = [ SHELL $(cl141_path) ] ;
-                local cl_path = $(shell_ret:D) ;
-                if $(cl_path)
-                {
-                    path = [ path.native $(cl_path) ] ;
-                    register-configuration $(i) : $(path) ;
-                }
-            }
-
             if $(.version-$(i)-reg)
             {
                 local vc-path ;
@@ -833,11 +820,11 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.10)" : $(version) ]
+            if [ MATCH "(14.1)" : $(version) ]
             {
                 if $(.debug-configuration)
                 {
-                    ECHO 'notice: [generate-setup-cmd] $(version) is 14.10' ;
+                    ECHO 'notice: [generate-setup-cmd] $(version) is 14.1' ;
                 }
                 parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
             }
@@ -872,8 +859,16 @@ local rule configure-really ( version ? : options * )
     # Decide what the 'default' version is.
     if ! $(v)
     {
-        # Take the first registered (i.e. auto-detected) version.
+        # Take the best registered (i.e. auto-detected) version.
         version = [ $(.versions).all ] ;
+        for local known in $(.known-versions)
+        {
+            if $(known) in $(version)
+            {
+                version = $(known) ;
+                break ;
+            }
+        }
         version = $(version[1]) ;
         v = $(version) ;
 
@@ -916,7 +911,7 @@ local rule configure-really ( version ? : options * )
 
         local command = [ feature.get-values <command> : $(options) ] ;
 
-        # For 14.10 we need the exact version as MS is planning rolling updates
+        # For 14.1 we need the exact version as MS is planning rolling updates
         # that will cause our `setup-cmd` to become invalid
         exact-version = [ MATCH "(14\.10\.[0-9\.]+)" : $(command) ] ;
 
@@ -933,9 +928,9 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(MSVC\\14.10)" : $(command) ]
+            if [ MATCH "(MSVC\\14.1)" : $(command) ]
             {
-                version = 14.10 ;
+                version = 14.1 ;
             }
             else if [ MATCH "(Microsoft Visual Studio 14)" : $(command) ]
             {
@@ -1232,37 +1227,39 @@ local rule configure-really ( version ? : options * )
 local rule default-path ( version )
 {
     # Use auto-detected path if possible.
-    local path = [ feature.get-values <command> : [ $(.versions).get $(version)
+    local result = [ feature.get-values <command> : [ $(.versions).get $(version)
         : options ] ] ;
 
-    if $(path)
+    if $(result)
     {
-        path = $(path:D) ;
+        result = $(result:D) ;
     }
     else
     {
         # Check environment.
-        if $(.version-$(version)-env)
+        for local env in $(.version-$(version)-env)
         {
-            local vc-path = [ os.environ $(.version-$(version)-env) ] ;
-            if $(vc-path)
+            local env-path = [ os.environ $(env) ] ;
+            if $(env-path) && $(.version-$(version)-path)
             {
-                vc-path = [ path.make $(vc-path) ] ;
-                vc-path = [ path.join $(vc-path) $(.version-$(version)-envpath) ] ;
-                vc-path = [ path.native $(vc-path) ] ;
-
-                path = $(vc-path) ;
+                for local bin-path in $(.version-$(version)-path)
+                {
+                    result = [ path.glob [ path.make $(env-path) ] : $(bin-path) ] ;
+                    if $(result)
+                    {
+                        result = [ path.native $(result[1]) ] ;
+                        break ;
+                    }
+                }
             }
-        }
-
-        # Check default path.
-        if ! $(path) && $(.version-$(version)-path)
-        {
-            path = [ path.native [ path.join $(.ProgramFiles) $(.version-$(version)-path) ] ] ;
+            if $(result)
+            {
+                break ;
+            }
         }
     }
 
-    return $(path) ;
+    return $(result) ;
 }
 
 
@@ -1622,7 +1619,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      armv7 armv7s ;
 
 # Known toolset versions, in order of preference.
-.known-versions = 14.10 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+.known-versions = 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
     7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
@@ -1635,7 +1632,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-11 = 11.0 ;
 .version-alias-12 = 12.0 ;
 .version-alias-14 = 14.0 ;
-.version-alias-15 = 14.10 ;
+.version-alias-14.1 = 14.1 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -1655,13 +1652,17 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 # Visual C++ Toolkit 2003 does not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation
 # path will be checked instead.
-.version-7.1toolkit-path    = "Microsoft Visual C++ Toolkit 2003" "bin" ;
+.version-7.1toolkit-path    = "Microsoft Visual C++ Toolkit 2003/bin" ;
 .version-7.1toolkit-env     = VCToolkitInstallDir ;
-
-# Path to the folder containing "cl.exe" relative to the value of the
-# corresponding environment variable.
-.version-7.1toolkit-envpath = "bin" ;
-
+# Visual Studio 2017 doesn't use a registry at all. And the suggested methods
+# of discovery involve having a compiled program. We can't do that as it would
+# make for a recursive discovery and build dependency cycle. So we search
+# paths for VS2017 (aka msvc >= 14.1).
+.version-14.1-path =
+    "../../VC/Tools/MSVC/*/bin/Host*/*"
+    "Microsoft Visual Studio/2017/*/VC/Tools/MSVC/*/bin/Host*/*"
+    ;
+.version-14.1-env = VS150COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 # Auto-detect all the available msvc installations on the system.
 auto-detect-toolset-versions ;

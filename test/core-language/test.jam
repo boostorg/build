@@ -1471,7 +1471,7 @@ if $(NT)
         for local x in $(param:L)
         {
             if ! x in $(found) &&
-                $(x) in "addservices" "policies" "deleted device ids"
+                $(x) in "addservices" "policies" "deleted device ids" "software"
             {
                 found += $(x) ;
             }
