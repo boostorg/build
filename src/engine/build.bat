@@ -27,8 +27,13 @@ ECHO ###
 ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
-ECHO ### Toolsets supported by this script are: borland, como, gcc, gcc-nocygwin,
-ECHO ###     intel-win32, metrowerks, mingw, msvc, vc7, vc8, vc9, vc10, vc11, vc12, vc14, vc141
+ECHO ### Toolsets supported by this script are: borland, como, gcc,
+ECHO ###     gcc-nocygwin, intel-win32, metrowerks, mingw, msvc, vc7, vc8,
+ECHO ###     vc9, vc10, vc11, vc12, vc14, vc141
+ECHO ###
+ECHO ### If you have Visual Studio 2017 installed you will need to build from
+ECHO ### the Visual Studio Command Prompt for VS 2017 as we where unable to
+ECHO ### detect your toolset installtion.
 ECHO ###
 call :Set_Error
 endlocal

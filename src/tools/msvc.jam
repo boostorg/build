@@ -920,6 +920,20 @@ local rule configure-really ( version ? : options * )
         command = [ common.get-invocation-command msvc : cl.exe : $(command) :
             [ default-paths $(version) ] : $(version) ] ;
 
+        if ( ! $(version) || $(version) = "default" ) && ! $(command:D)
+        {
+            ECHO ;
+            ECHO warning:
+                "Did not find command for MSVC toolset."
+                "If you have Visual Studio 2017 installed you will need to"
+                "specify the full path to the command,"
+                "set VS150COMNTOOLS for your installation,"
+                "or"
+                "build from the 'Visual Studio Command Prompt for VS 2017'."
+                ;
+            ECHO ;
+        }
+
         common.handle-options msvc : $(conditions) : $(command) : $(options) ;
 
         if ! $(version)
