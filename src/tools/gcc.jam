@@ -272,6 +272,35 @@ rule init ( version ? : command * : options * )
         rc-type = null ;
     }
     rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
+
+    if $(linker) = aix
+    {
+        # - Nm.
+        local nm = [ common.get-invocation-command gcc
+            : [ NORMALIZE_PATH [ MATCH "(.*)[$(nl)]+" :
+                [ SHELL "$(command-string) -print-prog-name=nm" ] ] ]
+            : [ feature.get-values <nm> : $(options) ]
+            : $(bin)
+            : search-path ] ;
+        toolset.flags gcc.link.dll.aix .NM $(condition) : $(nm[1]) ;
+        if $(.debug-configuration)
+        {
+            ECHO notice: using gcc nm :: $(condition) :: $(nm[1]) ;
+        }
+
+        # - Strip.
+        local strip = [ common.get-invocation-command gcc
+            : [ NORMALIZE_PATH [ MATCH "(.*)[$(nl)]+" :
+                [ SHELL "$(command-string) -print-prog-name=strip" ] ] ]
+            : [ feature.get-values <strip> : $(options) ]
+            : $(bin)
+            : search-path ] ;
+        toolset.flags gcc.link.dll.aix .STRIP $(condition) : $(strip[1]) ;
+        if $(.debug-configuration)
+        {
+            ECHO notice: using gcc strip :: $(condition) :: $(strip[1]) ;
+        }
+    }
 }
 
 if [ os.name ] = NT
@@ -756,6 +785,14 @@ generators.register $(g) ;
 generators.override gcc.cygwin.link : gcc.link ;
 generators.override gcc.cygwin.link.dll : gcc.link.dll ;
 
+generators.register
+  [ new gcc-linking-generator gcc.link.dll.aix
+      : LIB OBJ
+      : SHARED_LIB
+      : <toolset>gcc <target-os>aix <aix-soname>svr4 ] ;
+
+generators.override gcc.link.dll.aix : gcc.link.dll ;
+
 # Declare flags for linking.
 # First, the common flags.
 toolset.flags gcc.link OPTIONS <debug-symbols>on : -g ;
@@ -799,8 +836,10 @@ rule init-link-flags ( toolset linker condition )
         # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
         # this option, the prepending (relative) path + library name is
         # hard-coded in the loader section, causing *only* this path to be
-        # searched during load-time. Note that the AIX linker does not have an
-        # -soname equivalent, this is as close as it gets.
+        # searched during load-time.
+        # Note that creating shared libraries as archive files containing an
+        # import file it is possible to get a quite good -soname equivalent,
+        # shown in https://gcc.gnu.org/install/configure.html#WithAixSoname
         #
         # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
         # This is neccesary for some submodules such as math, but it does make running
@@ -971,6 +1010,8 @@ actions link bind LIBRARIES
 # is always available.
 .AR = ar ;
 .RANLIB = ranlib ;
+.NM = nm ;
+.STRIP = strip ;
 
 toolset.flags gcc.archive AROPTIONS <archiveflags> ;
 
@@ -1028,6 +1069,66 @@ rule link.dll ( targets * : sources * : properties * )
 actions link.dll bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+}
+
+rule link.dll.aix ( targets * : sources * : properties * ) 
+{
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
+    SPACE on $(targets) = " " ;
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+    quote-rpath $(targets) ;
+
+    local model = [ feature.get-values address-model : $(properties) ] ;
+    if ! $(model)
+    {
+        model = $(OBJECT_MODE) ;
+    }
+    if ! $(model)
+    {
+        model = 32 ;
+    }
+    if $(model) = 32
+    {
+        AIXSHR on $(targets) = shr ;
+        AIXBITS on $(targets) = 32 ;
+    }
+    else
+    {
+        AIXSHR on $(targets) = shr_64 ;
+        AIXBITS on $(targets) = 64 ;
+    }
+#   for local s in $(sources)
+#   {
+#       local t = [ type.type $(s) ] ;
+#       if $(t) && [ type.is-derived $(t) OBJ ]
+#       {
+#           AIXOBJS on $(targets) += $(s:P) ;
+#       }
+#   }
+}
+
+actions link.dll.aix bind LIBRARIES
+{
+    aixobjs=
+    for o in "$(>)"
+    do test "${o##*.}" == o && aixobjs="${aixobjs} '${o}'"
+    done
+    rm -rf "$(<).d"
+    trap 'rm -rf "$(<).d"' 0
+    mkdir -p "$(<).d" &&
+    echo "#! $(<[-1]:D=)($(AIXSHR).o)" > "$(<).d/$(AIXSHR).imp" &&
+    echo "# $(AIXBITS)" >> "$(<).d/$(AIXSHR).imp" &&
+    { eval "'$(.NM)' -PCpgl ${aixobjs}" || touch "$(<).d/$(AIXSHR).fail"
+    } |
+      { awk '{ if ((($ 2 == "T") || ($ 2 == "D") || ($ 2 == "B") || ($ 2 == "W") || ($ 2 == "V") || ($ 2 == "Z")) && (substr($ 1,1,1) != ".")) { if (($ 2 == "W") || ($ 2 == "V") || ($ 2 == "Z")) { print $ 1 " weak" } else { print $ 1 } } }' || touch "$(<).d/$(AIXSHR).fail"
+      } |
+        { sort -u || touch "$(<).d/$(AIXSHR).fail"
+        } >> "$(<).d/$(AIXSHR).imp" &&
+    test ! -r "$(<).d/$(AIXSHR).fail" &&
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1]).d/$(AIXSHR).o" -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) -Wl,-G -Wl,-bernotok "-Wl,-bE:$(<).d/$(AIXSHR).imp" $(USER_OPTIONS) &&
+    "$(.STRIP)" -e "$(<).d/$(AIXSHR).o" &&
+    "$(.AR)" $(AROPTIONS) rc "$(<)" "$(<).d/$(AIXSHR).o" "$(<).d/$(AIXSHR).imp"
 }
 
 rule setup-threading ( targets * : sources * : properties * )
