@@ -169,6 +169,8 @@ void path_build( PATHNAME * f, string * file )
     int check_f_pos;
 
     file_build1( f, file );
+    int check_f;
+    int check_f_pos;
 
     /* Do not prepend root if it is '.' or the directory is rooted. */
     check_f = (f->f_root.len
