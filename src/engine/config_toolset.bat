@@ -161,6 +161,7 @@ set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
 :Skip_VC14
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc141_" goto Skip_VC141
+call vswhere_usability_wrapper.cmd
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if NOT "_%VS150COMNTOOLS%_" == "__" (
         set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
