@@ -500,6 +500,7 @@ if [ os.name ] = HPUX
 
 toolset.flags gcc.compile USER_OPTIONS <cflags> ;
 toolset.flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
+toolset.flags gcc.compile.asm USER_OPTIONS <asmflags> ;
 toolset.flags gcc.compile DEFINES <define> ;
 toolset.flags gcc.compile INCLUDES <include> ;
 toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
@@ -647,7 +648,7 @@ rule compile.asm ( targets * : sources * : properties * )
 
 actions compile.asm
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 # Class checking that we do not try to use the <runtime-link>static property
