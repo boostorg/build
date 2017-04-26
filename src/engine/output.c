@@ -6,6 +6,8 @@
 
 #include "jam.h"
 #include "output.h"
+#include "cwd.h"
+#include "object.h"
 
 #include <stdio.h>
 #include <stdarg.h>
@@ -98,6 +100,45 @@ void err_printf(char const * const f, ...)
     }
 }
 
+static void out_json(char const* str, FILE* f)
+{
+    char const* escape_src = "\"\\\b\n\r\t";
+    char const* escape_subst[] = {
+        "\\\"", "\\\\", "\\b", "\\n", "\\r", "\\t"
+    };
+    char buffer[1024];
+    int i = 0;
+
+    /* trim leading whitespace */
+    while (*str != 0 && strchr(" \t\n\r\t", *str) != NULL)
+       ++str;
+
+    for (; *str != 0; ++str)
+    {
+        if (i >= sizeof(buffer) - 10)
+        {
+            buffer[i] = 0;
+            fputs(buffer, f);
+            i = 0;
+        }
+
+        /* skip non-printable characters */
+        if (*str < ' ' || *str > 127) continue;
+
+        char const* ch = strchr(escape_src, *str);
+        if (ch == NULL)
+        {
+            buffer[i++] = *str;
+            continue;
+        }
+        char const* subst = escape_subst[ch - escape_src];
+        strcpy(&buffer[i], subst);
+        i += strlen(subst);
+    }
+
+    buffer[i] = 0;
+    fputs(buffer, f);
+}
 
 void out_action
 (
@@ -145,6 +186,30 @@ void out_action
     err_flush();
 }
 
+void out_compile_database
+(
+    char const * const action,
+    char const * const source,
+    char const * const command
+)
+{
+    /* file format defined here:
+     * http://clang.llvm.org/docs/JSONCompilationDatabase.html
+     * we're not interested in link, mkdir, rm or any non-compile action
+     */
+    if (source
+       && strstr(action, "compile") != NULL)
+    {
+        fputs("{ \"directory\": \"", globs.comp_db);
+        out_json(object_str(cwd()), globs.comp_db);
+        fputs("\", \"command\": \"", globs.comp_db);
+        out_json(command, globs.comp_db);
+        fputs("\", \"file\": \"", globs.comp_db);
+        out_json(source, globs.comp_db);
+        fputs("\" },\n", globs.comp_db);
+    }
+
+}
 
 OBJECT * outf_int( int const value )
 {

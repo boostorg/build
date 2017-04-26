@@ -144,7 +144,8 @@ struct globs globs =
 #else
     { 0, 1 },   /* debug ... */
 #endif
-    0,          /* output commands, not run them */
+    0,          /* mirror output to file */
+    0,          /* output compilation db here */
     0,          /* action timeout */
     0           /* maximum buffer size zero is all output */
 };
@@ -243,9 +244,9 @@ int main( int argc, char * * argv, char * * arg_environ )
     ++argv;
 
     #ifdef HAVE_PYTHON
-    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qvz"
+    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:cqvz"
     #else
-    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qv"
+    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:cqv"
     #endif
 
     if ( getoptions( argc, argv, OPTSTRING, optv ) < 0 )
@@ -261,6 +262,7 @@ int main( int argc, char * * argv, char * * arg_environ )
         err_printf( "-mx     Maximum target output saved (kb), default is to save all output.\n" );
         err_printf( "-n      Don't actually execute the updating actions.\n" );
         err_printf( "-ox     Mirror all output to file x.\n" );
+        err_printf( "-c      Output JSON compilation database to compile_commands.json (only for built targets).\n" );
         err_printf( "-px     x=0, pipes action stdout and stderr merged into action output.\n" );
         err_printf( "-q      Quit quickly as soon as a target fails.\n" );
         err_printf( "-sx=y   Set variable x=y, overriding environment.\n" );
@@ -373,6 +375,17 @@ int main( int argc, char * * argv, char * * arg_environ )
             exit( EXITBAD );
         }
         /* ++globs.noexec; */
+    }
+
+    /* If we're asked to produce a compilation database, open the file. */
+    if ( ( s = getoptval( optv, 'c', 0 ) ) )
+    {
+        if ( !( globs.comp_db = fopen( "compile_commands.json", "w" ) ) )
+        {
+            err_printf( "Failed to write to 'compile_commands.json'\n");
+            exit( EXITBAD );
+        }
+        fprintf(globs.comp_db, "[\n");
     }
 
     constants_init();
@@ -612,6 +625,13 @@ int main( int argc, char * * argv, char * * arg_environ )
     /* Close log out. */
     if ( globs.out )
         fclose( globs.out );
+
+    /* close compilation database output file */
+    if ( globs.comp_db )
+    {
+        fprintf(globs.comp_db, "]\n");
+        fclose( globs.comp_db );
+    }
 
 #ifdef HAVE_PYTHON
     Py_Finalize();
