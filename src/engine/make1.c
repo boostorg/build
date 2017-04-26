@@ -562,7 +562,6 @@ static void make1c( state const * const pState )
              * affected Boost Build tests be updated.
              */
             assert( 0 < globs.jobs );
-            assert( globs.jobs <= MAXJOBS );
             while ( cmdsrunning >= globs.jobs )
                 exec_wait();
         }

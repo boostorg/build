@@ -38,6 +38,12 @@ typedef void (* ExecCmdCallback)
     int const cmd_exit_reason
 );
 
+/* Global initialization.  Must be called after setting
+ * globs.jobs.  May be called multiple times. */
+void exec_init( void );
+/* Global cleanup */
+void exec_done( void );
+
 /* Status codes passed to ExecCmdCallback routines. */
 #define EXEC_CMD_OK    0
 #define EXEC_CMD_FAIL  1

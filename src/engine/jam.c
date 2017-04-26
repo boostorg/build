@@ -317,10 +317,9 @@ int main( int argc, char * * argv, char * * arg_environ )
     if ( ( s = getoptval( optv, 'j', 0 ) ) )
     {
         globs.jobs = atoi( s );
-        if ( globs.jobs < 1 || globs.jobs > MAXJOBS )
+        if ( globs.jobs < 1 )
         {
-            err_printf( "Invalid value for the '-j' option, valid values are 1 "
-                "through %d.\n", MAXJOBS );
+            err_printf( "Invalid value for the '-j' option.\n" );
             exit( EXITBAD );
         }
     }
@@ -554,10 +553,9 @@ int main( int argc, char * * argv, char * * arg_environ )
             if ( !list_empty( p ) )
             {
                 int const j = atoi( object_str( list_front( p ) ) );
-                if ( j < 1 || j > MAXJOBS )
-                    out_printf( "Invalid value of PARALLELISM: %s. Valid values "
-                        "are 1 through %d.\n", object_str( list_front( p ) ),
-                        MAXJOBS );
+                if ( j < 1 )
+                    out_printf( "Invalid value of PARALLELISM: %s.\n",
+                        object_str( list_front( p ) ) );
                 else
                     globs.jobs = j;
             }
@@ -596,6 +594,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 
     /* Widely scattered cleanup. */
     property_set_done();
+    exec_done();
     file_done();
     rules_done();
     timestamp_done();
