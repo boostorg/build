@@ -869,19 +869,22 @@ static int try_wait( int const timeoutMillis )
     {
         int i;
         HANDLE active_handles[ MAXIMUM_WAIT_OBJECTS ];
+        int job_ids[ MAXIMUM_WAIT_OBJECTS ];
         DWORD num_handles = 0;
         DWORD wait_api_result;
         for ( i = 0; i < globs.jobs; ++i )
         {
             if( cmdtab[ i ].pi.hProcess )
             {
-                active_handles[ num_handles++ ] = cmdtab[ i ].pi.hProcess;
+                job_ids[ num_handles ] = i;
+                active_handles[ num_handles ] = cmdtab[ i ].pi.hProcess;
+                ++num_handles;
             }
         }
         wait_api_result = WaitForMultipleObjects( num_handles, active_handles, FALSE, timeoutMillis );
         if ( WAIT_OBJECT_0 <= wait_api_result && wait_api_result < WAIT_OBJECT_0 + globs.jobs )
         {
-            return wait_api_result - WAIT_OBJECT_0;
+            return job_ids[ wait_api_result - WAIT_OBJECT_0 ];
         }
         else
         {
