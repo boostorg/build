@@ -16,6 +16,7 @@ def split_stdin_stdout(text):
     may contain regular expressions enclosed in {{}}."""
     prompt = re.escape('(b2db) ')
     pattern = re.compile('(?<=%s)(.*\n)' % prompt)
+    text = text.replace("{{bjam}}", "{{.*}}bjam{{(?:\\.exe)?}}")
     stdin = ''.join(re.findall(pattern, text))
     stdout = re.sub(pattern, '', text)
     outside_pattern = re.compile(r'(?:\A|(?<=\}\}))(?:[^\{]|(?:\{(?!\{)))*(?:(?=\{\{)|\Z)')
@@ -43,7 +44,7 @@ def test_run():
 
     run(t, """\
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Child {{\d+}} exited with status 0
 (b2db) quit
 """)
@@ -57,7 +58,7 @@ def test_exit_status():
     """)
     run(t, """\
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 
 Child {{\d+}} exited with status 1
 (b2db) quit
@@ -83,7 +84,7 @@ def test_step():
 (b2db) break f
 Breakpoint 1 set at f
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, f ( ) at test.jam:8
 8	            g ;
 (b2db) step
@@ -121,7 +122,7 @@ def test_next():
 (b2db) break f
 Breakpoint 1 set at f
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, f ( ) at test.jam:7
 7	            g ;
 (b2db) next
@@ -165,7 +166,7 @@ def test_finish():
 (b2db) break f
 Breakpoint 1 set at f
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, f ( ) at test.jam:3
 3	            a = 1 ;
 (b2db) finish
@@ -205,7 +206,7 @@ def test_breakpoints():
 (b2db) break f
 Breakpoint 1 set at f
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, f ( ) at test.jam:3
 3	            a = 1 ;
 (b2db) kill
@@ -213,19 +214,19 @@ Breakpoint 1, f ( ) at test.jam:3
 Breakpoint 2 set at g
 (b2db) disable 1
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 2, g ( ) at test.jam:7
 7	            b = 2 ;
 (b2db) kill
 (b2db) enable 1
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, f ( ) at test.jam:3
 3	            a = 1 ;
 (b2db) kill
 (b2db) delete 1
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 2, g ( ) at test.jam:7
 7	            b = 2 ;
 (b2db) kill
@@ -234,14 +235,14 @@ Breakpoint 3 set at test.jam:12
 (b2db) clear g
 Deleted breakpoint 2
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 3, h ( ) at test.jam:12
 12	            d = 4 ;
 (b2db) kill
 (b2db) clear test.jam:12
 Deleted breakpoint 3
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Child {{\d+}} exited with status 0
 (b2db) quit
 """)
@@ -274,7 +275,7 @@ def test_breakpoints_running():
 (b2db) break test.jam:14
 Breakpoint 1 set at test.jam:14
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:14
 14	        f ;
 (b2db) break f
@@ -284,7 +285,7 @@ Breakpoint 2, f ( ) at test.jam:3
 3	            a = 1 ;
 (b2db) kill
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:14
 14	        f ;
 (b2db) break g
@@ -295,7 +296,7 @@ Breakpoint 3, g ( ) at test.jam:7
 7	            b = 2 ;
 (b2db) kill
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:14
 14	        f ;
 (b2db) enable 2
@@ -304,7 +305,7 @@ Breakpoint 2, f ( ) at test.jam:3
 3	            a = 1 ;
 (b2db) kill
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:14
 14	        f ;
 (b2db) delete 2
@@ -313,7 +314,7 @@ Breakpoint 3, g ( ) at test.jam:7
 7	            b = 2 ;
 (b2db) kill
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:14
 14	        f ;
 (b2db) break test.jam:12
@@ -325,7 +326,7 @@ Breakpoint 4, h ( ) at test.jam:12
 12	            d = 4 ;
 (b2db) kill
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:14
 14	        f ;
 (b2db) clear test.jam:12
@@ -353,7 +354,7 @@ def test_backtrace():
 (b2db) break f
 Breakpoint 1 set at f
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, f ( 1 : 2 : 3 ) at test.jam:3
 3	            return $(x) ;
 (b2db) backtrace
@@ -379,7 +380,7 @@ def test_print():
 (b2db) break f
 Breakpoint 1 set at f
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, f ( x ) at test.jam:3
 3	            return $(args) ;
 (b2db) print $(args)
@@ -407,12 +408,12 @@ def test_run_running():
 (b2db) break test.jam:1
 Breakpoint 1 set at test.jam:1
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:1
 1	        UPDATE ;
 (b2db) run -ftest.jam
 Child {{\d+}} exited with status 0
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:1
 1	        UPDATE ;
 (b2db) quit
@@ -452,7 +453,7 @@ def test_bad_arguments():
 (b2db) break test.jam:1
 Breakpoint 1 set at test.jam:1
 (b2db) run -ftest.jam
-Starting program: {{.*}}bjam -ftest.jam
+Starting program: {{bjam}} -ftest.jam
 Breakpoint 1, module scope at test.jam:1
 1	        UPDATE ;
 (b2db) continue 1
