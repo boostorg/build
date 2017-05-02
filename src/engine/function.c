@@ -12,6 +12,7 @@
 #include "class.h"
 #include "compile.h"
 #include "constants.h"
+#include "debugger.h"
 #include "filesys.h"
 #include "frames.h"
 #include "lists.h"
@@ -123,6 +124,7 @@ void backtrace_line( FRAME * );
 #define INSTR_WRITE_FILE                   54
 #define INSTR_OUTPUT_STRINGS               55
 
+#define INSTR_DEBUG_LINE                   67
 #define INSTR_FOR_POP                      70
 
 typedef struct instruction
@@ -2434,6 +2436,10 @@ static void compile_append_chain( PARSE * parse, compiler * c )
 
 static void compile_parse( PARSE * parse, compiler * c, int result_location )
 {
+#ifdef JAM_DEBUGGER
+    if ( debug_is_debugging() )
+        compile_emit( c, INSTR_DEBUG_LINE, parse->line );
+#endif
     if ( parse->type == PARSE_APPEND )
     {
         compile_append_chain( parse, c );
@@ -3669,6 +3675,71 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
     }
 }
 
+LIST * function_get_variables( FUNCTION * f )
+{
+    if ( f->type == FUNCTION_BUILTIN )
+        return L0;
+#ifdef HAVE_PYTHON
+    if ( f->type == FUNCTION_PYTHON )
+        return L0;
+#endif
+    {
+        JAM_FUNCTION * func = (JAM_FUNCTION *)f;
+        LIST * result = L0;
+        instruction * code;
+        int i;
+        assert( f->type == FUNCTION_JAM );
+        if ( func->generic ) func = ( JAM_FUNCTION * )func->generic;
+
+        for ( i = 0; ; ++i )
+        {
+            OBJECT * var;
+            code = func->code + i;
+            switch ( code->op_code )
+            {
+            case INSTR_PUSH_LOCAL: break;
+            case INSTR_RETURN: return result;
+            case INSTR_CALL_MEMBER_RULE:
+            case INSTR_CALL_RULE: ++i; continue;
+            case INSTR_PUSH_MODULE:
+                {
+                    int depth = 1;
+                    ++i;
+                    while ( depth > 0 )
+                    {
+                        code = func->code + i;
+                        switch ( code->op_code )
+                        {
+                        case INSTR_PUSH_MODULE:
+                        case INSTR_CLASS:
+                            ++depth;
+                            break;
+                        case INSTR_POP_MODULE:
+                            --depth;
+                            break;
+                        case INSTR_CALL_RULE:
+                            ++i;
+                            break;
+                        }
+                        ++i;
+                    }
+                    --i;
+                }
+            default: continue;
+            }
+            var = func->constants[ code->arg ];
+            if ( !( object_equal( var, constant_TMPDIR ) ||
+                    object_equal( var, constant_TMPNAME ) ||
+                    object_equal( var, constant_TMPFILE ) ||
+                    object_equal( var, constant_STDOUT ) ||
+                    object_equal( var, constant_STDERR ) ) )
+            {
+                result = list_push_back( result, var );
+            }
+        }
+    }
+}
+
 void function_refer( FUNCTION * func )
 {
     ++func->reference_count;
@@ -3780,6 +3851,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
     PROFILE_ENTER_LOCAL(function_run);
 
+#ifdef JAM_DEBUGGER
+    frame->function = function_;
+#endif
+
     if ( function_->type == FUNCTION_BUILTIN )
     {
         PROFILE_ENTER_LOCAL(function_run_FUNCTION_BUILTIN);
@@ -3787,9 +3862,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         if ( function_->formal_arguments )
             argument_list_check( function_->formal_arguments,
                 function_->num_formal_arguments, function_, frame );
+
+        debug_on_enter_function( frame, f->base.rulename, NULL, -1 );
+        result = f->func( frame, f->flags );
+        debug_on_exit_function( f->base.rulename );
         PROFILE_EXIT_LOCAL(function_run_FUNCTION_BUILTIN);
         PROFILE_EXIT_LOCAL(function_run);
-        return f->func( frame, f->flags );
+        return result;
     }
 
 #ifdef HAVE_PYTHON
@@ -3797,9 +3876,12 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
     {
         PROFILE_ENTER_LOCAL(function_run_FUNCTION_PYTHON);
         PYTHON_FUNCTION * f = (PYTHON_FUNCTION *)function_;
+        debug_on_enter_function( frame, f->base.rulename, NULL, -1 );
+        result = call_python_function( f, frame );
+        debug_on_exit_function( f->base.rulename );
         PROFILE_EXIT_LOCAL(function_run_FUNCTION_PYTHON);
         PROFILE_EXIT_LOCAL(function_run);
-        return call_python_function( f, frame );
+        return result;
     }
 #endif
 
@@ -3810,6 +3892,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             function_->num_formal_arguments, function_, frame, s );
 
     function = (JAM_FUNCTION *)function_;
+    debug_on_enter_function( frame, function->base.rulename, function->file, function->line );
     code = function->code;
     for ( ; ; )
     {
@@ -4145,6 +4228,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
 #endif
             assert( saved_stack == s->data );
+            debug_on_exit_function( function->base.rulename );
             PROFILE_EXIT_LOCAL(function_run_INSTR_RETURN);
             PROFILE_EXIT_LOCAL(function_run);
             return result;
@@ -4748,6 +4832,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 popsettings( root_module(), t->settings );
 
                 parse_file( t->boundname, frame );
+#ifdef JAM_DEBUGGER
+                frame->function = function_;
+#endif
             }
             PROFILE_EXIT_LOCAL(function_run_INSTR_INCLUDE);
             break;
@@ -4938,6 +5025,12 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 code->arg * sizeof( LIST * ) ) );
             combine_strings( s, code->arg, buf );
             PROFILE_EXIT_LOCAL(function_run_INSTR_OUTPUT_STRINGS);
+            break;
+        }
+
+        case INSTR_DEBUG_LINE:
+        {
+            debug_on_instruction( frame, function->file, code->arg );
             break;
         }
 

@@ -492,13 +492,14 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1)
 
         if stdout is not None and not match(self.stdout(), stdout):
+            stdout_test = match(self.stdout(), stdout)
             annotation("failure", "Unexpected stdout")
             annotation("Expected STDOUT", stdout)
             annotation("Actual STDOUT", self.stdout())
             stderr = self.stderr()
             if stderr:
                 annotation("STDERR", stderr)
-            self.maybe_do_diff(self.stdout(), stdout)
+            self.maybe_do_diff(self.stdout(), stdout, stdout_test)
             self.fail_test(1, dump_stdio=False)
 
         # Intel tends to produce some messages to stderr which make tests fail.
@@ -506,11 +507,12 @@ class Tester(TestCmd.TestCmd):
         actual_stderr = re.sub(intel_workaround, "", self.stderr())
 
         if stderr is not None and not match(actual_stderr, stderr):
+            stderr_test = match(actual_stderr, stderr)
             annotation("failure", "Unexpected stderr")
             annotation("Expected STDERR", stderr)
             annotation("Actual STDERR", self.stderr())
             annotation("STDOUT", self.stdout())
-            self.maybe_do_diff(actual_stderr, stderr)
+            self.maybe_do_diff(actual_stderr, stderr, stderr_test)
             self.fail_test(1, dump_stdio=False)
 
         if expected_duration is not None:
@@ -757,7 +759,7 @@ class Tester(TestCmd.TestCmd):
             print actual
             self.fail_test(1)
 
-    def maybe_do_diff(self, actual, expected):
+    def maybe_do_diff(self, actual, expected, result=None):
         if os.environ.get("DO_DIFF"):
             e = tempfile.mktemp("expected")
             a = tempfile.mktemp("actual")
@@ -777,6 +779,8 @@ class Tester(TestCmd.TestCmd):
                     ))
             os.unlink(e)
             os.unlink(a)
+        elif type(result) is TestCmd.MatchError:
+            print(result.message)
         else:
             print("Set environmental variable 'DO_DIFF' to examine the "
                 "difference.")

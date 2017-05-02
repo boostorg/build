@@ -518,7 +518,7 @@ if --show-locate-target in $(ARGV)
 
 # We have some different files for UNIX, VMS, and NT.
 jam.source =
-    command.c compile.c constants.c debug.c execcmd.c frames.c function.c glob.c
+    command.c compile.c constants.c debug.c debugger.c execcmd.c frames.c function.c glob.c
     hash.c hcache.c headers.c hdrmacro.c jam.c jambase.c jamgram.c lists.c
     make.c make1.c mem.c object.c option.c output.c parse.c pathsys.c regexp.c
     rules.c scan.c search.c subst.c w32_getreg.c timestamp.c variable.c
@@ -551,6 +551,7 @@ if ! $(debug) || --noassert in $(ARGV)
 --defs += OPT_SEMAPHORE ;
 --defs += OPT_AT_FILES ;
 --defs += OPT_DEBUG_PROFILE ;
+--defs += JAM_DEBUGGER ;
 
 # Bug fixes
 --defs += OPT_FIX_TARGET_VARIABLES_EXT ;
