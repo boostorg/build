@@ -25,6 +25,7 @@
 #include <fcntl.h>
 #else
 #include <errno.h>
+#include <sys/wait.h>
 #endif
 
 #undef debug_on_enter_function
