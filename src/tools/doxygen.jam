@@ -100,7 +100,7 @@ rule init ( name ? )
         .doxproc = $(.doxproc:D)/doxproc.py ;
 
         generators.register-composing doxygen.headers-to-doxyfile
-            : H HPP CPP : DOXYFILE ;
+            : H HPP CPP MARKDOWN : DOXYFILE ;
         generators.register-standard doxygen.run
             : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
         generators.register-standard doxygen.xml-dir-to-boostbook
