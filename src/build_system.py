@@ -454,6 +454,12 @@ def main_real():
 
     import b2.build.configure as configure
 
+    if '--interactive' in sys.argv:
+        from interpreter import InteractiveShell
+        exe = sys.argv[0]
+        boost_build_path = bjam.variable('BOOST_BUILD_PATH')
+        return InteractiveShell(exe, boost_build_path).interact()
+
     if "--version" in sys.argv:
         from b2.build import version
         version.report()
