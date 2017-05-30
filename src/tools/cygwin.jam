@@ -60,7 +60,7 @@ rule cygwin-to-windows-path ( path )
             }
             tail = $(tail:R=$(head:D=)) ;
 
-            if $(head) = /
+            if $(head) = "/" || [ MATCH  "^([a-zA-Z]:/)$" : $(head) ]
             {
                 head = ;
             }
