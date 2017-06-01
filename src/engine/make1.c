@@ -780,7 +780,7 @@ static void call_action_rule
             /* Clean the output of control characters. */
             for (; *output_i; ++output_i)
             {
-                if (iscntrl(*output_i)) *output_i = '?';
+                if (iscntrl(*output_i) && !isspace(*output_i)) *output_i = '?';
             }
             lol_add( frame->args, list_new( command_output_obj ) );
         }
