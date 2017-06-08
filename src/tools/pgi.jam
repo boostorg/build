@@ -25,7 +25,7 @@ rule init ( version ? : command * : options * )
 {
   local condition = [ common.check-init-parameters pgi : version $(version) ] ;
 
-  local l_command = [ common.get-invocation-command pgi : pgCC : $(command) ] ;
+  local l_command = [ common.get-invocation-command pgi : pgc++ : $(command) ] ;
 
   common.handle-options pgi : $(condition) : $(l_command) : $(options) ;
     

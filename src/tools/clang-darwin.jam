@@ -44,9 +44,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
     .debug-configuration = true ;
 }
                        
-# vectorization diagnostics
-feature vectorize : off on full ;
-
 # Initializes the clang-darwin toolset
 #   version in optional
 #   name (default clang++) is used to invoke the specified clang complier

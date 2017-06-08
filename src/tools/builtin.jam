@@ -117,6 +117,7 @@ feature.feature inlining           : off on full     : propagated ;
 feature.feature threading          : single multi    : propagated ;
 feature.feature rtti               : on off          : propagated ;
 feature.feature exception-handling : on off          : propagated ;
+feature.feature vectorize          : off on full     : propagated ;
 
 # Whether there is support for asynchronous EH (e.g. catching SEGVs).
 feature.feature asynch-exceptions  : off on          : propagated ;

@@ -321,6 +321,8 @@ local rule print-help-usage ( )
         Use abbreviated paths for targets. ;
     print.list-item --hash;
         Shorten target paths by using an MD5 hash. ;
+    print.list-item -dconsole;
+        Run the interactive debugger.  Cannot be used with any other option. ;
     print.list-item -dn;
         Enables output of diagnostic messages. The debug level '"n"' and all
         below it are enabled by this option. ;
