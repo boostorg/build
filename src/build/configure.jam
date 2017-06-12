@@ -1,4 +1,5 @@
 # Copyright (c) 2010 Vladimir Prus.
+# Copyright 2017 Rene Rivera.
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -17,6 +18,26 @@ import property ;
 import property-set ;
 import targets ;
 import config-cache ;
+import feature ;
+import modules ;
+import utility ;
+
+
+# The configure feature allows external definition of what features are
+# relevant for doing configuration builds. One can add additional relevant
+# features by using:
+#
+#   import feature ;
+#   import configure ;
+#   feature.compose <configure> : <threading> ;
+#
+feature.feature configure : : composite optional ;
+
+# This is the initial set of relevant features. Note that subfeature of all
+# relevant features are also considered relevant.
+#
+feature.compose <configure> :
+    <target-os> <toolset> <address-model> <architecture> ;
 
 
 rule log-summary ( )
@@ -211,15 +232,29 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
     }
 }
 
+local rule get-relevant-features ( )
+{
+    local relevant = [ feature.expand <configure> ] ;
+    local result = ;
+    for local f in $(relevant)
+    {
+        if $(f) != <configure>
+        {
+            local sub = [ modules.peek feature : $(f).subfeatures ] ;
+            local name = [ utility.ungrist $(f) ] ;
+            result += $(f) <$(name)-$(sub)> ;
+        }
+    }
+    return $(result) ;
+}
+
 rule builds ( metatarget-reference : properties * : what ? : retry ? )
 {
+    local toolset-subfeatures = [ modules.peek feature : <toolset>.subfeatures ] ;
+    toolset-subfeatures = <toolset-$(toolset-subfeatures)> ;
     # FIXME: This should not be hardcoded. Other checks might want to consider a
     # different set of features as relevant.
-    local toolset = [ property.select <toolset> : $(properties) ] ;
-    local toolset-version-property = "<toolset-$(toolset:G=):version>" ;
-    local relevant = [ property.select <target-os> <toolset>
-        $(toolset-version-property) <address-model> <architecture> :
-        $(properties) ] ;
+    local relevant = [ property.select [ get-relevant-features ] : $(properties) ] ;
     local ps = [ property-set.create $(relevant) ] ;
     local t = [ targets.current ] ;
     local p = [ $(t).project ] ;
