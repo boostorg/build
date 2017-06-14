@@ -1,11 +1,20 @@
 sudo: false
-os:
-  - linux
+dist: trusty
+os: linux
 env:
-  - TOOLSET=gcc TEST_ALL_EXTRAS=
-#  - TOOLSET=gcc TEST_ALL_EXTRAS=--extras
-  - TOOLSET=clang TEST_ALL_EXTRAS=
-#  - TOOLSET=clang TEST_ALL_EXTRAS=--extras
+  matrix:
+    - TRAVIS_EMPTY_JOB_WORKAROUND=true
+matrix:
+  exclude:
+    - env: TRAVIS_EMPTY_JOB_WORKAROUND=true
+  include:
+    - env: TOOLSET=gcc TEST_ALL_EXTRAS=
+    # - env: TOOLSET=gcc TEST_ALL_EXTRAS=--extras
+    - env: TOOLSET=clang TEST_ALL_EXTRAS=
+    # - env: TOOLSET=clang TEST_ALL_EXTRAS=--extras
+    - env: TOOLSET=clang TEST_ALL_EXTRAS=
+      os: osx
+      osx_image: xcode8.3
 language: python
 python:
   - 2.7
