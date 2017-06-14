@@ -1,5 +1,5 @@
 # Copyright 2001 David Abrahams
-# Copyright 2002-2006 Rene Rivera
+# Copyright 2002-2017 Rene Rivera
 # Copyright 2002-2003 Vladimir Prus
 # Copyright 2005 Reece H. Dunn
 # Copyright 2006 Ilya Sokolov
@@ -36,6 +36,9 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 feature.extend toolset : gcc ;
 # feature.subfeature toolset gcc : flavor : : optional ;
+
+feature.subfeature toolset gcc : linker-type :
+    gnu aix darwin hpux osf sun : propagated link-incompatible ;
 
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags gcc : unix ;
@@ -195,20 +198,7 @@ rule init ( version ? : command * : options * )
 
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
 
-    local linker = [ feature.get-values <linker-type> : $(options) ] ;
-    # TODO: The logic below should actually be keyed on <target-os>.
-    if ! $(linker)
-    {
-        switch [ os.name ]
-        {
-            case OSF     : linker = osf ;
-            case HPUX    : linker = hpux ;
-            case AIX     : linker = aix ;
-            case SOLARIS : linker = sun ;
-            case *       : linker = gnu ;
-        }
-    }
-    init-link-flags gcc $(linker) $(condition) ;
+    init-link-flags gcc - $(condition) ;
 
     # If gcc is installed in a non-standard location, we would need to add
     # LD_LIBRARY_PATH when running programs created with it (for unit-test/run
@@ -778,155 +768,196 @@ if [ os.name ] != HPUX
     toolset.flags gcc.link OPTIONS <runtime-link>static : -static ;
 }
 
+toolset.add-requirements
+    <toolset>gcc,<target-os>aix:<toolset-gcc:linker-type>aix
+    <toolset>gcc,<target-os>darwin:<toolset-gcc:linker-type>darwin
+    <toolset>gcc,<target-os>hpux:<toolset-gcc:linker-type>hpux
+    <toolset>gcc,<target-os>osf:<toolset-gcc:linker-type>osf
+    <toolset>gcc,<target-os>solaris:<toolset-gcc:linker-type>sun
+    ;
+
 # Now, the vendor specific flags.
 # The parameter linker can be either aix, darwin, gnu, hpux, osf or sun.
-rule init-link-flags ( toolset linker condition )
+rule init-link-flags ( toolset _ignored_ condition )
 {
-    switch $(linker)
-    {
-    case aix :
-        # On AIX we *have* to use the native linker.
-        #
-        # Using -brtl, the AIX linker will look for libraries with both the .a
-        # and .so extensions, such as libfoo.a and libfoo.so. Without -brtl, the
-        # AIX linker looks only for libfoo.a. Note that libfoo.a is an archived
-        # file that may contain shared objects and is different from static libs
-        # as on Linux.
-        #
-        # The -bnoipath strips the prepending (relative) path of libraries from
-        # the loader section in the target library or executable. Hence, during
-        # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
-        # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
-        # this option, the prepending (relative) path + library name is
-        # hard-coded in the loader section, causing *only* this path to be
-        # searched during load-time. Note that the AIX linker does not have an
-        # -soname equivalent, this is as close as it gets.
-        #
-        # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
-        # This is neccesary for some submodules such as math, but it does make running
-        # the tests a tad slower.
-        #
-        # The above options are definately for AIX 5.x, and most likely also for
-        # AIX 4.x and AIX 6.x. For details about the AIX linker see:
-        # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
-        #
+## aix :
+    # On AIX we *have* to use the native linker.
+    #
+    # Using -brtl, the AIX linker will look for libraries with both the .a
+    # and .so extensions, such as libfoo.a and libfoo.so. Without -brtl, the
+    # AIX linker looks only for libfoo.a. Note that libfoo.a is an archived
+    # file that may contain shared objects and is different from static libs
+    # as on Linux.
+    #
+    # The -bnoipath strips the prepending (relative) path of libraries from
+    # the loader section in the target library or executable. Hence, during
+    # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
+    # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
+    # this option, the prepending (relative) path + library name is
+    # hard-coded in the loader section, causing *only* this path to be
+    # searched during load-time. Note that the AIX linker does not have an
+    # -soname equivalent, this is as close as it gets.
+    #
+    # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
+    # This is neccesary for some submodules such as math, but it does make running
+    # the tests a tad slower.
+    #
+    # The above options are definately for AIX 5.x, and most likely also for
+    # AIX 4.x and AIX 6.x. For details about the AIX linker see:
+    # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
+    #
 
-        toolset.flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc
-            : unchecked ;
+    toolset.flags $(toolset).link OPTIONS <toolset-gcc:linker-type>aix/$(condition)
+        : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc
+        : unchecked ;
 
-    case darwin :
-        # On Darwin, the -s option to ld does not work unless we pass -static,
-        # and passing -static unconditionally is a bad idea. So, do not pass -s
-        # at all and darwin.jam will use a separate 'strip' invocation.
-        toolset.flags $(toolset).link RPATH $(condition) : <dll-path> :
-            unchecked ;
-        toolset.flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> :
-            unchecked ;
+## darwin :
+    # On Darwin, the -s option to ld does not work unless we pass -static,
+    # and passing -static unconditionally is a bad idea. So, do not pass -s
+    # at all and darwin.jam will use a separate 'strip' invocation.
+    toolset.flags $(toolset).link RPATH <toolset-gcc:linker-type>darwin/$(condition)
+        : <dll-path>
+        : unchecked ;
+    toolset.flags $(toolset).link RPATH_LINK <toolset-gcc:linker-type>darwin/$(condition)
+        : <xdll-path>
+        : unchecked ;
 
-    case gnu :
-        # Strip the binary when no debugging is needed. We use --strip-all flag
-        # as opposed to -s since icc (intel's compiler) is generally
-        # option-compatible with and inherits from the gcc toolset, but does not
-        # support -s.
-        toolset.flags $(toolset).link OPTIONS     $(condition)/<strip>on : -Wl,--strip-all   : unchecked ;
-        toolset.flags $(toolset).link RPATH       $(condition)           : <dll-path>        : unchecked ;
-        toolset.flags $(toolset).link RPATH_LINK  $(condition)           : <xdll-path>       : unchecked ;
-        toolset.flags $(toolset).link START-GROUP $(condition)           : -Wl,--start-group : unchecked ;
-        toolset.flags $(toolset).link END-GROUP   $(condition)           : -Wl,--end-group   : unchecked ;
+## gnu :
+    # Strip the binary when no debugging is needed. We use --strip-all flag
+    # as opposed to -s since icc (intel's compiler) is generally
+    # option-compatible with and inherits from the gcc toolset, but does not
+    # support -s.
+    toolset.flags $(toolset).link OPTIONS
+        <toolset-gcc:linker-type>gnu/$(condition)/<strip>on
+        : -Wl,--strip-all
+        : unchecked ;
+    toolset.flags $(toolset).link RPATH
+        <toolset-gcc:linker-type>gnu/$(condition)
+        : <dll-path>
+        : unchecked ;
+    toolset.flags $(toolset).link RPATH_LINK
+        <toolset-gcc:linker-type>gnu/$(condition)
+        : <xdll-path>
+        : unchecked ;
+    toolset.flags $(toolset).link START-GROUP
+        <toolset-gcc:linker-type>gnu/$(condition)
+        : -Wl,--start-group
+        : unchecked ;
+    toolset.flags $(toolset).link END-GROUP
+        <toolset-gcc:linker-type>gnu/$(condition)
+        : -Wl,--end-group
+        : unchecked ;
 
-        # gnu ld has the ability to change the search behaviour for libraries
-        # referenced by the -l switch. These modifiers are -Bstatic and
-        # -Bdynamic and change search for -l switches that follow them. The
-        # following list shows the tried variants. Search stops at the first
-        # variant that has a match.
-        #
-        # *nix: -Bstatic -lxxx
-        #    libxxx.a
-        #
-        # *nix: -Bdynamic -lxxx
-        #    libxxx.so
-        #    libxxx.a
-        #
-        # windows (mingw, cygwin) -Bstatic -lxxx
-        #    libxxx.a
-        #    xxx.lib
-        #
-        # windows (mingw, cygwin) -Bdynamic -lxxx
-        #    libxxx.dll.a
-        #    xxx.dll.a
-        #    libxxx.a
-        #    xxx.lib
-        #    cygxxx.dll (*)
-        #    libxxx.dll
-        #    xxx.dll
-        #    libxxx.a
-        #
-        # (*) This is for cygwin
-        # Please note that -Bstatic and -Bdynamic are not a guarantee that a
-        # static or dynamic lib indeed gets linked in. The switches only change
-        # search patterns!
+    # gnu ld has the ability to change the search behaviour for libraries
+    # referenced by the -l switch. These modifiers are -Bstatic and
+    # -Bdynamic and change search for -l switches that follow them. The
+    # following list shows the tried variants. Search stops at the first
+    # variant that has a match.
+    #
+    # *nix: -Bstatic -lxxx
+    #    libxxx.a
+    #
+    # *nix: -Bdynamic -lxxx
+    #    libxxx.so
+    #    libxxx.a
+    #
+    # windows (mingw, cygwin) -Bstatic -lxxx
+    #    libxxx.a
+    #    xxx.lib
+    #
+    # windows (mingw, cygwin) -Bdynamic -lxxx
+    #    libxxx.dll.a
+    #    xxx.dll.a
+    #    libxxx.a
+    #    xxx.lib
+    #    cygxxx.dll (*)
+    #    libxxx.dll
+    #    xxx.dll
+    #    libxxx.a
+    #
+    # (*) This is for cygwin
+    # Please note that -Bstatic and -Bdynamic are not a guarantee that a
+    # static or dynamic lib indeed gets linked in. The switches only change
+    # search patterns!
 
-        # On *nix mixing shared libs with static runtime is not a good idea.
-        toolset.flags $(toolset).link FINDLIBS-ST-PFX
-            $(condition)/<runtime-link>shared : -Wl,-Bstatic : unchecked ;
-        toolset.flags $(toolset).link FINDLIBS-SA-PFX
-            $(condition)/<runtime-link>shared : -Wl,-Bdynamic : unchecked ;
+    # On *nix mixing shared libs with static runtime is not a good idea.
+    toolset.flags $(toolset).link FINDLIBS-ST-PFX
+        <toolset-gcc:linker-type>gnu/$(condition)/<runtime-link>shared
+        : -Wl,-Bstatic
+        : unchecked ;
+    toolset.flags $(toolset).link FINDLIBS-SA-PFX
+        <toolset-gcc:linker-type>gnu/$(condition)/<runtime-link>shared
+        : -Wl,-Bdynamic
+        : unchecked ;
 
-        # On windows allow mixing of static and dynamic libs with static
-        # runtime is not a good idea.
-        toolset.flags $(toolset).link FINDLIBS-ST-PFX
-            $(condition)/<runtime-link>static/<target-os>windows : -Wl,-Bstatic
-            : unchecked ;
-        toolset.flags $(toolset).link FINDLIBS-SA-PFX
-            $(condition)/<runtime-link>static/<target-os>windows : -Wl,-Bdynamic
-            : unchecked ;
-        toolset.flags $(toolset).link OPTIONS
-            $(condition)/<runtime-link>static/<target-os>windows : -Wl,-Bstatic
-            : unchecked ;
+    # On windows allow mixing of static and dynamic libs with static
+    # runtime is not a good idea.
+    toolset.flags $(toolset).link FINDLIBS-ST-PFX
+        <toolset-gcc:linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
+        : -Wl,-Bstatic
+        : unchecked ;
+    toolset.flags $(toolset).link FINDLIBS-SA-PFX
+        <toolset-gcc:linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
+        : -Wl,-Bdynamic
+        : unchecked ;
+    toolset.flags $(toolset).link OPTIONS
+        <toolset-gcc:linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
+        : -Wl,-Bstatic
+        : unchecked ;
 
-    case hpux :
-        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on : -Wl,-s :
-            unchecked ;
-        toolset.flags $(toolset).link OPTIONS $(condition)/<link>shared : -fPIC
-            : unchecked ;
+## hpux :
+    toolset.flags $(toolset).link OPTIONS
+        <toolset-gcc:linker-type>hpux/$(condition)/<strip>on
+        : -Wl,-s
+        : unchecked ;
+    toolset.flags $(toolset).link OPTIONS
+        <toolset-gcc:linker-type>hpux/$(condition)/<link>shared
+        : -fPIC
+        : unchecked ;
 
-    case osf :
-        # No --strip-all, just -s.
-        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on : -Wl,-s :
-            unchecked ;
-        toolset.flags $(toolset).link RPATH $(condition) : <dll-path> :
-            unchecked ;
-        # This does not support -R.
-        toolset.flags $(toolset).link RPATH_OPTION $(condition) : -rpath :
-            unchecked ;
-        # -rpath-link is not supported at all.
+## osf :
+    # No --strip-all, just -s.
+    toolset.flags $(toolset).link OPTIONS
+        <toolset-gcc:linker-type>osf/$(condition)/<strip>on
+        : -Wl,-s
+        : unchecked ;
+    toolset.flags $(toolset).link RPATH
+        <toolset-gcc:linker-type>osf/$(condition)
+        : <dll-path>
+        : unchecked ;
+    # This does not support -R.
+    toolset.flags $(toolset).link RPATH_OPTION
+        <toolset-gcc:linker-type>osf/$(condition)
+        : -rpath
+        : unchecked ;
+    # -rpath-link is not supported at all.
 
-    case sun :
-        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on : -Wl,-s :
-            unchecked ;
-        toolset.flags $(toolset).link RPATH $(condition) : <dll-path> :
-            unchecked ;
-        # Solaris linker does not have a separate -rpath-link, but allows using
-        # -L for the same purpose.
-        toolset.flags $(toolset).link LINKPATH $(condition) : <xdll-path> :
-            unchecked ;
+## sun :
+    toolset.flags $(toolset).link OPTIONS
+        <toolset-gcc:linker-type>sun/$(condition)/<strip>on
+        : -Wl,-s
+        : unchecked ;
+    toolset.flags $(toolset).link RPATH
+        <toolset-gcc:linker-type>sun/$(condition)
+        : <dll-path>
+        : unchecked ;
+    # Solaris linker does not have a separate -rpath-link, but allows using
+    # -L for the same purpose.
+    toolset.flags $(toolset).link LINKPATH
+        <toolset-gcc:linker-type>sun/$(condition)
+        : <xdll-path>
+        : unchecked ;
 
-        # This permits shared libraries with non-PIC code on Solaris.
-        # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll, the
-        # following is not needed. Whether -fPIC should be hardcoded, is a
-        # separate question.
-        # AH, 2004/10/16: it is still necessary because some tests link against
-        # static libraries that were compiled without PIC.
-        toolset.flags $(toolset).link OPTIONS $(condition)/<link>shared :
-            -mimpure-text : unchecked ;
-
-    case * :
-        import errors ;
-        errors.user-error $(toolset) initialization: invalid linker '$(linker)'
-            : The value '$(linker)' specified for <linker> is not recognized.
-            : Possible values are 'aix', 'darwin', 'gnu', 'hpux', 'osf' or 'sun'
-            ;
-    }
+    # This permits shared libraries with non-PIC code on Solaris.
+    # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll, the
+    # following is not needed. Whether -fPIC should be hardcoded, is a
+    # separate question.
+    # AH, 2004/10/16: it is still necessary because some tests link against
+    # static libraries that were compiled without PIC.
+    toolset.flags $(toolset).link OPTIONS
+        <toolset-gcc:linker-type>sun/$(condition)/<link>shared
+        : -mimpure-text
+        : unchecked ;
 }
 
 
