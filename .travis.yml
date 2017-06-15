@@ -1,6 +1,4 @@
 sudo: false
-dist: trusty
-os: linux
 env:
   matrix:
     - TRAVIS_EMPTY_JOB_WORKAROUND=true
@@ -8,17 +6,16 @@ matrix:
   exclude:
     - env: TRAVIS_EMPTY_JOB_WORKAROUND=true
   include:
-    - env: TOOLSET=gcc TEST_ALL_EXTRAS=
-    # - env: TOOLSET=gcc TEST_ALL_EXTRAS=--extras
-    - env: TOOLSET=clang TEST_ALL_EXTRAS=
-    # - env: TOOLSET=clang TEST_ALL_EXTRAS=--extras
-    - env: TOOLSET=clang TEST_ALL_EXTRAS=
-      os: osx
+    - os: linux
+      dist: trusty
+      env: TOOLSET=gcc TEST_ALL_EXTRAS=
+    - os: linux
+      dist: precise
+      env: TOOLSET=clang TEST_ALL_EXTRAS=
+    - os: osx
       osx_image: xcode8.3
+      env: TOOLSET=clang TEST_ALL_EXTRAS=
 language: python
-python:
-  - 2.7
-  - 2.6
 script:
   - ./bootstrap.sh --with-toolset=${TOOLSET}
   - cd test && DO_DIFF=1 python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
