@@ -8,13 +8,13 @@ matrix:
   include:
     - os: linux
       dist: trusty
-      env: TOOLSET=gcc TEST_ALL_EXTRAS=
+      env: TOOLSET=gcc TEST_ALL_EXTRAS= DO_DIFF=diff
     - os: linux
-      dist: precise
-      env: TOOLSET=clang TEST_ALL_EXTRAS=
+      dist: trusty
+      env: TOOLSET=clang TEST_ALL_EXTRAS= DO_DIFF=diff
     - os: osx
       osx_image: xcode8.3
-      env: TOOLSET=clang TEST_ALL_EXTRAS=
+      env: TOOLSET=clang TEST_ALL_EXTRAS= DO_DIFF=diff
 language: python
 script:
   - ./bootstrap.sh --with-toolset=${TOOLSET}
