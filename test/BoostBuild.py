@@ -209,7 +209,7 @@ class Tester(TestCmd.TestCmd):
     def __init__(self, arguments=None, executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
-        ignore_toolset_requirements=True, workdir="", pass_d0=True,
+        ignore_toolset_requirements=False, workdir="", pass_d0=True,
         **keywords):
 
         assert arguments.__class__ is not str
@@ -715,6 +715,9 @@ class Tester(TestCmd.TestCmd):
 
         # Compiled Python files created when running Python based Boost Build.
         self.ignore("*.pyc")
+
+        # OSX/Darwin files and dirs.
+        self.ignore("*.dSYM/*")
 
         if not self.unexpected_difference.empty():
             annotation("failure", "Unexpected changes found")

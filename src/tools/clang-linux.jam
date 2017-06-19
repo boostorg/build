@@ -60,7 +60,7 @@ rule init ( version ? :  command * : options * ) {
     
   common.handle-options clang-linux : $(condition) : $(command) : $(options) ;
 
-  gcc.init-link-flags clang-linux gnu $(condition) ;
+  gcc.init-link-flags clang gnu $(condition) ;
 }
 
 ###############################################################################
