@@ -826,6 +826,10 @@ rule init-link-flags ( toolset _ignored_ condition )
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : <dll-path>
         : unchecked ;
+    toolset.flags $(toolset).link RPATH_OPTION
+        <toolset-$(toolset):linker-type>gnu/$(condition)
+        : -rpath
+        : unchecked ;
     toolset.flags $(toolset).link RPATH_LINK
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : <xdll-path>
