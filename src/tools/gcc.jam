@@ -195,7 +195,7 @@ rule init ( version ? : command * : options * )
 
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
 
-    init-link-flags gcc - $(condition) ;
+    init-link-flags gcc "" $(condition) ;
 
     # If gcc is installed in a non-standard location, we would need to add
     # LD_LIBRARY_PATH when running programs created with it (for unit-test/run
@@ -740,21 +740,25 @@ toolset.flags gcc.link LIBRARIES <library-file> ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
 
-toolset.add-requirements
-    <toolset>gcc,<target-os>aix:<toolset-gcc:linker-type>aix
-    <toolset>gcc,<target-os>darwin:<toolset-gcc:linker-type>darwin
-    <toolset>gcc,<target-os>hpux:<toolset-gcc:linker-type>hpux
-    <toolset>gcc,<target-os>osf:<toolset-gcc:linker-type>osf
-    <toolset>gcc,<target-os>solaris:<toolset-gcc:linker-type>sun
-    ;
-
 # Now, the vendor specific flags.
 # The parameter linker can be either aix, darwin, gnu, hpux, osf or sun.
-rule init-link-flags ( toolset _ignored_ condition )
+rule init-link-flags ( toolset subtool condition )
 {
+    local tool-module = $(toolset) ;
+    if $(subtool) != ""
+    {
+        tool-module = $(tool-module)-$(subtool) ;
+    }
     ## Need to define the linker-type feature once for each toolset module.
     if ! [ feature.valid <toolset-$(toolset):linker-type> ]
     {
+        toolset.add-requirements
+            $(condition),<target-os>aix:<toolset-$(toolset):linker-type>aix
+            $(condition),<target-os>darwin:<toolset-$(toolset):linker-type>darwin
+            $(condition),<target-os>hpux:<toolset-$(toolset):linker-type>hpux
+            $(condition),<target-os>osf:<toolset-$(toolset):linker-type>osf
+            $(condition),<target-os>solaris:<toolset-$(toolset):linker-type>sun
+            ;
         feature.subfeature toolset $(toolset) : linker-type :
             gnu aix darwin hpux osf sun : propagated link-incompatible ;
     }
@@ -785,12 +789,12 @@ rule init-link-flags ( toolset _ignored_ condition )
     # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
     #
 
-    toolset.flags $(toolset).link OPTIONS <toolset-$(toolset):linker-type>aix/$(condition)
+    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>aix/$(condition)
         : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc
         : unchecked ;
 
     # See note [1]
-    toolset.flags $(toolset).link OPTIONS <toolset-$(toolset):linker-type>aix/$(condition)/<runtime-link>static
+    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>aix/$(condition)/<runtime-link>static
         : -static
         : unchecked ;
 
@@ -798,18 +802,18 @@ rule init-link-flags ( toolset _ignored_ condition )
     # On Darwin, the -s option to ld does not work unless we pass -static,
     # and passing -static unconditionally is a bad idea. So, do not pass -s
     # at all and darwin.jam will use a separate 'strip' invocation.
-    toolset.flags $(toolset).link RPATH <toolset-$(toolset):linker-type>darwin/$(condition)
+    toolset.flags $(tool-module).link RPATH <toolset-$(toolset):linker-type>darwin/$(condition)
         : <dll-path>
         : unchecked ;
     # This does not support -R.
-    toolset.flags $(toolset).link RPATH_OPTION
+    toolset.flags $(tool-module).link RPATH_OPTION
         <toolset-$(toolset):linker-type>darwin/$(condition)
         : -rpath
         : unchecked ;
     # -rpath-link is not supported at all.
 
     # See note [1]
-    toolset.flags $(toolset).link OPTIONS <toolset-$(toolset):linker-type>darwin/$(condition)/<runtime-link>static
+    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>darwin/$(condition)/<runtime-link>static
         : -static
         : unchecked ;
 
@@ -818,27 +822,27 @@ rule init-link-flags ( toolset _ignored_ condition )
     # as opposed to -s since icc (intel's compiler) is generally
     # option-compatible with and inherits from the gcc toolset, but does not
     # support -s.
-    toolset.flags $(toolset).link OPTIONS
+    toolset.flags $(tool-module).link OPTIONS
         <toolset-$(toolset):linker-type>gnu/$(condition)/<strip>on
         : -Wl,--strip-all
         : unchecked ;
-    toolset.flags $(toolset).link RPATH
+    toolset.flags $(tool-module).link RPATH
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : <dll-path>
         : unchecked ;
-    toolset.flags $(toolset).link RPATH_OPTION
+    toolset.flags $(tool-module).link RPATH_OPTION
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : -rpath
         : unchecked ;
-    toolset.flags $(toolset).link RPATH_LINK
+    toolset.flags $(tool-module).link RPATH_LINK
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : <xdll-path>
         : unchecked ;
-    toolset.flags $(toolset).link START-GROUP
+    toolset.flags $(tool-module).link START-GROUP
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : -Wl,--start-group
         : unchecked ;
-    toolset.flags $(toolset).link END-GROUP
+    toolset.flags $(tool-module).link END-GROUP
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : -Wl,--end-group
         : unchecked ;
@@ -876,7 +880,7 @@ rule init-link-flags ( toolset _ignored_ condition )
     # search patterns!
 
     # On *nix mixing shared libs with static runtime is not a good idea.
-    toolset.flags $(toolset).link FINDLIBS-ST-PFX
+    toolset.flags $(tool-module).link FINDLIBS-ST-PFX
         <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>shared
         : -Wl,-Bstatic
         : unchecked ;
@@ -887,86 +891,86 @@ rule init-link-flags ( toolset _ignored_ condition )
 
     # On windows allow mixing of static and dynamic libs with static
     # runtime is not a good idea.
-    toolset.flags $(toolset).link FINDLIBS-ST-PFX
+    toolset.flags $(tool-module).link FINDLIBS-ST-PFX
         <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
         : -Wl,-Bstatic
         : unchecked ;
-    toolset.flags $(toolset).link FINDLIBS-SA-PFX
+    toolset.flags $(tool-module).link FINDLIBS-SA-PFX
         <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
         : -Wl,-Bdynamic
         : unchecked ;
-    toolset.flags $(toolset).link OPTIONS
+    toolset.flags $(tool-module).link OPTIONS
         <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
         : -Wl,-Bstatic
         : unchecked ;
 
-    toolset.flags $(toolset).link HAVE_SONAME
+    toolset.flags $(tool-module).link HAVE_SONAME
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : ""
         : unchecked ;
-    toolset.flags $(toolset).link SONAME_OPTION
+    toolset.flags $(tool-module).link SONAME_OPTION
         <toolset-$(toolset):linker-type>gnu/$(condition)
         : -h
         : unchecked ;
 
     # See note [1]
-    toolset.flags $(toolset).link OPTIONS <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static
+    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static
         : -static
         : unchecked ;
 
 ## hpux :
-    toolset.flags $(toolset).link OPTIONS
+    toolset.flags $(tool-module).link OPTIONS
         <toolset-$(toolset):linker-type>hpux/$(condition)/<strip>on
         : -Wl,-s
         : unchecked ;
-    toolset.flags $(toolset).link OPTIONS
+    toolset.flags $(tool-module).link OPTIONS
         <toolset-$(toolset):linker-type>hpux/$(condition)/<link>shared
         : -fPIC
         : unchecked ;
 
-    toolset.flags $(toolset).link HAVE_SONAME
+    toolset.flags $(tool-module).link HAVE_SONAME
         <toolset-$(toolset):linker-type>hpux/$(condition)
         : ""
         : unchecked ;
-    toolset.flags $(toolset).link SONAME_OPTION
+    toolset.flags $(tool-module).link SONAME_OPTION
         <toolset-$(toolset):linker-type>hpux/$(condition)
         : +h
         : unchecked ;
 
 ## osf :
     # No --strip-all, just -s.
-    toolset.flags $(toolset).link OPTIONS
+    toolset.flags $(tool-module).link OPTIONS
         <toolset-$(toolset):linker-type>osf/$(condition)/<strip>on
         : -Wl,-s
         : unchecked ;
-    toolset.flags $(toolset).link RPATH
+    toolset.flags $(tool-module).link RPATH
         <toolset-$(toolset):linker-type>osf/$(condition)
         : <dll-path>
         : unchecked ;
     # This does not support -R.
-    toolset.flags $(toolset).link RPATH_OPTION
+    toolset.flags $(tool-module).link RPATH_OPTION
         <toolset-$(toolset):linker-type>osf/$(condition)
         : -rpath
         : unchecked ;
     # -rpath-link is not supported at all.
 
     # See note [1]
-    toolset.flags $(toolset).link OPTIONS <toolset-$(toolset):linker-type>osf/$(condition)/<runtime-link>static
+    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>osf/$(condition)/<runtime-link>static
         : -static
         : unchecked ;
 
 ## sun :
-    toolset.flags $(toolset).link OPTIONS
+    toolset.flags $(tool-module).link OPTIONS
         <toolset-$(toolset):linker-type>sun/$(condition)/<strip>on
         : -Wl,-s
         : unchecked ;
-    toolset.flags $(toolset).link RPATH
+    toolset.flags $(tool-module).link RPATH
         <toolset-$(toolset):linker-type>sun/$(condition)
         : <dll-path>
         : unchecked ;
     # Solaris linker does not have a separate -rpath-link, but allows using
     # -L for the same purpose.
-    toolset.flags $(toolset).link LINKPATH
+    toolset.flags $(tool-module).link LINKPATH
         <toolset-$(toolset):linker-type>sun/$(condition)
         : <xdll-path>
         : unchecked ;
@@ -977,13 +981,13 @@ rule init-link-flags ( toolset _ignored_ condition )
     # separate question.
     # AH, 2004/10/16: it is still necessary because some tests link against
     # static libraries that were compiled without PIC.
-    toolset.flags $(toolset).link OPTIONS
+    toolset.flags $(tool-module).link OPTIONS
         <toolset-$(toolset):linker-type>sun/$(condition)/<link>shared
         : -mimpure-text
         : unchecked ;
 
     # See note [1]
-    toolset.flags $(toolset).link OPTIONS <toolset-$(toolset):linker-type>sun/$(condition)/<runtime-link>static
+    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>sun/$(condition)/<runtime-link>static
         : -static
         : unchecked ;
     

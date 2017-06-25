@@ -12,9 +12,6 @@ import toolset ;
 feature.extend toolset : clang ;
 feature.subfeature toolset clang : platform : : propagated link-incompatible ;
 
-feature.subfeature toolset clang : linker-type :
-    gnu aix darwin hpux osf sun : propagated link-incompatible ;
-
 rule init ( * : * )
 {
     if [ os.name ] = MACOSX
