@@ -18,6 +18,7 @@ matrix:
     - os: osx
       osx_image: xcode8.3
       env: TOOLSET=clang TEST_ALL_EXTRAS=
+      python: "2.6"
 language: python
 script:
   - ./bootstrap.sh --with-toolset=${TOOLSET}
