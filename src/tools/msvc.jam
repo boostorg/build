@@ -1250,10 +1250,39 @@ local rule default-path ( version )
     }
     else
     {
-        # Check environment.
+        # try to use vswhere
+        local pseudo_env_VS150 ;
+        if $(version) = 14.1 || $(version) = "default"
+        {
+            local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
+            local prop = "-property installationPath" ;
+            local limit = "-version \"[15.0,16.0)\"" ;
+            local root = [ os.environ "ProgramFiles(x86)" ] ;
+            if ( ! $(root) )
+            {
+                root = [ os.environ "ProgramFiles" ] ;
+            }
+            local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
+            if ( [ path.exists $(vswhere) ] )
+            {
+                local vmwhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
+                local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vmwhere_cmd) ] : "\n" ] ;
+                pseudo_env_VS150 = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
+            }
+        }
+
+        # Check environment or previous path_VS150
         for local env in $(.version-$(version)-env)
         {
-            local env-path = [ os.environ $(env) ] ;
+            local env-path ;
+            if ( $(pseudo_env_VS150) && [ path.exists $(pseudo_env_VS150) ] )
+            {
+                env-path = $(pseudo_env_VS150) ;
+            }
+            else
+            {
+                env-path = [ os.environ $(env) ] ;
+            }
             if $(env-path) && $(.version-$(version)-path)
             {
                 for local bin-path in $(.version-$(version)-path)
@@ -1669,8 +1698,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-7.1toolkit-path    = "Microsoft Visual C++ Toolkit 2003/bin" ;
 .version-7.1toolkit-env     = VCToolkitInstallDir ;
 # Visual Studio 2017 doesn't use a registry at all. And the suggested methods
-# of discovery involve having a compiled program. We can't do that as it would
-# make for a recursive discovery and build dependency cycle. So we search
+# of discovery involve having a compiled program. So as a fallback we search
 # paths for VS2017 (aka msvc >= 14.1).
 .version-14.1-path =
     "../../VC/Tools/MSVC/*/bin/Host*/*"

@@ -28,10 +28,14 @@ goto :eof
 :Guess
 REM Check the variable first. This can be set manually by the user (by running the tools commmand prompt).
 call :Clear_Error
+call vswhere_usability_wrapper.cmd
 if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
+
+:skip_vswhere
+call :Clear_Error
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"

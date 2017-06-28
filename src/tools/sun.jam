@@ -33,11 +33,13 @@ generators.override sun.searched-lib-generator : searched-lib-generator ;
 #
 feature.extend stdlib : sun-stlport ;
 feature.compose <stdlib>sun-stlport
-    : <cxxflags>-library=stlport4 <linkflags>-library=stlport4
+    : <cxxflags>-library=stlport4 <cxxflags>-compat=5
+      <linkflags>-library=stlport4 <linkflags>-compat=5
     ;
 feature.extend stdlib : apache ;
 feature.compose <stdlib>apache
-    : <cxxflags>-library=stdcxx4 <linkflags>-library=stdcxx4
+    : <cxxflags>-library=stdcxx4 <cxxflags>-compat=5
+      <linkflags>-library=stdcxx4 <cxxflags>-compat=5
     ;
 feature.extend stdlib : gnu ;
 feature.compose <stdlib>gnu
