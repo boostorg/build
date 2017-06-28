@@ -1283,7 +1283,6 @@ local rule default-path ( version )
             {
                 env-path = [ os.environ $(env) ] ;
             }
-            ECHO "env-path $(env-path)" ;
             if $(env-path) && $(.version-$(version)-path)
             {
                 for local bin-path in $(.version-$(version)-path)
