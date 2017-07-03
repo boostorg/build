@@ -64,7 +64,7 @@ static-lib %s :
     t.write("lib/jamfile.jam", output.getvalue())
     create_sources("lib", sources)
     t.run_build_system(subdir="lib")
-    built_archive = "lib/bin/$toolset/debug/%s" % name
+    built_archive = "lib/bin/$toolset/debug*/%s" % name
     t.expect_addition(built_archive)
     t.copy(built_archive, name)
     t.rm("lib")

@@ -47,13 +47,13 @@ helper() {}
 
 # First test that when outcomes are expected, all .test files are created.
 t.run_build_system(["hardcode-dll-paths=false"], stderr=None, status=None)
-t.expect_addition("bin/c.test/$toolset/debug/c.test")
-t.expect_addition("bin/c-f.test/$toolset/debug/c-f.test")
-t.expect_addition("bin/r.test/$toolset/debug/r.test")
-t.expect_addition("bin/r-f.test/$toolset/debug/r-f.test")
+t.expect_addition("bin/c.test/$toolset/debug*/c.test")
+t.expect_addition("bin/c-f.test/$toolset/debug*/c-f.test")
+t.expect_addition("bin/r.test/$toolset/debug*/r.test")
+t.expect_addition("bin/r-f.test/$toolset/debug*/r-f.test")
 
 # Make sure args are handled.
-t.expect_content("bin/r.test/$toolset/debug/r.output",
+t.expect_content("bin/r.test/$toolset/debug*/r.output",
                  "foo\nbar\n*\nEXIT STATUS: 0*\n", True)
 
 # Test that input file is handled as well.
@@ -84,13 +84,13 @@ time compilation : c-obj ;
 """)
 
 t.run_build_system(["hardcode-dll-paths=false"])
-t.expect_content("bin/r.test/$toolset/debug/r.output", """\
+t.expect_content("bin/r.test/$toolset/debug*/r.output", """\
 test input
 EXIT STATUS: 0
 """)
 
-t.expect_addition('bin/$toolset/debug/execution.time')
-t.expect_addition('bin/$toolset/debug/compilation.time')
+t.expect_addition('bin/$toolset/debug*/execution.time')
+t.expect_addition('bin/$toolset/debug*/compilation.time')
 
 # Make sure test failures are detected. Reverse expectation and see if .test
 # files are created or not.
@@ -105,9 +105,9 @@ run r-f.cpp ;
 t.touch(BoostBuild.List("c.cpp c-f.cpp r.cpp r-f.cpp"))
 
 t.run_build_system(["hardcode-dll-paths=false"], stderr=None, status=1)
-t.expect_removal("bin/c.test/$toolset/debug/c.test")
-t.expect_removal("bin/c-f.test/$toolset/debug/c-f.test")
-t.expect_removal("bin/r.test/$toolset/debug/r.test")
-t.expect_removal("bin/r-f.test/$toolset/debug/r-f.test")
+t.expect_removal("bin/c.test/$toolset/debug*/c.test")
+t.expect_removal("bin/c-f.test/$toolset/debug*/c-f.test")
+t.expect_removal("bin/r.test/$toolset/debug*/r.test")
+t.expect_removal("bin/r-f.test/$toolset/debug*/r-f.test")
 
 t.cleanup()
