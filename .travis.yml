@@ -18,6 +18,10 @@ matrix:
     - os: osx
       osx_image: xcode8.3
       env: TOOLSET=clang TEST_ALL_EXTRAS=
+  allow_failures:
+    - os: osx
+      osx_image: xcode8.3
+      env: TOOLSET=clang TEST_ALL_EXTRAS=
 language: cpp
 script:
   - ./bootstrap.sh --with-toolset=${TOOLSET}
