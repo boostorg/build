@@ -884,7 +884,7 @@ rule init-link-flags ( toolset subtool condition )
         <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>shared
         : -Wl,-Bstatic
         : unchecked ;
-    toolset.flags $(toolset).link FINDLIBS-SA-PFX
+    toolset.flags $(tool-module).link FINDLIBS-SA-PFX
         <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>shared
         : -Wl,-Bdynamic
         : unchecked ;
