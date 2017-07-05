@@ -523,6 +523,8 @@ class Tester(TestCmd.TestCmd):
                     expected_duration))
                 self.fail_test(1, dump_stdio=False)
 
+        self.__ignore_junk()
+
     def glob_file(self, name):
         name = self.adjust_name(name)
         result = None
@@ -696,7 +698,7 @@ class Tester(TestCmd.TestCmd):
                     "File %s touched, but no action was expected" % name)
                 self.fail_test(1)
 
-    def expect_nothing_more(self):
+    def __ignore_junk(self):
         # Not totally sure about this change, but I do not see a good
         # alternative.
         if windows:
@@ -721,6 +723,7 @@ class Tester(TestCmd.TestCmd):
         # OSX/Darwin files and dirs.
         self.ignore("*.dSYM/*")
 
+    def expect_nothing_more(self):
         if not self.unexpected_difference.empty():
             annotation("failure", "Unexpected changes found")
             output = StringIO.StringIO()
