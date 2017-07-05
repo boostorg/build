@@ -23,5 +23,3 @@ script:
   - ./bootstrap.sh --with-toolset=${TOOLSET}
   - cd test
   - DO_DIFF=diff python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
-  - DO_DIFF=diff python library_chain.py --verbose ${TOOLSET} ${TEST_ALL_EXTRAS}
-  - DO_DIFF=diff python searched_lib.py --verbose ${TOOLSET} ${TEST_ALL_EXTRAS}
