@@ -629,14 +629,12 @@ class gcc-linking-generator : unix-linking-generator
 {
     rule run ( project name ? : property-set : sources + )
     {
-        # TODO: Replace this with the use of a target-os property.
-        local no-static-link = ;
-        if [ modules.peek : UNIX ]
+        local target-os = [ $(property-set).get <target-os> ] ;
+        local no-static-link = true ;
+        switch $(target-os)
         {
-            switch [ modules.peek : JAMUNAME ]
-            {
-                case * : no-static-link = true ;
-            }
+            case vms : no-static-link = ;
+            case windows : no-static-link = ;
         }
 
         local properties = [ $(property-set).raw ] ;
