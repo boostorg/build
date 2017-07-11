@@ -26,6 +26,7 @@ import set ;
 import toolset ;
 import type ;
 import unix ;
+import virtual-target ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -68,7 +69,7 @@ type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
 #      version.
 # 3) Without user-provided restrictions use default 'g++'.
 #
-rule init ( version ? : command * : options * )
+rule init ( version ? : command * : options * : requirement * )
 {
     #1): use user-provided command
     local tool-command = ;
@@ -190,7 +191,7 @@ rule init ( version ? : command * : options * )
     {
         condition = flavor $(flavor) ;
     }
-    condition = [ common.check-init-parameters gcc : version $(version)
+    condition = [ common.check-init-parameters gcc $(requirement) : version $(version)
         : $(condition) ] ;
 
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
@@ -672,6 +673,22 @@ class gcc-linking-generator : unix-linking-generator
                 $(property-set) : $(sources) ] ;
         }
     }
+    
+    rule action-class ( )
+    {
+        return "gcc-link-action" ;
+    }
+}
+
+class gcc-link-action : action
+{
+    import gcc ;
+    
+    rule execute ( action-name targets + : sources * : properties * )
+    {
+        gcc.set-link-vars $(action-name) $(targets) : $(sources) : $(properties) ;
+        action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
+    }
 }
 
 # The set of permissible input types is different on mingw. So, define two sets
@@ -744,11 +761,6 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
 # The parameter linker can be either aix, darwin, gnu, hpux, osf or sun.
 rule init-link-flags ( toolset subtool condition )
 {
-    local tool-module = $(toolset) ;
-    if $(subtool) != ""
-    {
-        tool-module = $(tool-module)-$(subtool) ;
-    }
     ## Need to define the linker-type feature once for each toolset module.
     if ! [ feature.valid <toolset-$(toolset):linker-type> ]
     {
@@ -762,235 +774,205 @@ rule init-link-flags ( toolset subtool condition )
         feature.subfeature toolset $(toolset) : linker-type :
             gnu aix darwin hpux osf sun : propagated link-incompatible ;
     }
-## aix :
-    # On AIX we *have* to use the native linker.
-    #
-    # Using -brtl, the AIX linker will look for libraries with both the .a
-    # and .so extensions, such as libfoo.a and libfoo.so. Without -brtl, the
-    # AIX linker looks only for libfoo.a. Note that libfoo.a is an archived
-    # file that may contain shared objects and is different from static libs
-    # as on Linux.
-    #
-    # The -bnoipath strips the prepending (relative) path of libraries from
-    # the loader section in the target library or executable. Hence, during
-    # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
-    # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
-    # this option, the prepending (relative) path + library name is
-    # hard-coded in the loader section, causing *only* this path to be
-    # searched during load-time. Note that the AIX linker does not have an
-    # -soname equivalent, this is as close as it gets.
-    #
-    # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
-    # This is neccesary for some submodules such as math, but it does make running
-    # the tests a tad slower.
-    #
-    # The above options are definately for AIX 5.x, and most likely also for
-    # AIX 4.x and AIX 6.x. For details about the AIX linker see:
-    # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
-    #
+}
 
-    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>aix/$(condition)
-        : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc
-        : unchecked ;
+rule set-link-vars ( action-name targets + : sources * : properties * )
+{
+    local toolset = [ feature.get-values <toolset> : $(properties) ] ;
+    local linker-type = [ feature.get-values <toolset-$(toolset):linker-type> : $(properties) ] ;
+    local target-os = [ feature.get-values <target-os> : $(properties) ] ;
 
-    # See note [1]
-    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>aix/$(condition)/<runtime-link>static
-        : -static
-        : unchecked ;
+    switch $(linker-type:G=)
+    {
+        case aix :
 
-## darwin :
-    # On Darwin, the -s option to ld does not work unless we pass -static,
-    # and passing -static unconditionally is a bad idea. So, do not pass -s
-    # at all and darwin.jam will use a separate 'strip' invocation.
-    toolset.flags $(tool-module).link RPATH <toolset-$(toolset):linker-type>darwin/$(condition)
-        : <dll-path>
-        : unchecked ;
-    # This does not support -R.
-    toolset.flags $(tool-module).link RPATH_OPTION
-        <toolset-$(toolset):linker-type>darwin/$(condition)
-        : -rpath
-        : unchecked ;
-    # -rpath-link is not supported at all.
+        # On AIX we *have* to use the native linker.
+        #
+        # Using -brtl, the AIX linker will look for libraries with both the .a
+        # and .so extensions, such as libfoo.a and libfoo.so. Without -brtl, the
+        # AIX linker looks only for libfoo.a. Note that libfoo.a is an archived
+        # file that may contain shared objects and is different from static libs
+        # as on Linux.
+        #
+        # The -bnoipath strips the prepending (relative) path of libraries from
+        # the loader section in the target library or executable. Hence, during
+        # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
+        # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
+        # this option, the prepending (relative) path + library name is
+        # hard-coded in the loader section, causing *only* this path to be
+        # searched during load-time. Note that the AIX linker does not have an
+        # -soname equivalent, this is as close as it gets.
+        #
+        # The -bbigtoc option instrcuts the linker to create a TOC bigger than 64k.
+        # This is neccesary for some submodules such as math, but it does make running
+        # the tests a tad slower.
+        #
+        # The above options are definately for AIX 5.x, and most likely also for
+        # AIX 4.x and AIX 6.x. For details about the AIX linker see:
+        # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
+        #
 
-    # See note [1]
-    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>darwin/$(condition)/<runtime-link>static
-        : -static
-        : unchecked ;
+        OPTIONS on $(targets) += -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc ;
 
-## gnu :
-    # Strip the binary when no debugging is needed. We use --strip-all flag
-    # as opposed to -s since icc (intel's compiler) is generally
-    # option-compatible with and inherits from the gcc toolset, but does not
-    # support -s.
-    toolset.flags $(tool-module).link OPTIONS
-        <toolset-$(toolset):linker-type>gnu/$(condition)/<strip>on
-        : -Wl,--strip-all
-        : unchecked ;
-    toolset.flags $(tool-module).link RPATH
-        <toolset-$(toolset):linker-type>gnu/$(condition)
-        : <dll-path>
-        : unchecked ;
-    toolset.flags $(tool-module).link RPATH_OPTION
-        <toolset-$(toolset):linker-type>gnu/$(condition)
-        : -rpath
-        : unchecked ;
-    toolset.flags $(tool-module).link RPATH_LINK
-        <toolset-$(toolset):linker-type>gnu/$(condition)
-        : <xdll-path>
-        : unchecked ;
-    toolset.flags $(tool-module).link START-GROUP
-        <toolset-$(toolset):linker-type>gnu/$(condition)
-        : -Wl,--start-group
-        : unchecked ;
-    toolset.flags $(tool-module).link END-GROUP
-        <toolset-$(toolset):linker-type>gnu/$(condition)
-        : -Wl,--end-group
-        : unchecked ;
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
 
-    # gnu ld has the ability to change the search behaviour for libraries
-    # referenced by the -l switch. These modifiers are -Bstatic and
-    # -Bdynamic and change search for -l switches that follow them. The
-    # following list shows the tried variants. Search stops at the first
-    # variant that has a match.
-    #
-    # *nix: -Bstatic -lxxx
-    #    libxxx.a
-    #
-    # *nix: -Bdynamic -lxxx
-    #    libxxx.so
-    #    libxxx.a
-    #
-    # windows (mingw, cygwin) -Bstatic -lxxx
-    #    libxxx.a
-    #    xxx.lib
-    #
-    # windows (mingw, cygwin) -Bdynamic -lxxx
-    #    libxxx.dll.a
-    #    xxx.dll.a
-    #    libxxx.a
-    #    xxx.lib
-    #    cygxxx.dll (*)
-    #    libxxx.dll
-    #    xxx.dll
-    #    libxxx.a
-    #
-    # (*) This is for cygwin
-    # Please note that -Bstatic and -Bdynamic are not a guarantee that a
-    # static or dynamic lib indeed gets linked in. The switches only change
-    # search patterns!
+        case darwin :
 
-    # On *nix mixing shared libs with static runtime is not a good idea.
-    toolset.flags $(tool-module).link FINDLIBS-ST-PFX
-        <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>shared
-        : -Wl,-Bstatic
-        : unchecked ;
-    toolset.flags $(tool-module).link FINDLIBS-SA-PFX
-        <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>shared
-        : -Wl,-Bdynamic
-        : unchecked ;
+        # On Darwin, the -s option to ld does not work unless we pass -static,
+        # and passing -static unconditionally is a bad idea. So, do not pass -s
+        # at all and darwin.jam will use a separate 'strip' invocation.
+        RPATH on $(targets) +=
+            [ feature.get-values <dll-path> : $(properties) ] ;
+        # This does not support -R.
+        RPATH_OPTION on $(targets) += -rpath ;
+        # -rpath-link is not supported at all.
 
-    # On windows allow mixing of static and dynamic libs with static
-    # runtime is not a good idea.
-    toolset.flags $(tool-module).link FINDLIBS-ST-PFX
-        <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
-        : -Wl,-Bstatic
-        : unchecked ;
-    toolset.flags $(tool-module).link FINDLIBS-SA-PFX
-        <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
-        : -Wl,-Bdynamic
-        : unchecked ;
-    toolset.flags $(tool-module).link OPTIONS
-        <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static/<target-os>windows
-        : -Wl,-Bstatic
-        : unchecked ;
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
+        
+        case gnu :
 
-    toolset.flags $(tool-module).link HAVE_SONAME
-        <toolset-$(toolset):linker-type>gnu/$(condition)
-        : ""
-        : unchecked ;
-    toolset.flags $(tool-module).link SONAME_OPTION
-        <toolset-$(toolset):linker-type>gnu/$(condition)
-        : -h
-        : unchecked ;
+        # Strip the binary when no debugging is needed. We use --strip-all flag
+        # as opposed to -s since icc (intel's compiler) is generally
+        # option-compatible with and inherits from the gcc toolset, but does not
+        # support -s.
+        if <strip>on in $(properties)
+        {
+            OPTIONS on $(targets) += -Wl,--strip-all ;
+        }
+        RPATH on $(targets) +=
+            [ feature.get-values <dll-path> : $(properties) ] ;
+        RPATH_OPTION on $(targets) += -rpath ;
+        RPATH_LINK on $(targets) +=
+            [ feature.get-values <xdll-path> : $(properties) ] ;
+        START-GROUP on $(targets) += -Wl,--start-group ;
+        END-GROUP on $(targets) += -Wl,--end-group ;
 
-    # See note [1]
-    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>gnu/$(condition)/<runtime-link>static
-        : -static
-        : unchecked ;
+        # gnu ld has the ability to change the search behaviour for libraries
+        # referenced by the -l switch. These modifiers are -Bstatic and
+        # -Bdynamic and change search for -l switches that follow them. The
+        # following list shows the tried variants. Search stops at the first
+        # variant that has a match.
+        #
+        # *nix: -Bstatic -lxxx
+        #    libxxx.a
+        #
+        # *nix: -Bdynamic -lxxx
+        #    libxxx.so
+        #    libxxx.a
+        #
+        # windows (mingw, cygwin) -Bstatic -lxxx
+        #    libxxx.a
+        #    xxx.lib
+        #
+        # windows (mingw, cygwin) -Bdynamic -lxxx
+        #    libxxx.dll.a
+        #    xxx.dll.a
+        #    libxxx.a
+        #    xxx.lib
+        #    cygxxx.dll (*)
+        #    libxxx.dll
+        #    xxx.dll
+        #    libxxx.a
+        #
+        # (*) This is for cygwin
+        # Please note that -Bstatic and -Bdynamic are not a guarantee that a
+        # static or dynamic lib indeed gets linked in. The switches only change
+        # search patterns!
 
-## hpux :
-    toolset.flags $(tool-module).link OPTIONS
-        <toolset-$(toolset):linker-type>hpux/$(condition)/<strip>on
-        : -Wl,-s
-        : unchecked ;
-    toolset.flags $(tool-module).link OPTIONS
-        <toolset-$(toolset):linker-type>hpux/$(condition)/<link>shared
-        : -fPIC
-        : unchecked ;
+        # On *nix mixing shared libs with static runtime is not a good idea.
+        if <runtime-link>shared in $(properties)
+        {
+            FINDLIBS-ST-PFX on $(targets) += -Wl,-Bstatic ;
+            FINDLIBS-SA-PFX on $(targets) += -Wl,-Bdynamic ;
+        }
 
-    toolset.flags $(tool-module).link HAVE_SONAME
-        <toolset-$(toolset):linker-type>hpux/$(condition)
-        : ""
-        : unchecked ;
-    toolset.flags $(tool-module).link SONAME_OPTION
-        <toolset-$(toolset):linker-type>hpux/$(condition)
-        : +h
-        : unchecked ;
+        # On windows allow mixing of static and dynamic libs with static
+        # runtime is not a good idea.
+        if <runtime-link>static in $(properties) && <target-os>windows in $(properties)
+        {
+            FINDLIBS-ST-PFX on $(targets) += -Wl,-Bstatic ;
+            FINDLIBS-SA-PFX on $(targets) += -Wl,-Bdynamic ;
+            OPTIONS on $(targets) += -Wl,-Bstatic ;
+        }
 
-## osf :
-    # No --strip-all, just -s.
-    toolset.flags $(tool-module).link OPTIONS
-        <toolset-$(toolset):linker-type>osf/$(condition)/<strip>on
-        : -Wl,-s
-        : unchecked ;
-    toolset.flags $(tool-module).link RPATH
-        <toolset-$(toolset):linker-type>osf/$(condition)
-        : <dll-path>
-        : unchecked ;
-    # This does not support -R.
-    toolset.flags $(tool-module).link RPATH_OPTION
-        <toolset-$(toolset):linker-type>osf/$(condition)
-        : -rpath
-        : unchecked ;
-    # -rpath-link is not supported at all.
+        HAVE_SONAME on $(targets) += "" ;
+        SONAME_OPTION on $(targets) += -h ;
 
-    # See note [1]
-    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>osf/$(condition)/<runtime-link>static
-        : -static
-        : unchecked ;
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
 
-## sun :
-    toolset.flags $(tool-module).link OPTIONS
-        <toolset-$(toolset):linker-type>sun/$(condition)/<strip>on
-        : -Wl,-s
-        : unchecked ;
-    toolset.flags $(tool-module).link RPATH
-        <toolset-$(toolset):linker-type>sun/$(condition)
-        : <dll-path>
-        : unchecked ;
-    # Solaris linker does not have a separate -rpath-link, but allows using
-    # -L for the same purpose.
-    toolset.flags $(tool-module).link LINKPATH
-        <toolset-$(toolset):linker-type>sun/$(condition)
-        : <xdll-path>
-        : unchecked ;
+        case hpux :
 
-    # This permits shared libraries with non-PIC code on Solaris.
-    # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll, the
-    # following is not needed. Whether -fPIC should be hardcoded, is a
-    # separate question.
-    # AH, 2004/10/16: it is still necessary because some tests link against
-    # static libraries that were compiled without PIC.
-    toolset.flags $(tool-module).link OPTIONS
-        <toolset-$(toolset):linker-type>sun/$(condition)/<link>shared
-        : -mimpure-text
-        : unchecked ;
+        if <strip>on in $(properties)
+        {
+            OPTIONS on $(targets) += -Wl,-s ;
+        }
+        if <link>shared in $(properties)
+        {
+            OPTIONS on $(targets) += -fPIC ;
+        }
 
-    # See note [1]
-    toolset.flags $(tool-module).link OPTIONS <toolset-$(toolset):linker-type>sun/$(condition)/<runtime-link>static
-        : -static
-        : unchecked ;
-    
+        HAVE_SONAME on $(targets) += "" ; 
+        SONAME_OPTION on $(targets) += +h ;
+
+        case osf :
+
+        # No --strip-all, just -s.
+        OPTIONS
+            <toolset-$(toolset):linker-type>osf/$(condition)/<strip>on
+            : -Wl,-s
+            : unchecked ;
+        RPATH on $(targets) += [ feature.get-values <dll-path> ] ;
+        # This does not support -R.
+        RPATH_OPTION on $(targets) += -rpath ;
+        # -rpath-link is not supported at all.
+
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
+
+        case sun :
+
+        if <strip>on in $(properties)
+        {
+            OPTIONS on $(targets) += -Wl,-s ;
+        }
+        RPATH on $(targets) += [ feature.get-values <dll-path> ] ;
+        # Solaris linker does not have a separate -rpath-link, but allows using
+        # -L for the same purpose.
+        LINKPATH on $(targets) += [ feature.get-values <xdll-path> ] ;
+
+        # This permits shared libraries with non-PIC code on Solaris.
+        # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll, the
+        # following is not needed. Whether -fPIC should be hardcoded, is a
+        # separate question.
+        # AH, 2004/10/16: it is still necessary because some tests link against
+        # static libraries that were compiled without PIC.
+        if <link>shared in $(properties)
+        {
+            OPTIONS on $(targets) += -mimpure-text ;
+        }
+
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
+    }
+
     # [1]
     # For <runtime-link>static we made sure there are no dynamic libraries in the
     # link. On HP-UX not all system libraries exist as archived libraries (for
