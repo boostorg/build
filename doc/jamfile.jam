@@ -29,7 +29,7 @@ boostbook userman : src/standalone.xml
 
 xml jam_docs : bjam.qbk ;
 
-local examples = [ glob ../example/*/readme.qbk ] ;
+local examples = [ glob-tree-ex [ glob ../example/* ] : *.* : bin .DS_Store ] ;
 xml examples_docs : examples.qbk : <dependency>$(examples) ;
 
 if ! $(BOOST_ROOT)

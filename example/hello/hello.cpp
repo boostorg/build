@@ -7,7 +7,6 @@
 //  http://www.boost.org
 // 
 
-//[hello_cpp
 #include <iostream>
 
 int main()
@@ -15,4 +14,3 @@ int main()
     std::cout << "Hello!\n";
     return 1;
 }
-//]

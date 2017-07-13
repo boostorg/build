@@ -1,0 +1,46 @@
+[/
+Copyright 2017 Rene Rivera
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+]
+
+[section Time Action]
+
+This example shows how to use the `testing.time` utility to show time
+information for building a target.
+
+Files:
+
+* [@../../example/time/jamroot.jam jamroot.jam]
+* [@../../example/time/main_cpp.pro main_cpp.pro]
+
+Our `jamroot.jam` specifies the target we build and the `testing.time`
+declaration to time the target we build:
+
+[import jamroot.jam]
+
+[jamroot]
+
+Building the example yields:
+
+[teletype]
+```
+> cd /example/time
+> b2
+...found 8 targets...
+...updating 5 targets...
+common.mkdir bin
+common.mkdir bin/clang-darwin-4.2.1
+common.mkdir bin/clang-darwin-4.2.1/debug
+Jamfile</build/example/time>.do-something bin/clang-darwin-4.2.1/debug/main.cpp
+testing.time bin/clang-darwin-4.2.1/debug/main.time
+user: [main.cpp] 0.002240
+system: [main.cpp] 0.001804
+clock: [main.cpp] 2.000000
+...updated 5 targets...
+```
+
+[note The actual paths in the `bin` sub-directory will depend on your
+toolset.]
+
+[endsect]

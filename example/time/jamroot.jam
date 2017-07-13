@@ -1,13 +1,20 @@
-import feature ;
-import toolset ;
-import os ;
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+#[jamroot
+#<< Import the time rule from the testing module.
 import testing ;
 
-path-constant HERE : . ;
+#<< The target we are timing.
 make main.cpp : main_cpp.pro : @do-something ;
+
+#<< This target records the time to build the `main.cpp` target.
 time main.time : main.cpp ;
 
+#<< This simple action waits and then copies the source to target.
 actions do-something
 {
     sleep 2 && echo "$(<)" > "$(<)"
 }
+#]
