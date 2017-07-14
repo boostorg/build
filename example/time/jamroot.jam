@@ -6,15 +6,9 @@
 #<< Import the time rule from the testing module.
 import testing ;
 
-#<< The target we are timing.
-make main.cpp : main_cpp.pro : @do-something ;
+#<< The target we are timing just builds a hello program.
+exe hello : hello.cpp ;
 
-#<< This target records the time to build the `main.cpp` target.
-time main.time : main.cpp ;
-
-#<< This simple action waits and then copies the source to target.
-actions do-something
-{
-    sleep 2 && echo "$(<)" > "$(<)"
-}
+#<< This target records the time to build the `hello` target.
+time hello.time : hello ;
 #]
