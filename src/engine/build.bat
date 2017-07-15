@@ -258,9 +258,17 @@ set test=###%args:~0,2%###
 set test=%test:"###=%
 set test=%test:###"=%
 set test=%test:###=%
-set test=%test:~0,1%
-if "-" == "%test%" goto Set_Args_End
+set test1=%test:~0,1%
+set test2=%test:~1,1%
+REM We can't just search for dash because it might be a part of
+REM toolset name, like in `intel-win32'.
+if "-" == "%test1%" goto Set_Args_End
+if "-" == "%test2%" if not " " == "%test1" if not """" == "%test1" goto Set_Args_bite_Two
+goto Set_Args_Bite_One
 endlocal
+:Set_Args_Bite_Two
+set args=%args:~1%
+:Set_Args_Bite_One
 set args=%args:~1%
 goto Set_Args
 :Set_Args_End
