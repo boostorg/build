@@ -19,6 +19,11 @@
   <xi:include href="faq.xml"/>
 
   <!-- Appendicies -->
+  <appendix id="examples">
+    <title>Examples</title>
+    <xi:include href="examples_docs.xml" parse="xml"
+  xpointer="xpointer(id('bbv2.examples.introduction')|id('bbv2.examples.introduction')/following-sibling::*)"/>
+  </appendix>
 <!--  <xi:include href="architecture.xml"/> -->
 
 </part>
