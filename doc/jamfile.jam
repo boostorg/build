@@ -32,7 +32,11 @@ xml jam_docs : bjam.qbk ;
 local examples = [ glob-tree-ex [ glob ../example/* ] : *.* : bin .DS_Store ] ;
 xml examples_docs : examples.qbk : <dependency>$(examples) ;
 
-if ! $(BOOST_ROOT)
-{
-    BOOST_ROOT = [ modules.peek : BOOST_ROOT ] ;   
-}
+###############################################################################
+
+alias boostdoc : src/userman.xml
+    : : : <dependency>examples_docs <implicit-dependency>examples_docs ;
+explicit boostdoc ;
+
+alias boostrelease ;
+explicit boostrelease ;
