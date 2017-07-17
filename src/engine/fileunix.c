@@ -111,7 +111,8 @@ int file_collect_dir_content_( file_info_t * const d )
 {
     LIST * files = L0;
     PATHNAME f;
-    DIR * dd;
+    int n;
+    STRUCT_DIRENT ** namelist;
     STRUCT_DIRENT * dirent;
     string path[ 1 ];
     char const * dirstr;
@@ -128,13 +129,14 @@ int file_collect_dir_content_( file_info_t * const d )
 
     if ( !*dirstr ) dirstr = ".";
 
-    if ( !( dd = opendir( dirstr ) ) )
+    if ( -1 == ( n = scandir( dirstr, &namelist, NULL, alphasort ) ) )
         return -1;
 
     string_new( path );
-    while ( ( dirent = readdir( dd ) ) )
+    while ( n-- )
     {
         OBJECT * name;
+        dirent = namelist[ n ];
         f.f_base.ptr = dirent->d_name
         #ifdef old_sinix
             - 2  /* Broken structure definition on sinix. */
@@ -150,10 +152,11 @@ int file_collect_dir_content_( file_info_t * const d )
             files = list_push_back( files, name );
         else
             object_free( name );
+        free( dirent );
     }
     string_free( path );
 
-    closedir( dd );
+    free( namelist );
 
     d->files = files;
     return 0;
