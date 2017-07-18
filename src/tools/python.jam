@@ -706,14 +706,6 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     }
     extension-suffix ?= "" ;
 
-    # Normalize and dissect any version number.
-    local major-minor ;
-    if $(version)
-    {
-        major-minor = [ split-version $(version) ] ;
-        version = $(major-minor:J=.) ;
-    }
-
     local cmds-to-try ;
 
     if ! $(cmd-or-prefix) || [ GLOB $(cmd-or-prefix) : * ]
@@ -846,18 +838,28 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     {
         .numpy = true ;
         .numpy-include = $(result[1]) ;
-	debug-message "NumPy enabled" ;
+        debug-message "NumPy enabled" ;
     }
     else
     {
-	debug-message "NumPy disabled. Reason:" ;
-	debug-message "  $(full-cmd) aborted with " ;
-	debug-message "  $(result[1])" ;
+        debug-message "NumPy disabled. Reason:" ;
+        debug-message "  $(full-cmd) aborted with " ;
+        debug-message "  $(result[1])" ;
     }
 
     #
     # End autoconfiguration sequence.
     #
+    
+    # Normalize and dissect any version number.
+    local major-minor ;
+    if $(version)
+    {
+        major-minor = [ split-version $(version) ] ;
+        version = $(major-minor:J=.) ;
+    }
+    
+    
     local target-requirements = $(condition) ;
 
     # Add the version, if any, to the target requirements.
