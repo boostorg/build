@@ -573,21 +573,6 @@ rule compile.c++ ( targets * : sources * : properties * )
         LANG on $(<) = "-x c++" ;
     }
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
-
-    # Here we want to raise the template-depth parameter value to something
-    # higher than the default value of 17. Note that we could do this using the
-    # feature.set-default rule but we do not want to set the default value for
-    # all toolsets as well.
-    #
-    # TODO: This 'modified default' has been inherited from some 'older Boost
-    # Build implementation' and has most likely been added to make some Boost
-    # library parts compile correctly. We should see what exactly prompted this
-    # and whether we can get around the problem more locally.
-    local template-depth = [ on $(<) return $(TEMPLATE_DEPTH) ] ;
-    if ! $(template-depth)
-    {
-        TEMPLATE_DEPTH on $(<) = 128 ;
-    }
 }
 
 rule compile.c ( targets * : sources * : properties * )
