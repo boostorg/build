@@ -1,0 +1,25 @@
+# Copyright 2017 Rene Rivera
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+# The `cxxstd` feature specifies the version of the C++ Standard Language to
+# build with. All the official versions of the standard since "98" are
+# included: `98`, `03`, `11`, `14`, and `17`. It is also possible to
+# specify using the experimental, work in progress, `latest` version. Some
+# compilers specified intermediate versions for the experimental versions
+# leading up to the released standard version. Those are not included as
+# it's preferred to use actual releases, when available.
+#
+# NOTE: This is an `optional` feature. Hence when not specified the compiler
+# default behaviour is used.
+# 
+# NOTE: Please consult the toolset specific documentation for which `cxxstd`
+# is supported.
+
+
+import feature ;
+
+feature.feature cxxstd
+    : 98 03 11 14 17 latest
+    : optional composite propagated ;
