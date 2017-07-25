@@ -10,8 +10,9 @@ import feature ;
 # included: `98`, `03`, `11`, `14`, and `17`. It is also possible to
 # specify using the experimental, work in progress, `latest` version. Some
 # compilers specified intermediate versions for the experimental versions
-# leading up to the released standard version. Those are not included as
-# it's preferred to use actual releases, when available.
+# leading up to the released standard version. Those are included following
+# the GNU nomenclature as `0x`, `1y`, `1z`, and `2a`. And depending on the
+# compiler `latest` would map to one of those.
 #
 # NOTE: This is an `optional` feature. Hence when not specified the compiler
 # default behaviour is used.
@@ -20,7 +21,7 @@ import feature ;
 # is supported.
 
 feature.feature cxxstd
-    : 98 03 11 14 17 latest
+    : 98 03 0x 11 1y 14 1z 17 2a latest
     : optional composite propagated ;
 
 # The cxxstd:dialet subfeature indicates if a non-standard dialect should be
@@ -29,5 +30,5 @@ feature.feature cxxstd
 # ANSI C++ Standard conformance.
 
 feature.subfeature cxxstd : dialect
-    : gnu msvc
+    : gnu ms
     : optional composite propagated ;
