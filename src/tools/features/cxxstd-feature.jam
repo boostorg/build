@@ -3,6 +3,8 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
+import feature ;
+
 # The `cxxstd` feature specifies the version of the C++ Standard Language to
 # build with. All the official versions of the standard since "98" are
 # included: `98`, `03`, `11`, `14`, and `17`. It is also possible to
@@ -17,9 +19,15 @@
 # NOTE: Please consult the toolset specific documentation for which `cxxstd`
 # is supported.
 
-
-import feature ;
-
 feature.feature cxxstd
     : 98 03 11 14 17 latest
+    : optional composite propagated ;
+
+# The cxxstd:dialet subfeature indicates if a non-standard dialect should be
+# used. These usually have either/or extensions or platform specific
+# functionality. Not specifying the dialect will disable any dialect and use
+# ANSI C++ Standard conformance.
+
+feature.subfeature cxxstd : dialect
+    : gnu msvc
     : optional composite propagated ;
