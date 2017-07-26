@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 for python in build/*.py; do
     jam="${python%.py}.jam"
