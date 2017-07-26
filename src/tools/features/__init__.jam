@@ -1,0 +1,21 @@
+# Copyright 2017 Rene Rivera
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+# Here we automatically define any feature modules in this directory.
+
+import os path modules ;
+
+.this-module's-file = [ modules.binding $(__name__) ] ;
+.this-module's-dir = [ path.parent [ path.make $(.this-module's-file) ] ] ;
+.feature-jamfiles =  [ path.glob $(.this-module's-dir) : *-feature.jam ] ;
+.feature-modules = [ MATCH ^(.*)\.jam$ : $(.feature-jamfiles) ] ;
+
+# A loop over all feature modules in this directory
+for local m in $(.feature-modules)
+{
+    m = [ path.basename $(m) ] ;
+    m = features/$(m) ;
+    import $(m) ;
+}
