@@ -393,7 +393,7 @@ The arguments starting with the "=--option=" forms are passed to the =build.jam=
 must be quoted with double quotes (") to be used as arbitrary tokens, such as
 variable or target names.
 
-Comments start with the [^#] character and extend until the end of line.
+Comments start with the [^#] character and extend until the end of line. And block comments start with [^#*] and extend until the next [^*#].
 
 [endsect]
 
