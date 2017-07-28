@@ -284,12 +284,12 @@ int yylex()
                 break;
 
             c = yychar();
-            if ( ( c != EOF ) && c == '*' )
+            if ( ( c != EOF ) && c == '|' )
             {
                 /* Swallow up block comment. */
                 int c0 = yychar();
                 int c1 = yychar();
-                while ( ! ( c0 == '*' && c1 == '#' ) && ( c0 != EOF && c1 != EOF ) )
+                while ( ! ( c0 == '|' && c1 == '#' ) && ( c0 != EOF && c1 != EOF ) )
                 {
                     c0 = c1;
                     c1 = yychar();
