@@ -301,26 +301,8 @@ while cond { statements }
 <programlisting>
 return values ;
 </programlisting>
-        This statement should be used only inside a rule and assigns
-        <code>values</code> to the return value of the rule.
-        <warning>
-          <para>
-            The <code>return</code> statement does not exit the rule. For
-            example:
-<programlisting>
-rule test ( )
-{
-   if 1 = 1
-   {
-      return "reasonable" ;
-   }
-   return "strange" ;
-}
-</programlisting>
-            will return <literal>strange</literal>, not
-            <literal>reasonable</literal>.
-          </para>
-        </warning>
+        This statement should be used only inside a rule and returns
+        <code>values</code> to the caller of the rule.
 <programlisting>
 import <replaceable>module</replaceable> ;
 import <replaceable>module</replaceable> : <replaceable>rule</replaceable> ;
