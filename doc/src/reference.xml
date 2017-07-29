@@ -2298,17 +2298,17 @@ import path : native make : native-path make-path ;
       following steps:
       <orderedlist>
 
-        <listitem><para>applying default build,</para></listitem>
+        <listitem><para>applying the default build,</para></listitem>
 
         <listitem><para>selecting the main target alternative to use,
           </para></listitem>
 
-        <listitem><para>determining "common" properties,</para></listitem>
+        <listitem><para>determining the "common" properties,</para></listitem>
 
-        <listitem><para>building targets referred by the sources list and
+        <listitem><para>building targets referred by the the sources list and
             dependency properties,</para></listitem>
 
-        <listitem><para>adding the usage requirements produces when building
+        <listitem><para>adding the usage requirements produced when building
             dependencies to the "common" properties,</para></listitem>
 
         <listitem><para>building the target using generators,</para></listitem>
@@ -2320,35 +2320,37 @@ import path : native make : native-path make-path ;
 
     <section id="bbv2.reference.buildprocess.alternatives">
       <title>Alternative selection</title>
+      <indexterm><primary>Alternatives</primary><secondary>Selection</secondary></indexterm>
+      <indexterm><primary>Target Alternatives</primary><secondary>Selection</secondary></indexterm>
 
-      <para>When there are several alternatives, one of them must be
+      <para>When a target has several alternatives, one of them must be
         selected. The process is as follows:</para>
 
       <orderedlist>
         <listitem>
           <simpara>
-            For each alternative <emphasis>condition</emphasis> is defined as
-            the set of base properties in requirements. [Note: it might be
-            better to specify the condition explicitly, as in conditional
-            requirements].
+            For each alternative, its <emphasis>condition</emphasis> is defined as
+            the set of <link linkend="bbv2.reference.features.attributes.base">base properties</link>
+            in its requirements.  <link linkend="bbv2.reference.variants.propcond">Conditional properties</link>
+            are excluded.
           </simpara>
         </listitem>
 
         <listitem>
           <simpara>
-            An alternative is viable only if all properties in condition
-            are present in build request.
+            An alternative is viable only if all properties in its condition
+            are present in the build request.
           </simpara>
         </listitem>
 
         <listitem>
           <simpara>
-            If there's one viable alternative, it's choosen. Otherwise,
-            an attempt is made to find one best alternative. An alternative
+            If there's only one viable alternative, it's choosen. Otherwise,
+            an attempt is made to find the best alternative. An alternative
             a is better than another alternative b, if the set of properties
             in b's condition is a strict subset of the set of properties of
-            'a's condition. If there's one viable alternative, which is
-            better than all others, it's selected. Otherwise, an error is
+            a's condition. If one viable alternative is
+            better than all the others, it's selected. Otherwise, an error is
             reported.
           </simpara>
         </listitem>
@@ -2359,34 +2361,36 @@ import path : native make : native-path make-path ;
     <section id="bbv2.reference.buildprocess.common">
       <title>Determining common properties</title>
 
-      <para>The "common" properties is a somewhat artificial term. Those are
+      <para>"Common" properties is a somewhat artificial term. This is
         the intermediate property set from which both the build request for
-        dependencies and properties for building the target are derived.
+        dependencies and the properties for building the target are derived.
       </para>
 
-      <para>Since default build and alternatives are already handled, we have
-        only two inputs: build requests and requirements. Here are the rules
+      <para>Since the default build and alternatives are already handled, we have
+        only two inputs: the build request and the requirements. Here are the rules
         about common properties.
       </para>
 
       <orderedlist>
-        <listitem><para>Non-free feature can have only one
+        <listitem><para>Non-free features can have only one
             value</para></listitem>
 
-        <listitem><para>A non-conditional property in requirement in always
+        <listitem><para>A non-conditional property in the requirements is always
             present in common properties.</para></listitem>
 
-        <listitem><para>A property in build request is present in
-            common properties, unless (2) tells otherwise.</para></listitem>
+        <listitem><para>A property in the build request is present in
+            common properties, unless it is overridden by a property in
+            the requirements.</para></listitem>
 
-        <listitem><para>If either build request, or requirements (non-conditional
+        <listitem><para>If either the build request, or the requirements (non-conditional
             or conditional) include an expandable property (either composite,
-            or property with specified subfeature value), the behaviour is
-            equivalent to explicitly adding all expanded properties to build
-            request or requirements.</para></listitem>
+            or with a specified subfeature value), the behaviour is
+            equivalent to explicitly adding all the expanded properties to the build
+            request or the requirements respectively.</para></listitem>
 
-        <listitem><para>If requirements include a conditional property, and
-            condition of this property is true in context of common
+        <listitem><para>If the requirements include a
+            <link linkend="bbv2.reference.variants.propcond">conditional property</link>, and
+            the condition of this property is true in the context of common
             properties, then the conditional property should be in common
             properties as well.</para></listitem>
 
@@ -2394,11 +2398,11 @@ import path : native make : native-path make-path ;
             here, it has default value in common properties.</para></listitem>
       </orderedlist>
 
-      <para>Those rules are declarative, they don't specify how to compute the
+      <para>These rules are declarative. They don't specify how to compute the
         common properties. However, they provide enough information for the
         user. The important point is the handling of conditional
-        requirements. The condition can be satisfied either by property in
-        build request, by non-conditional requirements, or even by another
+        requirements. The condition can be satisfied either by a property in
+        the build request, by non-conditional requirements, or even by another
         conditional property. For example, the following example works as
         expected:
 <programlisting>
@@ -2663,6 +2667,8 @@ exe a : a.cpp
           </listitem>
         </itemizedlist>
 
+        <anchor id="bbv2.reference.features.attributes.base"/>
+        <indexterm><primary>base features</primary></indexterm>
         <para>Features that are neither free nor incidental are called
           <emphasis>base</emphasis> features.</para>
 
