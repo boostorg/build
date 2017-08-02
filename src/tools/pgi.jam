@@ -118,7 +118,7 @@ rule link.dll ( targets * : sources * : properties * )
 
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" $(OPTIONS) -shared -L"$(LINKPATH)" -R"$(RPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST)
+    "$(CONFIG_COMMAND)" $(OPTIONS) -shared -L"$(LINKPATH)" -R"$(RPATH)" -soname $(<[-1]:D=) -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST)
 }
 
 actions updated together piecemeal pgi.archive
