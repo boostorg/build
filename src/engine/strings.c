@@ -191,8 +191,9 @@ char string_back( string * self )
 
 void string_rtrim( string * self )
 {
+    char *p;
     assert_invariants( self );
-    char * p = self->value + self->size - 1;
+    p = self->value + self->size - 1;
     for ( p; p >= self->value && ( *p == '\0' || isspace( *p ) ); *p-- = 0 );
 }
 
@@ -228,6 +229,7 @@ void string_unit_test()
 
     {
         char * const foo = "Foo    ";
+        char * const bar = "Bar\0\0\0";
         string foo_copy[ 1 ];
         string_copy( foo_copy, foo );
         string_rtrim( foo_copy );
@@ -236,7 +238,6 @@ void string_unit_test()
         string_rtrim( foo_copy );
         assert( !strcmp( foo_copy->value, "Foo" ) );
 
-        char * const bar = "Bar\0\0\0";
         string bar_copy[ 1 ];
         string_copy( bar_copy, bar );
         string_rtrim( bar_copy );
