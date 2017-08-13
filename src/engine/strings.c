@@ -229,7 +229,6 @@ void string_unit_test()
 
     {
         char * const foo = "Foo    ";
-        char * const bar = "Bar\0\0\0";
         string foo_copy[ 1 ];
         string_copy( foo_copy, foo );
         string_rtrim( foo_copy );
@@ -237,7 +236,9 @@ void string_unit_test()
 
         string_rtrim( foo_copy );
         assert( !strcmp( foo_copy->value, "Foo" ) );
-
+    }
+    {
+        char * const bar = "Bar\0\0\0";
         string bar_copy[ 1 ];
         string_copy( bar_copy, bar );
         string_rtrim( bar_copy );
