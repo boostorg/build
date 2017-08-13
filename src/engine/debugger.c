@@ -833,8 +833,16 @@ static const char * debug_format_message( const char * format, va_list vargs )
         buf = malloc( sz );
         if ( !buf )
             return 0;
+        #ifndef va_copy
+        args = vargs;
+        #else
         va_copy( args, vargs );
+        #endif
+        #if defined(_MSC_VER) && (_MSC_VER <= 1310)
+        result = _vsnprintf( buf, sz, format, args );
+        #else
         result = vsnprintf( buf, sz, format, args );
+        #endif
         va_end( args );
         if ( result < 0 )
             return 0;
@@ -1125,10 +1133,13 @@ static void debug_start_child( int argc, const char * * argv )
     sprintf( buf, "%p", pipe2[ 1 ] );
     string_append( command_line, buf );
     /* Pass the rest of the command line. */
-    for ( int i = 1; i < argc; ++i )
-    {
-        string_push_back( command_line, ' ' );
-        string_append( command_line, argv[ i ] );
+	{
+        int i;
+        for ( i = 1; i < argc; ++i )
+        {
+            string_push_back( command_line, ' ' );
+            string_append( command_line, argv[ i ] );
+        }
     }
     SetHandleInformation( pipe1[ 1 ], HANDLE_FLAG_INHERIT, 0 );
     SetHandleInformation( pipe2[ 0 ], HANDLE_FLAG_INHERIT, 0 );

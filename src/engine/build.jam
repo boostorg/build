@@ -357,7 +357,7 @@ toolset vc7 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
     [ opt --release : /ML /O2 /Ob2 /Gy /GF /GA /GB ]
     [ opt --debug : /MLd /DEBUG /Z7 /Od /Ob0 ]
-    -I$(--python-include) -I$(--extra-include)
+    -I$(--python-include) -I$(--extra-include) -D_WIN32_WINNT=0x0501
     : kernel32.lib advapi32.lib user32.lib $(--python-lib[1]) ;
 ## Microsoft Visual C++ 2005
 toolset vc8 cl : /Fe /Fe /Fd /Fo : -D
