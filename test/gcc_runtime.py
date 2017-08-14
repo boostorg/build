@@ -11,8 +11,11 @@
 import BoostBuild
 
 t = BoostBuild.Tester()
-t.write("jamroot.jam", "lib hello : hello.cpp ;")
-t.write("hello.cpp", "int main() {}\n")
+t.write("jamroot.jam", "exe hello : hello.cpp ; outline mangled : hello ;")
+t.write("hello.cpp", "extern \"C\" int i; int main() { i = 42; return 0;}\n") 
+t.write("script.ld", "i = 42")
+
+# Also testing linker-scripts. If that thing works, the extern "C" int i can be resolved, elsewise not.
 
 t.run_build_system(["runtime-link=static"])
 t.expect_output_lines("warning: On gcc, DLLs can not be built with "
