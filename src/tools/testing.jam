@@ -410,7 +410,7 @@ rule run-path-setup ( target : source : properties * )
     # test are found. So, we collect all paths from dependency libraries (via
     # xdll-path property) and add whatever explicit dll-path user has specified.
     # The resulting paths are added to the environment on each test invocation.
-	local target-os = [ feature.get-values <target-os> : $(properties) ] ;
+    local target-os = [ feature.get-values <target-os> : $(properties) ] ;
     local dll-paths = [ feature.get-values <dll-path> : $(properties) ] ;
     dll-paths += [ feature.get-values <xdll-path> : $(properties) ] ;
     if $(target-os) != vxworks
@@ -443,7 +443,7 @@ rule run-path-setup ( target : source : properties * )
         }
         else
         {
-            dll-paths = [ sequence.transform path.native : $(dll-paths) ] ;
+            dll-paths = [ sequence.transform $(translate-to-os) : $(dll-paths) ] ;
             PATH_SETUP on $(target) = [ common.prepend-path-variable-command
                 [ os.shared-library-path-variable ] : $(dll-paths) ] ;
         }
