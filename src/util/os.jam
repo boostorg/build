@@ -65,6 +65,7 @@ if $(.name) = NT
 # constant whose value would be the same as the default, below.
 .shared-library-path-variable-NT = $(.executable-path-variable-NT) ;
 .path-separator-NT = ";" ;
+.path-separator-VXWORKS = ";" ;
 .expand-variable-prefix-NT = % ;
 .expand-variable-suffix-NT = % ;
 .executable-suffix-NT = .exe ;
@@ -82,6 +83,10 @@ if $(.name) = NT
 .expand-variable-prefix-VMS = '' ;
 .expand-variable-suffix-VMS = ' ;
 .executable-suffix-VMS = .exe ;
+
+# VxWorks uses the default LD_LIBRARY_PATH, but we need an alternate
+# name on the cross build host to propigate to the target system
+.shared-library-path-variable-VXWORKS = VSB_LD_LIBRARY_PATH ;
 
 # Default constants
 .shared-library-path-variable = LD_LIBRARY_PATH ;
