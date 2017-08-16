@@ -166,6 +166,11 @@ rule init ( version ? : command * : options * )
     local bin ;
     #   The compiler flavor.
     local flavor = [ feature.get-values <flavor> : $(options) ] ;
+    #   vxworks build on windows uses csh that is neither mingw or cygwin
+    if [ feature.get-values <target-os> : $(options) ] = vxworks
+    {
+        flavor ?= vxworks ;
+    }
     #   Autodetect the root and bin dir if not given.
     if $(command)
     {
@@ -288,9 +293,10 @@ rule .get-prog-name ( command-string : tool : flavor ? )
 {
     local prog-name = [ NORMALIZE_PATH [ MATCH "(.*)[\n]+" :
         [ SHELL "$(command-string) -print-prog-name=$(tool)" ] ] ] ;
-    if $(flavor) != mingw && [ os.name ] = NT
+
+    if !($(flavor) = vxworks || $(flavor) = mingw) && [ os.name ] = NT
     {
-        prog-name = [ cygwin.cygwin-to-windows-path $(prog-name) ] ;
+    prog-name = [ cygwin.cygwin-to-windows-path $(prog-name) ] ;
     }
     return $(prog-name) ;
 }
@@ -396,6 +402,8 @@ toolset.flags gcc.compile OPTIONS <profiling>on : -pg ;
 
 toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
+# tell Dinkum STL exceptions are off
+toolset.flags gcc.compile.c++ DEFINES <exception-handling>off/<target-os>vxworks : _NO_EX=1 ;
 
 rule setup-fpic ( targets * : sources * : properties * )
 {
@@ -808,6 +816,14 @@ rule init-link-flags ( toolset linker condition )
         toolset.flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> :
             unchecked ;
 
+    case vxworks :
+        # On VxWorks we want to reflect what ever special flags have been set in the
+        # environment for the CPU we are targeting in the cross build
+        toolset.flags $(toolset).link     OPTIONS     $(condition)/<strip>on    : -Wl,--strip-all                : unchecked ;
+        toolset.flags $(toolset).link     OPTIONS     $(condition)/<link>static : [ os.environ LDFLAGS_STATIC ]  : unchecked ;
+        toolset.flags $(toolset).link.dll OPTIONS     $(condition)              : [ os.environ LDFLAGS_SO ]      : unchecked ;
+        toolset.flags $(toolset).link     OPTIONS     $(condition)/<link>shared : [ os.environ LDFLAGS_DYNAMIC ] : unchecked ;
+  
     case gnu :
         # Strip the binary when no debugging is needed. We use --strip-all flag
         # as opposed to -s since icc (intel's compiler) is generally
@@ -1035,6 +1051,7 @@ rule setup-threading ( targets * : sources * : properties * )
             case *bsd    : option = -pthread ;  # There is no -lrt on BSD.
             case sgi     : # gcc on IRIX does not support multi-threading.
             case darwin  : # No threading options.
+            case vxworks : # No threading options.  
             case *       : option = -pthread ; libs = rt ;
         }
 
