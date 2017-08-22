@@ -25,6 +25,6 @@ int main()
 """)
 
 t.run_build_system(stdout=None, stderr=None)
-t.expect_addition("bin/$toolset/debug/hello.exe")
+t.expect_addition("bin/$toolset/debug*/hello.exe")
 
 t.cleanup()

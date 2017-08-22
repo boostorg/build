@@ -1,5 +1,5 @@
 # Copyright 2001 David Abrahams
-# Copyright 2002-2006 Rene Rivera
+# Copyright 2002-2017 Rene Rivera
 # Copyright 2002-2003 Vladimir Prus
 # Copyright 2005 Reece H. Dunn
 # Copyright 2006 Ilya Sokolov
@@ -26,6 +26,7 @@ import set ;
 import toolset ;
 import type ;
 import unix ;
+import virtual-target ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -68,7 +69,7 @@ type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
 #      version.
 # 3) Without user-provided restrictions use default 'g++'.
 #
-rule init ( version ? : command * : options * )
+rule init ( version ? : command * : options * : requirement * )
 {
     #1): use user-provided command
     local tool-command = ;
@@ -190,25 +191,12 @@ rule init ( version ? : command * : options * )
     {
         condition = flavor $(flavor) ;
     }
-    condition = [ common.check-init-parameters gcc : version $(version)
+    condition = [ common.check-init-parameters gcc $(requirement) : version $(version)
         : $(condition) ] ;
 
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
 
-    local linker = [ feature.get-values <linker-type> : $(options) ] ;
-    # TODO: The logic below should actually be keyed on <target-os>.
-    if ! $(linker)
-    {
-        switch [ os.name ]
-        {
-            case OSF     : linker = osf ;
-            case HPUX    : linker = hpux ;
-            case AIX     : linker = aix ;
-            case SOLARIS : linker = sun ;
-            case *       : linker = gnu ;
-        }
-    }
-    init-link-flags gcc $(linker) $(condition) ;
+    init-link-flags gcc "" $(condition) ;
 
     # If gcc is installed in a non-standard location, we would need to add
     # LD_LIBRARY_PATH when running programs created with it (for unit-test/run
@@ -482,22 +470,6 @@ rule setup-address-model ( targets * : sources * : properties * )
 }
 
 
-# FIXME: this should not use os.name.
-if ! [ os.name ] in NT OSF HPUX AIX
-{
-    # OSF does have an option called -soname but it does not seem to work as
-    # expected, therefore it has been disabled.
-    HAVE_SONAME   = "" ;
-    SONAME_OPTION = -h ;
-}
-
-# HPUX, for some reason, seems to use '+h' instead of '-h'.
-if [ os.name ] = HPUX
-{
-    HAVE_SONAME   = "" ;
-    SONAME_OPTION = +h ;
-}
-
 toolset.flags gcc.compile USER_OPTIONS <cflags> ;
 toolset.flags gcc.compile.c++ USER_OPTIONS <cxxflags> ;
 toolset.flags gcc.compile DEFINES <define> ;
@@ -642,14 +614,12 @@ class gcc-linking-generator : unix-linking-generator
 {
     rule run ( project name ? : property-set : sources + )
     {
-        # TODO: Replace this with the use of a target-os property.
-        local no-static-link = ;
-        if [ modules.peek : UNIX ]
+        local target-os = [ $(property-set).get <target-os> ] ;
+        local no-static-link = true ;
+        switch $(target-os)
         {
-            switch [ modules.peek : JAMUNAME ]
-            {
-                case * : no-static-link = true ;
-            }
+            case vms : no-static-link = ;
+            case windows : no-static-link = ;
         }
 
         local properties = [ $(property-set).raw ] ;
@@ -685,6 +655,22 @@ class gcc-linking-generator : unix-linking-generator
             return [ unix-linking-generator.run $(project) $(name) :
                 $(property-set) : $(sources) ] ;
         }
+    }
+    
+    rule action-class ( )
+    {
+        return "gcc-link-action" ;
+    }
+}
+
+class gcc-link-action : action
+{
+    import gcc ;
+    
+    rule execute ( action-name targets + : sources * : properties * )
+    {
+        gcc.set-link-vars $(action-name) $(targets) : $(sources) : $(properties) ;
+        action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
 
@@ -754,22 +740,35 @@ toolset.flags gcc.link LIBRARIES <library-file> ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
 
-# For <runtime-link>static we made sure there are no dynamic libraries in the
-# link. On HP-UX not all system libraries exist as archived libraries (for
-# example, there is no libunwind.a), so, on this platform, the -static option
-# cannot be specified.
-if [ os.name ] != HPUX
-{
-    toolset.flags gcc.link OPTIONS <runtime-link>static : -static ;
-}
-
 # Now, the vendor specific flags.
 # The parameter linker can be either aix, darwin, gnu, hpux, osf or sun.
-rule init-link-flags ( toolset linker condition )
+rule init-link-flags ( toolset subtool condition )
 {
-    switch $(linker)
+    ## Need to define the linker-type feature once for each toolset module.
+    if ! [ feature.valid <toolset-$(toolset):linker-type> ]
     {
-    case aix :
+        toolset.add-requirements
+            $(condition),<target-os>aix:<toolset-$(toolset):linker-type>aix
+            $(condition),<target-os>darwin:<toolset-$(toolset):linker-type>darwin
+            $(condition),<target-os>hpux:<toolset-$(toolset):linker-type>hpux
+            $(condition),<target-os>osf:<toolset-$(toolset):linker-type>osf
+            $(condition),<target-os>solaris:<toolset-$(toolset):linker-type>sun
+            ;
+        feature.subfeature toolset $(toolset) : linker-type :
+            gnu aix darwin hpux osf sun : propagated link-incompatible ;
+    }
+}
+
+rule set-link-vars ( action-name targets + : sources * : properties * )
+{
+    local toolset = [ feature.get-values <toolset> : $(properties) ] ;
+    local linker-type = [ feature.get-values <toolset-$(toolset):linker-type> : $(properties) ] ;
+    local target-os = [ feature.get-values <target-os> : $(properties) ] ;
+
+    switch $(linker-type:G=)
+    {
+        case aix :
+
         # On AIX we *have* to use the native linker.
         #
         # Using -brtl, the AIX linker will look for libraries with both the .a
@@ -796,28 +795,48 @@ rule init-link-flags ( toolset linker condition )
         # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
         #
 
-        toolset.flags $(toolset).link OPTIONS : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc
-            : unchecked ;
+        OPTIONS on $(targets) += -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc ;
 
-    case darwin :
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
+
+        case darwin :
+
         # On Darwin, the -s option to ld does not work unless we pass -static,
         # and passing -static unconditionally is a bad idea. So, do not pass -s
         # at all and darwin.jam will use a separate 'strip' invocation.
-        toolset.flags $(toolset).link RPATH $(condition) : <dll-path> :
-            unchecked ;
-        toolset.flags $(toolset).link RPATH_LINK $(condition) : <xdll-path> :
-            unchecked ;
+        RPATH on $(targets) +=
+            [ feature.get-values <dll-path> : $(properties) ] ;
+        # This does not support -R.
+        RPATH_OPTION on $(targets) += -rpath ;
+        # -rpath-link is not supported at all.
 
-    case gnu :
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
+        
+        case gnu :
+
         # Strip the binary when no debugging is needed. We use --strip-all flag
         # as opposed to -s since icc (intel's compiler) is generally
         # option-compatible with and inherits from the gcc toolset, but does not
         # support -s.
-        toolset.flags $(toolset).link OPTIONS     $(condition)/<strip>on : -Wl,--strip-all   : unchecked ;
-        toolset.flags $(toolset).link RPATH       $(condition)           : <dll-path>        : unchecked ;
-        toolset.flags $(toolset).link RPATH_LINK  $(condition)           : <xdll-path>       : unchecked ;
-        toolset.flags $(toolset).link START-GROUP $(condition)           : -Wl,--start-group : unchecked ;
-        toolset.flags $(toolset).link END-GROUP   $(condition)           : -Wl,--end-group   : unchecked ;
+        if <strip>on in $(properties)
+        {
+            OPTIONS on $(targets) += -Wl,--strip-all ;
+        }
+        RPATH on $(targets) +=
+            [ feature.get-values <dll-path> : $(properties) ] ;
+        RPATH_OPTION on $(targets) += -rpath ;
+        RPATH_LINK on $(targets) +=
+            [ feature.get-values <xdll-path> : $(properties) ] ;
+        START-GROUP on $(targets) += -Wl,--start-group ;
+        END-GROUP on $(targets) += -Wl,--end-group ;
 
         # gnu ld has the ability to change the search behaviour for libraries
         # referenced by the -l switch. These modifiers are -Bstatic and
@@ -852,49 +871,72 @@ rule init-link-flags ( toolset linker condition )
         # search patterns!
 
         # On *nix mixing shared libs with static runtime is not a good idea.
-        toolset.flags $(toolset).link FINDLIBS-ST-PFX
-            $(condition)/<runtime-link>shared : -Wl,-Bstatic : unchecked ;
-        toolset.flags $(toolset).link FINDLIBS-SA-PFX
-            $(condition)/<runtime-link>shared : -Wl,-Bdynamic : unchecked ;
+        if <runtime-link>shared in $(properties)
+        {
+            FINDLIBS-ST-PFX on $(targets) += -Wl,-Bstatic ;
+            FINDLIBS-SA-PFX on $(targets) += -Wl,-Bdynamic ;
+        }
 
         # On windows allow mixing of static and dynamic libs with static
         # runtime is not a good idea.
-        toolset.flags $(toolset).link FINDLIBS-ST-PFX
-            $(condition)/<runtime-link>static/<target-os>windows : -Wl,-Bstatic
-            : unchecked ;
-        toolset.flags $(toolset).link FINDLIBS-SA-PFX
-            $(condition)/<runtime-link>static/<target-os>windows : -Wl,-Bdynamic
-            : unchecked ;
-        toolset.flags $(toolset).link OPTIONS
-            $(condition)/<runtime-link>static/<target-os>windows : -Wl,-Bstatic
-            : unchecked ;
+        if <runtime-link>static in $(properties) && <target-os>windows in $(properties)
+        {
+            FINDLIBS-ST-PFX on $(targets) += -Wl,-Bstatic ;
+            FINDLIBS-SA-PFX on $(targets) += -Wl,-Bdynamic ;
+            OPTIONS on $(targets) += -Wl,-Bstatic ;
+        }
 
-    case hpux :
-        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on : -Wl,-s :
-            unchecked ;
-        toolset.flags $(toolset).link OPTIONS $(condition)/<link>shared : -fPIC
-            : unchecked ;
+        HAVE_SONAME on $(targets) += "" ;
+        SONAME_OPTION on $(targets) += -h ;
 
-    case osf :
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
+
+        case hpux :
+
+        if <strip>on in $(properties)
+        {
+            OPTIONS on $(targets) += -Wl,-s ;
+        }
+        if <link>shared in $(properties)
+        {
+            OPTIONS on $(targets) += -fPIC ;
+        }
+
+        HAVE_SONAME on $(targets) += "" ; 
+        SONAME_OPTION on $(targets) += +h ;
+
+        case osf :
+
         # No --strip-all, just -s.
-        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on : -Wl,-s :
-            unchecked ;
-        toolset.flags $(toolset).link RPATH $(condition) : <dll-path> :
-            unchecked ;
+        OPTIONS
+            <toolset-$(toolset):linker-type>osf/$(condition)/<strip>on
+            : -Wl,-s
+            : unchecked ;
+        RPATH on $(targets) += [ feature.get-values <dll-path> ] ;
         # This does not support -R.
-        toolset.flags $(toolset).link RPATH_OPTION $(condition) : -rpath :
-            unchecked ;
+        RPATH_OPTION on $(targets) += -rpath ;
         # -rpath-link is not supported at all.
 
-    case sun :
-        toolset.flags $(toolset).link OPTIONS $(condition)/<strip>on : -Wl,-s :
-            unchecked ;
-        toolset.flags $(toolset).link RPATH $(condition) : <dll-path> :
-            unchecked ;
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
+
+        case sun :
+
+        if <strip>on in $(properties)
+        {
+            OPTIONS on $(targets) += -Wl,-s ;
+        }
+        RPATH on $(targets) += [ feature.get-values <dll-path> ] ;
         # Solaris linker does not have a separate -rpath-link, but allows using
         # -L for the same purpose.
-        toolset.flags $(toolset).link LINKPATH $(condition) : <xdll-path> :
-            unchecked ;
+        LINKPATH on $(targets) += [ feature.get-values <xdll-path> ] ;
 
         # This permits shared libraries with non-PIC code on Solaris.
         # VP, 2004/09/07: Now that we have -fPIC hardcode in link.dll, the
@@ -902,16 +944,23 @@ rule init-link-flags ( toolset linker condition )
         # separate question.
         # AH, 2004/10/16: it is still necessary because some tests link against
         # static libraries that were compiled without PIC.
-        toolset.flags $(toolset).link OPTIONS $(condition)/<link>shared :
-            -mimpure-text : unchecked ;
+        if <link>shared in $(properties)
+        {
+            OPTIONS on $(targets) += -mimpure-text ;
+        }
 
-    case * :
-        import errors ;
-        errors.user-error $(toolset) initialization: invalid linker '$(linker)'
-            : The value '$(linker)' specified for <linker> is not recognized.
-            : Possible values are 'aix', 'darwin', 'gnu', 'hpux', 'osf' or 'sun'
-            ;
+        # See note [1]
+        if <runtime-link>static in $(properties)
+        {
+            OPTIONS on $(targets) += -static ;
+        }
     }
+
+    # [1]
+    # For <runtime-link>static we made sure there are no dynamic libraries in the
+    # link. On HP-UX not all system libraries exist as archived libraries (for
+    # example, there is no libunwind.a), so, on this platform, the -static option
+    # cannot be specified.
 }
 
 

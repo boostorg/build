@@ -72,7 +72,7 @@ int main() {}
     t.write("x/include2/h2.hpp", "\n")
 
     t.run_build_system()
-    t.expect_addition("x/bin/$toolset/debug/m.exe")
+    t.expect_addition("x/bin/$toolset/debug*/m.exe")
 
     t.cleanup()
 
@@ -90,7 +90,7 @@ int main() { return OK; }
 """)
     t.write("h2/header.h", "int const OK = 0;\n")
     t.run_build_system()
-    t.expect_addition("sub/bin/$toolset/debug/a.exe")
+    t.expect_addition("sub/bin/$toolset/debug*/a.exe")
 
     t.cleanup()
 
@@ -126,8 +126,8 @@ int main() {}
     t.write(header, "int some_func();\n")
     t.write("child_dir/folder_to_include/jamfile.jam", "")
 
-    expected_x1 = "child_dir/bin/$toolset/debug/x1.obj"
-    expected_x2 = "child_dir/bin/$toolset/debug/x2.obj"
+    expected_x1 = "child_dir/bin/$toolset/debug*/x1.obj"
+    expected_x2 = "child_dir/bin/$toolset/debug*/x2.obj"
 
     t.run_build_system()
     t.expect_addition(expected_x1)

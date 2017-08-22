@@ -135,12 +135,12 @@ bar() {}
 
 t.run_build_system(["hardcode-dll-paths=true"])
 
-t.expect_addition("bin/$toolset/debug/mp.pathlist")
+t.expect_addition("bin/$toolset/debug*/mp.pathlist")
 
-es1 = t.adjust_names("a/bin/$toolset/debug")[0]
-es2 = t.adjust_names("b/bin/$toolset/debug")[0]
+es1 = t.adjust_name("a/bin/$toolset/debug*")
+es2 = t.adjust_name("b/bin/$toolset/debug*")
 
-t.expect_content_lines("bin/$toolset/debug/mp.pathlist", "*" + es1);
-t.expect_content_lines("bin/$toolset/debug/mp.pathlist", "*" + es2);
+t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es1);
+t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es2);
 
 t.cleanup()

@@ -215,7 +215,7 @@ def test_include_scan():
 
     t.run_build_system(["test"])
 
-    t.expect_addition("bin/$toolset/debug/test.obj")
+    t.expect_addition("bin/$toolset/debug*/test.obj")
 
     t.run_build_system()
     t.expect_nothing_more()
@@ -248,7 +248,7 @@ def test_include_scan_merge_existing():
 
     t.run_build_system(["test"])
     t.expect_addition("include/file1.h")
-    t.expect_addition("bin/$toolset/debug/test.obj")
+    t.expect_addition("bin/$toolset/debug*/test.obj")
     t.ignore_touch("include/file2.h")
     t.expect_nothing_more()
 
