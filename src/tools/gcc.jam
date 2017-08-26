@@ -260,6 +260,8 @@ rule init ( version ? : command * : options * : requirement * )
         rc-type = null ;
     }
     rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
+    
+    toolset.flags gcc VERSION $(condition) : [ regex.split $(version) "[.]" ] ;
 }
 
 if [ os.name ] = NT
@@ -411,6 +413,83 @@ rule set-threading-options ( targets * : sources * : properties * )
     }
 }
 
+local rule zero-pad ( numbers * )
+{
+    local result ;
+    for local n in $(numbers)
+    {
+        switch $(n)
+        {
+            case ???? : result += $(n) ;
+            case ??? : result += 0$(n) ;
+            case ?? : result += 00$(n) ;
+            case ? : result += 000$(n) ;
+        }
+    }
+    return $(result) ;
+}
+
+rule set-cxxstd-options ( targets * : sources * : properties * )
+{
+    local toolset = [ feature.get-values toolset : $(properties) ] ;
+    local version = [ zero-pad [ on $(targets[1]) return $(VERSION) ] ] ;
+    version = $(version[1]).$(version[2]) ;
+    local cxxstd = [ feature.get-values cxxstd : $(properties) ] ;
+    local cxxstd-dialect = [ feature.get-values cxxstd-dialect : $(properties) ] ;
+    cxxstd-dialect ?= c++ ;
+    local option ;
+    if $(toolset) = gcc
+    {
+        switch $(cxxstd)
+        {
+            case 98 : if $(version) >= 0003.0003 { option = 98 ; }
+            case 03 : if $(version) >= 0004.0008 { option = 03 ; }
+            
+            case 11 : if $(version) >= 0004.0007 { option = 11 ; }
+            case 0x : if $(version) >= 0004.0003 { option = 0x ; }
+            
+            case 14 : if $(version) >= 0005.0001 { option = 14 ; }
+            case 1y : if $(version) >= 0004.0008 { option = 1y ; }
+            
+            case 17 : if $(version) >= 0005.0001 { option = 1z ; }
+            case 1z : if $(version) >= 0005.0001 { option = 1z ; }
+            
+            case 2a : if $(version) >= 0008.0000 { option = 2a ; }
+            case latest :
+            if $(version) >= 0008.0000 { option = 2a ; }
+            else if $(version) >= 0005.0001 { option = 1z ; }
+            else if $(version) >= 0004.0008 { option = 1y ; }
+            else if $(version) >= 0004.0007 { option = 11 ; }
+            else if $(version) >= 0003.0003 { option = 98 ; }
+        }
+    }
+    if $(toolset) = clang
+    {
+        switch $(cxxstd)
+        {
+            case 98 : option = 98 ;
+            case 03 : option = 03 ;
+            
+            case 11 : if $(version) >= 0003.0003 { option = 11 ; }
+            case 0x : if $(version) >= 0002.0009 { option = 0x ; }
+            
+            case 14 : if $(version) >= 0003.0004 { option = 14 ; }
+            case 1y : if $(version) >= 0002.0009 { option = 1y ; }
+            
+            case 17 : if $(version) >= 0003.0005 { option = 1z ; }
+            case 1z : if $(version) >= 0003.0005 { option = 1z ; }
+            
+            case 2a : option = 2a ;
+            case latest :
+            if $(version) >= 0003.0005 { option = 1z ; }
+            if $(version) >= 0003.0004 { option = 14 ; }
+            if $(version) >= 0003.0003 { option = 11 ; }
+            option ?= 03 ;
+        }
+    }
+    OPTIONS on $(targets) += -std=$(cxxstd-dialect)$(option) ;
+}
+
 ###
 ### Compiling generators and actions.
 ###
@@ -432,6 +511,7 @@ class gcc-c-compile-action : compile-action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
         compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
@@ -466,6 +546,7 @@ class gcc-fortran-compile-action : compile-action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
         compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
@@ -637,6 +718,7 @@ class gcc-pch-compile-action : compile-action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
         compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
@@ -775,6 +857,7 @@ class gcc-link-action : action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
         gcc.set-link-options $(action-name) $(targets) : $(sources) : $(properties) ;
         action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
