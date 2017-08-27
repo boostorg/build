@@ -11,19 +11,18 @@ matrix:
   include:
     - os: linux
       dist: trusty
-      env: TOOLSET=gcc TEST_ALL_EXTRAS=
+      env: TOOLSET=gcc
     - os: linux
       dist: trusty
-      env: TOOLSET=clang TEST_ALL_EXTRAS=
+      env: TOOLSET=clang
     - os: osx
       osx_image: xcode8.3
-      env: TOOLSET=clang TEST_ALL_EXTRAS=
-  allow_failures:
-    - os: osx
-      osx_image: xcode8.3
-      env: TOOLSET=clang TEST_ALL_EXTRAS=
+      env: TOOLSET=clang
 language: cpp
 script:
+  - cd src/engine
+  - build.sh
+  - cd ../..
   - ./bootstrap.sh --with-toolset=${TOOLSET}
   - cd test
-  - DO_DIFF=diff python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
+  - python test_all.py ${TOOLSET}
