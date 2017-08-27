@@ -21,7 +21,7 @@ matrix:
 language: cpp
 script:
   - cd src/engine
-  - build.sh
+  - ./build.sh
   - cd ../..
   - ./bootstrap.sh --with-toolset=${TOOLSET}
   - cd test
