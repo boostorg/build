@@ -487,6 +487,12 @@ rule set-cxxstd-options ( targets * : sources * : properties * )
             option ?= 03 ;
         }
     }
+    if $(cxxstd) && ! $(option)
+    {
+        ECHO Warning: cxxstd value \"$(cxxstd)\" not supported by
+            $(toolset) [ on $(targets[1]) return $(VERSION:J=.) ] ;
+        option = -invalid ;
+    }
     OPTIONS on $(targets) += -std=$(cxxstd-dialect)$(option) ;
 }
 
