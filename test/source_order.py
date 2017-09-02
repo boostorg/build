@@ -74,8 +74,8 @@ t.write("file2.c", "")
 t.write("file3.c", "")
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/check.order-test")
-t.expect_content("bin/$toolset/debug/check.order-test", """\
+t.expect_addition("bin/$toolset/debug*/check.order-test")
+t.expect_content("bin/$toolset/debug*/check.order-test", """\
 file2.c
 file1.c
 file3.c

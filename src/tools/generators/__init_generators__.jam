@@ -3,19 +3,21 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# Here we automatically define any feature modules in this directory.
+# Here we automatically define any "generator" modules in this directory.
+
+local key = generator ;
 
 import os path modules ;
 
 .this-module's-file = [ modules.binding $(__name__) ] ;
 .this-module's-dir = [ path.parent [ path.make $(.this-module's-file) ] ] ;
-.feature-jamfiles =  [ path.glob $(.this-module's-dir) : *-feature.jam ] ;
-.feature-modules = [ MATCH ^(.*)\.jam$ : $(.feature-jamfiles) ] ;
+.to-load-jamfiles =  [ path.glob $(.this-module's-dir) : *-$(key).jam ] ;
+.to-load-modules = [ MATCH ^(.*)\.jam$ : $(.to-load-jamfiles) ] ;
 
-# A loop over all feature modules in this directory
-for local m in $(.feature-modules)
+# A loop over all matched modules in this directory
+for local m in $(.to-load-modules)
 {
     m = [ path.basename $(m) ] ;
-    m = features/$(m) ;
+    m = $(key)s/$(m) ;
     import $(m) ;
 }

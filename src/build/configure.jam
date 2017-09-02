@@ -37,7 +37,7 @@ feature.feature configure : : composite optional ;
 # relevant features are also considered relevant.
 #
 feature.compose <configure> :
-    <target-os> <toolset> <address-model> <architecture> ;
+    <target-os> <toolset> <address-model> <architecture> <cxxstd> ;
 
 
 rule log-summary ( )

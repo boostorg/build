@@ -51,9 +51,9 @@ feature.compose <cf-on:version>1 : <define>CF_1 ;
 t.expand_toolset("jamfile.jam")
 
 t.run_build_system()
-t.expect_addition(["bin/$toolset/debug/a.exe",
-                   "bin/$toolset/debug/b.exe",
-                   "bin/$toolset/release/c.exe"])
+t.expect_addition(["bin/$toolset/debug*/a.exe",
+                   "bin/$toolset/debug*/b.exe",
+                   "bin/$toolset/release*/c.exe"])
 
 t.rm("bin")
 
@@ -75,6 +75,6 @@ t.write("foo/header.h", "\n")
 t.write("jamroot.jam", "")
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/test.exe")
+t.expect_addition("bin/$toolset/debug*/test.exe")
 
 t.cleanup()

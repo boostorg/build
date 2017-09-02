@@ -144,7 +144,7 @@ get_manager().engine().register_action("foo.foo",
     # Check that main target 'c' was able to find 'x.h' from 'a's dependency
     # graph.
     t.run_build_system()
-    t.expect_addition("bin/$toolset/debug/c.exe")
+    t.expect_addition("bin/$toolset/debug*/c.exe")
 
     # Check handling of first level includes.
 
@@ -152,35 +152,35 @@ get_manager().engine().register_action("foo.foo",
     t.touch("a.h")
     t.run_build_system()
 
-    t.expect_touch("bin/$toolset/debug/a.exe")
-    t.expect_touch("bin/$toolset/debug/a.obj")
-    t.expect_touch("bin/$toolset/debug/a_c.obj")
-    t.expect_touch("bin/$toolset/debug/b.exe")
-    t.expect_touch("bin/$toolset/debug/b.obj")
+    t.expect_touch("bin/$toolset/debug*/a.exe")
+    t.expect_touch("bin/$toolset/debug*/a.obj")
+    t.expect_touch("bin/$toolset/debug*/a_c.obj")
+    t.expect_touch("bin/$toolset/debug*/b.exe")
+    t.expect_touch("bin/$toolset/debug*/b.obj")
     t.expect_nothing_more()
 
     # Only source files using include <a.h> should be compiled.
     t.touch("src1/a.h")
     t.run_build_system()
 
-    t.expect_touch("bin/$toolset/debug/a.exe")
-    t.expect_touch("bin/$toolset/debug/a.obj")
-    t.expect_touch("bin/$toolset/debug/a_c.obj")
+    t.expect_touch("bin/$toolset/debug*/a.exe")
+    t.expect_touch("bin/$toolset/debug*/a.obj")
+    t.expect_touch("bin/$toolset/debug*/a_c.obj")
     t.expect_nothing_more()
 
     # "src/a.h" includes "b.h" (in the same dir).
     t.touch("src1/b.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/a.exe")
-    t.expect_touch("bin/$toolset/debug/a.obj")
-    t.expect_touch("bin/$toolset/debug/a_c.obj")
+    t.expect_touch("bin/$toolset/debug*/a.exe")
+    t.expect_touch("bin/$toolset/debug*/a.obj")
+    t.expect_touch("bin/$toolset/debug*/a_c.obj")
     t.expect_nothing_more()
 
     # Included by "src/b.h". We had a bug: file included using double quotes
     # (e.g. "b.h") was not scanned at all in this case.
     t.touch("src1/c.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/a.exe")
+    t.expect_touch("bin/$toolset/debug*/a.exe")
 
     t.touch("b.h")
     t.run_build_system()
@@ -193,14 +193,14 @@ get_manager().engine().register_action("foo.foo",
     # this check will be implemented later.
     t.touch("x.foo")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/a.obj")
-    t.expect_touch("bin/$toolset/debug/a_c.obj")
+    t.expect_touch("bin/$toolset/debug*/a.obj")
+    t.expect_touch("bin/$toolset/debug*/a_c.obj")
 
     # Check that generated headers are scanned for dependencies as well.
     t.touch("src1/z.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/a.obj")
-    t.expect_touch("bin/$toolset/debug/a_c.obj")
+    t.expect_touch("bin/$toolset/debug*/a.obj")
+    t.expect_touch("bin/$toolset/debug*/a_c.obj")
 
     t.cleanup()
 
@@ -226,11 +226,11 @@ int main() {}
     t.write("include/dir/header.h", "\n")
 
     t.run_build_system()
-    t.expect_addition("bin/$toolset/debug/main.obj")
+    t.expect_addition("bin/$toolset/debug*/main.obj")
 
     t.touch("include/dir/header.h")
     t.run_build_system()
-    t.expect_touch("bin/$toolset/debug/main.obj")
+    t.expect_touch("bin/$toolset/debug*/main.obj")
 
     t.cleanup()
 

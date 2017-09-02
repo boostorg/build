@@ -36,14 +36,14 @@ int __declspec(dllexport) force_implib_creation;
 """)
 
 t.run_build_system(["define=MACROS"])
-t.expect_addition("bin/$toolset/debug/"
+t.expect_addition("bin/$toolset/debug*/"
                   * (BoostBuild.List("a.obj b.obj b.dll a.exe")))
 
 
 # When building a debug version, the 'define' still applies.
 t.rm("bin")
 t.run_build_system(["debug", "define=MACROS"])
-t.expect_addition("bin/$toolset/debug/"
+t.expect_addition("bin/$toolset/debug*/"
                   * (BoostBuild.List("a.obj b.obj b.dll a.exe")))
 
 
