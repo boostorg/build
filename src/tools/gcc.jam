@@ -818,7 +818,7 @@ class gcc-linking-generator : unix-linking-generator
         {
             case vms : no-static-link = ;
             case windows : no-static-link = ;
-        }
+            }
 
         local properties = [ $(property-set).raw ] ;
         local reason ;
@@ -969,7 +969,7 @@ rule set-link-options ( action-name targets + : sources * : properties * )
 
     switch $(linker-type:G=)
     {
-        case aix :
+    case aix :
 
         # On AIX we *have* to use the native linker.
         #
@@ -1005,7 +1005,7 @@ rule set-link-options ( action-name targets + : sources * : properties * )
             OPTIONS on $(targets) += -static ;
         }
 
-        case darwin :
+    case darwin :
 
         # On Darwin, the -s option to ld does not work unless we pass -static,
         # and passing -static unconditionally is a bad idea. So, do not pass -s
@@ -1022,8 +1022,12 @@ rule set-link-options ( action-name targets + : sources * : properties * )
             OPTIONS on $(targets) += -static ;
         }
         
+<<<<<<< HEAD
         case vxworks :
 		
+=======
+    case vxworks :
+>>>>>>> 75beb798ab1f71bb3b93ba2cbc79be371881b55a
         # On VxWorks we want to reflect what ever special flags have been set in the
         # environment for the CPU we are targeting in the cross build
         toolset.flags $(toolset).link     OPTIONS     $(condition)/<strip>on    : -Wl,--strip-all                : unchecked ;
@@ -1031,7 +1035,11 @@ rule set-link-options ( action-name targets + : sources * : properties * )
         toolset.flags $(toolset).link.dll OPTIONS     $(condition)              : [ os.environ LDFLAGS_SO ]      : unchecked ;
         toolset.flags $(toolset).link     OPTIONS     $(condition)/<link>shared : [ os.environ LDFLAGS_DYNAMIC ] : unchecked ;
   
+<<<<<<< HEAD
         case gnu :
+=======
+    case gnu :
+>>>>>>> 75beb798ab1f71bb3b93ba2cbc79be371881b55a
 
         # Strip the binary when no debugging is needed. We use --strip-all flag
         # as opposed to -s since icc (intel's compiler) is generally
@@ -1106,7 +1114,7 @@ rule set-link-options ( action-name targets + : sources * : properties * )
             OPTIONS on $(targets) += -static ;
         }
 
-        case hpux :
+    case hpux :
 
         if <strip>on in $(properties)
         {
@@ -1120,7 +1128,7 @@ rule set-link-options ( action-name targets + : sources * : properties * )
         HAVE_SONAME on $(targets) += "" ; 
         SONAME_OPTION on $(targets) += +h ;
 
-        case osf :
+    case osf :
 
         # No --strip-all, just -s.
         OPTIONS
@@ -1138,7 +1146,7 @@ rule set-link-options ( action-name targets + : sources * : properties * )
             OPTIONS on $(targets) += -static ;
         }
 
-        case sun :
+    case sun :
 
         if <strip>on in $(properties)
         {
@@ -1164,7 +1172,7 @@ rule set-link-options ( action-name targets + : sources * : properties * )
         if <runtime-link>static in $(properties)
         {
             OPTIONS on $(targets) += -static ;
-        }
+    }
     }
 
     # [1]
@@ -1278,6 +1286,7 @@ actions piecemeal archive
 ### CPU architecture and instruction set options.
 ###
 
+            case vxworks : # No threading options.  
 local rule cpu-flags ( toolset variable : architecture : instruction-set + :
     values + : default ? )
 {
