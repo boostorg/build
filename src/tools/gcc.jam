@@ -818,7 +818,7 @@ class gcc-linking-generator : unix-linking-generator
         {
             case vms : no-static-link = ;
             case windows : no-static-link = ;
-            }
+        }
 
         local properties = [ $(property-set).raw ] ;
         local reason ;
@@ -969,7 +969,7 @@ rule set-link-options ( action-name targets + : sources * : properties * )
 
     switch $(linker-type:G=)
     {
-    case aix :
+        case aix :
 
         # On AIX we *have* to use the native linker.
         #
@@ -1005,7 +1005,7 @@ rule set-link-options ( action-name targets + : sources * : properties * )
             OPTIONS on $(targets) += -static ;
         }
 
-    case darwin :
+        case darwin :
 
         # On Darwin, the -s option to ld does not work unless we pass -static,
         # and passing -static unconditionally is a bad idea. So, do not pass -s
