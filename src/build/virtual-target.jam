@@ -794,7 +794,9 @@ class action
             # rules.
             .action on $(actual-targets) = $(__name__) ;
 
-            indirect.call $(self.action-name) $(actual-targets)
+            #indirect.call $(self.action-name) $(actual-targets)
+            #    : $(self.actual-sources) : [ $(properties).raw ] ;
+            execute $(self.action-name) $(actual-targets)
                 : $(self.actual-sources) : [ $(properties).raw ] ;
 
             # Since we set up the creating action here, we set up the action for
@@ -864,6 +866,19 @@ class action
     rule adjust-properties ( property-set )
     {
         return $(property-set) ;
+    }
+
+    # Execute the action rule on the given targets, sources, and properties.
+    # Since this does the final call to the engine action rule this takes
+    # engine level targets and raw properties. One could override this, for
+    # example, to set additional variables on hte target that might be
+    # difficult to determine just using toolset flags.
+    # Note, you must call this base rule when overriding as otherwise the
+    # actions will not execute and the engine will not run commands.
+    #
+    rule execute ( action-name targets + : sources * : properties * )
+    {
+        indirect.call $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
 

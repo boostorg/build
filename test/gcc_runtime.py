@@ -20,7 +20,7 @@ t.expect_output_lines("warning: On gcc, DLLs can not be built with "
 t.expect_nothing_more()
 
 t.run_build_system(["link=static", "runtime-link=static"])
-binFolder = "bin/$toolset/debug/link-static/runtime-link-static"
+binFolder = "bin/$toolset/debug*/link-static/runtime-link-static"
 t.expect_addition("%s/hello.obj" % binFolder)
 t.expect_addition("%s/hello.lib" % binFolder)
 t.expect_nothing_more()

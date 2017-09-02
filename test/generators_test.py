@@ -215,17 +215,17 @@ nm-exe e : e.cpp ;
 """)
 
     t.run_build_system()
-    t.expect_addition("bin/$toolset/debug/" * BoostBuild.List("a.my_exe "
+    t.expect_addition("bin/$toolset/debug*/" * BoostBuild.List("a.my_exe "
         "a.my_obj b.my_obj c.tui_h c.cpp c.my_obj d_parser.whl d_lexer.dlp "
         "d_parser.cpp d_lexer.cpp d_lexer.my_obj d_parser.lr0 d_parser.h "
         "d_parser.my_obj d_parser_symbols.h x.c x.my_obj y.x1 y.x2 y.cpp "
         "y.my_obj e.marked_cpp e.positions e.target_cpp e.my_obj e.my_exe "
         "f.my_exe obj_1.my_obj obj_2.my_obj"))
-    t.expect_addition("lib/bin/$toolset/debug/" * BoostBuild.List("c.my_obj "
+    t.expect_addition("lib/bin/$toolset/debug*/" * BoostBuild.List("c.my_obj "
         "auxilliary.my_lib"))
     t.expect_nothing_more()
 
-    folder = "bin/$toolset/debug"
+    folder = "bin/$toolset/debug*"
     t.expect_content_lines("%s/obj_1.my_obj" % folder, "     Sources: 'z.cpp'")
     t.expect_content_lines("%s/obj_2.my_obj" % folder, "     Sources: 'z.cpp'")
     t.expect_content_lines("%s/a.my_obj" % folder, "     Sources: 'a.cpp'")
@@ -311,7 +311,7 @@ ddd _xxx : _xxx._a ;
             def suffix(rename):
                 if rename: return "_x"
                 return ""
-            name = "bin/$toolset/debug/_xxx"
+            name = "bin/$toolset/debug*/_xxx"
             e = t.expect_addition
             e("%s%s._b1" % (name, suffix(rename1)))
             e("%s%s._b2" % (name, suffix(rename2)))

@@ -26,7 +26,7 @@ t.write("a.cpp", "int main() {}\n")
 
 t.run_build_system(["release"])
 
-t.expect_addition("bin/$toolset/release/a.exe")
+t.expect_addition("bin/$toolset/release*/a.exe")
 
 # Test that alternative selection works for ordinary properties, in particular
 # user-defined.
@@ -43,10 +43,10 @@ t.write("b.cpp", "int main() {}\n")
 t.rm("bin")
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/b.obj")
+t.expect_addition("bin/$toolset/debug*/b.obj")
 
 t.run_build_system(["X=on"])
-t.expect_addition("bin/$toolset/debug/X-on/a.obj")
+t.expect_addition("bin/$toolset/debug/X-on*/a.obj")
 
 t.rm("bin")
 
@@ -57,7 +57,7 @@ exe a : a.cpp : <variant>debug ;
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/a.exe")
+t.expect_addition("bin/$toolset/debug*/a.exe")
 
 # Test that only properties which are in the build request matter for
 # alternative selection. IOW, alternative with <variant>release is better than
@@ -68,7 +68,7 @@ exe a : a.cpp : <variant>release ;
 """)
 
 t.run_build_system(["release"])
-t.expect_addition("bin/$toolset/release/a.exe")
+t.expect_addition("bin/$toolset/release*/a.exe")
 
 # Test that free properties do not matter. We really do not want <cxxflags>
 # property in build request to affect alternative selection.
@@ -78,8 +78,9 @@ exe a : a.cpp : <variant>release ;
 """)
 
 t.rm("bin/$toolset/release/a.exe")
+t.rm("bin/$toolset/release/*/a.exe")
 t.run_build_system(["release", "define=FOO"])
-t.expect_addition("bin/$toolset/release/a.exe")
+t.expect_addition("bin/$toolset/release*/a.exe")
 
 # Test that ambiguity is reported correctly.
 t.write("jamfile.jam", """\
