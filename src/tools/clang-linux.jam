@@ -5,7 +5,7 @@
 #  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
 #  http://www.boost.org/LICENSE_1_0.txt)
 
-import os ;
+import common ;
 import toolset ;
 import feature ;
 import toolset : flags ;
@@ -147,14 +147,7 @@ actions compile.c.with-pch bind PCH_FILE
 ###############################################################################
 # PCH emission
 
-if [ os.name ] = NT
-{
-    RM = del /f /q ;
-}
-else
-{
-    RM = rm -f ;
-}
+RM = [ common.rm-command ] ;
 
 rule compile.c++.pch ( targets * : sources * : properties * ) {
 }
