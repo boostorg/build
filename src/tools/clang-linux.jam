@@ -5,6 +5,7 @@
 #  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
 #  http://www.boost.org/LICENSE_1_0.txt)
 
+import os ;
 import toolset ;
 import feature ;
 import toolset : flags ;
@@ -146,11 +147,20 @@ actions compile.c.with-pch bind PCH_FILE
 ###############################################################################
 # PCH emission
 
+if [ os.name ] = NT
+{
+    RM = del /f /q ;
+}
+else
+{
+    RM = rm -f ;
+}
+
 rule compile.c++.pch ( targets * : sources * : properties * ) {
 }
 
 actions compile.c++.pch {
-  rm -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
+  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
 }
 
 rule compile.c.pch ( targets * : sources * : properties * ) {
@@ -158,7 +168,7 @@ rule compile.c.pch ( targets * : sources * : properties * ) {
 
 actions compile.c.pch
 {
-  rm -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
+  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pth -o "$(<)" "$(>)"
 }
 
 ###############################################################################
