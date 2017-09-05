@@ -284,7 +284,7 @@ rule .get-prog-name ( command-string : tool : flavor ? )
     local prog-name = [ NORMALIZE_PATH [ MATCH "(.*)[\n]+" :
         [ SHELL "$(command-string) -print-prog-name=$(tool)" ] ] ] ;
 
-    if !($(flavor) = vxworks || $(flavor) = mingw) && [ os.name ] = NT
+    if $(flavor) != vxworks && $(flavor) != mingw && [ os.name ] = NT
     {
         prog-name = [ cygwin.cygwin-to-windows-path $(prog-name) ] ;
     }
