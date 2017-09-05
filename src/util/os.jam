@@ -12,7 +12,18 @@ import string ;
 # invoked.
 rule environ ( variable-names + )
 {
-    return [ modules.peek .ENVIRON : $(variable-names) ] ;
+    local result ;
+    for local var-name in $(variable-names)
+    {
+        # We check the various cases of the var name for a value to account
+        # for programs that change the casing of env vars. One such program
+        # is Python that upper-cases env var names on import, and resports
+        # them as upper-case instead of keeping the original case.
+        local value = [ modules.peek .ENVIRON :
+            $(var-name) $(var-name:U) $(var-name:L) ] ;
+        result += $(value[1]) ;
+    }
+    return $(result) ;
 }
 
 .name = [ modules.peek : OS ] ;
