@@ -19,9 +19,11 @@ rule environ ( variable-names + )
         # for programs that change the casing of env vars. One such program
         # is Python that upper-cases env var names on import, and resports
         # them as upper-case instead of keeping the original case.
-        local value = [ modules.peek .ENVIRON :
-            $(var-name) $(var-name:U) $(var-name:L) ] ;
-        result += $(value[1]) ;
+        local value ;
+        value ?= [ modules.peek .ENVIRON : $(var-name) ] ;
+        value ?= [ modules.peek .ENVIRON : $(var-name:U) ] ;
+        value ?= [ modules.peek .ENVIRON : $(var-name:L) ] ;
+        result += $(value) ;
     }
     return $(result) ;
 }
