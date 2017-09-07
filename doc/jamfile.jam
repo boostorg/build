@@ -9,23 +9,34 @@ project tools/build/doc
     ;
 
 boostbook userman : src/standalone.xml 
-   : <xsl:param>toc.section.depth=1
-     <xsl:param>doc.standalone=true 
-     <xsl:param>nav.layout=none
-     <implicit-dependency>jam_docs
-     <dependency>jam_docs
-     <xsl:param>boost.root=..
-     <xsl:param>boost.graphics.root=../images/
-     <xsl:param>html.stylesheet=../boostbook.css
-     <xsl:param>chunk.first.sections=0
-     <xsl:param>admon.graphics=0
+    :   <xsl:param>toc.section.depth=1
+        <xsl:param>doc.standalone=true 
+        <xsl:param>nav.layout=none
+        <xsl:param>boost.root=..
+        <xsl:param>boost.graphics.root=../images/
+        <xsl:param>html.stylesheet=../boostbook.css
+        <xsl:param>chunk.first.sections=0
+        <xsl:param>admon.graphics=0
 
-     <xsl:param>boost.defaults=Boost
-   ;
-   
-xml jam_docs : bjam.qbk ;   
-   
-if ! $(BOOST_ROOT)
-{   
-    BOOST_ROOT = [ modules.peek : BOOST_ROOT ] ;   
-}    
+        <xsl:param>boost.defaults=Boost
+
+        <implicit-dependency>jam_docs
+        <dependency>jam_docs
+
+        <implicit-dependency>examples_docs
+        <dependency>examples_docs
+    ;
+
+xml jam_docs : bjam.qbk ;
+
+local examples = [ glob-tree-ex [ glob ../example/* ] : *.* : bin .DS_Store ] ;
+xml examples_docs : examples.qbk : <dependency>$(examples) ;
+
+###############################################################################
+
+alias boostdoc : src/userman.xml
+    : : : <dependency>examples_docs <implicit-dependency>examples_docs ;
+explicit boostdoc ;
+
+alias boostrelease ;
+explicit boostrelease ;

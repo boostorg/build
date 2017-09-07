@@ -44,9 +44,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
     .debug-configuration = true ;
 }
                        
-# vectorization diagnostics
-feature vectorize : off on full ;
-
 # Initializes the clang-darwin toolset
 #   version in optional
 #   name (default clang++) is used to invoke the specified clang complier
@@ -69,8 +66,15 @@ rule init ( version ? :  command * : options * )
 
     common.handle-options clang-darwin : $(condition) : $(command) : $(options) ;
 
-    gcc.init-link-flags clang-darwin darwin $(condition) ;
+    gcc.init-link-flags clang darwin $(condition) ;
 
+    # - Ranlib.
+    local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
+    toolset.flags clang-darwin.archive .RANLIB $(condition) : $(ranlib[1]) ;
+
+    # - Archive builder.
+    local archiver = [ feature.get-values <archiver> : $(options) ] ;
+    toolset.flags clang-darwin.archive .AR $(condition) : $(archiver[1]) ;
 }
 
 SPACE = " " ;
@@ -131,6 +135,7 @@ flags clang-darwin ARFLAGS <archiveflags> ;
 # logic in clang-linux, but that's hardly worth the trouble
 # as on Linux, 'ar' is always available.
 .AR = ar ;
+.RANLIB = ranlib -cs ;
 
 rule archive ( targets * : sources * : properties * )
 {
@@ -164,7 +169,7 @@ rule archive ( targets * : sources * : properties * )
 actions piecemeal archive
 {
   "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
-  "ranlib" -cs "$(<)"
+  "$(.RANLIB)" "$(<)"
 }
 
 flags clang-darwin.link USER_OPTIONS <linkflags> ;

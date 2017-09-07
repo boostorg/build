@@ -1,15 +1,28 @@
 sudo: false
 os:
   - linux
+  - osx
 env:
-  - TOOLSET=gcc TEST_ALL_EXTRAS=
-#  - TOOLSET=gcc TEST_ALL_EXTRAS=--extras
-  - TOOLSET=clang TEST_ALL_EXTRAS=
-#  - TOOLSET=clang TEST_ALL_EXTRAS=--extras
-language: python
-python:
-  - 2.7
-  - 2.6
+  matrix:
+    - TRAVIS_EMPTY_JOB_WORKAROUND=true
+matrix:
+  exclude:
+    - env: TRAVIS_EMPTY_JOB_WORKAROUND=true
+  include:
+    - os: linux
+      dist: trusty
+      env: TOOLSET=gcc
+    - os: linux
+      dist: trusty
+      env: TOOLSET=clang
+    - os: osx
+      osx_image: xcode8.3
+      env: TOOLSET=clang
+language: cpp
 script:
+  - cd src/engine
+  - ./build.sh
+  - cd ../..
   - ./bootstrap.sh --with-toolset=${TOOLSET}
-  - cd test && DO_DIFF=1 python test_all.py ${TOOLSET} ${TEST_ALL_EXTRAS}
+  - cd test
+  - python test_all.py ${TOOLSET}

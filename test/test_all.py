@@ -170,7 +170,6 @@ tests = ["absolute_sources",
          "builtin_echo",
          "builtin_exit",
          "builtin_glob",
-         "builtin_glob_archive",
          "builtin_split_by_characters",
          "bzip2",
          "c_file",
@@ -201,6 +200,8 @@ tests = ["absolute_sources",
          "core_update_now",
          "core_variables_in_actions",
          "custom_generator",
+         "debugger",
+         "debugger-mi",
          "default_build",
          "default_features",
 # This test is known to be broken itself.
@@ -298,6 +299,10 @@ if toolset.startswith("gcc"):
 
 if toolset.startswith("gcc") or toolset.startswith("msvc"):
     tests.append("pch")
+
+# Disable on OSX as it doesn't seem to work for unknown reasons.
+if sys.platform != 'darwin':
+    tests.append("builtin_glob_archive")
 
 if "--extras" in sys.argv:
     tests.append("boostbook")

@@ -31,9 +31,9 @@ ECHO ### Toolsets supported by this script are: borland, como, gcc,
 ECHO ###     gcc-nocygwin, intel-win32, metrowerks, mingw, msvc, vc7, vc8,
 ECHO ###     vc9, vc10, vc11, vc12, vc14, vc141
 ECHO ###
-ECHO ### If you have Visual Studio 2017 installed you will need to build from
-ECHO ### the Visual Studio Command Prompt for VS 2017 as we where unable to
-ECHO ### detect your toolset installtion.
+ECHO ### If you have Visual Studio 2017 installed you will need either update
+ECHO ### the Visual Studio 2017 installer or run from VS 2017 Command Prompt
+ECHO ### as we where unable to detect your toolset installation.
 ECHO ###
 call :Set_Error
 endlocal
@@ -258,9 +258,17 @@ set test=###%args:~0,2%###
 set test=%test:"###=%
 set test=%test:###"=%
 set test=%test:###=%
-set test=%test:~0,1%
-if "-" == "%test%" goto Set_Args_End
+set test1=%test:~0,1%
+set test2=%test:~1,1%
+REM We can't just search for dash because it might be a part of
+REM toolset name, like in `intel-win32'.
+if "-" == "%test1%" goto Set_Args_End
+if "-" == "%test2%" if not " " == "%test1" if not """" == "%test1" goto Set_Args_bite_Two
+goto Set_Args_Bite_One
 endlocal
+:Set_Args_Bite_Two
+set args=%args:~1%
+:Set_Args_Bite_One
 set args=%args:~1%
 goto Set_Args
 :Set_Args_End

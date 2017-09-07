@@ -10,6 +10,7 @@
 #include "compile.h"
 #include "constants.h"
 #include "cwd.h"
+#include "debugger.h"
 #include "filesys.h"
 #include "frames.h"
 #include "hash.h"
@@ -450,11 +451,12 @@ void load_builtins()
         char const * args [] = { "path", 0 };
         bind_builtin( "MAKEDIR", builtin_makedir, 0, args );
     }
-    
+
     {
         const char * args [] = { "path", 0 };
         bind_builtin( "READLINK", builtin_readlink, 0, args );
     }
+
     {
         char const * args[] = { "archives", "*",
                                 ":", "member-patterns", "*",
@@ -462,6 +464,15 @@ void load_builtins()
                                 ":", "symbol-patterns", "*", 0 };
         bind_builtin( "GLOB_ARCHIVE", builtin_glob_archive, 0, args );
     }
+
+#ifdef JAM_DEBUGGER
+
+	{
+		const char * args[] = { "list", "*", 0 };
+		bind_builtin("__DEBUG_PRINT_HELPER__", builtin_debug_print_helper, 0, args);
+	}
+
+#endif
 
     /* Initialize builtin modules. */
     init_set();
@@ -1981,7 +1992,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         bufsize *= 2;
         buf = BJAM_MALLOC( bufsize );
     }
-    
+
     if ( buf != static_buf )
         BJAM_FREE( buf );
 
@@ -1989,6 +2000,15 @@ LIST *builtin_readlink( FRAME * frame, int flags )
 #endif
 }
 
+#ifdef JAM_DEBUGGER
+
+LIST *builtin_debug_print_helper( FRAME * frame, int flags )
+{
+    debug_print_result = list_copy( lol_get( frame->args, 0 ) );
+    return L0;
+}
+
+#endif
 
 #ifdef HAVE_PYTHON
 
@@ -2460,15 +2480,6 @@ PyObject * bjam_caller( PyObject * self, PyObject * args )
 #endif  /* defined(_MSC_VER) || defined(__BORLANDC__) */
 
 
-static char * rtrim( char * const s )
-{
-    char * p = s;
-    while ( *p ) ++p;
-    for ( --p; p >= s && isspace( *p ); *p-- = 0 );
-    return s;
-}
-
-
 LIST * builtin_shell( FRAME * frame, int flags )
 {
     LIST   * command = lol_get( frame->args, 0 );
@@ -2515,14 +2526,15 @@ LIST * builtin_shell( FRAME * frame, int flags )
         buffer[ ret ] = 0;
         if ( !no_output_opt )
         {
-            if ( strip_eol_opt )
-                rtrim( buffer );
             string_append( &s, buffer );
         }
 
         /* Explicit EOF check for systems with broken fread */
         if ( feof( p ) ) break;
     }
+
+    if ( strip_eol_opt )
+        string_rtrim( &s );
 
     exit_status = pclose( p );
 

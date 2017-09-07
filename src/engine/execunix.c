@@ -20,6 +20,7 @@
 #include <sys/resource.h>
 #include <sys/times.h>
 #include <sys/wait.h>
+#include <poll.h>
 
 #if defined(sun) || defined(__sun)
     #include <wait.h>
@@ -87,8 +88,47 @@ static struct
 
     /* Opaque data passed back to the 'func' callback. */
     void * closure;
-} cmdtab[ MAXJOBS ] = { { 0 } };
+} * cmdtab = NULL;
+static int cmdtab_size = 0;
 
+/* Contains both stdin and stdout of all processes.
+ * The length is either globs.jobs or globs.jobs * 2
+ * depending on globs.pipe_action.
+ */
+struct pollfd * wait_fds = NULL;
+#define WAIT_FDS_SIZE ( globs.jobs * ( globs.pipe_action ? 2 : 1 ) )
+#define GET_WAIT_FD( job_idx ) ( wait_fds + ( ( job_idx * ( globs.pipe_action ? 2 : 1 ) ) ) )
+
+/*
+ * exec_init() - global initialization
+ */
+void exec_init( void )
+{
+    int i;
+    if ( globs.jobs > cmdtab_size )
+    {
+        cmdtab = BJAM_REALLOC( cmdtab, globs.jobs * sizeof( *cmdtab ) );
+        memset( cmdtab + cmdtab_size, 0, ( globs.jobs - cmdtab_size ) * sizeof( *cmdtab ) );
+        wait_fds = BJAM_REALLOC( wait_fds, WAIT_FDS_SIZE * sizeof ( *wait_fds ) );
+        for ( i = cmdtab_size; i < globs.jobs; ++i )
+        {
+            GET_WAIT_FD( i )[ OUT ].fd = -1;
+            GET_WAIT_FD( i )[ OUT ].events = POLLIN;
+            if ( globs.pipe_action )
+            {
+                GET_WAIT_FD( i )[ ERR ].fd = -1;
+                GET_WAIT_FD( i )[ ERR ].events = POLLIN;
+            }
+        }
+        cmdtab_size = globs.jobs;
+    }
+}
+
+void exec_done( void )
+{
+    BJAM_FREE( cmdtab );
+    BJAM_FREE( wait_fds );
+}
 
 /*
  * exec_check() - preprocess and validate the command.
@@ -297,6 +337,10 @@ void exec_cmd
         }
     }
 
+    GET_WAIT_FD( slot )[ OUT ].fd = out[ EXECCMD_PIPE_READ ];
+    if ( globs.pipe_action )
+        GET_WAIT_FD( slot )[ ERR ].fd = err[ EXECCMD_PIPE_READ ];
+
     /* Save input data into the selected running commands table slot. */
     cmdtab[ slot ].func = func;
     cmdtab[ slot ].closure = closure;
@@ -381,38 +425,8 @@ static void close_streams( int const i, int const s )
 
     close( cmdtab[ i ].fd[ s ] );
     cmdtab[ i ].fd[ s ] = 0;
-}
 
-
-/*
- * Populate the file descriptors collection for use in select() and return the
- * maximal included file descriptor value.
- */
-
-static int populate_file_descriptors( fd_set * const fds )
-{
-    int i;
-    int fd_max = 0;
-
-    FD_ZERO( fds );
-    for ( i = 0; i < globs.jobs; ++i )
-    {
-        int fd;
-        if ( ( fd = cmdtab[ i ].fd[ OUT ] ) > 0 )
-        {
-            if ( fd > fd_max ) fd_max = fd;
-            FD_SET( fd, fds );
-        }
-        if ( globs.pipe_action )
-        {
-            if ( ( fd = cmdtab[ i ].fd[ ERR ] ) > 0 )
-            {
-                if ( fd > fd_max ) fd_max = fd;
-                FD_SET( fd, fds );
-            }
-        }
-    }
-    return fd_max;
+    GET_WAIT_FD( i )[ s ].fd = -1;
 }
 
 
@@ -434,10 +448,6 @@ void exec_wait()
         struct timeval tv;
         struct timeval * ptv = NULL;
         int select_timeout = globs.timeout;
-
-        /* Prepare file descriptor information for use in select(). */
-        fd_set fds;
-        int const fd_max = populate_file_descriptors( &fds );
 
         /* Check for timeouts:
          *   - kill children that already timed out
@@ -478,7 +488,7 @@ void exec_wait()
             sigemptyset(&sigmask);
             sigaddset(&sigmask, SIGCHLD);
             sigprocmask(SIG_BLOCK, &sigmask, NULL);
-            while ( ( ret = select( fd_max + 1, &fds, 0, 0, ptv ) ) == -1 )
+            while ( ( ret = poll( wait_fds, WAIT_FDS_SIZE, select_timeout * 1000 ) ) == -1 )
                 if ( errno != EINTR )
                     break;
             /* restore original signal mask by unblocking sigchld */
@@ -491,10 +501,10 @@ void exec_wait()
         {
             int out_done = 0;
             int err_done = 0;
-            if ( FD_ISSET( cmdtab[ i ].fd[ OUT ], &fds ) )
+            if ( GET_WAIT_FD( i )[ OUT ].revents )
                 out_done = read_descriptor( i, OUT );
 
-            if ( globs.pipe_action && FD_ISSET( cmdtab[ i ].fd[ ERR ], &fds ) )
+            if ( globs.pipe_action && ( GET_WAIT_FD( i )[ ERR ].revents ) )
                 err_done = read_descriptor( i, ERR );
 
             /* If feof on either descriptor, we are done. */
@@ -576,7 +586,7 @@ void exec_wait()
 static int get_free_cmdtab_slot()
 {
     int slot;
-    for ( slot = 0; slot < MAXJOBS; ++slot )
+    for ( slot = 0; slot < globs.jobs; ++slot )
         if ( !cmdtab[ slot ].pid )
             return slot;
     err_printf( "no slots for child!\n" );

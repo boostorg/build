@@ -209,7 +209,7 @@ class Tester(TestCmd.TestCmd):
     def __init__(self, arguments=None, executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
-        ignore_toolset_requirements=True, workdir="", pass_d0=True,
+        ignore_toolset_requirements=False, workdir="", pass_d0=True,
         **keywords):
 
         assert arguments.__class__ is not str
@@ -352,7 +352,7 @@ class Tester(TestCmd.TestCmd):
 
     def copy(self, src, dst):
         try:
-            self.write(dst, self.read(src, 1))
+            self.write(dst, self.read(src, binary=True))
         except:
             self.fail_test(1)
 
@@ -360,7 +360,7 @@ class Tester(TestCmd.TestCmd):
         src_name = self.native_file_name(src)
         dst_name = self.native_file_name(dst)
         stats = os.stat(src_name)
-        self.write(dst, self.read(src, 1))
+        self.write(dst, self.__read(src, binary=True))
         os.utime(dst_name, (stats.st_atime, stats.st_mtime))
 
     def touch(self, names, wait=True):
@@ -492,13 +492,14 @@ class Tester(TestCmd.TestCmd):
             self.fail_test(1)
 
         if stdout is not None and not match(self.stdout(), stdout):
+            stdout_test = match(self.stdout(), stdout)
             annotation("failure", "Unexpected stdout")
             annotation("Expected STDOUT", stdout)
             annotation("Actual STDOUT", self.stdout())
             stderr = self.stderr()
             if stderr:
                 annotation("STDERR", stderr)
-            self.maybe_do_diff(self.stdout(), stdout)
+            self.maybe_do_diff(self.stdout(), stdout, stdout_test)
             self.fail_test(1, dump_stdio=False)
 
         # Intel tends to produce some messages to stderr which make tests fail.
@@ -506,11 +507,12 @@ class Tester(TestCmd.TestCmd):
         actual_stderr = re.sub(intel_workaround, "", self.stderr())
 
         if stderr is not None and not match(actual_stderr, stderr):
+            stderr_test = match(actual_stderr, stderr)
             annotation("failure", "Unexpected stderr")
             annotation("Expected STDERR", stderr)
             annotation("Actual STDERR", self.stderr())
             annotation("STDOUT", self.stdout())
-            self.maybe_do_diff(actual_stderr, stderr)
+            self.maybe_do_diff(actual_stderr, stderr, stderr_test)
             self.fail_test(1, dump_stdio=False)
 
         if expected_duration is not None:
@@ -521,26 +523,26 @@ class Tester(TestCmd.TestCmd):
                     expected_duration))
                 self.fail_test(1, dump_stdio=False)
 
+        self.__ignore_junk()
+
     def glob_file(self, name):
+        name = self.adjust_name(name)
         result = None
         if hasattr(self, "difference"):
             for f in (self.difference.added_files +
                 self.difference.modified_files +
                 self.difference.touched_files):
                 if fnmatch.fnmatch(f, name):
-                    result = self.native_file_name(f)
+                    result = self.__native_file_name(f)
                     break
         if not result:
-            result = glob.glob(self.native_file_name(name))
+            result = glob.glob(self.__native_file_name(name))
             if result:
                 result = result[0]
         return result
 
-    def read(self, name, binary=False):
+    def __read(self, name, binary=False):
         try:
-            if self.toolset:
-                name = name.replace("$toolset", self.toolset + "*")
-            name = self.glob_file(name)
             openMode = "r"
             if binary:
                 openMode += "b"
@@ -554,6 +556,10 @@ class Tester(TestCmd.TestCmd):
             annotation("failure", "Could not open '%s'" % name)
             self.fail_test(1)
             return ""
+
+    def read(self, name, binary=False):
+        name = self.glob_file(name)
+        return self.__read(name, binary=binary)
 
     def read_and_strip(self, name):
         if not self.glob_file(name):
@@ -692,7 +698,7 @@ class Tester(TestCmd.TestCmd):
                     "File %s touched, but no action was expected" % name)
                 self.fail_test(1)
 
-    def expect_nothing_more(self):
+    def __ignore_junk(self):
         # Not totally sure about this change, but I do not see a good
         # alternative.
         if windows:
@@ -714,6 +720,10 @@ class Tester(TestCmd.TestCmd):
         # Compiled Python files created when running Python based Boost Build.
         self.ignore("*.pyc")
 
+        # OSX/Darwin files and dirs.
+        self.ignore("*.dSYM/*")
+
+    def expect_nothing_more(self):
         if not self.unexpected_difference.empty():
             annotation("failure", "Unexpected changes found")
             output = StringIO.StringIO()
@@ -725,10 +735,10 @@ class Tester(TestCmd.TestCmd):
         self.__expect_lines(self.stdout(), lines, expected)
 
     def expect_content_lines(self, filename, line, expected=True):
-        self.__expect_lines(self.__read_file(filename), line, expected)
+        self.__expect_lines(self.read_and_strip(filename), line, expected)
 
     def expect_content(self, name, content, exact=False):
-        actual = self.__read_file(name, exact)
+        actual = self.read(name)
         content = content.replace("$toolset", self.toolset + "*")
 
         matched = False
@@ -736,7 +746,7 @@ class Tester(TestCmd.TestCmd):
             matched = fnmatch.fnmatch(actual, content)
         else:
             def sorted_(x):
-                x.sort()
+                x.sort(lambda x, y: cmp(x.lower().replace("\\","/"), y.lower().replace("\\","/")))
                 return x
             actual_ = map(lambda x: sorted_(x.split()), actual.splitlines())
             content_ = map(lambda x: sorted_(x.split()), content.splitlines())
@@ -757,7 +767,7 @@ class Tester(TestCmd.TestCmd):
             print actual
             self.fail_test(1)
 
-    def maybe_do_diff(self, actual, expected):
+    def maybe_do_diff(self, actual, expected, result=None):
         if os.environ.get("DO_DIFF"):
             e = tempfile.mktemp("expected")
             a = tempfile.mktemp("actual")
@@ -777,6 +787,8 @@ class Tester(TestCmd.TestCmd):
                     ))
             os.unlink(e)
             os.unlink(a)
+        elif type(result) is TestCmd.MatchError:
+            print(result.message)
         else:
             print("Set environmental variable 'DO_DIFF' to examine the "
                 "difference.")
@@ -823,10 +835,15 @@ class Tester(TestCmd.TestCmd):
         r = map(self.adjust_suffix, r)
         r = map(lambda x, t=self.toolset: x.replace("$toolset", t + "*"), r)
         return r
+    
+    def adjust_name(self, name):
+        return self.adjust_names(name)[0]
+
+    def __native_file_name(self, name):
+        return os.path.normpath(os.path.join(self.workdir, *name.split("/")))
 
     def native_file_name(self, name):
-        name = self.adjust_names(name)[0]
-        return os.path.normpath(os.path.join(self.workdir, *name.split("/")))
+        return self.__native_file_name(self.adjust_name(name))
 
     def wait_for_time_change(self, path, touch):
         """
@@ -1056,19 +1073,6 @@ class Tester(TestCmd.TestCmd):
             if test_time(next):
                 return next
             index += 1
-
-    def __read_file(self, name, exact=False):
-        name = self.adjust_names(name)[0]
-        result = ""
-        try:
-            if exact:
-                result = self.read(name)
-            else:
-                result = self.read_and_strip(name).replace("\\", "/")
-        except (IOError, IndexError):
-            print "Note: could not open file", name
-            self.fail_test(1)
-        return result
 
     def __wait_for_time_change(self, path, touch, last_build_time):
         """

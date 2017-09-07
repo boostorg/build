@@ -100,6 +100,10 @@ int make( LIST * targets, int anyhow )
 
     memset( (char *)counts, 0, sizeof( *counts ) );
 
+    /* Make sure that the tables are set up correctly.
+     */
+    exec_init();
+
     /* First bind all targets with LOCATE_TARGET setting. This is needed to
      * correctly handle dependencies to generated headers.
      */

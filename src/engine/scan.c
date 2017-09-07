@@ -34,6 +34,8 @@ struct include
     include   * next;        /* next serial include file */
     char      * string;      /* pointer into current line */
     char    * * strings;     /* for yyfparse() -- text to parse */
+    LISTITER    pos;         /* for yysparse() -- text to parse */
+    LIST      * list;        /* for yysparse() -- text to parse */
     FILE      * file;        /* for yyfparse() -- file being read */
     OBJECT    * fname;       /* for yyfparse() -- file name */
     int         line;        /* line counter for error messages */
@@ -101,6 +103,13 @@ void yyfparse( OBJECT * s )
     /* If the filename is "+", it means use the internal jambase. */
     if ( !strcmp( object_str( s ), "+" ) )
         i->strings = jambase;
+}
+
+
+void yysparse( OBJECT * name, const char * * lines )
+{
+    yyfparse( name );
+    incp->strings = (char * *)lines;
 }
 
 
@@ -274,8 +283,24 @@ int yylex()
             if ( c != '#' )
                 break;
 
-            /* Swallow up comment line. */
-            while ( ( ( c = yychar() ) != EOF ) && ( c != '\n' ) ) ;
+            c = yychar();
+            if ( ( c != EOF ) && c == '|' )
+            {
+                /* Swallow up block comment. */
+                int c0 = yychar();
+                int c1 = yychar();
+                while ( ! ( c0 == '|' && c1 == '#' ) && ( c0 != EOF && c1 != EOF ) )
+                {
+                    c0 = c1;
+                    c1 = yychar();
+                }
+                c = c1;
+            }
+            else
+            {
+                /* Swallow up comment line. */
+                while ( ( c != EOF ) && ( c != '\n' ) ) c = yychar();
+            }
         }
 
         /* c now points to the first character of a token. */

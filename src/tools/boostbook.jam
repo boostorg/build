@@ -58,13 +58,10 @@ feature.feature format
     : implicit composite propagated ;
 
 type.register DTDXML : dtdxml ;
-type.register XML : xml ;
 type.register BOOSTBOOK : boostbook : XML ;
-type.register DOCBOOK : docbook : XML ;
 type.register FO : fo : XML ;
-type.register PDF : pdf ;
 type.register PS : ps ;
-type.register XSLT : xsl : XML ;
+type.register XSLT : xsl xslt : XML ;
 type.register HTMLDIR ;
 type.register XHTMLDIR ;
 type.register HTMLHELP ;
@@ -737,41 +734,3 @@ rule boostbook-to-tests ( target : source : properties * )
     xsltproc.xslt $(target) : $(source) $(stylesheet) : $(properties)
         <xsl:param>boost.root=$(boost_root) ;
 }
-
-
-#############################################################################
-# Dependency scanners
-#############################################################################
-# XInclude scanner. Mostly stolen from c-scanner. :)
-# Note that this assumes an "xi" prefix for XIncludes. This is not always the
-# case for XML documents, but we assume it is true for anything we encounter.
-#
-class xinclude-scanner : scanner
-{
-    import scanner ;
-
-    rule __init__ ( includes * )
-    {
-        scanner.__init__ ;
-        self.includes = $(includes) ;
-    }
-
-    rule pattern ( )
-    {
-        return "xi:include[ ]*href=\"([^\"]*)\"" ;
-    }
-
-    rule process ( target : matches * : binding )
-    {
-        local target_path = [ NORMALIZE_PATH $(binding:D) ] ;
-
-        NOCARE $(matches) ;
-        INCLUDES $(target) : $(matches) ;
-        SEARCH on $(matches) = $(target_path) $(self.includes:G=) ;
-
-        scanner.propagate $(__name__) : $(matches) : $(target) ;
-    }
-}
-
-scanner.register xinclude-scanner : xsl:path ;
-type.set-scanner XML : xinclude-scanner ;

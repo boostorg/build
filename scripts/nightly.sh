@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Copyright 2004, 2005, 2006 Vladimir Prus 
 # Distributed under the Boost Software License, Version 1.0. 

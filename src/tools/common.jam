@@ -208,6 +208,13 @@ rule check-init-parameters ( toolset requirement * : * )
         }
         sig = $(sig)$(value:E="")- ;
     }
+    # We also need to consider requirements on the toolset as we can
+    # configure the same toolset multiple times with different options that
+    # are selected with the requirements.
+    if $(requirement)
+    {
+        sig = $(sig)$(requirement:J=,) ;
+    }
     if $(sig) in $(.all-signatures)
     {
         local message =
@@ -857,6 +864,10 @@ rule format-name ( format * : name : type ? : property-set )
                 result += [ join-tag $(f:G=) : [ address-model-tag $(name) :
                     $(type) : $(property-set) ] ] ;
 
+            case <arch-and-model> :
+                result += [ join-tag $(f:G=) : [ arch-and-model-tag $(name) :
+                    $(type) : $(property-set) ] ] ;
+
             case <version:*> :
                 local key = [ MATCH <version:(.*)> : $(f:G) ] ;
                 local version = [ $(property-set).get <$(key)> ] ;
@@ -1029,6 +1040,19 @@ local rule address-model-tag ( name : type ? : property-set )
     return [ $(property-set).get <address-model> ] ;
 }
 
+# Create a tag for the architecture and model
+# <architecture>x86 <address-model>32 would generate "x32"
+# This relies on the fact that all architectures start with
+# unique letters.
+local rule arch-and-model-tag ( name : type ? : property-set )
+{
+    local architecture = [ $(property-set).get <architecture> ] ;
+    local address-model = [ $(property-set).get <address-model> ] ;
+
+    local arch = [ MATCH ^(.) : $(architecture) ] ;
+
+    return $(arch)$(address-model) ;
+}
 
 rule __test__ ( )
 {

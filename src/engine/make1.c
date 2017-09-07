@@ -562,7 +562,6 @@ static void make1c( state const * const pState )
              * affected Boost Build tests be updated.
              */
             assert( 0 < globs.jobs );
-            assert( globs.jobs <= MAXJOBS );
             while ( cmdsrunning >= globs.jobs )
                 exec_wait();
         }
@@ -775,7 +774,16 @@ static void call_action_rule
 
         /* output ? :: the output of the action command */
         if ( command_output )
-            lol_add( frame->args, list_new( object_new( command_output ) ) );
+        {
+            OBJECT * command_output_obj = object_new( command_output );
+            char * output_i = (char*)object_str(command_output_obj);
+            /* Clean the output of control characters. */
+            for (; *output_i; ++output_i)
+            {
+                if (iscntrl(*output_i) && !isspace(*output_i)) *output_i = '?';
+            }
+            lol_add( frame->args, list_new( command_output_obj ) );
+        }
         else
             lol_add( frame->args, L0 );
 

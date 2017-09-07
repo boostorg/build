@@ -96,7 +96,10 @@ rule init (
 
     : is-default ?
     # Default configurations are only used when bzip
-    # has not yet been configured.
+    # has not yet been configured.  This option is
+    # deprecated.  A configuration will be treated
+    # as a default when none of <include>, <search>,
+    # <name>, and <source> are present.
     )
 {
     local caller = [ project.current ] ;
@@ -122,6 +125,11 @@ rule init (
     tag = $(tag:G=) ;
     local build-name = [ property.select <build-name> : $(options) ] ;
     build-name = $(build-name:G=) ;
+
+    if ! $(library-path) && ! $(include-path) && ! $(source-path) && ! $(library-name)
+    {
+        is-default = true ;
+    }
 
     condition = [ property-set.create $(requirements) ] ;
     condition = [ property-set.create [ $(condition).base ] ] ;
