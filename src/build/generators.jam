@@ -1347,7 +1347,7 @@ local rule construct-really ( project name ? : target-type : property-set :
 #
 rule construct ( project name ? : target-type : property-set * : sources * : top-level ? )
 {
-    local saved-stack ;
+    local saved-active ;
     if $(top-level)
     {
         saved-active = $(.active-generators) ;

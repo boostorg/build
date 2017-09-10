@@ -301,26 +301,8 @@ while cond { statements }
 <programlisting>
 return values ;
 </programlisting>
-        This statement should be used only inside a rule and assigns
-        <code>values</code> to the return value of the rule.
-        <warning>
-          <para>
-            The <code>return</code> statement does not exit the rule. For
-            example:
-<programlisting>
-rule test ( )
-{
-   if 1 = 1
-   {
-      return "reasonable" ;
-   }
-   return "strange" ;
-}
-</programlisting>
-            will return <literal>strange</literal>, not
-            <literal>reasonable</literal>.
-          </para>
-        </warning>
+        This statement should be used only inside a rule and returns
+        <code>values</code> to the caller of the rule.
 <programlisting>
 import <replaceable>module</replaceable> ;
 import <replaceable>module</replaceable> : <replaceable>rule</replaceable> ;
@@ -383,14 +365,20 @@ actions create-file-from-another
   <section id="bbv2.overview.configuration">
     <title>Configuration</title>
 
+    <indexterm><primary>Configuration</primary></indexterm>
+    <indexterm><primary>site-config.jam</primary></indexterm>
+    <indexterm><primary>user-config.jam</primary></indexterm>
+    <indexterm><primary>project-config.jam</primary></indexterm>
+
     <para>
-      On startup, Boost.Build searches and reads two configuration files:
-      <filename>site-config.jam</filename> and <filename>user-config.jam</filename>.
-      The first one is usually installed and maintained by a system administrator, and
+      On startup, Boost.Build searches and reads three configuration files:
+      <filename>site-config.jam</filename>, <filename>user-config.jam</filename>,
+      and <filename>project-config.jam</filename>.  The first one is usually
+      installed and maintained by a system administrator, and
       the second is for the user to modify.  You can edit the one in the top-level
       directory of your Boost.Build installation or create a copy in your home
-      directory and edit the copy.  The following table explains where both files
-      are searched.
+      directory and edit the copy.  The third is used for project specific configuration.
+      The following table explains where the files are searched.
     </para>
 
     <table id="bbv2.reference.init.config">
@@ -405,6 +393,8 @@ actions create-file-from-another
             <entry>site-config.jam</entry>
 
             <entry>user-config.jam</entry>
+            
+            <entry>project-config.jam</entry>
           </row>
 
         </thead>
@@ -423,6 +413,13 @@ actions create-file-from-another
               <simpara><code>$HOME</code></simpara>
               <simpara><code>$BOOST_BUILD_PATH</code></simpara>
             </entry>
+
+            <entry>
+              <simpara><code>.</code></simpara>
+              <simpara><code>..</code></simpara>
+              <simpara><code>../..</code></simpara>
+              <simpara>...</simpara>
+            </entry>
           </row>
 
           <row>
@@ -439,6 +436,13 @@ actions create-file-from-another
               <simpara><code>%HOMEDRIVE%%HOMEPATH%</code></simpara>
               <simpara><code>%HOME%</code></simpara>
               <simpara><code>%BOOST_BUILD_PATH%</code></simpara>
+            </entry>
+
+            <entry>
+              <simpara><code>.</code></simpara>
+              <simpara><code>..</code></simpara>
+              <simpara><code>../..</code></simpara>
+              <simpara>...</simpara>
             </entry>
           </row>
         </tbody>

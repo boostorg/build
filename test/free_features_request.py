@@ -37,6 +37,6 @@ void foo() {}
 # error at this point.
 t.run_build_system(["hello", "define=FOO"])
 
-t.expect_addition("bin/$toolset/debug/hello.exe")
+t.expect_addition("bin/$toolset/debug*/hello.exe")
 
 t.cleanup()

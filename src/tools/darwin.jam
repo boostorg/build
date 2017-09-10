@@ -516,20 +516,10 @@ rule setup-address-model ( targets * : sources * : properties * )
     }            
 }
 
-rule setup-threading ( targets * : sources * : properties * )
-{
-    gcc.setup-threading $(targets) : $(sources) : $(properties) ;
-}
-
-rule setup-fpic ( targets * : sources * : properties * )
-{
-    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
-}
-
 rule compile.m ( targets * : sources * : properties * )
 {
     LANG on $(<) = "-x objective-c" ;
-    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
     setup-address-model $(targets) : $(sources) : $(properties) ;
 }
 
@@ -541,7 +531,7 @@ actions compile.m
 rule compile.mm  ( targets * : sources * : properties * )
 {
     LANG on $(<) = "-x objective-c++" ;
-    gcc.setup-fpic $(targets) : $(sources) : $(properties) ;
+    gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
     setup-address-model $(targets) : $(sources) : $(properties) ;
 }
 

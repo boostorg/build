@@ -45,7 +45,10 @@ rule init (
 
     : is-default ?
     # Default configurations are only used when
-    # not yet configured.
+    # not yet configured.  This option is
+    # deprecated.  A configuration will be treated
+    # as a default when none of <include>, <search>,
+    # <name>, and <source> are present.
     )
 {
     local caller = [ project.current ] ;
@@ -65,6 +68,11 @@ rule init (
     include-path = $(include-path:G=) ;
     local library-name = [ property.select <name> : $(options) ] ;
     library-name = $(library-name:G=) ;
+
+    if ! $(options)
+    {
+        is-default = true ;
+    }
 
     condition = [ property-set.create $(requirements) ] ;
     condition = [ property-set.create [ $(condition).base ] ] ;

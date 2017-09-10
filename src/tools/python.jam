@@ -561,7 +561,7 @@ toolset.flags python.capture-output PYTHON : <python.interpreter> ;
 # Support for Python configured --with-pydebug
 #
 feature.feature python-debugging : off on : propagated ;
-builtin.variant debug-python : debug : <python-debugging>on ;
+variant debug-python : debug : <python-debugging>on ;
 
 
 # Return a list of candidate commands to try when looking for a Python

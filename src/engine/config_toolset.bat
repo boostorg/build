@@ -55,7 +55,7 @@ if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if "_%VCINSTALLDIR%_" == "__" (
         set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
         ) )
-set "BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG kernel32.lib advapi32.lib user32.lib"
+set "BOOST_JAM_CC=cl /nologo /GZ /Zi /MLd /Fobootstrap/ /Fdbootstrap/ -DWINVER=0x0501 -D_WIN32_WINNT=0x0501 -DNT -DYYDEBUG kernel32.lib advapi32.lib user32.lib "
 set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
 set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
@@ -162,6 +162,8 @@ set "_known_=1"
 :Skip_VC14
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc141_" goto Skip_VC141
 call vswhere_usability_wrapper.cmd
+REM Reset ERRORLEVEL since from now on it's all based on ENV vars
+ver > nul 2> nul
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if NOT "_%VS150COMNTOOLS%_" == "__" (
         set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"

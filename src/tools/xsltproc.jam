@@ -72,6 +72,11 @@ rule check-xsltproc ( )
     }
 }
 
+rule name ( )
+{
+    freeze-config ;
+    return $(.xsltproc) ;
+}
 
 # Returns a non-empty string if a cygwin xsltproc binary was specified.
 #

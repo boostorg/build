@@ -410,9 +410,13 @@ rule run-path-setup ( target : source : properties * )
     # test are found. So, we collect all paths from dependency libraries (via
     # xdll-path property) and add whatever explicit dll-path user has specified.
     # The resulting paths are added to the environment on each test invocation.
+    local target-os = [ feature.get-values <target-os> : $(properties) ] ;
     local dll-paths = [ feature.get-values <dll-path> : $(properties) ] ;
     dll-paths += [ feature.get-values <xdll-path> : $(properties) ] ;
-    dll-paths += [ on $(source) return $(RUN_PATH) ] ;
+    if $(target-os) != vxworks
+    {
+         dll-paths += [ on $(source) return $(RUN_PATH) ] ;
+    }
     dll-paths = [ sequence.unique $(dll-paths) ] ;
     if $(dll-paths)
     {
@@ -421,9 +425,28 @@ rule run-path-setup ( target : source : properties * )
         {
             translate-to-os = path.to-VMS ;
         }
-        dll-paths = [ sequence.transform $(translate-to-os) : $(dll-paths) ] ;
-        PATH_SETUP on $(target) = [ common.prepend-path-variable-command
-            [ os.shared-library-path-variable ] : $(dll-paths) ] ;
+        if $(target-os) = vxworks
+        {
+            # map <build-os> paths to <target-os> paths
+            local save-os = [ modules.peek os : .name ] ;
+            modules.poke os : .name : VXWORKS ;
+            local parent = [ os.environ PKG_SRC_BUILD_DIR ] ;
+            local prefix = [ os.environ LAYER_SRC_PATH ] ;
+            local target-dll-paths ;
+            for local e in $(dll-paths)
+            {
+                target-dll-paths += [ path.join  $(prefix) [ path.relative $(e) $(parent) : noerror ] ] ;
+            }
+            PATH_SETUP on $(target) = [ common.prepend-path-variable-command
+                [ os.shared-library-path-variable ] : $(target-dll-paths) ] ;
+            modules.poke os : .name : $(save-os) ;
+        }
+        else
+        {
+            dll-paths = [ sequence.transform $(translate-to-os) : $(dll-paths) ] ;
+            PATH_SETUP on $(target) = [ common.prepend-path-variable-command
+                [ os.shared-library-path-variable ] : $(dll-paths) ] ;
+        }
     }
 }
 

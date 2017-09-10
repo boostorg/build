@@ -283,8 +283,24 @@ int yylex()
             if ( c != '#' )
                 break;
 
-            /* Swallow up comment line. */
-            while ( ( ( c = yychar() ) != EOF ) && ( c != '\n' ) ) ;
+            c = yychar();
+            if ( ( c != EOF ) && c == '|' )
+            {
+                /* Swallow up block comment. */
+                int c0 = yychar();
+                int c1 = yychar();
+                while ( ! ( c0 == '|' && c1 == '#' ) && ( c0 != EOF && c1 != EOF ) )
+                {
+                    c0 = c1;
+                    c1 = yychar();
+                }
+                c = c1;
+            }
+            else
+            {
+                /* Swallow up comment line. */
+                while ( ( c != EOF ) && ( c != '\n' ) ) c = yychar();
+            }
         }
 
         /* c now points to the first character of a token. */
