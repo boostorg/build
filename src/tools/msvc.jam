@@ -1260,7 +1260,15 @@ local rule default-path ( version )
             local root = [ os.environ "ProgramFiles(x86)" ] ;
             if ( ! $(root) )
             {
+                root = [ os.environ "PROGRAMFILES(X86)" ] ;
+            }
+            if ( ! $(root) )
+            {
                 root = [ os.environ "ProgramFiles" ] ;
+            }
+            if ( ! $(root) )
+            {
+                root = [ os.environ "PROGRAMFILES" ] ;
             }
             local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
             if ( [ path.exists $(vswhere) ] )
