@@ -445,60 +445,27 @@ rule set-cxxstd-options ( targets * : sources * : properties * )
     local cxxstd-dialect = [ feature.get-values cxxstd-dialect : $(properties) ] ;
     cxxstd-dialect ?= c++ ;
     local option ;
-    if $(toolset) = gcc
+    if $(cxxstd) = latest
     {
-        switch $(cxxstd)
+        if $(toolset) = gcc
         {
-            case 98 : if $(version) >= 0003.0003 { option = 98 ; }
-            case 03 : if $(version) >= 0004.0008 { option = 03 ; }
-            
-            case 11 : if $(version) >= 0004.0007 { option = 11 ; }
-            case 0x : if $(version) >= 0004.0003 { option = 0x ; }
-            
-            case 14 : if $(version) >= 0005.0001 { option = 14 ; }
-            case 1y : if $(version) >= 0004.0008 { option = 1y ; }
-            
-            case 17 : if $(version) >= 0005.0001 { option = 1z ; }
-            case 1z : if $(version) >= 0005.0001 { option = 1z ; }
-            
-            case 2a : if $(version) >= 0008.0000 { option = 2a ; }
-            case latest :
             if $(version) >= 0008.0000 { option = 2a ; }
             else if $(version) >= 0005.0001 { option = 1z ; }
             else if $(version) >= 0004.0008 { option = 1y ; }
             else if $(version) >= 0004.0007 { option = 11 ; }
             else if $(version) >= 0003.0003 { option = 98 ; }
         }
-    }
-    if $(toolset) = clang
-    {
-        switch $(cxxstd)
+        if $(toolset) = clang
         {
-            case 98 : option = 98 ;
-            case 03 : option = 03 ;
-            
-            case 11 : if $(version) >= 0003.0003 { option = 11 ; }
-            case 0x : if $(version) >= 0002.0009 { option = 0x ; }
-            
-            case 14 : if $(version) >= 0003.0004 { option = 14 ; }
-            case 1y : if $(version) >= 0002.0009 { option = 1y ; }
-            
-            case 17 : if $(version) >= 0003.0005 { option = 1z ; }
-            case 1z : if $(version) >= 0003.0005 { option = 1z ; }
-            
-            case 2a : option = 2a ;
-            case latest :
             if $(version) >= 0003.0005 { option = 1z ; }
             if $(version) >= 0003.0004 { option = 14 ; }
             if $(version) >= 0003.0003 { option = 11 ; }
             option ?= 03 ;
         }
     }
-    if $(cxxstd) && ! $(option)
+    else
     {
-        ECHO Warning: cxxstd value \"$(cxxstd)\" not supported by
-            $(toolset) [ on $(targets[1]) return $(VERSION:J=.) ] ;
-        option = -invalid ;
+        option = $(cxxstd) ;
     }
     OPTIONS on $(targets) += -std=$(cxxstd-dialect)$(option) ;
 }
