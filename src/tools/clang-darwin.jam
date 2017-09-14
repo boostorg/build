@@ -51,7 +51,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 rule init ( version ? :  command * : options * )
 {
     command = [ common.get-invocation-command clang-darwin : clang++ 
-        : $(command) ] ;
+        : $(command) : /usr/bin /usr/local/bin ] ;
 
     # Determine the version
     local command-string = $(command:J=" ") ;
@@ -61,8 +61,8 @@ rule init ( version ? :  command * : options * )
             : [ SHELL "$(command-string) -dumpversion" ] ] ;
     }
 
-    local condition = [ common.check-init-parameters clang-darwin
-        : version $(version) ] ;    
+    local condition = [ common.check-init-parameters clang
+        : version $(version) ] ;
 
     common.handle-options clang-darwin : $(condition) : $(command) : $(options) ;
 
