@@ -917,16 +917,17 @@ rule init-link-flags ( toolset subtool condition )
     ## Need to define the linker-type feature once for each toolset module.
     if ! [ feature.valid <toolset-$(toolset):linker-type> ]
     {
-        toolset.add-requirements
-            $(condition),<target-os>aix:<toolset-$(toolset):linker-type>aix
-            $(condition),<target-os>darwin:<toolset-$(toolset):linker-type>darwin
-            $(condition),<target-os>hpux:<toolset-$(toolset):linker-type>hpux
-            $(condition),<target-os>osf:<toolset-$(toolset):linker-type>osf
-            $(condition),<target-os>solaris:<toolset-$(toolset):linker-type>sun
-            ;
         feature.subfeature toolset $(toolset) : linker-type :
             gnu aix darwin hpux osf sun : propagated link-incompatible ;
     }
+    ## The specification to add the linker-type is per toolset "instance".
+    toolset.add-requirements
+        $(condition),<target-os>aix:<toolset-$(toolset):linker-type>aix
+        $(condition),<target-os>darwin:<toolset-$(toolset):linker-type>darwin
+        $(condition),<target-os>hpux:<toolset-$(toolset):linker-type>hpux
+        $(condition),<target-os>osf:<toolset-$(toolset):linker-type>osf
+        $(condition),<target-os>solaris:<toolset-$(toolset):linker-type>sun
+        ;
 }
 
 rule set-link-options ( action-name targets + : sources * : properties * )
