@@ -121,6 +121,7 @@
 #include "strings.h"
 #include "timestamp.h"
 #include "variable.h"
+#include "execcmd.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC
