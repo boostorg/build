@@ -705,7 +705,7 @@ class gcc-pch-compile-action : compile-action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) : $(self) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) : $(__name__) ;
         compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
