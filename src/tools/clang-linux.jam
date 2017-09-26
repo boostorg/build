@@ -49,9 +49,9 @@ rule init ( version ? :  command * : options * ) {
     : $(command) ] ;
                 
   # Determine the version
-  local command-string = $(command:J=" ") ;
-
   if $(command) {    
+    local command-string = \"$(command)\" ;
+    command-string = $(command-string:J=" ") ;
     version ?= [ MATCH "version ([0-9.]+)"
       : [ SHELL "$(command-string) --version" ] ] ;
   }
