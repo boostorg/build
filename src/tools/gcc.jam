@@ -436,8 +436,12 @@ local rule zero-pad ( numbers * )
     return $(result) ;
 }
 
-rule set-cxxstd-options ( targets * : sources * : properties * )
+rule set-cxxstd-options ( targets * : sources * : properties * : action )
 {
+    local *targets = [ $(action).targets ] ;
+    local *sources = [ $(action).sources ] ;
+    local target-type = [ $(*targets[1]).type ] ;
+    local source-type = [ $(*sources[1]).type ] ;
     local toolset = [ feature.get-values toolset : $(properties) ] ;
     local version = [ zero-pad [ on $(targets[1]) return $(VERSION) ] ] ;
     version = $(version[1]).$(version[2]) ;
@@ -467,7 +471,10 @@ rule set-cxxstd-options ( targets * : sources * : properties * )
     {
         option = $(cxxstd) ;
     }
-    OPTIONS on $(targets) += -std=$(cxxstd-dialect)$(option) ;
+    if $(source-type) in CPP || $(target-type) in CPP_PCH EXE SHARED_LIB
+    {
+        OPTIONS on $(targets) += -std=$(cxxstd-dialect)$(option) ;
+    }
 }
 
 ###
@@ -491,7 +498,7 @@ class gcc-c-compile-action : compile-action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) : $(__name__) ;
         compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
@@ -526,7 +533,7 @@ class gcc-fortran-compile-action : compile-action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) : $(__name__) ;
         compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
@@ -698,7 +705,7 @@ class gcc-pch-compile-action : compile-action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) : $(__name__) ;
         compile-action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
 }
@@ -838,7 +845,7 @@ class gcc-link-action : action
         gcc.set-threading-options $(targets) : $(sources) : $(properties) ;
         gcc.set-fpic-options $(targets) : $(sources) : $(properties) ;
         gcc.set-address-model-options $(targets) : $(sources) : $(properties) ;
-        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) ;
+        gcc.set-cxxstd-options $(targets) : $(sources) : $(properties) : $(__name__) ;
         gcc.set-link-options $(action-name) $(targets) : $(sources) : $(properties) ;
         action.execute $(action-name) $(targets) : $(sources) : $(properties) ;
     }
