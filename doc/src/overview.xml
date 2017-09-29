@@ -1129,7 +1129,7 @@ rule <replaceable>rule-name</replaceable> (
       <section>
         <title>Name</title>
 
-        <!-- perphaps we should use 'name-target-name' to closer
+        <!-- perhaps we should use 'name-target-name' to closer
         bind this description to the rule's signature. Here, and for
         other parameters.  -->
         <para>The name of main target has two purposes. First, it's used to refer to this target from
@@ -1423,7 +1423,7 @@ project tennis
         <!--
              This contradicts your earlier description of default
              build and I believe it is incorrect.  Specifying a build
-             request does not neccessarily render default build
+             request does not necessarily render default build
              ineffective, because it may cover different features.
              This description is repeated too many times in the
              documentation; you almost *had* to get it wrong once.

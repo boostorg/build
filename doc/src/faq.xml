@@ -434,6 +434,7 @@ alias my-lib
       dependants need not care if <code>my-lib</code> is a header-only or not,
       and it is possible to later make <code>my-lib</code> into a regular
       compiled library without having to that its dependants' declarations.
+      <!-- Even if "without having to that its" is correct English, I'd suggest to simplify this sentence. -->
     </para>
 
     <para>

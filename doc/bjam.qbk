@@ -346,7 +346,7 @@ The build scripts support additional invocation arguments for use by developers 
 /build/ \[/toolset/\] \[/setup/\*\] \[--/option/+ /target/\*\]
 ]
 
-The arguments immediately after the toolset are passed directly to the setup script of the toolset, if available and if it needs to be invoked. This allows one to configure the toolset ass needed to do non-default builds of =b2=. For example to build a Win64 version with =vc8=. See the toolset descriptiona above for when particular toolsets support this.
+The arguments immediately after the toolset are passed directly to the setup script of the toolset, if available and if it needs to be invoked. This allows one to configure the toolset as needed to do non-default builds of =b2=. For example to build a Win64 version with =vc8=. See the toolset descriptiona above for when particular toolsets support this.
 
 The arguments starting with the "=--option=" forms are passed to the =build.jam= script and are used to further customize what gets built. Options and targets supported by the =build.jam= script:
 
@@ -476,7 +476,7 @@ on /target/ $(/var/) /field1/ : /field2/ : /.../ : /fieldN/ ;
 The variable's value names the rule (or rules) to be invoked. A rule is
 invoked for each element in the list of [^$(/var/)]'s values. The fields
 [^/field1/ : /field2/ : /.../] are passed as arguments for each
-invokation. For the [ ... ] forms, the return value is the concatenation of
+invocation. For the [ ... ] forms, the return value is the concatenation of
 the return values for all of the invocations.
 
 [section Action Modifiers]
@@ -929,7 +929,7 @@ rule UPDATE_NOW ( /targets/ * : /log/ ? : /ignore-minus-n/ ? )
 ]
 
 The =UPDATE_NOW= caused the specified targets to be updated immediately.
-If update was successfull, non-empty string is returned. The /log/ parameter,
+If update was successful, non-empty string is returned. The /log/ parameter,
 if present, specifies a descriptor of a file where all output from building
 is redirected. If the /ignore-minus-n/ parameter is specified, the targets
 are updated even if the =-n= parameter is specified on the command line.
