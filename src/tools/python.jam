@@ -503,6 +503,22 @@ local rule probe ( python-cmd )
 }
 
 
+# Use python-config command to get default paths
+#
+local rule compute-python-config-paths ( version ? : exec-prefix ? )
+{
+    local cfg-cmd = $(exec-prefix)/bin/python$(version)-config ;
+
+    local includes-cmd =
+        $(cfg-cmd)" --includes | sed -n 's/^-I\(.*\) .*/\1/p' | tr -d '\\n'" ;
+    includes ?= [ shell-cmd $(includes-cmd) ] ;
+
+    local libraries-cmd =
+	      $(cfg-cmd)" --ldflags | sed -n 's/^-L\(.*\) .*/\1/p' | tr -d '\\n'" ;
+    libraries ?= [ shell-cmd $(libraries-cmd) ] ;
+}
+
+
 # Make sure the "libraries" and "includes" variables (in an enclosing scope)
 # have a value based on the information given.
 #
@@ -544,6 +560,9 @@ local rule compute-default-paths ( target-os : version ? : prefix ? :
     }
     else
     {
+        # try python-config first
+        compute-python-config-paths $(version) : $(exec-prefix) ;
+
         includes ?= $(prefix)/include/python$(version) ;
 
         local lib = $(exec-prefix)/lib ;
