@@ -8,19 +8,22 @@
 import property-set ;
 import feature : feature ;
 
-feature threadapi : win32 pthread : optional propagated ;
+if ! [ feature.valid threadapi ]
+{
+    feature threadapi : win32 pthread : optional propagated ;
+}
 
 rule get-default ( property-set )
 {
-	local api = pthread ;
-	if [ $(property-set).get <target-os> ] = windows { api = win32 ; }
-	return $(api) ;
+    local api = pthread ;
+    if [ $(property-set).get <target-os> ] = windows { api = win32 ; }
+    return $(api) ;
 }
 
 rule detect ( properties * )
 {
-	local ps = [ property-set.create $(properties) ] ;
-	local api = [ $(ps).get <threadapi> ] ;
-	if ! $(api) { api = [ get-default $(ps) ] ; }
-	return <threadapi>$(api) ;
+    local ps = [ property-set.create $(properties) ] ;
+    local api = [ $(ps).get <threadapi> ] ;
+    if ! $(api) { api = [ get-default $(ps) ] ; }
+    return <threadapi>$(api) ;
 }
