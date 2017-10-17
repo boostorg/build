@@ -1553,7 +1553,18 @@ class typed-target : basic-target
             : $(source-targets) : true ] ;
         if ! $(r)
         {
-            ECHO "warn: Unable to construct" [ full-name ] ;
+            local viable-generators = [ generators.find-viable-generators
+                $(self.type) : $(property-set) ] ;
+            ECHO "WARNING: Unable to construct" [ full-name ]
+                "of type" $(self.type)
+                "with these properties:" [ $(property-set).raw ] ;
+            ECHO "WARNING: Considered these as possible generators:" ;
+            for local gen in $(viable-generators)
+            {
+                ECHO "WARNING:" [ $(gen).id ]
+                    "with source types {" [ $(gen).source-types ] "}"
+                    "and requirements {" [ $(gen).requirements ] "}" ;
+            }
 
             # Are there any top-level generators for this type/property set.
             if ! [ generators.find-viable-generators $(self.type) :
