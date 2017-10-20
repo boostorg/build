@@ -433,7 +433,8 @@ alias my-lib
       automatically added to all of its dependants' build properties. The
       dependants need not care if <code>my-lib</code> is a header-only or not,
       and it is possible to later make <code>my-lib</code> into a regular
-      compiled library without having to that its dependants' declarations.
+      compiled library without having to add the includes to its dependants' 
+      declarations.
     </para>
 
     <para>

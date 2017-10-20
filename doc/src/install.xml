@@ -68,10 +68,10 @@
       </listitem>
       -->
 
-    <!-- This part should not go into intoduction docs, but we need to
+    <!-- This part should not go into introduction docs, but we need to
          place it somewhere. 
 
-    <para>It is slighly better way is to copy
+    <para>It is slightly better way is to copy
     <filename>new/user-config.jam</filename> into one of the locations
     where it can be found (given in <link linkend=
     "bbv2.reference.init.config">this table</link>). This prevent you

@@ -77,7 +77,7 @@
         and can be called with specific properties to generate concrete
         targets. At the code level it is represented by an instance of
         class derived from <link linkend="bbv2.reference.class.abstract-target">abstract-target</link>. 
-        <footnote><para>This name is historic, and will be eventuall changed to 
+        <footnote><para>This name is historic, and will be eventually changed to 
         <code>metatarget</code></para></footnote>
         </para>
         
@@ -173,12 +173,12 @@ local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
         The first parameter is the list of sources. The second parameter is the name
         a jam-level <link linkend="bbv2.overview.jam_language.actions">action</link>.
         The third parameter is the property-set applying to this action. The second line
-        creates a target. We specifie a name, a type and a project. We also pass the
+        creates a target. We specify a name, a type and a project. We also pass the
         action object created earlier.  If the action creates several targets, we can repeat
         the second line several times.</para>
 
         <para>In some cases, code that creates concrete targets may be invoked more than
-        once with the same properties. Returning to different instance of <classname>file-target</classname>
+        once with the same properties. Returning two different instances of <classname>file-target</classname>
         that correspond to the same file clearly will result in problems. Therefore, whenever
         returning targets you should pass them via the <code>virtual-target.register</code>
         function, besides allowing Boost.Build to track which virtual targets
@@ -235,7 +235,7 @@ return [ sequence.transform virtual-target.register : $(targets) ] ;
 
           <para>Each generator, in addition to target types that it can
           produce, have attribute that affects its applicability in
-          particular sitiation. Those attributes are:</para>
+          particular situation. Those attributes are:</para>
 
           <orderedlist>
             <listitem>
@@ -250,7 +250,7 @@ return [ sequence.transform virtual-target.register : $(targets) ] ;
             <listitem>
               <simpara>
                 Optional properties, which increase the generators
-                suitability for a particual build.
+                suitability for a particular build.
               </simpara>
             </listitem>
           </orderedlist>
@@ -270,7 +270,7 @@ return [ sequence.transform virtual-target.register : $(targets) ] ;
           (TODO: define composing generators). The found generators
           are assigned a rank, which is the number of optional properties
           present in requested properties. Finally, generators with highest
-          rank are selected for futher processing.</para>
+          rank are selected for further processing.</para>
 
         </section>
         <section>
@@ -507,7 +507,7 @@ type.register PLUGIN : : SHARED_LIB ;
       properties of the base type - in particular generators and suffix.
       Typically, you'll change the new type in some way. For example, using
       <code>type.set-generated-target-suffix</code> you can set the suffix for
-      the new type. Or you can write special a generator for the new type. For
+      the new type. Or you can write a special generator for the new type. For
       example, it can generate additional metainformation for the plugin.
       In either way, the <code>PLUGIN</code> type can be used whenever
       <code>SHARED_LIB</code> can. For example, you can directly link plugins
@@ -993,7 +993,7 @@ rule link
 
             This is a workaround for a bug in Boost.Build engine, which will hopefully
             be fixed one day.
-            <!-- This is *NOT* a bug!!  Anyway, BBv2 shouild handle this automatically. Why doesn't it? -->
+            <!-- This is *NOT* a bug!!  Anyway, BBv2 should handle this automatically. Why doesn't it? -->
 </para></listitem>
 
       </orderedlist>
