@@ -1491,9 +1491,9 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>off : /EHa ;
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>on : /EHac ;
 
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : /std:C++14 ;
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : /std:C++17 ;
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : /std:C++latest ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : /std:c++14 ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : /std:c++17 ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : /std:c++latest ;
 
     # By default 8.0 enables rtti support while prior versions disabled it. We
     # simply enable or disable it explicitly so we do not have to depend on this
