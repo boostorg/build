@@ -159,7 +159,13 @@ class asciidoctor-generator : generator
         if ( ! $(sources[2]) ) && ( [ $(sources[1]).type ] = ASCIIDOC )
         {
             # If no output name is specified, guess it from sources.
-            name ?= [ generator.determine-output-name $(sources) ] ;
+            # NOTE: For some reason the "?=" conditional assign op doesn't
+            # work here. It assigns the value regardless, so work around it.
+            # TODO: Look into why that happens.
+            if ! $(name)
+            {
+                name = [ generator.determine-output-name $(sources) ] ;
+            }
             
             # Depending on the kind of target we set up the backend, and
             # and any other options.
