@@ -190,11 +190,12 @@ class asciidoctor-generator : generator
         for local p in [ $(property-set).raw ]
         {
             if $(p:G) in <asciidoctor-attribute> <asciidoctor-doctype>
-                <include> <flags>
+                <asciidoctor-backend> <include> <flags>
             {
                 raw-set += $(p) ;
             }
         }
+        raw-set = [ feature.expand-composites $(raw-set) ] ;
         property-set = [ property-set.create $(raw-set) ] ;
         return [ generator.run $(project) $(name) : $(property-set) : $(sources) ] ;
     }
