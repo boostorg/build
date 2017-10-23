@@ -178,10 +178,6 @@ class asciidoctor-generator : generator
                     case MANPAGE : backend = manpage ;
                     case PDF : backend = pdf ;
                 }
-                if $(backend)
-                {
-                    property-set = [ $(property-set).add-raw  ] ;
-                }
             }
         }
         
@@ -190,7 +186,7 @@ class asciidoctor-generator : generator
         for local p in [ $(property-set).raw ]
         {
             if $(p:G) in <asciidoctor-attribute> <asciidoctor-doctype>
-                <asciidoctor-backend> <include> <flags>
+                <include> <flags>
             {
                 raw-set += $(p) ;
             }
