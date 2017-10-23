@@ -18,6 +18,12 @@
   <xi:include href="extending.xml"/>
   <xi:include href="faq.xml"/>
 
+  <!-- Tools -->
+  <appendix id="extra-tools">
+    <title>Extra Tools</title>
+    <xi:include href="tools.docbook" parse="xml"
+      xpointer="xpointer(id('_documentation_tools')|id('_documentation_tools')/following-sibling::*)"/>
+  </appendix>
   <!-- Appendicies -->
   <appendix id="examples">
     <title>Examples</title>
