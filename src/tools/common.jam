@@ -715,14 +715,14 @@ rule MkDir
 
 if [ os.name ] = NT
 {
-    actions mkdir
+    actions quietly mkdir
     {
         if not exist "$(<)\\" mkdir "$(<)"
     }
 }
 else
 {
-    actions mkdir
+    actions quietly mkdir
     {
         mkdir -p "$(<)"
     }
