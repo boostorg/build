@@ -446,8 +446,12 @@ rule set-cxxstd-options ( targets * : sources * : properties * : action )
     local version = [ zero-pad [ on $(targets[1]) return $(VERSION) ] ] ;
     version = $(version[1]).$(version[2]) ;
     local cxxstd = [ feature.get-values cxxstd : $(properties) ] ;
-    local cxxstd-dialect = [ feature.get-values cxxstd-dialect : $(properties) ] ;
-    cxxstd-dialect ?= c++ ;
+    local cxxstd-dialect ;
+    switch [ feature.get-values cxxstd-dialect : $(properties) ]
+    {
+        case gnu : cxxstd-dialect = gnu++ ;
+        case * : cxxstd-dialect = c++ ;
+    }
     local option ;
     if $(cxxstd) = latest
     {
