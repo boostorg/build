@@ -84,7 +84,7 @@ static char const * target_bind[] =
     "exists",
 };
 
-#define spaces(x) ( "                    " + ( x > 20 ? 0 : 20-x ) )
+#define spaces(x) ( ((const char *)"                    ") + ( x > 20 ? 0 : 20-x ) )
 
 
 /*

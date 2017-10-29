@@ -18,6 +18,7 @@
 #include <string.h>
 #include <limits.h>
 #include <signal.h>
+#include <ctype.h>
 
 #ifdef NT
 #include <windows.h>
@@ -26,6 +27,7 @@
 #else
 #include <errno.h>
 #include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 #undef debug_on_enter_function
@@ -399,7 +401,7 @@ static void debug_print_frame( FRAME * frame )
     printf( "%s ", frame->rulename );
     if ( strcmp( frame->rulename, "module scope" ) != 0 )
     {
-        printf( "( ", frame->rulename );
+        printf( "( " );
         if ( frame->args->count )
         {
             lol_print( frame->args );
@@ -428,7 +430,7 @@ static void debug_print_frame_info( FRAME_INFO * frame )
     printf( "%s ", frame->rulename );
     if ( strcmp( frame->rulename, "module scope" ) != 0 )
     {
-        printf( "( ", frame->rulename );
+        printf( "( " );
         if ( frame->args->count )
         {
             lol_print( frame->args );
@@ -2075,7 +2077,7 @@ static void debug_mi_break_list( int argc, const char * * argv )
     int number;
     int i;
     int first;
-    if ( argc > 2 || argc == 2 && strcmp( argv[ 1 ], "--" ) )
+    if ( argc > 2 || ( argc == 2 && strcmp( argv[ 1 ], "--" ) ) )
     {
         debug_mi_error( "Too many arguments for -break-list" );
         return;
