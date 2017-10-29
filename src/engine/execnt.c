@@ -569,7 +569,7 @@ static int raw_maxline()
 
 static int maxline()
 {
-    static result;
+    static int result;
     if ( !result ) result = raw_maxline();
     return result;
 }

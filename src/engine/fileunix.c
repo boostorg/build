@@ -222,6 +222,7 @@ void file_supported_fmt_resolution( timestamp * const t )
     timestamp_init( t, 1, 0 );
 }
 
+int file_collect_archive_content_( file_archive_info_t * const archive );
 
 /*
  * file_archscan() - scan an archive for files

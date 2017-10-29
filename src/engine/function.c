@@ -28,9 +28,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-/* *
+/*
 #define FUNCTION_DEBUG_PROFILE
-/* */
+*/
 
 #ifndef FUNCTION_DEBUG_PROFILE
 #undef PROFILE_ENTER_LOCAL
