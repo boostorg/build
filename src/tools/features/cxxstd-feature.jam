@@ -30,5 +30,5 @@ feature.feature cxxstd
 # ANSI C++ Standard conformance.
 
 feature.subfeature cxxstd : dialect
-    : gnu ms
+    : gnu++ ms
     : optional composite propagated ;
