@@ -96,6 +96,8 @@ file_info_t * filelist_item( FILELISTITER it );
 file_info_t * filelist_front(  FILELIST * list );
 file_info_t * filelist_back(  FILELIST * list );
 
+int filelist_empty( FILELIST * list );
+
 #define FL0 ((FILELIST *)0)
 
 
