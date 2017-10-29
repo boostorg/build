@@ -450,7 +450,7 @@ rule set-cxxstd-options ( targets * : sources * : properties * : action )
     switch [ feature.get-values cxxstd-dialect : $(properties) ]
     {
         case gnu : cxxstd-dialect = gnu++ ;
-        case * : cxxstd-dialect = c++ ;
+        case ansi : cxxstd-dialect = c++ ;
     }
     local option ;
     if $(cxxstd) = latest
