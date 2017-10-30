@@ -27,6 +27,7 @@ import toolset ;
 import type ;
 import unix ;
 import virtual-target ;
+import errors ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -446,11 +447,16 @@ rule set-cxxstd-options ( targets * : sources * : properties * : action )
     local version = [ zero-pad [ on $(targets[1]) return $(VERSION) ] ] ;
     version = $(version[1]).$(version[2]) ;
     local cxxstd = [ feature.get-values cxxstd : $(properties) ] ;
-    local cxxstd-dialect ;
-    switch [ feature.get-values cxxstd-dialect : $(properties) ]
+    local cxxstd-dialect = [ feature.get-values cxxstd-dialect : $(properties) ] ;
+    cxxstd-dialect ?= iso ;
+    switch $(cxxstd-dialect)
     {
         case gnu : cxxstd-dialect = gnu++ ;
-        case * : cxxstd-dialect = c++ ;
+        case iso : cxxstd-dialect = c++ ;
+        case * :
+        errors.warning Unknown cxxstd-dialect $(cxxstd-dialect:E=?) .. using
+            ISO dialect instead. ;
+        cxxstd-dialect = c++ ;
     }
     local option ;
     if $(cxxstd) = latest
