@@ -192,6 +192,7 @@ class asciidoctor-generator : generator
             }
         }
         raw-set = [ feature.expand-composites $(raw-set) ] ;
+        raw-set += [ $(property-set).incidental ] ;
         property-set = [ property-set.create $(raw-set) ] ;
         return [ generator.run $(project) $(name) : $(property-set) : $(sources) ] ;
     }
