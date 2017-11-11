@@ -1,0 +1,93 @@
+[[bbv2.reference.class.property-set]]
+Class property-set
+------------------
+
+property-set
+
+Class for storing a set of properties.
+
+[source,jam]
+----
+class property-set {
+    rule raw ( )
+    rule str ( )
+    rule propagated ( )
+    rule add ( ps )
+    rule add-raw ( properties * )
+    rule refine ( ps )
+    rule get ( feature )
+}
+----
+
+There is 1<->1 correspondence between identity and value. No two
+instances of the class are equal. To maintain this property, the
+'property-set.create' rule should be used to create new instances.
+Instances are immutable.
+
+1.  raw
++
+Property Set Method
++
+rule raw ( )
++
+Returns a Jam list of the stored properties.
+2.  str
++
+Property Set Method
++
+rule str ( )
++
+Returns the string repesentation of the stored properties.
+3.  propagated
++
+Property Set Method
++
+rule propagated ( )
++
+Returns a link:#bbv2.reference.class.property-set[property-set]
+containing all the
+link:#bbv2.reference.features.attributes.propagated[propagated]
+properties in this
+link:#bbv2.reference.class.property-set[property-set].
+4.  add
++
+Property Set Method
++
+rule add ( ps )
++
+Returns a new link:#bbv2.reference.class.property-set[property-set]
+containing the union of the properties in this
+link:#bbv2.reference.class.property-set[property-set] and in `ps`.
++
+________________________________________________________________________________________________________________________________________________________
+*Note*
+
+If `ps` contains non-free properties that should override the values in
+this object, use link:#bbv2.reference.class.property-set.refine[refine]
+instead.
+________________________________________________________________________________________________________________________________________________________
+5.  add-raw
++
+Property Set Method
++
+rule add-raw ( properties * )
++
+Link link:#bbv2.reference.class.property-set.add[add], except that it
+takes a list of properties instead of a
+link:#bbv2.reference.class.property-set[property-set].
+6.  refine
++
+Property Set Method
++
+rule refine ( ps )
++
+Refines properties by overriding any non-free and non-conditional
+properties for which a different value is specified in `ps`. Returns the
+resulting link:#bbv2.reference.class.property-set[property-set].
+7.  get
++
+Property Set Method
++
+rule get ( feature )
++
+Returns all the values of `feature`.
