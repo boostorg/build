@@ -716,25 +716,20 @@ project in the current directory is built.
 A Main target is a user-defined named entity that can be built, for
 example an executable file. Declaring a main target is usually done
 using one of the main target rules described in
-link:#bbv2.reference.rules[???]. The user can also declare custom main
-target rules as shown in link:#bbv2.extending.rules[???].
-
-main target
-
-declaration syntax
+link:#bbv2.reference.rules[the section called “Builtin rules”]. The user can
+also declare custom main target rules as shown in
+link:#bbv2.extending.rules[the section called “Main target rules”].
 
 Most main target rules in Boost.Build have the same common signature:
 
-common signature
-
-....
+----
 rule rule-name (
      main-target-name :
      sources + :
      requirements * :
      default-build * :
      usage-requirements * )
-....
+----
 
 * `main-target-name` is the name used to request the target on command
 line and to use it from other main targets. A main target name may
@@ -757,10 +752,9 @@ The actual requirements for a target are obtained by refining the
 requirements of the project where the target is declared with the
 explicitly specified requirements. The same is true for
 usage-requirements. More details can be found in
-link:#bbv2.reference.variants.proprefine[???]
+link:#bbv2.reference.variants.proprefine[the section called “Property refinement”].
 
-Name
-~~~~
+=== Name
 
 The name of main target has two purposes. First, it's used to refer to
 this target from other targets and from command line. Second, it's used
@@ -773,16 +767,15 @@ undescores and dots. The entire name is significant when resolving
 references from other targets. For determining filenames, only the part
 before the first dot is taken. For example:
 
-....
+----
 obj test.release : test.cpp : <variant>release ;
 obj test.debug : test.cpp : <variant>debug ;
-....
+----
 
 will generate two files named `test.obj` (in two different directories),
 not two files named `test.release.obj` and `test.debug.obj`.
 
-Sources
-~~~~~~~
+=== Sources
 
 The list of sources specifies what should be processed to get the
 resulting targets. Most of the time, it's just a list of files.
@@ -791,15 +784,17 @@ files rather than having to spell it out manually, in which case you can
 use the link:#bbv2.reference.rules.glob[glob] rule. Here are two
 examples:
 
-....
-exe a : a.cpp ;           # a.cpp is the only source file
-exe b : [ glob *.cpp ] ;  # all .cpp files in this directory are sources
-....
+----
+exe a : a.cpp ; <1>
+exe b : [ glob *.cpp ] ; <2>
+----
+<1> `a.cpp` is the only source file
+<2> all `.cpp` files in this directory are sources
 
 Unless you specify a file with an absolute path, the name is considered
 relative to the source directory — which is typically the directory
 where the Jamfile is located, but can be changed as described in
-link:#bbv2.overview.projects.attributes.projectrule[para_title].
+link:#bbv2.overview.projects.attributes.projectrule[the section called “Projects”].
 
 The list of sources can also refer to other main targets. Targets in the
 same project can be referred to by name, while targets in other projects
@@ -809,73 +804,72 @@ forward slash. There is no special syntax to distinguish the directory
 name from the project name—the part before the double slash is first
 looked up as project name, and then as directory name. For example:
 
-....
+----
 lib helper : helper.cpp ;
 exe a : a.cpp helper ;
-# Since all project ids start with slash, ".." is a directory name.
-exe b : b.cpp ..//utils ;
+exe b : b.cpp ..//utils ; <1>
 exe c : c.cpp /boost/program_options//program_options ;
-....
+----
+<1> Since all project ids start with slash, "`..`" is a directory name.
 
 The first exe uses the library defined in the same project. The second
 one uses some target (most likely a library) defined by a Jamfile one
 level higher. Finally, the third target uses a http://boost.org[C++
 Boost] library, referring to it using its absolute symbolic name. More
 information about target references can be found in
-link:#bbv2.tutorial.libs[???] and link:#bbv2.reference.ids[???].
+link:#bbv2.tutorial.libs[the section called “Dependent Targets”] and
+link:#bbv2.reference.ids[the section called “Target identifiers and references”].
 
 [[bbv2.overview.targets.requirements]]
 === Requirements
 
-requirements
-
 Requirements are the properties that should always be present when
 building a target. Typically, they are includes and defines:
 
-....
+----
 exe hello : hello.cpp : <include>/opt/boost <define>MY_DEBUG ;
-....
+----
 
 There are a number of other features, listed in
-link:#bbv2.overview.builtins.features[???]. For example if a library can
-only be built statically, or a file can't be compiled with optimization
-due to a compiler bug, one can use
+link:#bbv2.overview.builtins.features[the section called “Builtin features”].
+For example if a library can only be built statically, or a file can't be
+compiled with optimization due to a compiler bug, one can use.
 
-....
+----
 lib util : util.cpp : <link>static ;
 obj main : main.cpp : <optimization>off ;
-....
+----
 
-requirementsconditional Sometimes, particular relationships need to be
+Sometimes, particular relationships need to be
 maintained among a target's build properties. This can be achieved with
-conditional requirements. For example, you might want to set specific
+_conditional requirements_. For example, you might want to set specific
 `#defines` when a library is built as shared, or when a target's
 `release` variant is built in release mode.
 
-....
+----
 lib network : network.cpp
     : <link>shared:<define>NETWORK_LIB_SHARED
      <variant>release:<define>EXTRA_FAST
     ;
-....
+----
 
 In the example above, whenever `network` is built with `<link>shared`,
 `<define>NETWORK_LIB_SHARED` will be in its properties, too.
 
 You can use several properties in the condition, for example:
 
-....
+----
 lib network : network.cpp
     : <toolset>gcc,<optimization>speed:<define>USE_INLINE_ASSEMBLER
     ;
-....
+----
 
-requirementsindirect A more powerful variant of conditional requirements
-is indirect conditional requirements. You can provide a rule that will
+A more powerful variant of conditional requirements
+is _indirect conditional_ requirements. You can provide a rule that will
 be called with the current build properties and can compute additional
 properties to be added. For example:
 
-....
+----
 lib network : network.cpp
     : <conditional>@my-rule
     ;
@@ -888,7 +882,7 @@ rule my-rule ( properties * )
     }
     return $(result) ;
 }
-....
+----
 
 This example is equivalent to the previous one, but for complex cases,
 indirect conditional requirements can be easier to write and understand.
@@ -898,20 +892,20 @@ the requirements specified for the containing project. You can cause a
 target to completely ignore a specific project requirement using the
 syntax by adding a minus sign before the property, for example:
 
-....
+----
 exe main : main.cpp : -<define>UNNECESSARY_DEFINE ;
-....
+----
 
 This syntax is the only way to ignore free properties, such as defines,
 from a parent. It can be also useful for ordinary properties. Consider
 this example:
 
-....
+----
 project test : requirements <threading>multi ;
 exe test1 : test1.cpp ;
 exe test2 : test2.cpp : <threading>single ;
 exe test3 : test3.cpp : -<threading>multi ;
-....
+----
 
 Here, `test1` inherits the project requirements and will always be built
 in multi-threaded mode. The `test2` target _overrides_ the project's
@@ -923,36 +917,33 @@ multi-threaded mode depending on which variant is requested by the user.
 Note that the removal of requirements is completely textual: you need to
 specify exactly the same property to remove it.
 
-Default Build
-~~~~~~~~~~~~~
+=== Default Build
 
 The `default-build` parameter is a set of properties to be used if the
 build request does not otherwise specify a value for features in the
 set. For example:
 
-....
+----
 exe hello : hello.cpp : : <threading>multi ;
-....
+----
 
 would build a multi-threaded target unless the user explicitly requests
 a single-threaded version. The difference between the requirements and
 the default-build is that the requirements cannot be overridden in any
 way.
 
-Additional Information
-~~~~~~~~~~~~~~~~~~~~~~
+=== Additional Information
 
 The ways a target is built can be so different that describing them
 using conditional requirements would be hard. For example, imagine that
 a library actually uses different source files depending on the toolset
-used to build it. We can express this situation using target
-alternatives:
+used to build it. We can express this situation using _target alternatives_:
 
-....
+----
 lib demangler : dummy_demangler.cpp ;                # alternative 1
 lib demangler : demangler_gcc.cpp : <toolset>gcc ;   # alternative 2
 lib demangler : demangler_msvc.cpp : <toolset>msvc ; # alternative 3
-....
+----
 
 In the example above, when built with `gcc` or `msvc`, `demangler` will
 use a source file specific to the toolset. Otherwise, it will use a
@@ -961,10 +952,10 @@ generic source file, `dummy_demangler.cpp`.
 It is possible to declare a target inline, i.e. the "sources" parameter
 may include calls to other main rules. For example:
 
-....
+----
 exe hello : hello.cpp
     [ obj helpers : helpers.cpp : <optimization>off ] ;
-....
+----
 
 Will cause "helpers.cpp" to be always compiled without optimization.
 When referring to an inline main target, its declared name must be
@@ -976,9 +967,9 @@ current project will be built. If a target should be built only by
 explicit request, this can be expressed by the
 link:#bbv2.reference.rules.explicit[explicit] rule:
 
-....
+----
 explicit install_programs ;
-....
+----
 
 [[bbv2.overview.projects]]
 == Projects
@@ -992,21 +983,21 @@ referring to its targets.
 Projects are named using the `project` rule, which has the following
 syntax:
 
-....
+----
 project id : attributes ;
-....
+----
 
-Here, attributes is a sequence of rule arguments, each of which begins
+Here, _attributes_ is a sequence of rule arguments, each of which begins
 with an attribute-name and is followed by any number of build
 properties. The list of attribute names along with its handling is also
 shown in the table below. For example, it is possible to write:
 
-....
+----
 project tennis
     : requirements <threading>multi
     : default-build release
     ;
-....
+----
 
 The possible attributes are listed below.
 
@@ -1027,8 +1018,9 @@ request is specified explicitly.
 The default values for those attributes are given in the table below.
 
 [cols=",,,",options="header",]
-|=======================================================================
+|===
 |Attribute |Name |Default value |Handling by the `project` rule
+
 |Project id |none |none |Assigned from the first parameter of the
 'project' rule. It is assumed to denote absolute project id.
 
@@ -1045,11 +1037,12 @@ used as the project requirements.
 directory set. Otherwise, the parent's build directory with the relative
 path from parent to the current project appended to it. |Sets to the
 passed value, interpreted as relative to the project's location.
-|=======================================================================
+|===
 
 Besides defining projects and main targets, Jamfiles often invoke
 various utility rules. For the full list of rules that can be directly
-used in Jamfile see link:#bbv2.reference.rules[???].
+used in Jamfile see
+link:#bbv2.reference.rules[the section called “Builtin rules”].
 
 Each subproject inherits attributes, constants and rules from its parent
 project, which is defined by the nearest Jamfile in an ancestor
@@ -1066,13 +1059,9 @@ The loading order of any other projects is unspecified. Even if one
 project refers to another via the `use-project` or a target reference,
 no specific order should be assumed.
 
-________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
-
-Giving the root project the special name “`Jamroot`” ensures that
+NOTE: Giving the root project the special name “`Jamroot`” ensures that
 Boost.Build won't misinterpret a directory above it as the project root
 just because the directory contains a Jamfile.
-________________________________________________________________________________________________________________________________________________________________________________________
 
 [[bbv2.overview.build_process]]
 == The Build Process
@@ -1091,23 +1080,19 @@ requested properties. It is quite possible that the same metatarget is
 built several times with different properties, producing different
 files.
 
-__________________________________________________________________________________________________________________________________________________________________________________________________________
-*Tip*
-
-This means that for Boost.Build, you cannot directly obtain a build
+TIP: This means that for Boost.Build, you cannot directly obtain a build
 variant from a Jamfile. There could be several variants requested by the
 user, and each target can be built with different properties.
-__________________________________________________________________________________________________________________________________________________________________________________________________________
 
 [[bbv2.overview.build_request]]
-== Build Request
+=== Build Request
 
 The command line specifies which targets to build and with which
 properties. For example:
 
-....
+----
 b2 app1 lib1//lib1 toolset=gcc variant=debug optimization=full
-....
+----
 
 would build two targets, "app1" and "lib1//lib1" with the specified
 properties. You can refer to any targets, using
@@ -1115,20 +1100,19 @@ link:#bbv2.reference.ids[target id] and specify arbitrary properties.
 Some of the properties are very common, and for them the name of the
 property can be omitted. For example, the above can be written as:
 
-....
+----
 b2 app1 lib1//lib1 gcc debug optimization=full
-....
+----
 
 The complete syntax, which has some additional shortcuts, is described
-in link:#bbv2.overview.invocation[section_title].
+in link:#bbv2.overview.invocation[the section called “Invocation”].
 
-Building a main target
-~~~~~~~~~~~~~~~~~~~~~~
+=== Building a main target
 
 When you request, directly or indirectly, a build of a main target with
 specific requirements, the following steps are done. Some brief
 explanation is provided, and more details are given in
-link:#bbv2.reference.buildprocess[???].
+link:#bbv2.reference.buildprocess[the section called “Build process”].
 
 1.  Applying default build. If the default-build property of a target
 specifies a value of a feature that is not present in the build request,
@@ -1156,7 +1140,7 @@ requirements. The usage requirements are added to the common properties
 and the resulting property set will be used for building the current
 target.
 6.  Building the target using generators. To convert the sources to the
-desired type, Boost.Build uses "generators" --- objects that correspond
+desired type, Boost.Build uses "generators" -- objects that correspond
 to tools like compilers and linkers. Each generator declares what type
 of targets it can produce and what type of sources it requires. Using
 this information, Boost.Build determines which generators must be run to
@@ -1166,8 +1150,7 @@ run, they return the "real" targets.
 properties in usage requirements are expanded and the result is
 returned.
 
-Building a Project
-~~~~~~~~~~~~~~~~~~
+=== Building a Project
 
 Often, a user builds a complete project, not just one main target. In
 fact, invoking `b2` without arguments builds the project defined in the
@@ -1178,9 +1161,9 @@ modification to all main targets in that project. It's is possible to
 prevent implicit building of a target in a project with the `explicit`
 rule:
 
-....
+----
 explicit hello_test ;
-....
+----
 
 would cause the `hello_test` target to be built only if explicitly
 requested by the user or by some other target.
