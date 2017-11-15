@@ -4,58 +4,49 @@
 This section describes main targets types that Boost.Build supports
 out-of-the-box. Unless otherwise noted, all mentioned main target rules
 have the common signature, described in
-link:#bbv2.overview.targets[???].
+link:#bbv2.overview.targets[the section called “Declaring Targets”].
 
 [[bbv2.tasks.programs]]
 == Programs
 
-exe
-
 Programs are created using the `exe` rule, which follows the
 link:#bbv2.main-target-rule-syntax[common syntax]. For example:
 
-....
-exe hello : hello.cpp some_library.lib /some_project//library
-          : <threading>multi
-          ;
-....
+----
+exe hello
+    : hello.cpp some_library.lib /some_project//library
+    : <threading>multi
+    ;
+----
 
-This will create an executable file from the sourcesMDASHin this case,
+This will create an executable file from the sources--in this case,
 one C++ file, one library file present in the same directory, and
 another library that is created by Boost.Build. Generally, sources can
 include C and C++ files, object files and libraries. Boost.Build will
 automatically try to convert targets of other types.
 
-_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Tip*
-
-On Windows, if an application uses shared libraries, and both the
+TIP: On Windows, if an application uses shared libraries, and both the
 application and the libraries are built using Boost.Build, it is not
-possible to immediately run the application, because the `PATH
-        ` environment variable should include the path to the libraries.
-It means you have to either add the paths manually, or have the build
-place the application and the libraries into the same directory. See
-link:#bbv2.tasks.installing[section_title].
-_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+possible to immediately run the application, because the `PATH` environment
+variable should include the path to the libraries. It means you have to either
+add the paths manually, or have the build place the application and the
+libraries into the same directory. See
+link:#bbv2.tasks.installing[the section called “Installing”].
 
 [[bbv2.tasks.libraries]]
 == Libraries
 
-library
-
-target
-
 Library targets are created using the `lib` rule, which follows the
 link:#bbv2.main-target-rule-syntax[common syntax]. For example:
 
-....
+----
 lib helpers : helpers.cpp ;
-....
+----
 
 This will define a library target named `helpers` built from the
 `helpers.cpp` source file. It can be either a static library or a shared
 library, depending on the value of the
-link:#bbv2.overview.builtins.features.link[<link>] feature.
+link:#bbv2.overview.builtins.features.link[`<link>`] feature.
 
 Library targets can represent:
 
@@ -66,10 +57,10 @@ can be searched for by the tools using them (typically with the linker's
 
 The syntax for prebuilt libraries is given below:
 
-....
+----
 lib z : : <name>z <search>/home/ghost ;
 lib compress : : <file>/opt/libs/compress.a ;
-....
+----
 
 The `name` property specifies the name of the library without the
 standard prefixes and suffixes. For example, depending on the system,
@@ -83,41 +74,40 @@ location.
 The difference between using the `file` feature and using a combination
 of the `name` and `search` features is that `file` is more precise.
 
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Warning*
-
+[WARNING]
+====
 The value of the `search` feature is just added to the linker search
 path. When linking to multiple libraries, the paths specified by
 `search` are combined without regard to which `lib` target each path
 came from. Thus, given
 
-....
+----
 lib a : : <name>a <search>/pool/release ;
 lib b : : <name>b <search>/pool/debug ;
-....
+----
 
 If /pool/release/a.so, /pool/release/b.so, /pool/debug/a.so, and
 /pool/release/b.so all exist, the linker will probably take both `a` and
 `b` from the same directory, instead of finding `a` in /pool/release and
 `b` in /pool/debug. If you need to distinguish between multiple
 libraries with the same name, it's safer to use `file`.
-__________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 For convenience, the following syntax is allowed:
 
-....
+----
 lib z ;
 lib gui db aux ;
-....
+----
 
 which has exactly the same effect as:
 
-....
+----
 lib z : : <name>z ;
 lib gui : : <name>gui ;
 lib db : : <name>db ;
 lib aux : : <name>aux ;
-....
+----
 
 When a library references another library you should put that other
 library in its list of sources. This will do the right thing in all
@@ -125,14 +115,13 @@ cases. For portability, you should specify library dependencies even for
 searched and prebuilt libraries, othewise, static linking on Unix will
 not work. For example:
 
-....
+----
 lib z ;
 lib png : z : <name>png ;
-....
+----
 
-_______________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
-
+[NOTE]
+====
 When a library has a shared library as a source, or a static library has
 another static library as a source then any target linking to the first
 library with automatically link to its source library as well.
@@ -145,15 +134,15 @@ If you do not want a shared library to include all the libraries
 specified in its sources (especially statically linked ones), you would
 need to use the following:
 
-....
+----
 lib b : a.cpp ;
 lib a : a.cpp : <use>b : : <library>b ;
-....
+----
 
 This specifies that library `a` uses library `b`, and causes all
 executables that link to `a` to link to `b` also. In this case, even for
 shared linking, the `a` library will not refer to `b`.
-_______________________________________________________________________________________________________________________________________________________________________________________________________________
+====
 
 link:#bbv2.overview.targets[Usage requirements] are often very useful
 for defining library targets. For example, imagine that you want you
@@ -162,9 +151,9 @@ build a `helpers` library and its interface is described in its
 `helpers.cpp` source file. Then you could add the following to the
 Jamfile located in that same directory:
 
-....
+----
 lib helpers : helpers.cpp : : : <include>. ;
-....
+----
 
 which would automatically add the directory where the target has been
 defined (and where the library's header file is located) to the
@@ -178,41 +167,40 @@ The `alias` rule gives an alternative name to a group of targets. For
 example, to give the name `core` to a group of three other targets with
 the following code:
 
-....
+----
 alias core : im reader writer ;
-....
+----
 
 Using `core` on the command line, or in the source list of any other
-target is the same as explicitly using `im
-      `, `reader`, and `writer`.
+target is the same as explicitly using `im`, `reader`, and `writer`.
 
 Another use of the `alias` rule is to change build properties. For
-example, if you want to use link statically to the Boost Threads
+example, if you want to link statically to the Boost Threads
 library, you can write the following:
 
-....
+----
 alias threads : /boost/thread//boost_thread : <link>static ;
-....
+----
 
 and use only the `threads` alias in your Jamfiles.
 
 You can also specify usage requirements for the `alias` target. If you
 write the following:
 
-....
+----
 alias header_only_library : : : :  <include>/usr/include/header_only_library ;
-....
+----
 
 then using `header_only_library` in sources will only add an include
 path. Also note that when an alias has sources, their usage requirements
 are propagated as well. For example:
 
-....
+----
 lib library1 : library1.cpp : : : <include>/library/include1 ;
 lib library2 : library2.cpp : : : <include>/library/include2 ;
 alias static_libraries : library1 library2 : <link>static ;
 exe main : main.cpp static_libraries ;
-....
+----
 
 will compile `main.cpp` with additional includes required for using the
 specified static libraries.
@@ -220,26 +208,26 @@ specified static libraries.
 [[bbv2.tasks.installing]]
 == Installing
 
-This section describes various ways to install built target and
+This section describes various ways to install built targets and
 arbitrary files.
 
-*Basic install*
+=== Basic install
 
 For installing a built target you should use the `install` rule, which
 follows the link:#bbv2.main-target-rule-syntax[common syntax]. For
 example:
 
-....
+----
 install dist : hello helpers ;
-....
+----
 
 will cause the targets `hello` and `helpers` to be moved to the `dist`
 directory, relative to the Jamfile's directory. The directory can be
 changed using the `location` property:
 
-....
+----
 install dist : hello helpers : <location>/usr/bin ;
-....
+----
 
 While you can achieve the same effect by changing the target name to
 `/usr/bin`, using the `location` property is better as it allows you to
@@ -248,28 +236,28 @@ use a mnemonic target name.
 The `location` property is especially handy when the location is not
 fixed, but depends on the build variant or environment variables:
 
-....
+----
 install dist : hello helpers :
     <variant>release:<location>dist/release
     <variant>debug:<location>dist/debug ;
 install dist2 : hello helpers : <location>$(DIST) ;
-....
+----
 
 See also link:#bbv2.reference.variants.propcond[conditional properties]
 and link:#bbv2.faq.envar[environment variables]
 
-*Installing with all dependencies*
+=== Installing with all dependencies
 
 Specifying the names of all libraries to install can be boring. The
 `install` allows you to specify only the top-level executable targets to
 install, and automatically install all dependencies:
 
-....
-install dist : hello
-           : <install-dependencies>on <install-type>EXE
-             <install-type>LIB
-           ;
-....
+----
+install dist : hello :
+    <install-dependencies>on <install-type>EXE
+    <install-type>LIB
+    ;
+----
 
 will find all targets that `hello` depends on, and install all of those
 which are either executables or libraries. More specifically, for each
@@ -280,9 +268,7 @@ considered, as that feature is typically used to refer to header-only
 libraries. If the set of target types is specified, only targets of that
 type will be installed, otherwise, all found target will be installed.
 
-*Preserving Directory Hierarchy*
-
-install-source-root
+=== Preserving Directory Hierarchy
 
 By default, the `install` rule will strip paths from its sources. So, if
 sources include `a/b/c.hpp`, the `a/b` part will be ignored. To make the
@@ -291,20 +277,20 @@ sources include `a/b/c.hpp`, the `a/b` part will be ignored. To make the
 are installing. Relative paths from that root will be preserved. For
 example, if you write:
 
-....
+----
 install headers
     : a/b/c.h
     : <location>/tmp <install-source-root>a
     ;
-....
+----
 
 the a file named `/tmp/b/c.h` will be created.
 
-The link:#bbv2.reference.glob-tree[glob-tree] rule can be used to find
+The link:#bbv2.reference.glob-tree[`glob-tree`] rule can be used to find
 all files below a given directory, making it easy to install an entire
 directory tree.
 
-*Installing into Several Directories*
+=== Installing into Several Directories
 
 The link:#bbv2.tasks.alias[`alias`] rule can be used when targets need
 to be installed into several directories:
@@ -317,20 +303,17 @@ install install-lib : helper : /usr/lib ;
 
 Because the `install` rule just copies targets, most free features
 footnote:[see the definition of "free" in
-link:#bbv2.reference.features.attributes[???].] have no effect when used
-in requirements of the `install` rule. The only two that matter are
+link:#bbv2.reference.features.attributes[the section called “Feature Attributes”].]
+have no effect when used in requirements of the `install` rule. The only two
+that matter are
 link:#bbv2.builtin.features.dependency[`dependency`] and, on Unix,
 link:#bbv2.reference.features.dll-path[`dll-path`].
 
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
-
-(Unix specific) On Unix, executables built using Boost.Build typically
+NOTE: (Unix specific) On Unix, executables built using Boost.Build typically
 contain the list of paths to all used shared libraries. For installing,
 this is not desired, so Boost.Build relinks the executable with an empty
 list of paths. You can also specify additional paths for installed
 executables using the `dll-path` feature.
-____________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 [[bbv2.builtins.testing]]
 == Testing
