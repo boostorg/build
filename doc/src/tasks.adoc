@@ -322,9 +322,9 @@ Boost.Build has convenient support for running unit tests. The simplest
 way is the `unit-test` rule, which follows the
 link:#bbv2.main-target-rule-syntax[common syntax]. For example:
 
-....
+----
 unit-test helpers_test : helpers_test.cpp helpers ;
-....
+----
 
 The `unit-test` rule behaves like the link:#bbv2.tasks.programs[exe]
 rule, but after the executable is created it is also run. If the
@@ -335,30 +335,29 @@ unit test failure.
 
 There are few specialized testing rules, listed below:
 
-....
+----
 rule compile ( sources : requirements * : target-name ? )
 rule compile-fail ( sources : requirements * : target-name ? )
 rule link ( sources + : requirements * : target-name ? )
 rule link-fail ( sources + : requirements * : target-name ? )
-....
+----
 
 They are given a list of sources and requirements. If the target name is
 not provided, the name of the first source file is used instead. The
 `compile*` tests try to compile the passed source. The `link*` rules try
 to compile and link an application from all the passed sources. The
-`compile` and `link
-      ` rules expect that compilation/linking succeeds. The `
-      compile-fail` and `link-fail` rules expect that the
+`compile` and `link` rules expect that compilation/linking succeeds. The
+`compile-fail` and `link-fail` rules expect that the
 compilation/linking fails.
 
-There are two specialized rules for running applications, which are more
+There are two specialized rules for running executables, which are more
 powerful than the `unit-test` rule. The `run` rule has the following
 signature:
 
-....
+----
 rule run ( sources + : args * : input-files * : requirements * : target-name ?
     : default-build * )
-....
+----
 
 The rule builds application from the provided sources and runs it,
 passing `args` and `input-files` as command-line arguments. The `args`
@@ -370,26 +369,23 @@ fails.
 
 All rules described in this section, if executed successfully, create a
 special manifest file to indicate that the test passed. For the
-`unit-test` rule the files is named `
-      target-name.passed` and for the other rules it is called
-`target-name.test`. The `run*` rules also capture all output from the
-program, and store it in a file named `
-      target-name.output`.
+`unit-test` rule the files is named `target-name.passed` and for the other
+rules it is called `target-name.test`. The `run*` rules also capture all
+output from the program, and store it in a file named `target-name.output`.
 
-preserve-test-targets If the `preserve-test-targets` feature has the
+If the `preserve-test-targets` feature has the
 value `off`, then `run` and the `run-fail` rules will remove the
 executable after running it. This somewhat decreases disk space
 requirements for continuous testing environments. The default value of
 `preserve-test-targets` feature is `on`.
 
 It is possible to print the list of all test targets (except for
-`unit-test`) declared in your project, by passing the `
-      --dump-tests` command-line option. The output will consist of
-lines of the form:
+`unit-test`) declared in your project, by passing the `--dump-tests`
+command-line option. The output will consist of lines of the form:
 
-....
+----
 boost-test(test-type) path : sources
-....
+----
 
 It is possible to process the list of tests, Boost.Build output and the
 presense/absense of the `*.test` files created when test passes into
@@ -399,40 +395,47 @@ included in Boost.Build.
 The following features adjust behaviour of the testing metatargets.
 
 `testing.arg`::
-  Defines an argument to be passed to the target when it is executed
-  before the list of input files.
-  +
-....
+
+Defines an argument to be passed to the target when it is executed
+before the list of input files.
++
+----
 unit-test helpers_test
-  : helpers_test.cpp helpers
-  : <testing.arg>"--foo bar"
-  ;
-....
+    : helpers_test.cpp helpers
+    : <testing.arg>"--foo bar"
+    ;
+----
+
 `testing.input-file`::
-  Specifies a file to be passed to the executable on the command line
-  after the arguments. All files must be specified in alphabetical order
-  due to constrainsts in the current implementation.
+
+Specifies a file to be passed to the executable on the command line
+after the arguments. All files must be specified in alphabetical order
+due to constrainsts in the current implementation.
+
 `testing.launcher`::
-  By default, the executable is run directly. Sometimes, it is desirable
-  to run the executable using some helper command. You should use this
-  property to specify the name of the helper command. For example, if
-  you write:
-  +
-....
+
+By default, the executable is run directly. Sometimes, it is desirable
+to run the executable using some helper command. You should use this
+property to specify the name of the helper command. For example, if
+you write:
++
+----
 unit-test helpers_test
-  : helpers_test.cpp helpers
-  : <testing.launcher>valgrind
-  ;
-....
-  +
-  The command used to run the executable will be:
-  +
-....
+    : helpers_test.cpp helpers
+    : <testing.launcher>valgrind
+    ;
+----
++
+The command used to run the executable will be:
++
+----
 valgrind bin/$toolset/debug/helpers_test
-....
+----
+
 `test-info`::
-  A description of the test. This is displayed as part of the
-  `--dump-tests` command-line option.
+
+A description of the test. This is displayed as part of the
+`--dump-tests` command-line option.
 
 [[bbv2.builtins.raw]]
 == Custom commands
@@ -440,52 +443,50 @@ valgrind bin/$toolset/debug/helpers_test
 For most main target rules, Boost.Build automatically figures out the
 commands to run. When you want to use new file types or support new
 tools, one approach is to extend Boost.Build to support them smoothly,
-as documented in link:#bbv2.extender[???]. However, if the new tool is
-only used in a single place, it might be easier just to specify the
+as documented in link:#bbv2.extender[Extender Manual]. However, if the new
+tool is only used in a single place, it might be easier just to specify the
 commands to run explicitly.
 
-Three main target rules can be used for that. The `make
-      ` rule allows you to construct a single file from any number of
-source file, by running a command you specify. The `
-      notfile` rule allows you to run an arbitrary command, without
-creating any files. And finaly, the `generate
-      ` rule allows you to describe a transformation using Boost.Build's
-virtual targets. This is higher-level than the file names that the
-`make` rule operates with and allows you to create more than one target,
-create differently named targets depending on properties, or use more
-than one tool.
+Three main target rules can be used for that. The `make` rule allows you to
+construct a single file from any number of source file, by running a command
+you specify. The `notfile` rule allows you to run an arbitrary command,
+without creating any files. And finaly, the `generate` rule allows you to
+describe a transformation using Boost.Build's virtual targets. This is
+higher-level than the file names that the `make` rule operates with and
+allows you to create more than one target, create differently named targets
+depending on properties, or use more than one tool.
 
 The `make` rule is used when you want to create one file from a number
 of sources using some specific command. The `notfile` is used to
 unconditionally run a command.
 
 Suppose you want to create the file `file.out` from the file `file.in`
-by running the command `
-      in2out`. Here is how you would do this in Boost.Build:
+by running the command `in2out`. Here is how you would do this in Boost.Build:
 
-....
+----
 make file.out : file.in : @in2out ;
 actions in2out
 {
     in2out $(<) $(>)
 }
-....
+----
 
 If you run `b2` and `file.out` does not exist, Boost.Build will run the
 `in2out` command to create that file. For more details on specifying
-actions, see link:#bbv2.overview.jam_language.actions[???].
+actions, see
+link:#bbv2.overview.jam_language.actions[the section called “Boost.Jam Language”].
 
 It could be that you just want to run some command unconditionally, and
 that command does not create any specific files. For that you can use
 the `notfile` rule. For example:
 
-....
+----
 notfile echo_something : @echo ;
 actions echo
 {
     echo "something"
 }
-....
+----
 
 The only difference from the `make` rule is that the name of the target
 is not considered a name of a file, so Boost.Build will unconditionally
@@ -495,12 +496,12 @@ The `generate` rule is used when you want to express transformations
 using Boost.Build's virtual targets, as opposed to just filenames. The
 `generate` rule has the standard main target rule signature, but you are
 required to specify the `generating-rule` property. The value of the
-property should be in the form `
-      @rule-name`, the named rule should have the following signature:
+property should be in the form `@_rule-name_`, the named rule should have the
+following signature:
 
-....
+----
 rule generating-rule ( project name : property-set : sources * )
-....
+----
 
 and will be called with an instance of the `project-target` class, the
 name of the main target, an instance of the `property-set` class
@@ -523,14 +524,14 @@ toolsets.
 
 To use precompiled headers, follow the following steps:
 
-1.  Create a header that includes headers used by your project that you
+1. Create a header that includes headers used by your project that you
 want precompiled. It is better to include only headers that are
-sufficiently stable — like headers from the compiler and external
-libraries. Please wrap the header in `#ifdef
-          BOOST_BUILD_PCH_ENABLED`, so that the potentially expensive
-inclusion of headers is not done when PCH is not enabled. Include the
-new header at the top of your source files.
-2.  Declare a new Boost.Build target for the precompiled header and add
+sufficiently stable -- like headers from the compiler and external
+libraries. Please wrap the header in `#ifdef BOOST_BUILD_PCH_ENABLED`, so
+that the potentially expensive inclusion of headers is not done when PCH is
+not enabled. Include the new header at the top of your source files.
+
+2. Declare a new Boost.Build target for the precompiled header and add
 that precompiled header to the sources of the target whose compilation
 you want to speed up:
 +
@@ -582,13 +583,13 @@ added to the include path.
 
 Making this mechanism work across main target boundaries is possible,
 but imposes certain overhead. For that reason, if there is implicit
-dependency on files from other main targets, the `<implicit-dependency>
-      ` feature must be used, for example:
+dependency on files from other main targets, the `<implicit-dependency>`
+feature must be used, for example:
 
-....
+----
 lib parser : parser.y ;
 exe app : app.cpp : <implicit-dependency>parser ;
-....
+----
 
 The above example tells the build system that when scanning all sources
 of "app" for implicit-dependencies, it should consider targets from
@@ -602,30 +603,31 @@ cross compilation
 Boost.Build supports cross compilation with the gcc and msvc toolsets.
 
 When using gcc, you first need to specify your cross compiler in
-`user-config.jam` (see link:#bbv2.overview.configuration[???]), for
+`user-config.jam` (see
+link:#bbv2.overview.configuration[the section called “Configuration”]), for
 example:
 
-....
+----
 using gcc : arm : arm-none-linux-gnueabi-g++ ;
-....
+----
 
 After that, if the host and target os are the same, for example Linux,
 you can just request that this compiler version be used:
 
-....
+----
 b2 toolset=gcc-arm
-....
+----
 
 If you want to target a different operating system from the host, you
 need to additionally specify the value for the `target-os` feature, for
 example:
 
-....
+----
 # On windows box
 b2 toolset=gcc-arm target-os=linux
 # On Linux box
 b2 toolset=gcc-mingw target-os=windows
-....
+----
 
 For the complete list of allowed opeating system names, please see the
 documentation for link:#bbv2.reference.features.target-os[target-os
@@ -633,4 +635,5 @@ feature].
 
 When using the msvc compiler, it's only possible to cross-compile to a
 64-bit system on a 32-bit host. Please see
-link:#v2.reference.tools.compiler.msvc.64[???] for details.
+link:#v2.reference.tools.compiler.msvc.64[the section called “64-bit support”]
+for details.
