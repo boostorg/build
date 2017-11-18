@@ -7,7 +7,7 @@
 [[bbv2.reference.init]]
 === Initialization
 
-Immediately upon starting, the Boost.Build engine (`b2`) loads the Jam
+Immediately upon starting, the Boost.Build engine (*`b2`*) loads the Jam
 code that implements the build system. To do this, it searches for a
 file called `boost-build.jam`, first in the invocation directory, then
 in its parent and so forth up to the filesystem root, and finally in the
@@ -15,9 +15,9 @@ directories specified by the environment variable BOOST_BUILD_PATH. When
 found, the file is interpreted, and should specify the build system
 location by calling the boost-build rule:
 
-....
+----
 rule boost-build ( location ? )
-....
+----
 
 If location is a relative path, it is treated as relative to the
 directory of `boost-build.jam`. The directory specified by that location
@@ -29,11 +29,11 @@ system files were located in a directory "build-system/" at your project
 root, you might place a `boost-build.jam` at the project root
 containing:
 
-....
+----
 boost-build build-system ;
-....
+----
 
-In this case, running `b2` anywhere in the project tree will
+In this case, running *`b2`* anywhere in the project tree will
 automatically find the build system.
 
 The default `bootstrap.jam`, after loading some standard definitions,
@@ -46,142 +46,156 @@ This section contains the list of all rules that can be used in
 Jamfile—both rules that define new targets and auxiliary rules.
 
 `exe`::
-  Creates an executable file. See link:#bbv2.tasks.programs[???].
+Creates an executable file. See
+link:#bbv2.tasks.programs[the section called “Programs”].
+
 `lib`::
-  Creates an library file. See link:#bbv2.tasks.libraries[???].
+Creates an library file. See
+link:#bbv2.tasks.libraries[the section called “Libraries”].
+
 `install`::
-  Installs built targets and other files. See
-  link:#bbv2.tasks.installing[???].
+Installs built targets and other files. See
+link:#bbv2.tasks.installing[the section called “Installing”].
+
 `alias`::
-  Creates an alias for other targets. See link:#bbv2.tasks.alias[???].
+Creates an alias for other targets. See
+link:#bbv2.tasks.alias[the section called “Alias”].
+
 `unit-test`::
-  Creates an executable that will be automatically run. See
-  link:#bbv2.builtins.testing[???].
+Creates an executable that will be automatically run. See
+link:#bbv2.builtins.testing[the section called “Testing”].
+
 `compile`; `compile-fail`; `link`; `link-fail`; `run`; `run-fail`::
-  Specialized rules for testing. See link:#bbv2.builtins.testing[???].
+Specialized rules for testing. See
+link:#bbv2.builtins.testing[the section called “Testing”].
+
 `check-target-builds`::
-  The `check-target-builds` allows you to conditionally use different
-  properties depending on whether some metatarget builds, or not. This
-  is similar to functionality of configure script in autotools projects.
-  The function signature is:
-  +
-....
+The `check-target-builds` allows you to conditionally use different
+properties depending on whether some metatarget builds, or not. This
+is similar to functionality of configure script in autotools projects.
+The function signature is:
++
+----
 rule check-target-builds ( target message ? : true-properties * : false-properties * )
-        
-....
-  +
-  This function can only be used when passing requirements or usage
-  requirements to a metatarget rule. For example, to make an application
-  link to a library if it's available, one has use the following:
-  +
-....
+----
++
+This function can only be used when passing requirements or usage
+requirements to a metatarget rule. For example, to make an application
+link to a library if it's available, one has use the following:
++
+----
 exe app : app.cpp : [ check-target-builds has_foo "System has foo" : <library>foo : <define>FOO_MISSING=1 ] ;
-        
-....
-  +
-  For another example, the alias rule can be used to consolidate
-  configuration choices and make them available to other metatargets,
-  like so:
-  +
-....
+----
++
+For another example, the alias rule can be used to consolidate
+configuration choices and make them available to other metatargets,
+like so:
++
+----
 alias foobar : : : : [ check-target-builds has_foo "System has foo" : <library>foo : <library>bar ] ;
-        
-....
+----
+
 `obj`::
-  Creates an object file. Useful when a single source file must be
-  compiled with special properties.
+Creates an object file. Useful when a single source file must be
+compiled with special properties.
+
 `preprocessed`::
-  Creates an preprocessed source file. The arguments follow the
-  link:#bbv2.main-target-rule-syntax[common syntax].
+Creates an preprocessed source file. The arguments follow the
+link:#bbv2.main-target-rule-syntax[common syntax].
+
 `glob`::
-  The `glob` rule takes a list shell pattern and returns the list of
-  files in the project's source directory that match the pattern. For
-  example:
-  +
-....
+The `glob` rule takes a list shell pattern and returns the list of
+files in the project's source directory that match the pattern. For
+example:
++
+----
 lib tools : [ glob *.cpp ] ;
-        
-....
-  +
-  It is possible to also pass a second argument—the list of exclude
-  patterns. The result will then include the list of files matching any
-  of include patterns, and not matching any of the exclude patterns. For
-  example:
-  +
-....
+----
++
+It is possible to also pass a second argument—the list of exclude
+patterns. The result will then include the list of files matching any
+of include patterns, and not matching any of the exclude patterns. For
+example:
++
+----
 lib tools : [ glob *.cpp : file_to_exclude.cpp bad*.cpp ] ;
-        
-....
+----
+
 `glob-tree`::
-  The `glob-tree` is similar to the `glob` except that it operates
-  recursively from the directory of the containing Jamfile. For example:
-  +
-....
+The `glob-tree` is similar to the `glob` except that it operates
+recursively from the directory of the containing Jamfile. For example:
++
+----
 ECHO [ glob-tree *.cpp : .svn ] ;
-        
-....
-  +
-  will print the names of all C++ files in your project. The `.svn`
-  exclude pattern prevents the `glob-tree` rule from entering
-  administrative directories of the Subversion version control system.
+----
++
+will print the names of all C++ files in your project. The `.svn`
+exclude pattern prevents the `glob-tree` rule from entering
+administrative directories of the Subversion version control system.
+
 `project`::
-  Declares project id and attributes, including project requirements.
-  See link:#bbv2.overview.projects[???].
+Declares project id and attributes, including project requirements.
+See link:#bbv2.overview.projects[the section called “Projects”].
+
 `use-project`::
-  Assigns a symbolic project ID to a project at a given path. This rule
-  must be better documented!
+Assigns a symbolic project ID to a project at a given path. This rule
+must be better documented!
+
 `explicit`::
-  The `explicit` rule takes a single parameter—a list of target names.
-  The named targets will be marked explicit, and will be built only if
-  they are explicitly requested on the command line, or if their
-  dependents are built. Compare this to ordinary targets, that are built
-  implicitly when their containing project is built.
+The `explicit` rule takes a single parameter--a list of target names.
+The named targets will be marked explicit, and will be built only if
+they are explicitly requested on the command line, or if their
+dependents are built. Compare this to ordinary targets, that are built
+implicitly when their containing project is built.
+
 `always`::
-  The `always` function takes a single parameter—a list of metatarget
-  names. The top-level targets produced by the named metatargets will be
-  always considered out of date. Consider this example:
-  +
-....
+The `always` function takes a single parameter—a list of metatarget
+names. The top-level targets produced by the named metatargets will be
+always considered out of date. Consider this example:
++
+----
 exe hello : hello.cpp ;
 exe bye : bye.cpp ;
 always hello ;
-....
-  +
-  If a build of `hello` is requested, then the binary will always be
-  relinked. The object files will not be recompiled, though. Note that
-  if a build of `hello` is not requested, for example you specify just
-  `bye` on the command line, `hello` will not be relinked.
+----
++
+If a build of `hello` is requested, then the binary will always be
+relinked. The object files will not be recompiled, though. Note that
+if a build of `hello` is not requested, for example you specify just
+`bye` on the command line, `hello` will not be relinked.
+
 `constant`::
-  Sets project-wide constant. Takes two parameters: variable name and a
-  value and makes the specified variable name accessible in this Jamfile
-  and any child Jamfiles. For example:
-  +
-....
+Sets project-wide constant. Takes two parameters: variable name and a
+value and makes the specified variable name accessible in this Jamfile
+and any child Jamfiles. For example:
++
+----
 constant VERSION : 1.34.0 ;
-        
-....
+----
+
 `path-constant`::
-  Same as `constant` except that the value is treated as path relative
-  to Jamfile location. For example, if `b2` is invoked in the current
-  directory, and Jamfile in `helper` subdirectory has:
-  +
-....
+Same as `constant` except that the value is treated as path relative
+to Jamfile location. For example, if `b2` is invoked in the current
+directory, and Jamfile in `helper` subdirectory has:
++
+----
 path-constant DATA : data/a.txt ;
-        
-....
-  +
-  then the variable `DATA` will be set to `helper/data/a.txt`, and if
-  `b2` is invoked from the `helper` directory, then the variable `DATA`
-  will be set to `data/a.txt`.
+----
++
+then the variable `DATA` will be set to `helper/data/a.txt`, and if
+*`b2`* is invoked from the `helper` directory, then the variable `DATA`
+will be set to `data/a.txt`.
+
 `build-project`::
-  Cause some other project to be built. This rule takes a single
-  parameter—a directory name relative to the containing Jamfile. When
-  the containing Jamfile is built, the project located at that directory
-  will be built as well. At the moment, the parameter to this rule
-  should be a directory name. Project ID or general target references
-  are not allowed.
+Cause some other project to be built. This rule takes a single
+parameter—a directory name relative to the containing Jamfile. When
+the containing Jamfile is built, the project located at that directory
+will be built as well. At the moment, the parameter to this rule
+should be a directory name. Project ID or general target references
+are not allowed.
+
 `test-suite`::
-  This rule is deprecated and equivalent to `alias`.
+This rule is deprecated and equivalent to `alias`.
 
 [[bbv2.overview.builtins.features]]
 == Builtin features
@@ -190,270 +204,286 @@ This section documents the features that are built-in into Boost.Build.
 For features with a fixed set of values, that set is provided, with the
 default value listed first.
 
-features
-
-builtin
-
 `variant`::
-  A feature combining several low-level features, making it easy to
-  request common build configurations.
-  +
-  *Allowed values:* `debug`, `release`, `profile`.
-  +
-  The value `debug` expands to
-  +
-....
+*Allowed values:* `debug`, `release`, `profile`.
++
+A feature combining several low-level features, making it easy to
+request common build configurations.
++
+The value `debug` expands to
++
+----
 <optimization>off <debug-symbols>on <inlining>off <runtime-debugging>on
-....
-  +
-  The value `release` expands to
-  +
-....
+----
++
+The value `release` expands to
++
+----
 <optimization>speed <debug-symbols>off <inlining>full <runtime-debugging>off
-....
-  +
-  The value `profile` expands to the same as `release`, plus:
-  +
-....
+----
++
+The value `profile` expands to the same as `release`, plus:
++
+----
 <profiling>on <debug-symbols>on
-....
-  +
-  Users can define their own build variants using the `variant` rule
-  from the `common` module.
-  +
-  *Note:* Runtime debugging is on in debug builds to suit the
-  expectations of people used to various IDEs.
+----
++
+Users can define their own build variants using the `variant` rule
+from the `common` module.
++
+NOTE: Runtime debugging is on in debug builds to suit the expectations of
+people used to various IDEs.
+
 `link`::
-  *Allowed values:* `shared`, `static`
-  +
-  A feature controlling how libraries are built.
+*Allowed values:* `shared`, `static`
++
+A feature controlling how libraries are built.
+
 `runtime-link`::
-  *Allowed values:* `shared`, `static`
-  +
-  Controls if a static or shared C/C++ runtime should be used. There are
-  some restrictions how this feature can be used, for example on some
-  compilers an application using static runtime should not use shared
-  libraries at all, and on some compilers, mixing static and shared
-  runtime requires extreme care. Check your compiler documentation for
-  more details.
+*Allowed values:* `shared`, `static`
++
+Controls if a static or shared C/C++ runtime should be used. There are
+some restrictions how this feature can be used, for example on some
+compilers an application using static runtime should not use shared
+libraries at all, and on some compilers, mixing static and shared
+runtime requires extreme care. Check your compiler documentation for
+more details.
+
 `threading`::
-  *Allowed values:* `single`, `multi`
-  +
-  Controls if the project should be built in multi-threaded mode. This
-  feature does not necessary change code generation in the compiler, but
-  it causes the compiler to link to additional or different runtime
-  libraries, and define additional preprocessor symbols (for example,
-  `_MT` on Windows and `_REENTRANT` on Linux). How those symbols affect
-  the compiled code depends on the code itself.
+*Allowed values:* `single`, `multi`
++
+Controls if the project should be built in multi-threaded mode. This
+feature does not necessary change code generation in the compiler, but
+it causes the compiler to link to additional or different runtime
+libraries, and define additional preprocessor symbols (for example,
+`_MT` on Windows and `_REENTRANT` on Linux). How those symbols affect
+the compiled code depends on the code itself.
+
 `source`::
-  The `<source>X` feature has the same effect on building a target as
-  putting X in the list of sources. It is useful when you want to add
-  the same source to all targets in the project (you can put <source> in
-  requirements) or to conditionally include a source (using conditional
-  requirements, see link:#bbv2.tutorial.conditions[???]). See also the
-  `<library>
-              ` feature.
+The `<source>X` feature has the same effect on building a target as
+putting X in the list of sources. It is useful when you want to add
+the same source to all targets in the project (you can put <source> in
+requirements) or to conditionally include a source (using conditional
+requirements, see
+link:#bbv2.tutorial.conditions[the section called “Conditions and alternatives”]).
+See also the `<library>` feature.
+
 `library`::
-  This feature is almost equivalent to the `<source>` feature, except
-  that it takes effect only for linking. When you want to link all
-  targets in a Jamfile to certain library, the `<library>` feature is
-  preferred over `<source>X`MDASHthe latter will add the library to all
-  targets, even those that have nothing to do with libraries.
+This feature is almost equivalent to the `<source>` feature, except
+that it takes effect only for linking. When you want to link all
+targets in a Jamfile to certain library, the `<library>` feature is
+preferred over `<source>X`--the latter will add the library to all
+targets, even those that have nothing to do with libraries.
+
 `dependency`::
-  Introduces a dependency on the target named by the value of this
-  feature (so it will be brought up-to-date whenever the target being
-  declared is). The dependency is not used in any other way.
+Introduces a dependency on the target named by the value of this
+feature (so it will be brought up-to-date whenever the target being
+declared is). The dependency is not used in any other way.
+
 `implicit-dependency`::
-  Indicates that the target named by the value of this feature may
-  produce files that are included by the sources of the target being
-  declared. See link:#bbv2.reference.generated_headers[???] for more
-  information.
+Indicates that the target named by the value of this feature may
+produce files that are included by the sources of the target being
+declared. See
+link:#bbv2.reference.generated_headers[the section called “Generated headers”]
+for more information.
+
 `use`::
-  Introduces a dependency on the target named by the value of this
-  feature (so it will be brought up-to-date whenever the target being
-  declared is), and adds its usage requirements to the build properties
-  of the target being declared. The dependency is not used in any other
-  way. The primary use case is when you want the usage requirements
-  (such as `#include` paths) of some library to be applied, but do not
-  want to link to it.
+Introduces a dependency on the target named by the value of this
+feature (so it will be brought up-to-date whenever the target being
+declared is), and adds its usage requirements to the build properties
+of the target being declared. The dependency is not used in any other
+way. The primary use case is when you want the usage requirements
+(such as `#include` paths) of some library to be applied, but do not
+want to link to it.
+
 `dll-path`::
-  Specify an additional directory where the system should look for
-  shared libraries when the executable or shared library is run. This
-  feature only affects Unix compilers. Please see
-  link:#bbv2.faq.dll-path[???] in link:#bbv2.faq[???] for details.
+Specify an additional directory where the system should look for
+shared libraries when the executable or shared library is run. This
+feature only affects Unix compilers. Please see
+link:#bbv2.faq.dll-path[the FAQ: “Why are the dll-path and hardcode-dll-paths properties useful? ”]
+in link:#bbv2.faq[Frequently Asked Questions] for details.
+
 `hardcode-dll-paths`::
-  Controls automatic generation of dll-path properties.
-  +
-  *Allowed values:* `true`, `false`. This property is specific to Unix
-  systems. If an executable is built with `<hardcode-dll-paths>true`,
-  the generated binary will contain the list of all the paths to the
-  used shared libraries. As the result, the executable can be run
-  without changing system paths to shared libraries or installing the
-  libraries to system paths. This is very convenient during development.
-  Please see the link:#bbv2.faq.dll-path[FAQ entry] for details. Note
-  that on Mac OSX, the paths are unconditionally hardcoded by the
-  linker, and it is not possible to disable that behaviour.
+*Allowed values:* `true`, `false`.
++
+Controls automatic generation of dll-path properties.
++
+This property is specific to Unix systems. If an executable is built with
+`<hardcode-dll-paths>true`, the generated binary will contain the list of all
+the paths to the used shared libraries. As the result, the executable can be
+run without changing system paths to shared libraries or installing the
+libraries to system paths. This is very convenient during development.
+Please see the link:#bbv2.faq.dll-path[FAQ entry] for details. Note
+that on Mac OSX, the paths are unconditionally hardcoded by the
+linker, and it is not possible to disable that behaviour.
+
 `cflags`; `cxxflags`; `linkflags`::
-  The value of those features is passed without modification to the
-  corresponding tools. For `cflags` that is both the C and C++
-  compilers, for `cxxflags` that is the C++ compiler, and for
-  `linkflags` that is the linker. The features are handy when you are
-  trying to do something special that cannot be achieved by a
-  higher-level feature in Boost.Build.
+The value of those features is passed without modification to the
+corresponding tools. For `cflags` that is both the C and C++
+compilers, for `cxxflags` that is the C++ compiler, and for
+`linkflags` that is the linker. The features are handy when you are
+trying to do something special that cannot be achieved by a
+higher-level feature in Boost.Build.
+
 `include`::
-  Specifies an additional include path that is to be passed to C and C++
-  compilers.
+Specifies an additional include path that is to be passed to C and C++
+compilers.
+
 `define`::
-  Specifies an preprocessor symbol that should be defined on the command
-  line. You may either specify just the symbol, which will be defined
-  without any value, or both the symbol and the value, separated by
-  equal sign.
+Specifies an preprocessor symbol that should be defined on the command
+line. You may either specify just the symbol, which will be defined
+without any value, or both the symbol and the value, separated by
+equal sign.
+
 `warnings`::
-  The `<warnings>` feature controls the warning level of compilers. It
-  has the following values:
-  +
-  * `off` - disables all warnings.
-  * `on` - enables default warning level for the tool.
-  * `all` - enables all warnings.
-  +
-  Default value is `all`.
+The `<warnings>` feature controls the warning level of compilers. It
+has the following values:
++
+* `off` - disables all warnings.
+* `on` - enables default warning level for the tool.
+* `all` - enables all warnings.
++
+Default value is `all`.
+
 `warnings-as-errors`::
-  The `<warnings-as-errors>` makes it possible to treat warnings as
-  errors and abort compilation on a warning. The value `on` enables this
-  behaviour. The default value is `off`.
+The `<warnings-as-errors>` makes it possible to treat warnings as
+errors and abort compilation on a warning. The value `on` enables this
+behaviour. The default value is `off`.
+
 `build`::
-  *Allowed values:* `no`
-  +
-  The `build` feature is used to conditionally disable build of a
-  target. If `<build>no` is in properties when building a target, build
-  of that target is skipped. Combined with conditional requirements this
-  allows you to skip building some target in configurations where the
-  build is known to fail.
+*Allowed values:* `no`
++
+The `build` feature is used to conditionally disable build of a
+target. If `<build>no` is in properties when building a target, build
+of that target is skipped. Combined with conditional requirements this
+allows you to skip building some target in configurations where the
+build is known to fail.
+
 `tag`::
-  The `tag` feature is used to customize the name of the generated
-  files. The value should have the form:
-  +
-....
+The `tag` feature is used to customize the name of the generated
+files. The value should have the form:
++
+----
 @rulename
-....
-  +
-  where rulename should be a name of a rule with the following
-  signature:
-  +
-....
+----
++
+where _rulename_ should be a name of a rule with the following
+signature:
++
+----
 rule tag ( name : type ? : property-set )
-....
-  +
-  The rule will be called for each target with the default name computed
-  by Boost.Build, the type of the target, and property set. The rule can
-  either return a string that must be used as the name of the target, or
-  an empty string, in which case the default name will be used.
-  +
-  Most typical use of the `tag` feature is to encode build properties,
-  or library version in library target names. You should take care to
-  return non-empty string from the tag rule only for types you care
-  about — otherwise, you might end up modifying names of object files,
-  generated header file and other targets for which changing names does
-  not make sense.
+----
++
+The rule will be called for each target with the default name computed
+by Boost.Build, the type of the target, and property set. The rule can
+either return a string that must be used as the name of the target, or
+an empty string, in which case the default name will be used.
++
+Most typical use of the `tag` feature is to encode build properties,
+or library version in library target names. You should take care to
+return non-empty string from the tag rule only for types you care
+about -- otherwise, you might end up modifying names of object files,
+generated header file and other targets for which changing names does
+not make sense.
+
 `debug-symbols`::
-  *Allowed values:* `on`, `off`.
-  +
-  The `debug-symbols` feature specifies if produced object files,
-  executables, and libraries should include debug information.
-  Typically, the value of this feature is implicitly set by the
-  `variant` feature, but it can be explicitly specified by the user. The
-  most common usage is to build release variant with debugging
-  information.
+*Allowed values:* `on`, `off`.
++
+The `debug-symbols` feature specifies if produced object files,
+executables, and libraries should include debug information.
+Typically, the value of this feature is implicitly set by the
+`variant` feature, but it can be explicitly specified by the user. The
+most common usage is to build release variant with debugging
+information.
+
 `runtime-debugging`::
-  *Allowed values:* `on`, `off`.
-  +
-  The `runtime-debugging` feature specifies whether produced object
-  files, executables, and libraries should include behaviour useful only
-  for debugging, such as asserts. Typically, the value of this feature
-  is implicitly set by the `variant` feature, but it can be explicitly
-  specified by the user. The most common usage is to build release
-  variant with debugging output.
+*Allowed values:* `on`, `off`.
++
+The `runtime-debugging` feature specifies whether produced object
+files, executables, and libraries should include behaviour useful only
+for debugging, such as asserts. Typically, the value of this feature
+is implicitly set by the `variant` feature, but it can be explicitly
+specified by the user. The most common usage is to build release
+variant with debugging output.
+
 `target-os`::
-  The operating system for which the code is to be generated. The
-  compiler you used should be the compiler for that operating system.
-  This option causes Boost.Build to use naming conventions suitable for
-  that operating system, and adjust build process accordingly. For
-  example, with gcc, it controls if import libraries are produced for
-  shared libraries or not.
-  +
-  The complete list of possible values for this feature is: aix,
-  appletv, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
-  openbsd, osf, qnx, qnxnto, sgi, solaris, unix, unixware, windows.
-  +
-  See link:#bbv2.tasks.crosscompile[???] for details of crosscompilation
+The operating system for which the code is to be generated. The
+compiler you used should be the compiler for that operating system.
+This option causes Boost.Build to use naming conventions suitable for
+that operating system, and adjust build process accordingly. For
+example, with gcc, it controls if import libraries are produced for
+shared libraries or not.
++
+The complete list of possible values for this feature is: aix,
+appletv, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
+openbsd, osf, qnx, qnxnto, sgi, solaris, unix, unixware, windows.
++
+See link:#bbv2.tasks.crosscompile[the section called “Cross-compilation”]
+for details of crosscompilation.
+
 `architecture`::
-  *Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips1`, `mips2`,
-  `mips3`, `mips4`, `mips32`, `mips32r2`, `mips64`, `parisc`, `arm`,
-  `combined`, `combined-x86-power`.
-  +
-  The `architecture` features specifies the general processor family to
-  generate code for.
+*Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips1`, `mips2`,
+`mips3`, `mips4`, `mips32`, `mips32r2`, `mips64`, `parisc`, `arm`,
+`combined`, `combined-x86-power`.
++
+The `architecture` features specifies the general processor family to
+generate code for.
+
 `instruction-set`::
-  *Allowed values:* depend on the used toolset.
-  +
-  The `instruction-set` specifies for which specific instruction set the
-  code should be generated. The code in general might not run on
-  processors with older/different instruction sets.
-  +
-  While Boost.Build allows a large set of possible values for this
-  features, whether a given value works depends on which compiler you
-  use. Please see link:#bbv2.reference.tools.compilers[section_title]
-  for details.
+*Allowed values:* depends on the used toolset.
++
+The `instruction-set` specifies for which specific instruction set the
+code should be generated. The code in general might not run on
+processors with older/different instruction sets.
++
+While Boost.Build allows a large set of possible values for this
+features, whether a given value works depends on which compiler you
+use. Please see
+link:#bbv2.reference.tools.compilers[the section called “C++ Compilers”]
+for details.
+
 `address-model`::
-  *Allowed values:* `32`, `64`.
-  +
-  The `address-model` specifies if 32-bit or 64-bit code should be
-  generated by the compiler. Whether this feature works depends on the
-  used compiler, its version, how the compiler is configured, and the
-  values of the `architecture` `instruction-set` features. Please see
-  link:#bbv2.reference.tools.compilers[section_title] for details.
+*Allowed values:* `32`, `64`.
++
+The `address-model` specifies if 32-bit or 64-bit code should be
+generated by the compiler. Whether this feature works depends on the
+used compiler, its version, how the compiler is configured, and the
+values of the `architecture` `instruction-set` features. Please see
+link:#bbv2.reference.tools.compilers[the section called “C++ Compilers”]
+for details.
+
 `c++-template-depth`::
-  *Allowed values:* Any positive integer.
-  +
-  This feature allows configuring a C++ compiler with the maximal
-  template instantiation depth parameter. Specific toolsets may or may
-  not provide support for this feature depending on whether their
-  compilers provide a corresponding command-line option.
-  +
-  *Note:* Due to some internal details in the current Boost.Build
-  implementation it is not possible to have features whose valid values
-  are all positive integer. As a workaround a large set of allowed
-  values has been defined for this feature and, if a different one is
-  needed, user can easily add it by calling the feature.extend rule.
+*Allowed values:* Any positive integer.
++
+This feature allows configuring a C++ compiler with the maximal
+template instantiation depth parameter. Specific toolsets may or may
+not provide support for this feature depending on whether their
+compilers provide a corresponding command-line option.
++
+NOTE: Due to some internal details in the current Boost.Build
+implementation it is not possible to have features whose valid values
+are all positive integer. As a workaround a large set of allowed
+values has been defined for this feature and, if a different one is
+needed, user can easily add it by calling the feature.extend rule.
+
 `embed-manifest`::
-  manifest file
-  +
-  embedding
-  +
-  embed-manifest
-  +
-  *Allowed values:* on, off.
-  +
-  This feature is specific to the msvc toolset (see
-  link:#bbv2.reference.tools.compiler.msvc[section_title]), and controls
-  whether the manifest files should be embedded inside executables and
-  shared libraries, or placed alongside them. This feature corresponds
-  to the IDE option found in the project settings dialog, under
-  Configuration Properties > Manifest Tool > Input and Output > Embed
-  manifest.
+*Allowed values:* `on`, `off`.
++
+This feature is specific to the msvc toolset (see
+link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual C++”]),
+and controls whether the manifest files should be embedded inside executables
+and shared libraries, or placed alongside them. This feature corresponds
+to the IDE option found in the project settings dialog, under
+Configuration Properties -> Manifest Tool -> Input and Output -> Embed
+manifest.
+
 `embed-manifest-file`::
-  manifest file
-  +
-  embedding
-  +
-  embed-manifest-file
-  +
-  This feature is specific to the msvc toolset (see
-  link:#bbv2.reference.tools.compiler.msvc[section_title]), and controls
-  which manifest files should be embedded inside executables and shared
-  libraries. This feature corresponds to the IDE option found in the
-  project settings dialog, under Configuration Properties > Manifest
-  Tool > Input and Output > Additional Manifest Files.
+This feature is specific to the msvc toolset (see
+link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual C++”]),
+and controls which manifest files should be embedded inside executables and
+shared libraries. This feature corresponds to the IDE option found in the
+project settings dialog, under Configuration Properties -> Manifest
+Tool -> Input and Output -> Additional Manifest Files.
 
 [[bbv2.reference.tools]]
 == Builtin tools
