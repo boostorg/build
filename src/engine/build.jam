@@ -184,7 +184,7 @@ toolset borland bcc32 : -e -n : /D
     : $(--python-lib[1]) ;
 ## Generic Unix cc
 if ! $(CC) { CC = cc ; }
-toolset cc $(CC) : "-o " : -D
+toolset cc "$(CC)" : "-o " : -D
     : $(CFLAGS)
     [ opt --release : -s -O ]
     [ opt --debug : -g ]
@@ -343,15 +343,15 @@ toolset vacpp xlc : "-o " : -D
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) [ if-os AIX : -bmaxdata:0x40000000 ] ;
-    
+
 ## IBM XL C/C++ for Linux (little endian)
 toolset xlcpp xlC :  "-o " : -D
     : -Wno-unused -Wno-format
     [ opt --release : -s  ]
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
     -I$(--python-include) -I$(--extra-include)
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;    
-    
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+
 ## Microsoft Visual C++ .NET 7.x
 toolset vc7 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
