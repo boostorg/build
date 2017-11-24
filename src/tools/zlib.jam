@@ -132,7 +132,6 @@ rule init (
     condition = [ property-set.create $(requirements) ] ;
     condition = [ property-set.create [ $(condition).base ] ] ;
 
-    local no-build-from-source ;
     # Ignore environmental ZLIB_SOURCE if this initialization
     # requested to search for a specific pre-built library.
     if $(library-path) || $(include-path) || $(library-name)
