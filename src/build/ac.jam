@@ -11,6 +11,7 @@ import modules ;
 import "class" ; 
 import errors ;
 import configure ;
+import feature ;
 import project ;
 import virtual-target ;
 import generators ;
@@ -22,11 +23,21 @@ project.initialize $(__name__) ;
 .project = [ project.current ] ;
 project ac ;
 
+feature.feature ac.print-text : : free ;
+
 rule generate-include ( target : sources * : properties * )
 {
-    local header = [ property.select <include> : $(properties) ] ;
     print.output $(target) ;
-    print.text "#include <$(header:G=)>\n" : true ;
+    local text = [ property.select <ac.print-text> : $(properties) ] ;
+    if $(text)
+    {
+        print.text $(text:G=) : true ;
+    }
+    else
+    {
+        local header = [ property.select <include> : $(properties) ] ;
+        print.text "#include <$(header:G=)>\n" : true ;
+    }
 }
 
 rule generate-main ( target : sources * : properties * )
@@ -35,7 +46,7 @@ rule generate-main ( target : sources * : properties * )
     print.text "int main() {}" : true ;
 }
 
-rule find-include-path ( properties : header : provided-path ? )
+rule find-include-path ( properties : header : provided-path ? : test-source ? )
 {
     if $(provided-path) && [ path.exists [ path.root $(header) $(provided-path) ] ]
     {
@@ -43,7 +54,7 @@ rule find-include-path ( properties : header : provided-path ? )
     }
     else
     {
-        local a = [ class.new action : ac.generate-include : [ property-set.create <include>$(header) ] ] ;
+        local a = [ class.new action : ac.generate-include : [ property-set.create <include>$(header) <ac.print-text>$(test-source) ] ] ;
         # Create a new CPP target named after the header.
         # Replace dots (".") in target basename for portability.
         local basename = [ regex.replace $(header:D=) "[.]" "_" ] ;
@@ -143,6 +154,11 @@ class ac-library : basic-target
         self.default-names = $(names) ;
     }
 
+    rule set-header-test ( source )
+    {
+        self.header-test = $(source) ;
+    }
+
     rule reconfigure ( include-path ? : library-path ? : library-name ? )
     {
         if $(include-path) || $(library-path) || $(library-name)
@@ -236,7 +252,7 @@ class ac-library : basic-target
             }
             else
             {
-                local includes = [ ac.find-include-path $(property-set) : $(self.header) : $(include-path) ] ;
+                local includes = [ ac.find-include-path $(property-set) : $(self.header) : $(include-path) : $(self.header-test) ] ;
                 local library = [ ac.find-library $(property-set) : $(libnames) : $(library-path) ] ;
                 if $(includes) && $(library)
                 {

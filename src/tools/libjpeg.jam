@@ -25,6 +25,9 @@ import property-set ;
 
 header = jpeglib.h ;
 
+# jpeglib.h requires stdio.h to be included first.
+header-test = "#include <stdio.h>\n#include <jpeglib.h>\n" ;
+
 names = jpeg ;
 
 sources =   jaricom.c jcapimin.c jcapistd.c jcarith.c jccoefct.c jccolor.c
@@ -229,6 +232,7 @@ rule init (
         local mt = [ new ac-library libjpeg : $(.project) : $(condition) :
             $(include-path) : $(library-path) : $(library-name) : $(root) ] ;
         $(mt).set-header $(header) ;
+        $(mt).set-header-test $(header-test) ;
         $(mt).set-default-names $(names) ;
         targets.main-target-alternative $(mt) ;
     }

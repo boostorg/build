@@ -39,7 +39,7 @@ t.rm('libjpeg')
 common_stuff = '''
 source_file('test.cpp', 'test.cpp')
 source_file('main.cpp', 'int main() {}')
-source_file('jpeg.h.cpp', '#include <jpeglib.h>\\n')
+source_file('jpeg.h.cpp', '#include <stdio.h>\\n#include <jpeglib.h>\\n')
 action('-c -x c++ $main.cpp -o $main.o')
 '''
 t.write('test.cpp', 'test.cpp')
