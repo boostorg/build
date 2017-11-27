@@ -34,6 +34,7 @@
 
 
 import alias ;
+import build-system ;
 import "class" ;
 import common ;
 import errors ;
@@ -213,6 +214,11 @@ rule dump-tests
     }
 }
 
+if ( --dump-tests in [ modules.peek : ARGV ] )
+{
+    IMPORT testing : dump-tests : : testing.dump-tests ;
+    build-system.add-pre-build-hook testing.dump-tests ;
+}
 
 # Given a project location in normalized form (slashes are forward), compute the
 # name of the Boost library.
@@ -359,16 +365,6 @@ rule expect-failure ( target : dependency + : properties * )
 rule **passed**
 {
     remove-test-targets $(<) ;
-
-    # Dump all the tests, if needed. We do it here, since dump should happen
-    # only after all Jamfiles have been read, and there is no such place
-    # currently defined (but there should be).
-    if ! $(.dumped-tests) && ( --dump-tests in [ modules.peek : ARGV ] )
-    {
-        .dumped-tests = true ;
-        dump-tests ;
-    }
-
     # Force deletion of the target, in case any dependencies failed to build.
     RMOLD $(<) ;
 }

@@ -101,15 +101,20 @@ rule set-default-toolset ( toolset : version ? )
     .default-toolset-version = $(version) ;
 }
 
-rule set-pre-build-hook ( function )
+rule add-pre-build-hook ( function )
 {
-    .pre-build-hook = $(function) ;
+    .pre-build-hook += $(function) ;
 }
 
-rule set-post-build-hook ( function )
+rule add-post-build-hook ( function )
 {
-    .post-build-hook = $(function) ;
+    .post-build-hook += $(function) ;
 }
+
+# Old names for backwards compatibility
+IMPORT build-system : add-pre-build-hook : build-system : set-pre-build-hook ;
+IMPORT build-system : add-post-build-hook : build-system : set-post-build-hook ;
+EXPORT build-system : set-pre-build-hook set-post-build-hook ;
 
 ################################################################################
 #
@@ -963,9 +968,9 @@ local rule should-clean-project ( project )
     {
         configure.print-configure-checks-summary ;
 
-        if $(.pre-build-hook)
+        for local function in $(.pre-build-hook)
         {
-            $(.pre-build-hook) ;
+            $(function) ;
         }
 
         DEPENDS all : $(actual-targets) ;
@@ -980,9 +985,9 @@ local rule should-clean-project ( project )
             {
                 UPDATE_NOW $(.out-xml) : : ignore-minus-n ;
             }
-            if $(.post-build-hook)
+            for local function in $(.post-build-hook)
             {
-                $(.post-build-hook) $(ok) ;
+                $(function) $(ok) ;
             }
             # Prevent automatic update of the 'all' target, now that we have
             # explicitly updated what we wanted.
