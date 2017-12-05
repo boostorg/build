@@ -572,11 +572,22 @@ static void make1c( state const * const pState )
 
         /* Tally success/failure for those we tried to update. */
         if ( t->progress == T_MAKE_RUNNING )
+        {
+            /* Invert OK/FAIL target status when FAIL_EXPECTED has been applied. */
+            if ( t->flags & T_FLAG_FAIL_EXPECTED && !globs.noexec )
+            {
+                switch ( t->status )
+                {
+                    case EXEC_CMD_FAIL: t->status = EXEC_CMD_OK; break;
+                    case EXEC_CMD_OK: t->status = EXEC_CMD_FAIL; break;
+                }
+            }
             switch ( t->status )
             {
                 case EXEC_CMD_OK: ++counts->made; break;
                 case EXEC_CMD_FAIL: ++counts->failed; break;
             }
+        }
 
         /* Tell parents their dependency has been built. */
         {
@@ -832,16 +843,6 @@ static void make1c_closure
     {
         /* Store the target's status. */
         t->status = status_orig;
-
-        /* Invert OK/FAIL target status when FAIL_EXPECTED has been applied. */
-        if ( t->flags & T_FLAG_FAIL_EXPECTED && !globs.noexec )
-        {
-            switch ( t->status )
-            {
-                case EXEC_CMD_FAIL: t->status = EXEC_CMD_OK; break;
-                case EXEC_CMD_OK: t->status = EXEC_CMD_FAIL; break;
-            }
-        }
 
         /* Ignore failures for actions marked as 'ignore'. */
         if ( t->status == EXEC_CMD_FAIL && cmd->rule->actions->flags &
