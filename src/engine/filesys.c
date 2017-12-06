@@ -88,6 +88,7 @@ file_archive_info_t * file_archive_info( OBJECT * const path, int * found )
 
     if ( !*found )
     {
+        archive->name = path_key;
         archive->file = 0;
         archive->members = FL0;
     }
