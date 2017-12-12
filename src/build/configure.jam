@@ -20,7 +20,9 @@ import targets ;
 import config-cache ;
 import feature ;
 import modules ;
+import sequence ;
 import utility ;
+import virtual-target ;
 
 
 # The configure feature allows external definition of what features are
@@ -153,6 +155,20 @@ rule try-build ( targets * : ps : what : retry ? )
         
     local result ;
     local jam-targets ;
+
+    # Check whether we need to force rebuild configure targets
+    if --reconfigure in [ modules.peek : ARGV ]
+    {
+        local all-targets ;
+        for local t in $(targets)
+        {
+            all-targets += [ virtual-target.traverse $(t) ] ;
+        }
+        for local t in [ sequence.unique $(all-targets) ]
+        {
+            $(t).always ;
+        }
+    }
 
     for local t in $(targets)
     {
