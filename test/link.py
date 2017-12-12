@@ -279,8 +279,8 @@ def test_update_file_link(params1, params2):
     .has-files = [ glob include/file1.h ] ;
     
     rule can-link ( properties * ) {
-        if ( ! [ link.can-symlink $(.project) : [ property-set.empty ] ] ) &&
-           ( ! [ link.can-hardlink $(.project) : [ property-set.empty ] ] )
+        if ( ! [ link.can-symlink $(.project) ] ) &&
+           ( ! [ link.can-hardlink $(.project) ] )
         {
             ECHO links unsupported ;
         }
