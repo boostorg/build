@@ -1189,18 +1189,19 @@ local rule configure-really ( version ? : options * )
             local cpu-assembler = $(assembler) ;
             cpu-assembler ?= $(default-assembler-$(c)) ;
 
-            toolset.flags msvc.compile .RC  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(resource-compiler) ;
-            toolset.flags msvc.compile .IDL <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(idl-compiler) ;
-            toolset.flags msvc.compile .MC  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(mc-compiler) ;
-            toolset.flags msvc.link    .MT  <windows-api>$(api)/$(cpu-conditions) : $(setup-$(c))$(manifest-tool) -nologo ;
-
-            for api in desktop store phone
+            for local api in desktop store phone
             {
                 local setup-script = $(setup-$(c)) ;
                 if $(api) = phone
                 {
                     setup-script = $(setup-phone-$(c)) ;
                 }
+
+                toolset.flags msvc.compile .RC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(resource-compiler) ;
+                toolset.flags msvc.compile .IDL <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(idl-compiler) ;
+                toolset.flags msvc.compile .MC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(mc-compiler) ;
+                toolset.flags msvc.link    .MT  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(manifest-tool) -nologo ;
+
                 if $(api) = desktop
                 {
                     toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(setup-script)$(compiler) /Zm800 -nologo ;
