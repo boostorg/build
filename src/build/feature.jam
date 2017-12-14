@@ -371,12 +371,8 @@ local rule expand-subfeatures-aux (
 
     local result = $(components[1]:G=$(feature)) ;
 
-    local subvalues = $(components[2-]) ;
-    while $(subvalues)
+    for local subvalue in $(components[2-])
     {
-        local subvalue = $(subvalues[1]) ;  # Pop the head off of subvalues.
-        subvalues = $(subvalues[2-]) ;
-
         local subfeature = [ find-implied-subfeature $(feature) $(subvalue) :
             $(value) ] ;
 
@@ -385,7 +381,7 @@ local rule expand-subfeatures-aux (
         {
             result = $(components:J=-) ;
             result = $(result:G=$(feature)) ;
-            subvalues = ;  # Stop looping.
+            break ;
         }
         else
         {
@@ -1201,6 +1197,9 @@ rule __test__ ( )
 
     assert.result <define>foo=x-y
         : expand-subfeatures <define>foo=x-y ;
+
+    assert.result <define>minus=-
+        : expand-subfeatures <define>minus=- ;
 
     assert.result <toolset>gcc <toolset-gcc:version>3.0.1
         : expand-subfeatures gcc-3.0.1 ;
