@@ -2434,12 +2434,17 @@ static void compile_append_chain( PARSE * parse, compiler * c )
     }
 }
 
-static void compile_parse( PARSE * parse, compiler * c, int result_location )
+static void compile_emit_debug(compiler * c, int line)
 {
 #ifdef JAM_DEBUGGER
     if ( debug_is_debugging() )
-        compile_emit( c, INSTR_DEBUG_LINE, parse->line );
+        compile_emit( c, INSTR_DEBUG_LINE, line );
 #endif
+}
+
+static void compile_parse( PARSE * parse, compiler * c, int result_location )
+{
+    compile_emit_debug(c, parse->line);
     if ( parse->type == PARSE_APPEND )
     {
         compile_append_chain( parse, c );
@@ -2495,6 +2500,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         compile_emit( c, INSTR_FOR_INIT, 0 );
         compile_set_label( c, top );
         compile_emit_branch( c, INSTR_FOR_LOOP, end );
+        compile_emit_debug( c, parse->line );
         compile_emit( c, INSTR_SET, var );
 
         compile_push_break_scope( c, end );
@@ -2649,6 +2655,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                     group->elems, 0 ) )->s );
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
+                compile_emit_debug(c, parse->line);
                 compile_emit( c, INSTR_PUSH_LOCAL, name );
                 compile_push_cleanup( c, INSTR_POP_LOCAL, name );
                 compile_parse( parse->third, c, nested_result );
@@ -2660,6 +2667,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 var_parse_group_compile( group, c );
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
+                compile_emit_debug(c, parse->line);
                 compile_emit( c, INSTR_PUSH_LOCAL_GROUP, 0 );
                 compile_push_cleanup( c, INSTR_POP_LOCAL_GROUP, 0 );
                 compile_parse( parse->third, c, nested_result );
@@ -2671,6 +2679,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         {
             compile_parse( parse->left, c, RESULT_STACK );
             compile_parse( parse->right, c, RESULT_STACK );
+            compile_emit_debug(c, parse->line);
             compile_emit( c, INSTR_PUSH_LOCAL_GROUP, 0 );
             compile_push_cleanup( c, INSTR_POP_LOCAL_GROUP, 0 );
             compile_parse( parse->third, c, nested_result );
@@ -2820,6 +2829,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                     group->elems, 0 ) )->s );
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
+                compile_emit_debug(c, parse->line);
                 if ( result_location != RESULT_NONE )
                 {
                     compile_emit( c, INSTR_SET_RESULT, 1 );
@@ -2831,6 +2841,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
                 var_parse_group_compile( group, c );
                 var_parse_group_free( group );
                 compile_parse( parse->right, c, RESULT_STACK );
+                compile_emit_debug(c, parse->line);
                 if ( result_location != RESULT_NONE )
                 {
                     compile_emit( c, INSTR_SET_RESULT, 1 );
@@ -2842,6 +2853,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         {
             compile_parse( parse->left, c, RESULT_STACK );
             compile_parse( parse->right, c, RESULT_STACK );
+            compile_emit_debug(c, parse->line);
             if ( result_location != RESULT_NONE )
             {
                 compile_emit( c, INSTR_SET_RESULT, 1 );
@@ -2875,6 +2887,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         compile_parse( parse->third, c, RESULT_STACK );
         compile_parse( parse->right, c, RESULT_STACK );
 
+        compile_emit_debug(c, parse->line);
         switch ( parse->num )
         {
             case ASSIGN_APPEND: compile_emit( c, INSTR_APPEND_ON, 0 ); break;

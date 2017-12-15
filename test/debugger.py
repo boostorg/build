@@ -97,6 +97,9 @@ Breakpoint 1, f ( ) at test.jam:8
 """)
     t.cleanup()
 
+# Note: step doesn't need to worry about breakpoints,
+# as it always stops at the next line executed.
+
 def test_next():
     t = make_tester()
     t.write("test.jam", """\
@@ -133,6 +136,51 @@ Breakpoint 1, f ( ) at test.jam:7
 14	            g ;
 (b2db) next
 17	        d = 4 ;
+(b2db) quit
+""")
+    t.cleanup()
+
+def test_next_breakpoint():
+    """next should stop if it encounters a breakpoint.
+    If the normal end point happens to be a breakpoint,
+    then it should be reported as normal stepping."""
+    t = make_tester()
+    t.write("test.jam", """\
+        rule f ( recurse ? )
+        {
+            if $(recurse) { f ; }
+            a = 1 ;
+        }
+        rule g ( )
+        {
+            b = 2 ;
+        }
+        f true ;
+        g ;
+    """)
+    run(t, """\
+(b2db) break f
+Breakpoint 1 set at f
+(b2db) break g
+Breakpoint 2 set at g
+(b2db) break test.jam:4
+Breakpoint 3 set at test.jam:4
+(b2db) run -ftest.jam
+Starting program: {{bjam}} -ftest.jam
+Breakpoint 1, f ( true ) at test.jam:3
+3	            if $(recurse) { f ; }
+(b2db) next
+Breakpoint 1, f ( ) at test.jam:3
+3	            if $(recurse) { f ; }
+(b2db) next
+4	            a = 1 ;
+(b2db) next
+4	            a = 1 ;
+(b2db) next
+11	        g ;
+(b2db) next
+Breakpoint 2, g ( ) at test.jam:8
+8	            b = 2 ;
 (b2db) quit
 """)
     t.cleanup()
@@ -178,7 +226,100 @@ Breakpoint 1, f ( ) at test.jam:3
 (b2db) quit
 """)
     t.cleanup()
-    
+
+def test_finish_breakpoints():
+    """finish should stop when it reaches a breakpoint."""
+    t = make_tester()
+    t.write("test.jam", """\
+        rule f ( recurse * )
+        {
+            if $(recurse)
+            {
+                a = [ f $(recurse[2-]) ] ;
+            }
+        }
+        rule g ( list * )
+        {
+            for local v in $(list)
+            {
+                x = $(v) ;
+            }
+        }
+        f 1 2 ;
+        g 1 2 ;
+    """)
+    run(t, """\
+(b2db) break test.jam:5
+Breakpoint 1 set at test.jam:5
+(b2db) break test.jam:12
+Breakpoint 2 set at test.jam:12
+(b2db) run -ftest.jam
+Starting program: {{bjam}} -ftest.jam
+Breakpoint 1, f ( 1 2 ) at test.jam:5
+5	                a = [ f $(recurse[2-]) ] ;
+(b2db) finish
+Breakpoint 1, f ( 2 ) at test.jam:5
+5	                a = [ f $(recurse[2-]) ] ;
+(b2db) finish
+5	                a = [ f $(recurse[2-]) ] ;
+(b2db) finish
+16	        g 1 2 ;
+(b2db) finish
+Breakpoint 2, g ( 1 2 ) at test.jam:12
+12	                x = $(v) ;
+(b2db) finish
+Breakpoint 2, g ( 1 2 ) at test.jam:12
+12	                x = $(v) ;
+(b2db) quit
+""")
+    t.cleanup()
+
+def test_continue_breakpoints():
+    """continue should stop when it reaches a breakpoint"""
+    t = make_tester()
+    t.write("test.jam", """\
+        rule f ( recurse * )
+        {
+            if $(recurse)
+            {
+                a = [ f $(recurse[2-]) ] ;
+            }
+        }
+        rule g ( list * )
+        {
+            for local v in $(list)
+            {
+                x = $(v) ;
+            }
+        }
+        f 1 2 ;
+        g 1 2 ;
+    """)
+    run(t, """\
+(b2db) break test.jam:5
+Breakpoint 1 set at test.jam:5
+(b2db) break test.jam:12
+Breakpoint 2 set at test.jam:12
+(b2db) run -ftest.jam
+Starting program: {{bjam}} -ftest.jam
+Breakpoint 1, f ( 1 2 ) at test.jam:5
+5	                a = [ f $(recurse[2-]) ] ;
+(b2db) continue
+Breakpoint 1, f ( 2 ) at test.jam:5
+5	                a = [ f $(recurse[2-]) ] ;
+(b2db) continue
+Breakpoint 1, f ( 1 2 ) at test.jam:5
+5	                a = [ f $(recurse[2-]) ] ;
+(b2db) continue
+Breakpoint 2, g ( 1 2 ) at test.jam:12
+12	                x = $(v) ;
+(b2db) continue
+Breakpoint 2, g ( 1 2 ) at test.jam:12
+12	                x = $(v) ;
+(b2db) quit
+""")
+    t.cleanup()
+
 def test_breakpoints():
     """Tests the interaction between the following commands:
     break, clear, delete, disable, enable"""
@@ -519,7 +660,10 @@ test_run()
 test_exit_status()
 test_step()
 test_next()
+test_next_breakpoint()
 test_finish()
+test_finish_breakpoints()
+test_continue_breakpoints()
 test_breakpoints()
 test_breakpoints_running()
 test_backtrace()
