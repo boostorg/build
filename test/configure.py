@@ -35,9 +35,9 @@ obj bar : foo.cpp :
     t.expect_output_lines([
         "    - pass builds              : yes",
         "    - fail builds              : no"])
-    t.expect_addition("bin/$toolset/debug/pass.obj")
-    t.expect_addition("bin/$toolset/debug/foo.obj")
-    t.expect_addition("bin/$toolset/debug/bar.obj")
+    t.expect_addition("bin/$toolset/debug*/pass.obj")
+    t.expect_addition("bin/$toolset/debug*/foo.obj")
+    t.expect_addition("bin/$toolset/debug*/bar.obj")
     t.expect_nothing_more()
 
     # An up-to-date build should use the cache
@@ -52,9 +52,9 @@ obj bar : foo.cpp :
     t.expect_output_lines([
         "    - pass builds              : yes",
         "    - fail builds              : no"])
-    t.expect_touch("bin/$toolset/debug/pass.obj")
-    t.expect_touch("bin/$toolset/debug/foo.obj")
-    t.expect_touch("bin/$toolset/debug/bar.obj")
+    t.expect_touch("bin/$toolset/debug*/pass.obj")
+    t.expect_touch("bin/$toolset/debug*/foo.obj")
+    t.expect_touch("bin/$toolset/debug*/bar.obj")
     t.expect_nothing_more()
 
     # --reconfigure should re-run configuration checks only
@@ -62,7 +62,7 @@ obj bar : foo.cpp :
     t.expect_output_lines([
         "    - pass builds              : yes",
         "    - fail builds              : no"])
-    t.expect_touch("bin/$toolset/debug/pass.obj")
+    t.expect_touch("bin/$toolset/debug*/pass.obj")
     t.expect_nothing_more()
 
     t.cleanup()

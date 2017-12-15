@@ -25,17 +25,17 @@ run fail-run.cpp ;
 """)
 
     t.run_build_system(status=1)
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.obj")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.exe")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.output")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.run")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.test")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.obj")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.exe")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.output")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.run")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.test")
 
-    t.expect_addition("bin/fail-link.test/$toolset/debug/fail-link.obj")
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.obj")
 
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.obj")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.exe")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.output")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.obj")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.exe")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.output")
 
     t.expect_nothing_more()
 
@@ -57,17 +57,17 @@ run-fail fail-run.cpp ;
 """)
 
     t.run_build_system(status=1)
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.obj")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.exe")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.output")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.obj")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.exe")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.output")
 
-    t.expect_addition("bin/fail-link.test/$toolset/debug/fail-link.obj")
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.obj")
 
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.obj")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.exe")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.output")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.run")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.test")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.obj")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.exe")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.output")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.run")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")
 
     t.expect_nothing_more()
 
@@ -89,15 +89,15 @@ link fail-run.cpp ;
 """)
 
     t.run_build_system(status=1)
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.obj")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.exe")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.test")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.obj")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.exe")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.test")
 
-    t.expect_addition("bin/fail-link.test/$toolset/debug/fail-link.obj")
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.obj")
 
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.obj")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.exe")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.test")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.obj")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.exe")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")
 
     t.expect_nothing_more()
 
@@ -119,13 +119,13 @@ link-fail fail-run.cpp ;
 """)
 
     t.run_build_system(status=1)
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.obj")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.obj")
 
-    t.expect_addition("bin/fail-link.test/$toolset/debug/fail-link.obj")
-    t.expect_addition("bin/fail-link.test/$toolset/debug/fail-link.exe")
-    t.expect_addition("bin/fail-link.test/$toolset/debug/fail-link.test")
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.obj")
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.exe")
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.test")
 
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.obj")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.obj")
 
     t.expect_nothing_more()
 
@@ -147,14 +147,14 @@ compile fail-run.cpp ;
 """)
 
     t.run_build_system(status=1)
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.obj")
-    t.expect_addition("bin/pass.test/$toolset/debug/pass.test")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.obj")
+    t.expect_addition("bin/pass.test/$toolset/debug*/pass.test")
 
-    t.expect_addition("bin/fail-link.test/$toolset/debug/fail-link.obj")
-    t.expect_addition("bin/fail-link.test/$toolset/debug/fail-link.test")
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.obj")
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.test")
 
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.obj")
-    t.expect_addition("bin/fail-run.test/$toolset/debug/fail-run.test")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.obj")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")
 
     t.expect_nothing_more()
 
@@ -176,8 +176,8 @@ compile-fail fail-run.cpp ;
 """)
 
     t.run_build_system(status=1)
-    t.expect_addition("bin/fail-compile.test/$toolset/debug/fail-compile.obj")
-    t.expect_addition("bin/fail-compile.test/$toolset/debug/fail-compile.test")
+    t.expect_addition("bin/fail-compile.test/$toolset/debug*/fail-compile.obj")
+    t.expect_addition("bin/fail-compile.test/$toolset/debug*/fail-compile.test")
 
     t.expect_nothing_more()
 
