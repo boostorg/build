@@ -96,6 +96,7 @@ def run_tests(critical_tests, other_tests):
                 print("PASSED")
             else:
                 print("FAILED")
+                BoostBuild.flush_annotations()
         else:
             rs = "succeed"
             if not passed:
