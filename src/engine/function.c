@@ -533,7 +533,20 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
     if ( module->class_module )
     {
         rule = bindrule( rulename, module );
-        real_rulename = object_copy( function_rulename( rule->procedure ) );
+        if ( rule->procedure )
+        {
+            real_rulename = object_copy( function_rulename( rule->procedure ) );
+        }
+        else
+        {
+            string buf[ 1 ];
+            string_new( buf );
+            string_append( buf, object_str( module->name ) );
+            string_push_back( buf, '.' );
+            string_append( buf, object_str( rulename ) );
+            real_rulename = object_new( buf->value );
+            string_free( buf );
+        }
     }
     else
     {
