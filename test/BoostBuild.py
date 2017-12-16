@@ -707,7 +707,7 @@ class Tester(TestCmd.TestCmd):
             self.ignore("*.rsp")       # Response files.
             self.ignore("*.tds")       # Borland debug symbols.
             self.ignore("*.manifest")  # MSVC DLL manifests.
-            self.ignore("bin/standalone/msvc/$toolset*/msvc-setup.bat")
+            self.ignore("bin/standalone/msvc/*/msvc-setup.bat")
 
         # Debug builds of bjam built with gcc produce this profiling data.
         self.ignore("gmon.out")
