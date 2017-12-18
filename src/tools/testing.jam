@@ -339,7 +339,7 @@ generators.register-standard testing.unit-test : EXE : UNIT_TEST ;
 #
 rule expect-success ( target : dependency + : requirements * )
 {
-    **passed** $(target) : $(dependency) ;
+    **passed** $(target) : $(dependency) : $(requirements) ;
 }
 
 
@@ -356,15 +356,18 @@ rule expect-failure ( target : dependency + : properties * )
     RMOLD $(marker) ;
     DEPENDS $(marker) : $(dependency) ;
     DEPENDS $(target) : $(marker) ;
-    **passed** $(target) : $(marker) ;
+    **passed** $(target) : $(marker) : $(properties) ;
 }
 
 
 # The rule/action combination used to report successful passing of a test.
 #
-rule **passed**
+rule **passed** ( target : sources * : properties * )
 {
-    remove-test-targets $(<) ;
+    if [ feature.get-values preserve-test-targets : $(properties) ] = off
+    {
+        remove-test-targets $(<) ;
+    }
     # Force deletion of the target, in case any dependencies failed to build.
     RMOLD $(<) ;
 }
@@ -453,21 +456,17 @@ toolset.flags testing.capture-output ARGS <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
 toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
 
-.preserve-test-targets = on ;
 if --remove-test-targets in [ modules.peek : ARGV ]
 {
-    .preserve-test-targets = off ;
+    feature.set-default preserve-test-targets : off ;
 }
 
 
 # Runs executable 'sources' and stores stdout in file 'target'. Unless
 # --preserve-test-targets command line option has been specified, removes the
-# executable. The 'target-to-remove' parameter controls what should be removed:
-#   - if 'none', does not remove anything, ever
-#   - if empty, removes 'source'
-#   - if non-empty and not 'none', contains a list of sources to remove.
+# executable.
 #
-rule capture-output ( target : source : properties * : targets-to-remove * )
+rule capture-output ( target : source : properties * )
 {
     output-file on $(target) = $(target:S=.output) ;
     LOCATE on $(target:S=.output) = [ on $(target) return $(LOCATE) ] ;
@@ -485,31 +484,12 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
     # bug).
     DEPENDS $(target) : [ on $(target) return $(INPUT_FILES) ] ;
 
-    if $(targets-to-remove) = none
-    {
-        targets-to-remove = ;
-    }
-    else if ! $(targets-to-remove)
-    {
-        targets-to-remove = $(source) ;
-    }
-
     run-path-setup $(target) : $(source) : $(properties) ;
 
     DISABLE_TEST_EXECUTION on $(target) = 0 ;
     if [ feature.get-values testing.execute : $(properties) ] = off
     {
         DISABLE_TEST_EXECUTION on $(target) = 1 ;
-    }
-
-    if [ feature.get-values preserve-test-targets : $(properties) ] = off
-        || $(.preserve-test-targets) = off
-    {
-        rmtemp-sources $(target) : $(targets-to-remove) ;
-        for local to-remove in $(targets-to-remove)
-        {
-            rmtemp-all-sources $(to-remove) ;
-        }
     }
 
     if ! [ feature.get-values testing.launcher : $(properties) ]
@@ -521,42 +501,19 @@ rule capture-output ( target : source : properties * : targets-to-remove * )
 
 .types-to-remove = EXE OBJ ;
 
-local rule remove-test-targets ( targets + )
+local rule remove-test-targets ( target )
 {
-    if $(.preserve-test-targets) = off
-    {
-        rmtemp-all-sources $(target) ;
-    }
-}
-
-local rule rmtemp-all-sources ( target )
-{
-    local sources ;
     local action = [ on $(target) return $(.action) ] ;
-    if $(action)
+    local associated-targets = [ virtual-target.traverse [ $(action).targets ] ] ;
+    local targets-to-remove ;
+    for local t in [ sequence.unique $(associated-targets) ]
     {
-        local action-sources = [ $(action).sources ] ;
-        for local source in $(action-sources)
+        if [ $(t).type ] in $(.types-to-remove)
         {
-            local source-type = [ $(source).type ] ;
-            if $(source-type) in $(.types-to-remove)
-            {
-                sources += [ $(source).actual-name ] ;
-            }
-            else
-            {
-                # ECHO IGNORED: $(source) :: $(source-type) ;
-            }
-        }
-        if $(sources)
-        {
-            rmtemp-sources $(target) : $(sources) ;
-            for local source in $(sources)
-            {
-                rmtemp-all-sources $(source) ;
-            }
+            targets-to-remove += [ $(t).actual-name ] ;
         }
     }
+    rmtemp-sources $(target) : $(targets-to-remove) ;
 }
 
 local rule rmtemp-sources ( target : sources * )

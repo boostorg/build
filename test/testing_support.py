@@ -183,6 +183,51 @@ compile-fail fail-run.cpp ;
 
     t.cleanup()
 
+def test_remove_test_targets(option):
+    t = BoostBuild.Tester(use_test_config=False)
+
+    t.write("pass-compile.cpp", "int main() {}\n")
+    t.write("pass-link.cpp", "int main() {}\n")
+    t.write("pass-run.cpp", "int main() {}\n")
+    t.write("fail-compile.cpp", "#error expected to fail\n")
+    t.write("fail-link.cpp", "int f();\nint main() { return f(); }\n")
+    t.write("fail-run.cpp", "int main() { return 1; }\n")
+    t.write("source.cpp", "int f();\n")
+
+    t.write("Jamroot.jam", """import testing ;
+obj source.o : source.cpp ;
+compile pass-compile.cpp ;
+link pass-link.cpp source.o ;
+run pass-run.cpp source.o ;
+compile-fail fail-compile.cpp ;
+link-fail fail-link.cpp ;
+run-fail fail-run.cpp ;
+""")
+
+    t.run_build_system([option])
+
+    t.expect_addition("bin/$toolset/debug*/source.obj")
+
+    t.expect_addition("bin/pass-compile.test/$toolset/debug*/pass-compile.test")
+
+    t.expect_addition("bin/pass-link.test/$toolset/debug*/pass-link.test")
+
+    t.expect_addition("bin/pass-run.test/$toolset/debug*/pass-run.output")
+    t.expect_addition("bin/pass-run.test/$toolset/debug*/pass-run.run")
+    t.expect_addition("bin/pass-run.test/$toolset/debug*/pass-run.test")
+
+    t.expect_addition("bin/fail-compile.test/$toolset/debug*/fail-compile.test")
+
+    t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.test")
+    
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.output")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.run")
+    t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")
+
+    t.expect_nothing_more()
+
+    t.cleanup()
+
 ################################################################################
 #
 # test_files_with_spaces_in_their_name()
@@ -238,4 +283,6 @@ test_link()
 test_link_fail()
 test_compile()
 test_compile_fail()
+test_remove_test_targets("--remove-test-targets")
+test_remove_test_targets("preserve-test-targets=off")
 test_files_with_spaces_in_their_name()
