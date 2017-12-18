@@ -132,6 +132,10 @@ void timestamp_current( timestamp * const t )
     FILETIME ft;
     GetSystemTimeAsFileTime( &ft );
     timestamp_from_filetime( t, &ft );
+#elif defined(_POSIX_TIMERS)
+    struct timespec ts;
+    clock_gettime( CLOCK_REALTIME, &ts );
+    timestamp_init( t, ts.tv_sec, ts.tv_nsec );
 #else  /* OS_NT */
     timestamp_init( t, time( 0 ), 0 );
 #endif  /* OS_NT */
