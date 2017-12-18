@@ -426,6 +426,7 @@ class Tester(TestCmd.TestCmd):
             return
 
         self.previous_tree, dummy = tree.build_tree(self.workdir)
+        self.wait_for_time_change_since_last_build()
 
         if match is None:
             match = self.match
@@ -857,6 +858,22 @@ class Tester(TestCmd.TestCmd):
         """
         self.__wait_for_time_change(path, touch, last_build_time=False)
 
+    def wait_for_time_change_since_last_build(self):
+        """
+          Wait for newly assigned file system modification timestamps to
+        become large enough for the timestamp difference to be
+        correctly recognized by the Python based testing framework.
+        Does not care about Jam's timestamp resolution, since we
+        only need this to detect touched files.
+        """
+        if self.last_build_timestamp:
+            timestamp_file = "timestamp-3df2f2317e15e4a9"
+            open(timestamp_file, "wb").close()
+            self.__wait_for_time_change_impl(timestamp_file,
+                self.last_build_timestamp,
+                self.__python_timestamp_resolution(timestamp_file, 0), 0)
+            os.unlink(timestamp_file)
+
     def __build_timestamp_resolution(self):
         """
           Returns the minimum path modification timestamp resolution supported
@@ -1104,7 +1121,12 @@ class Tester(TestCmd.TestCmd):
 
         resolution = self.__python_timestamp_resolution(path, build_resolution)
         assert resolution >= build_resolution
+        self.__wait_for_time_change_impl(path, start_time, resolution, build_resolution)
 
+        if not touch:
+            os.utime(path, (stats_orig.st_atime, stats_orig.st_mtime))
+
+    def __wait_for_time_change_impl(self, path, start_time, resolution, build_resolution):
         # Implementation notes:
         #  * Theoretically time.sleep() API might get interrupted too soon
         #    (never actually encountered).
@@ -1160,9 +1182,6 @@ class Tester(TestCmd.TestCmd):
                 if c > start_time:
                     break
                 _sleep(max(0.01, start_time - c))
-
-        if not touch:
-            os.utime(path, (stats_orig.st_atime, stats_orig.st_mtime))
 
 
 class List:
