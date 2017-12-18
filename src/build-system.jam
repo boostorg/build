@@ -463,7 +463,9 @@ local rule process-explicit-toolset-requests
                     "previously configured; attempting to auto-configure now" ;
             }
             local t,v = [ MATCH ([^-]+)-?(.+)? : $(toolset) ] ;
+            project.push-current ;
             toolset.using $(t,v[1]) : $(t,v[2]) ;
+            project.pop-current ;
         }
 
         # Make sure we get an appropriate property into the build request in

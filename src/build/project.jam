@@ -833,7 +833,7 @@ rule current ( )
 # Temporarily changes the current project to 'project'. Should be followed by
 # 'pop-current'.
 #
-rule push-current ( project )
+rule push-current ( project ? )
 {
     .saved-current-project += $(.current-project) ;
     .current-project = $(project) ;
