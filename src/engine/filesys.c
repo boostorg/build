@@ -332,7 +332,11 @@ void file_query_posix_( file_info_t * const info )
         info->is_dir = statbuf.st_mode & S_IFDIR ? 1 : 0;
         info->exists = 1;
 #if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809
+#if defined(OS_MACOSX)
+        timestamp_init( &info->time, statbuf.st_mtimespec.tv_sec, statbuf.st_mtimespec.tv_nsec );
+#else
         timestamp_init( &info->time, statbuf.st_mtim.tv_sec, statbuf.st_mtim.tv_nsec );
+#endif
 #else
         timestamp_init( &info->time, statbuf.st_mtime, 0 );
 #endif
