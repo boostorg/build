@@ -146,18 +146,12 @@ rule print-configure-checks-summary ( )
     }
 }
 
-# Attempts to build a set of virtual targets
-rule try-build ( targets * : ps : what : retry ? )
-{
-   local cache-name = $(what) [ $(ps).raw ] ;
-   cache-name = $(cache-name:J=-) ;
-   local value = [ config-cache.get $(cache-name) ] ;
-        
-    local result ;
-    local jam-targets ;
+.reconfigure = [ modules.peek : ARGV ] ;
 
-    # Check whether we need to force rebuild configure targets
-    if --reconfigure in [ modules.peek : ARGV ]
+# Handle the --reconfigure option
+rule maybe-force-rebuild ( targets * )
+{    
+    if $(.reconfigure)
     {
         local all-targets ;
         for local t in $(targets)
@@ -169,6 +163,19 @@ rule try-build ( targets * : ps : what : retry ? )
             $(t).always ;
         }
     }
+}
+
+# Attempts to build a set of virtual targets
+rule try-build ( targets * : ps : what : retry ? )
+{
+   local cache-name = $(what) [ $(ps).raw ] ;
+   cache-name = $(cache-name:J=-) ;
+   local value = [ config-cache.get $(cache-name) ] ;
+        
+    local result ;
+    local jam-targets ;
+
+    maybe-force-rebuild $(targets) ;
 
     for local t in $(targets)
     {
@@ -237,20 +244,7 @@ rule try-find-build ( ps : what : * )
     local result ;
     local jam-targets ;
 
-
-    # Check whether we need to force rebuild configure targets
-    if --reconfigure in [ modules.peek : ARGV ]
-    {
-        local all-targets ;
-        for local t in $($(args)[2-])
-        {
-            all-targets += [ virtual-target.traverse $(t) ] ;
-        }
-        for local t in [ sequence.unique $(all-targets) ]
-        {
-            $(t).always ;
-        }
-    }
+    maybe-force-rebuild $($(args)[2-]) ;
 
     if $(value)
     {
@@ -393,7 +387,7 @@ rule find-builds-raw ( project : ps : what : * )
     }
 }
 
-local rule get-relevant-features ( )
+rule get-relevant-features ( )
 {
     local relevant = [ feature.expand <configure> ] ;
     local result = ;

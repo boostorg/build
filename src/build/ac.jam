@@ -61,14 +61,16 @@ rule find-include-path ( properties : header : provided-path ? : test-source ? )
         local header-target = $(header:S=:B=$(basename)) ;
         local cpp = [ class.new file-target $(header-target:S=.cpp) exact : CPP : $(.project) : $(a) ] ;
         cpp = [ virtual-target.register $(cpp) ] ;
+        $(cpp).root true ;
         local result = [ generators.construct $(.project) $(header-target) : OBJ : $(properties) : $(cpp) : true ] ;
+        configure.maybe-force-rebuild $(result[2-]) ;
         local jam-targets ;
-        for t in $(result[2-])
+        for local t in $(result[2-])
         {
             jam-targets += [ $(t).actualize ] ;
         }
         if [ UPDATE_NOW $(jam-targets) : [ modules.peek configure : .log-fd ]
-            : ignore-minus-n : ignore-minus-q ]
+            : ignore-minus-n ]
         {
             return %default ;
         }
@@ -107,16 +109,18 @@ rule find-library ( properties : names + : provided-path ? )
                 [ property-set.empty ] ] ;
             local main.cpp = [ virtual-target.register
                 [ class.new file-target main-$(name).cpp exact : CPP : $(.project) : $(a) ] ] ;
+            $(main.cpp).root true ;
             local test = [ generators.construct $(.project) $(name) : EXE
                 : [ $(properties).add $(lib[1]) ] : $(main.cpp) $(lib[2-])
                 : true ] ;
+            configure.maybe-force-rebuild $(test[2-]) ;
             local jam-targets ;
             for t in $(test[2-])
             {
                 jam-targets += [ $(t).actualize ] ;
             }
             if [ UPDATE_NOW $(jam-targets) : [ modules.peek configure : .log-fd ]
-                    : ignore-minus-n : ignore-minus-q ]
+                    : ignore-minus-n ]
             {
                 result = $(name) $(link-opts[1]) ;
                 names-iter = ; link-opts = ; # break
@@ -221,10 +225,7 @@ class ac-library : basic-target
                 library-path ?= [ modules.peek : $(name:U)_LIBPATH ] ;
             }
 
-            local toolset = [ $(property-set).get <toolset> ] ;
-            local toolset-version-property = "<toolset-$(toolset):version>" ;
-            local relevant = [ property.select <target-os> <toolset>
-                $(toolset-version-property) <link> <address-model> <architecture> :
+            local relevant = [ property.select [ configure.get-relevant-features ] <link> :
                 [ $(property-set).raw ] ] ;
 
             local key = ac-library-$(name)-$(relevant:J=-) ;

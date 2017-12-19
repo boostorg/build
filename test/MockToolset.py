@@ -18,6 +18,7 @@ parser.add_option('-o', dest="output_file")
 parser.add_option('-x', dest="language")
 parser.add_option('-c', dest="compile", action="store_true")
 parser.add_option('-I', dest="includes", action="append")
+parser.add_option('-D', dest="defines", action="append")
 parser.add_option('-L', dest="library_path", action="append")
 parser.add_option('--dll', dest="dll", action="store_true")
 parser.add_option('--archive', dest="archive", action="store_true")
@@ -99,6 +100,16 @@ class MockInfo(object):
       if self.verbose:
         print "    Failed to match -I ",  map(adjust_path, options.includes), \
           " != ", map(adjust_path, expected_options.includes)
+      return False
+
+    if options.defines is None:
+      options.defines = []
+    if expected_options.defines is None:
+      expected_options.defines = []
+    if options.defines != expected_options.defines:
+      if self.verbose:
+        print "    Failed to match -I ",  options.defines, \
+          " != ", expected_options.defines
       return False
 
     if options.library_path is None:
@@ -204,15 +215,16 @@ generators.register-linker mock.link.dll : LIB OBJ : SHARED_LIB : <toolset>mock 
 generators.register-archiver mock.archive : OBJ : STATIC_LIB : <toolset>mock ;
 
 toolset.flags mock.compile INCLUDES <include> ;
+toolset.flags mock.compile DEFINES <define> ;
 
 actions compile.c
 {
-   $(.config-cmd) mock.py -c -x c -I"$(INCLUDES)" "$(>)" -o "$(<)"
+   $(.config-cmd) mock.py -c -x c -I"$(INCLUDES)" -D"$(DEFINES)" "$(>)" -o "$(<)"
 }
 
 actions compile.c++
 {
-    $(.config-cmd) mock.py -c -x c++ -I"$(INCLUDES)" "$(>)" -o "$(<)"
+    $(.config-cmd) mock.py -c -x c++ -I"$(INCLUDES)" -D"$(DEFINES)" "$(>)" -o "$(<)"
 }
 
 toolset.flags mock.link USER_OPTIONS <linkflags> ;
