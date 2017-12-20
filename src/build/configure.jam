@@ -146,7 +146,10 @@ rule print-configure-checks-summary ( )
     }
 }
 
-.reconfigure = [ modules.peek : ARGV ] ;
+if --reconfigure in [ modules.peek : ARGV ]
+{
+    .reconfigure = true ;
+}
 
 # Handle the --reconfigure option
 rule maybe-force-rebuild ( targets * )
