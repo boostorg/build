@@ -195,8 +195,11 @@ static void debug_lol_read( FILE * in, LOL * lol )
 
 static void debug_frame_write( FILE * out, FRAME * frame )
 {
-    OBJECT * fullname = make_absolute_path( frame->file );
-    debug_object_write( out, frame->file );
+    OBJECT * fullname = constant_builtin;
+    OBJECT * file = frame->file;
+    if ( file == NULL ) file = constant_builtin;
+    else fullname = make_absolute_path( frame->file );
+    debug_object_write( out, file );
     debug_int_write( out, frame->line );
     debug_object_write( out, fullname );
     debug_lol_write( out, frame->args );
