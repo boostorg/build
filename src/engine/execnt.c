@@ -1282,7 +1282,9 @@ static void string_new_from_argv( string * result, char const * const * argv )
     while ( *argv )
     {
         string_push_back( result, ' ' );
+        string_push_back( result, '"' );
         string_append( result, *(argv++) );
+        string_push_back( result, '"' );
     }
 }
 
