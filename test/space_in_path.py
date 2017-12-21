@@ -23,12 +23,29 @@ make test.txt : : @write-file ;
 t.write("has space/test.cpp", "int main() {}\n")
 
 tmpdir = t.workpath("has space")
+try:
+    oldtmp = os.environ["TMP"]
+except:
+    oldtmp = None
+try:
+    oldtmpdir = os.environ["TMPDIR"]
+except:
+    oldtmpdir = None
 os.environ["TMP"] = tmpdir; # Windows
 os.environ["TMPDIR"] = tmpdir; # *nix
 
-t.run_build_system(["has space"])
-
-t.expect_addition("has space/bin/$toolset/debug*/test.txt")
-t.expect_addition("has space/bin/$toolset/debug*/test.passed")
+try:
+    t.run_build_system(["has space"])
+    t.expect_addition("has space/bin/$toolset/debug*/test.txt")
+    t.expect_addition("has space/bin/$toolset/debug*/test.passed")
+finally:
+    if oldtmp is not None:
+        os.environ["TMP"] = oldtmp
+    else:
+        del os.environ["TMP"]
+    if oldtmpdir is not None:
+        os.environ["TMPDIR"] = oldtmpdir
+    else:
+        del os.environ["TMPDIR"]
 
 t.cleanup()
