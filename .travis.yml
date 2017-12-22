@@ -1,7 +1,9 @@
 sudo: false
-os:
-  - linux
-  - osx
+branches:
+  only:
+    - master
+    - develop
+    - /feature\/.*/
 env:
   matrix:
     - TRAVIS_EMPTY_JOB_WORKAROUND=true
@@ -10,10 +12,25 @@ matrix:
     - env: TRAVIS_EMPTY_JOB_WORKAROUND=true
   include:
     - os: linux
+      dist: precise
+      env: TOOLSET=gcc
+    - os: linux
+      dist: precise
+      env: TOOLSET=clang
+    - os: linux
       dist: trusty
       env: TOOLSET=gcc
     - os: linux
       dist: trusty
+      env: TOOLSET=clang
+    - os: osx
+      osx_image: xcode9.2
+      env: TOOLSET=clang
+    - os: osx
+      osx_image: xcode9.1
+      env: TOOLSET=clang
+    - os: osx
+      osx_image: xcode9
       env: TOOLSET=clang
     - os: osx
       osx_image: xcode8.3
