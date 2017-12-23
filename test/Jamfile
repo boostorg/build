@@ -1,0 +1,6 @@
+import testing ;
+import type ;
+
+type.register PY : py : EXE ;
+
+run test_all.py : : : <testing.launcher>python ;
