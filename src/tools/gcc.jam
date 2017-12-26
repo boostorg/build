@@ -37,7 +37,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 
 feature.extend toolset : gcc ;
-# feature.subfeature toolset gcc : flavor : : optional ;
 
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags gcc : unix ;
@@ -189,14 +188,11 @@ rule init ( version ? : command * : options * : requirement * )
         switch $(machine:L)
         {
             case *mingw* : flavor ?= mingw ;
+            case *cygwin* : flavor ?= cygwin ;
         }
     }
 
     local condition ;
-    if $(flavor)
-    {
-        condition = flavor $(flavor) ;
-    }
     condition = [ common.check-init-parameters gcc $(requirement) : version $(version)
         : $(condition) ] ;
 
@@ -285,7 +281,7 @@ rule .get-prog-name ( command-string : tool : flavor ? )
     local prog-name = [ NORMALIZE_PATH [ MATCH "(.*)[\n]+" :
         [ SHELL "$(command-string) -print-prog-name=$(tool)" ] ] ] ;
 
-    if $(flavor) != vxworks && $(flavor) != mingw && [ os.name ] = NT
+    if $(flavor) = cygwin && [ os.name ] = NT
     {
         prog-name = [ cygwin.cygwin-to-windows-path $(prog-name) ] ;
     }
