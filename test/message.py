@@ -10,7 +10,7 @@
 import BoostBuild
 
 # Create a temporary working directory.
-t = BoostBuild.Tester(use_test_config=False)
+t = BoostBuild.Tester(["-d0"], use_test_config=False)
 
 t.write("Jamroot.jam", """
 project

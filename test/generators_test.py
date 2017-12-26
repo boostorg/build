@@ -12,7 +12,7 @@ import re
 
 
 def test_basic():
-    t = BoostBuild.Tester(pass_d0=False)
+    t = BoostBuild.Tester()
     __write_appender(t, "appender.jam")
     t.write("a.cpp", "")
     t.write("b.cxx", "")
@@ -285,7 +285,7 @@ appender.register ccc-to-ddd composing : CCC         : DDD ;
 ddd _xxx : _xxx._a ;
 """
 
-    t = BoostBuild.Tester(pass_d0=False)
+    t = BoostBuild.Tester()
     __write_appender(t, "appender.jam")
     t.write("_xxx._a", "")
 

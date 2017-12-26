@@ -215,7 +215,7 @@ class Tester(TestCmd.TestCmd):
     def __init__(self, arguments=None, executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
-        ignore_toolset_requirements=False, workdir="", pass_d0=True,
+        ignore_toolset_requirements=False, workdir="", pass_d0=False,
         **keywords):
 
         assert arguments.__class__ is not str
@@ -295,7 +295,8 @@ class Tester(TestCmd.TestCmd):
             verbosity = []
         if "--verbose" in sys.argv:
             keywords["verbose"] = True
-            verbosity = ["-d+2"]
+            verbosity = ["-d2"]
+        self.verbosity = verbosity
 
         if boost_build_path is None:
             boost_build_path = self.original_workdir + "/.."
@@ -306,8 +307,6 @@ class Tester(TestCmd.TestCmd):
         else:
             program_list.append(os.path.join(jam_build_dir, executable))
         program_list.append('-sBOOST_BUILD_PATH="' + boost_build_path + '"')
-        if verbosity:
-            program_list += verbosity
         if arguments:
             program_list += arguments
 
@@ -457,6 +456,8 @@ class Tester(TestCmd.TestCmd):
             kw["program"] += self.program
             if extra_args:
                 kw["program"] += extra_args
+            if stdout is None and not any(a.startswith("-d") for a in kw["program"]):
+                kw["program"] += self.verbosity
             if pass_toolset:
                 kw["program"].append("toolset=" + self.toolset)
             if use_test_config:

@@ -96,7 +96,7 @@ int main() { return OK; }
 
 
 def test_paths_set_by_indirect_conditionals():
-    t = BoostBuild.Tester(pass_d0=False, use_test_config=False)
+    t = BoostBuild.Tester(use_test_config=False)
 
     header = "child_dir/folder_to_include/some_header.h"
 
@@ -139,7 +139,7 @@ int main() {}
     t.expect_touch(expected_x2)
 
     t.touch(header)
-    t.run_build_system(["..", "-d2"], subdir="child_dir/folder_to_include")
+    t.run_build_system([".."], subdir="child_dir/folder_to_include")
     t.expect_touch(expected_x1)
     t.expect_touch(expected_x2)
 
