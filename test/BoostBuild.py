@@ -92,13 +92,19 @@ def get_toolset():
 cygwin = hasattr(os, "uname") and os.uname()[0].lower().startswith("cygwin")
 windows = cygwin or os.environ.get("OS", "").lower().startswith("windows")
 
+if cygwin:
+    default_os = "cygwin"
+elif windows:
+    default_os = "windows"
+elif hasattr(os, "uname"):
+    default_os = os.uname()[0].lower()
 
-def prepare_prefixes_and_suffixes(toolset):
-    prepare_suffix_map(toolset)
-    prepare_library_prefix(toolset)
+def prepare_prefixes_and_suffixes(toolset, target_os=default_os):
+    prepare_suffix_map(toolset, target_os)
+    prepare_library_prefix(toolset, target_os)
 
 
-def prepare_suffix_map(toolset):
+def prepare_suffix_map(toolset, target_os=default_os):
     """
       Set up suffix translation performed by the Boost Build testing framework
     to accomodate different toolsets generating targets of the same type using
@@ -107,11 +113,11 @@ def prepare_suffix_map(toolset):
     """
     global suffixes
     suffixes = {}
-    if windows:
+    if target_os in ["windows", "cygwin"]:
         if toolset == "gcc":
             suffixes[".lib"] = ".a"  # mingw static libs use suffix ".a".
             suffixes[".obj"] = ".o"
-        if cygwin:
+        if target_os == "cygwin":
             suffixes[".implib"] = ".lib.a"
         else:
             suffixes[".implib"] = ".lib"
@@ -122,11 +128,11 @@ def prepare_suffix_map(toolset):
         suffixes[".obj"] = ".o"
         suffixes[".implib"] = ".no_implib_files_on_this_platform"
 
-        if hasattr(os, "uname") and os.uname()[0] == "Darwin":
+        if target_os == "darwin":
             suffixes[".dll"] = ".dylib"
 
 
-def prepare_library_prefix(toolset):
+def prepare_library_prefix(toolset, target_os=default_os):
     """
       Setup whether Boost Build is expected to automatically prepend prefixes
     to its built library targets.
@@ -136,9 +142,9 @@ def prepare_library_prefix(toolset):
     lib_prefix = "lib"
 
     global dll_prefix
-    if cygwin:
+    if target_os == "cygwin":
         dll_prefix = "cyg"
-    elif windows and toolset != "gcc":
+    elif target_os == "windows" and toolset != "gcc":
         dll_prefix = None
     else:
         dll_prefix = "lib"
@@ -319,6 +325,12 @@ class Tester(TestCmd.TestCmd):
             # both 'TestCmd' and 'os' unavailable in our scope. Do nothing in
             # this case.
             pass
+
+    def set_toolset(self, toolset, target_os=default_os):
+        self.toolset = toolset
+        self.pass_toolset = True
+        prepare_prefixes_and_suffixes(toolset, target_os)
+        
 
     #
     # Methods that change the working directory's content.

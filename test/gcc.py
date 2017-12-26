@@ -36,6 +36,12 @@ def adjust_properties(properties):
 def has_property(name, properties):
     return name in [re.sub("=.*", "", p) for p in properties]
 
+def get_target_os(properties):
+    for m in [re.match("(.*)=(.*)", p) for p in properties]:
+        if m and m.group(1) == "target-os":
+            return m.group(2)
+    return default_target_os 
+
 def expand_properties(properties):
     result = properties[:]
     if not has_property("variant", properties):
@@ -75,13 +81,8 @@ def test_gcc(version, property_sets):
     t.run_build_system(["-sPYTHON_CMD=%s" % sys.executable], subdir="src")
     set_default_target_os(t.read("src/bin/target-os.txt").strip())
 
-    # Fixups required for explicitly setting the toolset
-    # FIXME: Change BoostBuild.py to support this directly
-    t.toolset = "gcc-" + version
-    t.pass_toolset = True
-    BoostBuild.prepare_prefixes_and_suffixes(t.toolset)
-
     for properties in property_sets:
+        t.set_toolset("gcc-" + version, get_target_os(properties))
         properties = adjust_properties(properties)
         path = compute_path(properties)
         os.environ["B2_PROPERTIES"] = " ".join(expand_properties(properties))
