@@ -62,14 +62,14 @@ def compute_path(properties):
         path += "/release"
     else:
         path += "/debug"
-    if "threading=multi" in properties:
-        path += "/threading-multi"
     if "link=static" in properties:
         path += "/link-static"
     if "runtime-link=static" in properties:
         path += "/runtime-link-static"
     if "target-os=linux" in properties:
         path += "/target-os-linux"
+    if "threading=multi" in properties:
+        path += "/threading-multi"
     return path
 
 def test_gcc(version, property_sets):
