@@ -13,6 +13,7 @@ import feature ;
 path-constant .AR : ar.py ;
 path-constant .RANLIB : ranlib.py ;
 path-constant .LIBTOOL : libtool.py ;
+path-constant .STRIP : strip.py ;
 
 rule c-escape ( str )
 {
@@ -25,11 +26,13 @@ rule cfg-header ( target : : properties * )
     local AR = [ c-escape $(.AR) ] ;
     local RANLIB = [ c-escape $(.RANLIB) ] ;
     local LIBTOOL = [ c-escape $(.LIBTOOL) ] ;
+    local STRIP = [ c-escape $(.STRIP) ] ;
     print.output $(target) ;
     print.text "#define PYTHON_CMD "\"$(PYTHON)\" : true ;
     print.text "#define AR_CMD "\"$(AR)\" : true ;
     print.text "#define RANLIB_CMD "\"$(RANLIB)\" : true ;
     print.text "#define LIBTOOL_CMD "\"$(LIBTOOL)\" : true ;
+    print.text "#define STRIP_CMD "\"$(STRIP)\" : true ;
 }
 
 # We can only build one variant at a time and we need to have a fixed path
@@ -51,3 +54,4 @@ make target-os.txt : : @write-target-os ;
 exe ar : [ obj ar.obj : mock-program.cpp : <define>PY_SCRIPT=AR_CMD ] ;
 exe ranlib : [ obj ranlib.obj : mock-program.cpp : <define>PY_SCRIPT=RANLIB_CMD ] ;
 exe libtool : [ obj libtool.obj : mock-program.cpp : <define>PY_SCRIPT=LIBTOOL_CMD ] ;
+exe strip : [ obj strip.obj : mock-program.cpp : <define>PY_SCRIPT=STRIP_CMD ] ;

@@ -13,4 +13,13 @@ using gcc : 4.2.1 : python $(here)/src/gcc-4.2.1-darwin.py : : <target-os>darwin
 
 # hard-code this to make the test work on other platforms
 modules.poke darwin : .host-osx-version : 10.11.0 ;
-using darwin : 4.2.1 : python $(here)/src/darwin-4.2.1.py : <archiver>$(here)/src/bin/libtool : <target-os>darwin ;
+using darwin : 4.2.1 : python $(here)/src/darwin-4.2.1.py
+  : <archiver>$(here)/src/bin/libtool
+    <striper>$(here)/src/bin/strip
+  : <target-os>darwin
+  ;
+
+using clang-darwin : 3.9.0 : python $(here)/src/clang-3.9.0-darwin.py
+  : <archiver>$(here)/src/bin/ar
+    <ranlib>$(here)/src/bin/ranlib
+  ;

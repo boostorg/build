@@ -36,11 +36,13 @@ def adjust_properties(properties):
 def has_property(name, properties):
     return name in [re.sub("=.*", "", p) for p in properties]
 
-def get_target_os(properties):
+def get_property(name, properties):
     for m in [re.match("(.*)=(.*)", p) for p in properties]:
-        if m and m.group(1) == "target-os":
+        if m and m.group(1) == name:
             return m.group(2)
-    return default_target_os 
+
+def get_target_os(properties):
+    return get_property("target-os", properties) or default_target_os
 
 def expand_properties(properties):
     result = properties[:]
@@ -52,6 +54,8 @@ def expand_properties(properties):
         result += ["link=shared"]
     if not has_property("runtime-link", properties):
         result += ["runtime-link=shared"]
+    if not has_property("strip", properties):
+        result += ["strip=off"]
     if not has_property("target-os", properties):
         result += ["target-os=" + default_target_os]
     return result
@@ -62,10 +66,16 @@ def compute_path(properties):
         path += "/release"
     else:
         path += "/debug"
+    if has_property("address-model", properties):
+        path += "/address-model-" + get_property("address-model", properties)
+    if has_property("architecture", properties):
+        path += "/architecture-" + get_property("architecture", properties)
     if "link=static" in properties:
         path += "/link-static"
     if "runtime-link=static" in properties:
         path += "/runtime-link-static"
+    if "strip=on" in properties:
+        path += "/strip-on"
     if get_target_os(properties) != default_target_os:
         path += "/target-os-" + get_target_os(properties)
     if "threading=multi" in properties:

@@ -6,16 +6,14 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# validates the darwin toolset using a mock of gcc
+# validates the clang-darwin toolset using a mock of clang
 
 from TestToolset import test_toolset
 
-test_toolset("darwin", "4.2.1", [
+test_toolset("clang-darwin", "3.9.0", [
     ["target-os=darwin"],
     ["target-os=darwin", "release", "strip=on"],
     ["target-os=darwin", "threading=multi"],
     ["target-os=darwin", "link=static"],
     ["target-os=darwin", "link=static", "runtime-link=static"],
-# Address-model handling is quite broken
-#    ["target-os=darwin", "architecture=x86", "address-model=32"]
-])
+    ["target-os=darwin", "architecture=x86", "address-model=32"]])
