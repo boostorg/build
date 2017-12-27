@@ -25,7 +25,7 @@ class ordered:
 # in any order.
 class unordered:
     def __init__(self, *args):
-        self.args = args
+        self.args = list(args)
     def match(self, command_line, pos, outputs):
         unmatched = self.args[:]
         while len(unmatched) > 0:
@@ -116,12 +116,12 @@ def make_file_contents(id):
 # is removed from the list.
 # Returns the index after the end of the match
 def try_match_one(command_line, pos, patterns, outputs):
-    for p in pattern:
+    for p in patterns:
         tmp = outputs[:]
         res = try_match(command_line, pos, p, tmp)
         if res is not None:
             outputs[:] = tmp
-            pattern.remove(p)
+            patterns.remove(p)
             return res
 
 # returns the end of the match if any
