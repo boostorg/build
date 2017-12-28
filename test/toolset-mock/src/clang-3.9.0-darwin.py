@@ -35,9 +35,9 @@ if allow_properties("variant=debug", "link=static", "runtime-link=static"):
     command('clang++', '-o', output_file('bin/clang-darwin-3.9.0/debug/link-static/runtime-link-static/target-os-darwin/test'), input_file('bin/clang-darwin-3.9.0/debug/link-static/runtime-link-static/target-os-darwin/main.o'), input_file('bin/clang-darwin-3.9.0/debug/link-static/runtime-link-static/target-os-darwin/libl1.a'), '-g', '-static')
 
 if allow_properties("variant=debug", "link=shared", "runtime-link=shared", "architecture=x86", "address-model=32"):
-    command('clang++', '-x', 'c++', '-O0', '-fno-inline', '-Wall', '-g', '-march=i686', '-fPIC', '-m32', '-c', '-o', output_file('bin/clang-darwin-3.9.0/debug/target-os-darwin/lib.o'), input_file(source='lib.cpp'))
-    command('clang++', '-o', output_file('bin/clang-darwin-3.9.0/debug/target-os-darwin/libl1.dylib'), '-single_module', '-dynamiclib', '-install_name', '@rpath/libl1.dylib', input_file('bin/clang-darwin-3.9.0/debug/target-os-darwin/lib.o'), '-g', '-march=i686', '-fPIC', '-m32')
-    command('clang++', '-x', 'c++', '-O0', '-fno-inline', '-Wall', '-g', '-march=i686', '-fPIC', '-m32', '-c', '-o', output_file('bin/clang-darwin-3.9.0/debug/target-os-darwin/main.o'), input_file(source='main.cpp'))
-    command('clang++', '-o', output_file('bin/clang-darwin-3.9.0/debug/target-os-darwin/test'), input_file('bin/clang-darwin-3.9.0/debug/target-os-darwin/main.o'), input_file('bin/clang-darwin-3.9.0/debug/target-os-darwin/libl1.dylib'), '-g', '-march=i686', '-fPIC', '-m32')
+    command('clang++', '-x', 'c++', '-O0', '-fno-inline', '-Wall', '-g', '-march=i686', '-fPIC', '-m32', '-c', '-o', output_file('bin/clang-darwin-3.9.0/debug/x86/target-os-darwin/lib.o'), input_file(source='lib.cpp'))
+    command('clang++', '-o', output_file('bin/clang-darwin-3.9.0/debug/x86/target-os-darwin/libl1.dylib'), '-single_module', '-dynamiclib', '-install_name', '@rpath/libl1.dylib', input_file('bin/clang-darwin-3.9.0/debug/x86/target-os-darwin/lib.o'), '-g', '-march=i686', '-fPIC', '-m32')
+    command('clang++', '-x', 'c++', '-O0', '-fno-inline', '-Wall', '-g', '-march=i686', '-fPIC', '-m32', '-c', '-o', output_file('bin/clang-darwin-3.9.0/debug/x86/target-os-darwin/main.o'), input_file(source='main.cpp'))
+    command('clang++', '-o', output_file('bin/clang-darwin-3.9.0/debug/x86/target-os-darwin/test'), input_file('bin/clang-darwin-3.9.0/debug/x86/target-os-darwin/main.o'), input_file('bin/clang-darwin-3.9.0/debug/x86/target-os-darwin/libl1.dylib'), '-g', '-march=i686', '-fPIC', '-m32')
     
 main()

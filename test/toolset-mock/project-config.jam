@@ -23,3 +23,8 @@ using clang-darwin : 3.9.0 : python $(here)/src/clang-3.9.0-darwin.py
   : <archiver>$(here)/src/bin/ar
     <ranlib>$(here)/src/bin/ranlib
   ;
+
+using intel-darwin : 10.2 : python $(here)/src/intel-darwin-10.2.py
+  : <archiver>$(here)/src/bin/ar
+    <ranlib>$(here)/src/bin/ranlib
+  ;

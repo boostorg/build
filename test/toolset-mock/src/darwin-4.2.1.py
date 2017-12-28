@@ -8,6 +8,8 @@
 
 from MockProgram import *
 
+script("libtool.py")
+
 command('g++', '-dumpversion', stdout='4.2.1')
 
 # all builds are multi-threaded for darwin

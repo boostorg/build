@@ -14,5 +14,7 @@ command('ar', 'rc', output_file('bin/gcc-darwin-4.2.1/debug/link-static/target-o
 command('ar', 'rc', output_file('bin/gcc-darwin-4.2.1/debug/link-static/runtime-link-static/target-os-darwin/libl1.a'), input_file('bin/gcc-darwin-4.2.1/debug/link-static/runtime-link-static/target-os-darwin/lib.o'))
 command('ar', 'rc', output_file('bin/clang-darwin-3.9.0/debug/link-static/target-os-darwin/libl1.a'), input_file('bin/clang-darwin-3.9.0/debug/link-static/target-os-darwin/lib.o'))
 command('ar', 'rc', output_file('bin/clang-darwin-3.9.0/debug/link-static/runtime-link-static/target-os-darwin/libl1.a'), input_file('bin/clang-darwin-3.9.0/debug/link-static/runtime-link-static/target-os-darwin/lib.o'))
+command('ar', 'rc', output_file('bin/intel-darwin-10.2/debug/link-static/target-os-darwin/libl1.a'), input_file('bin/intel-darwin-10.2/debug/link-static/target-os-darwin/lib.o'))
+command('ar', 'rc', output_file('bin/intel-darwin-10.2/debug/link-static/runtime-link-static/target-os-darwin/libl1.a'), input_file('bin/intel-darwin-10.2/debug/link-static/runtime-link-static/target-os-darwin/lib.o'))
 
 main()
