@@ -94,7 +94,7 @@ def test_toolset(toolset, version, property_sets):
     for properties in property_sets:
         t.set_toolset(toolset + "-" + version, get_target_os(properties))
         properties = adjust_properties(properties)
-        path = toolset + "-*" + version + compute_path(properties)
+        path = toolset.split("-")[0] + "-*" + version + compute_path(properties)
         os.environ["B2_PROPERTIES"] = " ".join(expand_properties(properties))
         t.run_build_system(["--user-config="] + properties)
         t.expect_addition("bin/%s/lib.obj" % (path))

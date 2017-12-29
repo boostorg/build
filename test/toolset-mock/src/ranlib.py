@@ -16,5 +16,7 @@ command('ranlib', input_file('bin/clang-darwin-3.9.0/debug/link-static/target-os
 command('ranlib', input_file('bin/clang-darwin-3.9.0/debug/link-static/runtime-link-static/target-os-darwin/libl1.a'))
 command('ranlib', '-cs', input_file('bin/intel-darwin-10.2/debug/link-static/target-os-darwin/libl1.a'))
 command('ranlib', '-cs', input_file('bin/intel-darwin-10.2/debug/link-static/runtime-link-static/target-os-darwin/libl1.a'))
+command('ranlib', input_file('bin/clang-linux-3.9.0/debug/link-static/libl1.a'))
+command('ranlib', input_file('bin/clang-linux-3.9.0/debug/link-static/runtime-link-static/libl1.a'))
 
 main()

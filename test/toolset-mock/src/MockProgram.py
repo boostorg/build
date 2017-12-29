@@ -255,6 +255,6 @@ def verify():
         srcdir = '.'
     verify_setup()
     for f in os.listdir(srcdir):
-        if re.match(r"(gcc|clang|darwin)-.*\.py", f):
+        if re.match(r"(gcc|clang|darwin|intel)-.*\.py", f):
             verify_file(f)
     exit(verify_finalize())
