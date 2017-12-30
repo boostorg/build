@@ -933,6 +933,7 @@ rule init-link-flags ( toolset subtool condition )
         feature.subfeature toolset $(toolset) : linker-type :
             gnu aix darwin hpux osf sun : propagated link-incompatible ;
     }
+    condition = [ regex.replace $(condition) "/" "," ] ;
     ## The specification to add the linker-type is per toolset "instance".
     toolset.add-requirements
         $(condition),<target-os>aix:<toolset-$(toolset):linker-type>aix
