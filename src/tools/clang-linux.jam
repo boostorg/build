@@ -36,7 +36,9 @@ type.set-generated-target-suffix PCH
 
 toolset.inherit-rules clang-linux : gcc ;
 toolset.inherit-flags clang-linux : gcc 
-  : <inlining>full ;
+  : <inlining>full
+    <threading>multi/<target-os>windows
+  ;
         
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
   .debug-configuration = true ;
@@ -58,8 +60,7 @@ rule init ( version ? :  command * : options * ) {
     : version $(version) ] ;
     
   common.handle-options clang-linux : $(condition) : $(command) : $(options) ;
-
-  gcc.init-link-flags clang linux $(condition) ;
+  clang.init-cxxstd-flags clang-linux : $(condition) : $(version) ;
 
   # - Ranlib.
   local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
@@ -76,6 +77,9 @@ rule init ( version ? :  command * : options * ) {
 # note: clang silently ignores some of these inlining options
 # For clang, 'on' and 'full' are identical.
 toolset.flags clang-linux.compile OPTIONS <inlining>full : -Wno-inline ;
+
+toolset.flags clang-linux.compile OPTIONS <threading>multi/<target-os>windows : -pthread ;
+toolset.flags clang-linux.link OPTIONS <threading>multi/<target-os>windows : -pthread ;
 
 ###############################################################################
 # C and C++ compilation

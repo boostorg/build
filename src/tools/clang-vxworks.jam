@@ -69,8 +69,6 @@ rule init ( version ? :  command * : options * )
 
     common.handle-options clang-vxworks : $(condition) : $(command) : $(options) ;
 
-    gcc.init-link-flags clang-vxworks vxworks $(condition) ;
-
     toolset.flags clang-vxworks.link      .LD  : $(linker) ;
 }
 

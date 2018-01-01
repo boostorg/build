@@ -156,9 +156,6 @@ rule init ( version ? : command * : options * : requirement * )
         flags darwin.compile OPTIONS $(condition)/<inlining>full : -Wno-inline ;
     }
 
-    # - Set the link flags common with the GCC toolset.
-    gcc.init-link-flags darwin darwin $(condition) ;
-
     # - The symbol strip program.
     local strip ;
     if <striper> in $(options)

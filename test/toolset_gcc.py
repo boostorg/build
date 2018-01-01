@@ -15,7 +15,8 @@ test_toolset("gcc", "4.8.3", [
     ["target-os=linux", "release"],
     ["target-os=linux", "threading=multi"],
     ["target-os=linux", "link=static"],
-    ["target-os=linux", "link=static", "runtime-link=static"]])
+    ["target-os=linux", "link=static", "runtime-link=static"],
+    ["target-os=linux", "cxxstd=latest"]])
 
 test_toolset("gcc", "4.2.1", [
     ["target-os=darwin"],

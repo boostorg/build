@@ -70,6 +70,8 @@ def compute_path(properties):
         path += "/address-model-" + get_property("address-model", properties)
     if has_property("architecture", properties):
         path += "/architecture-" + get_property("architecture", properties)
+    if "cxxstd=latest" in properties:
+        path += "/cxxstd-latest-iso"
     if "link=static" in properties:
         path += "/link-static"
     if "runtime-link=static" in properties:

@@ -55,8 +55,6 @@ rule init ( version ? :  command * : options * )
 
     common.handle-options intel-darwin : $(condition) : $(command) : $(options) ;
 
-    gcc.init-link-flags intel darwin $(condition) ;
-
     # handle <library-path>
     # local library-path = [ feature.get-values <library-path> : $(options) ] ;
     # flags intel-darwin.link USER_OPTIONS $(condition) : [ feature.get-values <dll-path> : $(options) ] ;

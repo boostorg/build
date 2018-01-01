@@ -96,8 +96,6 @@ rule init ( version ? :  command * : options * )
         : $(command) : $(default_path) ] ;
                 
     common.handle-options intel-linux : $(condition) : $(command) : $(options) ;
-
-    gcc.init-link-flags intel-linux gnu $(condition) ;
     
     local root = [ feature.get-values <root> : $(options) ] ;
     local bin ;
