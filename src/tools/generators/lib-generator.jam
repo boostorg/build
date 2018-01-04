@@ -54,8 +54,9 @@ class lib-generator : generator
             }
             property-set = [ $(property-set).add-raw <main-target-type>LIB ] ;
             # Construct the target.
-            return [ generators.construct $(project) $(name) : $(actual-type)
+            local result = [ generators.construct $(project) $(name) : $(actual-type)
                 : $(property-set) : $(sources) ] ;
+            return [ $(result[1]).add-raw <relevant>link ] $(result[2-]) ;
         }
     }
 

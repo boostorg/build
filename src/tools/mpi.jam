@@ -595,6 +595,10 @@ feature mpi:processes : : free incidental ;
 # apply to mpi.capture output at the moment.
 # Redo this explicitly.
 toolset.flags mpi.capture-output ARGS <testing.arg> ;
+toolset.uses-features mpi.capture-output :
+    <testing.launcher> <testing.execute> <dll-path> <xdll-path> <target-os>
+    <mpi:processes> ;
+
 rule capture-output ( target : sources * : properties * )
 {
     # Use the standard capture-output rule to run the tests

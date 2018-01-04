@@ -191,6 +191,7 @@ class project-target : abstract-target
     import property-set ;
     import set ;
     import sequence ;
+    import toolset ;
     import "class" : new ;
 
     rule __init__ ( name : project-module parent-project ?
@@ -584,6 +585,8 @@ class project-target : abstract-target
         IMPORT $(parent-module) : $(user-rules) : $(this-module) : $(user-rules)
             ;
         EXPORT $(this-module) : $(user-rules) ;
+
+        toolset.inherit-flags $(this-module) : $(parent-module) ;
     }
 }
 
@@ -621,10 +624,11 @@ class main-target : abstract-target
 {
     import assert ;
     import feature ;
-    import print ;
     import property-set ;
     import sequence ;
+    import set ;
     import targets : start-building end-building ;
+    import utility ;
 
     rule __init__ ( name : project )
     {
@@ -719,6 +723,43 @@ class main-target : abstract-target
         }
     }
 
+    # Features are relevant here if they could affect alternative
+    # selection.  That is, base, non-conditional properties that
+    # are not identical in all target alternatives.
+    rule relevant-features ( )
+    {
+        if $(self.alternatives[2-])
+        {
+            if $(self.relevant-features)
+            {
+                return $(self.relevant-features) ;
+            }
+            local all-properties ;
+            for t in $(self.alternatives)
+            {
+                local ps = [ $(t).requirements ] ;
+                ps = [ property-set.create [ $(ps).non-conditional ] ] ;
+                all-properties += [ $(ps).base ] ;
+            }
+            all-properties = [ sequence.unique $(all-properties) ] ;
+            local result ;
+            for t in $(self.alternatives)
+            {
+                local ps = [ $(t).requirements ] ;
+                ps = [ property-set.create [ $(ps).non-conditional ] ] ;
+                local properties = [ set.difference $(all-properties) : [ $(ps).base ] ] ;
+                result += $(properties:G) ;
+            }
+            result = [ sequence.transform utility.ungrist : [ sequence.unique $(result) ] ] ;
+            self.relevant-features = [ property-set.create <relevant>$(result) ] ;
+            return $(self.relevant-features) ;
+        }
+        else
+        {
+            return [ property-set.empty ] ;
+        }
+    }
+
     rule apply-default-build ( property-set )
     {
         return [ targets.apply-default-build $(property-set) :
@@ -739,11 +780,12 @@ class main-target : abstract-target
         property-set = [ $(property-set).expand ] ;
 
         local all-property-sets = [ apply-default-build $(property-set) ] ;
+        local relevant = [ relevant-features ] ;
         local usage-requirements = [ property-set.empty ] ;
         local result ;
         for local p in $(all-property-sets)
         {
-            local r = [ generate-really $(p) ] ;
+            local r = [ generate-really [ $(p).add $(relevant) ] ] ;
             if $(r)
             {
                 usage-requirements = [ $(usage-requirements).add $(r[1]) ] ;
@@ -1357,6 +1399,15 @@ class basic-target : abstract-target
                     local gur = $(result[1]) ;
                     result = $(result[2-]) ;
 
+                    # Relevant is automatically applied to usage requirements
+                    # and only applies for propagated features
+                    local relevant = [ propagated-relevant
+                        [ $(gur).get <relevant> ]
+                        [ $(rproperties).get <relevant> ] ] ;
+                    gur = [ property-set.create
+                        [ property.change [ $(gur).raw ] : <relevant> ]
+                        <relevant>$(relevant) ] ;
+
                     if $(self.always)
                     {
                         for local t in $(result)
@@ -1448,6 +1499,22 @@ class basic-target : abstract-target
         xusage-requirements = [ targets.evaluate-requirements
             $(self.usage-requirements) : $(rproperties) : added ] ;
 
+        # Filter out non-propagated <relevant> properties
+        local relevant ;
+        for local r in [ $(xusage-requirements).get <relevant> ]
+        {
+            local check = [ MATCH "(.*):<relevant>(.*)" : $(r) ] ;
+            if $(check) { check = $(check[2]) ; }
+            else { check = $(r) ; }
+            if propagated in [ feature.attributes <$(check)> ]
+            {
+                relevant += $(r) ;
+            }
+        }
+        xusage-requirements = [ property-set.create
+            [ property.change [ $(xusage-requirements).raw ] : <relevant> ] 
+            <relevant>$(relevant) ] ;
+
         # We generate all dependency properties and add them, as well as their
         # usage requirements, to the result.
         local extra ;
@@ -1485,6 +1552,19 @@ class basic-target : abstract-target
         raw = [ property.change $(raw) : <pch-header> ] ;
         raw = [ property.change $(raw) : <pch-file> ] ;
         return [ $(result).add [ property-set.create $(raw) ] ] ;
+    }
+
+    local rule propagated-relevant ( values * )
+    {
+        local result ;
+        for local v in [ feature.expand-relevant $(values) ]
+        {
+            if propagated in [ feature.attributes <$(v)> ]
+            {
+                result += $(v) ;
+            }
+        }
+        return $(result) ;
     }
 
     # Creates new subvariant instances for 'targets'.
@@ -1633,7 +1713,8 @@ rule main-target-requirements (
         import errors ;
         errors.error "Conflicting requirements for target:" $(requirements) ;
     }
-    return [ $(requirements).add [ toolset.requirements ] ] ;
+    local result = [ $(requirements).add [ toolset.requirements ] ] ;
+    return [ $(result).add-raw [ property.evaluate-conditional-relevance [ $(result).raw ] ] ] ;
 }
 
 
@@ -1656,7 +1737,10 @@ rule main-target-usage-requirements (
         $(specification)
         : [ $(project).project-module ] [ $(project).get location ] ] ;
 
-    return [ $(project-usage-requirements).add $(usage-requirements) ] ;
+    local result = [ $(project-usage-requirements).add $(usage-requirements) ] ;
+    local relevant =
+      [ property.evaluate-conditional-relevance [ $(result).raw ] ] ;
+    return [ $(result).add-raw $(relevant) ] ;
 }
 
 

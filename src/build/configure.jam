@@ -507,6 +507,11 @@ class configure-choose-worker
             }
         }
     }
+    rule all-properties ( )
+    {
+        local i = 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 ;
+        return $(self.props.$(i)) ;
+    }
     rule check ( properties * )
     {
         local i = [ configure.find-builds $(self.message) : $(properties)
@@ -542,7 +547,10 @@ rule check-target-builds ( target message ? : true-properties * :
 {
     local instance = [ new check-target-builds-worker $(target) $(message) :
         $(true-properties) : $(false-properties) ] ;
-    return <conditional>@$(instance).check ;
+    return <conditional>@$(instance).check
+        [ property.evaluate-conditional-relevance
+            $(true-properties) $(false-properties)
+          : [ configure.get-relevant-features ] ] ;
 }
 
 # Usage:
@@ -556,7 +564,10 @@ rule choose ( message : * )
         : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9)
         : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16)
         : $(17) : $(18) : $(19) ] ;
-    return <conditional>@$(instance).check ;
+    return <conditional>@$(instance).check
+        [ property.evaluate-conditional-relevance
+            [ $(instance).all-properties ]
+          : [ configure.get-relevant-features ]  ] ;
 }
 
 

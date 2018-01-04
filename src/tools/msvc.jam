@@ -527,6 +527,7 @@ actions compile.rc
     $(.SETUP) $(.RC) -l 0x409 -U$(UNDEFS) -D$(DEFINES) -I"$(INCLUDES:W)" -fo "$(<:W)" "$(>:W)"
 }
 
+toolset.uses-features msvc.link : <embed-manifest> <embed-manifest-file> ;
 
 rule link ( targets + : sources * : properties * )
 {
@@ -706,7 +707,7 @@ class msvc-pch-generator : pch-generator
             : $(pch-header) ] ;
 
         local pch-file ;
-        for local g in $(generated)
+        for local g in $(generated[2-])
         {
             if [ type.is-derived [ $(g).type ] PCH ]
             {
@@ -714,8 +715,8 @@ class msvc-pch-generator : pch-generator
             }
         }
 
-        return [ property-set.create <pch-header>$(pch-header)
-            <pch-file>$(pch-file) ] $(generated) ;
+        return [ $(generated[1]).add <pch-header>$(pch-header)
+            <pch-file>$(pch-file) ] $(generated[2-]) ;
     }
 }
 
@@ -878,7 +879,7 @@ local rule set-setup-command ( targets * : properties * )
         if ! $($(key))
         {
             properties = [ feature.expand $(properties) ] ;
-            properties = [ property.select <toolset> <toolset-msvc:version> <architecture> <address-model> <windows-api> : $(properties) ] ;
+            properties = [ property.select <toolset> <toolset-msvc:version> <architecture> <address-model> <windows-api> <relevant> : $(properties) ] ;
             local ps = [ property-set.create $(properties) <msvc.setup-options>$(setup-options) ] ;
             local original = [ virtual-target.from-file $(setup-script) : [ path.pwd ] : $(.project) ] ;
             local action = [ new non-scanning-action $(original) : msvc.adjust-setup-command : $(ps) ] ;
@@ -1422,8 +1423,8 @@ class msvc-linking-generator : linking-generator
 
         if $(result)
         {
-            local name-main = [ $(result[0]).name ] ;
-            local action = [ $(result[0]).action ] ;
+            local name-main = [ $(result[1]).name ] ;
+            local action = [ $(result[1]).action ] ;
 
             if [ $(property-set).get <debug-symbols> ] = "on"
             {

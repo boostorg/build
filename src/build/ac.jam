@@ -317,5 +317,8 @@ rule check-library ( target : true-properties * : false-properties * )
 {
     local instance = [ class.new check-library-worker $(target) :
         $(true-properties) : $(false-properties) ] ;
-    return <conditional>@$(instance).check ;
+    return <conditional>@$(instance).check
+        [ property.evaluate-conditional-relevance
+            $(true-properties) $(false-properties)
+          : [ configure.get-relevant-features ] <link> ] ;
 }

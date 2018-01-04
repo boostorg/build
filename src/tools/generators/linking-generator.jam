@@ -90,11 +90,12 @@ class linking-generator : generator
         local ur ;
         if $(result)
         {
-            ur = [ extra-usage-requirements $(result) : $(property-set) ] ;
+            ur = [ extra-usage-requirements $(result[2-]) : $(property-set) ] ;
             ur = [ $(ur).add
               [ property-set.create <xdll-path>$(extra-xdll-paths) ] ] ;
+            ur = [ $(ur).add $(result[1]) ] ;
         }
-        return $(ur) $(result) ;
+        return $(ur) $(result[2-]) ;
     }
 
     rule extra-usage-requirements ( created-targets * : property-set )
