@@ -94,7 +94,7 @@ rule init (
         find-tools $(docbook-xsl-dir) : $(docbook-dtd-dir) : $(boostbook-dir) ;
 
         # Register generators only if we were called via "using boostbook ;"
-        local reg-gen = generators.register-standard ;
+        local reg-gen = generators.register-xslt ;
         $(reg-gen) boostbook.dtdxml-to-boostbook  : DTDXML  : XML ;
         $(reg-gen) boostbook.boostbook-to-docbook : XML     : DOCBOOK ;
         $(reg-gen) boostbook.boostbook-to-tests   : XML     : TESTS ;

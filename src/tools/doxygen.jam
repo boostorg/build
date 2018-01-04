@@ -105,9 +105,9 @@ rule init ( name ? )
             : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
         generators.register-standard doxygen.xml-dir-to-boostbook
             : DOXYGEN_XML_MULTIFILE : BOOSTBOOK : <doxygen.processor>doxproc ;
-        generators.register-standard doxygen.xml-to-boostbook
+        generators.register-xslt doxygen.xml-to-boostbook
             : DOXYGEN_XML : BOOSTBOOK : <doxygen.processor>xsltproc ;
-        generators.register-standard doxygen.collect
+        generators.register-xslt doxygen.collect
             : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
         generators.register-standard doxygen.run
             : DOXYFILE : DOXYGEN_HTML_MULTIFILE ;
