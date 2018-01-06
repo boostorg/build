@@ -734,10 +734,6 @@ class main-target : abstract-target
     {
         start-building $(__name__) ;
 
-        # We want composite properties in the build request to act as if all the
-        # properties they expand to have been explicitly specified.
-        property-set = [ $(property-set).expand ] ;
-
         local all-property-sets = [ apply-default-build $(property-set) ] ;
         local usage-requirements = [ property-set.empty ] ;
         local result ;
@@ -901,8 +897,10 @@ rule apply-default-build ( property-set : default-build )
     # 1. First, see what properties from default-build are already present in
     # property-set.
 
+    local expanded = [ $(property-set).expand ] ;
     local raw = [ $(property-set).raw ] ;
-    local specified-features = $(raw:G) ;
+    local specified-features = [ $(expanded).raw ] ;
+    specified-features = $(specified-features:G) ;
 
     local defaults-to-apply ;
     for local d in [ $(default-build).raw ]
@@ -936,7 +934,7 @@ rule apply-default-build ( property-set : default-build )
             for local p in $(properties)
             {
                 result += [ property-set.create
-                    [ feature.expand [ feature.split $(p) ] ] ] ;
+                    [ feature.split $(p) ] ] ;
             }
         }
         else
@@ -1042,6 +1040,10 @@ rule evaluate-requirements ( requirements : context : what )
     local ok ;
     while $(count)
     {
+        # We need to expand composites here so that the requirements can
+        # safely override composite features.
+        current = [ feature.expand-composites $(current) ] ;
+        current = [ feature.add-defaults $(current) ] ;
         # Evaluate conditionals in context of current properties.
         local e = [ property.evaluate-conditionals-in-context $(conditionals) :
             $(current) ] ;
@@ -1095,19 +1097,6 @@ rule evaluate-requirements ( requirements : context : what )
 
 rule common-properties2 ( build-request requirements )
 {
-    # This guarantees that default properties are present in the result, unless
-    # they are overriden by some requirement. FIXME: There is a possibility that
-    # we have added <foo>bar, which is composite and expands to <foo2>bar2, but
-    # default value of <foo2> is not bar2, in which case it is not clear what to
-    # do.
-    #
-    build-request = [ $(build-request).add-defaults ] ;
-    # Features added by 'add-defaults' can be composite and expand to features
-    # without default values -- which therefore have not been added yet. It
-    # could be clearer/faster to expand only newly added properties but that is
-    # not critical.
-    build-request = [ $(build-request).expand ] ;
-
     return [ evaluate-requirements $(requirements) : $(build-request) :
         refined ] ;
 }
@@ -1214,9 +1203,9 @@ class basic-target : abstract-target
     #
     rule match ( property-set debug ? )
     {
-        # The condition is composed of all base non-conditional properties. It
-        # is not clear if we should expand 'self.requirements' or not. For one
-        # thing, it would be nice to be able to put
+        # The condition is composed of all base non-conditional properties. We
+        # only expand subfeatures in the condition.  We do not expand
+        # composites.  We want to be able to put
         #    <toolset>msvc-6.0
         # in requirements. On the other hand, if we have <variant>release as a
         # condition it does not make sense to require <optimization>full to be
@@ -1224,6 +1213,7 @@ class basic-target : abstract-target
         local bcondition = [ $(self.requirements).base ] ;
         local ccondition = [ $(self.requirements).conditional ] ;
         local condition = [ set.difference $(bcondition) : $(ccondition) ] ;
+        condition = [ feature.expand-subfeatures $(condition) : unchecked ] ;
         if $(debug)
         {
             ECHO "    next alternative: required properties:"
@@ -1294,7 +1284,7 @@ class basic-target : abstract-target
         #   define=FOO
         # he most likely wants this define to be set for all compiles.
         # Make it before check for already built.
-        property-set = [ $(property-set).refine
+        property-set = [ $(property-set).add
             [ build-system.command-line-free-features ] ] ;
 
         if ! $(self.generated.$(property-set))
