@@ -991,7 +991,7 @@ rule common-properties ( build-request requirements )
 # If 'what' is 'refined' returns context refined with new requirements. If
 # 'what' is 'added' returns just the requirements to be applied.
 #
-rule evaluate-requirements ( requirements : context : what )
+rule evaluate-requirements ( requirements : context )
 {
     # Apply non-conditional requirements. It is possible that further
     # conditional requirement change a value set by non-conditional
@@ -1017,25 +1017,17 @@ rule evaluate-requirements ( requirements : context : what )
 
     local conditionals = [ $(requirements).conditional ] ;
     # The 'count' variable has one element for each conditional feature and for
-    # each occurrence of '<indirect-conditional>' feature. It is used as a loop
+    # each occurrence of '<conditional>' feature. It is used as a loop
     # counter: for each iteration of the loop before we remove one element and
     # the property set should stabilize before we are done. It is assumed that
     # #conditionals iterations should be enough for properties to propagate
     # along conditions in any direction.
-    local count = $(conditionals) [ $(requirements).get <conditional> ]
+    local count = $(conditionals)
         and-once-more ;
 
     local added-requirements ;
 
     local current = $(raw) ;
-
-    # It is assumed that ordinary conditional requirements can not add
-    # <conditional> properties (a.k.a. indirect conditional properties), and
-    # that rules referred to by <conditional> properties can not add new
-    # <conditional> properties. So the list of indirect conditionals does not
-    # change.
-    local indirect = [ $(requirements).get <conditional> ] ;
-    indirect = [ MATCH ^@(.*) : $(indirect) ] ;
 
     local ok ;
     while $(count)
@@ -1047,15 +1039,6 @@ rule evaluate-requirements ( requirements : context : what )
         # Evaluate conditionals in context of current properties.
         local e = [ property.evaluate-conditionals-in-context $(conditionals) :
             $(current) ] ;
-
-        # Evaluate indirect conditionals.
-        for local i in $(indirect)
-        {
-            local t = [ current ] ;
-            local p = [ $(t).project ] ;
-            local new = [ indirect.call $(i) $(current) ] ;
-            e += [ property.translate-paths $(new) : [ $(p).location ] ] ;
-        }
 
         if $(e) = $(added-requirements)
         {
@@ -1079,26 +1062,13 @@ rule evaluate-requirements ( requirements : context : what )
         errors.error Can not evaluate conditional properties $(conditionals) ;
     }
 
-    if $(what) = added
-    {
-        return [ property-set.create $(unconditional) $(added-requirements) ] ;
-    }
-    else if $(what) = refined
-    {
-        return [ property-set.create $(current) ] ;
-    }
-    else
-    {
-        import errors ;
-        errors.error "Invalid value of the 'what' parameter." ;
-    }
+    return [ property-set.create $(current) ] ;
 }
 
 
 rule common-properties2 ( build-request requirements )
 {
-    return [ evaluate-requirements $(requirements) : $(build-request) :
-        refined ] ;
+    return [ evaluate-requirements $(requirements) : $(build-request) ] ;
 }
 
 
@@ -1435,8 +1405,9 @@ class basic-target : abstract-target
     rule compute-usage-requirements ( subvariant )
     {
         local rproperties = [ $(subvariant).build-properties ] ;
-        xusage-requirements = [ targets.evaluate-requirements
-            $(self.usage-requirements) : $(rproperties) : added ] ;
+        xusage-requirements =
+            [ $(self.usage-requirements).evaluate-conditionals
+              $(rproperties) ] ;
 
         # We generate all dependency properties and add them, as well as their
         # usage requirements, to the result.

@@ -100,7 +100,16 @@ def test_paths_set_by_indirect_conditionals():
 
     header = "child_dir/folder_to_include/some_header.h"
 
-    t.write("jamroot.jam", "build-project child_dir ;")
+    t.write("jamroot.jam", """
+build-project child_dir ;
+rule attach-include-parent ( properties * )
+{
+    return <include>another_folder ;
+}
+# requirements inherited from a parent project will bind paths
+# relative to the project that actually names the rule.
+project : requirements <conditional>@attach-include-parent ;
+""")
     t.write("child_dir/jamfile.jam", """\
 import remote/remote ;
 
@@ -121,9 +130,11 @@ rule attach-include-remote ( properties * )
 """)
     t.write("child_dir/x.cpp", """\
 #include <some_header.h>
+#include <header2.h>
 int main() {}
 """)
     t.write(header, "int some_func();\n")
+    t.write("another_folder/header2.h", "int f2();\n")
     t.write("child_dir/folder_to_include/jamfile.jam", "")
 
     expected_x1 = "child_dir/bin/$toolset/debug*/x1.obj"

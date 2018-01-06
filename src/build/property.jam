@@ -67,11 +67,16 @@ rule evaluate-conditionals-in-context ( properties * : context * )
 {
     local base ;
     local conditionals ;
+    local indirect ;
     for local p in $(properties)
     {
         if [ MATCH (:<) : $(p) ]
         {
             conditionals += $(p) ;
+        }
+        else if $(p:G) = <conditional>
+        {
+            indirect += $(p) ;
         }
         else
         {
@@ -126,6 +131,24 @@ rule evaluate-conditionals-in-context ( properties * : context * )
             {
                 result += $(s[2]) ;
             }
+        }
+    }
+    # Import here to avoid cyclic dependency
+    import project ;
+    for local i in [ MATCH "^@(.*)" : $(indirect:G=) ]
+    {
+        # If the rule was set in a project module, translate paths
+        # relative to that project's location.
+        local m = [ indirect.get-module $(i) ] ;
+        local p = [ project.target $(m) : allow-missing ] ;
+        local new = [ indirect.call $(i) $(context) ] ;
+        if $(p) && [ $(p).location ]
+        {
+            result += [ translate-paths $(new) : [ $(p).location ] ] ;
+        }
+        else
+        {
+            result += $(new) ;
         }
     }
     return $(result) ;
