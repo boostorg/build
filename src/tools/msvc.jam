@@ -715,7 +715,7 @@ class msvc-pch-generator : pch-generator
             }
         }
 
-        return [ $(generated[1]).add <pch-header>$(pch-header)
+        return [ $(generated[1]).add-raw <pch-header>$(pch-header)
             <pch-file>$(pch-file) ] $(generated[2-]) ;
     }
 }
