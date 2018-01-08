@@ -773,7 +773,7 @@ class Tester(TestCmd.TestCmd):
                     lambda x, y: x and reduce(
                         lambda a, b: a and b,
                     y),
-                    matched)
+                    matched, True)
 
         if not matched:
             print "Expected:\n"
