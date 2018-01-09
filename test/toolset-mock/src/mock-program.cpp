@@ -37,6 +37,6 @@ int main(int argc, char ** argv)
     args.push_back(script);
     args.insert(args.end(), argv + 1, argv + argc);
     args.push_back(NULL);
-    execv(python_cmd, args.data());
+    execv(python_cmd, &args[0]);
     perror("exec");
 }
