@@ -32,6 +32,21 @@ def test_implicit():
     t.expect_content("bin/*/output.txt", "v2")
     t.cleanup()
 
+def test_optional():
+    '''Tests that feature= works for optional features'''
+    t = BoostBuild.Tester()
+    t.write('Jamroot.jam', '''
+    import feature : feature ;
+    import toolset : flags ;
+    feature f1 : 1 2 : optional ;
+    make output.txt : : @run ;
+    flags run OPTIONS <f1> ;
+    actions run { echo b $(OPTIONS) > $(<) }
+    ''')
+    t.run_build_system(['f1='])
+    t.expect_content("bin/*/output.txt", "b")
+    t.cleanup()
+
 def test_free():
     '''Free features named on the command line apply to all targets
     everywhere.  Free features can contain any characters, even those
@@ -143,6 +158,7 @@ def test_cross_product():
 
 test_basic()
 test_implicit()
+test_optional()
 test_free()
 test_subfeature()
 test_multiple_values()
