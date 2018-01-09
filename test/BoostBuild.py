@@ -219,7 +219,7 @@ class Tester(TestCmd.TestCmd):
         **keywords):
 
         assert arguments.__class__ is not str
-        self.original_workdir = os.getcwd()
+        self.original_workdir = os.path.dirname(__file__)
         if workdir and not os.path.isabs(workdir):
             raise ("Parameter workdir <%s> must point to an absolute "
                 "directory: " % workdir)
@@ -280,8 +280,9 @@ class Tester(TestCmd.TestCmd):
 
             # Find where jam_src is located. Try for the debug version if it is
             # lying around.
-            dirs = [os.path.join("..", "src", "engine", jam_build_dir + ".debug"),
-                    os.path.join("..", "src", "engine", jam_build_dir)]
+            srcdir = os.path.join(os.path.dirname(__file__), "..", "src")
+            dirs = [os.path.join(srcdir, "engine", jam_build_dir + ".debug"),
+                    os.path.join(srcdir, "engine", jam_build_dir)]
             for d in dirs:
                 if os.path.exists(d):
                     jam_build_dir = d
@@ -773,7 +774,7 @@ class Tester(TestCmd.TestCmd):
                     lambda x, y: x and reduce(
                         lambda a, b: a and b,
                     y),
-                    matched)
+                    matched, True)
 
         if not matched:
             print "Expected:\n"

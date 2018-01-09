@@ -79,7 +79,6 @@ rule find-include-path ( properties : header : provided-path ? : test-source ? )
 
 rule construct-library ( name : property-set : provided-path ? )
 {
-    property-set = [ $(property-set).refine [ property-set.create $(link-opt) ] ] ;
     local lib-props = [ $(property-set).add-raw <name>$(name) <search>$(provided-path) ] ;
     return [ generators.construct $(.project) lib-$(name)
         : SEARCHED_LIB : $(lib-props) : : true ] ;

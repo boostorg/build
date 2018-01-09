@@ -1837,6 +1837,122 @@ using bzip2 : 1.0.6 : &lt;source&gt;C:/Devel/src/bzip2-1.0.6 : &lt;toolset&gt;ms
 using bzip2 : 1.0.6 : : &lt;toolset&gt;gcc ;
 </programlisting>
         </section>
+
+        <section id="bbv2.reference.tools.libraries.python">
+          <title>Python</title>
+          <indexterm><primary>Python</primary></indexterm>
+
+          <para>Provides support for the
+          <ulink url="http://www.python.org">python</ulink> language
+          environment to be linked in as a library.</para>
+
+          <para>python can be initialized using the following syntax</para>
+          <programlisting>
+using python : <optional><replaceable>version</replaceable></optional> : <optional><replaceable>command-or-prefix</replaceable></optional> : <optional><replaceable>includes</replaceable></optional> : <optional><replaceable>libraries</replaceable></optional> : <optional><replaceable>conditions</replaceable></optional> : <optional><replaceable>extension-suffix</replaceable></optional> ;
+          </programlisting>
+          <para>Options for using python:</para>
+          <variablelist>
+            <varlistentry>
+              <term><literal>version</literal></term>
+              <listitem>
+                <para>the version of Python to use. Should be in Major.Minor
+                format, for example 2.3.  Do not include the subminor version.
+                </para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>command-or-prefix</literal></term>
+              <listitem>
+                <para>Preferably, a command that invokes a Python interpreter.
+                Alternatively, the installation prefix for Python libraries
+                and includes. If empty, will be guessed from the version, the
+                platform's installation patterns, and the python executables
+                that can be found in PATH.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>includes</literal></term>
+              <listitem>
+                <para>the include path to Python headers. If empty, will be
+                guessed.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>libraries</literal></term>
+              <listitem>
+                <para>the path to Python library binaries. If empty, will
+                be guessed. On MacOS/Darwin, you can also pass the path of the
+                Python framework.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>conditions</literal></term>
+              <listitem>
+                <para>if specified, should be a set of properties that are 
+                matched against the build configuration when Boost.Build
+                selects a Python configuration to use.</para>
+              </listitem>
+            </varlistentry>
+            <varlistentry>
+              <term><literal>extension-suffix</literal></term>
+              <listitem>
+                <para>A string to append to the name of extension modules 
+                before the true filename extension.  Ordinarily we would just
+                compute this based on the value of the &lt;python-debugging&gt;
+                feature. However ubuntu's python-dbg package uses the windows
+                convention of appending _d to debug-build extension modules. We
+                have no way of detecting ubuntu, or of probing python for the
+                "_d" requirement, and if you configure and build python using
+                --with-pydebug, you'll be using the standard *nix convention.
+                Defaults to "" (or "_d" when targeting windows and
+                &lt;python-debugging&gt; is set).</para>
+              </listitem>
+            </varlistentry>
+          </variablelist>
+          <para>Examples:</para>
+          <programlisting>
+# Find python in the default system location
+using python ;
+# 2.7
+using python : 2.7 ;
+# 3.5
+using python : 3.5 ;
+
+# On ubuntu 16.04
+using python
+: 2.7 # version
+: # Interpreter/path to dir
+: /usr/include/python2.7 # includes
+: /usr/lib/x86_64-linux-gnu # libs
+: # conditions
+;
+
+using python 
+: 3.5 # version
+: # Interpreter/path to dir
+: /usr/include/python3.5 # includes
+: /usr/lib/x86_64-linux-gnu # libs
+: # conditions
+;
+
+# On windows
+using python
+: 2.7 # version
+: C:\\Python27-32\\python.exe # Interperter/path to dir
+: C:\\Python27-32\\include # includes
+: C:\\Python27-32\\libs # libs
+: &lt;address-model&gt;32 &lt;address-model&gt; # conditions - both 32 and unspecified 
+;
+
+using python
+: 2.7 # version
+: C:\\Python27-64\\python.exe # Interperter/path to dir
+: C:\\Python27-64\\include # includes
+: C:\\Python27-64\\libs # libs
+: &lt;address-model&gt;64 # conditions
+;
+</programlisting>
+         </section>
         
       </section>
 

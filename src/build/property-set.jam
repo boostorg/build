@@ -414,7 +414,7 @@ class property-set
             # characters as well, e.g. free or indirect properties. Indirect
             # properties for example contain a full Jamfile path in their value
             # which on Windows file systems contains ':' as the drive separator.
-            if [ MATCH (:) : $(p:G=) ] && ! ( free in [ feature.attributes $(p:G) ] )
+            if ( [ MATCH (:) : $(p:G=) ] && ! ( free in [ feature.attributes $(p:G) ] ) ) || $(p:G) = <conditional>
             {
                 self.conditional += $(p) ;
             }

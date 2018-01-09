@@ -775,10 +775,6 @@ class main-target : abstract-target
     {
         start-building $(__name__) ;
 
-        # We want composite properties in the build request to act as if all the
-        # properties they expand to have been explicitly specified.
-        property-set = [ $(property-set).expand ] ;
-
         local all-property-sets = [ apply-default-build $(property-set) ] ;
         local relevant = [ relevant-features ] ;
         local usage-requirements = [ property-set.empty ] ;
@@ -943,8 +939,10 @@ rule apply-default-build ( property-set : default-build )
     # 1. First, see what properties from default-build are already present in
     # property-set.
 
+    local expanded = [ $(property-set).expand ] ;
     local raw = [ $(property-set).raw ] ;
-    local specified-features = $(raw:G) ;
+    local specified-features = [ $(expanded).raw ] ;
+    specified-features = $(specified-features:G) ;
 
     local defaults-to-apply ;
     for local d in [ $(default-build).raw ]
@@ -978,7 +976,7 @@ rule apply-default-build ( property-set : default-build )
             for local p in $(properties)
             {
                 result += [ property-set.create
-                    [ feature.expand [ feature.split $(p) ] ] ] ;
+                    [ feature.split $(p) ] ] ;
             }
         }
         else
@@ -1035,7 +1033,7 @@ rule common-properties ( build-request requirements )
 # If 'what' is 'refined' returns context refined with new requirements. If
 # 'what' is 'added' returns just the requirements to be applied.
 #
-rule evaluate-requirements ( requirements : context : what )
+rule evaluate-requirements ( requirements : context )
 {
     # Apply non-conditional requirements. It is possible that further
     # conditional requirement change a value set by non-conditional
@@ -1061,41 +1059,28 @@ rule evaluate-requirements ( requirements : context : what )
 
     local conditionals = [ $(requirements).conditional ] ;
     # The 'count' variable has one element for each conditional feature and for
-    # each occurrence of '<indirect-conditional>' feature. It is used as a loop
+    # each occurrence of '<conditional>' feature. It is used as a loop
     # counter: for each iteration of the loop before we remove one element and
     # the property set should stabilize before we are done. It is assumed that
     # #conditionals iterations should be enough for properties to propagate
     # along conditions in any direction.
-    local count = $(conditionals) [ $(requirements).get <conditional> ]
+    local count = $(conditionals)
         and-once-more ;
 
     local added-requirements ;
 
     local current = $(raw) ;
 
-    # It is assumed that ordinary conditional requirements can not add
-    # <conditional> properties (a.k.a. indirect conditional properties), and
-    # that rules referred to by <conditional> properties can not add new
-    # <conditional> properties. So the list of indirect conditionals does not
-    # change.
-    local indirect = [ $(requirements).get <conditional> ] ;
-    indirect = [ MATCH ^@(.*) : $(indirect) ] ;
-
     local ok ;
     while $(count)
     {
+        # We need to expand composites here so that the requirements can
+        # safely override composite features.
+        current = [ feature.expand-composites $(current) ] ;
+        current = [ feature.add-defaults $(current) ] ;
         # Evaluate conditionals in context of current properties.
         local e = [ property.evaluate-conditionals-in-context $(conditionals) :
             $(current) ] ;
-
-        # Evaluate indirect conditionals.
-        for local i in $(indirect)
-        {
-            local t = [ current ] ;
-            local p = [ $(t).project ] ;
-            local new = [ indirect.call $(i) $(current) ] ;
-            e += [ property.translate-paths $(new) : [ $(p).location ] ] ;
-        }
 
         if $(e) = $(added-requirements)
         {
@@ -1119,39 +1104,13 @@ rule evaluate-requirements ( requirements : context : what )
         errors.error Can not evaluate conditional properties $(conditionals) ;
     }
 
-    if $(what) = added
-    {
-        return [ property-set.create $(unconditional) $(added-requirements) ] ;
-    }
-    else if $(what) = refined
-    {
-        return [ property-set.create $(current) ] ;
-    }
-    else
-    {
-        import errors ;
-        errors.error "Invalid value of the 'what' parameter." ;
-    }
+    return [ property-set.create $(current) ] ;
 }
 
 
 rule common-properties2 ( build-request requirements )
 {
-    # This guarantees that default properties are present in the result, unless
-    # they are overriden by some requirement. FIXME: There is a possibility that
-    # we have added <foo>bar, which is composite and expands to <foo2>bar2, but
-    # default value of <foo2> is not bar2, in which case it is not clear what to
-    # do.
-    #
-    build-request = [ $(build-request).add-defaults ] ;
-    # Features added by 'add-defaults' can be composite and expand to features
-    # without default values -- which therefore have not been added yet. It
-    # could be clearer/faster to expand only newly added properties but that is
-    # not critical.
-    build-request = [ $(build-request).expand ] ;
-
-    return [ evaluate-requirements $(requirements) : $(build-request) :
-        refined ] ;
+    return [ evaluate-requirements $(requirements) : $(build-request) ] ;
 }
 
 
@@ -1256,9 +1215,9 @@ class basic-target : abstract-target
     #
     rule match ( property-set debug ? )
     {
-        # The condition is composed of all base non-conditional properties. It
-        # is not clear if we should expand 'self.requirements' or not. For one
-        # thing, it would be nice to be able to put
+        # The condition is composed of all base non-conditional properties. We
+        # only expand subfeatures in the condition.  We do not expand
+        # composites.  We want to be able to put
         #    <toolset>msvc-6.0
         # in requirements. On the other hand, if we have <variant>release as a
         # condition it does not make sense to require <optimization>full to be
@@ -1266,6 +1225,7 @@ class basic-target : abstract-target
         local bcondition = [ $(self.requirements).base ] ;
         local ccondition = [ $(self.requirements).conditional ] ;
         local condition = [ set.difference $(bcondition) : $(ccondition) ] ;
+        condition = [ feature.expand-subfeatures $(condition) : unchecked ] ;
         if $(debug)
         {
             ECHO "    next alternative: required properties:"
@@ -1336,7 +1296,7 @@ class basic-target : abstract-target
         #   define=FOO
         # he most likely wants this define to be set for all compiles.
         # Make it before check for already built.
-        property-set = [ $(property-set).refine
+        property-set = [ $(property-set).add
             [ build-system.command-line-free-features ] ] ;
 
         if ! $(self.generated.$(property-set))
@@ -1496,8 +1456,9 @@ class basic-target : abstract-target
     rule compute-usage-requirements ( subvariant )
     {
         local rproperties = [ $(subvariant).build-properties ] ;
-        xusage-requirements = [ targets.evaluate-requirements
-            $(self.usage-requirements) : $(rproperties) : added ] ;
+        xusage-requirements =
+            [ $(self.usage-requirements).evaluate-conditionals
+              $(rproperties) ] ;
 
         # Filter out non-propagated <relevant> properties
         local relevant ;

@@ -289,7 +289,8 @@ local rule find-implied-subfeature ( feature subvalue : value-string ? )
         import errors ;
         errors.error invalid feature $(feature) ;
     }
-    return $($(feature)$(value-string:E="")<>$(subvalue).subfeature) ;
+    value-string += "" ;
+    return $($(feature)$(value-string)<>$(subvalue).subfeature) ;
 }
 
 
@@ -1047,6 +1048,8 @@ local rule split-top-feature ( feature-plus )
 # Given a set of properties, add default values for features not represented in
 # the set.
 #
+# properties must be fully expanded and must not contain conditionals.
+#
 # Note: if there's an ordinary feature F1 and a composite feature F2 which
 # includes some value for F1 and both feature have default values then the
 # default value of F1 will be added (as opposed to the value in F2). This might
@@ -1074,27 +1077,65 @@ rule add-defaults ( properties * )
                 feature ;
         }
     }
-    # We don't add default for elements with ":" inside. This catches:
-    # 1. Conditional properties --- we don't want <variant>debug:<define>DEBUG
-    #    to be takes as specified value for <variant>
-    # 2. Free properties with ":" in values. We don't care, since free
-    #    properties don't have defaults.
-    local xproperties = [ MATCH "^([^:]+)$" : $(properties) ] ;
-    local missing-top = [ set.difference $(.all-top-features) : $(xproperties:G) ] ;
+    local missing-top = [ set.difference $(.all-top-features) : $(properties:G) ] ;
     local more =  [ defaults $(missing-top) ] ;
-    properties += $(more) ;
-    xproperties += $(more) ;
 
-    # Add defaults for subfeatures of features which are present.
-    for local p in $(xproperties)
+    # This is similar to property.refine, except that it
+    # does not remove subfeatures, because we might be adding
+    # the default value of a subfeature.
+    local to-remove ;
+    for local f in $(properties:G)
     {
-        local s = $($(p:G).subfeatures) ;
-        local f = [ utility.ungrist $(p:G) ] ;
-        local missing-subs = [ set.difference <$(f)-$(s)> : $(properties:G) ] ;
-        properties += [ defaults [ select-subfeatures $(p) : $(missing-subs) ] ] ;
+        if ! free in [ attributes $(f) ]
+        {
+            to-remove += $(f) ;
+        }
     }
 
-    return $(properties)  ;
+    local worklist = $(properties) ;
+    local expanded-from-composite ;
+    local to-expand = $(more) ;
+    while $(worklist)
+    {
+        # Add defaults for subfeatures of features which are present.
+        for local p in $(worklist)
+        {
+            local s = $($(p:G).subfeatures) ;
+            local f = [ utility.ungrist $(p:G) ] ;
+            local missing-subs = [ set.difference <$(f)-$(s)> : $(properties:G) ] ;
+            local sd = [ defaults [ select-subfeatures $(p) : $(missing-subs) ] ] ;
+            to-expand += $(sd) ;
+        }
+        worklist = ;
+
+        # Expand subfeatures of newly added properties
+        for local m in [ sequence.transform expand-composite : $(to-expand) ]
+        {
+            if ! $(m:G) in $(to-remove)
+            {
+                local att = [ attributes $(m:G) ] ;
+                if $(m:G) in $(expanded-from-composite) &&
+                    ! free in $(att) &&
+                    ! $(m) in $(more)
+                {
+                    import errors ;
+                    errors.error "default values for $(p:G) conflict" ;
+                }
+                if ! $(m) in $(to-expand)
+                {
+                    expanded-from-composite += $(m:G) ;
+                }
+                more += $(m) ;
+                if ! subfeature in $(att) && ! free in $(att)
+                {
+                    worklist += $(m) ;
+                }
+            }
+        }
+        to-expand = ;
+    }
+
+    return [ sequence.unique $(properties) $(more) ] ;
 }
 
 
@@ -1276,17 +1317,18 @@ rule __test__ ( )
 
     assert.result optional : attributes <fu> ;
 
-    assert.result <runtime-link>static <define>foobar <optimization>on
-        <toolset>gcc:<define>FOO <toolset>gcc <variant>debug <stdlib>native
-        <dummy>dummy1 <toolset-gcc:version>2.95.2
-        : add-defaults <runtime-link>static <define>foobar <optimization>on
-          <toolset>gcc:<define>FOO ;
+    assert.result [ SORT <define>_DEBUG <runtime-link>static
+        <define>foobar <optimization>on
+        <toolset>gcc <variant>debug <stdlib>native
+        <dummy>dummy1 <toolset-gcc:version>2.95.2 ]
+        : add-defaults <runtime-link>static <define>foobar <optimization>on ;
 
-    assert.result <runtime-link>static <define>foobar <optimization>on
-        <toolset>gcc:<define>FOO <fu>fu1 <toolset>gcc <variant>debug
-        <stdlib>native <dummy>dummy1 <fu-subfu2>q <toolset-gcc:version>2.95.2
+    assert.result [ SORT <define>_DEBUG <runtime-link>static
+        <define>foobar <optimization>on
+        <fu>fu1 <toolset>gcc <variant>debug
+        <stdlib>native <dummy>dummy1 <fu-subfu2>q <toolset-gcc:version>2.95.2 ]
         : add-defaults <runtime-link>static <define>foobar <optimization>on
-          <toolset>gcc:<define>FOO <fu>fu1 ;
+          <fu>fu1 ;
 
     set-default <runtime-link> : static ;
     assert.result <runtime-link>static : defaults <runtime-link> ;
