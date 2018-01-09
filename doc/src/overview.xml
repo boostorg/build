@@ -1021,6 +1021,12 @@ b2 include=static,shared
 </screen>
         <para>is not treated specially.</para>
 
+        <para>Multiple features may be grouped by using a forwards slash.</para>
+<screen>
+b2 gcc/link=shared msvc/link=static,shared
+</screen>
+        <para>This will build 3 different variants, altogether.</para>
+
       </section>
 
       <section id="bbv2.overview.invocation.targets">
