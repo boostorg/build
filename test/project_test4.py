@@ -16,13 +16,13 @@ t.run_build_system()
 
 t.expect_addition("bin/$toolset/debug*/a.obj")
 t.expect_content("bin/$toolset/debug*/a.obj",
-"""$toolset/debug*/include-everything
+"""$toolset/debug*/include-everything*
 a.cpp
 """)
 
 t.expect_addition("bin/$toolset/debug*/a.exe")
 t.expect_content("bin/$toolset/debug*/a.exe",
-"$toolset/debug*/include-everything\n" +
+"$toolset/debug*/include-everything*\n" +
 "bin/$toolset/debug*/a.obj lib/bin/$toolset/debug/optimization-speed*/b.obj\n"
 )
 

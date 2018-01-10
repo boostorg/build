@@ -67,6 +67,9 @@ rule load ( cache-file )
     cache-file = [ path.native $(cache-file) ] ;
     if [ path.exists $(cache-file) ] && ! ( --reconfigure in [ modules.peek : ARGV ] )
     {
+        FILE_CONTENTS on <old-cache-file>$(cache-file) = "" ;
+        config-cache.write <old-cache-file>$(cache-file) ;
+        UPDATE_NOW <old-cache-file>$(cache-file) : [ modules.peek configure : .log-fd ] : ignore-minus-n ;
         include <old-cache-file>$(cache-file) ;
     }
     .cache-file = $(cache-file) ;

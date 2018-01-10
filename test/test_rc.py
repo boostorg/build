@@ -34,7 +34,7 @@ def included_resource_newer_than_rc_script():
     #   affected by any local (mis)configuration..
     t = BoostBuild.Tester(["-d4", "--debug-configuration",
         "--ignore-site-config", "--user-config=", "toolset=%s" % toolsetName],
-        pass_d0=False, pass_toolset=False, use_test_config=False,
+        pass_toolset=False, use_test_config=False,
         translate_suffixes=False)
 
     # Prepare a dummy toolset so we do not get errors in case the default one

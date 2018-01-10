@@ -10,7 +10,7 @@ import BoostBuild
 
 
 def test_basic():
-    t = BoostBuild.Tester(["-d3", "-d+12"], pass_d0=False, use_test_config=False)
+    t = BoostBuild.Tester(["-d3", "-d+12"], use_test_config=False)
 
     t.write("a.cpp", """
 #include <a.h>
@@ -211,7 +211,7 @@ def test_scanned_includes_with_absolute_paths():
     considered when scanning dependencies.
 
     """
-    t = BoostBuild.Tester(["-d3", "-d+12"], pass_d0=False)
+    t = BoostBuild.Tester(["-d3", "-d+12"])
 
     t.write("jamroot.jam", """\
 path-constant TOP : . ;

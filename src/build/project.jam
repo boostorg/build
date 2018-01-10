@@ -833,7 +833,7 @@ rule current ( )
 # Temporarily changes the current project to 'project'. Should be followed by
 # 'pop-current'.
 #
-rule push-current ( project )
+rule push-current ( project ? )
 {
     .saved-current-project += $(.current-project) ;
     .current-project = $(project) ;
@@ -900,9 +900,9 @@ rule get-jamroot-module ( project )
 
 # Returns the project target corresponding to the 'project-module'.
 #
-rule target ( project-module )
+rule target ( project-module : allow-missing ? )
 {
-    if ! $(.target.$(project-module))
+    if ! $(.target.$(project-module)) && ! $(allow-missing)
     {
         import errors ;
         errors.user-error Project target requested but not yet assigned for

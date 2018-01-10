@@ -925,9 +925,9 @@ local rule toolset-tag ( name : type ? : property-set )
         case edg* : tag += edg ;
         case gcc* :
         {
-            switch [ $(property-set).get <toolset-gcc:flavor> ]
+            switch [ $(property-set).get <target-os> ]
             {
-                case *mingw* : tag += mgw ;
+                case *windows* : tag += mgw ;
                 case * : tag += gcc ;
             }
         }

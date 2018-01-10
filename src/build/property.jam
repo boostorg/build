@@ -28,8 +28,20 @@ rule refine ( properties * : requirements * )
     for local r in $(requirements)
     {
         # Do not consider conditional requirements.
-        if ! [ MATCH (:) : $(r:G=) ] && ! free in [ feature.attributes $(r:G) ]
+        if ! [ MATCH (:<) : $(r:G=) ] && ! free in [ feature.attributes $(r:G) ]
         {
+            if ! $(r) in $(properties)
+            {
+                # Kill subfeatures of properties that we're changing
+                local sub = [ modules.peek feature : $(r:G).subfeatures ] ;
+                if $(sub)
+                {
+                    # non-specific subfeatures are still valid
+                    sub = [ MATCH "(.*:.*)" : $(sub) ] ;
+                    local name = [ utility.ungrist $(r:G) ] ;
+                    unset += <$(name)-$(sub)> ;
+                }
+            }
             unset += $(r:G) ;
         }
     }
@@ -37,7 +49,7 @@ rule refine ( properties * : requirements * )
     # Remove properties that are overridden by requirements
     for local p in $(properties)
     {
-        if [ MATCH (:) : $(p:G=) ] || ! $(p:G) in $(unset)
+        if [ MATCH (:<) : $(p:G=) ] || ! $(p:G) in $(unset)
         {
             result += $(p) ;
         }
@@ -55,11 +67,16 @@ rule evaluate-conditionals-in-context ( properties * : context * )
 {
     local base ;
     local conditionals ;
+    local indirect ;
     for local p in $(properties)
     {
         if [ MATCH (:<) : $(p) ]
         {
             conditionals += $(p) ;
+        }
+        else if $(p:G) = <conditional>
+        {
+            indirect += $(p) ;
         }
         else
         {
@@ -114,6 +131,24 @@ rule evaluate-conditionals-in-context ( properties * : context * )
             {
                 result += $(s[2]) ;
             }
+        }
+    }
+    # Import here to avoid cyclic dependency
+    import project ;
+    for local i in [ MATCH "^@(.*)" : $(indirect:G=) ]
+    {
+        # If the rule was set in a project module, translate paths
+        # relative to that project's location.
+        local m = [ indirect.get-module $(i) ] ;
+        local p = [ project.target $(m) : allow-missing ] ;
+        local new = [ indirect.call $(i) $(context) ] ;
+        if $(p) && [ $(p).location ]
+        {
+            result += [ translate-paths $(new) : [ $(p).location ] ] ;
+        }
+        else
+        {
+            result += $(new) ;
         }
     }
     return $(result) ;

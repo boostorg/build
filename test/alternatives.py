@@ -88,7 +88,7 @@ exe a : a_empty.cpp ;
 exe a : a.cpp ;
 """)
 t.run_build_system(["--no-error-backtrace"], status=None)
-t.fail_test(string.find(t.stdout(), "No best alternative") == -1)
+t.expect_output_lines("error: No best alternative for ./a")
 
 # Another ambiguity test: two matches properties in one alternative are neither
 # better nor worse than a single one in another alternative.
@@ -98,7 +98,8 @@ exe a : a.cpp : <debug-symbols>on ;
 """)
 
 t.run_build_system(["--no-error-backtrace"], status=None)
-t.fail_test(string.find(t.stdout(), "No best alternative") == -1)
+t.expect_output_lines("error: No best alternative for ./a")
+t.rm("bin")
 
 # Test that we can have alternative without sources.
 t.write("jamfile.jam", """\
@@ -108,7 +109,21 @@ feature.extend os : MAGIC ;
 alias specific-sources : b.cpp : <os>MAGIC ;
 exe a : a.cpp specific-sources ;
 """)
-t.rm("bin")
 t.run_build_system()
+t.expect_addition("bin/$toolset/debug*/a.exe")
+t.rm("bin")
+
+# Test that subfeatures are expanded in alternatives
+# and that unknown subfeatures fail to match instead of
+# causing errors.
+t.write("jamfile.jam", """\
+import feature : feature subfeature ;
+feature X : off on : propagated ;
+subfeature X on : version : 1 : propagated ;
+exe a : a.cpp : <X>on-1 ;
+exe a : a_empty.cpp ;
+exe a : a_empty.cpp : <X>on-2 ;
+""")
+t.run_build_system(["X=on-1"])
 
 t.cleanup()

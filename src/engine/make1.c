@@ -572,11 +572,42 @@ static void make1c( state const * const pState )
 
         /* Tally success/failure for those we tried to update. */
         if ( t->progress == T_MAKE_RUNNING )
+        {
+            /* Invert OK/FAIL target status when FAIL_EXPECTED has been applied. */
+            if ( t->flags & T_FLAG_FAIL_EXPECTED && !globs.noexec )
+            {
+                switch ( t->status )
+                {
+                    case EXEC_CMD_FAIL: t->status = EXEC_CMD_OK; break;
+                    case EXEC_CMD_OK: t->status = EXEC_CMD_FAIL; break;
+                }
+
+                /* Printing failure has to be delayed until the last
+                 * action is completed for FAIL_EXPECTED targets.
+                 * Do it here.
+                 */
+                if ( t->status == EXEC_CMD_FAIL )
+                {
+                    out_printf( "...failed %s ", object_str( t->actions->action->rule->name ) );
+                    out_printf( "%s", object_str( t->boundname ) );
+                    out_printf( "...\n" );
+                }
+
+                /* Handle -q */
+                if ( t->status == EXEC_CMD_FAIL && globs.quitquick )
+                    ++quit;
+
+                /* Delete the target on failure. */
+                if ( !( t->flags & ( T_FLAG_PRECIOUS | T_FLAG_NOTFILE ) ) &&
+                    !unlink( object_str( t->boundname ) ) )
+                    out_printf( "...removing %s\n", object_str( t->boundname ) );
+            }
             switch ( t->status )
             {
                 case EXEC_CMD_OK: ++counts->made; break;
                 case EXEC_CMD_FAIL: ++counts->failed; break;
             }
+        }
 
         /* Tell parents their dependency has been built. */
         {
@@ -833,16 +864,6 @@ static void make1c_closure
         /* Store the target's status. */
         t->status = status_orig;
 
-        /* Invert OK/FAIL target status when FAIL_EXPECTED has been applied. */
-        if ( t->flags & T_FLAG_FAIL_EXPECTED && !globs.noexec )
-        {
-            switch ( t->status )
-            {
-                case EXEC_CMD_FAIL: t->status = EXEC_CMD_OK; break;
-                case EXEC_CMD_OK: t->status = EXEC_CMD_FAIL; break;
-            }
-        }
-
         /* Ignore failures for actions marked as 'ignore'. */
         if ( t->status == EXEC_CMD_FAIL && cmd->rule->actions->flags &
             RULE_IGNORE )
@@ -873,7 +894,8 @@ static void make1c_closure
     }
 
     /* Print command text on failure. */
-    if ( t->status == EXEC_CMD_FAIL && DEBUG_MAKE )
+    if ( t->status == EXEC_CMD_FAIL && DEBUG_MAKE &&
+        ! ( t->flags & T_FLAG_FAIL_EXPECTED ) )
     {
         if ( !DEBUG_EXEC )
             out_printf( "%s\n", cmd->buf->value );
@@ -891,7 +913,8 @@ static void make1c_closure
         ++intr;
         ++quit;
     }
-    if ( t->status == EXEC_CMD_FAIL && globs.quitquick )
+    if ( t->status == EXEC_CMD_FAIL && globs.quitquick &&
+        ! ( t->flags & T_FLAG_FAIL_EXPECTED ) )
         ++quit;
 
     /* If the command was not successful remove all of its targets not marked as
