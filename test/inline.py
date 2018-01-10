@@ -22,9 +22,7 @@ t.write("helper.cpp", "void helper() {}\n")
 
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug*/a__helper.lib")
-t.rm("bin/$toolset/debug/a__helper.lib")
-t.rm("bin/$toolset/debug/link-static/a__helper.lib")
-t.rm("bin/$toolset/debug/link-static/*/a__helper.lib")
+t.rm("bin/$toolset/debug*/a__helper.lib")
 
 t.run_build_system(["a__helper"])
 t.expect_addition("bin/$toolset/debug*/a__helper.lib")
