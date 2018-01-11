@@ -441,7 +441,7 @@ rule initialize (
     local jamroot ;
 
     local parent-module ;
-    if $(module-name) = test-config
+    if $(module-name) in test-config all-config
     {
         # No parent.
     }
@@ -502,7 +502,7 @@ rule initialize (
         }
         else
         {
-            local cfgs = project site test user ;
+            local cfgs = project site test user all ;
             if ! $(module-name) in $(cfgs)-config
             {
                 # This is a standalone project with known location. Set its
