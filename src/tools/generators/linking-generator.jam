@@ -55,15 +55,8 @@ class linking-generator : generator
         {
             if [ type.is-derived [ $(s).type ] SHARED_LIB ] && ! [ $(s).action ]
             {
-                # Unfortunately, we do not have a good way to find the path to a
-                # file, so use this nasty approach.
-                #
-                # TODO: This needs to be done better. One thing that is really
-                # broken with this is that it does not work correctly with
-                # projects having multiple source locations.
-                local p = [ $(s).project ] ;
                 local location = [ path.root [ $(s).name ]
-                    [ $(p).get source-location ] ] ;
+                    [ $(s).path ] ] ;
                 extra-xdll-paths += [ path.parent $(location) ] ;
             }
         }
