@@ -773,7 +773,7 @@ class Tester(TestCmd.TestCmd):
                 matched = reduce(
                     lambda x, y: x and reduce(
                         lambda a, b: a and b,
-                    y),
+                    y, True),
                     matched, True)
 
         if not matched:
