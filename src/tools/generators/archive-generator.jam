@@ -11,6 +11,7 @@ import generators ;
 #
 class archive-generator : generator
 {
+    import generators ;
     import property-set ;
 
     rule __init__ ( id composing ? : source-types + : target-types +
@@ -56,9 +57,7 @@ class archive-generator : generator
             }
         }
 
-        usage-requirements = [ property-set.create $(usage-requirements) ] ;
-
-        return $(usage-requirements) $(result) ;
+        return [ generators.add-usage-requirements $(result) : $(usage-requirements) ] ;
     }
 }
 

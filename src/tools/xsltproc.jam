@@ -151,6 +151,7 @@ IMPORT xsltproc : register-generator : : generators.register-xslt ;
 
 rule flags ( rulename )
 {
+    toolset.uses-features $(rulename) : <xsl:param> <catalog> : unchecked ;
     toolset.flags $(rulename) XSL-PATH : <xsl:path> : unchecked ;
     toolset.flags $(rulename) FLAGS : <flags> : unchecked ;
 }

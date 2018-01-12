@@ -331,6 +331,8 @@ generators.register-standard testing.capture-output : EXE : RUN_OUTPUT ;
 # http://article.gmane.org/gmane.comp.lib.boost.build/6353).
 generators.register-standard testing.unit-test : EXE : UNIT_TEST ;
 
+toolset.uses-features testing.expect-success : <preserve-test-targets> ;
+toolset.uses-features testing.expect-failure : <preserve-test-targets> ;
 
 # The action rules called by generators.
 
@@ -455,6 +457,9 @@ local argv = [ modules.peek : ARGV ] ;
 toolset.flags testing.capture-output ARGS <testing.arg> ;
 toolset.flags testing.capture-output INPUT_FILES <testing.input-file> ;
 toolset.flags testing.capture-output LAUNCHER <testing.launcher> ;
+
+toolset.uses-features testing.capture-output :
+    <testing.launcher> <testing.execute> <dll-path> <xdll-path> <target-os> ;
 
 if --remove-test-targets in [ modules.peek : ARGV ]
 {

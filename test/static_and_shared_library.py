@@ -31,7 +31,7 @@ t.expect_nothing_more()
 
 reset()
 t.run_build_system(["link=static"], subdir="lib")
-t.expect_addition("lib/bin/$toolset/debug/link-static*/" * BoostBuild.List(
+t.expect_addition("lib/bin/$toolset/debug*/" * BoostBuild.List(
     "c.obj auxilliary1.lib auxilliary2.lib"))
 t.expect_nothing_more()
 
