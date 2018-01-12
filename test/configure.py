@@ -65,6 +65,13 @@ obj bar : foo.cpp :
     t.expect_touch("bin/$toolset/debug*/pass.obj")
     t.expect_nothing_more()
 
+    # -a -n should not rebuild configuration checks
+    t.run_build_system(["-a", "-n"])
+    t.expect_output_lines([
+        "    - pass builds              : yes (cached)",
+        "    - fail builds              : no  (cached)"])
+    t.expect_nothing_more()
+
     t.cleanup()
 
 def test_choose():
