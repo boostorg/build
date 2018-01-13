@@ -214,8 +214,9 @@ generators.register-linker mock.link : LIB OBJ : EXE : <toolset>mock ;
 generators.register-linker mock.link.dll : LIB OBJ : SHARED_LIB : <toolset>mock ;
 generators.register-archiver mock.archive : OBJ : STATIC_LIB : <toolset>mock ;
 
-toolset.flags mock.compile INCLUDES <include> ;
-toolset.flags mock.compile DEFINES <define> ;
+toolset.flags mock.compile OPTIONS <link>shared : -fPIC ;
+toolset.flags mock.compile INCLUDES : <include> ;
+toolset.flags mock.compile DEFINES : <define> ;
 
 actions compile.c
 {

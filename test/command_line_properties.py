@@ -63,8 +63,8 @@ def test_free():
     actions run { echo $(OPTIONS) > $(<) }
     ''')
     t.run_build_system(['f1=x,/:-'])
-    t.expect_content("bin/*/output1.txt", "x,/:-")
-    t.expect_content("bin/*/output2.txt", "x,/:-")
+    t.expect_content("bin*/output1.txt", "x,/:-")
+    t.expect_content("bin*/output2.txt", "x,/:-")
     t.cleanup()
 
 def test_subfeature():

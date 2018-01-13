@@ -12,6 +12,8 @@ t = BoostBuild.Tester(use_test_config=False)
 
 t.write("jamroot.jam", """
 project : requirements <threading>multi <variant>debug:<link>static ;
+# Force link to be relevant
+project : requirements <link>shared:<define>TEST_DLL ;
 
 build-project sub ;
 build-project sub2 ;

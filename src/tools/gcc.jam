@@ -550,8 +550,8 @@ class gcc-pch-generator : pch-generator
         # Return result of base class and pch-file property as
         # usage-requirements.
         return
-            [ property-set.create <pch-file>$(pch-file) <cflags>-Winvalid-pch ]
-            $(pch-file)
+            [ $(pch-file[1]).add-raw <pch-file>$(pch-file[2-]) <cflags>-Winvalid-pch ]
+            $(pch-file[2-])
           ;
     }
 
