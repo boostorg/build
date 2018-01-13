@@ -101,8 +101,8 @@ rule init ( version ? : command * : options * : requirement * )
             {
                 local tool-command-string = \"$(tool-command)\" ;
                 tool-command-string = $(tool-command-string:J=" ") ;
-                local tool-version = [ MATCH "^([0-9.]+)" :
-                    [ SHELL "$(tool-command-string) -dumpversion" ] ] ;
+                local tool-version = [ dump-full-version
+                    $(tool-command-string) ] ;
                 if $(tool-version) != $(version)
                 {
                     # Permit a match betwen a two-digit version specified by the
@@ -184,8 +184,7 @@ rule init ( version ? : command * : options * : requirement * )
     {
         local machine = [ MATCH "^([^ ]+)" :
             [ SHELL "$(command-string) -dumpmachine" ] ] ;
-        version ?= [ MATCH "^([0-9.]+)" :
-            [ SHELL "$(command-string) -dumpversion" ] ] ;
+        version ?= [ dump-full-version $(command-string) ] ;
         switch $(machine:L)
         {
             case *mingw* : flavor ?= mingw ;
@@ -273,6 +272,15 @@ if [ os.name ] = NT
     # thus avoiding command-line length limitations.
     # TODO: Set JAMSHELL on specific targets instead of globally.
     JAMSHELL = % ;
+}
+
+local rule dump-full-version ( command-string )
+{
+    # -dumpfullversion is only supported for gcc 7+.
+    # Passing both options works, as the first one that's
+    # recognized will be used.
+    return [ MATCH "^([0-9.]+)" :
+        [ SHELL "$(command-string) -dumpfullversion -dumpversion" ] ] ;
 }
 
 # Uses -print-prog-name to get the name of the tool.
