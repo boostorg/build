@@ -52,7 +52,7 @@ class lib-generator : generator
             {
                 actual-type = STATIC_LIB ;
             }
-            property-set = [ $(property-set).add-raw <main-target-type>LIB ] ;
+            property-set = [ $(property-set).add-raw <main-target-type>LIB <relevant>link ] ;
             # Construct the target.
             local result = [ generators.construct $(project) $(name) : $(actual-type)
                 : $(property-set) : $(sources) ] ;
