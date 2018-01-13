@@ -232,6 +232,7 @@ tests = ["absolute_sources",
          "inline",
          "libjpeg",
          "lib_source_property",
+         "lib_zlib",
          "library_chain",
          "library_property",
          "link",
@@ -288,7 +289,6 @@ tests = ["absolute_sources",
          "using",
          "wrapper",
          "wrong_project",
-         "zlib"
          ]
 
 if os.name == "posix":
