@@ -26,6 +26,8 @@ class archive-generator : generator
     {
         sources += [ $(property-set).get <library>  ] ;
 
+        property-set = [ $(property-set).add-raw <relevant>link ] ;
+
         local result = [ generator.run $(project) $(name) : $(property-set)
             : $(sources) ] ;
 
@@ -45,7 +47,7 @@ class archive-generator : generator
         # will link to the library, but it should not cause any harm. So, return
         # all LIB sources together with created targets, so that dependants link
         # to them.
-        local usage-requirements ;
+        local usage-requirements = <relevant>link ;
         if [ $(property-set).get <link> ] = static
         {
             for local t in $(sources)

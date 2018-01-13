@@ -35,7 +35,7 @@ class linking-generator : generator
         sources += [ $(property-set).get <library>  ] ;
 
         # Add <library-path> properties for all searched libraries.
-        local extra ;
+        local extra = <relevant>link ;
         for local s in $(sources)
         {
             if [ $(s).type ] = SEARCHED_LIB
@@ -84,8 +84,8 @@ class linking-generator : generator
         if $(result)
         {
             ur = [ extra-usage-requirements $(result[2-]) : $(property-set) ] ;
-            ur = [ $(ur).add
-              [ property-set.create <xdll-path>$(extra-xdll-paths) ] ] ;
+            ur = [ $(ur).add-raw
+                   <relevant>link <xdll-path>$(extra-xdll-paths) ] ;
             ur = [ $(ur).add $(result[1]) ] ;
         }
         return $(ur) $(result[2-]) ;
