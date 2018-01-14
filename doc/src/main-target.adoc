@@ -1,8 +1,5 @@
 [[bbv2.reference.class.main-target]]
-Class main-target
------------------
-
-main-target
+= Class main-target
 
 [source,jam]
 ----
@@ -20,11 +17,8 @@ class main-target : abstract-target {
 A link:#bbv2.reference.class.main-target[main-target] represents a named
 top-level target in a Jamfile.
 
-1.  generate
-+
-Main Target Method
-+
-rule generate ( property-set )
+--
+1. `rule generate ( property-set )`
 +
 Overrides
 link:#bbv2.reference.class.abstract-target.generate[abstract-target.generate].
@@ -35,5 +29,7 @@ link:#bbv2.reference.class.basic-target.generate[generate] on that
 alternative.
 +
 On success, returns:
++
 * a property-set with the usage requirements to be applied to dependents
 * a list of produced virtual targets, which may be empty.
+--

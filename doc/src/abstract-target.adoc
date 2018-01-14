@@ -1,8 +1,5 @@
 [[bbv2.reference.class.abstract-target]]
-Class abstract-target
----------------------
-
-abstract-target
+= Class abstract-target
 
 Base class for all abstract targets.
 
@@ -25,47 +22,33 @@ link:#bbv2.reference.class.abstract-target[abstract-target]:
 * main-target
 * basic-target
 
-1.  rule __init__ ( name : project )
+--
+1. `rule __init__ ( name : project )`
 +
 `name`::
   The name of the target in the Jamfile.
 `project`::
   The link:#bbv2.reference.class.project-target[project] to which this
   target belongs.
-2.  name
-+
-Abstract Target
-+
-rule name ( )
+
+2. `rule name ( )`
 +
 Returns the name of this target.
-3.  project
-+
-Abstract Target
-+
-rule project ( )
+
+3. `rule project ( )`
 +
 Returns the link:#bbv2.reference.class.project-target[project] for this
 target.
-4.  location
-+
-Abstract Target
-+
-rule location ( )
+
+4. `rule location ( )`
 +
 Returns the location where the target was declared.
-5.  full-name
-+
-Abstract Target
-+
-rule full-name ( )
+
+5. `rule full-name ( )`
 +
 Returns a user-readable name for this target.
-6.  generate
-+
-Abstract Target
-+
-rule generate ( property-set )
+
+6. `rule generate ( property-set )`
 +
 Generates virtual targets for this abstract target using the specified
 properties, unless a different value of some feature is required by the
@@ -73,8 +56,10 @@ target. This is an abstract method which must be overriden by derived
 classes.
 +
 On success, returns:
++
 * a property-set with the usage requirements to be applied to dependents
 * a list of produced virtual targets, which may be empty.
 +
 If `property-set` is empty, performs the default build of this target,
 in a way specific to the derived class.
+--

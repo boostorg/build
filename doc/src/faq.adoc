@@ -20,10 +20,7 @@ are two ways you can use that value:
 link:#bbv2.overview.targets.requirements.conditional[???].
 * Define a custom generator and a custom main target type. The custom
 generator can do arbitrary processing or properties. See the
-+
-extender manual
-+
-.
+link:#bbv2.extender[extender manual]
 
 [[bbv2.faq.duplicate]]
 == I am getting a "Duplicate name of actual target" error. What does that mean?
@@ -31,10 +28,10 @@ extender manual
 The most likely case is that you are trying to compile the same file
 twice, with almost the same, but differing properties. For example:
 
-....
+----
 exe a : a.cpp : <include>/usr/local/include ;
 exe b : a.cpp ;
-....
+----
 
 The above snippet requires two different compilations of `a.cpp`, which
 differ only in their `include` property. Since the `include` feature is
@@ -50,27 +47,27 @@ once or twice.
 1.  To compile the file only once, make sure that properties are the
 same for both target requests:
 +
-....
+----
 exe a : a.cpp : <include>/usr/local/include ;
 exe b : a.cpp : <include>/usr/local/include ;
-....
+----
 +
 or:
 +
-....
+----
 alias a-with-include : a.cpp : <include>/usr/local/include ;
 exe a : a-with-include ;
 exe b : a-with-include ;
-....
+----
 +
 or if you want the `includes` property not to affect how any other
 sources added for the built `a` and `b` executables would be compiled:
 +
-....
+----
 obj a-obj : a.cpp : <include>/usr/local/include ;
 exe a : a-obj ;
 exe b : a-obj ;
-....
+----
 +
 Note that in both of these cases the `include` property will be applied
 only for building these object files and not any other sources that
@@ -78,19 +75,19 @@ might be added for targets `a` and `b`.
 2.  To compile the file twice, you can tell Boost.Build to compile it to
 two separate object files like so:
 +
-....
-      obj a_obj : a.cpp : <include>/usr/local/include ;
-      obj b_obj : a.cpp ;
-      exe a : a_obj ;
-      exe b : b_obj ;
-....
+----
+obj a_obj : a.cpp : <include>/usr/local/include ;
+obj b_obj : a.cpp ;
+exe a : a_obj ;
+exe b : b_obj ;
+----
 +
 or you can make the object file targets local to the main target:
 +
-....
-      exe a : [ obj a_obj : a.cpp : <include>/usr/local/include ] ;
-      exe b : [ obj a_obj : a.cpp ] ;
-....
+----
+exe a : [ obj a_obj : a.cpp : <include>/usr/local/include ] ;
+exe b : [ obj a_obj : a.cpp ] ;
+----
 +
 which will cause Boost.Build to actually change the generated object
 file names a bit for you and thus avoid any conflicts.
@@ -121,19 +118,19 @@ Boost.Jam automatically imports all environment variables into its
 built-in .ENVIRON module so user can read them from there directly or by
 using the helper os.environ rule. For example:
 
-....
+----
 import os ;
 local unga-unga = [ os.environ UNGA_UNGA ] ;
 ECHO $(unga-unga) ;
-....
+----
 
 or a bit more realistic:
 
-....
+----
 import os ;
 local SOME_LIBRARY_PATH = [ os.environ SOME_LIBRARY_PATH ] ;
 exe a : a.cpp : <include>$(SOME_LIBRARY_PATH) ;
-....
+----
 
 [[bbv2.faq.proporder]]
 == How to control properties order?
@@ -141,9 +138,9 @@ exe a : a.cpp : <include>$(SOME_LIBRARY_PATH) ;
 For internal reasons, Boost.Build sorts all the properties
 alphabetically. This means that if you write:
 
-....
+----
 exe a : a.cpp : <include>b <include>a ;
-....
+----
 
 then the command line with first mention the `a` include directory, and
 then `b`, even though they are specified in the opposite order. In most
@@ -151,9 +148,9 @@ cases, the user does not care. But sometimes the order of includes, or
 other properties, is important. For such cases, a special syntax is
 provided:
 
-....
+----
 exe a : a.cpp : <include>a&&b ;
-....
+----
 
 The `&&` symbols separate property values and specify that their order
 should be preserved. You are advised to use this feature only when the
@@ -178,27 +175,27 @@ usage is listed in its requirements. To explicitly specify the `use`
 relationship one can use the `<use>` feature. For example, both of the
 following lines will cause `a` to appear before `b` on the command line:
 
-....
+----
 lib a : a.cpp b ;
 lib a : a.cpp : <use>b ;
-....
+----
 
 The same approach works for searched libraries as well:
 
-....
+----
 lib z ;
 lib png : : <use>z ;
 exe viewer : viewer png z ;
-....
+----
 
 [[bbv2.faq.external]]
 == Can I get capture external program output using a Boost.Jam variable?
 
 The `SHELL` builtin rule may be used for this purpose:
 
-....
+----
 local gtk_includes = [ SHELL "gtk-config --cflags" ] ;
-....
+----
 
 [[bbv2.faq.projectroot]]
 == How to get the project root (a.k.a. Jamroot) location?
@@ -206,9 +203,9 @@ local gtk_includes = [ SHELL "gtk-config --cflags" ] ;
 You might want to use your project's root location in your Jamfiles. To
 access it just declare a path constant in your Jamroot.jam file using:
 
-....
+----
 path-constant TOP : . ;
-....
+----
 
 After that, the `TOP` variable can be used in every Jamfile.
 
@@ -219,35 +216,31 @@ If one file must be compiled with special options, you need to
 explicitly declare an `obj` target for that file and then use that
 target in your `exe` or `lib` target:
 
-....
+----
 exe a : a.cpp b ;
 obj b : b.cpp : <optimization>off ;
-....
+----
 
 Of course you can use other properties, for example to specify specific
 C/C++ compiler options:
 
-....
+----
 exe a : a.cpp b ;
 obj b : b.cpp : <cflags>-g ;
-....
+----
 
 You can also use link:#bbv2.tutorial.conditions[conditional properties]
 for finer control:
 
-....
+----
 exe a : a.cpp b ;
 obj b : b.cpp : <variant>release:<optimization>off ;
-....
+----
 
 [[bbv2.faq.dll-path]]
 == Why are the `dll-path` and `hardcode-dll-paths` properties useful?
 
-_______________________________________
-*Note*
-
-This entry is specific to Unix systems.
-_______________________________________
+NOTE: This entry is specific to Unix systems.
 
 Before answering the questions, let us recall a few points about shared
 libraries. Shared libraries can be used by several applications, or
@@ -261,7 +254,7 @@ started the OS may need to find the shared library when the application
 is started. The dynamic linker will search in a system-defined list of
 paths, load the library and resolve the symbols. Which means that you
 should either change the system-defined list, given by the
-LD_LIBRARY_PATH environment variable, or install the libraries to a
+`LD_LIBRARY_PATH` environment variable, or install the libraries to a
 system location. This can be inconvenient when developing, since the
 libraries are not yet ready to be installed, and cluttering system paths
 may be undesirable. Luckily, on Unix there is another way.
@@ -270,22 +263,21 @@ An executable can include a list of additional library paths, which will
 be searched before system paths. This is excellent for development
 because the build system knows the paths to all libraries and can
 include them in the executables. That is done when the
-`hardcode-dll-paths
-      ` feature has the `true` value, which is the default. When the
-executables should be installed, the story is different.
+`hardcode-dll-paths` feature has the `true` value, which is the default.
+When the executables should be installed, the story is different.
 
 Obviously, installed executable should not contain hardcoded paths to
 your development tree. (The `install` rule explicitly disables the
 `hardcode-dll-paths` feature for that reason.) However, you can use the
 `dll-path` feature to add explicit paths manually. For example:
 
-....
+----
 install installed : application : <dll-path>/usr/lib/snake
                                   <location>/usr/bin ;
-....
+----
 
-will allow the application to find libraries placed in the `
-      /usr/lib/snake` directory.
+will allow the application to find libraries placed in the
+`/usr/lib/snake` directory.
 
 If you install libraries to a nonstandard location and add an explicit
 path, you get more control over libraries which will be used. A library
@@ -314,18 +306,18 @@ different development machines and then such declarations would need to
 be duplicated in different projects. The solution is to declare the
 targets in Boost.Build's `site-config.jam` configuration file:
 
-....
+----
 project site-config ;
 lib zlib : : <name>z ;
-....
+----
 
 Recall that both `site-config.jam` and `user-config.jam` are projects,
 and everything you can do in a Jamfile you can do in those files as
 well. So, you declare a project id and a target. Now, one can write:
 
-....
+----
 exe hello : hello.cpp /site-config//zlib ;
-....
+----
 
 in any Jamfile.
 
@@ -344,13 +336,13 @@ whether it is a header-only library or not.
 Header-only libraries may be declared using the `alias` rule, specifying
 their include path as a part of its usage requirements, for example:
 
-....
+----
 alias my-lib
     : # no sources
     : # no build requirements
     : # no default build
     : <include>whatever ;
-....
+----
 
 The includes specified in usage requirements of `my-lib` are
 automatically added to all of its dependants' build properties. The
@@ -362,10 +354,10 @@ If you already have proper usage requirements declared for a project
 where a header-only library is defined, you do not need to duplicate
 them for the `alias` target:
 
-....
+----
 project my : usage-requirements <include>whatever ;
 alias mylib ;
-....
+----
 
 [[bbv2.faq.names]]
 == What is the difference between Boost.Build, `b2`, `bjam` and Perforce Jam?

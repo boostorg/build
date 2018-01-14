@@ -1,10 +1,5 @@
 [[bbv2.reference.modules.regex]]
-regex
------
-
-regex
-
-module
+= regex
 
 Contains rules for string processing using regular expressions.
 
@@ -22,67 +17,46 @@ Contains rules for string processing using regular expressions.
 * "\<" matches the beginning of a word.
 * "\>" matches the end of a word.
 
-1.  split
-+
-regex
-+
-rule split ( string separator )
+1. `rule split ( string separator )`
 +
 Returns a list of the following substrings:
-1.  from beginning till the first occurrence of `separator` or till the
++
+.. from beginning till the first occurrence of `separator` or till the
 end,
-2.  between each occurrence of `separator` and the next occurrence,
-3.  from the last occurrence of `separator` till the end.
+.. between each occurrence of `separator` and the next occurrence,
+.. from the last occurrence of `separator` till the end.
 +
 If no separator is present, the result will contain only one element.
-2.  split-list
-+
-regex
-+
-rule split-list ( list * : separator )
+
+2. `rule split-list ( list * : separator )`
 +
 Returns the concatenated results of applying
 link:#bbv2.reference.modules.regex.split[regex.split] to every element
 of the list using the separator pattern.
-3.  match
-+
-regex
-+
-rule match ( pattern : string : indices * )
+
+3. `rule match ( pattern : string : indices * )`
 +
 Match `string` against `pattern`, and return the elements indicated by
 `indices`.
-4.  transform
-+
-regex
-+
-rule transform ( list * : pattern : indices * )
+
+4. `rule transform ( list * : pattern : indices * )`
 +
 Matches all elements of `list` against the `pattern` and returns a list
 of elements indicated by `indices` of all successful matches. If
 `indices` is omitted returns a list of first parenthesized groups of all
 successful matches.
-5.  escape
-+
-regex
-+
-rule escape ( string : symbols : escape-symbol )
+
+5. `rule escape ( string : symbols : escape-symbol )`
 +
 Escapes all of the characters in `symbols` using the escape symbol
 `escape-symbol` for the given string, and returns the escaped string.
-6.  replace
-+
-regex
-+
-rule replace ( string match replacement )
+
+6. `rule replace ( string match replacement )`
 +
 Replaces occurrences of a match string in a given string and returns the
 new string. The match string can be a regex expression.
-7.  replace-list
-+
-regex
-+
-rule replace-list ( list * : match : replacement )
+
+7. `rule replace-list ( list * : match : replacement )`
 +
 Replaces occurrences of a match string in a given list of strings and
 returns a list of new strings. The match string can be a regex

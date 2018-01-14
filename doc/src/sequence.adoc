@@ -1,10 +1,5 @@
 [[bbv2.reference.modules.sequence]]
-sequence
---------
-
-sequence
-
-module
+= sequence
 
 Various useful list functions. Note that algorithms in this module
 execute largely in the caller's module namespace, so that local rules
@@ -13,80 +8,49 @@ multi-element lists. In that case, all but the first element are
 prepended to the first argument which is passed to the rule named by the
 first element.
 
-1.  filter
-+
-sequence
-+
-rule filter ( predicate + : sequence * )
+1. `rule filter ( predicate + : sequence * )`
 +
 Return the elements `e` of `$(sequence)` for which `[ $(predicate) e ]`
 has a non-null value.
-2.  transform
-+
-sequence
-+
-rule transform ( function + : sequence * )
+
+2. `rule transform ( function + : sequence * )`
 +
 Return a new sequence consisting of `[ $(function) $(e) ]` for each
 element `e` of `$(sequence)`.
-3.  reverse
-+
-sequence
-+
-rule reverse ( s * )
+
+3. `rule reverse ( s * )`
 +
 Returns the elements of `s` in reverse order.
-4.  insertion-sort
-+
-sequence
-+
-rule insertion-sort ( s * : ordered * )
+
+4. `rule insertion-sort ( s * : ordered * )`
 +
 Insertion-sort `s` using the BinaryPredicate `ordered`.
-5.  merge
-+
-sequence
-+
-rule merge ( s1 * : s2 * : ordered * )
+
+5. `rule merge ( s1 * : s2 * : ordered * )`
 +
 Merge two ordered sequences using the BinaryPredicate `ordered`.
-6.  join
-+
-sequence
-+
-rule join ( s * : joint ? )
+
+6. `rule join ( s * : joint ? )`
 +
 Join the elements of `s` into one long string. If `joint` is supplied,
 it is used as a separator.
-7.  length
-+
-sequence
-+
-rule length ( s * )
+
+7. `rule length ( s * )`
 +
 Find the length of any sequence.
-8.  unique
-+
-sequence
-+
-rule unique ( list * : stable ? )
+
+8. `rule unique ( list * : stable ? )`
 +
 Removes duplicates from `list`. If `stable` is passed, then the order of
 the elements will be unchanged.
-9.  max-element
-+
-sequence
-+
-rule max-element ( elements + : ordered ? )
+
+9. `rule max-element ( elements + : ordered ? )`
 +
 Returns the maximum number in `elements`. Uses `ordered` for comparisons
 or link:#bbv2.reference.modules.numbers.less[numbers.less] if none is
 provided.
-10. select-highest-ranked
-+
-sequence
-+
-rule select-highest-ranked ( elements * : ranks * )
+
+10. `rule select-highest-ranked ( elements * : ranks * )`
 +
 Returns all of `elements` for which the corresponding element in the
 parallel list `rank` is equal to the maximum value in `rank`.

@@ -496,16 +496,16 @@ specify additional information about the tool's configuration. This is
 done by calling the `using` rule, typically in your `user-config.jam`,
 for example:
 
-....
+----
 using gcc ;
-....
+----
 
 additional parameters can be passed just like for other rules, for
 example:
 
-....
+----
 using gcc : 4.0 : g++-4.0 ;
-....
+----
 
 The options that can be passed to each tool are documented in the
 subsequent sections.
@@ -518,517 +518,27 @@ and documents how each one can be initialized. The name of support
 module for compiler is also the value for the `toolset` feature that can
 be used to explicitly request that compiler.
 
-[[bbv2.reference.tools.compiler.gcc]]
-==== GNU C++
-
-The `gcc` module supports the http://gcc.gnu.org[GNU C++ compiler] on
-Linux, a number of Unix-like system including SunOS and on Windows
-(either http://www.cygwin.com[Cygwin] or http://www.mingw.org[MinGW]).
-On Mac OSX, it is recommended to use system gcc, see
-link:#bbv2.reference.tools.compiler.darwin[section_title].
-
-The `gcc` module is initialized using the following syntax:
-
-....
-using gcc : TOOLSET_OPS ;
-....
-
-USING_REPEATION
-
-If the version is not explicitly specified, it will be automatically
-detected by running the compiler with the `-v` option. If the command is
-not specified, the `g++` binary will be searched in PATH.
-
-OPTION_LIST_INTRO
-
-`archiver`::
-  Specifies the archiver command that is used to produce static
-  libraries. Normally, it is autodetected using gcc `-print-prog-name`
-  option or defaulted to `ar`, but in some cases you might want to
-  override it, for example to explicitly use a system version instead of
-  one included with gcc.
-`ranlib`::
-  Specifies the ranlib command that is used to generated symbol table
-  for static libraries. Normally, it is autodetected using gcc
-  `-print-prog-name` option or defaulted to `ranlib`, but in some cases
-  you might want to override it, for example to explicitly use a system
-  version instead of one included with gcc.
-`rc`::
-  Specifies the resource compiler command that will be used with the
-  version of gcc that is being configured. This setting makes sense only
-  for Windows and only if you plan to use resource files. By default
-  `windres` will be used.
-`rc-type`::
-  Specifies the type of resource compiler. The value can be either
-  `windres` for msvc resource compiler, or `rc` for borland's resource
-  compiler.
-
-64-bit compilation
-
-gcc
-
-In order to compile 64-bit applications, you have to specify
-
-address-model=64
-
-, and the
-
-instruction-set
-
-feature should refer to a 64 bit processor. Currently, those include
-
-nocona
-
-,
-
-opteron
-
-,
-
-athlon64
-
-and
-
-athlon-fx
-
-.
-
-[[bbv2.reference.tools.compiler.darwin]]
-==== Apple Darwin gcc
-
-The `darwin` module supports the version of gcc that is modified and
-provided by Apple. The configuration is essentially identical to that of
-the gcc module.
-
-fat binaries The darwin toolset can generate so called "fat"
-binaries—binaries that can run support more than one architecture, or
-address mode. To build a binary that can run both on Intel and PowerPC
-processors, specify `architecture=combined`. To build a binary that can
-run both in 32-bit and 64-bit modes, specify `address-model=32_64`. If
-you specify both of those properties, a "4-way" fat binary will be
-generated.
-
-[[bbv2.reference.tools.compiler.msvc]]
-==== Microsoft Visual C++
-
-The `msvc` module supports the
-http://msdn.microsoft.com/visualc/[Microsoft Visual C++] command-line
-tools on Microsoft Windows. The supported products and versions of
-command line tools are listed below:
-
-* Visual Studio 2017—14.1
-* Visual Studio 2015—14.0
-* Visual Studio 2013—12.0
-* Visual Studio 2012—11.0
-* Visual Studio 2010—10.0
-* Visual Studio 2008—9.0
-* Visual Studio 2005—8.0
-* Visual Studio .NET 2003—7.1
-* Visual Studio .NET—7.0
-* Visual Studio 6.0, Service Pack 5—6.5
-
-The user would then call the boost build executable with the toolset set
-equal to `msvc-[version number]` for example to build with Visual Studio
-2017 one could run:
-
-....
-.\b2 toolset=msvc-14.1 target
-          
-....
-
-The `msvc` module is initialized using the following syntax:
-
-....
-using msvc : TOOLSET_OPS ;
-          
-....
-
-USING_REPEATION
-
-If the version is not explicitly specified, the most recent version
-found in the registry will be used instead. If the special value `all`
-is passed as the version, all versions found in the registry will be
-configured. If a version is specified, but the command is not, the
-compiler binary will be searched in standard installation paths for that
-version, followed by PATH.
-
-The compiler command should be specified using forward slashes, and
-quoted.
-
-OPTION_LIST_INTRO
-
-`assembler`::
-  The command that compiles assembler sources. If not specified, `ml`
-  will be used. The command will be invoked after the setup script was
-  executed and adjusted the PATH variable.
-`compiler`::
-  The command that compiles C and C++ sources. If not specified, `cl`
-  will be used. The command will be invoked after the setup script was
-  executed and adjusted the PATH variable.
-`compiler-filter`::
-  Command through which to pipe the output of running the compiler. For
-  example to pass the output to STLfilt.
-`idl-compiler`::
-  The command that compiles Microsoft COM interface definition files. If
-  not specified, `midl` will be used. The command will be invoked after
-  the setup script was executed and adjusted the PATH variable.
-`linker`::
-  The command that links executables and dynamic libraries. If not
-  specified, `link` will be used. The command will be invoked after the
-  setup script was executed and adjusted the PATH variable.
-`mc-compiler`::
-  The command that compiles Microsoft message catalog files. If not
-  specified, `mc` will be used. The command will be invoked after the
-  setup script was executed and adjusted the PATH variable.
-`resource-compiler`::
-  The command that compiles resource files. If not specified, `rc` will
-  be used. The command will be invoked after the setup script was
-  executed and adjusted the PATH variable.
-`setup`::
-  The filename of the global environment setup script to run before
-  invoking any of the tools defined in this toolset. Will not be used in
-  case a target platform specific script has been explicitly specified
-  for the current target platform. Used setup script will be passed the
-  target platform identifier (x86, x86_amd64, x86_ia64, amd64 or ia64)
-  as a parameter. If not specified a default script is chosen based on
-  the used compiler binary, e.g. `vcvars32.bat` or `vsvars32.bat`.
-`setup-amd64`; `setup-i386`; `setup-ia64`::
-  The filename of the target platform specific environment setup script
-  to run before invoking any of the tools defined in this toolset. If
-  not specified the global environment setup script is used.
-
-[[v2.reference.tools.compiler.msvc.64]]
-64-bit support
-++++++++++++++
-
-64-bit compilation
-
-Microsoft Visual Studio
-
-Starting with version 8.0, Microsoft Visual Studio can generate binaries
-for 64-bit processor, both 64-bit flavours of x86 (codenamed
-AMD64/EM64T), and Itanium (codenamed IA64). In addition, compilers that
-are itself run in 64-bit mode, for better performance, are provided. The
-complete list of compiler configurations are as follows (we abbreviate
-AMD64/EM64T to just AMD64):
-
-* 32-bit x86 host, 32-bit x86 target
-* 32-bit x86 host, 64-bit AMD64 target
-* 32-bit x86 host, 64-bit IA64 target
-* 64-bit AMD64 host, 64-bit AMD64 target
-* 64-bit IA64 host, 64-bit IA64 target
-
-The 32-bit host compilers can be always used, even on 64-bit Windows. On
-the contrary, 64-bit host compilers require both 64-bit host processor
-and 64-bit Windows, but can be faster. By default, only 32-bit host,
-32-bit target compiler is installed, and additional compilers need to be
-installed explicitly.
-
-To use 64-bit compilation you should:
-
-1.  Configure you compiler as usual. If you provide a path to the
-compiler explicitly, provide the path to the 32-bit compiler. If you try
-to specify the path to any of 64-bit compilers, configuration will not
-work.
-2.  When compiling, use `address-model=64`, to generate AMD64 code.
-3.  To generate IA64 code, use `architecture=ia64`
-
-The (AMD64 host, AMD64 target) compiler will be used automatically when
-you are generating AMD64 code and are running 64-bit Windows on AMD64.
-The (IA64 host, IA64 target) compiler will never be used, since nobody
-has an IA64 machine to test.
-
-It is believed that AMD64 and EM64T targets are essentially compatible.
-The compiler options `/favor:AMD64` and `/favor:EM64T`, which are
-accepted only by AMD64 targeting compilers, cause the generated code to
-be tuned to a specific flavor of 64-bit x86. Boost.Build will make use
-of those options depending on the value of the`instruction-set` feature.
-
-[[v2.reference.tools.compiler.msvc.winrt]]
-Windows Runtime support
-+++++++++++++++++++++++
-
-Windows Runtime support
-
-Microsoft Visual Studio
-
-Starting with version 11.0, Microsoft Visual Studio can produce binaries
-for Windows Store and Phone in addition to traditional Win32 desktop. To
-specify which Windows API set to target, use the `windows-api` feature.
-Available options are `desktop`, `store`, or `phone`. If not specified,
-`desktop` will be used.
-
-When using `store` or `phone` the specified toolset determines what
-Windows version is targeted. The following options are available:
-
-* Windows 8.0: toolset=msvc-11.0 windows-api=store
-* Windows 8.1: toolset=msvc-12.0 windows-api=store
-* Windows Phone 8.0: toolset=msvc-11.0 windows-api=phone
-* Windows Phone 8.1: toolset=msvc-12.0 windows-api=phone
-
-For example use the following to build for Windows Store 8.1 with the
-ARM architecture:
-
-....
-.\b2 toolset=msvc-12.0 windows-api=store architecture=arm
-....
-
-Note that when targeting Windows Phone 8.1, version 12.0 didn't include
-the vcvars phone setup scripts. They can be separately downloaded from
-http://blogs.msdn.com/b/vcblog/archive/2014/07/18/using-boost-libraries-in-windows-store-and-phone-applications.aspx[here].
-
-[[bbv2.reference.tools.compiler.intel]]
-==== Intel C++
-
-The `intel-linux` and `intel-win` modules support the Intel C++
-command-line compiler—the
-http://www.intel.com/software/products/compilers/clin/index.htm[Linux]
-and
-http://www.intel.com/cd/software/products/asmo-na/eng/compilers/284527.htm[Windows]
-versions respectively.
-
-The module is initialized using the following syntax:
-
-....
-using intel-linux : TOOLSET_OPS ;
-....
-
-or
-
-....
-using intel-win : TOOLSET_OPS ;
-....
-
-respectively.
-
-USING_REPEATION
-
-If compiler command is not specified, then Boost.Build will look in PATH
-for an executable `icpc` (on Linux), or `icc.exe` (on Windows).
-
-OPTION_LIST_INTRO
-
-The Linux version supports the following additional options:
-
-[[bbv2.reference.tools.compiler.acc]]
-==== HP aC++ compiler
-
-The `acc` module supports the
-http://h21007.www2.hp.com/dspp/tech/tech_TechSoftwareDetailPage_IDX/1,1703,1740,00.html[HP
-aC++ compiler] for the HP-UX operating system.
-
-The module is initialized using the following syntax:
-
-....
-using acc : TOOLSET_OPS ;
-....
-
-USING_REPEATION
-
-If the command is not specified, the `aCC` binary will be searched in
-PATH.
-
-OPTION_LIST_INTRO
-
-[[bbv2.reference.tools.compiler.borland]]
-==== Borland C++ Compiler
-
-The `borland` module supports the command line C++ compiler included in
-http://www.borland.com/us/products/cbuilder/index.html[C++ Builder 2006]
-product and earlier version of it, running on Microsoft Windows.
-
-The supported products are listed below. The version reported by the
-command lines tools is also listed for reference.:
-
-* C++ Builder 2006—5.8.2
-* CBuilderX—5.6.5, 5.6.4 (depending on release)
-* CBuilder6—5.6.4
-* Free command line tools—5.5.1
-
-The module is initialized using the following syntax:
-
-....
-using borland : TOOLSET_OPS ;
-....
-
-USING_REPEATION
-
-If the command is not specified, Boost.Build will search for a binary
-named `bcc32` in PATH.
-
-OPTION_LIST_INTRO
-
-[[bbv2.reference.tools.compiler.como]]
-==== Comeau C/C++ Compiler
-
-The `como-linux` and the `como-win` modules supports the
-http://www.comeaucomputing.com/[Comeau C/C++ Compiler] on Linux and
-Windows respectively.
-
-The module is initialized using the following syntax:
-
-....
-using como-linux : TOOLSET_OPS ;
-....
-
-USING_REPEATION
-
-If the command is not specified, Boost.Build will search for a binary
-named `como` in PATH.
-
-OPTION_LIST_INTRO
-
-Before using the Windows version of the compiler, you need to setup
-necessary environment variables per compiler's documentation. In
-particular, the COMO_XXX_INCLUDE variable should be set, where XXX
-corresponds to the used backend C compiler.
-
-[[bbv2.reference.tools.compiler.cw]]
-==== Code Warrior
-
-The `cw` module support CodeWarrior compiler, originally produced by
-Metrowerks and presently developed by Freescale. Boost.Build supports
-only the versions of the compiler that target x86 processors. All such
-versions were released by Metrowerks before acquisition and are not sold
-any longer. The last version known to work is 9.4.
-
-The module is initialized using the following syntax:
-
-....
-using cw : TOOLSET_OPS ;
-....
-
-USING_REPEATION
-
-If the command is not specified, Boost.Build will search for a binary
-named `mwcc` in default installation paths and in PATH.
-
-OPTION_LIST_INTRO
-
-`setup`::
-  The command that sets up environment variables prior to invoking the
-  compiler. If not specified, `cwenv.bat` alongside the compiler binary
-  will be used.
-`compiler`::
-  The command that compiles C and C++ sources. If not specified, `mwcc`
-  will be used. The command will be invoked after the setup script was
-  executed and adjusted the PATH variable.
-`linker`::
-  The command that links executables and dynamic libraries. If not
-  specified, `mwld` will be used. The command will be invoked after the
-  setup script was executed and adjusted the PATH variable.
-
-[[bbv2.reference.tools.compiler.dmc]]
-==== Digital Mars C/C++ Compiler
-
-The `dmc` module supports the http://www.digitalmars.com/[Digital Mars
-C++ compiler.]
-
-The module is initialized using the following syntax:
-
-....
-using dmc : TOOLSET_OPS ;
-....
-
-USING_REPEATION
-
-If the command is not specified, Boost.Build will search for a binary
-named `dmc` in PATH.
-
-OPTION_LIST_INTRO
-
-[[bbv2.reference.tools.compiler.hp_cxx]]
-==== HP C++ Compiler for Tru64 Unix
-
-The `hp_cxx` modules supports the
-http://h30097.www3.hp.com/cplus/?jumpid=reg_R1002_USEN[HP C++ Compiler]
-for Tru64 Unix.
-
-The module is initialized using the following syntax:
-
-....
-using hp_cxx : TOOLSET_OPS ;
-....
-
-USING_REPEATION
-
-If the command is not specified, Boost.Build will search for a binary
-named `hp_cxx` in PATH.
-
-OPTION_LIST_INTRO
-
-[[bbv2.reference.tools.compiler.sun]]
-==== Sun Studio
-
-The `sun` module supports the
-http://developers.sun.com/sunstudio/index.jsp[Sun Studio] C++ compilers
-for the Solaris OS.
-
-The module is initialized using the following syntax:
-
-....
-using sun : TOOLSET_OPS ;
-....
-
-USING_REPEATION
-
-If the command is not specified, Boost.Build will search for a binary
-named `CC` in `/opt/SUNWspro/bin` and in PATH.
-
-When using this compiler on complex C++ code, such as the
-http://boost.org[Boost C++ library], it is recommended to specify the
-following options when initializing the `sun` module:
-
-....
--library=stlport4 -features=tmplife -features=tmplrefstatic
-          
-....
-
-See the http://blogs.sun.com/sga/entry/command_line_options[Sun C++
-Frontend Tales] for details.
-
-OPTION_LIST_INTRO
-
-64-bit compilation
-
-Sun Studio
-
-Starting with Sun Studio 12, you can create 64-bit applications by using
-the
-
-address-model=64
-
-property.
-
-[[bbv2.reference.tools.compiler.vacpp]]
-==== IBM Visual Age
-
-The `vacpp` module supports the http://www.ibm.com/software/ad/vacpp[IBM
-Visual Age] C++ Compiler, for the AIX operating system. Versions 7.1 and
-8.0 are known to work.
-
-The module is initialized using the following syntax:
-
-....
-using vacpp ;
-....
-
-The module does not accept any initialization options. The compiler
-should be installed in the `/usr/vacpp/bin` directory.
-
-Later versions of Visual Age are known as XL C/C++. They were not tested
-with the the `vacpp` module.
-
-Third-party libraries
-~~~~~~~~~~~~~~~~~~~~~
+:leveloffset: +3
+include::../../src/tools/acc.jam[tag=doc]
+include::../../src/tools/borland.jam[tag=doc]
+include::../../src/tools/como.jam[tag=doc]
+include::../../src/tools/cw.jam[tag=doc]
+include::../../src/tools/dmc.jam[tag=doc]
+include::../../src/tools/gcc.jam[tag=doc]
+include::../../src/tools/hp_cxx.jam[tag=doc]
+include::../../src/tools/intel.jam[tag=doc]
+include::../../src/tools/msvc.jam[tag=doc]
+include::../../src/tools/sun.jam[tag=doc]
+include::../../src/tools/vacpp.jam[tag=doc]
+:leveloffset: -3
+
+=== Third-party libraries
 
 Boost.Build provides special support for some third-party C++ libraries,
 documented below.
 
 [[bbv2.reference.tools.libraries.stlport]]
 ==== STLport library
-
-STLport
 
 The http://stlport.org[STLport] library is an alternative implementation
 of C++ runtime library. Boost.Build supports using that library on
@@ -1038,9 +548,9 @@ each STLport version and is not officially supported.
 Before using STLport, you need to configure it in `user-config.jam`
 using the following syntax:
 
-....
+----
 using stlport : version : header-path : library-path ;
-....
+----
 
 Where version is the version of STLport, for example `5.1.4`, headers is
 the location where STLport headers can be found, and libraries is the
@@ -1055,18 +565,15 @@ When STLport is configured, you can build with STLport by requesting
 [[bbv2.reference.tools.libraries.zlib]]
 ==== zlib
 
-zlib
-
 Provides support for the http://www.zlib.net[zlib] library. zlib can be
 configured either to use precompiled binaries or to build the library
 from source.
 
 zlib can be initialized using the following syntax
 
-....
+----
 using zlib : version : options : condition : is-default ;
-          
-....
+----
 
 Options for using a prebuilt library:
 
@@ -1094,7 +601,7 @@ Options for building zlib from source:
 
 Examples:
 
-....
+----
 # Find zlib in the default system location
 using zlib ;
 # Build zlib from source
@@ -1105,12 +612,10 @@ using zlib : 1.2.7 : <include>/usr/local/include <search>/usr/local/lib ;
 # prebuilt binaries for gcc.
 using zlib : 1.2.7 : <source>C:/Devel/src/zlib-1.2.7 : <toolset>msvc ;
 using zlib : 1.2.7 : : <toolset>gcc ;
-....
+----
 
 [[bbv2.reference.tools.libraries.bzip2]]
 ==== bzip2
-
-bzip2
 
 Provides support for the http://www.bzip.org[bzip2] library. bzip2 can
 be configured either to use precompiled binaries or to build the library
@@ -1118,10 +623,9 @@ from source.
 
 bzip2 can be initialized using the following syntax
 
-....
+----
 using bzip2 : version : options : condition : is-default ;
-          
-....
+----
 
 Options for using a prebuilt library:
 
@@ -1149,7 +653,7 @@ Options for building bzip2 from source:
 
 Examples:
 
-....
+----
 # Find bzip in the default system location
 using bzip2 ;
 # Build bzip from source
@@ -1160,10 +664,9 @@ using bzip2 : 1.0.6 : <include>/usr/local/include <search>/usr/local/lib ;
 # prebuilt binaries for gcc.
 using bzip2 : 1.0.6 : <source>C:/Devel/src/bzip2-1.0.6 : <toolset>msvc ;
 using bzip2 : 1.0.6 : : <toolset>gcc ;
-....
+----
 
-Documentation tools
-~~~~~~~~~~~~~~~~~~~
+=== Documentation tools
 
 Boost.Build support for the Boost documentation tools is documented
 below.
@@ -1171,20 +674,19 @@ below.
 [[bbv2.reference.tools.doc.xsltproc]]
 ==== xsltproc
 
-xsltproc
-
 To use xsltproc, you first need to configure it using the following
 syntax:
 
-....
+----
 using xsltproc : xsltproc ;
-....
+----
 
 Where xsltproc is the xsltproc executable. If xsltproc is not specified,
 and the variable XSLTPROC is set, the value of XSLTPROC will be used.
 Otherwise, xsltproc will be searched for in PATH.
 
-OPTION_LIST_INTRO
+The following options can be provided, using
+_`<option-name>option-value syntax`_:
 
 `xsl:param`::
   Values should have the form name=value
@@ -1198,123 +700,126 @@ operate on jam targets and are intended to be used by another toolset,
 such as boostbook, rather than directly by users.
 
 `xslt`::
-....
++
+----
 rule xslt ( target : source stylesheet : properties * )
-....
-  +
-  Runs xsltproc to create a single output file.
+----
++
+Runs xsltproc to create a single output file.
+
 `xslt-dir`::
-....
++
+----
 rule xslt-dir ( target : source stylesheet : properties * : dirname )
-....
-  +
-  Runs xsltproc to create multiple outputs in a directory. `dirname` is
-  unused, but exists for historical reasons. The output directory is
-  determined from the target.
+----
++
+Runs xsltproc to create multiple outputs in a directory. `dirname` is
+unused, but exists for historical reasons. The output directory is
+determined from the target.
 
 [[bbv2.reference.tools.doc.boostbook]]
 ==== boostbook
 
-boostbook
-
-module
-
 To use boostbook, you first need to configure it using the following
 syntax:
 
-....
+----
 using boostbook : docbook-xsl-dir : docbook-dtd-dir : boostbook-dir ;
-....
+----
 
-docbook-xsl-dir is the DocBook XSL stylesheet directory. If not
-provided, we use DOCBOOK_XSL_DIR from the environment (if available) or
+`docbook-xsl-dir` is the DocBook XSL stylesheet directory. If not
+provided, we use `DOCBOOK_XSL_DIR` from the environment (if available) or
 look in standard locations. Otherwise, we let the XML processor load the
 stylesheets remotely.
 
-docbook-dtd-dir is the DocBook DTD directory. If not provided, we use
-DOCBOOK_DTD_DIR From the environment (if available) or look in standard
+`docbook-dtd-dir` is the DocBook DTD directory. If not provided, we use
+`DOCBOOK_DTD_DIR` From the environment (if available) or look in standard
 locations. Otherwise, we let the XML processor load the DTD remotely.
 
-boostbook-dir is the BoostBook directory with the DTD and XSL subdirs.
+`boostbook-dir` is the BoostBook directory with the DTD and XSL subdirs.
 
 The boostbook module depends on xsltproc. For pdf or ps output, it also
 depends on fop.
 
-OPTION_LIST_INTRO
+The following options can be provided, using
+_`<option-name>option-value syntax`_:
 
 `format`::
-  *Allowed values:* `html`, `xhtml`, `htmlhelp`, `onehtml`, `man`,
-  `pdf`, `ps`, `docbook`, `fo`, `tests`.
-  +
-  The `format` feature determines the type of output produced by the
-  boostbook rule.
++
+*Allowed values:* `html`, `xhtml`, `htmlhelp`, `onehtml`, `man`,
+`pdf`, `ps`, `docbook`, `fo`, `tests`.
++
+The `format` feature determines the type of output produced by the
+boostbook rule.
 
 The boostbook module defines a rule for creating a target following the
 common syntax.
 
 `boostbook`::
-....
++
+----
 rule boostbook ( target-name : sources * : requirements * : default-build * )
-....
-  +
-  Creates a boostbook target.
+----
++
+Creates a boostbook target.
 
 [[bbv2.reference.tools.doc.doxygen]]
 ==== doxygen
 
-doxygen
-
 To use doxygen, you first need to configure it using the following
 syntax:
 
-....
+----
 using doxygen : name ;
-....
+----
 
-name is the doxygen command. If it is not specified, it will be found in
+`name` is the doxygen command. If it is not specified, it will be found in
 the PATH.
 
 The doxygen module depends on the boostbook module when generating
 BoostBook XML.
 
-OPTION_LIST_INTRO
+The following options can be provided, using
+_`<option-name>option-value syntax`_:
 
 `doxygen:param`::
-  All the values of `doxygen:param` are added to the doxyfile.
-`prefix`::
-  Specifies the common prefix of all headers when generating BoostBook
-  XML. Everything before this will be stripped off.
-`reftitle`::
-  Specifies the title of the library-reference section, when generating
-  BoostBook XML.
-`doxygen:xml-imagedir`::
-  When generating BoostBook XML, specifies the directory in which to
-  place the images generated from LaTex formulae.
-  +
-  _____________________________________________________________________________________________________________________________________________________
-  *Warning*
++
+All the values of `doxygen:param` are added to the doxyfile.
 
-  The path is interpreted relative to the current working directory, not
-  relative to the Jamfile. This is necessary to match the behavior of
-  BoostBook.
-  _____________________________________________________________________________________________________________________________________________________
+`prefix`::
++
+Specifies the common prefix of all headers when generating BoostBook
+XML. Everything before this will be stripped off.
+
+`reftitle`::
++
+Specifies the title of the library-reference section, when generating
+BoostBook XML.
+
+`doxygen:xml-imagedir`::
++
+When generating BoostBook XML, specifies the directory in which to
+place the images generated from LaTex formulae.
++
+WARNING: The path is interpreted relative to the current working directory,
+not relative to the Jamfile. This is necessary to match the behavior of
+BoostBook.
 
 The doxygen module defines a rule for creating a target following the
 common syntax.
 
 `doxygen`::
-....
++
+----
 rule doxygen ( target : sources * : requirements * : default-build * : usage-requirements * )
-....
-  +
-  Creates a doxygen target. If the target name ends with .html, then
-  this will generate an html directory. Otherwise it will generate
-  BoostBook XML.
+----
++
+Creates a doxygen target. If the target name ends with .html, then
+this will generate an html directory. Otherwise it will generate
+BoostBook XML.
 
 [[bbv2.reference.tools.doc.quickbook]]
 ==== quickbook
-
-quickbook
 
 The quickbook module provides a generator to convert from Quickbook to
 BoostBook XML.
@@ -1322,32 +827,30 @@ BoostBook XML.
 To use quickbook, you first need to configure it using the following
 syntax:
 
-....
+----
 using quickbook : command ;
-....
+----
 
-command is the quickbook executable. If it is not specified, Boost.Build
+`command` is the quickbook executable. If it is not specified, Boost.Build
 will compile it from source. If it is unable to find the source it will
 search for a quickbook executable in PATH.
 
 [[bbv2.reference.tools.doc.fop]]
 ==== fop
 
-fop
-
 The fop module provides generators to convert from XSL formatting
 objects to Postscript and PDF.
 
 To use fop, you first need to configure it using the following syntax:
 
-....
+----
 using fop : fop-command : java-home : java ;
-....
+----
 
-fop-command is the command to run fop. If it is not specified,
+`fop-command` is the command to run fop. If it is not specified,
 Boost.Build will search for it in PATH and FOP_HOME.
 
-Either java-home or java can be used to specify where to find java.
+Either `java-home` or `java` can be used to specify where to find java.
 
 [[bbv2.reference.modules]]
 == Builtin modules
@@ -1359,21 +862,15 @@ Jamfile.
 [[bbv2.reference.modules.modules]]
 === modules
 
-modules
-
 The `modules` module defines basic functionality for handling modules.
 
 A module defines a number of rules that can be used in other modules.
 Modules can contain code at the top level to initialize the module. This
 code is executed the first time the module is loaded.
 
-__________________________________________________________________________________________________________________________________________________________________________________________
-*Note*
-
-A Jamfile is a special kind of module which is managed by the build
+NOTE: A Jamfile is a special kind of module which is managed by the build
 system. Although they cannot be loaded directly by users, the other
 features of modules are still useful for Jamfiles.
-__________________________________________________________________________________________________________________________________________________________________________________________
 
 Each module has its own namespaces for variables and rules. If two
 modules A and B both use a variable named X, each one gets its own copy
@@ -1384,16 +881,10 @@ Every module has two special variables. `$(__file__)` contains the name
 of the file that the module was loaded from and `$(__name__)` contains
 the name of the module.
 
-__________________________________________________________________________________________________
-*Note*
-
-`$(__file__)` does not contain the full path to the file. If you need
+NOTE: `$(__file__)` does not contain the full path to the file. If you need
 this, use `modules.binding`.
-__________________________________________________________________________________________________
 
-1.  binding
-+
-rule binding ( module-name )
+1. `rule binding ( module-name )`
 +
 Returns the filesystem binding of the given module.
 +
@@ -1403,9 +894,8 @@ For example, a module can get its own location with:
 ----
 me = [ modules.binding $(__name__) ] ;
 ----
-2.  poke
-+
-rule poke ( module-name ? : variables + : value * )
+
+2. `rule poke ( module-name ? : variables + : value * )`
 +
 Sets the module-local value of a variable.
 +
@@ -1415,9 +905,8 @@ For example, to set a variable in the global module:
 ----
 modules.poke : ZLIB_INCLUDE : /usr/local/include ;
 ----
-3.  peek
-+
-rule peek ( module-name ? : variables + )
+
+3. `rule peek ( module-name ? : variables + )`
 +
 Returns the module-local value of a variable.
 +
@@ -1427,20 +916,15 @@ For example, to read a variable from the global module:
 ----
 local ZLIB_INCLUDE = [ modules.peek : ZLIB_INCLUDE ] ;
 ----
-4.  call-in
-+
-rule call-in ( module-name ? : rule-name args * : * )
+
+4. `rule call-in ( module-name ? : rule-name args * : * )`
 +
 Call the given rule locally in the given module. Use this for rules
 accepting rule names as arguments, so that the passed rule may be
 invoked in the context of the rule's caller (for example, if the rule
 accesses module globals or is a local rule).
 +
-______________________________________________________
-*Note*
-
-rules called this way may accept at most 8 parameters.
-______________________________________________________
+NOTE: rules called this way may accept at most 8 parameters.
 +
 Example:
 +
@@ -1460,9 +944,8 @@ rule filter ( f : values * )
     return result ;
 }
 ----
-5.  load
-+
-rule load ( module-name : filename ? : search * )
+
+5. `rule load ( module-name : filename ? : search * )`
 +
 Load the indicated module if it is not already loaded.
 +
@@ -1475,9 +958,8 @@ Load the indicated module if it is not already loaded.
 `search`::
   Directories in which to search for filename. Defaults to
   `$(BOOST_BUILD_PATH)`.
-6.  import
-+
-rule import ( module-names + : rules-opt * : rename-opt * )
+
+6. `rule import ( module-names + : rules-opt * : rename-opt * )`
 +
 Load the indicated module and import rule names into the current module.
 Any members of `rules-opt` will be available without qualification in
@@ -1487,11 +969,7 @@ have in the imported module. If `rules-opt = '*'`, all rules from the
 indicated module are imported into the caller's module. If `rename-opt`
 is supplied, it must have the same number of elements as `rules-opt`.
 +
-____________________________________________________________________
-*Note*
-
-The `import` rule is available without qualification in all modules.
-____________________________________________________________________
+NOTE: The `import` rule is available without qualification in all modules.
 +
 Examples:
 +
@@ -1502,20 +980,47 @@ import path : * ;
 import path : join ;
 import path : native make : native-path make-path ;
 ----
-7.  clone-rules
-+
-rule clone-rules ( source-module target-module )
+
+7. `rule clone-rules ( source-module target-module )`
 +
 Define exported copies in `$(target-module)` of all rules exported from
 `$(source-module)`. Also make them available in the global module with
 qualification, so that it is just as though the rules were defined
 originally in `$(target-module)`.
 
+:leveloffset: +2
+
+include::path.adoc[]
+
+include::regex.adoc[]
+
+include::sequence.adoc[]
+
+include::type.adoc[]
+
+:leveloffset: -2
+
 [[bbv2.reference.class]]
 == Builtin classes
 
+:leveloffset: +2
+
+include::abstract-target.adoc[]
+
+include::project-target.adoc[]
+
+include::main-target.adoc[]
+
+include::basic-target.adoc[]
+
+include::typed-target.adoc[]
+
+include::property-set.adoc[]
+
+:leveloffset: -2
+
 [[bbv2.reference.buildprocess]]
-=== Build process
+== Build process
 
 The general overview of the build process was given in the
 link:#bbv2.overview.build_process[user documentation]. This section
@@ -1537,14 +1042,6 @@ the "common" properties,
 [[bbv2.reference.buildprocess.alternatives]]
 === Alternative selection
 
-Alternatives
-
-Selection
-
-Target Alternatives
-
-Selection
-
 When a target has several alternatives, one of them must be selected.
 The process is as follows:
 
@@ -1552,8 +1049,10 @@ The process is as follows:
 link:#bbv2.reference.features.attributes.base[base properties] in its
 requirements. link:#bbv2.reference.variants.propcond[Conditional
 properties] are excluded.
+
 2.  An alternative is viable only if all properties in its condition are
 present in the build request.
+
 3.  If there's only one viable alternative, it's choosen. Otherwise, an
 attempt is made to find the best alternative. An alternative a is better
 than another alternative b, if the set of properties in b's condition is
@@ -1573,19 +1072,24 @@ only two inputs: the build request and the requirements. Here are the
 rules about common properties.
 
 1.  Non-free features can have only one value
+
 2.  A non-conditional property in the requirements is always present in
 common properties.
+
 3.  A property in the build request is present in common properties,
 unless it is overridden by a property in the requirements.
+
 4.  If either the build request, or the requirements (non-conditional or
 conditional) include an expandable property (either composite, or with a
 specified subfeature value), the behaviour is equivalent to explicitly
 adding all the expanded properties to the build request or the
 requirements respectively.
+
 5.  If the requirements include a
 link:#bbv2.reference.variants.propcond[conditional property], and the
 condition of this property is true in the context of common properties,
 then the conditional property should be in common properties as well.
+
 6.  If no value for a feature is given by other rules here, it has
 default value in common properties.
 
@@ -1596,43 +1100,38 @@ The condition can be satisfied either by a property in the build
 request, by non-conditional requirements, or even by another conditional
 property. For example, the following example works as expected:
 
-....
+----
 exe a : a.cpp
       : <toolset>gcc:<variant>release
         <variant>release:<define>FOO ;
-....
+----
 
 [[bbv2.reference.buildprocess.targetpath]]
 === Target Paths
-
-path
-
-for targets
 
 Several factors determine the location of a concrete file target. All
 files in a project are built under the directory bin unless this is
 overridden by the build-dir project attribute. Under bin is a path that
 depends on the properties used to build each target. This path is
 uniquely determined by all non-free, non-incidental properties. For
-example, given a property set containing:
-`<toolset>gcc <toolset-gcc:version>4.6.1 <variant>debug
-      <warnings>all <define>_DEBUG <include>/usr/local/include
-      <link>static`, the path will be gcc-4.6.1/debug/link-static.
-<warnings> is an incidental feature and <define> and <include> are free
-features, so they do not affect the path.
+example, given a property set containing: `<toolset>gcc`
+`<toolset-gcc:version>4.6.1` `<variant>debug` `<warnings>all` `<define>_DEBUG`
+`<include>/usr/local/include` `<link>static`, the path will be
+`gcc-4.6.1/debug/link-static`. `<warnings>` is an incidental feature and
+`<define>` and `<include>` are free features, so they do not affect the path.
 
 Sometimes the paths produced by Boost.Build can become excessively long.
 There are a couple of command line options that can help with this.
---abbreviate-paths reduces each element to no more than five characters.
-For example, link-static becomes lnk-sttc. The --hash option reduces the
+`--abbreviate-paths` reduces each element to no more than five characters.
+For example, `link-static` becomes `lnk-sttc`. The `--hash` option reduces the
 path to a single directory using an MD5 hash.
 
-There are two features that affect the build directory. The <location>
+There are two features that affect the build directory. The `<location>`
 feature completely overrides the default build directory. For example,
 
-....
+----
 exe a : a.cpp : <location>. ;
-....
+----
 
 builds all the files produced by `a` in the directory of the Jamfile.
 This is generally discouraged, as it precludes variant builds.
@@ -1640,9 +1139,9 @@ This is generally discouraged, as it precludes variant builds.
 The <location-prefix> feature adds a prefix to the path, under the
 project's build directory. For example,
 
-....
+----
 exe a : a.cpp : <location-prefix>subdir ;
-....
+----
 
 will create the files for `a` in bin/subdir/gcc-4.6.1/debug
 
@@ -1737,9 +1236,9 @@ features, on the other hand, can have several values at a time and each
 value can be an arbitrary string. For example, it is possible to have
 several preprocessor symbols defined simultaneously:
 +
-....
+----
 <define>NDEBUG=1 <define>HAS_CONFIG_H=1
-....
+----
 * _optional_
 +
 An optional feature is a feature that is not required to appear in a
@@ -1787,8 +1286,6 @@ on library B. As the result, whenever an application will link to A, it
 will also link to B. Specifying B as dependency of A is different from
 adding B to the sources of A.
 
-base features
-
 Features that are neither free nor incidental are called _base_
 features.
 
@@ -1798,9 +1295,9 @@ features.
 The low-level feature declaration interface is the `feature` rule from
 the `feature` module:
 
-....
+----
 rule feature ( name : allowed-values * : attributes * )
-....
+----
 
 A feature's allowed-values may be extended with the `feature.extend`
 rule.
@@ -1815,6 +1312,7 @@ refinement_ and is performed by these rules
 
 1.  Each property in the required set is added to the original property
 set
+
 2.  If the original property set includes property with a different
 value of non free feature, that property is removed.
 
@@ -1828,36 +1326,35 @@ passing a command line option to it. You would not want to pass that
 option to other compilers. Conditional properties allow you to do just
 that. Their syntax is:
 
-....
-        property ( "," property ) * ":" property
-      
-....
+----
+property ( "," property ) * ":" property
+----
 
 For example, the problem above would be solved by:
 
-....
+----
 exe hello : hello.cpp : <toolset>yfc:<cxxflags>-disable-pointless-warning ;
-....
+----
 
 The syntax also allows several properties in the condition, for example:
 
-....
+----
 exe hello : hello.cpp : <os>NT,<toolset>gcc:<link>static ;
-....
+----
 
 [[bbv2.reference.ids]]
 === Target identifiers and references
 
 _Target identifier_ is used to denote a target. The syntax is:
 
-....
+----
 target-id -> (target-name | file-name | project-id | directory-name)
               | (project-id | directory-name) "//" target-name
 project-id -> path
 target-name -> path
 file-name -> path
 directory-name -> path
-....
+----
 
 This grammar allows some elements to be recognized as either
 
@@ -1872,13 +1369,13 @@ relative to the current project's location.
 To determine the real meaning the possible interpretations are checked
 in this order. For example, valid target ids might be:
 
-....
-a                                    -- target in current project
-lib/b.cpp                            -- regular file
-/boost/thread                        -- project "/boost/thread"
-/home/ghost/build/lr_library//parser -- target in specific project
-../boost_1_61_0                      -- project in specific directory
-....
+|===
+| `a`                                    | target in current project
+| `lib/b.cpp`                            | regular file
+| `/boost/thread`                        | project "/boost/thread"
+| `/home/ghost/build/lr_library//parser` | target in specific project
+| `../boost_1_61_0`                      | project in specific directory
+|===
 
 **Rationale:**Target is separated from project by special separator (not
 just slash), because:
@@ -1890,17 +1387,16 @@ _Target reference_ is used to specify a source target, and may
 additionally specify desired properties for that target. It has this
 syntax:
 
-....
+----
 target-reference -> target-id [ "/" requested-properties ]
 requested-properties -> property-path
-....
+----
 
 For example,
 
-....
-          exe compiler : compiler.cpp libs/cmdline/<optimization>space ;
-        
-....
+----
+exe compiler : compiler.cpp libs/cmdline/<optimization>space ;
+----
 
 would cause the version of `cmdline` library, optimized for space, to be
 linked in even if the `compiler` executable is build with optimization

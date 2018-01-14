@@ -28,4 +28,8 @@ include::faq.adoc[]
 
 include::tools.adoc[]
 
+include::examples.adoc[]
+
+include::bjam.adoc[]
+
 :leveloffset: -1

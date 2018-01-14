@@ -5,7 +5,7 @@
 == Introduction
 
 This section explains how to extend Boost.Build to accomodate your local
-requirementsMDASHprimarily to add support for non-standard tools you
+requirements -- primarily to add support for non-standard tools you
 have. Before we start, be sure you have read and understoon the concept
 of metatarget, link:#bbv2.overview.concepts[???], which is critical to
 understanding the remaining material.
@@ -20,20 +20,16 @@ concrete target::
   Object that corresponds to a file or an action.
 jam target::
   Low-level concrete target that is specific to Boost.Jam build engine.
-  Essentially a stringMDASHmost often a name of file.
+  Essentially a string -- most often a name of file.
 
 In most cases, you will only have to deal with concrete targets and the
 process that creates concrete targets from metatargets. Extending
 metatarget level is rarely required. The jam targets are typically only
 used inside the command line patterns.
 
-_________________________________________________________________________________________________________________________________________________________________________
-*Warning*
-
-All of the Boost.Jam target-related builtin functions, like `DEPENDS` or
-`ALWAYS` operate on jam targets. Applying them to metatargets or
+WARNING: All of the Boost.Jam target-related builtin functions, like
+`DEPENDS` or `ALWAYS` operate on jam targets. Applying them to metatargets or
 concrete targets has no effect.
-_________________________________________________________________________________________________________________________________________________________________________
 
 [[bbv2.extender.overview.metatargets]]
 === Metatargets
@@ -51,9 +47,10 @@ takes the build properties (as an instance of the
 link:#bbv2.reference.class.property-set[property-set] class) and returns
 a list containing:
 
-* As front elementMDASHUsage-requirements from this invocation (an
+* As front element -- Usage-requirements from this invocation (an
 instance of link:#bbv2.reference.class.property-set[property-set])
-* As subsequent elementsMDASHcreated concrete targets ( instances of the
+
+* As subsequent elements -- created concrete targets ( instances of the
 `virtual-target` class.)
 
 It's possible to lookup a metataget by target-id using the
@@ -69,6 +66,7 @@ corresponds to a project and is not intended for further subclassing.
 The link:#bbv2.reference.class.project-target.generate[generate] method
 of this class builds all targets in the project that are not marked as
 explicit.
+
 * link:#bbv2.reference.class.main-target[main-target] corresponds to a
 target in a project and contains one or more target alternatives. This
 class also should not be subclassed. The
@@ -76,6 +74,7 @@ link:#bbv2.reference.class.main-target.generate[generate] method of this
 class selects an alternative to build, and calls the
 link:#bbv2.reference.class.basic-target.generate[generate] method of
 that alternative.
+
 * link:#bbv2.reference.class.basic-target[basic-target] corresponds to a
 specific target alternative. This is base class, with a number of
 derived classes. The
@@ -89,7 +88,7 @@ the list of source virtual targets, and the final properties.
 The instances of the
 link:#bbv2.reference.class.project-target[project-target] and
 link:#bbv2.reference.class.main-target[main-target] classes are created
-implicitlyMDASHwhen loading a new Jamfiles, or when a new target
+implicitly -- when loading a new Jamfiles, or when a new target
 alternative with as-yet unknown name is created. The instances of the
 classes derived from
 link:#bbv2.reference.class.basic-target[basic-target] are typically
@@ -99,7 +98,7 @@ It it permissible to create a custom class derived from
 link:#bbv2.reference.class.basic-target[basic-target] and create new
 metatarget rule that creates instance of such target. However, in the
 majority of cases, a specific subclass of
-link:#bbv2.reference.class.basic-target[basic-target]MDASH
+link:#bbv2.reference.class.basic-target[basic-target] -- 
 link:#bbv2.reference.class.typed-target[typed-target] is used. That
 class is associated with a type and relays to generators to construct
 concrete targets of that type. This process will be explained below.
@@ -112,7 +111,7 @@ that type.
 
 Concrete targets are represented by instance of classes derived from
 `virtual-target`. The most commonly used subclass is `file-target`. A
-file target is associated with an action that creates itMDASH an
+file target is associated with an action that creates it --  an
 instance of the `action` class. The action, in turn, hold a list of
 source targets. It also holds the
 link:#bbv2.reference.class.property-set[property-set] instance with the
@@ -120,10 +119,10 @@ build properties that should be used for the action.
 
 Here's an example of creating a target from another target, `source`
 
-....
+----
 local a = [ new action $(source) : common.copy : $(property-set) ] ;
 local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
-....
+----
 
 The first line creates an instance of the `action` class. The first
 parameter is the list of sources. The second parameter is the name a
@@ -144,10 +143,10 @@ necessary.footnote:[This create-then-register pattern is caused by
 limitations of the Boost.Jam language. Python port is likely to never
 create duplicate targets.] Here are a couple of examples:
 
-....
+----
 return [ virtual-target.register $(t) ] ;
 return [ sequence.transform virtual-target.register : $(targets) ] ;
-....
+----
 
 [[bbv2.extender.overview.generators]]
 === Generators
@@ -201,10 +200,10 @@ Let's see what Boost.Build can do.
 First off, Boost.Build has no idea about "verbatim files". So, you must
 register a new target type. The following code does it:
 
-....
+----
 import type ;
 type.register VERBATIM : verbatim ;
-....
+----
 
 The first parameter to
 link:#bbv2.reference.modules.type.register[type.register] gives the name
@@ -219,28 +218,28 @@ step that transforms targets of one type (or set of types) into another.
 Our generator will be called `verbatim.inline-file`; it transforms
 `VERBATIM` files into `CPP` files:
 
-....
+----
 import generators ;
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
-....
+----
 
 Lastly, you have to inform Boost.Build about the shell commands used to
 make that transformation. That's done with an `actions` declaration.
 
-....
+----
 actions inline-file
 {
     "./inline-file.py" $(<) $(>)
 }
-....
+----
 
 Now, we're ready to tie it all together. Put all the code above in file
 `verbatim.jam`, add `import verbatim ;` to `Jamroot.jam`, and it's
 possible to write the following in your Jamfile:
 
-....
+----
 exe codegen : codegen.cpp class_template.verbatim usage.verbatim ;
-....
+----
 
 The listed verbatim files will be automatically converted into C++
 source files, compiled and then linked to the codegen executable.
@@ -255,10 +254,10 @@ mechanisms in detail. The complete code is available in the
 The first thing we did in the link:#bbv2.extender.intro[introduction]
 was declaring a new target type:
 
-....
+----
 import type ;
 type.register VERBATIM : verbatim ;
-....
+----
 
 The type is the most important property of a target. Boost.Build can
 automatically generate necessary build actions only because you specify
@@ -276,15 +275,15 @@ depending on build properties, such as toolset. For example, some
 compiler uses extension `elf` for executable files. You can use the
 `type.set-generated-target-suffix` rule:
 
-....
+----
 type.set-generated-target-suffix EXE : <toolset>elf : elf ;
-....
+----
 
 A new target type can be inherited from an existing one.
 
-....
+----
 type.register PLUGIN : : SHARED_LIB ;
-....
+----
 
 The above code defines a new type derived from `SHARED_LIB`. Initially,
 the new type inherits all the properties of the base type - in
@@ -311,7 +310,7 @@ be assigned to a target type.
 
 First, we need to declare a new class for the scanner:
 
-....
+----
 class verbatim-scanner : common-scanner
 {
     rule pattern ( )
@@ -319,7 +318,7 @@ class verbatim-scanner : common-scanner
         return "//###include[ ]*\"([^\"]*)\"" ;
     }
 }
-....
+----
 
 All the complex logic is in the `common-scanner` class, and you only
 need to override the method that returns the regular expression to be
@@ -332,9 +331,9 @@ group to be matched.
 
 After that, we need to register our scanner class:
 
-....
+----
 scanner.register verbatim-scanner : include ;
-....
+----
 
 The value of the second parameter, in this case `include`, specifies the
 properties that contain the list of paths that should be searched for
@@ -342,9 +341,9 @@ the included files.
 
 Finally, we assign the new scanner to the `VERBATIM` target type:
 
-....
+----
 type.set-scanner VERBATIM : verbatim-scanner ;
-....
+----
 
 That's enough for scanning include dependencies.
 
@@ -370,14 +369,14 @@ derived class, but simply create an instance of the `generator` class.
 Let's review the example we've seen in the
 link:#bbv2.extender.intro[introduction].
 
-....
+----
 import generators ;
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 actions inline-file
 {
     "./inline-file.py" $(<) $(>)
 }
-....
+----
 
 We declare a standard generator, specifying its id, the source type and
 the target type. When invoked, the generator will create a target of
@@ -393,10 +392,10 @@ There are two primary kinds of generators: standard and composing, which
 are registered with the `generators.register-standard` and the
 `generators.register-composing` rules, respectively. For example:
 
-....
+----
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 generators.register-composing mex.mex : CPP LIB : MEX ;
-....
+----
 
 The first (standard) generator takes a _single_ source of type
 `VERBATIM` and produces a result. The second (composing) generator takes
@@ -423,7 +422,7 @@ need to create a new generator class with your own logic. Then, you have
 to create an instance of that class and register it. Here's an example
 how you can create your own generator class:
 
-....
+----
 class custom-generator : generator
 {
     rule __init__ ( * : * )
@@ -435,7 +434,7 @@ class custom-generator : generator
 
 generators.register
   [ new custom-generator verbatim.inline-file : VERBATIM : CPP ] ;
-....
+----
 
 This generator will work exactly like the `verbatim.inline-file`
 generator we've defined above, but it's possible to customize the
@@ -455,7 +454,7 @@ sources. Naturally, you don't want to list all source files manually.
 Here's how the `generated-targets` method can find the list of sources
 automatically:
 
-....
+----
 class itrace-generator : generator {
 ...
     rule generated-targets ( sources + : property-set : project name ? )
@@ -474,7 +473,7 @@ class itrace-generator : generator {
     }
 }
 generators.register [ new itrace-generator nm.itrace : EXE : ITRACE ] ;
-....
+----
 
 The `generated-targets` method will be called with a single source
 target of type `EXE`. The call to `virtual-target.traverse` will return
@@ -492,7 +491,7 @@ files have the same name, the created Python extension must be renamed.
 Otherwise, the Python program will import itself, not the extension.
 Here's how it can be done:
 
-....
+----
 rule run ( project name ? : property-set : sources * )
 {
     local python ;
@@ -531,7 +530,7 @@ rule run ( project name ? : property-set : sources * )
     result = [ construct-result $(python) $(new-sources) : $(project) $(name)
                  : $(property-set) ] ;
 }
-....
+----
 
 First, we separate all source into python files, libraries and C++
 sources. For each C++ source we create a separate Python extension by
@@ -545,7 +544,7 @@ necessary.
 Often, we need to control the options passed the invoked tools. This is
 done with features. Consider an example:
 
-....
+----
 # Declare a new free feature
 import feature : feature ;
 feature verbatim-options : : free ;
@@ -560,7 +559,7 @@ actions inline-file
 {
     "./inline-file.py" $(OPTIONS) $(<) $(>)
 }
-....
+----
 
 We first define a new feature. Then, the `flags` invocation says that
 whenever verbatin.inline-file action is run, the value of the
@@ -597,6 +596,7 @@ your project with two different settings of the feature and Boost.Build
 will automatically use two different directories for generated files.
 Boost.Build does not try to separate targets built with different raw
 options.
+
 * Unlike with “raw” features, you don't need to use specific
 command-line flags in your Jamfile, and it will be more likely to work
 with other tools.
@@ -611,8 +611,7 @@ link:#bbv2.reference.features.attributes[feature attributes]:
 * if you want a feature value set for one target to automaticaly
 propagate to its dependant targets then make it “propagated”.
 * if a feature does not have a fixed list of values, it must be “free.”
-For example, the `include
-                ` feature is a free feature.
+For example, the `include` feature is a free feature.
 * if a feature is used to refer to a path relative to the Jamfile, it
 must be a “path” feature. Such features will also get their values
 automatically converted to Boost.Build's internal path representation.
@@ -633,32 +632,34 @@ to a target. For example, when linking dynamic libraries on Windows, one
 sometimes needs to specify a "DEF file", telling what functions should
 be exported. It would be nice to use this file like this:
 
-....
-        lib a : a.cpp : <def-file>a.def ;
-....
+----
+lib a : a.cpp : <def-file>a.def ;
+----
 
 Actually, this feature is already supported, but anyway...
 
 1.  Since the feature refers to a target, it must be "dependency".
 +
-....
+----
 feature def-file : : free dependency ;
-....
+----
+
 2.  One of the toolsets that cares about DEF files is msvc. The
 following line should be added to it.
 +
-....
+----
 flags msvc.link DEF_FILE <def-file> ;
-....
+----
+
 3.  Since the DEF_FILE variable is not used by the msvc.link action, we
 need to modify it to be:
 +
-....
+----
 actions link bind DEF_FILE
 {
     $(.LD) .... /DEF:$(DEF_FILE) ....
 }
-....
+----
 +
 Note the `bind DEF_FILE` part. It tells Boost.Build to translate the
 internal target name in `DEF_FILE` to a corresponding filename in the
@@ -667,12 +668,12 @@ strange symbol that is not likely to make sense for the linker.
 +
 We are almost done, except for adding the follwing code to `msvc.jam`:
 +
-....
+----
 rule link
 {
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
 }
-....
+----
 +
 This is a workaround for a bug in Boost.Build engine, which will
 hopefully be fixed one day.
@@ -685,17 +686,17 @@ of features.
 
 It is possible to define your own build variants. For example:
 
-....
+----
 variant crazy : <optimization>speed <inlining>off
                 <debug-symbols>on <profiling>on ;
-....
+----
 
 will define a new variant with the specified set of properties. You can
 also extend an existing variant:
 
-....
+----
 variant super_release : release : <define>USE_ASM ;
-....
+----
 
 In this case, `super_release` will expand to all properties specified by
 `release`, and the additional one you've specified.
@@ -703,11 +704,11 @@ In this case, `super_release` will expand to all properties specified by
 You are not restricted to using the `variant` feature only. Here's
 example that defines a brand new feature:
 
-....
+----
 feature parallelism : mpi fake none : composite link-incompatible ;
 feature.compose <parallelism>mpi : <library>/mpi//mpi/<parallelism>none ;
 feature.compose <parallelism>fake : <library>/mpi//fake/<parallelism>none ;
-....
+----
 
 This will allow you to specify the value of feature `parallelism`, which
 will expand to link to the necessary library.
@@ -727,13 +728,13 @@ rule. The name of the rule is obtained from the name of the type, by
 downcasing all letters and replacing underscores with dashes. For
 example, if you create a module `obfuscate.jam` containing:
 
-....
+----
 import type ;
 type.register OBFUSCATED_CPP  : ocpp ;
 
 import generators ;
 generators.register-standard obfuscate.file : CPP : OBFUSCATED_CPP ;
-....
+----
 
 and import that module, you'll be able to use the rule "obfuscated-cpp"
 in Jamfiles, which will convert source to the OBFUSCATED_CPP type.
@@ -743,25 +744,25 @@ rules. For example, suppose you have only one library per directory and
 want all cpp files in the directory to be compiled into that library.
 You can achieve this effect using:
 
-....
+----
 lib codegen : [ glob *.cpp ] ;
-....
+----
 
 If you want to make it even simpler, you could add the following
 definition to the `Jamroot.jam` file:
 
-....
+----
 rule glib ( name : extra-sources * : requirements * )
 {
     lib $(name) : [ glob *.cpp ] $(extra-sources) : $(requirements) ;
 }
-....
+----
 
 allowing you to reduce the Jamfile to just
 
-....
+----
 glib codegen ;
-....
+----
 
 Note that because you can associate a custom generator with a target
 type, the logic of building can be rather complicated. For example, the
@@ -790,18 +791,20 @@ Here are some guidelines that help to make Boost.Build more consistent:
 incorrect path, you should emit a warning and go on. Configuration may
 be shared between different machines, and wrong values on one machine
 can be OK on another.
+
 * Prefer specifying the command to be executed to specifying the tool's
 installation path. First of all, this gives more control: it's possible
 to specify
 +
-....
+----
 /usr/bin/g++-snapshot
 time g++
-....
+----
 +
 as the command. Second, while some tools have a logical "installation
 root", it's better if the user doesn't have to remember whether a
 specific tool requires a full command or a path.
+
 * Check for multiple initialization. A user can try to initialize the
 module several times. You need to check for this and decide what to do.
 Typically, unless you support several versions of a tool, duplicate
@@ -810,23 +813,24 @@ during initialization, make sure the version is either always specified,
 or never specified (in which case the tool is initialied only once). For
 example, if you allow:
 +
-....
+----
 using yfc ;
 using yfc : 3.3 ;
 using yfc : 3.4 ;
-....
+----
 +
 Then it's not clear if the first initialization corresponds to version
 3.3 of the tool, version 3.4 of the tool, or some other version. This
 can lead to building twice with the same version.
+
 * If possible, `init` must be callable with no parameters. In which
 case, it should try to autodetect all the necessary information, for
 example, by looking for a tool in PATH or in common installation
 locations. Often this is possible and allows the user to simply write:
 +
-....
+----
 using yfc ;
-....
+----
+
 * Consider using facilities in the `tools/common` module. You can take a
 look at how `tools/gcc.jam` uses that module in the `init` rule.
-
