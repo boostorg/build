@@ -856,6 +856,60 @@ path-constant DATA : data/a.txt ;
         </listitem>
       </varlistentry>
 
+      <varlistentry id="bbv2.reference.features.relevant"><term><literal>relevant</literal></term>
+        <listitem>
+
+          <indexterm><primary>features</primary><secondary>relevance</secondary></indexterm>
+          <indexterm><primary>relevant</primary></indexterm>
+
+          <para>
+            <emphasis role="bold">Allowed values:</emphasis> the name of any feature.
+          </para>
+
+          <para>
+            This feature is used to indicate which other features are relevant for
+            a given target.  It is usually not necessary to manage it explicitly,
+            as Boost.Build can deduce it in most cases.  Features which are not
+            relevant will not affect target paths, and will not cause conflicts.
+          </para>
+          
+          <para>
+            A feature will be considered relevant if any of the following are true
+            <itemizedlist>
+              <listitem>It is referenced by <literal>toolset.flags</literal> or <literal>toolset.uses-features</literal></listitem>
+              <listitem>It is used by the requirements of a generator</listitem>
+              <listitem>It is a subfeature of a relevant feature</listitem>
+              <listitem>It has a subfeature which is relevant</listitem>
+              <listitem>It is a composite feature, and any composed feature is relevant</listitem>
+              <listitem>It affects target alternative selection for a main target</listitem>
+              <listitem>It is a propagated feature and is relevant for any dependency</listitem>
+              <listitem>It is relevant for any dependency created by the same main target</listitem>
+              <listitem>It is used in the condition of a conditional property and the corresponding value is relevant</listitem>
+              <listitem>It is explicitly named as relevent</listitem>
+            </itemizedlist>
+          </para>
+
+          <para>Relevant features cannot be automatically deduced in the following cases:</para>
+          <itemizedlist>
+            <listitem>Indirect conditionals.  Solution: return properties of the form
+            <literal>&lt;relevant&gt;result-feature:&lt;relevant&gt;condition-feature</literal>
+              <note><para>This isn't really a <link linkend="bbv2.reference.variants.propcond">conditional</link>,
+              although for most purposes it functions like one.  In particular, it does not support
+              multiple comma-separated elements in the condition, and it does work correctly even
+              in contexts where conditional properties are not allowed</para></note></listitem>
+            <listitem>
+              <para>Action rules that read properties.  Solution: add <literal>toolset.uses-features</literal>
+              to tell Boost.Build that the feature is actually used.</para>
+            </listitem>
+            <listitem>
+              <para>Generators and targets that manipulate property-sets directly.
+              Solution: set <literal>&lt;relevant&gt;</literal> manually.</para>
+            </listitem>
+          </itemizedlist>
+
+        </listitem>
+      </varlistentry>
+
 
     </variablelist>
   </section>
@@ -2539,7 +2593,8 @@ exe a : a.cpp
       the directory bin unless this is overridden by the build-dir project
       attribute.  Under bin is a path that depends on the properties
       used to build each target.  This path is uniquely determined by
-      all non-free, non-incidental properties.  For example,
+      all <link linkend="bbv2.reference.features.relevant">relevant</link>
+      non-free, non-incidental properties.  For example,
       given a property set containing:
       <code>&lt;toolset&gt;gcc &lt;toolset-gcc:version&gt;4.6.1 &lt;variant&gt;debug
       &lt;warnings&gt;all &lt;define&gt;_DEBUG &lt;include&gt;/usr/local/include
