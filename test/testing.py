@@ -142,7 +142,6 @@ run pass.cpp l ;
     t.expect_addition("bin/pass.test/$toolset/debug*/pass.output")
     t.expect_addition("bin/pass.test/$toolset/debug*/pass.run")
     t.expect_addition("bin/pass.test/$toolset/debug*/pass.test")
-    t.expect_nothing_more()
 
     t.cleanup()
 
