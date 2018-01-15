@@ -4,6 +4,7 @@
 :sectanchors:
 :sectnums:
 :icons: font
+:nofooter:
 
 include::howto.adoc[]
 
