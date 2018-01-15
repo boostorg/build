@@ -14,11 +14,11 @@
 import project ;
 import ac ;
 import errors ;
+import feature ;
 import "class" : new ;
 import targets ;
 import path ;
 import modules ;
-import errors ;
 import indirect ;
 import property ;
 import property-set ;
@@ -62,12 +62,9 @@ rule init (
         project lzma ;
     }
 
-    local library-path = [ property.select <search> : $(options) ] ;
-    library-path = $(library-path:G=) ;
-    local include-path = [ property.select <include> : $(options) ] ;
-    include-path = $(include-path:G=) ;
-    local library-name = [ property.select <name> : $(options) ] ;
-    library-name = $(library-name:G=) ;
+    local library-path = [ feature.get-values <search> : $(options) ] ;
+    local include-path = [ feature.get-values <include> : $(options) ] ;
+    local library-name = [ feature.get-values <name> : $(options) ] ;
 
     if ! $(options)
     {

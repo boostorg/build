@@ -999,10 +999,8 @@ rule register ( target )
             {
                 local ps1 = [ $(a1).properties ] ;
                 local ps2 = [ $(a2).properties ] ;
-                local p1 = [ $(ps1).base ] [ $(ps1).free ] [ set.difference
-                    [ $(ps1).dependency ] : [ $(ps1).incidental ] ] ;
-                local p2 = [ $(ps2).base ] [ $(ps2).free ] [ set.difference
-                    [ $(ps2).dependency ] : [ $(ps2).incidental ] ] ;
+                local p1 = [ $(ps1).relevant ] ;
+                local p2 = [ $(ps2).relevant ] ;
                 if $(p1) = $(p2)
                 {
                     result = $(t) ;

@@ -105,9 +105,9 @@ rule init ( name ? )
             : DOXYFILE : DOXYGEN_XML_MULTIFILE ;
         generators.register-standard doxygen.xml-dir-to-boostbook
             : DOXYGEN_XML_MULTIFILE : BOOSTBOOK : <doxygen.processor>doxproc ;
-        generators.register-standard doxygen.xml-to-boostbook
+        generators.register-xslt doxygen.xml-to-boostbook
             : DOXYGEN_XML : BOOSTBOOK : <doxygen.processor>xsltproc ;
-        generators.register-standard doxygen.collect
+        generators.register-xslt doxygen.collect
             : DOXYGEN_XML_MULTIFILE : DOXYGEN_XML ;
         generators.register-standard doxygen.run
             : DOXYFILE : DOXYGEN_HTML_MULTIFILE ;
@@ -274,6 +274,7 @@ rule translate-path ( path )
     }
 }
 
+toolset.uses-features doxygen.headers-to-doxyfile : "<doxygen:param>" ;
 
 # Generates a doxygen configuration file (doxyfile) given a set of C++ sources
 # and a property list that may contain <doxygen:param> features.
@@ -321,6 +322,7 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     print.text $(text) : true ;
 }
 
+toolset.uses-features doxygen.run : <doxygen.rmdir> "<doxygen:param>" ;
 
 # Run Doxygen. See doxygen-action for a description of the strange properties of
 # this rule.
@@ -406,6 +408,7 @@ rule collect ( target : source : properties * )
         : <xsl:param>doxygen.xml.path=$(native-path) ;
 }
 
+toolset.uses-features doxygen.xml-to-boostbook : <prefix> <reftitle> ;
 
 # Translate Doxygen XML into BoostBook.
 #

@@ -441,7 +441,7 @@ rule initialize (
     local jamroot ;
 
     local parent-module ;
-    if $(module-name) = test-config
+    if $(module-name) in test-config all-config
     {
         # No parent.
     }
@@ -502,7 +502,7 @@ rule initialize (
         }
         else
         {
-            local cfgs = project site test user ;
+            local cfgs = project site test user all ;
             if ! $(module-name) in $(cfgs)-config
             {
                 # This is a standalone project with known location. Set its
@@ -833,7 +833,7 @@ rule current ( )
 # Temporarily changes the current project to 'project'. Should be followed by
 # 'pop-current'.
 #
-rule push-current ( project )
+rule push-current ( project ? )
 {
     .saved-current-project += $(.current-project) ;
     .current-project = $(project) ;
@@ -900,9 +900,9 @@ rule get-jamroot-module ( project )
 
 # Returns the project target corresponding to the 'project-module'.
 #
-rule target ( project-module )
+rule target ( project-module : allow-missing ? )
 {
-    if ! $(.target.$(project-module))
+    if ! $(.target.$(project-module)) && ! $(allow-missing)
     {
         import errors ;
         errors.user-error Project target requested but not yet assigned for

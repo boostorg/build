@@ -143,4 +143,21 @@ es2 = t.adjust_name("b/bin/$toolset/debug*")
 t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es1);
 t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es2);
 
+t.rm("bin/$toolset/debug*/mp.pathlist")
+
+# Now run the same checks with pre-built libraries
+adll = t.glob_file("a/bin/$toolset/debug*/a.dll")
+bdll = t.glob_file("b/bin/$toolset/debug*/b.dll")
+t.write("b/jamfile.jam", """
+local bdll = %s ;
+# Make sure that it is found even with multiple source-locations
+project : source-location c $(bdll:D) ;
+lib b : ../a//a : <file>$(bdll:D=) ;
+""" % bdll.replace("\\", "\\\\"))
+t.run_build_system(["hardcode-dll-paths=true"])
+t.expect_addition("bin/$toolset/debug*/mp.pathlist")
+
+t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es1)
+t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es2)
+
 t.cleanup()

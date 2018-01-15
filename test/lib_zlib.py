@@ -25,7 +25,8 @@ alias zlib : /zlib//zlib : : <link>static <link>shared ;
 MockToolset.set_expected(t, '''
 source_file('deflate.c', 'deflate')
 action('-c -x c -I./zlib -o $deflate.o $deflate.c')
-action('--dll $deflate.o -o $deflate.so')
+action('-c -x c -I./zlib -DZLIB_DLL -o $deflate-shared.o $deflate.c')
+action('--dll $deflate-shared.o -o $deflate.so')
 action('--archive $deflate.o -o $deflate.a')
 ''')
 
@@ -111,6 +112,27 @@ MockToolset.set_expected(t, common_stuff + '''
 action('$main.o -L./zlib --shared-lib=myzlib -o $config.exe')
 action('-c -x c++ $test.cpp -I./zlib -o $test.o')
 action('$test.o -L./zlib --shared-lib=myzlib -o $test')
+''')
+t.run_build_system()
+t.expect_addition('bin/mock/debug/test.exe')
+t.expect_addition('bin/mock/debug/link-static/test.exe')
+
+# Initialization in explicit location - both static and shared libraries
+t.rm('bin')
+t.write("Jamroot.jam", """
+path-constant here : . ;
+using zlib : : <name>myzlib <include>$(here)/zlib <search>$(here)/zlib ;
+exe test : test.cpp /zlib//zlib
+  : <link>shared:<define>SHARED : <link>static <link>shared ;
+""")
+
+MockToolset.set_expected(t, common_stuff + '''
+action('$main.o -L./zlib --static-lib=myzlib -o $config.exe')
+action('$main.o -L./zlib --shared-lib=myzlib -o $config.exe')
+action('-c -x c++ $test.cpp -I./zlib -o $test-static.o')
+action('-c -x c++ $test.cpp -I./zlib -DSHARED -o $test-shared.o')
+action('$test-static.o -L./zlib --static-lib=myzlib -o $test')
+action('$test-shared.o -L./zlib --shared-lib=myzlib -o $test')
 ''')
 t.run_build_system()
 t.expect_addition('bin/mock/debug/test.exe')

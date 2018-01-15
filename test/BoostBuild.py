@@ -92,13 +92,19 @@ def get_toolset():
 cygwin = hasattr(os, "uname") and os.uname()[0].lower().startswith("cygwin")
 windows = cygwin or os.environ.get("OS", "").lower().startswith("windows")
 
+if cygwin:
+    default_os = "cygwin"
+elif windows:
+    default_os = "windows"
+elif hasattr(os, "uname"):
+    default_os = os.uname()[0].lower()
 
-def prepare_prefixes_and_suffixes(toolset):
-    prepare_suffix_map(toolset)
-    prepare_library_prefix(toolset)
+def prepare_prefixes_and_suffixes(toolset, target_os=default_os):
+    prepare_suffix_map(toolset, target_os)
+    prepare_library_prefix(toolset, target_os)
 
 
-def prepare_suffix_map(toolset):
+def prepare_suffix_map(toolset, target_os=default_os):
     """
       Set up suffix translation performed by the Boost Build testing framework
     to accomodate different toolsets generating targets of the same type using
@@ -107,11 +113,11 @@ def prepare_suffix_map(toolset):
     """
     global suffixes
     suffixes = {}
-    if windows:
+    if target_os in ["windows", "cygwin"]:
         if toolset == "gcc":
             suffixes[".lib"] = ".a"  # mingw static libs use suffix ".a".
             suffixes[".obj"] = ".o"
-        if cygwin:
+        if target_os == "cygwin":
             suffixes[".implib"] = ".lib.a"
         else:
             suffixes[".implib"] = ".lib"
@@ -122,11 +128,11 @@ def prepare_suffix_map(toolset):
         suffixes[".obj"] = ".o"
         suffixes[".implib"] = ".no_implib_files_on_this_platform"
 
-        if hasattr(os, "uname") and os.uname()[0] == "Darwin":
+        if target_os == "darwin":
             suffixes[".dll"] = ".dylib"
 
 
-def prepare_library_prefix(toolset):
+def prepare_library_prefix(toolset, target_os=default_os):
     """
       Setup whether Boost Build is expected to automatically prepend prefixes
     to its built library targets.
@@ -136,9 +142,9 @@ def prepare_library_prefix(toolset):
     lib_prefix = "lib"
 
     global dll_prefix
-    if cygwin:
+    if target_os == "cygwin":
         dll_prefix = "cyg"
-    elif windows and toolset != "gcc":
+    elif target_os == "windows" and toolset != "gcc":
         dll_prefix = None
     else:
         dll_prefix = "lib"
@@ -209,11 +215,11 @@ class Tester(TestCmd.TestCmd):
     def __init__(self, arguments=None, executable="bjam",
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
-        ignore_toolset_requirements=False, workdir="", pass_d0=True,
+        ignore_toolset_requirements=False, workdir="", pass_d0=False,
         **keywords):
 
         assert arguments.__class__ is not str
-        self.original_workdir = os.getcwd()
+        self.original_workdir = os.path.dirname(__file__)
         if workdir and not os.path.isabs(workdir):
             raise ("Parameter workdir <%s> must point to an absolute "
                 "directory: " % workdir)
@@ -274,8 +280,9 @@ class Tester(TestCmd.TestCmd):
 
             # Find where jam_src is located. Try for the debug version if it is
             # lying around.
-            dirs = [os.path.join("..", "src", "engine", jam_build_dir + ".debug"),
-                    os.path.join("..", "src", "engine", jam_build_dir)]
+            srcdir = os.path.join(os.path.dirname(__file__), "..", "src")
+            dirs = [os.path.join(srcdir, "engine", jam_build_dir + ".debug"),
+                    os.path.join(srcdir, "engine", jam_build_dir)]
             for d in dirs:
                 if os.path.exists(d):
                     jam_build_dir = d
@@ -289,7 +296,8 @@ class Tester(TestCmd.TestCmd):
             verbosity = []
         if "--verbose" in sys.argv:
             keywords["verbose"] = True
-            verbosity = ["-d+2"]
+            verbosity = ["-d2"]
+        self.verbosity = verbosity
 
         if boost_build_path is None:
             boost_build_path = self.original_workdir + "/.."
@@ -300,8 +308,6 @@ class Tester(TestCmd.TestCmd):
         else:
             program_list.append(os.path.join(jam_build_dir, executable))
         program_list.append('-sBOOST_BUILD_PATH="' + boost_build_path + '"')
-        if verbosity:
-            program_list += verbosity
         if arguments:
             program_list += arguments
 
@@ -319,6 +325,12 @@ class Tester(TestCmd.TestCmd):
             # both 'TestCmd' and 'os' unavailable in our scope. Do nothing in
             # this case.
             pass
+
+    def set_toolset(self, toolset, target_os=default_os):
+        self.toolset = toolset
+        self.pass_toolset = True
+        prepare_prefixes_and_suffixes(toolset, target_os)
+        
 
     #
     # Methods that change the working directory's content.
@@ -426,6 +438,7 @@ class Tester(TestCmd.TestCmd):
             return
 
         self.previous_tree, dummy = tree.build_tree(self.workdir)
+        self.wait_for_time_change_since_last_build()
 
         if match is None:
             match = self.match
@@ -444,6 +457,8 @@ class Tester(TestCmd.TestCmd):
             kw["program"] += self.program
             if extra_args:
                 kw["program"] += extra_args
+            if stdout is None and not any(a.startswith("-d") for a in kw["program"]):
+                kw["program"] += self.verbosity
             if pass_toolset:
                 kw["program"].append("toolset=" + self.toolset)
             if use_test_config:
@@ -707,6 +722,7 @@ class Tester(TestCmd.TestCmd):
             self.ignore("*.rsp")       # Response files.
             self.ignore("*.tds")       # Borland debug symbols.
             self.ignore("*.manifest")  # MSVC DLL manifests.
+            self.ignore("bin/standalone/msvc/*/msvc-setup.bat")
 
         # Debug builds of bjam built with gcc produce this profiling data.
         self.ignore("gmon.out")
@@ -757,8 +773,8 @@ class Tester(TestCmd.TestCmd):
                 matched = reduce(
                     lambda x, y: x and reduce(
                         lambda a, b: a and b,
-                    y),
-                    matched)
+                    y, True),
+                    matched, True)
 
         if not matched:
             print "Expected:\n"
@@ -855,6 +871,22 @@ class Tester(TestCmd.TestCmd):
 
         """
         self.__wait_for_time_change(path, touch, last_build_time=False)
+
+    def wait_for_time_change_since_last_build(self):
+        """
+          Wait for newly assigned file system modification timestamps to
+        become large enough for the timestamp difference to be
+        correctly recognized by the Python based testing framework.
+        Does not care about Jam's timestamp resolution, since we
+        only need this to detect touched files.
+        """
+        if self.last_build_timestamp:
+            timestamp_file = "timestamp-3df2f2317e15e4a9"
+            open(timestamp_file, "wb").close()
+            self.__wait_for_time_change_impl(timestamp_file,
+                self.last_build_timestamp,
+                self.__python_timestamp_resolution(timestamp_file, 0), 0)
+            os.unlink(timestamp_file)
 
     def __build_timestamp_resolution(self):
         """
@@ -1103,7 +1135,12 @@ class Tester(TestCmd.TestCmd):
 
         resolution = self.__python_timestamp_resolution(path, build_resolution)
         assert resolution >= build_resolution
+        self.__wait_for_time_change_impl(path, start_time, resolution, build_resolution)
 
+        if not touch:
+            os.utime(path, (stats_orig.st_atime, stats_orig.st_mtime))
+
+    def __wait_for_time_change_impl(self, path, start_time, resolution, build_resolution):
         # Implementation notes:
         #  * Theoretically time.sleep() API might get interrupted too soon
         #    (never actually encountered).
@@ -1159,9 +1196,6 @@ class Tester(TestCmd.TestCmd):
                 if c > start_time:
                     break
                 _sleep(max(0.01, start_time - c))
-
-        if not touch:
-            os.utime(path, (stats_orig.st_atime, stats_orig.st_mtime))
 
 
 class List:

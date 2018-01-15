@@ -31,9 +31,16 @@ local rule indirect-rule ( x )
 #
 rule make ( rulename bound-args * : context ? )
 {
-    context ?= [ CALLER_MODULE ] ;
-    context ?= "" ;
-    return $(context)%$(rulename) $(bound-args) ;
+    if [ MATCH $(.pattern) : $(rulename) ]
+    {
+        return $(rulename) $(bound-args) ;
+    }
+    else
+    {
+        context ?= [ CALLER_MODULE ] ;
+        context ?= "" ;
+        return $(context)%$(rulename) $(bound-args) ;
+    }
 }
 
 

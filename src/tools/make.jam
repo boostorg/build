@@ -17,6 +17,8 @@ import targets ;
 class make-target-class : basic-target
 {
     import "class" : new ;
+    import indirect ;
+    import toolset ;
     import type ;
     import virtual-target ;
 
@@ -34,10 +36,11 @@ class make-target-class : basic-target
         # below.
         local m = [ MATCH ^@(.*) : $(action-name) ] ;
 
-        local a = [ new action $(source-targets) : $(m[1]) : $(property-set) ] ;
+        local relevant = [ toolset.relevant [ indirect.get-rule $(m[1]) ] ] ;
+        local a = [ new action $(source-targets) : $(m[1]) : [ $(property-set).add $(relevant) ] ] ;
         local t = [ new file-target $(self.name) exact : [ type.type
             $(self.name) ] : $(self.project) : $(a) ] ;
-        return [ property-set.empty ] [ virtual-target.register $(t) ] ;
+        return $(relevant) [ virtual-target.register $(t) ] ;
     }
 }
 

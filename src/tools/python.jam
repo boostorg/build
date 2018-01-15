@@ -1243,6 +1243,10 @@ local rule pyd-pythonpath ( source )
 toolset.flags python.capture-output ARGS <testing.arg> ;
 toolset.flags python.capture-output INPUT_FILES <testing.input-file> ;
 
+toolset.uses-features python.capture-output :
+    <testing.launcher> <testing.execute> <dll-path> <xdll-path> <target-os>
+    <pythonpath> ;
+
 rule capture-output ( target : sources * : properties * )
 {
     # Setup up a proper DLL search path. Here, $(sources[1]) is a python module
@@ -1255,10 +1259,7 @@ rule capture-output ( target : sources * : properties * )
     PYTHONPATH += [ feature.get-values pythonpath : $(properties) ] ;
 
     # After test is run, we remove the Python module, but not the Python script.
-    local targets-to-remove = $(sources[2-]) ;
-    targets-to-remove ?= none ;
-    testing.capture-output $(target) : $(sources[1]) : $(properties) :
-        $(targets-to-remove) ;
+    testing.capture-output $(target) : $(sources[1]) : $(properties) ;
 
     # PYTHONPATH is different; it will be interpreted by whichever Python is
     # invoked and so must follow path rules for the target os. The only OSes
@@ -1275,7 +1276,7 @@ rule capture-output ( target : sources * : properties * )
     }
     local path-separator = [ os.path-separator [ translate-os $(target-os) ] ] ;
     local set-PYTHONPATH = [ common.variable-setting-command PYTHONPATH :
-        $(PYTHONPATH:J=$(path-separator)) ] ;
+        $(PYTHONPATH:E=:J=$(path-separator)) ] ;
     LAUNCHER on $(target) = $(set-PYTHONPATH) [ on $(target) return \"$(PYTHON)\" ] ;
 }
 

@@ -269,6 +269,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 #endif
 
     cwd_init();
+    constants_init();
 
 #ifdef JAM_DEBUGGER
 
@@ -448,8 +449,6 @@ int main( int argc, char * * argv, char * * arg_environ )
         }
         /* ++globs.noexec; */
     }
-
-    constants_init();
 
     {
         PROFILE_ENTER( MAIN );
