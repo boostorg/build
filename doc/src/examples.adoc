@@ -11,6 +11,6 @@ from.
 
 :leveloffset: +1
 
-// include::../../example/*/readme.adoc[]
+include::../../example/hello/readme.adoc[]
 
 :leveloffset: -1
