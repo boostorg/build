@@ -9,7 +9,7 @@
 #
 # After 'using lzma', the following targets are available:
 #
-# /lzma//lzam -- The lzma library
+# /lzma//lzma -- The lzma library
 
 import project ;
 import ac ;
