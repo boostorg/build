@@ -1,5 +1,5 @@
 Want to learn about Boost.Build features? Start with the
-link:#bbv2.tutorial[totorial] and continue with the link:#bbv2.overview[overview].
+link:#bbv2.tutorial[tutorial] and continue with the link:#bbv2.overview[overview].
 When you're ready to try Boost.Build in practice, go to the
 link:#bbv2.installation[installation].
 
