@@ -41,6 +41,7 @@ import errors ;
 import feature ;
 import generators ;
 import os ;
+import param ;
 import path ;
 import project ;
 import property ;
@@ -139,6 +140,7 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
 #
 rule compile ( sources + : requirements * : target-name ? )
 {
+    param.handle-named-params sources requirements target-name ;
     return [ make-test compile : $(sources) : $(requirements) : $(target-name) ]
         ;
 }
@@ -146,6 +148,7 @@ rule compile ( sources + : requirements * : target-name ? )
 
 rule compile-fail ( sources + : requirements * : target-name ? )
 {
+    param.handle-named-params sources requirements target-name ;
     return [ make-test compile-fail : $(sources) : $(requirements) :
         $(target-name) ] ;
 }
@@ -153,12 +156,14 @@ rule compile-fail ( sources + : requirements * : target-name ? )
 
 rule link ( sources + : requirements * : target-name ? )
 {
+    param.handle-named-params sources requirements target-name ;
     return [ make-test link : $(sources) : $(requirements) : $(target-name) ] ;
 }
 
 
 rule link-fail ( sources + : requirements * : target-name ? )
 {
+    param.handle-named-params sources requirements target-name ;
     return [ make-test link-fail : $(sources) : $(requirements) : $(target-name)
         ] ;
 }
@@ -183,6 +188,8 @@ rule handle-input-files ( input-files * )
 rule run ( sources + : args * : input-files * : requirements * : target-name ? :
     default-build * )
 {
+    param.handle-named-params sources args input-files requirements
+        target-name default-build ;
     requirements += <testing.arg>$(args:J=" ") ;
     requirements += [ handle-input-files $(input-files) ] ;
     return [ make-test run : $(sources) : $(requirements) : $(target-name) ] ;
@@ -192,6 +199,8 @@ rule run ( sources + : args * : input-files * : requirements * : target-name ? :
 rule run-fail ( sources + : args * : input-files * : requirements * :
     target-name ? : default-build * )
 {
+    param.handle-named-params sources args input-files requirements
+        target-name default-build ;
     requirements += <testing.arg>$(args:J=" ") ;
     requirements += [ handle-input-files $(input-files) ] ;
     return [ make-test run-fail : $(sources) : $(requirements) : $(target-name)
