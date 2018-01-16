@@ -33,6 +33,29 @@ if --debug-configuration in [ modules.peek : ARGV ]
     .debug =  true ;
 }
 
+# Initializes the lzma library.
+#
+# Options for configuring lzma::
+#
+#   <search>
+#       The directory containing the lzma binaries.
+#   <name>
+#       Overrides the default library name.
+#   <include>
+#       The directory containing the lzma headers.
+#
+# If none of these options is specified, then the environmental
+# variables LZMA_LIBRARY_PATH, LZMA_NAME, and LZMA_INCLUDE will
+# be used instead.
+#
+# Examples::
+#
+#   # Find lzma in the default system location
+#   using lzma ;
+#   # Find lzma in /usr/local
+#   using lzma : 1.2.7
+#     : <include>/usr/local/include <search>/usr/local/lib ;
+#
 rule init (
     version ?
     # (currently ignored)
