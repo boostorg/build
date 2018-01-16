@@ -349,6 +349,9 @@ searched.
 ...
 |===
 
+Any of these files may also be overridden
+link:#bbv2.reference.init.options.config[on the command line].
+
 TIP: You can use the `--debug-configuration` option to find which
 configuration files are actually loaded.
 
@@ -566,6 +569,14 @@ Boost.Build recognizes the following command line options.
   that don't depend on the failed ones.
 `-j N`::
   Run up to N commands in parallel.
+`--config=filename`[[bbv2.reference.init.options.config]]::
+  Override all link:#bbv2.overview.configuration[configuration files]
+`--site-config=filename`::
+  Override the default link:#bbv2.overview.configuration[site-config.jam]
+`--user-config=filename`::
+  Override the default link:#bbv2.overview.configuration[user-config.jam]
+`--project-config=filename`::
+  Override the default link:#bbv2.overview.configuration[project-config.jam]
 `--debug-configuration`::
   Produces debug information about the loading of Boost.Build and
   toolset files.
@@ -701,6 +712,14 @@ b2 include=static,shared
 ----
 
 is not treated specially.
+
+Multiple features may be grouped by using a forwards slash.
+
+----
+b2 gcc/link=shared msvc/link=static,shared
+----
+
+This will build 3 different variants, altogether.
 
 [[bbv2.overview.invocation.targets]]
 === Targets
