@@ -121,6 +121,11 @@ class virtual-target
         .always = 1 ;
     }
 
+    rule fail-expected ( )
+    {
+        .fail-expected = 1 ;
+    }
+
     # Generates all the actual targets and sets up build actions for this
     # target.
     #
@@ -139,6 +144,11 @@ class virtual-target
         if $(.always)
         {
             ALWAYS $(actual-name) ;
+        }
+
+        if $(.fail-expected)
+        {
+            FAIL_EXPECTED $(actual-name) ;
         }
 
         if ! $(scanner)

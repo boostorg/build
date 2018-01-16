@@ -312,15 +312,40 @@ rule dump-test ( target )
     }
 }
 
+class testing.expect-failure-generator : generator
+{
+    rule generated-targets ( sources + : property-set : project name ? )
+    {
+        for local s in $(sources)
+        {
+            local a = [ $(s).action ] ;
+            if $(a)
+            {
+                for local t in [ $(a).targets ]
+                {
+                    $(t).fail-expected ;
+                }
+            }
+        }
+        return [ generator.generated-targets $(sources)
+            : $(property-set) : $(project) $(name) ] ;
+    }
+}
+
+local rule register-fail-expected ( source-type : test-type )
+{
+    generators.register [ class.new testing.expect-failure-generator
+        testing.expect-failure : $(source-type) : $(test-type) ] ;
+}
 
 # Register generators. Depending on target type, either 'expect-success' or
 # 'expect-failure' rule will be used.
 generators.register-standard testing.expect-success : OBJ        : COMPILE      ;
-generators.register-standard testing.expect-failure : OBJ        : COMPILE_FAIL ;
+register-fail-expected                                OBJ        : COMPILE_FAIL ;
 generators.register-standard testing.expect-success : RUN_OUTPUT : RUN          ;
-generators.register-standard testing.expect-failure : RUN_OUTPUT : RUN_FAIL     ;
-generators.register-standard testing.expect-failure : EXE        : LINK_FAIL    ;
+register-fail-expected                                RUN_OUTPUT : RUN_FAIL     ;
 generators.register-standard testing.expect-success : EXE        : LINK         ;
+register-fail-expected                                EXE        : LINK_FAIL    ;
 
 # Generator which runs an EXE and captures output.
 generators.register-standard testing.capture-output : EXE : RUN_OUTPUT ;
@@ -353,7 +378,6 @@ rule expect-failure ( target : dependency + : properties * )
     local grist = [ MATCH ^<(.*)> : $(dependency:G) ] ;
     local marker = $(dependency:G=$(grist)*fail) ;
     (failed-as-expected) $(marker) ;
-    FAIL_EXPECTED $(dependency) ;
     LOCATE on $(marker) = [ on $(dependency) return $(LOCATE) ] ;
     RMOLD $(marker) ;
     DEPENDS $(marker) : $(dependency) ;
