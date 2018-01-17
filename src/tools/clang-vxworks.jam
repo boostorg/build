@@ -41,10 +41,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
     .debug-configuration = true ;
 }
-                       
-# vectorization diagnostics
-feature vectorize : off on full ;
-
 # Initializes the clang-vxworks toolset
 #   version in optional
 #   compile and link options allow you to specify addition command line options for each version
@@ -96,6 +92,8 @@ toolset.flags clang-vxworks.compile OPTIONS <warnings-as-errors>on : -Werror ;
 toolset.flags clang-vxworks.compile OPTIONS <debug-symbols>on : -g ;
 toolset.flags clang-vxworks.compile OPTIONS <profiling>on : -pg ;
 toolset.flags clang-vxworks.compile OPTIONS <rtti>off : -fno-rtti ;
+toolset.flags clang-vxworks.compile.c++ DEFINES <rtti>off : _NO_RTTI ;
+toolset.flags clang-vxworks.compile.c++ DEFINES <exception-handling>off : _NO_EX=1 ;
 
 toolset.flags clang-vxworks.compile OPTIONS <flags> ;
 
