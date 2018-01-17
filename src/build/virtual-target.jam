@@ -1364,11 +1364,11 @@ class subvariant
 
     rule all-target-directories ( target-type ? )
     {
-        if ! $(self.target-directories)
+        if ! $(self.target-directories.$(target-type:E=))
         {
             compute-target-directories $(target-type) ;
         }
-        return $(self.target-directories) ;
+        return $(self.target-directories.$(target-type:E=)) ;
     }
 
     rule compute-target-directories ( target-type ? )
@@ -1388,6 +1388,6 @@ class subvariant
         {
             result += [ $(d).all-target-directories $(target-type) ] ;
         }
-        self.target-directories = $(result) ;
+        self.target-directories.$(target-type:E=) = $(result) ;
     }
 }
