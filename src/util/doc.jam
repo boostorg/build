@@ -650,7 +650,7 @@ local rule print-help-config (
 }
 
 
-ws = "	 " ;
+ws = "\t " ;
 
 # Extract the text from a block of comments.
 #
@@ -967,9 +967,7 @@ local rule read-file (
             content = [ SHELL "cat \"$(file)\"" ] ;
         }
         local lines ;
-        local nl = "
-" ;
-        local << = "([^$(nl)]*)[$(nl)](.*)" ;
+        local << = "([^\r\n]*)[\r]?[\n](.*)" ;
         local line+ = [ MATCH "$(<<)" : "$(content)" ] ;
         while $(line+)
         {
