@@ -12,7 +12,7 @@ import BoostBuild
 t = BoostBuild.Tester(use_test_config=False)
 
 # We need an object file before we can run the actual test.
-t.write('input.cpp', 'int f() {}\n')
+t.write('input.cpp', 'void f() {}\n')
 t.write('Jamroot.jam', 'obj input : input.cpp ;')
 t.run_build_system()
 
