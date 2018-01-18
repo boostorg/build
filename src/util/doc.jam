@@ -652,6 +652,43 @@ local rule print-help-config (
 
 ws = "\t " ;
 
+# Extract the text from a single comment
+#
+local rule extract-one-comment (
+    var  # The name of the variable to extract from
+  : start # The initial part after the leading '#'
+)
+{
+    local m = [ MATCH ^(\\|)(.*) : $(start) ] ;
+    if $(m)
+    {
+        start = $(m[2]) ;
+        local comment ;
+        while true
+        {
+            local end = [ MATCH "(.*)(\\|#)(.*)" : $(start) ] ;
+            if $(end)
+            {
+                comment += $(end[1]) ;
+                $(var) = $(end[3]) $($(var)[2-]) ;
+                return $(comment) ;
+            }
+            else
+            {
+                comment += $(start) ;
+                $(var) = $($(var)[2-]) ;
+            }
+            start = $($(var)[1]) ;
+        }
+    }
+    else
+    {
+        $(var) = $($(var)[2-]) ;
+        if $(start) { return [ MATCH "^[$(ws)]?(.*)$" : $(start) ] ; }
+        else { return "" ; }
+    }
+}
+
 # Extract the text from a block of comments.
 #
 local rule extract-comment (
@@ -663,9 +700,7 @@ local rule extract-comment (
     local l = [ MATCH "^[$(ws)]*(#)(.*)$" : $(line) ] ;
     while $(l[1]) && $($(var))
     {
-        if $(l[2]) { comment += [ MATCH "^[$(ws)]?(.*)$" : $(l[2]) ] ; }
-        else { comment += "" ; }
-        $(var) = $($(var)[2-]) ;
+        comment += [ extract-one-comment $(var) : $(l[2]) ] ;
         line = $($(var)[1]) ;
         l = [ MATCH "^[$(ws)]*(#)(.*)$" : $(line) ] ;
     }
