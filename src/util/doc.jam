@@ -172,7 +172,10 @@ local rule set-class-doc (
     module-name ?= * ;
 
     $(module-name).$(name).is-class = true ;
-    $(module-name).$(name).super-name = $(super-name) ;
+    if $(super-name)
+    {
+        $(module-name).$(name).super-name = $(super-name) ;
+    }
     $(module-name).$(name).class-rules =
         [ MATCH "^($(name)[.].*)" : $($(module-name).rules) ] ;
     $(module-name).$($(module-name).$(name).class-rules).is-class-rule = true ;
@@ -912,14 +915,39 @@ local rule scan-variable (
 #
 local rule scan-class (
     syntax ?  # The syntax text for the class declaration.
+    : var  # The name of the variable to extract from.
 )
 {
     # [1] = class?, [2] = name, [3] = superclass
     local class-parts =
-        [ MATCH "^[$(ws)]*([^$(ws)]+)[$(ws)]+([^$(ws)]+)[$(ws)]+:*[$(ws)]*([^$(ws);]*)" : $(syntax) ] ;
+        [ MATCH "^[$(ws)]*([^$(ws)]+)[$(ws)]+([^$(ws)]+)[$(ws)]*:*[$(ws)]*([^$(ws);]*)" : $(syntax) ] ;
     if $(class-parts[1]) = "class" || $(class-parts[1]) = "class.class"
     {
+        # Scan within this class scope.
+        local scope-level = [ extract-token $(var) ] ;
+        local scope-name = $(class-parts[2]) ;
+        while $(scope-level) && $($(var))
+        {
+            local comment-block = [ extract-comment $(var) ] ;
+            local syntax-block = [ extract-syntax $(var) ] ;
+            if [ scan-rule $(syntax-block) : $(var) ]
+            {
+            }
+            else if [ MATCH "^(\\{)" : $(syntax-block) ]
+            {
+                scope-level += "{" ;
+            }
+            else if [ MATCH "^[^\\}]*([\\}])[$(ws)]*$"  : $(syntax-block) ]
+            {
+                scope-level = $(scope-level[2-]) ;
+            }
+        }
+
+        # This has to come after parsing the rules, because
+        # it looks up the rules for the class from the global list.
         set-class-doc $(class-parts[2]) $(module-name) : $(class-parts[3]) ;
+
+        return true ;
     }
 }
 
@@ -954,7 +982,7 @@ rule scan-module (
         }
         if [ scan-rule $(syntax-block) : text ] { }
         else if [ scan-variable $(syntax-block) : text ] { }
-        else if [ scan-class $(syntax-block) ] { }
+        else if [ scan-class $(syntax-block) : text ] { }
         else if [ MATCH .*([cC]opyright).* : $(comment-block:J=" ") ]
         {
             # mark as the copy for the module.
