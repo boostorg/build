@@ -520,12 +520,16 @@ local rule print-help-rules (
                 signature ?= "" ;
                 print.section "Rule '$(module-name).$(rule-name) ( $(signature) )'"
                     $($(module-name).$(rule-name).docs) ;
-                if $($(module-name).$(rule-name).args)
+                if $($(module-name).$(rule-name).args) &&
+                    $($(module-name).$(rule-name).args.$($(module-name).$(rule-name).args).docs)
                 {
                     print.list-start ;
                     for local arg-name in $($(module-name).$(rule-name).args)
                     {
-                        print.list-item $(arg-name): $($(module-name).$(rule-name).args.$(arg-name).docs) ;
+                        if $($(module-name).$(rule-name).args.$(arg-name).docs)
+                        {
+                            print.list-item $(arg-name): $($(module-name).$(rule-name).args.$(arg-name).docs) ;
+                        }
                     }
                     print.list-end ;
                 }
