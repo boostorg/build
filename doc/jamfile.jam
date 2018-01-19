@@ -8,12 +8,23 @@ project tools/build/doc
     ;
 
 html index : src/standalone.adoc ;
+explicit index ;
+
+install html-hljs : [ glob src/hljs/*.js ] : <location>html/hljs ;
+explicit html-hljs ;
+
+install html-hljs-styles : [ glob src/hljs/styles/*.css ] : <location>html/hljs/styles ;
+explicit html-hljs-styles ;
+
 install html : index : <location>html ;
+explicit html ;
+
+alias standalone-html : html html-hljs html-hljs-styles ;
 
 ###############################################################################
 
 alias boostdoc ;
 explicit boostdoc ;
 
-alias boostrelease : html ;
+alias boostrelease : standalone-html ;
 explicit boostrelease ;

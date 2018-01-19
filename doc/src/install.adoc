@@ -11,9 +11,10 @@ unpacked tree.
 other operating systems).
 3.  Run
 +
-....
-./b2 install --prefix=PREFIX
-....
+[source,shell]
+----
+$ ./b2 install --prefix=PREFIX
+----
 +
 where PREFIX is a directory where you want Boost.Build to be installed.
 4.  Optionally, add `PREFIX/bin` to your PATH environment variable.
@@ -26,8 +27,9 @@ Now that Boost.Build is installed, you can try some of the examples.
 Copy `PREFIX/share/boost-build/examples/hello` to a different directory,
 then change to that directory and run:
 
-....
-PREFIX/bin/b2
-....
+[source,shell]
+----
+$ PREFIX/bin/b2
+----
 
 A simple executable should be built.

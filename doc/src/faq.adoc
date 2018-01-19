@@ -28,6 +28,7 @@ link:#bbv2.extender[extender manual]
 The most likely case is that you are trying to compile the same file
 twice, with almost the same, but differing properties. For example:
 
+[source,jam]
 ----
 exe a : a.cpp : <include>/usr/local/include ;
 exe b : a.cpp ;
@@ -47,6 +48,7 @@ once or twice.
 1.  To compile the file only once, make sure that properties are the
 same for both target requests:
 +
+[source,jam]
 ----
 exe a : a.cpp : <include>/usr/local/include ;
 exe b : a.cpp : <include>/usr/local/include ;
@@ -54,6 +56,7 @@ exe b : a.cpp : <include>/usr/local/include ;
 +
 or:
 +
+[source,jam]
 ----
 alias a-with-include : a.cpp : <include>/usr/local/include ;
 exe a : a-with-include ;
@@ -63,6 +66,7 @@ exe b : a-with-include ;
 or if you want the `includes` property not to affect how any other
 sources added for the built `a` and `b` executables would be compiled:
 +
+[source,jam]
 ----
 obj a-obj : a.cpp : <include>/usr/local/include ;
 exe a : a-obj ;
@@ -75,6 +79,7 @@ might be added for targets `a` and `b`.
 2.  To compile the file twice, you can tell Boost.Build to compile it to
 two separate object files like so:
 +
+[source,jam]
 ----
 obj a_obj : a.cpp : <include>/usr/local/include ;
 obj b_obj : a.cpp ;
@@ -84,6 +89,7 @@ exe b : b_obj ;
 +
 or you can make the object file targets local to the main target:
 +
+[source,jam]
 ----
 exe a : [ obj a_obj : a.cpp : <include>/usr/local/include ] ;
 exe b : [ obj a_obj : a.cpp ] ;
@@ -118,6 +124,7 @@ Boost.Jam automatically imports all environment variables into its
 built-in .ENVIRON module so user can read them from there directly or by
 using the helper os.environ rule. For example:
 
+[source,jam]
 ----
 import os ;
 local unga-unga = [ os.environ UNGA_UNGA ] ;
@@ -126,6 +133,7 @@ ECHO $(unga-unga) ;
 
 or a bit more realistic:
 
+[source,jam]
 ----
 import os ;
 local SOME_LIBRARY_PATH = [ os.environ SOME_LIBRARY_PATH ] ;
@@ -138,6 +146,7 @@ exe a : a.cpp : <include>$(SOME_LIBRARY_PATH) ;
 For internal reasons, Boost.Build sorts all the properties
 alphabetically. This means that if you write:
 
+[source,jam]
 ----
 exe a : a.cpp : <include>b <include>a ;
 ----
@@ -148,6 +157,7 @@ cases, the user does not care. But sometimes the order of includes, or
 other properties, is important. For such cases, a special syntax is
 provided:
 
+[source,jam]
 ----
 exe a : a.cpp : <include>a&&b ;
 ----
@@ -175,6 +185,7 @@ usage is listed in its requirements. To explicitly specify the `use`
 relationship one can use the `<use>` feature. For example, both of the
 following lines will cause `a` to appear before `b` on the command line:
 
+[source,jam]
 ----
 lib a : a.cpp b ;
 lib a : a.cpp : <use>b ;
@@ -182,6 +193,7 @@ lib a : a.cpp : <use>b ;
 
 The same approach works for searched libraries as well:
 
+[source,jam]
 ----
 lib z ;
 lib png : : <use>z ;
@@ -193,6 +205,7 @@ exe viewer : viewer png z ;
 
 The `SHELL` builtin rule may be used for this purpose:
 
+[source,jam]
 ----
 local gtk_includes = [ SHELL "gtk-config --cflags" ] ;
 ----
@@ -203,6 +216,7 @@ local gtk_includes = [ SHELL "gtk-config --cflags" ] ;
 You might want to use your project's root location in your Jamfiles. To
 access it just declare a path constant in your Jamroot.jam file using:
 
+[source,jam]
 ----
 path-constant TOP : . ;
 ----
@@ -216,6 +230,7 @@ If one file must be compiled with special options, you need to
 explicitly declare an `obj` target for that file and then use that
 target in your `exe` or `lib` target:
 
+[source,jam]
 ----
 exe a : a.cpp b ;
 obj b : b.cpp : <optimization>off ;
@@ -224,6 +239,7 @@ obj b : b.cpp : <optimization>off ;
 Of course you can use other properties, for example to specify specific
 C/C++ compiler options:
 
+[source,jam]
 ----
 exe a : a.cpp b ;
 obj b : b.cpp : <cflags>-g ;
@@ -232,6 +248,7 @@ obj b : b.cpp : <cflags>-g ;
 You can also use link:#bbv2.tutorial.conditions[conditional properties]
 for finer control:
 
+[source,jam]
 ----
 exe a : a.cpp b ;
 obj b : b.cpp : <variant>release:<optimization>off ;
@@ -271,6 +288,7 @@ your development tree. (The `install` rule explicitly disables the
 `hardcode-dll-paths` feature for that reason.) However, you can use the
 `dll-path` feature to add explicit paths manually. For example:
 
+[source,jam]
 ----
 install installed : application : <dll-path>/usr/lib/snake
                                   <location>/usr/bin ;
@@ -306,6 +324,7 @@ different development machines and then such declarations would need to
 be duplicated in different projects. The solution is to declare the
 targets in Boost.Build's `site-config.jam` configuration file:
 
+[source,jam]
 ----
 project site-config ;
 lib zlib : : <name>z ;
@@ -315,6 +334,7 @@ Recall that both `site-config.jam` and `user-config.jam` are projects,
 and everything you can do in a Jamfile you can do in those files as
 well. So, you declare a project id and a target. Now, one can write:
 
+[source,jam]
 ----
 exe hello : hello.cpp /site-config//zlib ;
 ----
@@ -336,6 +356,7 @@ whether it is a header-only library or not.
 Header-only libraries may be declared using the `alias` rule, specifying
 their include path as a part of its usage requirements, for example:
 
+[source,jam]
 ----
 alias my-lib
     : # no sources
@@ -354,6 +375,7 @@ If you already have proper usage requirements declared for a project
 where a header-only library is defined, you do not need to duplicate
 them for the `alias` target:
 
+[source,jam]
 ----
 project my : usage-requirements <include>whatever ;
 alias mylib ;

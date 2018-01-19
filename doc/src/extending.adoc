@@ -119,6 +119,7 @@ build properties that should be used for the action.
 
 Here's an example of creating a target from another target, `source`
 
+[source,jam]
 ----
 local a = [ new action $(source) : common.copy : $(property-set) ] ;
 local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
@@ -143,6 +144,7 @@ necessary.footnote:[This create-then-register pattern is caused by
 limitations of the Boost.Jam language. Python port is likely to never
 create duplicate targets.] Here are a couple of examples:
 
+[source,jam]
 ----
 return [ virtual-target.register $(t) ] ;
 return [ sequence.transform virtual-target.register : $(targets) ] ;
@@ -200,6 +202,7 @@ Let's see what Boost.Build can do.
 First off, Boost.Build has no idea about "verbatim files". So, you must
 register a new target type. The following code does it:
 
+[source,jam]
 ----
 import type ;
 type.register VERBATIM : verbatim ;
@@ -218,6 +221,7 @@ step that transforms targets of one type (or set of types) into another.
 Our generator will be called `verbatim.inline-file`; it transforms
 `VERBATIM` files into `CPP` files:
 
+[source,jam]
 ----
 import generators ;
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
@@ -226,6 +230,7 @@ generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 Lastly, you have to inform Boost.Build about the shell commands used to
 make that transformation. That's done with an `actions` declaration.
 
+[source,jam]
 ----
 actions inline-file
 {
@@ -237,6 +242,7 @@ Now, we're ready to tie it all together. Put all the code above in file
 `verbatim.jam`, add `import verbatim ;` to `Jamroot.jam`, and it's
 possible to write the following in your Jamfile:
 
+[source,jam]
 ----
 exe codegen : codegen.cpp class_template.verbatim usage.verbatim ;
 ----
@@ -254,6 +260,7 @@ mechanisms in detail. The complete code is available in the
 The first thing we did in the link:#bbv2.extender.intro[introduction]
 was declaring a new target type:
 
+[source,jam]
 ----
 import type ;
 type.register VERBATIM : verbatim ;
@@ -275,12 +282,14 @@ depending on build properties, such as toolset. For example, some
 compiler uses extension `elf` for executable files. You can use the
 `type.set-generated-target-suffix` rule:
 
+[source,jam]
 ----
 type.set-generated-target-suffix EXE : <toolset>elf : elf ;
 ----
 
 A new target type can be inherited from an existing one.
 
+[source,jam]
 ----
 type.register PLUGIN : : SHARED_LIB ;
 ----
@@ -310,6 +319,7 @@ be assigned to a target type.
 
 First, we need to declare a new class for the scanner:
 
+[source,jam]
 ----
 class verbatim-scanner : common-scanner
 {
@@ -331,6 +341,7 @@ group to be matched.
 
 After that, we need to register our scanner class:
 
+[source,jam]
 ----
 scanner.register verbatim-scanner : include ;
 ----
@@ -341,6 +352,7 @@ the included files.
 
 Finally, we assign the new scanner to the `VERBATIM` target type:
 
+[source,jam]
 ----
 type.set-scanner VERBATIM : verbatim-scanner ;
 ----
@@ -369,6 +381,7 @@ derived class, but simply create an instance of the `generator` class.
 Let's review the example we've seen in the
 link:#bbv2.extender.intro[introduction].
 
+[source,jam]
 ----
 import generators ;
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
@@ -392,6 +405,7 @@ There are two primary kinds of generators: standard and composing, which
 are registered with the `generators.register-standard` and the
 `generators.register-composing` rules, respectively. For example:
 
+[source,jam]
 ----
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 generators.register-composing mex.mex : CPP LIB : MEX ;
@@ -422,6 +436,7 @@ need to create a new generator class with your own logic. Then, you have
 to create an instance of that class and register it. Here's an example
 how you can create your own generator class:
 
+[source,jam]
 ----
 class custom-generator : generator
 {
@@ -454,6 +469,7 @@ sources. Naturally, you don't want to list all source files manually.
 Here's how the `generated-targets` method can find the list of sources
 automatically:
 
+[source,jam]
 ----
 class itrace-generator : generator {
 ...
@@ -491,6 +507,7 @@ files have the same name, the created Python extension must be renamed.
 Otherwise, the Python program will import itself, not the extension.
 Here's how it can be done:
 
+[source,jam]
 ----
 rule run ( project name ? : property-set : sources * )
 {
@@ -544,6 +561,7 @@ necessary.
 Often, we need to control the options passed the invoked tools. This is
 done with features. Consider an example:
 
+[source,jam]
 ----
 # Declare a new free feature
 import feature : feature ;
@@ -632,6 +650,7 @@ to a target. For example, when linking dynamic libraries on Windows, one
 sometimes needs to specify a "DEF file", telling what functions should
 be exported. It would be nice to use this file like this:
 
+[source,jam]
 ----
 lib a : a.cpp : <def-file>a.def ;
 ----
@@ -686,6 +705,7 @@ of features.
 
 It is possible to define your own build variants. For example:
 
+[source,jam]
 ----
 variant crazy : <optimization>speed <inlining>off
                 <debug-symbols>on <profiling>on ;
@@ -694,6 +714,7 @@ variant crazy : <optimization>speed <inlining>off
 will define a new variant with the specified set of properties. You can
 also extend an existing variant:
 
+[source,jam]
 ----
 variant super_release : release : <define>USE_ASM ;
 ----
@@ -704,6 +725,7 @@ In this case, `super_release` will expand to all properties specified by
 You are not restricted to using the `variant` feature only. Here's
 example that defines a brand new feature:
 
+[source,jam]
 ----
 feature parallelism : mpi fake none : composite link-incompatible ;
 feature.compose <parallelism>mpi : <library>/mpi//mpi/<parallelism>none ;
@@ -728,6 +750,7 @@ rule. The name of the rule is obtained from the name of the type, by
 downcasing all letters and replacing underscores with dashes. For
 example, if you create a module `obfuscate.jam` containing:
 
+[source,jam]
 ----
 import type ;
 type.register OBFUSCATED_CPP  : ocpp ;
@@ -744,6 +767,7 @@ rules. For example, suppose you have only one library per directory and
 want all cpp files in the directory to be compiled into that library.
 You can achieve this effect using:
 
+[source,jam]
 ----
 lib codegen : [ glob *.cpp ] ;
 ----
@@ -751,6 +775,7 @@ lib codegen : [ glob *.cpp ] ;
 If you want to make it even simpler, you could add the following
 definition to the `Jamroot.jam` file:
 
+[source,jam]
 ----
 rule glib ( name : extra-sources * : requirements * )
 {
@@ -760,6 +785,7 @@ rule glib ( name : extra-sources * : requirements * )
 
 allowing you to reduce the Jamfile to just
 
+[source,jam]
 ----
 glib codegen ;
 ----

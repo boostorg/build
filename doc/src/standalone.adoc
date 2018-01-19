@@ -5,6 +5,9 @@
 :sectnums:
 :icons: font
 :nofooter:
+:source-highlighter: highlightjs
+:source-language: jam
+:highlightjsdir: hljs
 
 include::howto.adoc[]
 
