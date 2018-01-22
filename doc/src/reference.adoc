@@ -485,6 +485,41 @@ shared libraries. This feature corresponds to the IDE option found in the
 project settings dialog, under Configuration Properties -> Manifest
 Tool -> Input and Output -> Additional Manifest Files.
 
+`relevant`::
+*Allowed values:* the name of any feature.
++
+This feature is used to indicate which other features are relevant for a
+given target. It is usually not necessary to manage it explicitly, as
+Boost.Build can deduce it in most cases. Features which are not relevant
+will not affect target paths, and will not cause conflicts.
++
+* A feature will be considered relevant if any of the following are true
++
+** It is referenced by `toolset.flags` or `toolset.uses-features`
+** It is used by the requirements of a generator
+** It is a subfeature of a relevant feature
+** It has a subfeature which is relevant
+** It is a composite feature, and any composed feature is relevant
+** It affects target alternative selection for a main target
+** It is a propagated feature and is relevant for any dependency
+** It is relevant for any dependency created by the same main target
+** It is used in the condition of a conditional property and the corresponding
+  value is relevant
+** It is explicitly named as relevent
++
+* Relevant features cannot be automatically deduced in the following cases:
++
+** Indirect conditionals. Solution: return properties of the form
+`<relevant>result-feature:<relevant>condition-feature`
++
+NOTE: This isn't really a conditional, although for most purposes it
+functions like one. In particular, it does not support multiple
+comma-separated elements in the condition, and it does work correctly even
+in contexts where conditional properties are not allowed
+** Action rules that read properties. Solution: add toolset.uses-features to
+tell Boost.Build that the feature is actually used.
+** Generators and targets that manipulate property-sets directly. Solution: set <relevant> manually.
+
 [[bbv2.reference.tools]]
 == Builtin tools
 
