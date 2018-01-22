@@ -97,6 +97,7 @@ run fail-run.cpp ;
     t.expect_addition("bin/fail-compile.test/$toolset/debug*/fail-compile.test")
     t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.test")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")
+    t.expect_output_lines("...failed*", False)
 
     # Now make them fail
     t.write("pass.cpp", "int main() {}\n")
@@ -142,7 +143,6 @@ run pass.cpp l ;
     t.expect_addition("bin/pass.test/$toolset/debug*/pass.output")
     t.expect_addition("bin/pass.test/$toolset/debug*/pass.run")
     t.expect_addition("bin/pass.test/$toolset/debug*/pass.test")
-    t.expect_nothing_more()
 
     t.cleanup()
 
@@ -271,6 +271,7 @@ link fail-link.cpp ;
     t.expect_addition("bin/pass.test/$toolset/debug*/pass.test")
     t.expect_addition("bin/fail-compile.test/$toolset/debug*/fail-compile.test")
     t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.test")
+    t.expect_output_lines("...failed*", False)
 
     # Now make them fail
     t.write("pass.cpp", "int main() {}\n")
@@ -353,6 +354,7 @@ compile fail-compile.cpp ;
     # Sanity check
     t.expect_addition("bin/pass.test/$toolset/debug*/pass.test")
     t.expect_addition("bin/fail-compile.test/$toolset/debug*/fail-compile.test")
+    t.expect_output_lines("...failed*", False)
 
     # Now make them fail
     t.write("pass.cpp", "int main() {}\n")

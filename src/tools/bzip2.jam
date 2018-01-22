@@ -142,7 +142,12 @@ rule init (
     }
     else
     {
-        source-path ?= [ modules.peek : BZIP2_SOURCE ] ;
+        source-path ?= [ os.environ BZIP2_SOURCE ] ;
+        if $(source-path)
+        {
+            source-path = [ path.root [ path.make $(source-path) ]
+                                      [ path.pwd ] ] ;
+        }
     }
 
     if $(.configured.$(condition))

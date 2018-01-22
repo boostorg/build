@@ -1,0 +1,129 @@
+# Copyright 2018 Steven Watanabe
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+# defines the check-has-flag rule.
+
+import "class" ;
+import common ;
+import feature : feature ;
+import generators ;
+import make ;
+import print ;
+import project ;
+
+rule init ( )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+        project.push-current ;
+        project.initialize $(__name__) ;
+        project /check/flags ;
+        .project = [ project.current ] ;
+        make empty.c : : @write-main ;
+        make empty.cpp : : @write-main ;
+        obj empty.obj : empty.cpp ;
+        project : requirements <flags.check>on <warnings-as-errors>on ;
+        project.pop-current ;
+    }
+}
+
+rule write-main ( target : : properties * )
+{
+    print.output $(target) ;
+    print.text "int main() {}\n" : yes ;
+}
+
+# Applies true-properties if the toolset recognizes a specific flag.
+# Otherwise applies false-properties.
+#
+# Option must be one of <cflags>, <cxxflags>, or <linkflags>.
+#
+# Example::
+#
+#   exe foo : foo.cpp :
+#     [ check-has-flag <cxxflags>-std=c++11 : <cxxflags>-std=c++11 ] ;
+#
+rule check-has-flag ( option message ? : true-properties * : false-properties * )
+{
+    init ;
+    local id = [ MD5 $(option) ] ;
+
+    if ! $(.targets.$(id))
+    {
+        project.push-current $(.project) ;
+        switch $(option:G)
+        {
+            case <cflags>    : obj flags_$(id) : empty.c   : $(option) ;
+            case <cxxflags>  : obj flags_$(id) : empty.cpp : $(option) ;
+            case <linkflags> : exe flags_$(id) : empty.obj : $(option) ;
+            case * :
+                import errors ;
+                errors.user-error "Don't know how to check $(option:G)" ;
+        }
+        project.pop-current ;
+        .targets.$(id) = true ;
+    }
+    message ?= "has $(option:G=)" ;
+    return [ check-target-builds /check/flags//flags_$(id) $(message)
+       : $(true-properties) : $(false-properties) ] ;
+}
+
+IMPORT $(__name__) : check-has-flag : : check-has-flag ;
+
+# This ugly hack is necessary because /WX doesn't apply
+# to the warning about unknown options.
+feature flags.check : on : optional ;
+
+class flag-check-generator : generator
+{
+    rule __init__ ( type )
+    {
+        generator.__init__ flags.check-msvc : $(type) : $(type)(%_valid) :
+            <toolset>msvc <flags.check>on ;
+    }
+    rule run ( project name ? : property-set : sources * )
+    {
+        property-set = [ property-set.create [ property.change
+            [ $(property-set).raw ] : <flags.check> ] ] ;
+        return [ generator.run $(project) $(name)
+          : $(property-set) : $(sources) ] ;
+    }
+    rule action-class ( )
+    {
+        return non-scanning-action ;
+    }
+}
+
+generators.register [ class.new flag-check-generator OBJ ] ;
+generators.register [ class.new flag-check-generator EXE ] ;
+generators.override flags.check-msvc : all ;
+
+rule check-msvc-callback ( targets * : source-targets * : ignored * : output ? )
+{
+    if [ MATCH "(D9002|LNK4044)" : $(output) ]
+    {
+        FLAG_CHECK_COMMAND on $(targets) = illegal-ad22d215a8bbd73 ;
+    }
+}
+
+IMPORT $(__name__) : check-msvc-callback : : flags.check-msvc-callback ;
+
+rule check-msvc ( targets * : sources * : properties * )
+{
+    local action = [ on $(sources) return $(.action) ] ;
+    local all-sources ;
+    for local t in [ $(action).targets ]
+    {
+        all-sources += [ $(t).actualize ] ;
+    }
+    __ACTION_RULE__ on $(all-sources) = flags.check-msvc-callback $(targets) ;
+    common.copy $(targets[1]) : $(sources[1]) ;
+}
+
+actions check-msvc
+{
+    $(FLAG_CHECK_COMMAND)
+}

@@ -737,6 +737,16 @@ rule link.dll ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+    # On msvc-14.1, the linker might not touch the import library
+    # if the exports do not change.  (Apparently this could also
+    # happen for incremental linking, which is why we disable it,
+    # but that no longer seems to be enough).
+    # Therefore, don't update the import library just because
+    # it's out-dated.  It will be force updated, when the dll
+    # is updated.  Also, make it so that anything that depends
+    # on it depends on the dll as well.
+    NOUPDATE $(targets[2]) ;
+    INCLUDES $(targets[2]) : $(targets[1]) ;
     if <embed-manifest>on in $(properties)
     {
         if [ feature.get-values <embed-manifest-file> : $(properties) ]

@@ -15,6 +15,7 @@ import configure ;
 import config-cache ;
 import feature ;
 import generators ;
+import indirect ;
 import make ;
 import modules ;
 import os ;
@@ -103,12 +104,12 @@ rule set-default-toolset ( toolset : version ? )
 
 rule add-pre-build-hook ( function )
 {
-    .pre-build-hook += $(function) ;
+    .pre-build-hook += [ indirect.make $(function) : [ CALLER_MODULE ] ] ;
 }
 
 rule add-post-build-hook ( function )
 {
-    .post-build-hook += $(function) ;
+    .post-build-hook += [ indirect.make $(function) : [ CALLER_MODULE ] ] ;
 }
 
 # Old names for backwards compatibility
@@ -1047,7 +1048,7 @@ local rule should-clean-project ( project )
 
         for local function in $(.pre-build-hook)
         {
-            $(function) ;
+            indirect.call $(function) ;
         }
 
         DEPENDS all : $(actual-targets) ;
@@ -1064,7 +1065,7 @@ local rule should-clean-project ( project )
             }
             for local function in $(.post-build-hook)
             {
-                $(function) $(ok) ;
+                indirect.call $(function) $(ok) ;
             }
             # Prevent automatic update of the 'all' target, now that we have
             # explicitly updated what we wanted.

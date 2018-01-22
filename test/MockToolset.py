@@ -35,6 +35,8 @@ class MockInfo(object):
   def source_file(self, name, pattern):
     self.files[name] = pattern
   def action(self, command, status=0):
+    if isinstance(command, str):
+      command = command.split()
     self.commands.append((command, status))
   def check(self, command):
     print "Testing command", command
@@ -42,7 +44,7 @@ class MockInfo(object):
       if self.matches(raw, command):
         return status
   def matches(self, raw, command):
-    (expected_options, expected_args) = parser.parse_args(raw.split())
+    (expected_options, expected_args) = parser.parse_args(raw)
     options = command[0]
     input_files = list(command[1])
     if self.verbose:

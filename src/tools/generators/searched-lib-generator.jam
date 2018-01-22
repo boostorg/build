@@ -86,6 +86,11 @@ class searched-lib-target : abstract-file-target
         NOTFILE $(target) ;
     }
 
+    rule relevant ( )
+    {
+        return [ property-set.create <relevant>link ] ;
+    }
+
     rule path ( )
     {
     }

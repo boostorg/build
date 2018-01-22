@@ -87,7 +87,10 @@ class property-set
         return $(self.free) ;
     }
 
-    # Returns relevant base properties
+    # Returns relevant base properties.  This is used for computing
+    # target paths, so it must return the expanded set of relevant
+    # properties.
+    #
     rule base-relevant ( )
     {
         if ! $(self.relevant-initialized)
@@ -97,14 +100,33 @@ class property-set
         return $(self.base-relevant) ;
     }
 
-    # Returns all relevant properties
-    rule relevant
+    # Returns all properties marked as relevant by features-ps
+    # Does not attempt to expand features-ps in any way, as
+    # this matches what virtual-target.register needs.
+    #
+    rule relevant ( features-ps )
     {
-        if ! $(self.relevant-initialized)
+        if ! $(self.relevant.$(features-ps))
         {
-            init-relevant ;
+            local result ;
+            local features = [ $(features-ps).get <relevant> ] ;
+            features = <$(features)> ;
+            local ignore-relevance = [ modules.peek
+                property-set : .ignore-relevance ] ;
+            for local p in $(self.raw)
+            {
+                if $(ignore-relevance) || $(p:G) in $(features)
+                {
+                    local att = [ feature.attributes $(p:G) ] ;
+                    if ! ( incidental in $(att) )
+                    {
+                        result += $(p) ;
+                    }
+                }
+            }
+            self.relevant.$(features-ps) = [ property-set.create $(result) ] ;
         }
-        return $(self.relevant) ;
+        return $(self.relevant.$(features-ps)) ;
     }
 
     # Returns dependency properties.

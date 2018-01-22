@@ -1472,8 +1472,20 @@ class basic-target : abstract-target
                 relevant += $(r) ;
             }
         }
+        local raw = [ $(xusage-requirements).raw ] ;
+        local free = [ property.take free : $(raw) ] ;
+        if $(free) != $(raw)
+        {
+            if ! $(self.warned-usage-requirements)
+            {
+                self.warned-usage-requirements = true ;
+                ECHO "warning:" non-free usage requirements
+                    [ set.difference $(raw) : $(free) ] ignored ;
+                ECHO "warning:" in main-target [ name ] at [ location ] ;
+            }
+        }
         xusage-requirements = [ property-set.create
-            [ property.change [ $(xusage-requirements).raw ] : <relevant> ] 
+            [ property.change $(free) : <relevant> ]
             <relevant>$(relevant) ] ;
 
         # We generate all dependency properties and add them, as well as their

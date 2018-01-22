@@ -34,7 +34,31 @@ t.run_build_system()
 t.expect_addition('bin/standalone/zlib/mock/debug/z.dll')
 t.expect_addition('bin/standalone/zlib/mock/debug/link-static/z.lib')
 
+# Build from source specified in the environment
+t.rm('bin')
 t.rm('zlib')
+
+t.write("zlib root/zlib.h", 'zlib')
+t.write("zlib root/deflate.c", 'deflate')
+
+t.write("Jamroot.jam", """
+using zlib ;
+alias zlib : /zlib//zlib : : <link>static <link>shared ;
+""")
+
+MockToolset.set_expected(t, '''
+source_file('deflate.c', 'deflate')
+action(['-c', '-x', 'c', '-I./zlib root', '-o', '$deflate.o', '$deflate.c'])
+action(['-c', '-x', 'c', '-I./zlib root', '-DZLIB_DLL', '-o', '$deflate-shared.o', '$deflate.c'])
+action('--dll $deflate-shared.o -o $deflate.so')
+action('--archive $deflate.o -o $deflate.a')
+''')
+t.run_build_system(['-sZLIB_SOURCE=zlib root'])
+t.expect_addition('bin/standalone/zlib/mock/debug/z.dll')
+t.expect_addition('bin/standalone/zlib/mock/debug/link-static/z.lib')
+
+
+t.rm('zlib root')
 
 # Generic definitions that aren't configuration specific
 common_stuff = '''
@@ -135,6 +159,25 @@ action('$test-static.o -L./zlib --static-lib=myzlib -o $test')
 action('$test-shared.o -L./zlib --shared-lib=myzlib -o $test')
 ''')
 t.run_build_system()
+t.expect_addition('bin/mock/debug/test.exe')
+t.expect_addition('bin/mock/debug/link-static/test.exe')
+
+# Initialization from the environment
+t.rm('bin')
+t.write('Jamroot.jam', """
+using zlib ;
+exe test : test.cpp /zlib//zlib
+  : : <link>static <link>shared ;
+""")
+t.write('zlib root/zlib.h', 'zlib')
+MockToolset.set_expected(t, common_stuff + '''
+action(['$main.o', '-L./zlib root', '--shared-lib=myzlib', '-o', '$config.exe'])
+action(['-c', '-x', 'c++', '$test.cpp', '-I./zlib root', '-o', '$test.o'])
+action(['$test.o', '-L./zlib root', '--shared-lib=myzlib', '-o', '$test'])
+''')
+t.run_build_system(['-sZLIB_INCLUDE=zlib root',
+                    '-sZLIB_LIBRARY_PATH=zlib root',
+                    '-sZLIB_NAME=myzlib'])
 t.expect_addition('bin/mock/debug/test.exe')
 t.expect_addition('bin/mock/debug/link-static/test.exe')
 
