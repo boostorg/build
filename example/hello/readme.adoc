@@ -8,16 +8,18 @@ Distributed under the Boost Software License, Version 1.0.
 = Hello
 
 This example shows a very basic Boost Build project set up so it compiles a
-single executable from a single source file.
+single executable from a single source file:
 
-Files:
-
-* link:../../example/hello/hello.cpp[hello.cpp]
-* link:../../example/hello/jamroot.jam[jamroot.jam]
+.`hello.cpp`
+[source,cpp]
+----
+include::../../example/hello/hello.cpp[tag=source]
+----
 
 Our `jamroot.jam` is minimal and only specifies one `exe` target for the
 program:
 
+.`jamroot.jam`
 [source,jam]
 ----
 include::jamroot.jam[]
@@ -25,7 +27,7 @@ include::jamroot.jam[]
 
 Building the example yields:
 
-[source,console]
+[source,bash]
 ----
 > cd /example/hello
 > b2
