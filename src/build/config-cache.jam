@@ -42,6 +42,8 @@ rule save ( )
         ALWAYS $(target) ;
         config-cache.write $(target) ;
         UPDATE_NOW $(target) : [ modules.peek configure : .log-fd ] : ignore-minus-n ;
+        import common ;
+        common.Clean clean-all : $(target) ;
     }
 }
 
@@ -69,7 +71,7 @@ rule load ( cache-file )
     {
         FILE_CONTENTS on <old-cache-file>$(cache-file) = "" ;
         config-cache.write <old-cache-file>$(cache-file) ;
-        UPDATE_NOW <old-cache-file>$(cache-file) : [ modules.peek configure : .log-fd ] : ignore-minus-n ;
+        UPDATE_NOW <old-cache-file>$(cache-file) : [ modules.peek configure : .log-fd ] ;
         include <old-cache-file>$(cache-file) ;
     }
     .cache-file = $(cache-file) ;

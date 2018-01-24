@@ -65,6 +65,44 @@ obj bar : foo.cpp :
     t.expect_touch("bin/$toolset/debug*/pass.obj")
     t.expect_nothing_more()
 
+    # -a -n should not rebuild configuration checks
+    t.run_build_system(["-a", "-n"])
+    t.expect_output_lines([
+        "    - pass builds              : yes (cached)",
+        "    - fail builds              : no  (cached)"])
+    t.expect_nothing_more()
+
+    # --clean-all should clear all configuration checks
+    t.run_build_system(["--clean-all"])
+    t.expect_output_lines([
+        "    - pass builds              : yes (cached)",
+        "    - fail builds              : no  (cached)"])
+    t.expect_removal("bin/$toolset/debug*/pass.obj")
+    t.expect_removal("bin/$toolset/debug*/foo.obj")
+    t.expect_removal("bin/$toolset/debug*/bar.obj")
+    t.expect_nothing_more()
+
+    # If configuration checks are absent, then --clean-all
+    # should create them and then delete them again.  This
+    # currently fails because clean cannot remove targets
+    # that were created in the same build.
+    #t.run_build_system(["--clean-all"])
+    #t.expect_output_lines([
+    #    "    - pass builds              : yes",
+    #    "    - fail builds              : no"])
+    #t.expect_nothing_more()
+
+    # Just verify that we're actually in the initial
+    # state here.
+    t.run_build_system()
+    t.expect_output_lines([
+        "    - pass builds              : yes",
+        "    - fail builds              : no"])
+    t.expect_addition("bin/$toolset/debug*/pass.obj")
+    t.expect_addition("bin/$toolset/debug*/foo.obj")
+    t.expect_addition("bin/$toolset/debug*/bar.obj")
+    t.expect_nothing_more()
+
     t.cleanup()
 
 def test_choose():
@@ -113,6 +151,38 @@ obj foo : foo.cpp :
     t.expect_output_lines([
         "    - which one?               : pass"])
     t.expect_touch("bin/$toolset/debug*/pass.obj")
+    t.expect_nothing_more()
+
+    # -a -n should not rebuild configuration checks
+    t.run_build_system(["-a", "-n"])
+    t.expect_output_lines([
+        "    - which one?               : pass (cached)"])
+    t.expect_nothing_more()
+
+    # --clean-all should clear all configuration checks
+    t.run_build_system(["--clean-all"])
+    t.expect_output_lines([
+        "    - which one?               : pass (cached)"])
+    t.expect_removal("bin/$toolset/debug*/pass.obj")
+    t.expect_removal("bin/$toolset/debug*/foo.obj")
+    t.expect_nothing_more()
+
+    # If configuration checks are absent, then --clean-all
+    # should create them and then delete them again.  This
+    # currently fails because clean cannot remove targets
+    # that were created in the same build.
+    #t.run_build_system(["--clean-all"])
+    #t.expect_output_lines([
+    #    "    - which one?               : pass"])
+    #t.expect_nothing_more()
+
+    # Just verify that we're actually in the initial
+    # state here.
+    t.run_build_system()
+    t.expect_output_lines([
+        "    - which one?               : pass"])
+    t.expect_addition("bin/$toolset/debug*/pass.obj")
+    t.expect_addition("bin/$toolset/debug*/foo.obj")
     t.expect_nothing_more()
 
     t.cleanup()

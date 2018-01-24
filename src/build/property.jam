@@ -70,7 +70,7 @@ rule evaluate-conditionals-in-context ( properties * : context * )
     local indirect ;
     for local p in $(properties)
     {
-        if [ MATCH (:<) : $(p) ]
+        if [ MATCH (:<) : $(p) ] && ! free in [ feature.attributes $(p:G) ]
         {
             conditionals += $(p) ;
         }
@@ -152,6 +152,36 @@ rule evaluate-conditionals-in-context ( properties * : context * )
         }
     }
     return $(result) ;
+}
+
+
+# Returns <relevant> properties indicating how the conditionals in
+# properties affect feature relevance.  If the optional argument cond
+# is passed, it is treated as extra conditions for all properties.
+# 
+rule evaluate-conditional-relevance ( properties * :  cond * )
+{
+    cond = [ sequence.transform utility.ungrist : $(cond:G) ] ;
+    local result ;
+    for local p in $(properties)
+    {
+        # Separate condition and property.
+        local s = [ MATCH ^(.*):(<.*) : $(p) ] ;
+        if ! $(s) || free in [ feature.attributes $(p:G) ]
+        {
+            local value = [ utility.ungrist $(p:G) ] ;
+            result += <relevant>$(value):<relevant>$(cond) ;
+        }
+        else
+        {
+            local condition = [ regex.split $(s[1]) "," ] ;
+            condition = [ MATCH ^!?(.*) : $(condition) ] ;
+            condition = [ sequence.transform utility.ungrist : $(condition:G) ] $(cond) ;
+            local value = [ utility.ungrist $(s[2]:G) ] ;
+            result += <relevant>$(value):<relevant>$(condition) ;
+        }
+    }
+    return [ sequence.unique $(result) ] ;
 }
 
 

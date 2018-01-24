@@ -36,7 +36,7 @@ os.environ["TMPDIR"] = tmpdir; # *nix
 
 try:
     t.run_build_system(["has space"])
-    t.expect_addition("has space/bin/$toolset/debug*/test.txt")
+    t.expect_addition("has space/bin/test.txt")
     t.expect_addition("has space/bin/$toolset/debug*/test.passed")
 finally:
     if oldtmp is not None:

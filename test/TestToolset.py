@@ -60,7 +60,7 @@ def expand_properties(properties):
         result += ["target-os=" + default_target_os]
     return result
 
-def compute_path(properties):
+def compute_path(properties, target_type):
     path = ""
     if "variant=release" in properties:
         path += "/release"
@@ -74,9 +74,9 @@ def compute_path(properties):
         path += "/cxxstd-latest-iso"
     if "link=static" in properties:
         path += "/link-static"
-    if "runtime-link=static" in properties:
+    if "runtime-link=static" in properties and target_type in ["exe"]:
         path += "/runtime-link-static"
-    if "strip=on" in properties:
+    if "strip=on" in properties and target_type in ["dll", "exe", "obj2"]:
         path += "/strip-on"
     if get_target_os(properties) != default_target_os:
         path += "/target-os-" + get_target_os(properties)
@@ -96,16 +96,17 @@ def test_toolset(toolset, version, property_sets):
     for properties in property_sets:
         t.set_toolset(toolset + "-" + version, get_target_os(properties))
         properties = adjust_properties(properties)
-        path = toolset.split("-")[0] + "-*" + version + compute_path(properties)
+        def path(t):
+            return toolset.split("-")[0] + "-*" + version + compute_path(properties, t)
         os.environ["B2_PROPERTIES"] = " ".join(expand_properties(properties))
         t.run_build_system(["--user-config="] + properties)
-        t.expect_addition("bin/%s/lib.obj" % (path))
+        t.expect_addition("bin/%s/lib.obj" % (path("obj")))
         if "link=static" not in properties:
-            t.expect_addition("bin/%s/l1.dll" % (path))
+            t.expect_addition("bin/%s/l1.dll" % (path("dll")))
         else:
-            t.expect_addition("bin/%s/l1.lib" % (path))
-        t.expect_addition("bin/%s/main.obj" % (path))
-        t.expect_addition("bin/%s/test.exe" % (path))
+            t.expect_addition("bin/%s/l1.lib" % (path("lib")))
+        t.expect_addition("bin/%s/main.obj" % (path("obj2")))
+        t.expect_addition("bin/%s/test.exe" % (path("exe")))
         t.expect_nothing_more()
         t.rm("bin")
 

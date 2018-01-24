@@ -20,6 +20,7 @@ import targets ;
 import path ;
 import modules ;
 import indirect ;
+import os ;
 import property ;
 import property-set ;
 
@@ -139,7 +140,12 @@ rule init (
     }
     else
     {
-        source-path ?= [ modules.peek : ZLIB_SOURCE ] ;
+        source-path ?= [ os.environ ZLIB_SOURCE ] ;
+        if $(source-path)
+        {
+            source-path = [ path.root [ path.make $(source-path) ]
+                                      [ path.pwd ] ] ;
+        }
     }
 
     if $(.configured.$(condition))
