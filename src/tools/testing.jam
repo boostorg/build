@@ -118,7 +118,8 @@ rule make-test ( target-type : sources + : requirements * : target-name ? )
     # to allow post-processing tools to work.
     local t = [ targets.create-typed-target [ type.type-from-rule-name
         $(target-type) ] : $(project) : $(real-name) : $(sources) :
-        $(requirements) <location-prefix>$(real-name)$(.TEST-DIR-SUFFIX) ] ;
+        $(requirements) <location-prefix>$(real-name)$(.TEST-DIR-SUFFIX)
+        <relevant>toolset ] ;
 
     # The alias to the real target, per period replacement above.
     if $(real-name) != $(target-name)
