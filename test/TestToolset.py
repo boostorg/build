@@ -50,8 +50,12 @@ def expand_properties(properties):
         result += ["variant=debug"]
     if not has_property("threading", properties):
         result += ["threading=single"]
+    if not has_property("exception-handling", properties):
+        result += ["exception-handling=on"]
     if not has_property("link", properties):
         result += ["link=shared"]
+    if not has_property("rtti", properties):
+        result += ["rtti=on"]
     if not has_property("runtime-link", properties):
         result += ["runtime-link=shared"]
     if not has_property("strip", properties):
@@ -72,8 +76,12 @@ def compute_path(properties, target_type):
         path += "/architecture-" + get_property("architecture", properties)
     if "cxxstd=latest" in properties:
         path += "/cxxstd-latest-iso"
+    if "exception-handling=off" in properties:
+        path += "/exception-handling-off"
     if "link=static" in properties:
         path += "/link-static"
+    if "rtti=off" in properties:
+        path += "/rtti-off"
     if "runtime-link=static" in properties and target_type in ["exe"]:
         path += "/runtime-link-static"
     if "strip=on" in properties and target_type in ["dll", "exe", "obj2"]:
