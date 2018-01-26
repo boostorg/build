@@ -663,6 +663,30 @@ rule add-requirements ( requirements * )
     }
 }
 
+# Returns the global toolset defaults.
+#
+.defaults = [ property-set.empty ] ;
+
+rule defaults ( )
+{
+    return $(.defaults) ;
+}
+
+# Add elements to the list of global toolset defaults.  These properties
+# should be conditional and will override the default value of the feature.
+# Do not use this for non-conditionals.  Use feature.set-default instead.
+#
+rule add-defaults ( properties * )
+{
+    if ! $(.ignore-requirements)
+    {
+        properties = [ property.translate-indirect $(properties) : [ CALLER_MODULE ] ] ;
+        properties = [ property.expand-subfeatures-in-conditions $(properties) ] ;
+        properties = [ property.make $(properties) ] ;
+        .defaults = [ $(.defaults).add-raw $(properties) ] ;
+    }
+}
+
 
 rule __test__ ( )
 {
