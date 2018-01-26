@@ -179,6 +179,7 @@ rule init ( version ? : command * : options * : requirement * )
         bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
         root ?= $(bin:D) ;
     }
+    local target-os ;
     #   Autodetect the version and flavor if not given.
     if $(command)
     {
@@ -190,6 +191,13 @@ rule init ( version ? : command * : options * : requirement * )
             case *mingw* : flavor ?= mingw ;
             case *cygwin* : flavor ?= cygwin ;
         }
+        switch $(machine:L)
+        {
+            case *mingw*  : target-os ?= windows ;
+            case *cygwin* : target-os ?= cygwin ;
+            case *linux*  : target-os ?= linux ;
+            # TODO: finish this list.
+        }
     }
 
     local condition ;
@@ -197,6 +205,13 @@ rule init ( version ? : command * : options * : requirement * )
         : $(condition) ] ;
 
     common.handle-options gcc : $(condition) : $(command) : $(options) ;
+
+    # Set the default target-os for this toolset.
+    if $(target-os) && ! [ feature.get-values <target-os> : $(requirement) ]
+    {
+        local conditionx = [ regex.replace $(condition) "/" "," ] ;
+        toolset.add-defaults $(conditionx):<target-os>$(target-os) ;
+    }
 
     # If gcc is installed in a non-standard location, we would need to add
     # LD_LIBRARY_PATH when running programs created with it (for unit-test/run
