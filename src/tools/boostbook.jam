@@ -33,6 +33,7 @@ import generators ;
 import make ;
 import modules ;
 import os ;
+import param ;
 import path ;
 import print ;
 import project ;
@@ -716,11 +717,14 @@ class boostbook-target-class : basic-target
 
 # Declare a boostbook target.
 #
-rule boostbook ( target-name : sources * : requirements * : default-build * )
+rule boostbook ( target-name : sources * : requirements * : default-build * :
+    usage-requirements * )
 {
+    param.handle-named-params
+        sources requirements default-build usage-requirements ;
     return [ targets.create-metatarget boostbook-target-class :
         [ project.current ] : $(target-name) : $(sources) : $(requirements) :
-        $(default-build) ] ;
+        $(default-build) : $(usage-requirements) ] ;
 }
 
 

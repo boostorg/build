@@ -6,6 +6,7 @@
 
 import "class" : new ;
 import generators ;
+import param ;
 import project ;
 import targets ;
 
@@ -74,6 +75,8 @@ generators.register [ new lib-generator builtin.lib-generator :  : LIB ] ;
 rule lib ( names + : sources * : requirements * : default-build * :
     usage-requirements * )
 {
+    param.handle-named-params
+        sources requirements default-build usage-requirements ;
     if $(names[2])
     {
         if <name> in $(requirements:G)

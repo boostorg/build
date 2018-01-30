@@ -27,6 +27,7 @@ import make ;
 import modules ;
 import generators ;
 import os ;
+import param ;
 import path ;
 import print ;
 import project ;
@@ -622,6 +623,8 @@ rule check-tools ( target )
 rule doxygen ( target : sources + : requirements * : default-build * :
     usage-requirements * )
 {
+    param.handle-named-params
+        sources requirements default-build usage-requirements ;
     requirements += <format>none ;
     freeze-config ;
     local project = [ project.current ] ;
