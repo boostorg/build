@@ -217,7 +217,7 @@ class generator
             # name. We use parallel lists for prefix and postfix (as opposed to
             # mapping), because given target type might occur several times, for
             # example "H H(%_symbols)".
-            local m = [ MATCH ([^\\(]*)(\\((.*)%(.*)\\))? : $(e) ] ;
+            local m = [ MATCH "([^\\(]*)(\\((.*)%(.*)\\))?" : $(e) ] ;
             self.target-types += $(m[1]) ;
             self.name-prefix += $(m[3]:E="") ;
             self.name-postfix += $(m[4]:E="") ;
@@ -333,7 +333,7 @@ class generator
         local target-types ;
         for local t in $(self.target-types-and-names)
         {
-            local m = [ MATCH ([^\\(]*)(\\(.*\\))? : $(t) ] ;
+            local m = [ MATCH "([^\\(]*)(\\(.*\\))?" : $(t) ] ;
             if $(m) = $(base)
             {
                 target-types += $(type)$(m[2]:E="") ;
@@ -1379,7 +1379,9 @@ rule construct ( project name ? : target-type : property-set * : sources * : top
         .active-generators = ;
     }
 
-    if (.construct-stack)
+    # FIXME This is probably not intended be be run unconditionally,
+    # but changing it causes no_type to fail.
+    if "(.construct-stack)"
     {
         ensure-type $(sources) ;
     }

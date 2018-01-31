@@ -367,7 +367,7 @@ rule set-target-variables-aux ( rule-or-module : property-set )
     }
 
     # Strip away last dot separated part and recurse.
-    local next = [ MATCH ^(.+)\\.([^\\.])* : $(rule-or-module) ] ;
+    local next = [ MATCH "^(.+)\\.([^\\.])*" : $(rule-or-module) ] ;
     if $(next)
     {
         result += [ set-target-variables-aux $(next[1]) : $(property-set) ] ;
@@ -411,7 +411,7 @@ rule relevant-features ( rule-or-module )
         }
 
         # Strip away last dot separated part and recurse.
-        local next = [ MATCH ^(.+)\\.([^\\.])* : $(rule-or-module) ] ;
+        local next = [ MATCH "^(.+)\\.([^\\.])*" : $(rule-or-module) ] ;
         if $(next)
         {
             result += [ relevant-features $(next[1]) ] ;
@@ -439,7 +439,7 @@ local rule used-features ( rule-or-module )
         local result = $(.uses-features.$(rule-or-module)) ;
  
         # Strip away last dot separated part and recurse.
-        local next = [ MATCH ^(.+)\\.([^\\.])* : $(rule-or-module) ] ;
+        local next = [ MATCH "^(.+)\\.([^\\.])*" : $(rule-or-module) ] ;
         if $(next)
         {
             result += [ used-features $(next[1]) ] ;

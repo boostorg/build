@@ -81,7 +81,7 @@ rule init ( version ? : command * : options * : requirement * )
         if ! $(tool-command)
         {
             import errors ;
-            errors.error toolset gcc initialization:
+            errors.error toolset gcc "initialization:"
                 : provided command '$(command)' not found
                 : initialized from [ errors.nearest-user-location ] ;
         }
@@ -116,7 +116,7 @@ rule init ( version ? : command * : options * : requirement * )
                     if $(stripped) != $(version)
                     {
                         import errors ;
-                        errors.error toolset gcc initialization:
+                        errors.error toolset gcc "initialization:"
                             : version '$(version)' requested but
                                 'g++-$(version)' not found and version
                                 '$(tool-version)' of default '$(tool-command)'
@@ -133,7 +133,7 @@ rule init ( version ? : command * : options * : requirement * )
             else
             {
                 import errors ;
-                errors.error toolset gcc initialization:
+                errors.error toolset gcc "initialization:"
                     : version '$(version)' requested but neither
                         'g++-$(version)' nor default 'g++' found
                     : initialized from [ errors.nearest-user-location ] ;
@@ -147,7 +147,7 @@ rule init ( version ? : command * : options * : requirement * )
         if ! $(tool-command)
         {
             import errors ;
-            errors.error toolset gcc initialization:
+            errors.error toolset gcc "initialization:"
                 : no command provided, default command 'g++' not found
                 : initialized from [ errors.nearest-user-location ] ;
         }
@@ -210,7 +210,7 @@ rule init ( version ? : command * : options * : requirement * )
     if $(target-os) && ! [ feature.get-values <target-os> : $(requirement) ]
     {
         local conditionx = [ regex.replace $(condition) "/" "," ] ;
-        toolset.add-defaults $(conditionx):<target-os>$(target-os) ;
+        toolset.add-defaults $(conditionx)\:<target-os>$(target-os) ;
     }
 
     # If gcc is installed in a non-standard location, we would need to add
@@ -226,7 +226,7 @@ rule init ( version ? : command * : options * : requirement * )
         local lib_path = $(root)/bin $(root)/lib $(root)/lib32 $(root)/lib64 ;
         if $(.debug-configuration)
         {
-            ECHO notice: using gcc libraries :: $(condition) :: $(lib_path) ;
+            ECHO "notice:" using gcc libraries "::" $(condition) "::" $(lib_path) ;
         }
         toolset.flags gcc.link RUN_PATH $(condition) : $(lib_path) ;
     }
@@ -244,7 +244,7 @@ rule init ( version ? : command * : options * : requirement * )
     toolset.flags gcc.archive .AR $(condition) : $(archiver[1]) ;
     if $(.debug-configuration)
     {
-        ECHO notice: using gcc archiver :: $(condition) :: $(archiver[1]) ;
+        ECHO "notice:" using gcc archiver "::" $(condition) "::" $(archiver[1]) ;
     }
 
     # - Ranlib.
@@ -256,7 +256,7 @@ rule init ( version ? : command * : options * : requirement * )
     toolset.flags gcc.archive .RANLIB $(condition) : $(ranlib[1]) ;
     if $(.debug-configuration)
     {
-        ECHO notice: using gcc ranlib :: $(condition) :: $(ranlib[1]) ;
+        ECHO "notice:" using gcc ranlib "::" $(condition) "::" $(ranlib[1]) ;
     }
 
     # - Resource compiler.
@@ -563,7 +563,7 @@ class gcc-pch-generator : pch-generator
         {
             local location = [ $(project).project-module ] ;
             import errors : user-error : errors.user-error ;
-            errors.user-error "in" $(location): pch target name '$(name)' should
+            errors.user-error "in" "$(location):" pch target name '$(name)' should
                 be the same as the base name of header file '$(header-name)' ;
         }
 
@@ -702,8 +702,8 @@ class gcc-linking-generator : unix-linking-generator
         }
         if $(reason)
         {
-            ECHO warning: $(reason) ;
-            ECHO warning: It is suggested to use '<runtime-link>static' together
+            ECHO "warning:" $(reason) ;
+            ECHO "warning:" It is suggested to use '<runtime-link>static' together
                 with '<link>static'. ;
         }
         else

@@ -231,7 +231,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
     {
         local path-string = $(path) ;
         if $(path-string) = "" { path-string = . ; }
-        ECHO notice: Searching '$(path-string)' for $(module-name)
+        ECHO "notice:" Searching '$(path-string)' for $(module-name)
             configuration file '$(filename)'. ;
     }
     local where = [ GLOB $(path) : $(filename) ] ;
@@ -243,7 +243,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
             local where-string = $(where:D) ;
             if $(where-string) = "" { where-string = . ; }
             where-string = '$(where-string)' ;
-            ECHO notice: Loading $(module-name) configuration file '$(filename)'
+            ECHO "notice:" Loading $(module-name) configuration file '$(filename)'
                 from $(where-string:J=" "). ;
         }
 
@@ -267,7 +267,7 @@ local rule load-config ( module-name : filename : path + : must-find ? )
             errors.user-error Configuration file '$(filename)' not found "in"
                 $(path-string). ;
         }
-        ECHO notice: Configuration file '$(filename)' not found "in"
+        ECHO "notice:" Configuration file '$(filename)' not found "in"
             $(path-string). ;
     }
     return $(where) ;
@@ -426,7 +426,7 @@ local rule load-configuration-files
         }
         else if $(.debug-config)
         {
-            ECHO notice: Site configuration file loading explicitly disabled. ;
+            ECHO "notice:" Site configuration file loading explicitly disabled. ;
         }
     }
 
@@ -440,8 +440,8 @@ local rule load-configuration-files
         {
             if $(.debug-config)
             {
-                ECHO notice: Loading explicitly specified user configuration
-                    file: ;
+                ECHO "notice:" Loading explicitly specified user configuration
+                    "file:" ;
                 ECHO "    $(user-config)" ;
             }
 
@@ -454,7 +454,7 @@ local rule load-configuration-files
         }
         else if $(.debug-config)
         {
-            ECHO notice: User configuration file loading explicitly disabled. ;
+            ECHO "notice:" User configuration file loading explicitly disabled. ;
         }
     }
 
@@ -488,7 +488,7 @@ local rule load-configuration-files
         }
         else if $(.debug-config)
         {
-            ECHO notice: Project configuration file loading explicitly
+            ECHO "notice:" Project configuration file loading explicitly
                 disabled. ;
         }
     }
@@ -511,7 +511,7 @@ local rule process-explicit-toolset-requests
     for local t in $(option-toolsets) $(feature-toolsets)
     {
         # Parse toolset-version/properties.
-        local toolset = [ MATCH ([^/]+)/?.* : $(t) ] ;
+        local toolset = [ MATCH "([^/]+)/?.*" : $(t) ] ;
         local properties = [ feature.expand-subfeatures <toolset>$(toolset) : true ] ;
         local toolset-property = [ property.select <toolset> : $(properties) ] ;
         local known ;
@@ -538,7 +538,7 @@ local rule process-explicit-toolset-requests
                 ECHO "notice: [cmdline-cfg] toolset $(toolset) not"
                     "previously configured; attempting to auto-configure now" ;
             }
-            local t,v = [ MATCH ([^-]+)-?(.+)? : $(toolset) ] ;
+            local t,v = [ MATCH "([^-]+)-?(.+)?" : $(toolset) ] ;
             project.push-current ;
             toolset.using $(t,v[1]) : $(t,v[2]) ;
             project.pop-current ;
@@ -551,7 +551,7 @@ local rule process-explicit-toolset-requests
         {
             if $(.debug-config)
             {
-                ECHO notice: [cmdline-cfg] adding toolset=$(t) to the build
+                ECHO "notice:" "[cmdline-cfg]" adding toolset=$(t) to the build
                     request. ;
             }
             extra-properties += toolset=$(t) ;

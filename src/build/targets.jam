@@ -1291,11 +1291,11 @@ class basic-target : abstract-target
             local fn = [ full-name ] ;
             ECHO [ targets.indent ] "Building target '$(fn)'" ;
             targets.increase-indent ;
-            ECHO [ targets.indent ] Build request: $(property-set)
+            ECHO [ targets.indent ] Build "request:" $(property-set)
                 [ $(property-set).raw ] ;
             local cf = [ build-system.command-line-free-features ] ;
-            ECHO [ targets.indent ] Command line free features: [ $(cf).raw ] ;
-            ECHO [ targets.indent ] Target requirements:
+            ECHO [ targets.indent ] Command line free "features:" [ $(cf).raw ] ;
+            ECHO [ targets.indent ] Target "requirements:"
                 [ $(self.requirements).raw ] ;
         }
         targets.push-target $(__name__) ;
