@@ -13,8 +13,8 @@ if allow_properties('variant=debug', 'link=shared', 'threading=single', 'runtime
     command('ld', '-o', output_file('bin/clang-vxworks-4.0.1/debug/test'), input_file('bin/clang-vxworks-4.0.1/debug/main.o'), input_file('bin/clang-vxworks-4.0.1/debug/libl1.so'), unordered('-g', '-fPIC'))
 
 if allow_properties('variant=release', 'link=shared', 'threading=single', 'runtime-link=shared', 'strip=on'):
-    command('ld', '-o', output_file('bin/clang-vxworks-4.0.1/release/libl1.so'), input_file('bin/clang-vxworks-4.0.1/release/lib.o'), unordered('-fPIC', '-Wl,--strip-all'), '-fpic', '-shared', '-non-static')
-    command('ld', '-o', output_file('bin/clang-vxworks-4.0.1/release/test'), input_file('bin/clang-vxworks-4.0.1/release/main.o'), input_file('bin/clang-vxworks-4.0.1/release/libl1.so'), unordered('-fPIC', '-Wl,--strip-all'))
+    command('ld', '-t', '-o', output_file('bin/clang-vxworks-4.0.1/release/libl1.so'), input_file('bin/clang-vxworks-4.0.1/release/lib.o'), unordered('-fPIC', '-Wl,--strip-all'), '-fpic', '-shared', '-non-static')
+    command('ld', '-t', '-o', output_file('bin/clang-vxworks-4.0.1/release/test'), input_file('bin/clang-vxworks-4.0.1/release/main.o'), input_file('bin/clang-vxworks-4.0.1/release/libl1.so'), unordered('-fPIC', '-Wl,--strip-all'))
 
 if allow_properties('variant=debug', 'link=shared', 'threading=multi', 'runtime-link=shared'):
     command('ld', '-o', output_file('bin/clang-vxworks-4.0.1/debug/threading-multi/libl1.so'), input_file('bin/clang-vxworks-4.0.1/debug/threading-multi/lib.o'), unordered('-g', '-fPIC'), '-fpic', '-shared', '-non-static')

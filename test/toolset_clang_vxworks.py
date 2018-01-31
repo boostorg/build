@@ -12,7 +12,7 @@ from TestToolset import test_toolset
 
 test_toolset("clang-vxworks", "4.0.1", [
     ["target-os=vxworks"],
-    ["target-os=vxworks", "release", "strip=on"],
+    ["target-os=vxworks", "release", "strip=on", "linkflags=-t"],
     ["target-os=vxworks", "threading=multi"],
     ["target-os=vxworks", "link=static"],
     ["target-os=vxworks", "link=static", "runtime-link=static"],

@@ -95,8 +95,6 @@ actions compile.c++
 
 
 
-flags clang-vxworks ARFLAGS <archiveflags> ;
-
 # Default value. Mostly for the sake of clang-linux
 # that inherits from gcc, but does not has the same
 # logic to set the .AR variable. We can put the same
@@ -109,8 +107,6 @@ actions piecemeal archive
 {
   "$(.AR)" $(AROPTIONS) rcu "$(<)" "$(>)"
 }
-
-flags clang-vxworks.link USER_OPTIONS <linkflags> ;
 
 # Declare actions for linking
 rule link ( targets * : sources * : properties * )
