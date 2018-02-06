@@ -101,9 +101,44 @@ rule init ( : : options * : requirements * )
     # spaces (e.g. if 'command' is an absolute path and some path components
     # have spaces).
 
-    # FIXME: Detect compiler version instead of hard coding a version.
-    local dotted-version = 8.6.5 ;
-    local version = [ numeric-version $(dotted-version) ] ;
+    local version = ;
+    local developer-build = ;
+    {
+        local version-string = [ SHELL "$(command-c++) -VV 2>&1" ] ;
+        local version-components = [ MATCH "Version ([0-9]+).([0-9]+).([a-zA-Z0-9]+)" : $(version-string) ] ;
+        if ! [ MATCH "([0-9]+)" : $(version-components[3]) ]
+        {
+
+            # The last component of the version is not a series of digits. This means
+            # we're probably using a developer build of CCE (i.e. a compiler built by
+            # a Cray employee). Developer builds report versions like '8.7.x'.
+
+            developer-build = true ;
+
+            # We want to treat developer builds as though they are the highest
+            # possible patch version of the release. Effectively, we want to turn
+            # '8.7.x' into '8.7.99'.
+
+            version-components = $(version-components[1]) $(version-components[2]) 99 ;
+
+        }
+
+        version = $(version-components:J=.) ;
+    }
+
+    local build = ;
+    if $(developer-build)
+    {
+
+        # If this is a developer build, we want to add the build subfeature to the
+        # compiler.
+
+        local version-string = [ SHELL "$(command-c++) -VV 2>&1" ] ;
+        build = [ MATCH "[(][0-9]+_([0-9a-fA-F]+)[)]" : $(version-string) ] ;
+
+        # Truncate build hash to 7 characters
+        build = [ MATCH "(.......)................................." : $(build) ] ;
+    }
 
     {
 
@@ -114,7 +149,7 @@ rule init ( : : options * : requirements * )
         # returned condition as the conditional in a 'toolset.flags' call to set
         # flags specific to this configuration of this toolset.
 
-        local identifying-condition = [ common.check-init-parameters $(toolset) $(requirements) ] ;
+        local identifying-condition = [ common.check-init-parameters $(toolset) $(requirements) : version $(version) : build $(build) ] ;
 
         # 'handle-options' uses 'toolset.flags' to set 'CONFIG_COMMAND' variables
         # on targets when this toolset is used. The 'CONFIG_COMMAND' variables
@@ -134,7 +169,7 @@ rule init ( : : options * : requirements * )
         # not used in any actions, but it is used in some updating rule
         # procedures.
 
-        toolset.flags $(toolset) VERSION $(identifying-condition) : $(version) ;
+        toolset.flags $(toolset) VERSION $(identifying-condition) : [ numeric-version $(version) ] ;
     }
 }
 
