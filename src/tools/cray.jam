@@ -70,8 +70,6 @@ import unix ;
 rule init ( : : options * : requirements * )
 {
 
-    check-prgenv-module ;
-
     # User cannot specify a 'version' in their 'using' statement. Compiler
     # version is always controlled by loading and unloading modules in the
     # user's environment.
@@ -84,6 +82,8 @@ rule init ( : : options * : requirements * )
     # code. Each compiler driver compiles a single type of source code. It is
     # possible to let the user pass in three 'command' arguments, one for each
     # driver, but that seems like more effort that it's worth.
+
+    check-prgenv-module ;
 
     local toolset = cray ;
 
