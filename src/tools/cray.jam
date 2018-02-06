@@ -498,12 +498,14 @@ rule archive ( targets * : sources * : properties * )
 rule compile-c++-procedure ( targets * : sources * : properties * )
 {
     set-cxxstd-procedure $(targets) : $(sources) : $(properties) ;
+    set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
     add-space-procedure $(targets) : $(sources) : $(properties) ;
     debug-driver-procedure $(targets) : $(sources) : $(properties) ;
 }
 
 rule compile-c-procedure ( targets * : sources * : properties * )
 {
+    set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
     add-space-procedure $(targets) : $(sources) : $(properties) ;
     debug-driver-procedure $(targets) : $(sources) : $(properties) ;
 }
@@ -511,12 +513,14 @@ rule compile-c-procedure ( targets * : sources * : properties * )
 rule compile-c++-preprocess-procedure ( targets * : sources * : properties * )
 {
     set-cxxstd-procedure $(targets) : $(sources) : $(properties) ;
+    set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
     add-space-procedure $(targets) : $(sources) : $(properties) ;
     debug-driver-procedure $(targets) : $(sources) : $(properties) ;
 }
 
 rule compile-c-preprocess-procedure ( targets * : sources * : properties * )
 {
+    set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
     add-space-procedure $(targets) : $(sources) : $(properties) ;
     debug-driver-procedure $(targets) : $(sources) : $(properties) ;
 }
@@ -766,6 +770,28 @@ rule set-cxxstd-dialect-procedure ( targets * : sources * : properties * )
     local space = " " ;
     OPTIONS on $(targets) += -h$(space)$(cray-conform)
                              -h$(space)$(cray-gnu) ;
+}
+
+rule set-debug-symbols-procedure ( targets * : sources * : properties * )
+{
+
+    local debug-symbols = [ feature.get-values <debug-symbols> : $(properties) ] ;
+    if $(debug-symbols) = "on"
+    {
+        local optimization = [ feature.get-values <optimization> : $(properties) ] ;
+        local debug-option = ;
+        if $(optimization) = speed
+        {
+            debug-option = f ;
+        }
+        else
+        {
+            debug-option = n ;
+        }
+
+        local space = " " ;
+        OPTIONS on $(targets) += -G$(space)$(debug-option) ;
+    }
 }
 
 rule debug-driver-procedure ( targets * : sources * : properties * )
