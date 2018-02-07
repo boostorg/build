@@ -791,13 +791,13 @@ rule set-debug-symbols-procedure ( targets * : sources * : properties * )
     {
         local optimization = [ feature.get-values <optimization> : $(properties) ] ;
         local debug-option = ;
-        if $(optimization) = speed
+        if $(optimization) = off
         {
-            debug-option = 3 ;
+            debug-option = 0 ;
         }
         else
         {
-            debug-option = 0 ;
+            debug-option = 3 ;
         }
 
         local space = " " ;
