@@ -782,11 +782,11 @@ rule set-debug-symbols-procedure ( targets * : sources * : properties * )
         local debug-option = ;
         if $(optimization) = speed
         {
-            debug-option = f ;
+            debug-option = 3 ;
         }
         else
         {
-            debug-option = n ;
+            debug-option = 0 ;
         }
 
         local space = " " ;
