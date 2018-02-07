@@ -40,6 +40,9 @@ assert.result test1.cpp -- <link>shared
   : test3 sources test1.cpp : requirements <link>shared ;
 assert.result test1.cpp -- <link>shared
   : test3 requirements <link>shared : sources test1.cpp ;
+assert.result -- : test3 sources ;
+assert.result -- : test3 requirements ;
+assert.result -- <link>shared : test3 requirements <link>shared ;
 try ;
 {
     test3 sources test1.cpp : sources test2.cpp ;
