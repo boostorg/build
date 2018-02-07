@@ -405,6 +405,11 @@ actions compile.c
     "$(CONFIG_COMMAND_C)" $(OPTIONS) $(USER_OPTIONS) -D$(SPACE)$(DEFINES) -I$(SPACE)"$(INCLUDES)" -c -o "$(<)" "$(>)" $(DRIVER_OPTIONS)
 }
 
+actions compile.asm
+{
+    "$(CONFIG_COMMAND_CXX)" $(OPTIONS) $(USER_OPTIONS) -D$(SPACE)$(DEFINES) -I$(SPACE)"$(INCLUDES)" -c -o "$(<)" "$(>)" $(DRIVER_OPTIONS)
+}
+
 actions compile.c++.preprocess
 {
     "$(CONFIG_COMMAND_CXX)" $(OPTIONS) $(USER_OPTIONS) -D$(SPACE)$(DEFINES) -I$(SPACE)"$(INCLUDES)" -E "$(>)" >"$(<)" $(DRIVER_OPTIONS)
@@ -465,6 +470,11 @@ rule compile.c ( targets * : sources * : properties * )
     compile-c-procedure $(targets) : $(sources) : $(properties) ;
 }
 
+rule compile.asm ( targets * : sources * : properties * )
+{
+    compile-asm-procedure $(targets) : $(sources) : $(properties) ;
+}
+
 rule compile.c++.preprocess ( targets * : sources * : properties * )
 {
     compile-c++-preprocess-procedure $(targets) : $(sources) : $(properties) ;
@@ -505,6 +515,14 @@ rule compile-c++-procedure ( targets * : sources * : properties * )
 
 rule compile-c-procedure ( targets * : sources * : properties * )
 {
+    set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
+    add-space-procedure $(targets) : $(sources) : $(properties) ;
+    debug-driver-procedure $(targets) : $(sources) : $(properties) ;
+}
+
+rule compile-asm-procedure ( targets * : sources * : properties * )
+{
+    set-cxxstd-procedure $(targets) : $(sources) : $(properties) ;
     set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
     add-space-procedure $(targets) : $(sources) : $(properties) ;
     debug-driver-procedure $(targets) : $(sources) : $(properties) ;
@@ -799,10 +817,10 @@ rule debug-driver-procedure ( targets * : sources * : properties * )
     if $(.debug-driver)
     {
 
-        # Passing '-craype-verbose' to the CCE driver causes it to output the
-        # command lines for the underlying compiler that it invokes.
+        # Passing '-vv' to the CCE driver causes it to output the command lines
+        # for the underlying tools that it invokes.
 
-        DRIVER_OPTIONS on $(<) += -craype-verbose ;
+        DRIVER_OPTIONS on $(<) += -vv ;
     }
 }
 
@@ -841,6 +859,11 @@ generators.register [ new C-compiling-generator
 generators.register [ new C-compiling-generator
                           cray.compile.c
                         : C
+                        : OBJ
+                        : <toolset>cray ] ;
+generators.register [ new C-compiling-generator
+                          cray.compile.asm
+                        : ASM
                         : OBJ
                         : <toolset>cray ] ;
 generators.register [ new C-compiling-generator
