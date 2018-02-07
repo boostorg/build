@@ -522,25 +522,17 @@ rule compile-c-procedure ( targets * : sources * : properties * )
 
 rule compile-asm-procedure ( targets * : sources * : properties * )
 {
-    set-cxxstd-procedure $(targets) : $(sources) : $(properties) ;
-    set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
-    add-space-procedure $(targets) : $(sources) : $(properties) ;
-    debug-driver-procedure $(targets) : $(sources) : $(properties) ;
+    compile-c++-procedure $(targets) : $(sources) : $(properties) ;
 }
 
 rule compile-c++-preprocess-procedure ( targets * : sources * : properties * )
 {
-    set-cxxstd-procedure $(targets) : $(sources) : $(properties) ;
-    set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
-    add-space-procedure $(targets) : $(sources) : $(properties) ;
-    debug-driver-procedure $(targets) : $(sources) : $(properties) ;
+    compile-c++-procedure $(targets) : $(sources) : $(properties) ;
 }
 
 rule compile-c-preprocess-procedure ( targets * : sources * : properties * )
 {
-    set-debug-symbols-procedure $(targets) : $(sources) : $(properties) ;
-    add-space-procedure $(targets) : $(sources) : $(properties) ;
-    debug-driver-procedure $(targets) : $(sources) : $(properties) ;
+    compile-c-procedure $(targets) : $(sources) : $(properties) ;
 }
 
 rule link-procedure ( targets * : sources * : properties * )
