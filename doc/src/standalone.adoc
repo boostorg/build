@@ -5,9 +5,11 @@
 :sectnums:
 :icons: font
 :nofooter:
-:source-highlighter: highlightjs
+:source-highlighter: pygments
 :source-language: jam
 :highlightjsdir: hljs
+:pygments-style: friendly
+
 
 include::howto.adoc[]
 

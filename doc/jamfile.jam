@@ -4,10 +4,17 @@
 
 import asciidoctor ;
 
+path-constant PYGMENTS_DIR : src/pygments ;
+
 project tools/build/doc
     ;
 
-html index : src/standalone.adoc ;
+html index : src/standalone.adoc :
+    :
+        <flags>--require=$(PYGMENTS_DIR)/pygments_init.rb
+        <flags>--trace
+        <flags>--verbose
+    ;
 explicit index ;
 
 install html-hljs : [ glob src/hljs/*.js ] : <location>html/hljs ;
