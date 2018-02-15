@@ -344,7 +344,7 @@ int yylex()
                     c0 = c1;
                     c1 = yychar();
                 }
-                c = c1;
+                c = yychar();
             }
             else
             {
