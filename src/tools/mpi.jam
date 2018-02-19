@@ -589,7 +589,7 @@ generators.register-standard testing.expect-success
   : RUN_MPI_OUTPUT : RUN_MPI ;
 
 # The number of processes to spawn when executing an MPI test.
-feature mpi:processes : : free incidental ;
+feature "mpi:processes" : : free incidental ;
 
 # The flag settings on testing.capture-output do not
 # apply to mpi.capture output at the moment.

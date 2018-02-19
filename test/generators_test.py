@@ -110,7 +110,7 @@ type.register NM_EXE : : MY_EXE ;
 appender.register marked-to-target-cpp : CPP_MARKED : NM.TARGET.CPP ;
 appender.register cpp-to-marked-positions : CPP : CPP_MARKED POSITIONS ;
 
-class nm::target::cpp-obj-generator : generator
+class "nm::target::cpp-obj-generator" : generator
 {
     rule __init__ ( id )
     {
@@ -137,7 +137,7 @@ class nm::target::cpp-obj-generator : generator
         }
     }
 }
-generators.register [ new nm::target::cpp-obj-generator target-obj ] ;
+generators.register [ new "nm::target::cpp-obj-generator" target-obj ] ;
 generators.override target-obj : all ;
 
 
@@ -406,7 +406,7 @@ rule appender ( targets + : sources + : properties * )
         local appender-run = $(appender-runs) ;
         if $(targets[2])-defined
         {
-            appender-run += [$(target-index)/$(target-count)] ;
+            appender-run += "[$(target-index)/$(target-count)]" ;
         }
         append $(targets) : $(appender-run:J=" ") $(t) $(sources) ;
     }

@@ -113,7 +113,7 @@ set_generated_obj_suffix('cygwin')
 
     # Prepare project source files.
     t.write("jamroot.jam", """\
-ECHO {{{ [ modules.peek : XXX ] [ modules.peek : NOEXEC ] }}} ;
+ECHO "{{{" [ modules.peek : XXX ] [ modules.peek : NOEXEC ] "}}}" ;
 obj xxx : xxx.rc ;
 """)
     t.write("xxx.rc", '1 MESSAGETABLE "xxx.bin"\n')

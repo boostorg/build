@@ -165,7 +165,7 @@ feature.feature ccc : 0 1 : incidental ;
 rule buildRule ( name : targets ? : properties * )
 {
     local ttt = [ feature.get-values toolset                     : $(properties) ] ;
-    local vvv = [ feature.get-values toolset-testToolset:version : $(properties) ] ;
+    local vvv = [ feature.get-values "toolset-testToolset:version" : $(properties) ] ;
     local aaa = [ feature.get-values aaa                         : $(properties) ] ;
     local bbb = [ feature.get-values bbb                         : $(properties) ] ;
     local ccc = [ feature.get-values ccc                         : $(properties) ] ;

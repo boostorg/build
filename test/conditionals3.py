@@ -12,7 +12,7 @@ import BoostBuild
 t = BoostBuild.Tester(use_test_config=False)
 
 t.write("jamroot.jam", """
-exe hello : hello.cpp : <variant>debug:<define>CLASS=Foo::Bar ;
+exe hello : hello.cpp : <variant>debug:<define>"CLASS=Foo::Bar" ;
 """)
 
 t.write("hello.cpp", """

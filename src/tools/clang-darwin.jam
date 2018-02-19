@@ -110,8 +110,6 @@ actions compile.mm
     "$(CONFIG_COMMAND)" -x objective-c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
-flags clang-darwin ARFLAGS <archiveflags> ;
-
 # Default value. Mostly for the sake of clang-linux
 # that inherits from gcc, but does not has the same
 # logic to set the .AR variable. We can put the same
@@ -154,8 +152,6 @@ actions piecemeal archive
   "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
   "$(.RANLIB)" "$(<)"
 }
-
-flags clang-darwin.link USER_OPTIONS <linkflags> ;
 
 # Declare actions for linking
 rule link ( targets * : sources * : properties * )

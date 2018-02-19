@@ -514,6 +514,7 @@ static void make1c( state const * const pState )
 {
     TARGET * const t = pState->t;
     CMD * const cmd = (CMD *)t->cmds;
+    int exec_flags = 0;
 
     if ( cmd )
     {
@@ -542,6 +543,35 @@ static void make1c( state const * const pState )
         /* Increment the jobs running counter. */
         ++cmdsrunning;
 
+        if ( ( globs.jobs == 1 ) && ( DEBUG_MAKEQ ||
+            ( DEBUG_MAKE && !( cmd->rule->actions->flags & RULE_QUIETLY ) ) ) )
+        {
+            OBJECT * action  = cmd->rule->name;
+            OBJECT * target = list_front( lol_get( (LOL *)&cmd->args, 0 ) );
+
+            out_printf( "%s %s\n", object_str( action ), object_str( target ) );
+
+            /* Print out the command executed if given -d+2. */
+            if ( DEBUG_EXEC )
+            {
+                out_puts( cmd->buf->value );
+                out_putc( '\n' );
+            }
+
+            /* We only need to flush the streams if there's likely to
+             * be a wait before it finishes.
+             */
+            if ( ! globs.noexec && ! cmd->noop )
+            {
+                out_flush();
+                err_flush();
+            }
+        }
+        else
+        {
+            exec_flags |= EXEC_CMD_QUIET;
+        }
+
         /* Execute the actual build command or fake it if no-op. */
         if ( globs.noexec || cmd->noop )
         {
@@ -552,7 +582,7 @@ static void make1c( state const * const pState )
         }
         else
         {
-            exec_cmd( cmd->buf, make1c_closure, t, cmd->shell );
+            exec_cmd( cmd->buf, exec_flags, make1c_closure, t, cmd->shell );
 
             /* Wait until under the concurrent command count limit. */
             /* FIXME: This wait could be skipped here and moved to just before
@@ -854,6 +884,7 @@ static void make1c_closure
     CMD * const cmd = (CMD *)t->cmds;
     char const * rule_name = 0;
     char const * target_name = 0;
+    int print_buffer = 0;
 
     assert( cmd );
 
@@ -878,8 +909,18 @@ static void make1c_closure
             );
     }
 
-    out_action( rule_name, target_name, cmd->buf->value, cmd_stdout, cmd_stderr,
-        cmd_exit_reason );
+    if ( rule_name == NULL || globs.jobs > 1 )
+        out_action( rule_name, target_name, cmd->buf->value, cmd_stdout,
+            cmd_stderr, cmd_exit_reason );
+
+    /* If the process expired, make user aware with an explicit message, but do
+     * this only for non-quiet actions.
+     */
+    if ( cmd_exit_reason == EXIT_TIMEOUT && target_name )
+        out_printf( "%ld second time limit exceeded\n", globs.timeout );
+
+    out_flush();
+    err_flush();
 
     if ( !globs.noexec )
     {

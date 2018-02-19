@@ -317,7 +317,7 @@ rule dump-test ( target )
         # Format them into a single string of quoted strings.
         test-info = \"$(test-info:J=\"\ \")\" ;
 
-        ECHO boost-test($(type)) \"$(name)\" [$(test-info)] ":"
+        ECHO boost-test($(type)) \"$(name)\" "[$(test-info)]" ":"
             \"$(source-files)\" ;
     }
 }
@@ -767,7 +767,7 @@ generators.register-composing testing.time : : TIME ;
 # with an embedded manifest file by a separate action.
 rule record-time ( target : source : start end user system clock )
 {
-    local src-string = [$(source:G=:J=",")"] " ;
+    local src-string = "[$(source:G=:J=,)] " ;
     USER_TIME on $(target) += $(src-string)$(user) ;
     SYSTEM_TIME on $(target) += $(src-string)$(system) ;
     CLOCK_TIME on $(target) += $(src-string)$(clock) ;

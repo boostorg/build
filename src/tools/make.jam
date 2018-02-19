@@ -9,6 +9,7 @@
 # This module defines the 'make' main target rule.
 
 import "class" : new ;
+import param ;
 import project ;
 import property-set ;
 import targets ;
@@ -50,6 +51,8 @@ class make-target-class : basic-target
 rule make ( target-name : sources * : generating-rule + : requirements * :
     usage-requirements * )
 {
+    param.handle-named-params
+        sources generating-rule requirements default-build usage-requirements ;
     # The '@' sign causes the feature.jam module to qualify rule name with the
     # module name of current project, if needed.
     local m = [ MATCH ^(@).* : $(generating-rule) ] ;

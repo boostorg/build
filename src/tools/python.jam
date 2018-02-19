@@ -108,7 +108,7 @@ rule init ( version ? : cmd-or-prefix ? : includes * : libraries ?
     {
         if $($(v))
         {
-            debug-message "  user-specified "$(v): \"$($(v))\" ;
+            debug-message "  user-specified $(v):" \"$($(v))\" ;
         }
     }
 
@@ -155,7 +155,7 @@ local rule is-cygwin-symlink ( path )
     if $(dir-listing)
     {
         # Escape any special regex characters in the base part of the path.
-        local base-pat = [ regex.escape $(path:D=) : ].[()*+?|\\$^ : \\ ] ;
+        local base-pat = [ regex.escape $(path:D=) : "].[()*+?|\\$^" : \\ ] ;
 
         # Extract the file's size from the directory listing.
         local size-of-system-file = [ MATCH "([0-9]+) "$(base-pat) : $(dir-listing) : 1 ] ;
@@ -228,7 +228,7 @@ local rule debug-message ( message * )
 {
     if --debug-configuration in [ modules.peek : ARGV ]
     {
-        ECHO notice: [python-cfg] $(message) ;
+        ECHO "notice:" "[python-cfg]" $(message) ;
     }
 }
 
@@ -256,8 +256,8 @@ local rule software-registry-value ( path : data ? )
 }
 
 
-.windows-drive-letter-re = ^([A-Za-z]):[\\/](.*) ;
-.cygwin-drive-letter-re = ^/cygdrive/([a-z])/(.*) ;
+.windows-drive-letter-re = "^([A-Za-z]):[\\/](.*)" ;
+.cygwin-drive-letter-re = "^/cygdrive/([a-z])/(.*)" ;
 
 .working-directory = [ PWD ] ;
 .working-drive-letter = [ SUBST $(.working-directory) $(.windows-drive-letter-re) $1 ] ;
@@ -284,7 +284,7 @@ local rule cygwin-to-windows-path ( path )
 {
     path = $(path:R="") ; # strip any trailing slash
 
-    local drive-letter = [ SUBST $(path) $(.cygwin-drive-letter-re) $1:/$2 ] ;
+    local drive-letter = [ SUBST $(path) $(.cygwin-drive-letter-re) "$1:/$2" ] ;
     if $(drive-letter)
     {
         path = $(drive-letter) ;
@@ -353,7 +353,7 @@ local rule windows-path-to-native ( path )
 #
 local rule guess-windows-path ( path )
 {
-    return [ SUBST $(path) ($(.windows-drive-letter-re)|.*([\\]).*) $1 ] ;
+    return [ SUBST $(path) "($(.windows-drive-letter-re)|.*([\\]).*)" $1 ] ;
 }
 
 
@@ -380,7 +380,7 @@ local rule path-to-native ( paths * )
 #
 local rule split-version ( version )
 {
-    local major-minor = [ MATCH ^([0-9]+)\.([0-9]+)(.*)$ : $(version) : 1 2 3 ] ;
+    local major-minor = [ MATCH "^([0-9]+)\.([0-9]+)(.*)$" : $(version) : 1 2 3 ] ;
     if ! $(major-minor[2]) || $(major-minor[3])
     {
         ECHO "Warning: \"using python\" expects a two part (major, minor) version number; got" $(version) instead ;
@@ -459,7 +459,7 @@ local rule probe ( python-cmd )
         debug-message ;
         debug-message If you intend to target a Cygwin build of Python, please ;
         debug-message replace the path to the link with the path to a real executable ;
-        debug-message (guessing: \"$(skip-symlink)\") "in" your 'using python' line ;
+        debug-message "(guessing:" \"$(skip-symlink)\") "in" your 'using python' line ;
         debug-message "in" user-config.jam or site-config.jam. Do not forget to escape ;
         debug-message backslashes ;
         debug-message -------------------------------------------------------------------- ;
@@ -495,7 +495,7 @@ local rule probe ( python-cmd )
             {
                 # These variables are expected to be declared local in the
                 # caller, so Jam's dynamic scoping will set their values there.
-                sys.$(s) = [ SUBST $(output) \\<$(s)=([^$(nl)]+) $1 ] ;
+                sys.$(s) = [ SUBST $(output) "\\<$(s)=([^$(nl)]+)" $1 ] ;
             }
         }
         return $(output) ;
@@ -676,10 +676,10 @@ local rule declare-libpython-target ( version ? : requirements * )
 
     if ! $(lib-version)
     {
-        ECHO *** warning: could not determine Python version, which will ;
-        ECHO *** warning: probably prevent us from linking with the python ;
-        ECHO *** warning: library.  Consider explicitly passing the version ;
-        ECHO *** warning: to 'using python'. ;
+        ECHO *** "warning:" could not determine Python version, which will ;
+        ECHO *** "warning:" probably prevent us from linking with the python ;
+        ECHO *** "warning:" library.  Consider explicitly passing the version ;
+        ECHO *** "warning:" to 'using python'. ;
     }
 
     # Declare it.
@@ -934,7 +934,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     # Global, but conditional, requirements to give access to the interpreter
     # for general utilities, like other toolsets, that run Python scripts.
     toolset.add-requirements
-        $(target-requirements:J=,):<python.interpreter>$(interpreter-cmd) ;
+        "$(target-requirements:J=,):<python.interpreter>$(interpreter-cmd)" ;
 
     # Register the right suffix for extensions.
     register-extension-suffix $(extension-suffix) : $(target-requirements) ;
@@ -1015,7 +1015,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
             :
             : $(target-requirements)
             :
-            : $(usage-requirements) <linkflags>-Wl,-bI:$(libraries[1])/python.exp
+            : $(usage-requirements) <linkflags>"-Wl,-bI:$(libraries[1])/python.exp"
             ;
     }
     else

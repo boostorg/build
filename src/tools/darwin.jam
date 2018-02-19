@@ -369,7 +369,7 @@ local rule init-available-sdk-versions ( condition * : root ? )
     local result ;
     for local sdk in $(sdks)
     {
-        local sdk-match = [ MATCH ([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)? : $(sdk:D=) ] ;
+        local sdk-match = [ MATCH "([^0-9]+)([0-9]+)[.]([0-9x]+)[.]?([0-9x]+)?" : $(sdk:D=) ] ;
         local sdk-platform = $(sdk-match[1]:L) ;
         local sdk-version = $(sdk-match[2-]) ;
         if $(sdk-version)

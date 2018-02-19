@@ -27,6 +27,7 @@ import make ;
 import modules ;
 import generators ;
 import os ;
+import param ;
 import path ;
 import print ;
 import project ;
@@ -42,7 +43,7 @@ import virtual-target ;
 
 # Use to specify extra configuration paramters. These get translated into a
 # doxyfile which configures the building of the docs.
-feature.feature doxygen:param : : free ;
+feature.feature "doxygen:param" : : free ;
 
 # Specify the "<xsl:param>boost.doxygen.header.prefix" XSLT option.
 feature.feature prefix : : free ;
@@ -63,7 +64,7 @@ feature.feature doxygen.doxproc.id : : free ;
 feature.feature doxygen.doxproc.title : : free ;
 
 # Location for images when generating XML
-feature.feature doxygen:xml-imagedir : : free ;
+feature.feature "doxygen:xml-imagedir" : : free ;
 
 # Indicates whether the entire directory should be deleted
 feature.feature doxygen.rmdir : off on : optional incidental ;
@@ -252,7 +253,7 @@ rule translate-path ( path )
         {
             if $(.is-cygwin)
             {
-                match = [ MATCH ^(.):(.*) : $(path) ] ;
+                match = [ MATCH "^(.):(.*)" : $(path) ] ;
                 if $(match)
                 {
                     return /cygdrive/$(match[1])$(match[2]:T) ;
@@ -288,7 +289,7 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     # Translate <doxygen:param> into command line flags.
     for local param in [ feature.get-values <doxygen:param> : $(properties) ]
     {
-        local namevalue = [ MATCH ([^=]*)=(.*) : $(param) ] ;
+        local namevalue = [ MATCH "([^=]*)=(.*)" : $(param) ] ;
         if $(namevalue[1]) = OUTPUT_DIRECTORY
         {
             output-dir = [ translate-path [ utility.unquote $(namevalue[2]) ] ]
@@ -333,7 +334,7 @@ rule run ( target : source : properties * )
     if <doxygen.rmdir>on in $(properties)
     {
         local output-dir = [ path.make [ MATCH
-            <doxygen:param>OUTPUT_DIRECTORY=\"?([^\"]*) : $(properties) ] ] ;
+            "<doxygen:param>OUTPUT_DIRECTORY=\"?([^\"]*)" : $(properties) ] ] ;
         local html-dir = [ path.make [ MATCH <doxygen:param>HTML_OUTPUT=(.*) :
             $(properties) ] ] ;
         if $(output-dir) && $(html-dir) &&
@@ -379,7 +380,7 @@ rule check-boostbook ( )
             : The boostbook module is not initialized you have attempted to use
             : the 'doxygen' toolset, which requires BoostBook, but never
             : initialized BoostBook.
-            : Hint: add 'using boostbook ;' to your user-config.jam. ;
+            : "Hint:" add 'using boostbook \;' to your user-config.jam. ;
     }
 }
 
@@ -622,6 +623,8 @@ rule check-tools ( target )
 rule doxygen ( target : sources + : requirements * : default-build * :
     usage-requirements * )
 {
+    param.handle-named-params
+        sources requirements default-build usage-requirements ;
     requirements += <format>none ;
     freeze-config ;
     local project = [ project.current ] ;

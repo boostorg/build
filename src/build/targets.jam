@@ -1057,6 +1057,9 @@ rule evaluate-requirements ( requirements : context )
     # properties. We now try to figure out what other properties should be added
     # in order to satisfy rules (4)-(6) from the docs.
 
+    local defaults = [ toolset.defaults ] ;
+    defaults = [ $(defaults).raw ] ;
+
     local conditionals = [ $(requirements).conditional ] ;
     # The 'count' variable has one element for each conditional feature and for
     # each occurrence of '<conditional>' feature. It is used as a loop
@@ -1064,10 +1067,11 @@ rule evaluate-requirements ( requirements : context )
     # the property set should stabilize before we are done. It is assumed that
     # #conditionals iterations should be enough for properties to propagate
     # along conditions in any direction.
-    local count = $(conditionals)
+    local count = $(conditionals) $(defaults)
         and-once-more ;
 
     local added-requirements ;
+    local added-defaults ;
 
     local current = $(raw) ;
 
@@ -1081,8 +1085,10 @@ rule evaluate-requirements ( requirements : context )
         # Evaluate conditionals in context of current properties.
         local e = [ property.evaluate-conditionals-in-context $(conditionals) :
             $(current) ] ;
+        local d = [ property.evaluate-conditionals-in-context $(defaults) :
+            $(current) ] ;
 
-        if $(e) = $(added-requirements)
+        if $(e) = $(added-requirements) && $(d) = $(added-defaults)
         {
             # If we got the same result, we have found the final properties.
             count = ;
@@ -1095,6 +1101,8 @@ rule evaluate-requirements ( requirements : context )
             # using initial properties and conditional requirements.
             added-requirements = $(e) ;
             current = [ property.refine $(raw) : [ feature.expand $(e) ] ] ;
+            added-defaults = $(d) ;
+            current = [ property.refine $(d) : $(current) ] ;
         }
         count = $(count[2-]) ;
     }
@@ -1283,11 +1291,11 @@ class basic-target : abstract-target
             local fn = [ full-name ] ;
             ECHO [ targets.indent ] "Building target '$(fn)'" ;
             targets.increase-indent ;
-            ECHO [ targets.indent ] Build request: $(property-set)
+            ECHO [ targets.indent ] Build "request:" $(property-set)
                 [ $(property-set).raw ] ;
             local cf = [ build-system.command-line-free-features ] ;
-            ECHO [ targets.indent ] Command line free features: [ $(cf).raw ] ;
-            ECHO [ targets.indent ] Target requirements:
+            ECHO [ targets.indent ] Command line free "features:" [ $(cf).raw ] ;
+            ECHO [ targets.indent ] Target "requirements:"
                 [ $(self.requirements).raw ] ;
         }
         targets.push-target $(__name__) ;

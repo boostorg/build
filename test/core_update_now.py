@@ -211,8 +211,8 @@ NOTFILE target1 ;
 ALWAYS target1 ;
 fail target1 ;
 
-ECHO update1: [ UPDATE_NOW target1 ] ;
-ECHO update2: [ UPDATE_NOW target1 ] ;
+ECHO "update1:" [ UPDATE_NOW target1 ] ;
+ECHO "update2:" [ UPDATE_NOW target1 ] ;
 
 DEPENDS all : target1 ;
 """)
