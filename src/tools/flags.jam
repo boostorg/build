@@ -34,7 +34,7 @@ rule init ( )
 rule write-main ( target : : properties * )
 {
     print.output $(target) ;
-    print.text "int main() {}\n" : yes ;
+    print.text "int main() { return 0; }\n" : yes ;
 }
 
 # Applies true-properties if the toolset recognizes a specific flag.
