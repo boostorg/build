@@ -218,6 +218,7 @@ int yypeek()
             ungetc( ch, incp->file );
         return ch;
     }
+    return EOF;
 }
 
 /*
