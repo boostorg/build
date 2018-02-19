@@ -6,8 +6,8 @@
 import numbers ;
 
 
-.major = "2015" ;
-.minor = "07" ;
+.major = "2018" ;
+.minor = "02" ;
 
 
 rule boost-build ( )
