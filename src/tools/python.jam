@@ -1044,7 +1044,11 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
 # required properties.
 rule require-py ( properties * )
 {
-    local py-ext-target = [ $(.project).find python_for_extensions ] ;
+    local py-ext-target = [ $(.project).find python_for_extensions : no-error ] ;
+    if ! $(py-ext-target)
+    {
+        return <build>no ;
+    }
     local property-set = [ property-set.create $(properties) ] ;
     property-set = [ $(property-set).expand ] ;
     local py-ext-alternative = [ $(py-ext-target).select-alternatives $(property-set) ] ;
