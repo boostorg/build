@@ -657,6 +657,15 @@ local rule system-library-dependencies ( target-os )
 }
 
 
+# Define a version suffix for libraries depending on Python.
+# For example, Boost.Python built for Python 2.7 uses the suffix "27"
+rule version-suffix ( version )
+{
+    local major-minor = [ split-version $(version) ] ;
+    local suffix = $(major-minor:J="") ;
+    return $(suffix) ;
+}
+
 # Declare a target to represent Python's library.
 #
 local rule declare-libpython-target ( version ? : requirements * )
