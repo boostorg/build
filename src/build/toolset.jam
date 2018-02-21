@@ -367,7 +367,7 @@ rule set-target-variables-aux ( rule-or-module : property-set )
     }
 
     # Strip away last dot separated part and recurse.
-    local next = [ MATCH ^(.+)\\.([^\\.])* : $(rule-or-module) ] ;
+    local next = [ MATCH "^(.+)\\.([^\\.])*" : $(rule-or-module) ] ;
     if $(next)
     {
         result += [ set-target-variables-aux $(next[1]) : $(property-set) ] ;
@@ -411,7 +411,7 @@ rule relevant-features ( rule-or-module )
         }
 
         # Strip away last dot separated part and recurse.
-        local next = [ MATCH ^(.+)\\.([^\\.])* : $(rule-or-module) ] ;
+        local next = [ MATCH "^(.+)\\.([^\\.])*" : $(rule-or-module) ] ;
         if $(next)
         {
             result += [ relevant-features $(next[1]) ] ;
@@ -439,7 +439,7 @@ local rule used-features ( rule-or-module )
         local result = $(.uses-features.$(rule-or-module)) ;
  
         # Strip away last dot separated part and recurse.
-        local next = [ MATCH ^(.+)\\.([^\\.])* : $(rule-or-module) ] ;
+        local next = [ MATCH "^(.+)\\.([^\\.])*" : $(rule-or-module) ] ;
         if $(next)
         {
             result += [ used-features $(next[1]) ] ;
@@ -660,6 +660,30 @@ rule add-requirements ( requirements * )
         requirements = [ property.expand-subfeatures-in-conditions $(requirements) ] ;
         requirements = [ property.make $(requirements) ] ;
         .requirements = [ $(.requirements).add-raw $(requirements) ] ;
+    }
+}
+
+# Returns the global toolset defaults.
+#
+.defaults = [ property-set.empty ] ;
+
+rule defaults ( )
+{
+    return $(.defaults) ;
+}
+
+# Add elements to the list of global toolset defaults.  These properties
+# should be conditional and will override the default value of the feature.
+# Do not use this for non-conditionals.  Use feature.set-default instead.
+#
+rule add-defaults ( properties * )
+{
+    if ! $(.ignore-requirements)
+    {
+        properties = [ property.translate-indirect $(properties) : [ CALLER_MODULE ] ] ;
+        properties = [ property.expand-subfeatures-in-conditions $(properties) ] ;
+        properties = [ property.make $(properties) ] ;
+        .defaults = [ $(.defaults).add-raw $(properties) ] ;
     }
 }
 

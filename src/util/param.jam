@@ -36,7 +36,7 @@ rule handle-named-params ( parameter-names * )
                 found-8bef5c096d06a1b0 = true ; 
                 tmp-8bef5c096d06a1b0.$($(v-8bef5c096d06a1b0)[1]) = $($(v-8bef5c096d06a1b0)[2-]) ;
             }
-            else
+            else if $($(v-8bef5c096d06a1b0))-is-defined
             {
                 if $(found-8bef5c096d06a1b0)
                 {

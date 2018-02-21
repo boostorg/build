@@ -48,7 +48,15 @@ t.write('test.cpp', '''
 #endif
 ''')
 
-t.run_build_system(['-sOBJECT_FILE=' + linker_input])
+# Don't check the status immediately, so that we have a chance
+# to print config.log.  Also, we need a minimum of d2 to make
+# sure that we always see the commands and output.
+t.run_build_system(['-sOBJECT_FILE=' + linker_input, '-d2'], status=None)
+
+if t.status != 0:
+    log_file = t.read('bin/config.log')
+    BoostBuild.annotation("config.log", log_file)
+    t.fail_test(True)
 
 t.expect_output_lines(['    - has --illegal-flag-cpp   : no',
                        '    - has -DMACRO_CPP          : yes',

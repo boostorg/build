@@ -43,7 +43,7 @@ int main() {}
 """)
 
 t.write("sub3/jamfile.jam", """
-exe hello : hello.cpp : -<variant>debug:<link>static ;
+exe hello : hello.cpp : "-<variant>debug:<link>static" ;
 """)
 
 t.write("sub4/hello.cpp", """
@@ -51,7 +51,7 @@ int main() {}
 """)
 
 t.write("sub4/jamfile.jam", """
-project : requirements -<variant>debug:<link>static ;
+project : requirements "-<variant>debug:<link>static" ;
 exe hello : hello.cpp ;
 """)
 

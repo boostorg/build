@@ -74,7 +74,7 @@ rule init ( version ? :  command * : options * )
             local lib_path = $(root)/lib $(root:P)/lib/$(bin:B) ;
             if $(.debug-configuration)
             {
-                ECHO notice: using intel libraries :: $(condition) :: $(lib_path) ;
+                ECHO notice\: using intel libraries "::" $(condition) "::" $(lib_path) ;
             }
             flags intel-vxworks.link RUN_PATH $(condition) : $(lib_path) ;
         }

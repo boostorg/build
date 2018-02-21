@@ -18,8 +18,8 @@ import sequence ;
 import toolset ;
 import virtual-target ;
 
-feature.feature xsl:param : : free ;
-feature.feature xsl:path : : free ;
+feature.feature "xsl:param" : : free ;
+feature.feature "xsl:path" : : free ;
 feature.feature catalog : : free ;
 
 

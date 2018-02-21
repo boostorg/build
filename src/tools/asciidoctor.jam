@@ -186,7 +186,7 @@ class asciidoctor-generator : generator
         for local p in [ $(property-set).raw ]
         {
             if $(p:G) in <asciidoctor-attribute> <asciidoctor-doctype>
-                <include> <flags>
+                <flags>
             {
                 raw-set += $(p) ;
             }
@@ -201,7 +201,6 @@ class asciidoctor-generator : generator
 _ = " " ;
 toolset.flags asciidoctor ATTRIBUTE : <asciidoctor-attribute> ;
 toolset.flags asciidoctor DOCTYPE : <asciidoctor-doctype> ;
-toolset.flags asciidoctor INCLUDES : <include> ;
 toolset.flags asciidoctor BACKEND : <asciidoctor-backend> ;
 toolset.flags asciidoctor FLAGS : <flags> ;
 
@@ -209,5 +208,5 @@ feature.compose <asciidoctor-backend>pdf : <flags>"-r asciidoctor-pdf" ;
 
 actions convert
 {
-    "$(ASCIIDOCTOR)" -o$(_)"$(<:D=)" -D$(_)"$(<:D)" -b$(_)"$(BACKEND)" -a$(_)"$(ATTRIBUTE)" -d$(_)"$(DOCTYPE)" -I$(_)"$(INCLUDES)" $(FLAGS) "$(>)"
+    "$(ASCIIDOCTOR)" -o$(_)"$(<:D=)" -D$(_)"$(<:D)" -b$(_)"$(BACKEND)" -a$(_)"$(ATTRIBUTE)" -d$(_)"$(DOCTYPE)" $(FLAGS) "$(>)"
 }

@@ -30,7 +30,7 @@ BINDRULE = bind-rule ;
 
 rule bind-rule ( target : path )
 {
-    ECHO found: $(target) at $(path) ;
+    ECHO "found:" $(target) at $(path) ;
 }
 
 DEPENDS all : fake-target ;

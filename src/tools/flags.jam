@@ -12,6 +12,7 @@ import generators ;
 import make ;
 import print ;
 import project ;
+import toolset : flags ;
 
 rule init ( )
 {
@@ -25,7 +26,7 @@ rule init ( )
         make empty.c : : @write-main ;
         make empty.cpp : : @write-main ;
         obj empty.obj : empty.cpp ;
-        project : requirements <flags.check>on <warnings-as-errors>on ;
+        project : requirements <flags.check>on ;
         project.pop-current ;
     }
 }
@@ -33,7 +34,7 @@ rule init ( )
 rule write-main ( target : : properties * )
 {
     print.output $(target) ;
-    print.text "int main() {}\n" : yes ;
+    print.text "int main() { return 0; }\n" : yes ;
 }
 
 # Applies true-properties if the toolset recognizes a specific flag.
@@ -73,21 +74,31 @@ rule check-has-flag ( option message ? : true-properties * : false-properties * 
 
 IMPORT $(__name__) : check-has-flag : : check-has-flag ;
 
-# This ugly hack is necessary because /WX doesn't apply
-# to the warning about unknown options.
-feature flags.check : on : optional ;
+feature flags.check : on : optional composite ;
+feature.compose <flags.check>on : <warnings-as-errors>on ;
+
+# Some compilers don't have an easy way to cause an error
+# for unknown options.  In this case, we need to check
+# their stdout/stderr.  This generator will copy it's
+# source, but will cause an error if the given pattern
+# matches the output from the source.
+#
+
+feature flags.pattern : : free ;
 
 class flag-check-generator : generator
 {
-    rule __init__ ( type )
+    rule __init__ ( type : requirements * : pattern )
     {
-        generator.__init__ flags.check-msvc : $(type) : $(type)(%_valid) :
-            <toolset>msvc <flags.check>on ;
+        generator.__init__ flags.check-output : $(type) : $(type)(%_valid) :
+            $(requirements) <flags.check>on ;
+        self.pattern = $(pattern) ;
     }
     rule run ( project name ? : property-set : sources * )
     {
-        property-set = [ property-set.create [ property.change
-            [ $(property-set).raw ] : <flags.check> ] ] ;
+        property-set = [ property-set.create
+            [ property.change [ $(property-set).raw ] : <flags.check> ]
+            <flags.pattern>$(self.pattern) ] ;
         return [ generator.run $(project) $(name)
           : $(property-set) : $(sources) ] ;
     }
@@ -97,21 +108,32 @@ class flag-check-generator : generator
     }
 }
 
-generators.register [ class.new flag-check-generator OBJ ] ;
-generators.register [ class.new flag-check-generator EXE ] ;
-generators.override flags.check-msvc : all ;
+# These generator definitions should probably be moved to the individual toolsets.
 
-rule check-msvc-callback ( targets * : source-targets * : ignored * : output ? )
+# msvc-7.1 uses 4002.  Later versions use 9002.
+generators.register
+    [ class.new flag-check-generator OBJ : <toolset>msvc : "(D[94]002)" ] ;
+generators.register
+    [ class.new flag-check-generator EXE : <toolset>msvc : "(LNK4044)" ] ;
+generators.register
+    [ class.new flag-check-generator OBJ : <toolset>intel : "(#10006)" ] ;
+generators.register
+    [ class.new flag-check-generator EXE : <toolset>intel : "(#10006)" ] ;
+generators.override flags.check-output : all ;
+
+rule check-output-callback ( targets * : source-targets * : ignored * : output ? )
 {
-    if [ MATCH "(D9002|LNK4044)" : $(output) ]
+    if [ MATCH [ on $(targets) return $(PATTERN) ] : $(output) ]
     {
         FLAG_CHECK_COMMAND on $(targets) = illegal-ad22d215a8bbd73 ;
     }
 }
 
-IMPORT $(__name__) : check-msvc-callback : : flags.check-msvc-callback ;
+IMPORT $(__name__) : check-output-callback : : flags.check-output-callback ;
 
-rule check-msvc ( targets * : sources * : properties * )
+flags flags.check-output PATTERN : <flags.pattern> ;
+
+rule check-output ( targets * : sources * : properties * )
 {
     local action = [ on $(sources) return $(.action) ] ;
     local all-sources ;
@@ -119,11 +141,12 @@ rule check-msvc ( targets * : sources * : properties * )
     {
         all-sources += [ $(t).actualize ] ;
     }
-    __ACTION_RULE__ on $(all-sources) = flags.check-msvc-callback $(targets) ;
+    REBUILDS $(targets) : $(sources) ;
+    __ACTION_RULE__ on $(all-sources) = flags.check-output-callback $(targets) ;
     common.copy $(targets[1]) : $(sources[1]) ;
 }
 
-actions check-msvc
+actions check-output
 {
     $(FLAG_CHECK_COMMAND)
 }

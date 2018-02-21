@@ -409,7 +409,7 @@ rule configure-version-specific ( toolset : version : conditions )
     # version 7.* explicitly or if we auto-detected the version ourselves.
     if ! [ MATCH ^(6\\.) : $(version) ]
     {
-        toolset.flags $(toolset).compile CFLAGS $(conditions) : /Zc:forScope /Zc:wchar_t ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:forScope" "/Zc:wchar_t" ;
         toolset.flags $(toolset).compile.c++ C++FLAGS $(conditions) : /wd4675 ;
 
         # Explicitly disable the 'function is deprecated' warning. Some msvc
@@ -417,7 +417,7 @@ rule configure-version-specific ( toolset : version : conditions )
         # with /W0.
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<warnings>off : /wd4996 ;
 
-        if [ MATCH ^([78]\\.) : $(version) ]
+        if [ MATCH "^([78]\\.)" : $(version) ]
         {
             # 64-bit compatibility warning deprecated since 9.0, see
             # http://msdn.microsoft.com/en-us/library/yt4xw8fh.aspx
@@ -429,7 +429,7 @@ rule configure-version-specific ( toolset : version : conditions )
     # Processor-specific optimization.
     #
 
-    if [ MATCH ^([67]) : $(version) ]
+    if [ MATCH "^([67])" : $(version) ]
     {
         # 8.0 deprecates some of the options.
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>speed $(conditions)/<optimization>space : /Ogiy /Gs ;
@@ -453,19 +453,19 @@ rule configure-version-specific ( toolset : version : conditions )
     else
     {
         # 8.0 and above adds some more options.
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set> : /favor:blend ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-em64t) : /favor:EM64T ;
-        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-amd64) : /favor:AMD64 ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set> : "/favor:blend" ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-em64t) : "/favor:EM64T" ;
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/$(.cpu-arch-amd64)/<instruction-set>$(.cpu-type-amd64) : "/favor:AMD64" ;
 
         # 8.0 and above only has multi-threaded static RTL.
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>off/<runtime-link>static/<threading>single : /MT ;
         toolset.flags $(toolset).compile CFLAGS $(conditions)/<runtime-debugging>on/<runtime-link>static/<threading>single : /MTd ;
 
         # Specify target machine type so the linker will not need to guess.
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : /MACHINE:X64 ;
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : /MACHINE:X86 ;
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : /MACHINE:IA64 ;
-        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : /MACHINE:ARM ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-amd64) : "/MACHINE:X64" ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-i386)  : "/MACHINE:X86" ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-ia64)  : "/MACHINE:IA64" ;
+        toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : "/MACHINE:ARM" ;
 
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
@@ -480,7 +480,7 @@ feature.feature windows-api : desktop store phone : propagated composite link-in
 feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 
     <linkflags>/APPCONTAINER ;
 feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 
-    <linkflags>/APPCONTAINER <linkflags>/NODEFAULTLIB:ole32.lib <linkflags>/NODEFAULTLIB:kernel32.lib <linkflags>WindowsPhoneCore.lib ;
+    <linkflags>/APPCONTAINER <linkflags>"/NODEFAULTLIB:ole32.lib" <linkflags>"/NODEFAULTLIB:kernel32.lib" <linkflags>WindowsPhoneCore.lib ;
 feature.set-default windows-api : desktop ;
 
 
@@ -737,6 +737,12 @@ rule link.dll ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
     DEPENDS $(<) : [ on $(<) return $(DEF_FILE) ] ;
+    local import-lib ;
+    if ! <suppress-import-lib>true in $(properties)
+    {
+        import-lib = $(targets[2]) ;
+        IMPORT_LIB on $(targets) = $(import-lib) ;
+    }
     # On msvc-14.1, the linker might not touch the import library
     # if the exports do not change.  (Apparently this could also
     # happen for incremental linking, which is why we disable it,
@@ -745,8 +751,8 @@ rule link.dll ( targets + : sources * : properties * )
     # it's out-dated.  It will be force updated, when the dll
     # is updated.  Also, make it so that anything that depends
     # on it depends on the dll as well.
-    NOUPDATE $(targets[2]) ;
-    INCLUDES $(targets[2]) : $(targets[1]) ;
+    NOUPDATE $(import-lib) ;
+    INCLUDES $(import-lib) : $(targets[1]) ;
     if <embed-manifest>on in $(properties)
     {
         if [ feature.get-values <embed-manifest-file> : $(properties) ]
@@ -791,9 +797,9 @@ if [ os.name ] in NT
         $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);1"
     }
 
-    actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
         if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
 
@@ -822,9 +828,9 @@ else
         fi
     }
 
-    actions link.dll bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(<[2]:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 
     actions manifest.dll
@@ -1013,7 +1019,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
             {
                 if $(.debug-configuration)
                 {
-                    ECHO 'notice: [generate-setup-cmd] $(version) is 14.1' ;
+                    ECHO 'notice\: "[generate-setup-cmd]" $(version) is 14.1' ;
                 }
                 parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
             }
@@ -1174,7 +1180,7 @@ local rule configure-really ( version ? : options * )
         if ( ! $(version) || $(version) = "default" ) && ! $(command:D)
         {
             ECHO ;
-            ECHO warning:
+            ECHO warning\:
                 "Did not find command for MSVC toolset."
                 "If you have Visual Studio 2017 installed you will need to"
                 "specify the full path to the command,"
@@ -1242,8 +1248,8 @@ local rule configure-really ( version ? : options * )
 
         # Generate and register setup command.
 
-        local below-8.0 = [ MATCH ^([67]\\.) : $(version) ] ;
-        local below-11.0 = [ MATCH ^([6789]\\.|10\\.) : $(version) ] ;
+        local below-8.0 = [ MATCH "^([67]\\.)" : $(version) ] ;
+        local below-11.0 = [ MATCH "^([6789]\\.|10\\.)" : $(version) ] ;
         
         local cpu = i386 amd64 ia64 arm ;
         if $(below-8.0)
@@ -1481,7 +1487,7 @@ local rule configure-really ( version ? : options * )
                     toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(compiler) /Zm800 /ZW /EHsc -nologo ;
                 }
                 toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(cpu-assembler) -nologo ;
-                toolset.flags msvc.link    .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /NOLOGO /INCREMENTAL:NO ;
+                toolset.flags msvc.link    .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /NOLOGO "/INCREMENTAL:NO" ;
                 toolset.flags msvc.archive .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /lib /NOLOGO  ;
             }
 
@@ -1762,9 +1768,9 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>off : /EHa ;
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>on : /EHac ;
 
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : /std:c++14 ;
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : /std:c++17 ;
-    toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : /std:c++latest ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : "/std:c++14" ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : "/std:c++17" ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : "/std:c++latest" ;
 
     # By default 8.0 enables rtti support while prior versions disabled it. We
     # simply enable or disable it explicitly so we do not have to depend on this
@@ -1800,19 +1806,19 @@ local rule register-toolset-really ( )
 
     # Declare flags for linking.
     {
-        toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : /PDB: ;  # not used yet
+        toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : "/PDB:" ;  # not used yet
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
 
         # The linker disables the default optimizations when using /DEBUG so we
         # have to enable them manually for release builds with debug symbols.
-        toolset.flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : /OPT:REF,ICF ;
+        toolset.flags msvc LINKFLAGS <debug-symbols>on/<runtime-debugging>off : "/OPT:REF,ICF" ;
 
-        toolset.flags msvc LINKFLAGS <user-interface>console : /subsystem:console ;
-        toolset.flags msvc LINKFLAGS <user-interface>gui : /subsystem:windows ;
-        toolset.flags msvc LINKFLAGS <user-interface>wince : /subsystem:windowsce ;
-        toolset.flags msvc LINKFLAGS <user-interface>native : /subsystem:native ;
-        toolset.flags msvc LINKFLAGS <user-interface>auto : /subsystem:posix ;
+        toolset.flags msvc LINKFLAGS <user-interface>console : "/subsystem:console" ;
+        toolset.flags msvc LINKFLAGS <user-interface>gui : "/subsystem:windows" ;
+        toolset.flags msvc LINKFLAGS <user-interface>wince : "/subsystem:windowsce" ;
+        toolset.flags msvc LINKFLAGS <user-interface>native : "/subsystem:native" ;
+        toolset.flags msvc LINKFLAGS <user-interface>auto : "/subsystem:posix" ;
 
         toolset.flags msvc.link OPTIONS <linkflags> ;
         toolset.flags msvc.link LINKPATH <library-path> ;
@@ -1869,7 +1875,7 @@ local rule register-configuration ( version : path ? )
         {
             if $(.debug-configuration)
             {
-                ECHO notice: [msvc-cfg] msvc-$(version) detected, command:
+                ECHO notice\: "[msvc-cfg]" msvc-$(version) detected, command\:
                     '$(command)' ;
             }
 

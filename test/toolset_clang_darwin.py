@@ -12,7 +12,7 @@ from TestToolset import test_toolset
 
 test_toolset("clang-darwin", "3.9.0", [
     ["target-os=darwin"],
-    ["target-os=darwin", "release", "strip=on"],
+    ["target-os=darwin", "release", "strip=on", "linkflags=-v"],
     ["target-os=darwin", "threading=multi"],
     ["target-os=darwin", "link=static"],
     ["target-os=darwin", "link=static", "runtime-link=static"],

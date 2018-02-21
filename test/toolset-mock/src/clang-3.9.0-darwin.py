@@ -20,9 +20,9 @@ if allow_properties("variant=debug", "link=shared", "runtime-link=shared"):
 
 if allow_properties("variant=release", "link=shared", "runtime-link=shared"):
     command('clang++', '-x', 'c++', unordered('-O3', '-Wno-inline', '-Wall', '-fPIC'), '-DNDEBUG', '-c', '-o', output_file('bin/clang-darwin-3.9.0/release/target-os-darwin/lib.o'), input_file(source='lib.cpp'))
-    command('clang++', '-o', output_file('bin/clang-darwin-3.9.0/release/target-os-darwin/libl1.dylib'), '-single_module', '-dynamiclib', '-install_name', '@rpath/libl1.dylib', input_file('bin/clang-darwin-3.9.0/release/target-os-darwin/lib.o'), '-fPIC')
+    command('clang++', '-v', '-o', output_file('bin/clang-darwin-3.9.0/release/target-os-darwin/libl1.dylib'), '-single_module', '-dynamiclib', '-install_name', '@rpath/libl1.dylib', input_file('bin/clang-darwin-3.9.0/release/target-os-darwin/lib.o'), '-fPIC')
     command('clang++', '-x', 'c++', unordered('-O3', '-Wno-inline', '-Wall', '-fPIC'), '-DNDEBUG', '-c', '-o', output_file('bin/clang-darwin-3.9.0/release/target-os-darwin/main.o'), input_file(source='main.cpp'))
-    command('clang++', '-o', output_file('bin/clang-darwin-3.9.0/release/target-os-darwin/test'), input_file('bin/clang-darwin-3.9.0/release/target-os-darwin/main.o'), input_file('bin/clang-darwin-3.9.0/release/target-os-darwin/libl1.dylib'), '-fPIC')
+    command('clang++', '-v', '-o', output_file('bin/clang-darwin-3.9.0/release/target-os-darwin/test'), input_file('bin/clang-darwin-3.9.0/release/target-os-darwin/main.o'), input_file('bin/clang-darwin-3.9.0/release/target-os-darwin/libl1.dylib'), '-fPIC')
 
 if allow_properties("variant=debug", "link=static", "runtime-link=shared"):
     command('clang++', '-x', 'c++', unordered('-O0', '-fno-inline', '-Wall', '-g'), '-c', '-o', output_file('bin/clang-darwin-3.9.0/debug/link-static/target-os-darwin/lib.o'), input_file(source='lib.cpp'))

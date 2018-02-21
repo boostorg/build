@@ -24,7 +24,7 @@ actions go
     $(prefix)stdout$(suffix)
     $(prefix)stderr$(suffix) 1>&2
 }
-ECHO {{{ $(XXX) }}} ;
+ECHO "{{{" $(XXX) "}}}" ;
 ALWAYS all ;
 go all ;
 """)
