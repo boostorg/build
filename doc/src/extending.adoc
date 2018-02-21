@@ -7,7 +7,7 @@
 This section explains how to extend Boost.Build to accomodate your local
 requirements -- primarily to add support for non-standard tools you
 have. Before we start, be sure you have read and understoon the concept
-of metatarget, link:#bbv2.overview.concepts[???], which is critical to
+of metatarget, <<bbv2.overview.concepts>>, which is critical to
 understanding the remaining material.
 
 The current version of Boost.Build has three levels of targets, listed
@@ -601,7 +601,7 @@ allow the user to pass any value to the command line parameters for a
 particular tool, if so desired. For example, the `<cxxflags>` feature
 allows you to pass any command line options to a C++ compiler. The
 `<include>` feature allows you to pass any string preceded by `-I` and
-the interpretation is tool-specific. (See link:#bbv2.faq.external[???]
+the interpretation is tool-specific. (See <<bbv2.faq.external>>
 for an example of very smart usage of that feature). Of course one
 should always strive to use portable features, but these are still be
 provided as a backdoor just to make sure Boost.Build does not take away
@@ -743,7 +743,8 @@ A main target rule (e.g “link:#bbv2.tasks.programs[exe]” Or
 quite likely that you'll want to declare your own and there are two ways
 to do that.
 
-The first way applies when your target rule should just produce a target
+[[bbv2.extending.rules.main-type]]The first way applies when your target rule
+should just produce a target
 of specific type. In that case, a rule is already defined for you! When
 you define a new type, Boost.Build automatically defines a corresponding
 rule. The name of the rule is obtained from the name of the type, by

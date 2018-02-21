@@ -23,7 +23,7 @@ This class has the following responsibilities:
 * Maintaining a list of main targets in this project and building them.
 
 --
-1. `rule generate ( property-set )`
+1. [[bbv2.reference.class.project-target.generate]] `rule generate ( property-set )`
 +
 Overrides
 link:#bbv2.reference.class.abstract-target.generate[abstract-target.generate].

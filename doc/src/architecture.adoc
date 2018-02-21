@@ -202,7 +202,7 @@ the same file several times]. For example, a single C++ file may be
 compiled using different include paths.
 * link:#bbv2.arch.depends.dependencies-on-generated-files[Proper
 detection of dependencies on generated files.]
-* link:#bbv2.arch.depends.dependencies-from-generatedfiles[Proper
+* link:#bbv2.arch.depends.dependencies-from-generated-files[Proper
 detection of dependencies from a generated file.]
 
 [[bbv2.arch.depends.different-scanning-algorithms]]

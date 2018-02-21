@@ -12,7 +12,7 @@ The simplest project that Boost.Build can construct is stored in
 `example/hello/` directory. The project is described by a file called
 `Jamroot` that contains:
 
-[source,jam]
+[source]
 ----
 exe hello : hello.cpp ;
 ----
@@ -22,6 +22,7 @@ of all, just invoking `b2` will build the `hello` executable by compiling
 and linking `hello.cpp`. By default, the debug variant is built. Now, to
 build the release variant of `hello`, invoke
 
+[source,shell]
 ----
 b2 release
 ----
@@ -31,7 +32,7 @@ directories, so you can switch between variants or even build multiple
 variants at once, without any unnecessary recompilation. Let us extend
 the example by adding another line to our project's `Jamroot`:
 
-[source,jam]
+[source]
 ----
 exe hello2 : hello.cpp ;
 ----
@@ -39,6 +40,7 @@ exe hello2 : hello.cpp ;
 Now let us build both the debug and release variants of our project
 again:
 
+[source,shell]
 ----
 b2 debug release
 ----
@@ -49,6 +51,7 @@ instead the existing object files will just be linked into the
 corresponding variants of `hello2`. Now let us remove all the built
 products:
 
+[source,shell]
 ----
 b2 --clean debug release
 ----
@@ -57,6 +60,7 @@ It is also possible to build or clean specific targets. The following
 two commands, respectively, build or clean only the debug version of
 `hello2`.
 
+[source,shell]
 ----
 b2 hello2
 b2 --clean hello2
@@ -79,6 +83,7 @@ arbitrary build configurations. The following command builds the
 project's `release` variant with inlining disabled and debug symbols
 enabled:
 
+[source,shell]
 ----
 b2 release inlining=off debug-symbols=on
 ----
@@ -93,6 +98,7 @@ The `release` and `debug` that we have seen in `b2` invocations are just
 a shorthand way to specify values of the `variant` feature. For example,
 the command above could also have been written this way:
 
+[source,shell]
 ----
 b2 variant=release inlining=off debug-symbols=on
 ----
@@ -122,7 +128,7 @@ targets. Multithread-enabled compilation is another example of a typical
 target requirement. The Jamfile fragment below illustrates how these
 requirements might be specified.
 
-[source,jam]
+[source]
 ----
 exe hello
     : hello.cpp
@@ -150,7 +156,7 @@ leads to a great deal of repeated boilerplate in Jamfiles. Fortunately,
 there's a better way. Each project can specify a set of _attributes_,
 including requirements:
 
-[source,jam]
+[source]
 ----
 project
     : requirements <include>/home/ghost/Work/boost <threading>multi
@@ -204,7 +210,7 @@ Projects inherit all attributes (such as requirements) from their
 parents. Inherited requirements are combined with any requirements
 specified by the subproject. For example, if `top/Jamroot` has
 
-[source,jam]
+[source]
 ----
 <include>/home/ghost/local
 ----
@@ -222,7 +228,7 @@ project does not automatically cause its subprojects to be built unless
 the parent project's Jamfile explicitly requests it. In our example,
 `top/Jamroot` might contain:
 
-[source,jam]
+[source]
 ----
 build-project app ;
 ----
@@ -242,14 +248,14 @@ To get a feeling of target dependencies, let's continue the above
 example and see how `top/app/Jamfile` can use libraries from
 `top/util/foo`. If `top/util/foo/Jamfile` contains
 
-[source,jam]
+[source]
 ----
 lib bar : bar.cpp ;
 ----
 
 then to use this library in `top/app/Jamfile`, we can write:
 
-[source,jam]
+[source]
 ----
 exe app : app.cpp ../util/foo//bar ;
 ----
@@ -264,6 +270,7 @@ library to the list of sources.
 
 Suppose we build `app` with:
 
+[source,shell]
 ----
 b2 app optimization=full define=USE_ASM
 ----
@@ -282,7 +289,7 @@ the `<include>  ` feature, but then this work will be repeated for all
 programs that use `foo`. A better solution is to modify
 `util/foo/Jamfile` in this way:
 
-[source,jam]
+[source]
 ----
 project
     : usage-requirements <include>.
@@ -303,14 +310,14 @@ The solution is to use project ids—symbolic names not tied to directory
 layout. First, we need to assign a project id by adding this code to
 `Jamroot`:
 
-[source,jam]
+[source]
 ----
 use-project /library-example/foo : util/foo ;
 ----
 
 Second, we modify `app/Jamfile` to use the project id:
 
-[source,jam]
+[source]
 ----
 exe app : app.cpp /library-example/foo//bar ;
 ----
@@ -330,7 +337,7 @@ target by using the `<library>` property. For example, if
 project, you can add `<library>/boost/filesystem//fs` to the project's
 requirements, like this:
 
-[source,jam]
+[source]
 ----
 project
    : requirements <library>/boost/filesystem//fs
@@ -352,13 +359,14 @@ value of the `link` feature. Default value is `shared`, and to build a
 static library, the value should be `static`. You can request a static
 build either on the command line:
 
+[source,shell]
 ----
 b2 link=static
 ----
 
 or in the library's requirements:
 
-[source,jam]
+[source]
 ----
 lib l : l.cpp : <link>static ;
 ----
@@ -369,7 +377,7 @@ correctly built only with the static version of a library, we can
 qualify the executable's link:#bbv2.reference.targets.references[target
 reference] to the library as follows:
 
-[source,jam]
+[source]
 ----
 exe important : main.cpp helpers/<link>static ;
 ----
@@ -383,7 +391,7 @@ you still want static (or dynamic) linking to that library in all cases.
 If that library is used by many targets, you _could_ use target
 references everywhere:
 
-[source,jam]
+[source]
 ----
 exe e1 : e1.cpp /other_project//bar/<link>static ;
 exe e10 : e10.cpp /other_project//bar/<link>static ;
@@ -393,7 +401,7 @@ but that's far from being convenient. A better approach is to introduce
 a level of indirection. Create a local `alias` target that refers to the
 static (or dynamic) version of `foo`:
 
-[source,jam]
+[source]
 ----
 alias foo : /other_project//bar/<link>static ;
 exe e1 : e1.cpp foo ;
@@ -408,7 +416,7 @@ reference to a target and possibly change the properties.
 When one library uses another, you put the second library in the source
 list of the first. For example:
 
-[source,jam]
+[source]
 ----
 lib utils : utils.cpp /boost/filesystem//fs ;
 lib core : core.cpp utils ;
@@ -439,7 +447,7 @@ target's build properties. For example, you might want to set specific
 `release` variant is built. This can be achieved using _conditional
 requirements_.
 
-[source,jam]
+[source]
 ----
 lib network : network.cpp
     : <link>shared:<define>NETWORK_LIB_SHARED
@@ -458,7 +466,7 @@ that a library actually uses different source files depending on the
 toolset used to build it. We can express this situation using target
 _alternatives_:
 
-[source,jam]
+[source]
 ----
 lib demangler : dummy_demangler.cpp ;                # <1>
 lib demangler : demangler_gcc.cpp : <toolset>gcc ;   # <2>
@@ -480,7 +488,7 @@ you need to create `lib` targets with an appropriate `file` property.
 Target alternatives can be used to associate multiple library files with
 a single conceptual target. For example:
 
-[source,jam]
+[source]
 ----
 # util/lib2/Jamfile
 lib lib2
@@ -501,7 +509,7 @@ feature is used to specify the file name.
 Once a prebuilt target has been declared, it can be used just like any
 other target:
 
-[source,jam]
+[source]
 ----
 exe app : app.cpp ../util/lib2//lib2 ;
 ----
@@ -515,7 +523,7 @@ System libraries — those that are automatically found by the toolset by
 searching through some set of predetermined paths — should be declared
 almost like regular ones:
 
-[source,jam]
+[source]
 ----
 lib pythonlib : : <name>python22 ;
 ----
@@ -527,14 +535,14 @@ command line (other compilers may use different options).
 
 We can also specify where the toolset should look for the library:
 
-[source,jam]
+[source]
 ----
 lib pythonlib : : <name>python22 <search>/opt/lib ;
 ----
 
 And, of course, target alternatives can be used in the usual way:
 
-[source,jam]
+[source]
 ----
 lib pythonlib : : <name>python22 <variant>release ;
 lib pythonlib : : <name>python22_d <variant>debug ;

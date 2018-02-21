@@ -15,6 +15,7 @@ directories specified by the environment variable BOOST_BUILD_PATH. When
 found, the file is interpreted, and should specify the build system
 location by calling the boost-build rule:
 
+[source]
 ----
 rule boost-build ( location ? )
 ----
@@ -29,6 +30,7 @@ system files were located in a directory "build-system/" at your project
 root, you might place a `boost-build.jam` at the project root
 containing:
 
+[source]
 ----
 boost-build build-system ;
 ----
@@ -45,31 +47,31 @@ loads both `site-config.jam` and `user-config.jam`.
 This section contains the list of all rules that can be used in
 Jamfile—both rules that define new targets and auxiliary rules.
 
-`exe`::
+[[bbv2.reference.rules.exe]]`exe`::
 Creates an executable file. See
 link:#bbv2.tasks.programs[the section called “Programs”].
 
-`lib`::
+[[bbv2.reference.rules.lib]]`lib`::
 Creates an library file. See
 link:#bbv2.tasks.libraries[the section called “Libraries”].
 
-`install`::
+[[bbv2.reference.rules.install]]`install`::
 Installs built targets and other files. See
 link:#bbv2.tasks.installing[the section called “Installing”].
 
-`alias`::
+[[bbv2.reference.rules.alias]]`alias`::
 Creates an alias for other targets. See
 link:#bbv2.tasks.alias[the section called “Alias”].
 
-`unit-test`::
+[[bbv2.reference.rules.unit-test]]`unit-test`::
 Creates an executable that will be automatically run. See
 link:#bbv2.builtins.testing[the section called “Testing”].
 
-`compile`; `compile-fail`; `link`; `link-fail`; `run`; `run-fail`::
+[[bbv2.reference.rules.test]]`compile`; `compile-fail`; `link`; `link-fail`; `run`; `run-fail`::
 Specialized rules for testing. See
 link:#bbv2.builtins.testing[the section called “Testing”].
 
-`check-target-builds`::
+[[bbv2.reference.rules.check-target-builds]]`check-target-builds`::
 The `check-target-builds` allows you to conditionally use different
 properties depending on whether some metatarget builds, or not. This
 is similar to functionality of configure script in autotools projects.
@@ -95,15 +97,15 @@ like so:
 alias foobar : : : : [ check-target-builds has_foo "System has foo" : <library>foo : <library>bar ] ;
 ----
 
-`obj`::
+[[bbv2.reference.rules.obj]]`obj`::
 Creates an object file. Useful when a single source file must be
 compiled with special properties.
 
-`preprocessed`::
+[[bbv2.reference.rules.preprocessed]]`preprocessed`::
 Creates an preprocessed source file. The arguments follow the
 link:#bbv2.main-target-rule-syntax[common syntax].
 
-`glob`::
+[[bbv2.reference.rules.glob]]`glob`::
 The `glob` rule takes a list shell pattern and returns the list of
 files in the project's source directory that match the pattern. For
 example:
@@ -121,7 +123,7 @@ example:
 lib tools : [ glob *.cpp : file_to_exclude.cpp bad*.cpp ] ;
 ----
 
-`glob-tree`::
+[[bbv2.reference.glob-tree]]`glob-tree`::
 The `glob-tree` is similar to the `glob` except that it operates
 recursively from the directory of the containing Jamfile. For example:
 +
@@ -133,22 +135,22 @@ will print the names of all C++ files in your project. The `.svn`
 exclude pattern prevents the `glob-tree` rule from entering
 administrative directories of the Subversion version control system.
 
-`project`::
+[[bbv2.reference.rules.project]]`project`::
 Declares project id and attributes, including project requirements.
 See link:#bbv2.overview.projects[the section called “Projects”].
 
-`use-project`::
+[[bbv2.reference.rules.use-project]]`use-project`::
 Assigns a symbolic project ID to a project at a given path. This rule
 must be better documented!
 
-`explicit`::
+[[bbv2.reference.rules.explicit]]`explicit`::
 The `explicit` rule takes a single parameter--a list of target names.
 The named targets will be marked explicit, and will be built only if
 they are explicitly requested on the command line, or if their
 dependents are built. Compare this to ordinary targets, that are built
 implicitly when their containing project is built.
 
-`always`::
+[[bbv2.reference.rules.always]]`always`::
 The `always` function takes a single parameter—a list of metatarget
 names. The top-level targets produced by the named metatargets will be
 always considered out of date. Consider this example:
@@ -164,7 +166,7 @@ relinked. The object files will not be recompiled, though. Note that
 if a build of `hello` is not requested, for example you specify just
 `bye` on the command line, `hello` will not be relinked.
 
-`constant`::
+[[bbv2.reference.rules.constant]]`constant`::
 Sets project-wide constant. Takes two parameters: variable name and a
 value and makes the specified variable name accessible in this Jamfile
 and any child Jamfiles. For example:
@@ -173,7 +175,7 @@ and any child Jamfiles. For example:
 constant VERSION : 1.34.0 ;
 ----
 
-`path-constant`::
+[[bbv2.reference.rules.path-constant]]`path-constant`::
 Same as `constant` except that the value is treated as path relative
 to Jamfile location. For example, if `b2` is invoked in the current
 directory, and Jamfile in `helper` subdirectory has:
@@ -186,7 +188,7 @@ then the variable `DATA` will be set to `helper/data/a.txt`, and if
 *`b2`* is invoked from the `helper` directory, then the variable `DATA`
 will be set to `data/a.txt`.
 
-`build-project`::
+[[bbv2.reference.rules.build-project]]`build-project`::
 Cause some other project to be built. This rule takes a single
 parameter—a directory name relative to the containing Jamfile. When
 the containing Jamfile is built, the project located at that directory
@@ -194,7 +196,7 @@ will be built as well. At the moment, the parameter to this rule
 should be a directory name. Project ID or general target references
 are not allowed.
 
-`test-suite`::
+[[bbv2.reference.rules.test-suite]]`test-suite`::
 This rule is deprecated and equivalent to `alias`.
 
 [[bbv2.overview.builtins.features]]
@@ -204,7 +206,7 @@ This section documents the features that are built-in into Boost.Build.
 For features with a fixed set of values, that set is provided, with the
 default value listed first.
 
-`variant`::
+[[bbv2.builtin.features.variant]]`variant`::
 *Allowed values:* `debug`, `release`, `profile`.
 +
 A feature combining several low-level features, making it easy to
@@ -234,12 +236,12 @@ from the `common` module.
 NOTE: Runtime debugging is on in debug builds to suit the expectations of
 people used to various IDEs.
 
-`link`::
+[[bbv2.builtin.features.link]]`link`::
 *Allowed values:* `shared`, `static`
 +
 A feature controlling how libraries are built.
 
-`runtime-link`::
+[[bbv2.builtin.features.runtime-link]]`runtime-link`::
 *Allowed values:* `shared`, `static`
 +
 Controls if a static or shared C/C++ runtime should be used. There are
@@ -249,7 +251,7 @@ libraries at all, and on some compilers, mixing static and shared
 runtime requires extreme care. Check your compiler documentation for
 more details.
 
-`threading`::
+[[bbv2.builtin.features.threading]]`threading`::
 *Allowed values:* `single`, `multi`
 +
 Controls if the project should be built in multi-threaded mode. This
@@ -259,7 +261,7 @@ libraries, and define additional preprocessor symbols (for example,
 `_MT` on Windows and `_REENTRANT` on Linux). How those symbols affect
 the compiled code depends on the code itself.
 
-`source`::
+[[bbv2.builtin.features.source]]`source`::
 The `<source>X` feature has the same effect on building a target as
 putting X in the list of sources. It is useful when you want to add
 the same source to all targets in the project (you can put <source> in
@@ -268,26 +270,26 @@ requirements, see
 link:#bbv2.tutorial.conditions[the section called “Conditions and alternatives”]).
 See also the `<library>` feature.
 
-`library`::
+[[bbv2.builtin.features.library]]`library`::
 This feature is almost equivalent to the `<source>` feature, except
 that it takes effect only for linking. When you want to link all
 targets in a Jamfile to certain library, the `<library>` feature is
 preferred over `<source>X`--the latter will add the library to all
 targets, even those that have nothing to do with libraries.
 
-`dependency`::
+[[bbv2.builtin.features.dependency]]`dependency`::
 Introduces a dependency on the target named by the value of this
 feature (so it will be brought up-to-date whenever the target being
 declared is). The dependency is not used in any other way.
 
-`implicit-dependency`::
+[[bbv2.builtin.features.implicit-dependency]]`implicit-dependency`::
 Indicates that the target named by the value of this feature may
 produce files that are included by the sources of the target being
 declared. See
 link:#bbv2.reference.generated_headers[the section called “Generated headers”]
 for more information.
 
-`use`::
+[[bbv2.builtin.features.use]]`use`::
 Introduces a dependency on the target named by the value of this
 feature (so it will be brought up-to-date whenever the target being
 declared is), and adds its usage requirements to the build properties
@@ -296,14 +298,14 @@ way. The primary use case is when you want the usage requirements
 (such as `#include` paths) of some library to be applied, but do not
 want to link to it.
 
-`dll-path`::
+[[bbv2.builtin.features.dll-path]]`dll-path`::
 Specify an additional directory where the system should look for
 shared libraries when the executable or shared library is run. This
 feature only affects Unix compilers. Please see
 link:#bbv2.faq.dll-path[the FAQ: “Why are the dll-path and hardcode-dll-paths properties useful? ”]
 in link:#bbv2.faq[Frequently Asked Questions] for details.
 
-`hardcode-dll-paths`::
+[[bbv2.builtin.features.hardcode-dll-paths]]`hardcode-dll-paths`::
 *Allowed values:* `true`, `false`.
 +
 Controls automatic generation of dll-path properties.
@@ -317,7 +319,7 @@ Please see the link:#bbv2.faq.dll-path[FAQ entry] for details. Note
 that on Mac OSX, the paths are unconditionally hardcoded by the
 linker, and it is not possible to disable that behaviour.
 
-`cflags`; `cxxflags`; `linkflags`::
+[[bbv2.builtin.features.flags]]`cflags`; `cxxflags`; `linkflags`::
 The value of those features is passed without modification to the
 corresponding tools. For `cflags` that is both the C and C++
 compilers, for `cxxflags` that is the C++ compiler, and for
@@ -325,17 +327,17 @@ compilers, for `cxxflags` that is the C++ compiler, and for
 trying to do something special that cannot be achieved by a
 higher-level feature in Boost.Build.
 
-`include`::
+[[bbv2.builtin.features.include]]`include`::
 Specifies an additional include path that is to be passed to C and C++
 compilers.
 
-`define`::
+[[bbv2.builtin.features.define]]`define`::
 Specifies an preprocessor symbol that should be defined on the command
 line. You may either specify just the symbol, which will be defined
 without any value, or both the symbol and the value, separated by
 equal sign.
 
-`warnings`::
+[[bbv2.builtin.features.warnings]]`warnings`::
 The `<warnings>` feature controls the warning level of compilers. It
 has the following values:
 +
@@ -345,12 +347,12 @@ has the following values:
 +
 Default value is `all`.
 
-`warnings-as-errors`::
+[[bbv2.builtin.features.warnings-as-errors]]`warnings-as-errors`::
 The `<warnings-as-errors>` makes it possible to treat warnings as
 errors and abort compilation on a warning. The value `on` enables this
 behaviour. The default value is `off`.
 
-`build`::
+[[bbv2.builtin.features.build]]`build`::
 *Allowed values:* `no`
 +
 The `build` feature is used to conditionally disable build of a
@@ -359,7 +361,7 @@ of that target is skipped. Combined with conditional requirements this
 allows you to skip building some target in configurations where the
 build is known to fail.
 
-`tag`::
+[[bbv2.builtin.features.tag]]`tag`::
 The `tag` feature is used to customize the name of the generated
 files. The value should have the form:
 +
@@ -386,7 +388,7 @@ about -- otherwise, you might end up modifying names of object files,
 generated header file and other targets for which changing names does
 not make sense.
 
-`debug-symbols`::
+[[bbv2.builtin.features.debug-symbols]]`debug-symbols`::
 *Allowed values:* `on`, `off`.
 +
 The `debug-symbols` feature specifies if produced object files,
@@ -396,7 +398,7 @@ Typically, the value of this feature is implicitly set by the
 most common usage is to build release variant with debugging
 information.
 
-`runtime-debugging`::
+[[bbv2.builtin.features.runtime-debugging]]`runtime-debugging`::
 *Allowed values:* `on`, `off`.
 +
 The `runtime-debugging` feature specifies whether produced object
@@ -406,7 +408,7 @@ is implicitly set by the `variant` feature, but it can be explicitly
 specified by the user. The most common usage is to build release
 variant with debugging output.
 
-`target-os`::
+[[bbv2.builtin.features.target-os]]`target-os`::
 The operating system for which the code is to be generated. The
 compiler you used should be the compiler for that operating system.
 This option causes Boost.Build to use naming conventions suitable for
@@ -421,7 +423,7 @@ openbsd, osf, qnx, qnxnto, sgi, solaris, unix, unixware, windows.
 See link:#bbv2.tasks.crosscompile[the section called “Cross-compilation”]
 for details of crosscompilation.
 
-`architecture`::
+[[bbv2.builtin.features.architecture]]`architecture`::
 *Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips1`, `mips2`,
 `mips3`, `mips4`, `mips32`, `mips32r2`, `mips64`, `parisc`, `arm`,
 `combined`, `combined-x86-power`.
@@ -429,7 +431,7 @@ for details of crosscompilation.
 The `architecture` features specifies the general processor family to
 generate code for.
 
-`instruction-set`::
+[[bbv2.builtin.features.instruction-set]]`instruction-set`::
 *Allowed values:* depends on the used toolset.
 +
 The `instruction-set` specifies for which specific instruction set the
@@ -442,7 +444,7 @@ use. Please see
 link:#bbv2.reference.tools.compilers[the section called “C++ Compilers”]
 for details.
 
-`address-model`::
+[[bbv2.builtin.features.address-model]]`address-model`::
 *Allowed values:* `32`, `64`.
 +
 The `address-model` specifies if 32-bit or 64-bit code should be
@@ -452,7 +454,7 @@ values of the `architecture` `instruction-set` features. Please see
 link:#bbv2.reference.tools.compilers[the section called “C++ Compilers”]
 for details.
 
-`c++-template-depth`::
+[[bbv2.builtin.features.cpp-template-depth]]`c++-template-depth`::
 *Allowed values:* Any positive integer.
 +
 This feature allows configuring a C++ compiler with the maximal
@@ -466,7 +468,7 @@ are all positive integer. As a workaround a large set of allowed
 values has been defined for this feature and, if a different one is
 needed, user can easily add it by calling the feature.extend rule.
 
-`embed-manifest`::
+[[bbv2.builtin.features.embed-manifest]]`embed-manifest`::
 *Allowed values:* `on`, `off`.
 +
 This feature is specific to the msvc toolset (see
@@ -477,7 +479,7 @@ to the IDE option found in the project settings dialog, under
 Configuration Properties -> Manifest Tool -> Input and Output -> Embed
 manifest.
 
-`embed-manifest-file`::
+[[bbv2.builtin.features.embed-manifest-file]]`embed-manifest-file`::
 This feature is specific to the msvc toolset (see
 link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual C++”]),
 and controls which manifest files should be embedded inside executables and
@@ -485,7 +487,7 @@ shared libraries. This feature corresponds to the IDE option found in the
 project settings dialog, under Configuration Properties -> Manifest
 Tool -> Input and Output -> Additional Manifest Files.
 
-`relevant`::
+[[bbv2.builtin.features.relevant]]`relevant`::
 *Allowed values:* the name of any feature.
 +
 This feature is used to indicate which other features are relevant for a
@@ -531,6 +533,7 @@ specify additional information about the tool's configuration. This is
 done by calling the `using` rule, typically in your `user-config.jam`,
 for example:
 
+[source]
 ----
 using gcc ;
 ----
@@ -538,6 +541,7 @@ using gcc ;
 additional parameters can be passed just like for other rules, for
 example:
 
+[source]
 ----
 using gcc : 4.0 : g++-4.0 ;
 ----
@@ -583,6 +587,7 @@ each STLport version and is not officially supported.
 Before using STLport, you need to configure it in `user-config.jam`
 using the following syntax:
 
+[source]
 ----
 using stlport : version : header-path : library-path ;
 ----
@@ -606,6 +611,7 @@ from source.
 
 zlib can be initialized using the following syntax
 
+[source]
 ----
 using zlib : version : options : condition : is-default ;
 ----
@@ -636,6 +642,7 @@ Options for building zlib from source:
 
 Examples:
 
+[source]
 ----
 # Find zlib in the default system location
 using zlib ;
@@ -658,6 +665,7 @@ from source.
 
 bzip2 can be initialized using the following syntax
 
+[source]
 ----
 using bzip2 : version : options : condition : is-default ;
 ----
@@ -688,6 +696,7 @@ Options for building bzip2 from source:
 
 Examples:
 
+[source]
 ----
 # Find bzip in the default system location
 using bzip2 ;
@@ -709,6 +718,7 @@ environment to be linked in as a library.
 
 python can be initialized using the following syntax
 
+[source]
 ----
 using python : [version] : [command-or-prefix] : [includes] : [libraries] : [conditions] : [extension-suffix] ;
 ----
@@ -748,6 +758,7 @@ and <python-debugging> is set).
 
 Examples:
 
+[source]
 ----
 # Find python in the default system location
 using python ;
@@ -802,6 +813,7 @@ below.
 To use xsltproc, you first need to configure it using the following
 syntax:
 
+[source]
 ----
 using xsltproc : xsltproc ;
 ----
@@ -848,6 +860,7 @@ determined from the target.
 To use boostbook, you first need to configure it using the following
 syntax:
 
+[source]
 ----
 using boostbook : docbook-xsl-dir : docbook-dtd-dir : boostbook-dir ;
 ----
@@ -894,6 +907,7 @@ Creates a boostbook target.
 To use doxygen, you first need to configure it using the following
 syntax:
 
+[source]
 ----
 using doxygen : name ;
 ----
@@ -952,6 +966,7 @@ BoostBook XML.
 To use quickbook, you first need to configure it using the following
 syntax:
 
+[source]
 ----
 using quickbook : command ;
 ----
@@ -968,6 +983,7 @@ objects to Postscript and PDF.
 
 To use fop, you first need to configure it using the following syntax:
 
+[source]
 ----
 using fop : fop-command : java-home : java ;
 ----
@@ -1225,6 +1241,7 @@ The condition can be satisfied either by a property in the build
 request, by non-conditional requirements, or even by another conditional
 property. For example, the following example works as expected:
 
+[source]
 ----
 exe a : a.cpp
       : <toolset>gcc:<variant>release
@@ -1254,6 +1271,7 @@ path to a single directory using an MD5 hash.
 There are two features that affect the build directory. The `<location>`
 feature completely overrides the default build directory. For example,
 
+[source]
 ----
 exe a : a.cpp : <location>. ;
 ----
@@ -1264,6 +1282,7 @@ This is generally discouraged, as it precludes variant builds.
 The <location-prefix> feature adds a prefix to the path, under the
 project's build directory. For example,
 
+[source]
 ----
 exe a : a.cpp : <location-prefix>subdir ;
 ----
@@ -1332,7 +1351,7 @@ build request. We also refer to the attributes of properties, so that an
 _incidental_ property, for example, is one whose feature has the
 _incidental_ attribute.
 
-* _incidental_
+* [[bbv2.reference.features.attributes.incidental]] _incidental_
 +
 Incidental features are assumed not to affect build products at all. As
 a consequence, the build system may use the same file for targets whose
@@ -1343,8 +1362,9 @@ incidental feature.
 Non-incidental features are assumed to affect build products, so the
 files for targets whose build specification differs in non-incidental
 features are placed in different directories as described in
-link:#bbv2.reference.buildprocess.targetpath[section_title].
-* _propagated_
+<<bbv2.reference.buildprocess.targetpath>>.
+
+* [[bbv2.reference.features.attributes.propagated]] _propagated_
 +
 Features of this kind are propagated to dependencies. That is, if a
 link:#bbv2.overview.targets.main[main target] is built using a
@@ -1353,7 +1373,8 @@ when building any of its dependencies as part of that main target. For
 instance, when an optimized executable is requested, one usually wants
 it to be linked with optimized libraries. Thus, the `<optimization>`
 feature is propagated.
-* _free_
+
+* [[bbv2.reference.features.attributes.free]] _free_
 +
 Most features have a finite set of allowed values, and can only take on
 a single value from that set in a given build specification. Free
@@ -1364,7 +1385,8 @@ several preprocessor symbols defined simultaneously:
 ----
 <define>NDEBUG=1 <define>HAS_CONFIG_H=1
 ----
-* _optional_
+
+* [[bbv2.reference.features.attributes.optional]] _optional_
 +
 An optional feature is a feature that is not required to appear in a
 build specification. Every non-optional non-free feature has a default
@@ -1372,19 +1394,22 @@ value that is used when a value for the feature is not otherwise
 specified, either in a target's requirements or in the user's build
 request. [A feature's default value is given by the first value listed
 in the feature's declaration. -- move this elsewhere - dwa]
-* _symmetric_
+
+* [[bbv2.reference.features.attributes.symmetric]] _symmetric_
 +
 Normally a feature only generates a subvariant directory when its value
 differs from its default value, leading to an asymmetric subvariant
 directory structure for certain values of the feature. A symmetric
 feature always generates a corresponding subvariant directory.
-* _path_
+
+* [[bbv2.reference.features.attributes.path]] _path_
 +
 The value of a path feature specifies a path. The path is treated as
 relative to the directory of Jamfile where path feature is used and is
 translated appropriately by the build system when the build is invoked
 from a different directory
-* _implicit_
+
+* [[bbv2.reference.features.attributes.implicit]] _implicit_
 +
 Values of implicit features alone identify the feature. For example, a
 user is not required to write "<toolset>gcc", but can simply write
@@ -1392,7 +1417,8 @@ user is not required to write "<toolset>gcc", but can simply write
 although the values do. Thus: bin/gcc/... as opposed to
 bin/toolset-gcc/.... There should typically be only a few such features,
 to avoid possible name clashes.
-* _composite_
+
+* [[bbv2.reference.features.attributes.composite]] _composite_
 +
 Composite features actually correspond to groups of properties. For
 example, a build variant is a composite feature. When generating targets
@@ -1400,7 +1426,8 @@ from a set of build properties, composite features are recursively
 expanded and _added_ to the build property set, so rules can find them
 if necessary. Non-composite non-free features override components of
 composite features in a build property set.
-* _dependency_
+
+* [[bbv2.reference.features.attributes.dependency]] _dependency_
 +
 The value of a dependency feature is a target reference. When used for
 building of a main target, the value of dependency feature is treated as
@@ -1420,6 +1447,7 @@ features.
 The low-level feature declaration interface is the `feature` rule from
 the `feature` module:
 
+[source]
 ----
 rule feature ( name : allowed-values * : attributes * )
 ----
@@ -1457,12 +1485,14 @@ property ( "," property ) * ":" property
 
 For example, the problem above would be solved by:
 
+[source]
 ----
 exe hello : hello.cpp : <toolset>yfc:<cxxflags>-disable-pointless-warning ;
 ----
 
 The syntax also allows several properties in the condition, for example:
 
+[source]
 ----
 exe hello : hello.cpp : <os>NT,<toolset>gcc:<link>static ;
 ----
@@ -1508,6 +1538,7 @@ just slash), because:
 * It emphasis that projects and targets are different things.
 * It allows to have main target names with slashes.
 
+[[bbv2.reference.targets.references]]
 _Target reference_ is used to specify a source target, and may
 additionally specify desired properties for that target. It has this
 syntax:
@@ -1519,6 +1550,7 @@ requested-properties -> property-path
 
 For example,
 
+[source]
 ----
 exe compiler : compiler.cpp libs/cmdline/<optimization>space ;
 ----

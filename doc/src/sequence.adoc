@@ -47,8 +47,7 @@ the elements will be unchanged.
 9. `rule max-element ( elements + : ordered ? )`
 +
 Returns the maximum number in `elements`. Uses `ordered` for comparisons
-or link:#bbv2.reference.modules.numbers.less[numbers.less] if none is
-provided.
+or `numbers.less` if none is provided.
 
 10. `rule select-highest-ranked ( elements * : ranks * )`
 +

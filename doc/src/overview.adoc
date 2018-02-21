@@ -5,7 +5,7 @@ This section will provide the information necessary to create your own
 projects using Boost.Build. The information provided here is relatively
 high-level, and the link:#bbv2.reference[Reference] as well as the on-line
 help system must be used to obtain low-level documentation (see
-link:#bbv2.reference.init.options.help[`--help`]).
+link:#bbv2.overview.invocation.options.help[`--help`]).
 
 Boost.Build has two parts — a build engine with its own interpreted
 language, and Boost.Build itself, implemented in that language. The
@@ -79,6 +79,7 @@ generate actual targets.
 
 Consider an example:
 
+[source]
 ----
 exe a : a.cpp ;
 ----
@@ -89,6 +90,7 @@ used. After all build files are parsed, Boost.Build considers the
 properties requested on the command line. Supposed you have invoked
 Boost.Build with:
 
+[source,shell]
 ----
 b2 toolset=gcc toolset=msvc
 ----
@@ -139,6 +141,7 @@ Syntantically, a link:#bbv2.jam[Boost.Jam] program consists of two kinds
 of elements—keywords (which have a special meaning to
 link:#bbv2.jam[Boost.Jam]) and literals. Consider this code:
 
+[source]
 ----
 a = b ;
 ----
@@ -153,6 +156,7 @@ error.
 If you want to use a literal value that is the same as some keyword, the
 value can be quoted:
 
+[source]
 ----
 a = "=" ;
 ----
@@ -163,6 +167,7 @@ previous example. An undefined variable is the same as a variable with
 an empty value. Variables can be accessed using the `$(variable)`
 syntax. For example:
 
+[source]
 ----
 a = $(b) $(c) ;
 ----
@@ -170,6 +175,7 @@ a = $(b) $(c) ;
 Rules are defined by specifying the rule name, the parameter names, and
 the allowed value list size for each parameter.
 
+[source]
 ----
 rule example
  (
@@ -191,6 +197,7 @@ arbitrarily long, but the third argument may not be empty.
 The overview of link:#bbv2.jam[Boost.Jam] language statements is given
 below:
 
+[source]
 ----
 helper 1 : 2 : 3 ;
 x = [ helper 1 : 2 : 3 ] ;
@@ -200,6 +207,7 @@ This code calls the named rule with the specified arguments. When the
 result of the call must be used inside some expression, you need to add
 brackets around the call, like shown on the second line.
 
+[source]
 ----
 if cond { statements } [ else { statements } ]
 ----
@@ -213,6 +221,7 @@ in the left and the right arguments.
 * Logical operations: `! a`, `a && b`, `a || b`
 * Grouping: `( cond )`
 
+[source]
 ----
 for var in list { statements }
 ----
@@ -220,12 +229,14 @@ for var in list { statements }
 Executes statements for each element in list, setting the variable `var`
 to the element value.
 
+[source]
 ----
 while cond { statements }
 ----
 
 Repeatedly execute statements while cond remains true upon entry.
 
+[source]
 ----
 return values ;
 ----
@@ -233,6 +244,7 @@ return values ;
 This statement should be used only inside a rule and returns `values` to
 the caller of the rule.
 
+[source]
 ----
 import module ;
 import module : rule ;
@@ -243,10 +255,12 @@ are made available using the qualified name: `module.rule`. The second form
 imports the specified rules only, and they can be called using unqualified
 names.
 
+[[bbv2.overview.jam_language.actions]]
 Sometimes, you need to specify the actual command lines to be used when
 creating targets. In the jam language, you use named actions to do this.
 For example:
 
+[source]
 ----
 actions create-file-from-another
 {
@@ -263,6 +277,7 @@ To adjust the command line flexibly, you can define a rule with the same
 name as the action and taking three parameters -- targets, sources and
 properties. For example:
 
+[source]
 ----
 rule create-file-from-another ( targets * : sources * : properties * )
 {
@@ -360,6 +375,7 @@ other tools (see link:#bbv2.recipies.site-config[the section called “Targets
 in site-config.jam”] for more advanced usage). A tool is configured using
 the following syntax:
 
+[source]
 ----
 using tool-name : ... ;
 ----
@@ -367,6 +383,7 @@ using tool-name : ... ;
 The `using` rule is given the name of tool, and will make that tool
 available to Boost.Build. For example,
 
+[source]
 ----
 using gcc ;
 ----
@@ -390,6 +407,7 @@ If you have a single compiler, and the compiler executable
 
 it can be configured by simply:
 
+[source]
 ----
 using tool-name ;
 ----
@@ -397,6 +415,7 @@ using tool-name ;
 If the compiler is installed in a custom directory, you should provide
 the command that invokes the compiler, for example:
 
+[source]
 ----
 using gcc : : g++-3.2 ;
 using msvc : : "Z:/Programs/Microsoft Visual Studio/vc98/bin/cl" ;
@@ -409,6 +428,7 @@ executables for C and C++ are different, the path to the C++ compiler
 executable must be specified. The command can be any command allowed by
 the operating system. For example:
 
+[source]
 ----
 using msvc : : echo Compiling && foo/bar/baz/cl ;
 ----
@@ -418,6 +438,7 @@ will work.
 To configure several versions of a toolset, simply invoke the `using`
 rule multiple times:
 
+[source]
 ----
 using gcc : 3.3 ;
 using gcc : 3.4 : g++-3.4 ;
@@ -441,6 +462,7 @@ directly to the C++ compiler, and values of the `compileflags` feature
 are passed to both. For example, to configure a `gcc` toolset so that it
 always generates 64-bit code you could write:
 
+[source]
 ----
 using gcc : 3.4 : : <compileflags>-m64 <linkflags>-m64 ;
 ----
@@ -448,6 +470,7 @@ using gcc : 3.4 : : <compileflags>-m64 <linkflags>-m64 ;
 If multiple of the same type of options are needed, they can be
 concatenated with quotes or have multiple instances of the option tag.
 
+[source]
 ----
 using gcc : 5 : : <cxxflags>"-std=c++14 -O2" ;
 using clang : 3.9 : : <cxxflags>-std=c++14 <cxxflags>-O2 ;
@@ -458,6 +481,7 @@ are deliniated by the version passed in. Because the dash '-' cannot be
 used here, the convention has become to use the tilde '~' to deliniate
 variations.
 
+[source]
 ----
 using gcc : 5 : g++-5 : ; # default is C++ 98
 using gcc : 5~c++03 : g++-5 : <cxxflags>-std=c++03 ; # C++ 03
@@ -468,6 +492,7 @@ using gcc : 5~c++14 : g++-5 : <cxxflags>-std=c++14 ; # C++ 14
 
 These are then used as normal toolsets:
 
+[source,shell]
 ----
 b2 toolset=gcc-5 stage
 b2 toolset=gcc-5~c++14 stage
@@ -503,12 +528,14 @@ target::
 To build all targets defined in the Jamfile in the current directory
 with the default properties, run:
 
+[source,shell]
 ----
 b2
 ----
 
 To build specific targets, specify them on the command line:
 
+[source,shell]
 ----
 b2 lib1 subproject//lib2
 ----
@@ -516,6 +543,7 @@ b2 lib1 subproject//lib2
 To request a certain value for some property, add `property=value` to the
 command line:
 
+[source,shell]
 ----
 b2 toolset=gcc variant=debug optimization=space
 ----
@@ -525,7 +553,7 @@ b2 toolset=gcc variant=debug optimization=space
 
 Boost.Build recognizes the following command line options.
 
-`--help`::
+[[bbv2.overview.invocation.options.help]]`--help`::
   Invokes the online help system. This prints general information on how
   to use the help system with additional --help* options.
 `--clean`::
@@ -692,6 +720,7 @@ once on the command line. In which case, everything will be built
 several times -- once for each specified value of a feature. For
 example, if you use
 
+[source,shell]
 ----
 b2 link=static link=shared threading=single threading=multi
 ----
@@ -700,6 +729,7 @@ Then a total of 4 builds will be performed. For convenience, instead of
 specifying all requested values of a feature in separate command line
 elements, you can separate the values with commas, for example:
 
+[source,shell]
 ----
 b2 link=static,shared threading=single,multi
 ----
@@ -707,6 +737,7 @@ b2 link=static,shared threading=single,multi
 The comma has this special meaning only if the feature has a fixed set
 of values, so
 
+[source,shell]
 ----
 b2 include=static,shared
 ----
@@ -715,6 +746,7 @@ is not treated specially.
 
 Multiple features may be grouped by using a forwards slash.
 
+[source,shell]
 ----
 b2 gcc/link=shared msvc/link=static,shared
 ----
@@ -732,6 +764,7 @@ project in the current directory is built.
 [[bbv2.overview.targets]]
 == Declaring Targets
 
+[[bbv2.overview.targets.main]]
 A Main target is a user-defined named entity that can be built, for
 example an executable file. Declaring a main target is usually done
 using one of the main target rules described in
@@ -739,8 +772,10 @@ link:#bbv2.reference.rules[the section called “Builtin rules”]. The user can
 also declare custom main target rules as shown in
 link:#bbv2.extending.rules[the section called “Main target rules”].
 
+anchor:bbv2.main-target-rule-syntax[]
 Most main target rules in Boost.Build have the same common signature:
 
+[source]
 ----
 rule rule-name (
      main-target-name :
@@ -786,6 +821,7 @@ undescores and dots. The entire name is significant when resolving
 references from other targets. For determining filenames, only the part
 before the first dot is taken. For example:
 
+[source]
 ----
 obj test.release : test.cpp : <variant>release ;
 obj test.debug : test.cpp : <variant>debug ;
@@ -803,6 +839,7 @@ files rather than having to spell it out manually, in which case you can
 use the link:#bbv2.reference.rules.glob[glob] rule. Here are two
 examples:
 
+[source]
 ----
 exe a : a.cpp ; <1>
 exe b : [ glob *.cpp ] ; <2>
@@ -823,6 +860,7 @@ forward slash. There is no special syntax to distinguish the directory
 name from the project name—the part before the double slash is first
 looked up as project name, and then as directory name. For example:
 
+[source]
 ----
 lib helper : helper.cpp ;
 exe a : a.cpp helper ;
@@ -845,6 +883,7 @@ link:#bbv2.reference.ids[the section called “Target identifiers and references
 Requirements are the properties that should always be present when
 building a target. Typically, they are includes and defines:
 
+[source]
 ----
 exe hello : hello.cpp : <include>/opt/boost <define>MY_DEBUG ;
 ----
@@ -854,17 +893,20 @@ link:#bbv2.overview.builtins.features[the section called “Builtin features”]
 For example if a library can only be built statically, or a file can't be
 compiled with optimization due to a compiler bug, one can use.
 
+[source]
 ----
 lib util : util.cpp : <link>static ;
 obj main : main.cpp : <optimization>off ;
 ----
 
-Sometimes, particular relationships need to be
+[[bbv2.overview.targets.requirements.conditional]]Sometimes, particular
+relationships need to be
 maintained among a target's build properties. This can be achieved with
 _conditional requirements_. For example, you might want to set specific
 `#defines` when a library is built as shared, or when a target's
 `release` variant is built in release mode.
 
+[source]
 ----
 lib network : network.cpp
     : <link>shared:<define>NETWORK_LIB_SHARED
@@ -877,6 +919,7 @@ In the example above, whenever `network` is built with `<link>shared`,
 
 You can use several properties in the condition, for example:
 
+[source]
 ----
 lib network : network.cpp
     : <toolset>gcc,<optimization>speed:<define>USE_INLINE_ASSEMBLER
@@ -888,6 +931,7 @@ is _indirect conditional_ requirements. You can provide a rule that will
 be called with the current build properties and can compute additional
 properties to be added. For example:
 
+[source]
 ----
 lib network : network.cpp
     : <conditional>@my-rule
@@ -911,6 +955,7 @@ the requirements specified for the containing project. You can cause a
 target to completely ignore a specific project requirement using the
 syntax by adding a minus sign before the property, for example:
 
+[source]
 ----
 exe main : main.cpp : -<define>UNNECESSARY_DEFINE ;
 ----
@@ -919,6 +964,7 @@ This syntax is the only way to ignore free properties, such as defines,
 from a parent. It can be also useful for ordinary properties. Consider
 this example:
 
+[source]
 ----
 project test : requirements <threading>multi ;
 exe test1 : test1.cpp ;
@@ -942,6 +988,7 @@ The `default-build` parameter is a set of properties to be used if the
 build request does not otherwise specify a value for features in the
 set. For example:
 
+[source]
 ----
 exe hello : hello.cpp : : <threading>multi ;
 ----
@@ -958,6 +1005,7 @@ using conditional requirements would be hard. For example, imagine that
 a library actually uses different source files depending on the toolset
 used to build it. We can express this situation using _target alternatives_:
 
+[source]
 ----
 lib demangler : dummy_demangler.cpp ;                # alternative 1
 lib demangler : demangler_gcc.cpp : <toolset>gcc ;   # alternative 2
@@ -971,6 +1019,7 @@ generic source file, `dummy_demangler.cpp`.
 It is possible to declare a target inline, i.e. the "sources" parameter
 may include calls to other main rules. For example:
 
+[source]
 ----
 exe hello : hello.cpp
     [ obj helpers : helpers.cpp : <optimization>off ] ;
@@ -986,6 +1035,7 @@ current project will be built. If a target should be built only by
 explicit request, this can be expressed by the
 link:#bbv2.reference.rules.explicit[explicit] rule:
 
+[source]
 ----
 explicit install_programs ;
 ----
@@ -1002,6 +1052,7 @@ referring to its targets.
 Projects are named using the `project` rule, which has the following
 syntax:
 
+[source]
 ----
 project id : attributes ;
 ----
@@ -1011,6 +1062,7 @@ with an attribute-name and is followed by any number of build
 properties. The list of attribute names along with its handling is also
 shown in the table below. For example, it is possible to write:
 
+[source]
 ----
 project tennis
     : requirements <threading>multi
@@ -1034,6 +1086,7 @@ the projects as well as all subprojects.
 _Default build_ is the build request that should be used when no build
 request is specified explicitly.
 
+[[bbv2.overview.projects.attributes.projectrule]]
 The default values for those attributes are given in the table below.
 
 [cols=",,,",options="header",]
@@ -1109,6 +1162,7 @@ user, and each target can be built with different properties.
 The command line specifies which targets to build and with which
 properties. For example:
 
+[source,shell]
 ----
 b2 app1 lib1//lib1 toolset=gcc variant=debug optimization=full
 ----
@@ -1119,6 +1173,7 @@ link:#bbv2.reference.ids[target id] and specify arbitrary properties.
 Some of the properties are very common, and for them the name of the
 property can be omitted. For example, the above can be written as:
 
+[source,shell]
 ----
 b2 app1 lib1//lib1 gcc debug optimization=full
 ----
@@ -1180,6 +1235,7 @@ modification to all main targets in that project. It's is possible to
 prevent implicit building of a target in a project with the `explicit`
 rule:
 
+[source]
 ----
 explicit hello_test ;
 ----

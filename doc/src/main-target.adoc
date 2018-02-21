@@ -18,7 +18,7 @@ A link:#bbv2.reference.class.main-target[main-target] represents a named
 top-level target in a Jamfile.
 
 --
-1. `rule generate ( property-set )`
+1. [[bbv2.reference.class.main-target.generate]] `rule generate ( property-set )`
 +
 Overrides
 link:#bbv2.reference.class.abstract-target.generate[abstract-target.generate].

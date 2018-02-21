@@ -12,6 +12,7 @@ link:#bbv2.overview.targets[the section called “Declaring Targets”].
 Programs are created using the `exe` rule, which follows the
 link:#bbv2.main-target-rule-syntax[common syntax]. For example:
 
+[source]
 ----
 exe hello
     : hello.cpp some_library.lib /some_project//library
@@ -39,6 +40,7 @@ link:#bbv2.tasks.installing[the section called “Installing”].
 Library targets are created using the `lib` rule, which follows the
 link:#bbv2.main-target-rule-syntax[common syntax]. For example:
 
+[source]
 ----
 lib helpers : helpers.cpp ;
 ----
@@ -46,7 +48,7 @@ lib helpers : helpers.cpp ;
 This will define a library target named `helpers` built from the
 `helpers.cpp` source file. It can be either a static library or a shared
 library, depending on the value of the
-link:#bbv2.overview.builtins.features.link[`<link>`] feature.
+link:#bbv2.builtin.features.link[`<link>`] feature.
 
 Library targets can represent:
 
@@ -57,6 +59,7 @@ can be searched for by the tools using them (typically with the linker's
 
 The syntax for prebuilt libraries is given below:
 
+[source]
 ----
 lib z : : <name>z <search>/home/ghost ;
 lib compress : : <file>/opt/libs/compress.a ;
@@ -81,6 +84,7 @@ path. When linking to multiple libraries, the paths specified by
 `search` are combined without regard to which `lib` target each path
 came from. Thus, given
 
+[source]
 ----
 lib a : : <name>a <search>/pool/release ;
 lib b : : <name>b <search>/pool/debug ;
@@ -95,6 +99,7 @@ libraries with the same name, it's safer to use `file`.
 
 For convenience, the following syntax is allowed:
 
+[source]
 ----
 lib z ;
 lib gui db aux ;
@@ -102,6 +107,7 @@ lib gui db aux ;
 
 which has exactly the same effect as:
 
+[source]
 ----
 lib z : : <name>z ;
 lib gui : : <name>gui ;
@@ -115,6 +121,7 @@ cases. For portability, you should specify library dependencies even for
 searched and prebuilt libraries, othewise, static linking on Unix will
 not work. For example:
 
+[source]
 ----
 lib z ;
 lib png : z : <name>png ;
@@ -134,6 +141,7 @@ If you do not want a shared library to include all the libraries
 specified in its sources (especially statically linked ones), you would
 need to use the following:
 
+[source]
 ----
 lib b : a.cpp ;
 lib a : a.cpp : <use>b : : <library>b ;
@@ -151,6 +159,7 @@ build a `helpers` library and its interface is described in its
 `helpers.cpp` source file. Then you could add the following to the
 Jamfile located in that same directory:
 
+[source]
 ----
 lib helpers : helpers.cpp : : : <include>. ;
 ----
@@ -167,6 +176,7 @@ The `alias` rule gives an alternative name to a group of targets. For
 example, to give the name `core` to a group of three other targets with
 the following code:
 
+[source]
 ----
 alias core : im reader writer ;
 ----
@@ -178,6 +188,7 @@ Another use of the `alias` rule is to change build properties. For
 example, if you want to link statically to the Boost Threads
 library, you can write the following:
 
+[source]
 ----
 alias threads : /boost/thread//boost_thread : <link>static ;
 ----
@@ -187,6 +198,7 @@ and use only the `threads` alias in your Jamfiles.
 You can also specify usage requirements for the `alias` target. If you
 write the following:
 
+[source]
 ----
 alias header_only_library : : : :  <include>/usr/include/header_only_library ;
 ----
@@ -195,6 +207,7 @@ then using `header_only_library` in sources will only add an include
 path. Also note that when an alias has sources, their usage requirements
 are propagated as well. For example:
 
+[source]
 ----
 lib library1 : library1.cpp : : : <include>/library/include1 ;
 lib library2 : library2.cpp : : : <include>/library/include2 ;
@@ -217,6 +230,7 @@ For installing a built target you should use the `install` rule, which
 follows the link:#bbv2.main-target-rule-syntax[common syntax]. For
 example:
 
+[source]
 ----
 install dist : hello helpers ;
 ----
@@ -225,6 +239,7 @@ will cause the targets `hello` and `helpers` to be moved to the `dist`
 directory, relative to the Jamfile's directory. The directory can be
 changed using the `location` property:
 
+[source]
 ----
 install dist : hello helpers : <location>/usr/bin ;
 ----
@@ -236,6 +251,7 @@ use a mnemonic target name.
 The `location` property is especially handy when the location is not
 fixed, but depends on the build variant or environment variables:
 
+[source]
 ----
 install dist : hello helpers :
     <variant>release:<location>dist/release
@@ -252,6 +268,7 @@ Specifying the names of all libraries to install can be boring. The
 `install` allows you to specify only the top-level executable targets to
 install, and automatically install all dependencies:
 
+[source]
 ----
 install dist : hello :
     <install-dependencies>on <install-type>EXE
@@ -277,6 +294,7 @@ sources include `a/b/c.hpp`, the `a/b` part will be ignored. To make the
 are installing. Relative paths from that root will be preserved. For
 example, if you write:
 
+[source]
 ----
 install headers
     : a/b/c.h
@@ -295,11 +313,12 @@ directory tree.
 The link:#bbv2.tasks.alias[`alias`] rule can be used when targets need
 to be installed into several directories:
 
-....
+[source]
+----
 alias install : install-bin install-lib ;
 install install-bin : applications : /usr/bin ;
 install install-lib : helper : /usr/lib ;
-....
+----
 
 Because the `install` rule just copies targets, most free features
 footnote:[see the definition of "free" in
@@ -307,7 +326,7 @@ link:#bbv2.reference.features.attributes[the section called “Feature Attribute
 have no effect when used in requirements of the `install` rule. The only two
 that matter are
 link:#bbv2.builtin.features.dependency[`dependency`] and, on Unix,
-link:#bbv2.reference.features.dll-path[`dll-path`].
+link:#bbv2.builtin.features.dll-path[`dll-path`].
 
 NOTE: (Unix specific) On Unix, executables built using Boost.Build typically
 contain the list of paths to all used shared libraries. For installing,
@@ -322,6 +341,7 @@ Boost.Build has convenient support for running unit tests. The simplest
 way is the `unit-test` rule, which follows the
 link:#bbv2.main-target-rule-syntax[common syntax]. For example:
 
+[source]
 ----
 unit-test helpers_test : helpers_test.cpp helpers ;
 ----
@@ -335,6 +355,7 @@ unit test failure.
 
 There are few specialized testing rules, listed below:
 
+[source]
 ----
 rule compile ( sources : requirements * : target-name ? )
 rule compile-fail ( sources : requirements * : target-name ? )
@@ -354,6 +375,7 @@ There are two specialized rules for running executables, which are more
 powerful than the `unit-test` rule. The `run` rule has the following
 signature:
 
+[source]
 ----
 rule run ( sources + : args * : input-files * : requirements * : target-name ?
     : default-build * )
@@ -383,6 +405,7 @@ It is possible to print the list of all test targets (except for
 `unit-test`) declared in your project, by passing the `--dump-tests`
 command-line option. The output will consist of lines of the form:
 
+[source]
 ----
 boost-test(test-type) path : sources
 ----
@@ -399,6 +422,7 @@ The following features adjust behaviour of the testing metatargets.
 Defines an argument to be passed to the target when it is executed
 before the list of input files.
 +
+[source]
 ----
 unit-test helpers_test
     : helpers_test.cpp helpers
@@ -419,6 +443,7 @@ to run the executable using some helper command. You should use this
 property to specify the name of the helper command. For example, if
 you write:
 +
+[source]
 ----
 unit-test helpers_test
     : helpers_test.cpp helpers
@@ -428,6 +453,7 @@ unit-test helpers_test
 +
 The command used to run the executable will be:
 +
+[source,shell]
 ----
 valgrind bin/$toolset/debug/helpers_test
 ----
@@ -463,6 +489,7 @@ unconditionally run a command.
 Suppose you want to create the file `file.out` from the file `file.in`
 by running the command `in2out`. Here is how you would do this in Boost.Build:
 
+[source]
 ----
 make file.out : file.in : @in2out ;
 actions in2out
@@ -480,6 +507,7 @@ It could be that you just want to run some command unconditionally, and
 that command does not create any specific files. For that you can use
 the `notfile` rule. For example:
 
+[source]
 ----
 notfile echo_something : @echo ;
 actions echo
@@ -499,6 +527,7 @@ required to specify the `generating-rule` property. The value of the
 property should be in the form `@_rule-name_`, the named rule should have the
 following signature:
 
+[source]
 ----
 rule generating-rule ( project name : property-set : sources * )
 ----
@@ -586,6 +615,7 @@ but imposes certain overhead. For that reason, if there is implicit
 dependency on files from other main targets, the `<implicit-dependency>`
 feature must be used, for example:
 
+[source]
 ----
 lib parser : parser.y ;
 exe app : app.cpp : <implicit-dependency>parser ;
@@ -607,6 +637,7 @@ When using gcc, you first need to specify your cross compiler in
 link:#bbv2.overview.configuration[the section called “Configuration”]), for
 example:
 
+[source]
 ----
 using gcc : arm : arm-none-linux-gnueabi-g++ ;
 ----
@@ -614,6 +645,7 @@ using gcc : arm : arm-none-linux-gnueabi-g++ ;
 After that, if the host and target os are the same, for example Linux,
 you can just request that this compiler version be used:
 
+[source,shell]
 ----
 b2 toolset=gcc-arm
 ----
@@ -622,6 +654,7 @@ If you want to target a different operating system from the host, you
 need to additionally specify the value for the `target-os` feature, for
 example:
 
+[source,bat]
 ----
 # On windows box
 b2 toolset=gcc-arm target-os=linux
@@ -630,10 +663,10 @@ b2 toolset=gcc-mingw target-os=windows
 ----
 
 For the complete list of allowed opeating system names, please see the
-documentation for link:#bbv2.reference.features.target-os[target-os
+documentation for link:#bbv2.builtin.features.target-os[target-os
 feature].
 
 When using the msvc compiler, it's only possible to cross-compile to a
 64-bit system on a 32-bit host. Please see
-link:#v2.reference.tools.compiler.msvc.64[the section called “64-bit support”]
+link:#bbv2.reference.tools.compiler.msvc.64[the section called “64-bit support”]
 for details.

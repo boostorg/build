@@ -3,7 +3,7 @@
 
 Base class for all abstract targets.
 
-[source,jam]
+[source]
 ----
 class abstract-target {
     rule __init__ ( name : project )
@@ -48,7 +48,7 @@ Returns the location where the target was declared.
 +
 Returns a user-readable name for this target.
 
-6. `rule generate ( property-set )`
+6. [[bbv2.reference.class.abstract-target.generate]] `rule generate ( property-set )`
 +
 Generates virtual targets for this abstract target using the specified
 properties, unless a different value of some feature is required by the

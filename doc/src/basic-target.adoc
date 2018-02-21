@@ -1,7 +1,7 @@
 [[bbv2.reference.class.basic-target]]
 = Class basic-target
 
-[source,jam]
+[source]
 ----
 class basic-target : abstract-target {
     rule __init__ ( name : project : sources * : requirements * : default-build * : usage-requirements * )  
@@ -29,7 +29,7 @@ and handles generation of those dependency targets.
   The link:#bbv2.reference.class.project-target[project] in which the
   target is declared.
 
-2. `rule generate ( property-set )`
+2. [[bbv2.reference.class.basic-target.generate]] `rule generate ( property-set )`
 +
 Overrides
 link:#bbv2.reference.class.abstract-target.generate[abstract-target.generate].
@@ -42,7 +42,7 @@ On success, returns:
 * a property-set with the usage requirements to be applied to dependents
 * a list of produced virtual targets, which may be empty.
 
-3. `rule construct ( name : source-targets * : property-set )`
+3. [[bbv2.reference.class.basic-target.construct]] `rule construct ( name : source-targets * : property-set )`
 +
 Constructs virtual targets for this abstract target. Returns a
 usage-requirements property-set and a list of virtual targets. Should be

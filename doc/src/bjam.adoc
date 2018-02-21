@@ -17,6 +17,7 @@ name of the toolset to build with. When the toolset is not given an
 attempt is made to detect an available toolset and use that. The build
 scripts accept these arguments:
 
+[source,shell]
 ----
 build [toolset]
 ----
@@ -24,6 +25,7 @@ build [toolset]
 Running the scripts without arguments will give you the best chance of
 success. On Windows platforms from a command console do:
 
+[source,bat]
 ----
 cd jam source location
 .\build.bat
@@ -31,6 +33,7 @@ cd jam source location
 
 On Unix type platforms do:
 
+[source,shell]
 ----
 cd jam source location
 sh ./build.sh
@@ -316,7 +319,7 @@ a rule which is called with the name of the target and the path it is
 being bound to. The signature of the rule named by `$(BINDRULE[1])`
 should match the following:
 
-[source,jam]
+[source]
 ----
 rule bind-rule ( target : path )
 ----
@@ -344,30 +347,35 @@ The `b2` statements for defining and invoking rules are as follows:
 
 Define a rule's procedure, replacing any previous definition.
 
+[source]
 ----
 rule rulename { statements }
 ----
 
 Define a rule's updating actions, replacing any previous definition.
 
+[source]
 ----
 actions [ modifiers ] rulename { commands }
 ----
 
 Invoke a rule.
 
+[source]
 ----
 rulename field1 : field2 : ... : fieldN ;
 ----
 
 Invoke a rule under the influence of target's specific variables..
 
+[source]
 ----
 on target rulename field1 : field2 : ... : fieldN ;
 ----
 
 Used as an argument, expands to the return value of the rule invoked.
 
+[source]
 ----
 [ rulename field1 : field2 : ... : fieldN ]
 [ on target rulename field1 : field2 : ... : fieldN ]
@@ -392,6 +400,7 @@ replaced by bound versions of the target names. See Binding above.
 
 Rule invocation may be indirected through a variable:
 
+[source]
 ----
 $(var) field1 : field2 : ... : fieldN ;
 
@@ -437,7 +446,7 @@ You can describe the arguments accepted by a rule, and refer to them by
 name within the rule. For example, the following prints "I'm sorry,
 Dave" to the console:
 
-[source,jam]
+[source]
 ----
 rule report ( pronoun index ? : state : names + )
 {
@@ -470,6 +479,7 @@ rules.
 The actual and formal arguments are checked for inconsistencies, which
 cause `b2` to exit with an error code:
 
+[source]
 ----
 ### argument error
 # rule report ( pronoun index ?  : state  : names + )
@@ -500,7 +510,7 @@ are just utility rules.
 [[jam.language.rules.builtins.dependency_building._depends__]]
 ===== `DEPENDS`
 
-[source,jam]
+[source]
 ----
 rule DEPENDS ( targets1 * : targets2 * )
 ----
@@ -512,7 +522,7 @@ themselves rebuilt or are newer than _targets1_.
 [[jam.language.rules.builtins.dependency_building._includes__]]
 ===== `INCLUDES`
 
-[source,jam]
+[source]
 ----
 rule INCLUDES ( targets1 * : targets2 * )
 ----
@@ -524,7 +534,7 @@ object built from the source file depends both on the original and
 included source file, but the two sources files don't depend on each
 other. For example:
 
-[source,jam]
+[source]
 ----
 DEPENDS foo.o : foo.c ;
 INCLUDES foo.c : foo.h ;
@@ -546,7 +556,7 @@ be changed by invoking the following rules:
 [[jam.language.rules.builtins.modifying_binding._always__]]
 ===== `ALWAYS`
 
-[source,jam]
+[source]
 ----
 rule ALWAYS ( targets * )
 ----
@@ -561,7 +571,7 @@ be updated as well.
 [[jam.language.rules.builtins.modifying_binding._leaves__]]
 ===== `LEAVES`
 
-[source,jam]
+[source]
 ----
 rule LEAVES ( targets * )
 ----
@@ -575,7 +585,7 @@ updated only if original source files change.
 [[jam.language.rules.builtins.modifying_binding._nocare__]]
 ===== `NOCARE`
 
-[source,jam]
+[source]
 ----
 rule NOCARE ( targets * )
 ----
@@ -594,7 +604,7 @@ nonzero return code, dependent targets will still be built.
 [[jam.language.rules.builtins.modifying_binding._notfile__]]
 ===== `NOTFILE`
 
-[source,jam]
+[source]
 ----
 rule NOTFILE ( targets * )
 ----
@@ -609,7 +619,7 @@ pseudotargets.
 [[jam.language.rules.builtins.modifying_binding._noupdate__]]
 ===== `NOUPDATE`
 
-[source,jam]
+[source]
 ----
 rule NOUPDATE ( targets * )
 ----
@@ -624,7 +634,7 @@ directory exists, not when it has last been updated.
 [[jam.language.rules.builtins.modifying_binding._temporary__]]
 ===== `TEMPORARY`
 
-[source,jam]
+[source]
 ----
 rule TEMPORARY ( targets * )
 ----
@@ -639,7 +649,7 @@ archived.
 [[jam.language.rules.builtins.modifying_binding._fail_expected__]]
 ===== `FAIL_EXPECTED`
 
-[source,jam]
+[source]
 ----
 rule FAIL_EXPECTED ( targets * )
 ----
@@ -655,7 +665,7 @@ succeeds, dependent targets are skipped.
 [[jam.language.rules.builtins.modifying_binding._rmold__]]
 ===== `RMOLD`
 
-[source,jam]
+[source]
 ----
 rule RMOLD ( targets * )
 ----
@@ -668,7 +678,7 @@ arguments to be removed if any of their dependencies fail to build.
 [[jam.language.rules.builtins.modifying_binding._isfile__]]
 ===== `ISFILE`
 
-[source,jam]
+[source]
 ----
 rule ISFILE ( targets * )
 ----
@@ -690,7 +700,7 @@ parsing phase.
 [[jam.language.rules.builtins.utility._echo__]]
 ===== `ECHO`
 
-[source,jam]
+[source]
 ----
 rule ECHO ( args * )
 ----
@@ -700,7 +710,7 @@ Blurts out the message _args_ to stdout.
 [[jam.language.rules.builtins.utility._exit__]]
 ===== `EXIT`
 
-[source,jam]
+[source]
 ----
 rule EXIT ( message * : result-value ? )
 ----
@@ -718,7 +728,7 @@ rules and not part of the language, like `include`.
 
 The `GLOB` rule does filename globbing.
 
-[source,jam]
+[source]
 ----
 rule GLOB ( directories * : patterns * : downcase-opt ? )
 ----
@@ -742,7 +752,7 @@ Cygwin, and OpenVMS, filenames are always downcased before matching.
 
 The `GLOB_ARCHIVE` rule does name globbing of object archive members.
 
-[source,jam]
+[source]
 ----
 rule GLOB_ARCHIVE ( archives * : member-patterns * : downcase-opt ? : symbol-patterns ? )
 ----
@@ -775,7 +785,7 @@ specified.
 
 The `MATCH` rule does pattern matching.
 
-[source,jam]
+[source]
 ----
 rule MATCH ( regexps + : list * )
 ----
@@ -787,7 +797,7 @@ for each string in _list_, and for each regular expression in _regexps_.
 [[jam.language.rules.builtins.utility._backtrace__]]
 ===== `BACKTRACE`
 
-[source,jam]
+[source]
 ----
 rule BACKTRACE ( )
 ----
@@ -799,7 +809,7 @@ to generate useful diagnostic messages from Jam rules.
 [[jam.language.rules.builtins.utility._update__]]
 ===== `UPDATE`
 
-[source,jam]
+[source]
 ----
 rule UPDATE ( targets * )
 ----
@@ -818,7 +828,7 @@ updated. To support changing of the update list in more useful ways, the
 rule also returns the targets previously in the update list. This makes
 it possible to add targets as such:
 
-[source,jam]
+[source]
 ----
 local previous-updates = [ UPDATE ] ;
 UPDATE $(previous-updates) a-new-target ;
@@ -827,7 +837,7 @@ UPDATE $(previous-updates) a-new-target ;
 [[jam.language.rules.builtins.utility._w32_getreg__]]
 ===== `W32_GETREG`
 
-[source,jam]
+[source]
 ----
 rule W32_GETREG ( path : data ? )
 ----
@@ -854,7 +864,7 @@ type and other unsupported types will be put into a string without
 modification. If it can't receive the value of the data, it just return
 an empty list. For example,
 
-[source,jam]
+[source]
 ----
 local PSDK-location =
   [ W32_GETREG HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\MicrosoftSDK\\Directories : "Install Dir" ] ;
@@ -863,7 +873,7 @@ local PSDK-location =
 [[jam.language.rules.builtins.utility._w32_getregnames__]]
 ===== `W32_GETREGNAMES`
 
-[source,jam]
+[source]
 ----
 rule W32_GETREGNAMES ( path : result-type )
 ----
@@ -885,7 +895,7 @@ Depending on '_result-type_', the rule returns one of the following:
 If '_result-type_' is not recognized, or requested data cannot be
 retrieved, the rule returns an empty list. Example:
 
-[source,jam]
+[source]
 ----
 local key = "HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\App Paths" ;
 local subkeys = [ W32_GETREGNAMES "$(key)" : subkeys ] ;
@@ -903,7 +913,7 @@ for local subkey in $(subkeys)
 [[jam.language.rules.builtins.utility._shell__]]
 ===== `SHELL`
 
-[source,jam]
+[source]
 ----
 rule SHELL ( command : * )
 ----
@@ -932,7 +942,7 @@ case.
 [[jam.language.rules.builtins.utility._md5__]]
 ===== `MD5`
 
-[source,jam]
+[source]
 ----
 rule MD5 ( string )
 ----
@@ -943,7 +953,7 @@ returns it.
 [[jam.language.rules.builtins.utility._split_by_characters__]]
 ===== `SPLIT_BY_CHARACTERS`
 
-[source,jam]
+[source]
 ----
 rule SPLIT_BY_CHARACTERS ( string : delimiters )
 ----
@@ -954,7 +964,7 @@ character present in _delimiters_ and returns the resulting list.
 [[jam.language.rules.builtins.utility._precious__]]
 ===== `PRECIOUS`
 
-[source,jam]
+[source]
 ----
 rule PRECIOUS ( targets * )
 ----
@@ -966,7 +976,7 @@ fails.
 [[jam.language.rules.builtins.utility._pad__]]
 ===== `PAD`
 
-[source,jam]
+[source]
 ----
 rule PAD ( string : width )
 ----
@@ -978,7 +988,7 @@ _string_ unmodified.
 [[jam.language.rules.builtins.utility._file_open__]]
 ===== `FILE_OPEN`
 
-[source,jam]
+[source]
 ----
 rule FILE_OPEN ( filename : mode )
 ----
@@ -991,7 +1001,7 @@ descriptor number.
 [[jam.language.rules.builtins.utility._update_now__]]
 ===== `UPDATE_NOW`
 
-[source,jam]
+[source]
 ----
 rule UPDATE_NOW ( targets * : log ? : ignore-minus-n ? )
 ----
@@ -1008,6 +1018,7 @@ specified on the command line.
 
 `B2` has several simple flow-of-control statements:
 
+[source]
 ----
 for var in list { statements }
 ----
@@ -1015,6 +1026,7 @@ for var in list { statements }
 Executes _statements_ for each element in _list_, setting the variable
 _var_ to the element value.
 
+[source]
 ----
 if cond { statements }
 [ else { statements } ]
@@ -1050,6 +1062,7 @@ Does the obvious; the `else` clause is optional. _cond_ is built of:
 `( cond )`::
   precedence grouping
 
+[source]
 ----
 include file ;
 ----
@@ -1063,6 +1076,7 @@ phase. The primary input file and all the included file(s) are treated
 as a single file; that is, `b2` infers no scope boundaries from included
 files.
 
+[source]
 ----
 local vars [ = values ] ;
 ----
@@ -1076,6 +1090,7 @@ of a block (in which case the previous value is restored when the input
 ends). The _vars_ are initialized to _values_ if present, or left
 uninitialized otherwise.
 
+[source]
 ----
 return values ;
 ----
@@ -1083,6 +1098,7 @@ return values ;
 Within a rule body, the return statement sets the return value for an
 invocation of the rule and returns to the caller.
 
+[source]
 ----
 switch value
 {
@@ -1108,6 +1124,7 @@ values may include the following wildcards:
 `\x`::
   match _x_ (escapes the other wildcards)
 
+[source]
 ----
 while cond { statements }
 ----
@@ -1115,12 +1132,14 @@ while cond { statements }
 Repeatedly execute _statements_ while _cond_ remains true upon entry.
 (See the description of _cond_ expression syntax under if, above).
 
+[source]
 ----
 break ;
 ----
 
 Immediately exits the nearest enclosing while or for loop.
 
+[source]
 ----
 continue ;
 ----
@@ -1142,6 +1161,7 @@ specific target.
 
 A variable is defined with:
 
+[source]
 ----
 variable = elements ;
 variable += elements ;
@@ -1342,7 +1362,7 @@ On VMS, `$(var:P)` is the parent directory of `$(var:D)`.
 Boost Jam allows you to declare a local for loop control variable right
 in the loop:
 
-[source,jam]
+[source]
 ----
 x = 1 2 3 ;
 y = 4 5 6 ;
@@ -1498,7 +1518,7 @@ passing the action block as an argument to the shell. The invocation of
 the shell can be controlled by `$(JAMSHELL)`. The default on Unix is,
 for example:
 
-[source,jam]
+[source]
 ----
 JAMSHELL = /bin/sh -c % ;
 ----
@@ -1547,14 +1567,14 @@ rule for `b2` to call *after* an action completes for a target. They
 both give diagnostic information about the action that completed. For
 `+__TIMING_RULE__+` the rule is called as:
 
-[source,jam]
+[source]
 ----
 rule timing-rule ( args * : target : start end user system )
 ----
 
 And `+__ACTION_RULE__+` is called as:
 
-[source,jam]
+[source]
 ----
 rule action-rule ( args * : target : command status start end user system : output ? )
 ----
@@ -1601,6 +1621,7 @@ to write Jam rules which provide a more elegant module interface.
 [[jam.language.modules.declaration]]
 ==== Declaration
 
+[source]
 ----
 module expression { ... }
 ----
@@ -1611,7 +1632,7 @@ and in the namespace of the global module as _module-name_._rule-name_,
 so within a module, other rules in that module may always be invoked
 without qualification:
 
-[source,jam]
+[source]
 ----
 module my_module
 {
@@ -1626,7 +1647,7 @@ When an invoked rule is not found in the current module's namespace, it
 is looked up in the namespace of the global module, so qualified calls
 work across modules:
 
-[source,jam]
+[source]
 ----
 module your_module
 {
@@ -1642,7 +1663,7 @@ execution passes from module A to module B, all the variable bindings
 from A become unavailable, and are replaced by the bindings that belong
 to B. This applies equally to local and global variables:
 
-[source,jam]
+[source]
 ----
 module A
 {
@@ -1671,7 +1692,7 @@ module B
 The only way to access another module's variables is by entering that
 module:
 
-[source,jam]
+[source]
 ----
 rule peek ( module-name ? : variables + )
 {
@@ -1689,6 +1710,7 @@ explains the use of `$(>)` in the peek rule above.
 [[jam.language.modules.local_rules]]
 ==== Local Rules
 
+[source]
 ----
 local rule rulename...
 ----
@@ -1697,6 +1719,7 @@ The rule is declared locally to the current module. It is not entered in
 the global module with qualification, and its name will not appear in
 the result of:
 
+[source]
 ----
 [ RULENAMES module-name ]
 ----
@@ -1704,7 +1727,7 @@ the result of:
 [[jam.language.modules.the__rulenames__rule]]
 ==== The `RULENAMES` Rule
 
-[source,jam]
+[source]
 ----
 rule RULENAMES ( module ? )
 ----
@@ -1716,7 +1739,7 @@ module are returned.
 [[jam.language.modules.the__varnames__rule]]
 ==== The `VARNAMES` Rule
 
-[source,jam]
+[source]
 ----
 rule VARNAMES ( module ? )
 ----
@@ -1733,7 +1756,7 @@ have not returned at the time of the `VARNAMES` invocation.
 
 `IMPORT` allows rule name aliasing across modules:
 
-[source,jam]
+[source]
 ----
 rule IMPORT ( source_module ? : source_rules *
             : target_module ? : target_rules * )
@@ -1748,7 +1771,7 @@ _target_module_. If _source_rules_ contains a name which doesn't
 correspond to a rule in _source_module_, or if it contains a different
 number of items than _target_rules_, an error is issued. For example,
 
-[source,jam]
+[source]
 ----
 # import m1.rule1 into m2 as local rule m1-rule1.
 IMPORT m1 : rule1 : m2 : m1-rule1 ;
@@ -1761,7 +1784,7 @@ IMPORT m1 : [ RULENAMES m1 ] : m2 : [ RULENAMES m1 ] ;
 
 `EXPORT` allows rule name aliasing across modules:
 
-[source,jam]
+[source]
 ----
 rule EXPORT ( module ? : rules * )
 ----
@@ -1770,7 +1793,7 @@ The `EXPORT` rule marks _rules_ from the `source_module` as non-local
 (and thus exportable). If an element of _rules_ does not name a rule in
 _module_, an error is issued. For example,
 
-[source,jam]
+[source]
 ----
 module X {
   local rule r { ECHO X.r ; }
@@ -1783,7 +1806,7 @@ IMPORT X : r : : r ; # OK.
 [[jam.language.modules.the__caller_module__rule]]
 ==== The `CALLER_MODULE` Rule
 
-[source,jam]
+[source]
 ----
 rule CALLER_MODULE ( levels ? )
 ----
@@ -1795,7 +1818,7 @@ module). If the scope belongs to the global module, or if no such module
 exists, returns the empty list. For example, the following prints "\{Y}
 \{X}":
 
-[source,jam]
+[source]
 ----
 module X {
     rule get-caller { return [ CALLER_MODULE ] ; }
@@ -1813,7 +1836,7 @@ ECHO {$(callers)} ;
 [[jam.language.modules.the__delete_module__rule]]
 ==== The `DELETE_MODULE` Rule
 
-[source,jam]
+[source]
 ----
 rule DELETE_MODULE ( module ? )
 ----

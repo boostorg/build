@@ -17,7 +17,7 @@ A feature has a specific value only when building a target, and there
 are two ways you can use that value:
 
 * Use conditional requirements or indirect conditional requirements. See
-link:#bbv2.overview.targets.requirements.conditional[???].
+link:#bbv2.overview.targets.requirements.conditional[the section called “Requirements”].
 * Define a custom generator and a custom main target type. The custom
 generator can do arbitrary processing or properties. See the
 link:#bbv2.extender[extender manual]
