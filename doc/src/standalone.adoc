@@ -3,13 +3,31 @@
 :toclevels: 3
 :sectanchors:
 :sectnums:
-:icons: font
 :nofooter:
 :source-highlighter: pygments
 :source-language: jam
 :highlightjsdir: hljs
 :pygments-style: friendly
+:caution-caption: ⚑
+:important-caption: ‼
+:note-caption: ℹ
+:tip-caption: ☀
+:warning-caption: ⚠
 
+ifdef::backend-html5[]
+++++
+<style>
+.admonitionblock .icon .title {
+font-size: 2.5em;
+text-shadow: 1px 1px 2px rgba(0,0,0,.5); }
+.caution .icon .title { color: rgba(192,51,0,.8); }
+.important .icon .title { color: rgba(192,0,0,.8); }
+.note .icon .title { color: rgba(26,64,128,.8); }
+.tip .icon .title { color: rgba(255,192,0,.8); }
+.warning .icon .title { color: rgba(192,102,0,.8); }
+</style>
+++++
+endif::[]
 
 include::howto.adoc[]
 
