@@ -63,7 +63,7 @@ feature is `optional` and is not `propagated` to dependent targets. If no value
 for this feature is specified, then one is copied from the feature
 `debug-symbols`.
 
-|# end::doc[]
+|# # end::doc[]
 
 feature.subfeature sass : line-numbers : on off : optional ;
 
