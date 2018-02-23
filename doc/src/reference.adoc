@@ -1438,6 +1438,7 @@ on library B. As the result, whenever an application will link to A, it
 will also link to B. Specifying B as dependency of A is different from
 adding B to the sources of A.
 
+[[bbv2.reference.features.attributes.base]]
 Features that are neither free nor incidental are called _base_
 features.
 
