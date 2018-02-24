@@ -545,6 +545,12 @@ local rule compute-default-paths ( target-os : version ? : prefix ? :
     else
     {
         includes ?= $(prefix)/include/python$(version) ;
+        if $(sys.abiflags)
+        {
+            # Calling "sys.abiflags" does not throw an exception, which 
+            # indicates this is not a build from source distro.
+            includes ?= $(includes)$(sys.abiflags) ;
+        }
 
         local lib = $(exec-prefix)/lib ;
         libraries ?= $(lib)/python$(version)/config $(lib) ;
@@ -746,7 +752,7 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     {
         # Values to be extracted from python's sys module. These will be set by
         # the probe rule, above, using Jam's dynamic scoping.
-        local sys-elements = version platform prefix exec_prefix executable ;
+        local sys-elements = version platform prefix exec_prefix executable abiflags ;
         local sys.$(sys-elements) ;
 
         # Compute the string Python's sys.platform needs to match. If not
