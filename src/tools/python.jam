@@ -548,7 +548,8 @@ local rule compute-default-paths ( target-os : version ? : prefix ? :
         if $(sys.abiflags)
         {
             # Calling "sys.abiflags" does not throw an exception, which 
-            # indicates this is not a build from source distro.
+            # indicates this is neither a Python 2 build, nor a build from
+            # source distro.
             includes ?= $(includes)$(sys.abiflags) ;
         }
 
