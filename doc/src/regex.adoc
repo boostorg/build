@@ -62,4 +62,4 @@ Replaces occurrences of a match string in a given list of strings and
 returns a list of new strings. The match string can be a regex
 expression.
 
-See also: link:#jam.language.rules.builtins.utility._match__[MATCH]
+See also: link:#jam.language.rules.builtins.utility.\_match__[MATCH]
