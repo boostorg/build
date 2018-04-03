@@ -1167,4 +1167,3 @@ rule __test__ ( )
         assert.equal x : y ;
     }
 }
-
