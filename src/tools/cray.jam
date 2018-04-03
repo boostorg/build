@@ -140,6 +140,15 @@ rule init ( : : options * : requirements * )
         build = [ MATCH "(.......)................................." : $(build) ] ;
     }
 
+    # IMPORTANT: 'set-cray-feature-defaults' causes the Boost.Build tests to
+    # fail. I tried using an 'init' argument called 'ignore-cray-defaults' and
+    # setting up 'test-config.jam' to pass 'ignore-cray-defaults' during
+    # testing, but I couldn't get the test to read my 'test-config.jam' file
+    # when running tests individually. So, I just comment out
+    # 'set-cray-feature-defaults' during testing.
+
+    set-cray-feature-defaults ;
+
     {
 
         # 'check-init-parameters' ensures that each time a toolset is initialized,
@@ -202,6 +211,27 @@ rule check-prgenv-module ( toolset )
     }
 }
 
+rule set-cray-feature-defaults ( )
+{
+
+    # CCE users expect that using the 'cray' toolset without any explicit
+    # options will give them the same result as invoking CCE without any
+    # explicit options. So, we set feature defaults to match the default CCE
+    # options.
+    #
+    # The decision to turn off <debug-symbols> by default was a tough one.
+    # When CCE produces debugging symbols, it disables all inlining. This
+    # causes a decrease in performance, which the user probably was not
+    # expecting since they thought they were compiling with default CCE
+    # options.
+
+    feature.set-default cxxstd-dialect : gnu ;
+    feature.set-default debug-symbols  : off ;
+    feature.set-default optimization   : default ;
+    feature.set-default inlining       : default ;
+    feature.set-default vectorize      : default ;
+}
+
 ###
 ### Command line options
 ###
@@ -241,12 +271,12 @@ feature.extend toolset : cray ;
 # 'cray' is not the first value added to '<toolset>'. Therefore, we need
 # to call 'feature.set-default'.
 #
-# If the build request specified a '<toolset>' (e.g. on the command line),
-# then our default will not be used. However, if the 'cray' toolset was
-# selected as the default in 'user-config.jam', then the build request
-# will use the default '<toolset>'. Therefore, we must use
-# 'feature.set-default' so that default selecting the 'cray' toolset in
-# 'user-config.jam' works correctly.
+# If the build request specifies a '<toolset>' (e.g. on the command line),
+# then the '<toolset>' feature default is ignored. However, if the 'cray'
+# toolset is selected in 'user-config.jam' (e.g. with 'using cray ;'),
+# then the build request will use the '<toolset>' feature default.
+# Therefore, we must use 'feature.set-default' so that selecting the
+# 'cray' toolset in 'user-config.jam' works correctly.
 
 feature.set-default toolset : cray ;
 
@@ -257,13 +287,6 @@ feature.set-default toolset : cray ;
 # turn the feature off. 'default' will not include an additional command
 # line argument, but will do optimization, inlining, and vectorizing at
 # whatever default level CCE uses.
-#
-# A user wishing to use CCE's default values may put the following in
-# their 'user-config.jam' file:
-#
-# feature.set-default optimization : default ;
-# feature.set-default inlining     : default ;
-# feature.set-default vectorize    : default ;
 
 feature.extend optimization : default ;
 feature.extend inlining     : default ;
