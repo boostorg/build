@@ -88,7 +88,7 @@ rule init ( : : options * : requirements * )
     check-prgenv-module $(toolset) ;
 
     local command-c = [ validate-command $(toolset) cc ] ;
-    local command-c++ = [ validate-command $(toolset) CC ] ;
+    local command-cxx = [ validate-command $(toolset) CC ] ;
     local command-fortran = [ validate-command $(toolset) ftn ] ;
 
     # Archive builder.
@@ -104,7 +104,7 @@ rule init ( : : options * : requirements * )
     local version = ;
     local developer-build = ;
     {
-        local version-string = [ SHELL "\"$(command-c++)\" -VV 2>&1" ] ;
+        local version-string = [ SHELL "\"$(command-cxx)\" -VV 2>&1" ] ;
         local version-components = [ MATCH "Version ([0-9]+).([0-9]+).([a-zA-Z0-9]+)" : $(version-string) ] ;
         if ! [ MATCH "([0-9]+)" : $(version-components[3]) ]
         {
@@ -133,7 +133,7 @@ rule init ( : : options * : requirements * )
         # If this is a developer build, we want to add the build subfeature to the
         # compiler.
 
-        local version-string = [ SHELL "\"$(command-c++)\" -VV 2>&1" ] ;
+        local version-string = [ SHELL "\"$(command-cxx)\" -VV 2>&1" ] ;
         build = [ MATCH "[(][0-9]+_([0-9a-fA-F]+)[)]" : $(version-string) ] ;
 
         # Truncate build hash to 7 characters
@@ -171,7 +171,7 @@ rule init ( : : options * : requirements * )
         handle-options
             $(toolset)
           : $(identifying-condition)
-          : $(command-c) $(command-c++) $(command-fortran) $(command-ar) $(command-ranlib)
+          : $(command-c) $(command-cxx) $(command-fortran) $(command-ar) $(command-ranlib)
           : $(options) ;
 
         # Add compiler version to 'VERSION' variable on all targets. 'VERSION' is
@@ -941,7 +941,7 @@ local rule options-helper ( rule-or-module variable-name condition * : feature o
 rule handle-options (
     toolset
   : toolset-condition *
-  : command-c command-c++ command-fortran command-ar command-ranlib
+  : command-c command-cxx command-fortran command-ar command-ranlib
   : options *
 )
 {
@@ -958,7 +958,7 @@ rule handle-options (
     # variable the way the 'gcc' toolset does.
 
     toolset.flags $(toolset) CONFIG_COMMAND_C $(toolset-condition) : $(command-c) : unchecked ;
-    toolset.flags $(toolset) CONFIG_COMMAND_CXX $(toolset-condition) : $(command-c++) : unchecked ;
+    toolset.flags $(toolset) CONFIG_COMMAND_CXX $(toolset-condition) : $(command-cxx) : unchecked ;
     toolset.flags $(toolset) CONFIG_COMMAND_FORTRAN $(toolset-condition) : $(command-fortran) : unchecked ;
     toolset.flags $(toolset).archive .AR $(toolset-condition) : $(command-ar) : unchecked ;
     toolset.flags $(toolset).archive .RANLIB $(toolset-condition) : $(command-ranlib) : unchecked ;
@@ -1092,7 +1092,7 @@ rule log ( log-level prefix ? : * )
         local message = $($(message-arg)) ;
         if $(message)
         {
-            ECHO $(log-level): $(prefix): $(message) ;
+            ECHO "$(log-level):" "$(prefix):" $(message) ;
         }
     }
 }
