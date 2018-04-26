@@ -1,13 +1,45 @@
-# Copyright 2004,2006 Vladimir Prus
-# Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+#|
+Copyright 2004,2006 Vladimir Prus
+Copyright 2018 Rene Rivera
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+|#
+
+#|
+Doc generation works in two mode: standalone embedded and website.
+
+For the standalone we just generate the local html for inclusion in a release
+archive. This is the default when no arguments are given.
+
+For the website we clone the website branch locally, generatate the docs in
+the website tree, commit, and push. The default for those arguments is to
+build as if we are doing "develop" branch docs.
+
+b2 --website-dir=website --website-doc-dir=manual/develop website
+|#
 
 import asciidoctor ;
+import modules ;
+import path ;
+
+project b2doc
+    ;
 
 path-constant PYGMENTS_DIR : src/pygments ;
 
-project tools/build/doc
-    ;
+doc-dir = [ MATCH "--doc-dir=(.*)" : [ modules.peek : ARGV ] ] ;
+doc-dir ?= html ;
+
+website = [ MATCH "(website)" : [ modules.peek : ARGV ] ] ;
+website-dir = [ MATCH "--website-dir=(.*)" : [ modules.peek : ARGV ] ] ;
+website-dir ?= website ;
+website-doc-dir = [ MATCH "--website-doc-dir=(.*)" : [ modules.peek : ARGV ] ] ;
+website-doc-dir ?= manual/develop ;
+if $(website)
+{
+    doc-dir = $(website-dir)/$(website-doc-dir) ;
+}
+ECHO $(website) .. $(website-dir) .. $(website-doc-dir) .. $(doc-dir) ;
 
 html index : src/standalone.adoc :
     :
@@ -17,16 +49,52 @@ html index : src/standalone.adoc :
     ;
 explicit index ;
 
-install html-hljs : [ glob src/hljs/*.js ] : <location>html/hljs ;
-explicit html-hljs ;
-
-install html-hljs-styles : [ glob src/hljs/styles/*.css ] : <location>html/hljs/styles ;
-explicit html-hljs-styles ;
-
-install html : index : <location>html ;
+install html : index : <location>$(doc-dir) <dependency>website-html ;
 explicit html ;
 
-alias standalone-html : html html-hljs html-hljs-styles ;
+alias standalone-html : html ;
+
+if $(website)
+{
+    make website-checkout : : @website-checkout ;
+    make website-publish : html : @website-publish ;
+    alias website-html : website-checkout ;
+}
+else
+{
+    alias website-checkout ;
+    alias website-publish ;
+    alias website-html ;
+}
+alias website : website-publish ;
+explicit website-checkout ;
+explicit website-publish ;
+explicit website-html ;
+explicit website ;
+
+###############################################################################
+
+actions website-checkout
+{
+    rm -rf "$(website-dir)"
+    git clone --verbose -b gh-pages "https://github.com/boostorg/build.git" "$(website-dir)" || exit 1
+    pushd "$(website-dir)" > /dev/null
+    git rm --ignore-unmatch -r "$(website-doc-dir)" || exit 1
+    mkdir -p "$(website-doc-dir)" || exit 1
+    popd > /dev/null
+    echo "done" > "$(<)"
+}
+
+actions website-publish
+{
+    pushd "$(website-dir)/$(website-doc-dir)" > /dev/null
+    git add --verbose . || exit 1
+    git commit -m "Update user manual."
+    git push || exit 1
+    popd > /dev/null
+    rm -rf "$(website-dir)"
+    echo "done" > "$(<)"
+}
 
 ###############################################################################
 
