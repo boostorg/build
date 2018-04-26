@@ -59,6 +59,8 @@ if $(website)
     make website-checkout : : @website-checkout ;
     make website-publish : html : @website-publish ;
     alias website-html : website-checkout ;
+    always website-checkout ;
+    always website-publish ;
 }
 else
 {
