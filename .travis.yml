@@ -5,73 +5,61 @@ branches:
     - develop
     - /feature\/.*/
 language: cpp
-install:
-  - mkdir -p .travis
-  - echo "pushd src/engine" > .travis/test.sh
-  - echo "./build.sh" >> .travis/test.sh
-  - echo "popd" >> .travis/test.sh
-  - echo "./bootstrap.sh --with-toolset=\$\{TOOLSET\}" >> .travis/test.sh
-  - echo "pushd test" >> .travis/test.sh
-  - echo "python test_all.py \$\{TOOLSET\}" >> .travis/test.sh
-  - echo "popd" >> .travis/test.sh
-  - echo "git config user.email \"b2-bot\"" > .travis/website.sh
-  - echo "git config user.name \"b2-bot\"" >> .travis/website.sh
-  - echo "pushd src/engine" >> .travis/website.sh
-  - echo "./build.sh" >> .travis/website.sh
-  - echo "popd" >> .travis/website.sh
-  - echo "./bootstrap.sh" >> .travis/website.sh
-  - echo "pushd doc" >> .travis/website.sh
-  - echo "../b2 --website-doc-dir=manual/develop website" >> .travis/website.sh
+script:
+  - pushd src/engine
+  - ./build.sh
+  - popd
+  - ./bootstrap.sh --with-toolset=${TOOLSET}
+  - pushd test
+  - python test_all.py ${TOOLSET}
+  - popd
 stages:
   - name: test
   - name: website update
     if: branch IN (feature/new-doc-format,develop)
-job:
+jobs:
   include:
-    - script: bash .travis/test.sh
-      os: linux
+    - os: linux
       dist: precise
       env: TOOLSET=gcc
-    - script: bash .travis/test.sh
-      os: linux
+    - os: linux
       dist: precise
       env: TOOLSET=clang
-    - script: bash .travis/test.sh
-      os: linux
+    - os: linux
       dist: trusty
       env: TOOLSET=gcc
-    - script: bash .travis/test.sh
-      os: linux
+    - os: linux
       dist: trusty
       env: TOOLSET=clang
-    - script: bash .travis/test.sh
-      os: osx
+    - os: osx
       osx_image: xcode9.2
       env: TOOLSET=clang
-    - script: bash .travis/test.sh
-      os: osx
+    - os: osx
       osx_image: xcode9.1
       env: TOOLSET=clang
-    - script: bash .travis/test.sh
-      os: osx
+    - os: osx
       osx_image: xcode9
       env: TOOLSET=clang
-    - script: bash .travis/test.sh
-      os: osx
+    - os: osx
       osx_image: xcode8.3
       env: TOOLSET=clang
-    - script: bash .travis/test.sh
-      os: osx
+    - os: osx
       osx_image: xcode8
       env: TOOLSET=clang
-    - script: bash .travis/test.sh
-      os: osx
+    - os: osx
       osx_image: xcode7.3
       env: TOOLSET=clang
-    - script: bash .travis/test.sh
-      os: osx
+    - os: osx
       osx_image: xcode6.4
       env: TOOLSET=clang
     - stage: website update
-      script: bash .travis/website.sh
       os: linux
+      script:
+        - git config user.email "b2-bot"
+        - git config user.name "b2-bot"
+        - pushd src/engine
+        - ./build.sh
+        - popd
+        - ./bootstrap.sh --with-toolset=${TOOLSET}
+        - pushd doc
+        - ../b2 --website-doc-dir=manual/develop website
