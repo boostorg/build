@@ -9,6 +9,7 @@ install:
   - gem install asciidoctor
   - gem install pygments.rb
   - pip install --user Pygments
+  - pip install --user https://github.com/bfgroup/jam_pygments/archive/master.zip
 script:
   - pushd src/engine
   - ./build.sh
