@@ -187,5 +187,33 @@ obj foo : foo.cpp :
 
     t.cleanup()
 
+def test_choose_none():
+    """Tests choose when none of the alternatives match."""
+    t = BoostBuild.Tester(use_test_config=0)
+    t.write("Jamroot", """
+import configure ;
+obj fail : fail.cpp ;
+explicit pass fail ;
+obj foo : foo.cpp :
+  [ configure.choose "which one?" : fail <define>FAIL ] ;
+""")
+    t.write("fail.cpp", "#error fail.cpp\n")
+    t.write("foo.cpp", """
+#ifdef FAIL
+#error FAIL is defined
+#endif
+""")
+    t.run_build_system()
+    t.expect_output_lines([
+        "    - which one?               : none"])
+
+    # An up-to-date build should use the cache
+    t.run_build_system()
+    t.expect_output_lines([
+        "    - which one?               : none (cached)"])
+    t.expect_nothing_more()
+    t.cleanup()
+
 test_check_target_builds()
 test_choose()
+test_choose_none()
