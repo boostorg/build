@@ -70,6 +70,7 @@ jobs:
       script:
         - git config user.email "b2-bot"
         - git config user.name "b2-bot"
+        - echo "using asciidoctor ;" >> project-config.jam
         - pushd src/engine
         - ./build.sh
         - popd
