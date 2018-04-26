@@ -79,7 +79,7 @@ explicit website ;
 actions website-checkout
 {
     rm -rf "$(website-dir)"
-    git clone --verbose -b gh-pages "https://github.com/boostorg/build.git" "$(website-dir)" || exit 1
+    git clone --verbose --branch gh-pages --depth 1 "https://${GH_TOKEN}github.com/boostorg/build.git" "$(website-dir)" || exit 1
     pushd "$(website-dir)" > /dev/null
     git rm --ignore-unmatch -r "$(website-doc-dir)" || exit 1
     mkdir -p "$(website-doc-dir)" || exit 1

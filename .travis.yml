@@ -4,14 +4,22 @@ branches:
     - master
     - develop
     - /feature\/.*/
-env:
-  matrix:
-    - TRAVIS_EMPTY_JOB_WORKAROUND=true
-matrix:
-  exclude:
-    - env: TRAVIS_EMPTY_JOB_WORKAROUND=true
+language: cpp
+script:
+  - pushd src/engine
+  - ./build.sh
+  - popd
+  - ./bootstrap.sh --with-toolset=${TOOLSET}
+  - pushd test
+  - python test_all.py ${TOOLSET}
+  - popd
+stages:
+  - name: website update
+    if: branch IN (feature/new-doc-format,develop)
+job:
   include:
-    - os: linux
+    - stage: test
+      os: linux
       dist: precise
       env: TOOLSET=gcc
     - os: linux
@@ -44,11 +52,14 @@ matrix:
     - os: osx
       osx_image: xcode6.4
       env: TOOLSET=clang
-language: cpp
-script:
-  - cd src/engine
-  - ./build.sh
-  - cd ../..
-  - ./bootstrap.sh --with-toolset=${TOOLSET}
-  - cd test
-  - python test_all.py ${TOOLSET}
+    - stage: website update
+      os: linux
+      script:
+        - git config user.email "b2-bot"
+        - git config user.name "b2-bot"
+        - pushd src/engine
+        - ./build.sh
+        - popd
+        - ./bootstrap.sh --with-toolset=${TOOLSET}
+        - pushd doc
+        - ../b2 --website-doc-dir=manual/develop website
