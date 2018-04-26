@@ -19,44 +19,52 @@ script:
   - popd
 stages:
   - name: test
-    if: NOT branch IN (feature/new-doc-format)
   - name: website update
     if: branch IN (feature/new-doc-format,develop)
 jobs:
   include:
     - os: linux
-      dist: precise
-      env: TOOLSET=gcc
-    - os: linux
-      dist: precise
-      env: TOOLSET=clang
-    - os: linux
       dist: trusty
       env: TOOLSET=gcc
     - os: linux
       dist: trusty
       env: TOOLSET=clang
+    - os: linux
+      dist: precise
+      env: TOOLSET=gcc
+      if: NOT branch IN (feature/new-doc-format)
+    - os: linux
+      dist: precise
+      env: TOOLSET=clang
+      if: NOT branch IN (feature/new-doc-format)
     - os: osx
       osx_image: xcode9.2
       env: TOOLSET=clang
+      if: NOT branch IN (feature/new-doc-format)
     - os: osx
       osx_image: xcode9.1
       env: TOOLSET=clang
+      if: NOT branch IN (feature/new-doc-format)
     - os: osx
       osx_image: xcode9
       env: TOOLSET=clang
+      if: NOT branch IN (feature/new-doc-format)
     - os: osx
       osx_image: xcode8.3
       env: TOOLSET=clang
+      if: NOT branch IN (feature/new-doc-format)
     - os: osx
       osx_image: xcode8
       env: TOOLSET=clang
+      if: NOT branch IN (feature/new-doc-format)
     - os: osx
       osx_image: xcode7.3
       env: TOOLSET=clang
+      if: NOT branch IN (feature/new-doc-format)
     - os: osx
       osx_image: xcode6.4
       env: TOOLSET=clang
+      if: NOT branch IN (feature/new-doc-format)
     - stage: website update
       os: linux
       script:
