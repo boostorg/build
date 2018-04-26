@@ -5,6 +5,10 @@ branches:
     - develop
     - /feature\/.*/
 language: cpp
+install:
+  - gem install asciidoctor
+  - gem install pygments.rb
+  - pip install --user Pygments
 script:
   - pushd src/engine
   - ./build.sh
@@ -15,6 +19,7 @@ script:
   - popd
 stages:
   - name: test
+    if: NOT branch IN (feature/new-doc-format)
   - name: website update
     if: branch IN (feature/new-doc-format,develop)
 jobs:
