@@ -5,11 +5,6 @@ branches:
     - develop
     - /feature\/.*/
 language: cpp
-install:
-  - gem install asciidoctor
-  - gem install pygments.rb
-  - pip install --user Pygments
-  - pip install --user https://github.com/bfgroup/jam_pygments/archive/master.zip
 script:
   - pushd src/engine
   - ./build.sh
@@ -60,6 +55,10 @@ jobs:
     - stage: website update
       os: linux
       script:
+        - gem install asciidoctor
+        - gem install pygments.rb
+        - pip install --user Pygments
+        - pip install --user https://github.com/bfgroup/jam_pygments/archive/master.zip
         - git config user.email "b2-bot"
         - git config user.name "b2-bot"
         - echo "using asciidoctor ;" >> project-config.jam
