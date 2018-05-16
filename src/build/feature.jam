@@ -1080,6 +1080,15 @@ rule add-defaults ( properties * )
     local missing-top = [ set.difference $(.all-top-features) : $(properties:G) ] ;
     local more =  [ defaults $(missing-top) ] ;
 
+    local xproperties = [ MATCH "^([^:]+)$" : $(properties) ] $(more) ;
+    for local p in $(xproperties)
+    {
+        local s = $($(p:G).subfeatures) ;
+        local f = [ utility.ungrist $(p:G) ] ;
+        local missing-subs = [ set.difference <$(f)-$(s)> : $(properties:G) ] ;
+        properties += [ defaults [ select-subfeatures $(p) : $(missing-subs) ] ] ;
+    }
+
     # This is similar to property.refine, except that it
     # does not remove subfeatures, because we might be adding
     # the default value of a subfeature.
