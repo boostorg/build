@@ -1094,7 +1094,7 @@ rule add-defaults ( properties * )
 
     local worklist = $(properties) $(more) ;
     local expanded-from-composite ;
-    local to-expand ;
+    local to-expand = $(more) ;
     while $(worklist)
     {
         # Add defaults for subfeatures of features which are present.
