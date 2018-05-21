@@ -56,8 +56,8 @@ rule init ( version ? :  command * : options * )
     local command-string = $(command:J=" ") ;
     if $(command)
     {    
-        version ?= [ MATCH "^([0-9.]+)"
-            : [ SHELL "$(command-string) -dumpversion" ] ] ;
+        version ?= [ MATCH "version ([0-9]+[.][0-9]+)"
+            : [ SHELL "$(command-string) --version" ] ] ;
     }
 
     local condition = [ common.check-init-parameters clang
