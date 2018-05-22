@@ -1092,7 +1092,7 @@ rule add-defaults ( properties * )
         }
     }
 
-    local worklist = $(properties) ;
+    local worklist = $(properties) $(more) ;
     local expanded-from-composite ;
     local to-expand = $(more) ;
     while $(worklist)
