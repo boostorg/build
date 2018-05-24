@@ -628,8 +628,6 @@ of "app" for implicit-dependencies, it should consider targets from
 [[bbv2.tasks.crosscompile]]
 == Cross-compilation
 
-cross compilation
-
 Boost.Build supports cross compilation with the gcc and msvc toolsets.
 
 When using gcc, you first need to specify your cross compiler in
@@ -670,3 +668,64 @@ When using the msvc compiler, it's only possible to cross-compile to a
 64-bit system on a 32-bit host. Please see
 link:#bbv2.reference.tools.compiler.msvc.64[the section called “64-bit support”]
 for details.
+
+[[bbv2.tasks.packagemanagers]]
+== Package Managers
+
+Boost.Build support automatic, or manual, loading of generated build files
+from package managers. For example using the Conan package manager which
+generates `conanbuildinfo.jam` files B2 will load that files automatically
+when it loads the project at the same location. The included file can
+define targets and other project declarations in the context of the
+project it's being loaded into. Control over what package manager file
+is loaded can be controlled with (in order of priority):
+
+* With the `use-packages` rule.
+* Command line argument `--use-package-manager=X`.
+* Environment variable `PACKAGE_MANAGER_BUILD_INFO`.
+* Built-in detection of the file. Currently this includes: "conan".
+
+**`use-packages` rule:**
+
+[source]
+----
+rule use-packages ( name-or-glob-pattern ? )
+----
+
+The `use-packages` rule allows one to specify in the projects themselves kind
+of package definitions to use either as the ones for a built-in package
+manager support. For example:
+
+[source]
+----
+use-packages conan ;
+----
+
+Or to specify a `glob` pattern to find the file with the definitions. For
+instance:
+
+[source]
+----
+use-packages "packages.jam" ;
+----
+
+**`--use-package-manager` command line option:**
+
+The `--use-package-manager=NAME` command line option allows one to
+non-instrusively specify per invocation which of the built-in package manager
+types to use.
+
+**`PACKAGE_MANAGER_BUILD_INFO` variable:**
+
+The `PACKAGE_MANAGER_BUILD_INFO` variable, which is taken from the environment
+or defined with the `-sX=Y` option, specifies a `glob` pattern to use to find
+the package definitions.
+
+**Built-in detection:**
+
+There are a number of built-in `glob` patterns to support popular package
+managers. Currently the supported ones are:
+
+* Conan (`conan`): currently supports the
+  link:https://bintray.com/bfgroup/public-conan/b2gen%3Abfgroup[`b2gen`]
+  generator.
