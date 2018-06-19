@@ -114,7 +114,5 @@ actions website-publish
 alias boostdoc ;
 explicit boostdoc ;
 
-# TODO: Enable doc build when this is merged: https://github.com/boostorg/release-tools/pull/9
-# alias boostrelease : standalone-html ;
-alias boostrelease ;
+alias boostrelease : standalone-html ;
 explicit boostrelease ;
