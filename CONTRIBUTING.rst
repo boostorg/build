@@ -23,7 +23,7 @@ Additional resources include
 
 - The issue tracker
 
-  https://github.com/boostorg/build
+  https://github.com/boostorg/build/issues
 
 - mailing list
 
