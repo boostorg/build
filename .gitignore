@@ -1,4 +1,5 @@
 *.py[co]
+/.vscode
 /doc/bin
 /doc/html
 /b2
