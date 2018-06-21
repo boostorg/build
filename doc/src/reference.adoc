@@ -1301,8 +1301,9 @@ not contain the '`>`' character.
 
 Each feature in a build configuration has one or more associated
 __value__s. Feature values for non-free features may not contain the
-'`<`', '`:`', or '`=`' characters. Feature values for free features may
-not contain the '`<`' character.
+punctuation characters of pointy bracket (‘`<`’), colon (‘`:`’ ),
+equal sign (‘`=`’) and dashes (‘`-`’). Feature values for free
+features may not contain the pointy bracket (‘`<`’) character.
 
 A _property_ is a (feature,value) pair, expressed as <feature>value.
 
@@ -1315,9 +1316,9 @@ hierarchy.
 A _value-string_ for a feature *F* is a string of the form
 `value-subvalue1-subvalue2`...`-subvalueN`, where `value` is a legal
 value for *F* and `subvalue1`...`subvalueN` are legal values of some of
-*F*'s subfeatures. For example, the properties
-`<toolset>gcc <toolset-version>3.0.1` can be expressed more concisely
-using a value-string, as `<toolset>gcc-3.0.1`.
+*F*'s subfeatures separated with dashes (‘`-`’).
+For example, the properties `<toolset>gcc <toolset-version>3.0.1` can
+be expressed more concisely using a value-string, as `<toolset>gcc-3.0.1`.
 
 A _property set_ is a set of properties (i.e. a collection without
 duplicates), for instance: `<toolset>gcc <runtime-link>static`.
