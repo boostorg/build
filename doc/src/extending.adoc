@@ -4,9 +4,9 @@
 [[bbv2.extender.intro]]
 == Introduction
 
-This section explains how to extend Boost.Build to accomodate your local
+This section explains how to extend Boost.Build to accommodate your local
 requirements -- primarily to add support for non-standard tools you
-have. Before we start, be sure you have read and understoon the concept
+have. Before we start, be sure you have read and understood the concept
 of metatarget, <<bbv2.overview.concepts>>, which is critical to
 understanding the remaining material.
 
@@ -370,7 +370,7 @@ created. That object has specific types of targets that it accepts and
 produces. Using that information, Boost.Build is able to automatically
 invoke the generator. For example, if you declare a generator that takes
 a target of the type `D` and produces a target of the type `OBJ`, when
-placing a file with extention `.d` in a list of sources will cause
+placing a file with extension `.d` in a list of sources will cause
 Boost.Build to invoke your generator, and then to link the resulting
 object file into an application. (Of course, this requires that you
 specify that the `.d` extension corresponds to the `D` type.)
@@ -421,7 +421,7 @@ linker.
 
 You should also know about two specific functions for registering
 generators: `generators.register-c-compiler` and
-`generators.register-linker`. The first sets up header dependecy
+`generators.register-linker`. The first sets up header dependency
 scanning for C files, and the seconds handles various complexities like
 searched libraries. For that reason, you should always use those
 functions when adding support for compilers and linkers.
@@ -497,7 +497,7 @@ all targets the executable depends on, and we further find files that
 are not produced from anything. The found targets are added to the
 sources.
 
-The `run` method can be overriden to completely customize the way the
+The `run` method can be overridden to completely customize the way the
 generator works. In particular, the conversion of sources to the desired
 types can be completely customized. Here's another real example. Tests
 for the Boost Python library usually consist of two parts: a Python
@@ -580,7 +580,7 @@ actions inline-file
 ----
 
 We first define a new feature. Then, the `flags` invocation says that
-whenever verbatin.inline-file action is run, the value of the
+whenever verbatim.inline-file action is run, the value of the
 `verbatim-options` feature will be added to the `OPTIONS` variable, and
 can be used inside the action body. You'd need to consult online help
 (--help) to find all the features of the `toolset.flags` rule.
@@ -619,14 +619,14 @@ options.
 command-line flags in your Jamfile, and it will be more likely to work
 with other tools.
 
-*Steps for adding a feauture*
+*Steps for adding a feature*
 
 Adding a feature requires three steps:
 
 1.  Declaring a feature. For that, the "feature.feature" rule is used.
 You have to decide on the set of
 link:#bbv2.reference.features.attributes[feature attributes]:
-* if you want a feature value set for one target to automaticaly
+* if you want a feature value set for one target to automatically
 propagate to its dependant targets then make it “propagated”.
 * if a feature does not have a fixed list of values, it must be “free.”
 For example, the `include` feature is a free feature.
@@ -685,7 +685,7 @@ internal target name in `DEF_FILE` to a corresponding filename in the
 `link` action. Without it the expansion of `$(DEF_FILE)` would be a
 strange symbol that is not likely to make sense for the linker.
 +
-We are almost done, except for adding the follwing code to `msvc.jam`:
+We are almost done, except for adding the following code to `msvc.jam`:
 +
 ----
 rule link
@@ -837,7 +837,7 @@ module several times. You need to check for this and decide what to do.
 Typically, unless you support several versions of a tool, duplicate
 initialization is a user error. If the tool's version can be specified
 during initialization, make sure the version is either always specified,
-or never specified (in which case the tool is initialied only once). For
+or never specified (in which case the tool is initialized only once). For
 example, if you allow:
 +
 ----

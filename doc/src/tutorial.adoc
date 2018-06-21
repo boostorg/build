@@ -124,7 +124,7 @@ link:#bbv2.tutorial.hierarchy[the section called “Project Hierarchies”]).
 For example, the locations of `#include`d header files are normally not
 specified on the command-line, but described in Jamfiles as _target
 requirements_ and automatically combined with the build request for those
-targets. Multithread-enabled compilation is another example of a typical
+targets. Multi-threaded compilation is another example of a typical
 target requirement. The Jamfile fragment below illustrates how these
 requirements might be specified.
 
@@ -138,7 +138,7 @@ exe hello
 
 When `hello` is built, the two requirements specified above will always
 be present. If the build request given on the `b2` command-line
-explictly contradicts a target's requirements, the target requirements
+explicitly contradicts a target's requirements, the target requirements
 usually override (or, in the case of “free” features like
 `<include>`, footnote:[See
 link:#bbv2.reference.features.attributes[the section called “Feature Attributes”]]
@@ -549,5 +549,5 @@ lib pythonlib : : <name>python22_d <variant>debug ;
 ----
 
 A more advanced use of prebuilt targets is described in
-link:#bbv2.recipies.site-config[the section called “Targets in
+link:#bbv2.recipes.site-config[the section called “Targets in
 site-config.jam”].

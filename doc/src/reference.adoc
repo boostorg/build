@@ -507,7 +507,7 @@ will not affect target paths, and will not cause conflicts.
 ** It is relevant for any dependency created by the same main target
 ** It is used in the condition of a conditional property and the corresponding
   value is relevant
-** It is explicitly named as relevent
+** It is explicitly named as relevant
 +
 * Relevant features cannot be automatically deduced in the following cases:
 +
