@@ -118,7 +118,7 @@ lib aux : : <name>aux ;
 When a library references another library you should put that other
 library in its list of sources. This will do the right thing in all
 cases. For portability, you should specify library dependencies even for
-searched and prebuilt libraries, othewise, static linking on Unix will
+searched and prebuilt libraries, otherwise, static linking on Unix will
 not work. For example:
 
 [source]
@@ -411,7 +411,7 @@ boost-test(test-type) path : sources
 ----
 
 It is possible to process the list of tests, Boost.Build output and the
-presense/absense of the `*.test` files created when test passes into
+presence/absence of the `*.test` files created when test passes into
 human-readable status table of tests. Such processing utilities are not
 included in Boost.Build.
 
@@ -434,7 +434,7 @@ unit-test helpers_test
 
 Specifies a file to be passed to the executable on the command line
 after the arguments. All files must be specified in alphabetical order
-due to constrainsts in the current implementation.
+due to constraints in the current implementation.
 
 `testing.launcher`::
 
@@ -476,7 +476,7 @@ commands to run explicitly.
 Three main target rules can be used for that. The `make` rule allows you to
 construct a single file from any number of source file, by running a command
 you specify. The `notfile` rule allows you to run an arbitrary command,
-without creating any files. And finaly, the `generate` rule allows you to
+without creating any files. And finally, the `generate` rule allows you to
 describe a transformation using Boost.Build's virtual targets. This is
 higher-level than the file names that the `make` rule operates with and
 allows you to create more than one target, create differently named targets
@@ -712,7 +712,7 @@ use-packages "packages.jam" ;
 **`--use-package-manager` command line option:**
 
 The `--use-package-manager=NAME` command line option allows one to
-non-instrusively specify per invocation which of the built-in package manager
+non-intrusively specify per invocation which of the built-in package manager
 types to use.
 
 **`PACKAGE_MANAGER_BUILD_INFO` variable:**

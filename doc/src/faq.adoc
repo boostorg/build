@@ -114,7 +114,7 @@ intention in such cases.
 Many users would like to use environment variables in Jamfiles, for
 example, to control the location of external libraries. In many cases it
 is better to declare those external libraries in the site-config.jam
-file, as documented in the link:#bbv2.recipies.site-config[recipes
+file, as documented in the link:#bbv2.recipes.site-config[recipes
 section]. However, if the users already have the environment variables
 set up, it may not be convenient for them to set up their
 site-config.jam files as well and using the environment variables might
@@ -314,7 +314,7 @@ systems differ in this respect. For example, the Debian GNU guidelines
 prohibit any additional search paths while Solaris guidelines suggest
 that they should always be used.
 
-[[bbv2.recipies.site-config]]
+[[bbv2.recipes.site-config]]
 == Targets in site-config.jam
 
 It is desirable to declare standard libraries available on a given

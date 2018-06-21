@@ -52,7 +52,7 @@ Returns a user-readable name for this target.
 +
 Generates virtual targets for this abstract target using the specified
 properties, unless a different value of some feature is required by the
-target. This is an abstract method which must be overriden by derived
+target. This is an abstract method which must be overridden by derived
 classes.
 +
 On success, returns:

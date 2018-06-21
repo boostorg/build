@@ -137,7 +137,7 @@ into modules—there is one global module and a number of named modules.
 Besides that, a link:#bbv2.jam[Boost.Jam] program contains classes and
 class instances.
 
-Syntantically, a link:#bbv2.jam[Boost.Jam] program consists of two kinds
+Syntactically, a link:#bbv2.jam[Boost.Jam] program consists of two kinds
 of elements—keywords (which have a special meaning to
 link:#bbv2.jam[Boost.Jam]) and literals. Consider this code:
 
@@ -707,7 +707,7 @@ either `SYMBOL` or `SYMBOL=VALUE`
 
 |runtime-link
 |shared,static
-|Determines if shared or static version of C and C++ runtimes should be used.
+|Determines if shared or static version of C and C++ runtime should be used.
 |===
 
 If you have more than one version of a given C++ toolset (e.g.
@@ -817,7 +817,7 @@ obtained from main target name by appending system-dependent suffixes
 and prefixes.
 
 The name of a main target can contain alphanumeric characters, dashes,
-undescores and dots. The entire name is significant when resolving
+underscores and dots. The entire name is significant when resolving
 references from other targets. For determining filenames, only the part
 before the first dot is taken. For example:
 

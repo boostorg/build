@@ -28,7 +28,7 @@ Returns a Jam list of the stored properties.
 
 2. `rule str ( )`
 +
-Returns the string repesentation of the stored properties.
+Returns the string representation of the stored properties.
 
 3. `rule propagated ( )`
 +

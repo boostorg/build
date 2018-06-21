@@ -46,5 +46,5 @@ On success, returns:
 +
 Constructs virtual targets for this abstract target. Returns a
 usage-requirements property-set and a list of virtual targets. Should be
-overriden in derived classes.
+overridden in derived classes.
 --

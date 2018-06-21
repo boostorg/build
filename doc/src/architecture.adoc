@@ -52,7 +52,7 @@ to the `generators.construct` function.
 `run` method is called. The method returns a list of virtual targets.
 4.  The virtual targets are returned to the top level code, and for each
 instance, the `actualize` method is called to setup nodes and updating
-actions in the depenendency graph kepts inside Boost.Build engine. This
+actions in the dependency graph kept inside Boost.Build engine. This
 dependency graph is then updated, which runs necessary commands.
 
 [[bbv2.arch.build.metatargets]]
