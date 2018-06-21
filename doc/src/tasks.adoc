@@ -21,9 +21,9 @@ exe hello
 ----
 
 This will create an executable file from the sources--in this case,
-one C++ file, one library file present in the same directory, and
+one {CPP} file, one library file present in the same directory, and
 another library that is created by Boost.Build. Generally, sources can
-include C and C++ files, object files and libraries. Boost.Build will
+include C and {CPP} files, object files and libraries. Boost.Build will
 automatically try to convert targets of other types.
 
 TIP: On Windows, if an application uses shared libraries, and both the
@@ -598,7 +598,7 @@ details.
 == Generated headers
 
 Usually, Boost.Build handles implicit dependendies completely
-automatically. For example, for C++ files, all `#include` statements are
+automatically. For example, for {CPP} files, all `#include` statements are
 found and handled. The only aspect where user help might be needed is
 implicit dependency on generated files.
 

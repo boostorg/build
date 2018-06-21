@@ -62,12 +62,12 @@ The supported toolsets, and whether they are auto-detected, are:
 |`build.bat`
 |Windows NT, 2000, and XP
 |http://www.codegear.com/downloads/free/cppbuilder[`borland`],
-http://www.borland.com/[Borland] C++Builder (BCC 5.5)
+http://www.borland.com/[Borland] {CPP}Builder (BCC 5.5)
 a|
 * Common install location: `C:\Borland\BCC55`
 * `BCC32.EXE` in `PATH`
 
-| | |http://www.comeaucomputing.com/[`como`], Comeau Computing C/C++ |
+| | |http://www.comeaucomputing.com/[`como`], Comeau Computing C/{CPP} |
 
 | | |http://gcc.gnu.org/[`gcc`], GNU GCC |
 
@@ -75,12 +75,12 @@ a|
 
 | |
 |http://www.intel.com/software/products/compilers/c60[`intel-win32`],
-Intel C++ Compiler for Windows
+Intel {CPP} Compiler for Windows
 a|
 * `ICL.EXE` in `PATH`
 
 | | |http://www.metrowerks.com/[`metrowerks`], MetroWerks CodeWarrior
-C/C++ 7.x, 8.x, 9.x
+C/{CPP} 7.x, 8.x, 9.x
 a|
 * `CWFolder` variable configured
 * `MWCC.EXE` in PATH
@@ -90,16 +90,16 @@ http://www.mingw.org/[MinGW] configuration
 a|
 * Common install location: `C:\MinGW`
 
-| | |http://msdn.microsoft.com/visualc/[`msvc`], Microsoft Visual C++
+| | |http://msdn.microsoft.com/visualc/[`msvc`], Microsoft Visual {CPP}
 6.x
 a|
 * `VCVARS32.BAT` already configured
 * `%MSVCDir%` is present in environment
 * Common install locations: `%ProgramFiles%\Microsoft Visual Studio`,
-`%ProgramFiles%\Microsoft Visual C++`
+`%ProgramFiles%\Microsoft Visual {CPP}`
 * `CL.EXE` in `PATH`
 
-| | |http://msdn.microsoft.com/visualc/[`vc7`], Microsoft Visual C++ 7.x
+| | |http://msdn.microsoft.com/visualc/[`vc7`], Microsoft Visual {CPP} 7.x
 a|
 * `VCVARS32.BAT` or `VSVARS32.BAT` already configured
 * `%VS71COMNTOOLS%` is present in environment
@@ -109,7 +109,7 @@ a|
 * `CL.EXE` in `PATH`
 
 | | |http://msdn.microsoft.com/visualc/[`vc8` and `vc9`], Microsoft
-Visual C++ 8.x and 9.x
+Visual {CPP} 8.x and 9.x
 a|
 Detection:
 
@@ -135,7 +135,7 @@ a|
 * `aCC` in `PATH`
 * `uname` is "HP-UX"
 
-| | |http://www.comeaucomputing.com/[`como`], Comeau Computing C/C++
+| | |http://www.comeaucomputing.com/[`como`], Comeau Computing C/{CPP}
 a|
 * `como` in `PATH`
 
@@ -145,18 +145,18 @@ a|
 
 | |
 |http://www.intel.com/software/products/compilers/c60l/[`intel-linux`],
-Intel C++ for Linux
+Intel {CPP} for Linux
 a|
 * `icc` in `PATH`
 * Common install locations: `/opt/intel/cc/9.0`, `/opt/intel_cc_80`,
   `/opt/intel/compiler70`, `/opt/intel/compiler60`, `/opt/intel/compiler50`
 
-| | |`kcc`, Intel KAI C++
+| | |`kcc`, Intel KAI {CPP}
 a|
 * `KCC` in `PATH`
 
 | | |http://www.codegear.com/downloads/free/cppbuilder[`kylix`],
-http://www.borland.com/[Borland] C++Builder
+http://www.borland.com/[Borland] {CPP}Builder
 a|
 * `bc++` in `PATH`
 
@@ -166,7 +166,7 @@ SGI MIPSpro C
 a|
 * `uname` is "IRIX" or "IRIX64"
 
-| | |`sunpro`, Sun Workshop 6 C++
+| | |`sunpro`, Sun Workshop 6 {CPP}
 a|
 * Standard install location: `/opt/SUNWspro`
 
@@ -174,13 +174,13 @@ a|
 a|
 * `uname` is "QNX" and `qcc` in `PATH`
 
-| | |http://www.tru64unix.compaq.com/cplus/[`true64cxx`], Compaq C++
+| | |http://www.tru64unix.compaq.com/cplus/[`true64cxx`], Compaq {CPP}
 Compiler for True64 UNIX
 a|
 * `uname` is "OSF1"
 
 | | |http://www.ibm.com/software/awdtools/vacpp/[`vacpp`], IBM VisualAge
-C++
+{CPP}
 a|
 * `xlc` in `PATH`
 

@@ -16,13 +16,13 @@ sources.
 
 cxxflags
 
-Specifies additional compiler flags that will be used when compiling C++
+Specifies additional compiler flags that will be used when compiling {CPP}
 sources.
 
 compileflags
 
 Specifies additional compiler flags that will be used when compiling
-both C and C++ sources.
+both C and {CPP} sources.
 
 linkflags
 

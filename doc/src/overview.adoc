@@ -392,10 +392,10 @@ will make the http://gcc.gnu.org[GCC] compiler available.
 
 All the supported tools are documented in
 link:#bbv2.reference.tools[the section called “Builtin tools”], including the
-specific options they take. Some general notes that apply to most C++
+specific options they take. Some general notes that apply to most {CPP}
 compilers are below.
 
-For all the C++ compiler toolsets that Boost.Build supports
+For all the {CPP} compiler toolsets that Boost.Build supports
 out-of-the-box, the list of parameters to `using` is the same:
 `toolset-name`, `version`, `invocation-command`, and `options`.
 
@@ -424,7 +424,7 @@ using msvc : : "Z:/Programs/Microsoft Visual Studio/vc98/bin/cl" ;
 Some Boost.Build toolsets will use that path to take additional actions
 required before invoking the compiler, such as calling vendor-supplied
 scripts to set up its required environment variables. When the compiler
-executables for C and C++ are different, the path to the C++ compiler
+executables for C and {CPP} are different, the path to the {CPP} compiler
 executable must be specified. The command can be any command allowed by
 the operating system. For example:
 
@@ -458,7 +458,7 @@ four options `cflags`, `cxxflags`, `compileflags` and `linkflags` as
 corresponding tools. There must not be a space between the tag for the
 option name and the value. Values of the `cflags` feature are passed
 directly to the C compiler, values of the `cxxflags` feature are passed
-directly to the C++ compiler, and values of the `compileflags` feature
+directly to the {CPP} compiler, and values of the `compileflags` feature
 are passed to both. For example, to configure a `gcc` toolset so that it
 always generates 64-bit code you could write:
 
@@ -680,22 +680,22 @@ and your compiler documentation in case of problems.
 
 |toolset
 |(Depends on configuration)
-|The C++ compiler to use. See
+|The {CPP} compiler to use. See
 link:#bbv2.reference.tools.compilers[the section called “C++ Compilers”]
 for a detailed list.
 
 |include
 |(Arbitrary string)
-|Additional include paths for C and C++ compilers.
+|Additional include paths for C and {CPP} compilers.
 
 |define
 |(Arbitrary string)
-|Additional macro definitions for C and C++ compilers. The string should be
+|Additional macro definitions for C and {CPP} compilers. The string should be
 either `SYMBOL` or `SYMBOL=VALUE`
 
 |cxxflags
 |(Arbitrary string)
-|Custom options to pass to the C++ compiler.
+|Custom options to pass to the {CPP} compiler.
 
 |cflags
 |(Arbitrary string)
@@ -703,14 +703,14 @@ either `SYMBOL` or `SYMBOL=VALUE`
 
 |linkflags
 |(Arbitrary string)
-|Custom options to pass to the C++ linker.
+|Custom options to pass to the {CPP} linker.
 
 |runtime-link
 |shared,static
-|Determines if shared or static version of C and C++ runtime should be used.
+|Determines if shared or static version of C and {CPP} runtimes should be used.
 |===
 
-If you have more than one version of a given C++ toolset (e.g.
+If you have more than one version of a given {CPP} toolset (e.g.
 configured in `user-config.jam`, or autodetected, as happens with msvc),
 you can request the specific version by passing `toolset-version` as the
 value of the `toolset` feature, for example `toolset=msvc-8.0`.
@@ -871,7 +871,7 @@ exe c : c.cpp /boost/program_options//program_options ;
 
 The first exe uses the library defined in the same project. The second
 one uses some target (most likely a library) defined by a Jamfile one
-level higher. Finally, the third target uses a http://boost.org[C++
+level higher. Finally, the third target uses a http://boost.org[{CPP}
 Boost] library, referring to it using its absolute symbolic name. More
 information about target references can be found in
 link:#bbv2.tutorial.libs[the section called “Dependent Targets”] and

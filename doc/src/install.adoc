@@ -20,7 +20,7 @@ where PREFIX is a directory where you want Boost.Build to be installed.
 4.  Optionally, add `PREFIX/bin` to your PATH environment variable.
 
 If you are not using a Boost.Build package, but rather the version
-bundled with the Boost C++ Libraries, the above commands should be run
+bundled with the Boost {CPP} Libraries, the above commands should be run
 in the `tools/build` directory.
 
 Now that Boost.Build is installed, you can try some of the examples.

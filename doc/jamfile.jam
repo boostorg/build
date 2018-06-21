@@ -48,7 +48,7 @@ if $(website)
 {
     doc-dir = $(website-dir)/$(website-doc-dir) ;
 }
-ECHO $(website) .. $(website-dir) .. $(website-doc-dir) .. $(doc-dir) ;
+# ECHO $(website) .. $(website-dir) .. $(website-doc-dir) .. $(doc-dir) ;
 
 html index : src/standalone.adoc :
     :

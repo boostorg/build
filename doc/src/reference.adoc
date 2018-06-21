@@ -131,7 +131,7 @@ recursively from the directory of the containing Jamfile. For example:
 ECHO [ glob-tree *.cpp : .svn ] ;
 ----
 +
-will print the names of all C++ files in your project. The `.svn`
+will print the names of all {CPP} files in your project. The `.svn`
 exclude pattern prevents the `glob-tree` rule from entering
 administrative directories of the Subversion version control system.
 
@@ -244,7 +244,7 @@ A feature controlling how libraries are built.
 [[bbv2.builtin.features.runtime-link]]`runtime-link`::
 *Allowed values:* `shared`, `static`
 +
-Controls if a static or shared C/C++ runtime should be used. There are
+Controls if a static or shared C/{CPP} runtime should be used. There are
 some restrictions how this feature can be used, for example on some
 compilers an application using static runtime should not use shared
 libraries at all, and on some compilers, mixing static and shared
@@ -321,14 +321,14 @@ linker, and it is not possible to disable that behaviour.
 
 [[bbv2.builtin.features.flags]]`cflags`; `cxxflags`; `linkflags`::
 The value of those features is passed without modification to the
-corresponding tools. For `cflags` that is both the C and C++
-compilers, for `cxxflags` that is the C++ compiler, and for
+corresponding tools. For `cflags` that is both the C and {CPP}
+compilers, for `cxxflags` that is the {CPP} compiler, and for
 `linkflags` that is the linker. The features are handy when you are
 trying to do something special that cannot be achieved by a
 higher-level feature in Boost.Build.
 
 [[bbv2.builtin.features.include]]`include`::
-Specifies an additional include path that is to be passed to C and C++
+Specifies an additional include path that is to be passed to C and {CPP}
 compilers.
 
 [[bbv2.builtin.features.define]]`define`::
@@ -457,7 +457,7 @@ for details.
 [[bbv2.builtin.features.cpp-template-depth]]`c++-template-depth`::
 *Allowed values:* Any positive integer.
 +
-This feature allows configuring a C++ compiler with the maximal
+This feature allows configuring a {CPP} compiler with the maximal
 template instantiation depth parameter. Specific toolsets may or may
 not provide support for this feature depending on whether their
 compilers provide a corresponding command-line option.
@@ -472,7 +472,7 @@ needed, user can easily add it by calling the feature.extend rule.
 *Allowed values:* `on`, `off`.
 +
 This feature is specific to the msvc toolset (see
-link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual C++”]),
+link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual {CPP}”]),
 and controls whether the manifest files should be embedded inside executables
 and shared libraries, or placed alongside them. This feature corresponds
 to the IDE option found in the project settings dialog, under
@@ -481,7 +481,7 @@ manifest.
 
 [[bbv2.builtin.features.embed-manifest-file]]`embed-manifest-file`::
 This feature is specific to the msvc toolset (see
-link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual C++”]),
+link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual {CPP}”]),
 and controls which manifest files should be embedded inside executables and
 shared libraries. This feature corresponds to the IDE option found in the
 project settings dialog, under Configuration Properties -> Manifest
@@ -525,7 +525,7 @@ tell Boost.Build that the feature is actually used.
 [[bbv2.reference.tools]]
 == Builtin tools
 
-Boost.Build comes with support for a large number of C++ compilers, and
+Boost.Build comes with support for a large number of {CPP} compilers, and
 other tools. This section documents how to use those tools.
 
 Before using any tool, you must declare your intention, and possibly
@@ -550,9 +550,9 @@ The options that can be passed to each tool are documented in the
 subsequent sections.
 
 [[bbv2.reference.tools.compilers]]
-=== C++ Compilers
+=== {CPP} Compilers
 
-This section lists all Boost.Build modules that support C++ compilers
+This section lists all Boost.Build modules that support {CPP} compilers
 and documents how each one can be initialized. The name of support
 module for compiler is also the value for the `toolset` feature that can
 be used to explicitly request that compiler.
@@ -573,14 +573,14 @@ include::../../src/tools/vacpp.jam[tag=doc]
 
 === Third-party libraries
 
-Boost.Build provides special support for some third-party C++ libraries,
+Boost.Build provides special support for some third-party {CPP} libraries,
 documented below.
 
 [[bbv2.reference.tools.libraries.stlport]]
 ==== STLport library
 
 The http://stlport.org[STLport] library is an alternative implementation
-of C++ runtime library. Boost.Build supports using that library on
+of {CPP} runtime library. Boost.Build supports using that library on
 Windows platform. Linux is hampered by different naming of libraries in
 each STLport version and is not officially supported.
 

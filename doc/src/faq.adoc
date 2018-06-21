@@ -237,7 +237,7 @@ obj b : b.cpp : <optimization>off ;
 ----
 
 Of course you can use other properties, for example to specify specific
-C/C++ compiler options:
+C/{CPP} compiler options:
 
 [source,jam]
 ----
@@ -344,7 +344,7 @@ in any Jamfile.
 [[bbv2.faq.header-only-libraries]]
 == Header-only libraries
 
-In modern C++, libraries often consist of just header files, without any
+In modern {CPP}, libraries often consist of just header files, without any
 source files to compile. To use such libraries, you need to add proper
 includes and possibly defines to your project. But with a large number
 of external libraries it becomes problematic to remember which libraries

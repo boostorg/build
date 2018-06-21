@@ -191,14 +191,14 @@ Dependency scanning
 -------------------
 
 Dependency scanning is the process of finding implicit dependencies,
-like "#include" statements in C++. The requirements for correct
+like "#include" statements in {CPP}. The requirements for correct
 dependency scanning mechanism are:
 
 * link:#bbv2.arch.depends.different-scanning-algorithms[Support for
-different scanning algorithms]. C++ and XML have quite different syntax
+different scanning algorithms]. {CPP} and XML have quite different syntax
 for includes and rules for looking up the included files.
 * link:#bbv2.arch.depends.same-file-different-scanners[Ability to scan
-the same file several times]. For example, a single C++ file may be
+the same file several times]. For example, a single {CPP} file may be
 compiled using different include paths.
 * link:#bbv2.arch.depends.dependencies-on-generated-files[Proper
 detection of dependencies on generated files.]
@@ -217,7 +217,7 @@ details.
 Ability to scan the same file several times
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As stated above, it is possible to compile a C++ file multiple times,
+As stated above, it is possible to compile a {CPP} file multiple times,
 using different include paths. Therefore, include dependencies for those
 compilations can be different. The problem is that Boost.Build engine
 does not allow multiple scans of the same target. To solve that, we pass
@@ -327,7 +327,7 @@ implemented now.
 
 The second sub-requirements is that targets generated under the "bin"
 directory are handled as well. Boost.Build implements a semi-automatic
-approach. When compiling C++ files the process is:
+approach. When compiling {CPP} files the process is:
 
 1.  The main target to which the compiled file belongs to is found.
 2.  All other main targets that the found one depends on are found.
@@ -344,7 +344,7 @@ that main target should be explicitly specified using the dependency
 property. It would be better to lift this requirement, but it does not
 seem to be causing any problems in practice.
 
-For target types other than C++, adding of include paths must be
+For target types other than {CPP}, adding of include paths must be
 implemented anew.
 
 [[bbv2.arch.depends.dependencies-from-generated-files]]
