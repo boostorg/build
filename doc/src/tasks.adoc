@@ -67,7 +67,7 @@ lib compress : : <file>/opt/libs/compress.a ;
 
 The `name` property specifies the name of the library without the
 standard prefixes and suffixes. For example, depending on the system,
-`z` could refer to a file called z.so, libz.a, or z.lib, etc. The
+`z` could refer to a file called `z.so`, `libz.a`, or `z.lib`, etc. The
 `search` feature specifies paths in which to search for the library in
 addition to the default compiler paths. `search` can be specified
 several times or it can be omitted, in which case only the default
@@ -350,7 +350,7 @@ The `unit-test` rule behaves like the link:#bbv2.tasks.programs[exe]
 rule, but after the executable is created it is also run. If the
 executable returns an error code, the build system will also return an
 error and will try running the executable on the next invocation until
-it runs successfully. This behaviour ensures that you can not miss a
+it runs successfully. This behavior ensures that you can not miss a
 unit test failure.
 
 There are few specialized testing rules, listed below:
@@ -415,7 +415,7 @@ presence/absence of the `*.test` files created when test passes into
 human-readable status table of tests. Such processing utilities are not
 included in Boost.Build.
 
-The following features adjust behaviour of the testing metatargets.
+The following features adjust behavior of the testing metatargets.
 
 `testing.arg`::
 
@@ -564,10 +564,11 @@ not enabled. Include the new header at the top of your source files.
 that precompiled header to the sources of the target whose compilation
 you want to speed up:
 +
-....
+[source]
+----
 cpp-pch pch : pch.hpp ;
 exe main : main.cpp pch ;
-....
+----
 +
 You can use the `c-pch` rule if you want to use the precompiled header
 in C programs.
@@ -597,7 +598,7 @@ details.
 [[bbv2.reference.generated_headers]]
 == Generated headers
 
-Usually, Boost.Build handles implicit dependendies completely
+Usually, Boost.Build handles implicit dependencies completely
 automatically. For example, for {CPP} files, all `#include` statements are
 found and handled. The only aspect where user help might be needed is
 implicit dependency on generated files.
@@ -660,7 +661,7 @@ b2 toolset=gcc-arm target-os=linux
 b2 toolset=gcc-mingw target-os=windows
 ----
 
-For the complete list of allowed opeating system names, please see the
+For the complete list of allowed operating system names, please see the
 documentation for link:#bbv2.builtin.features.target-os[target-os
 feature].
 

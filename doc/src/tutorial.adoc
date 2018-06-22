@@ -215,16 +215,16 @@ specified by the subproject. For example, if `top/Jamroot` has
 <include>/home/ghost/local
 ----
 
-in its requirements, then all of its subprojects will have it in their
+in its requirements, then all of its sub-projects will have it in their
 requirements, too. Of course, any project can add include paths to those
 specified by its parents. footnote:[Many features will be overridden,
-rather than added-to, in subprojects. See
+rather than added-to, in sub-projects See
 link:#bbv2.reference.features.attributes[the section called “Feature Attributes”] for more information] More
 details can be found in link:#bbv2.overview.projects[the section called “Projects”].
 
 Invoking `b2` without explicitly specifying any targets on the command
 line builds the project rooted in the current directory. Building a
-project does not automatically cause its subprojects to be built unless
+project does not automatically cause its sub-projects to be built unless
 the parent project's Jamfile explicitly requests it. In our example,
 `top/Jamroot` might contain:
 
