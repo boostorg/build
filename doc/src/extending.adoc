@@ -53,7 +53,7 @@ instance of link:#bbv2.reference.class.property-set[property-set])
 * As subsequent elements -- created concrete targets ( instances of the
 `virtual-target` class.)
 
-It's possible to lookup a metataget by target-id using the
+It's possible to lookup a metatarget by target-id using the
 `targets.resolve-reference` function, and the
 `targets.generate-from-reference` function can both lookup and generate
 a metatarget.
@@ -248,7 +248,7 @@ exe codegen : codegen.cpp class_template.verbatim usage.verbatim ;
 ----
 
 The listed verbatim files will be automatically converted into {CPP}
-source files, compiled and then linked to the codegen executable.
+source files, compiled and then linked to the `codegen` executable.
 
 In subsequent sections, we will extend this example, and review all the
 mechanisms in detail. The complete code is available in the
@@ -300,7 +300,7 @@ particular generators and suffix. Typically, you'll change the new type
 in some way. For example, using `type.set-generated-target-suffix` you
 can set the suffix for the new type. Or you can write a special
 generator for the new type. For example, it can generate additional
-metainformation for the plugin. In either way, the `PLUGIN` type can be
+meta-information for the plugin. In either way, the `PLUGIN` type can be
 used whenever `SHARED_LIB` can. For example, you can directly link
 plugins to an application.
 
@@ -453,7 +453,7 @@ generators.register
 
 This generator will work exactly like the `verbatim.inline-file`
 generator we've defined above, but it's possible to customize the
-behaviour by overriding methods of the `generator` class.
+behavior by overriding methods of the `generator` class.
 
 There are two methods of interest. The `run` method is responsible for
 the overall process - it takes a number of source targets, converts them
@@ -627,7 +627,7 @@ Adding a feature requires three steps:
 You have to decide on the set of
 link:#bbv2.reference.features.attributes[feature attributes]:
 * if you want a feature value set for one target to automatically
-propagate to its dependant targets then make it “propagated”.
+propagate to its dependent targets then make it “propagated”.
 * if a feature does not have a fixed list of values, it must be “free.”
 For example, the `include` feature is a free feature.
 * if a feature is used to refer to a path relative to the Jamfile, it
@@ -748,7 +748,7 @@ should just produce a target
 of specific type. In that case, a rule is already defined for you! When
 you define a new type, Boost.Build automatically defines a corresponding
 rule. The name of the rule is obtained from the name of the type, by
-downcasing all letters and replacing underscores with dashes. For
+down-casing all letters and replacing underscores with dashes. For
 example, if you create a module `obfuscate.jam` containing:
 
 [source,jam]

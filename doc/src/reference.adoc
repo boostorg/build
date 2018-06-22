@@ -45,7 +45,7 @@ loads both `site-config.jam` and `user-config.jam`.
 == Builtin rules
 
 This section contains the list of all rules that can be used in
-Jamfile—both rules that define new targets and auxiliary rules.
+Jamfile — both rules that define new targets and auxiliary rules.
 
 [[bbv2.reference.rules.exe]]`exe`::
 Creates an executable file. See
@@ -74,7 +74,7 @@ link:#bbv2.builtins.testing[the section called “Testing”].
 [[bbv2.reference.rules.check-target-builds]]`check-target-builds`::
 The `check-target-builds` allows you to conditionally use different
 properties depending on whether some metatarget builds, or not. This
-is similar to functionality of configure script in autotools projects.
+is similar to functionality of configure script in `autotools` projects.
 The function signature is:
 +
 ----
@@ -317,7 +317,7 @@ run without changing system paths to shared libraries or installing the
 libraries to system paths. This is very convenient during development.
 Please see the link:#bbv2.faq.dll-path[FAQ entry] for details. Note
 that on Mac OSX, the paths are unconditionally hardcoded by the
-linker, and it is not possible to disable that behaviour.
+linker, and it is not possible to disable that behavior
 
 [[bbv2.builtin.features.flags]]`cflags`; `cxxflags`; `linkflags`::
 The value of those features is passed without modification to the
@@ -350,7 +350,7 @@ Default value is `all`.
 [[bbv2.builtin.features.warnings-as-errors]]`warnings-as-errors`::
 The `<warnings-as-errors>` makes it possible to treat warnings as
 errors and abort compilation on a warning. The value `on` enables this
-behaviour. The default value is `off`.
+behavior. The default value is `off`.
 
 [[bbv2.builtin.features.build]]`build`::
 *Allowed values:* `no`
@@ -402,7 +402,7 @@ information.
 *Allowed values:* `on`, `off`.
 +
 The `runtime-debugging` feature specifies whether produced object
-files, executables, and libraries should include behaviour useful only
+files, executables, and libraries should include behavior useful only
 for debugging, such as asserts. Typically, the value of this feature
 is implicitly set by the `variant` feature, but it can be explicitly
 specified by the user. The most common usage is to build release
@@ -416,12 +416,12 @@ that operating system, and adjust build process accordingly. For
 example, with gcc, it controls if import libraries are produced for
 shared libraries or not.
 +
-The complete list of possible values for this feature is: aix,
-appletv, bsd, cygwin, darwin, freebsd, hpux, iphone, linux, netbsd,
-openbsd, osf, qnx, qnxnto, sgi, solaris, unix, unixware, windows.
+The complete list of possible values for this feature is: `aix`,
+`appletv`, `bsd`, `cygwin`, `darwin`, `freebsd`, `hpux`, `iphone`, `linux`, `netbsd`,
+`openbsd`, `osf`, `qnx`, `qnxnto`, `sgi`, `solaris`, `unix`, `unixware`, `windows`.
 +
 See link:#bbv2.tasks.crosscompile[the section called “Cross-compilation”]
-for details of crosscompilation.
+for details of cross-compilation.
 
 [[bbv2.builtin.features.architecture]]`architecture`::
 *Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips1`, `mips2`,
@@ -499,8 +499,8 @@ will not affect target paths, and will not cause conflicts.
 +
 ** It is referenced by `toolset.flags` or `toolset.uses-features`
 ** It is used by the requirements of a generator
-** It is a subfeature of a relevant feature
-** It has a subfeature which is relevant
+** It is a sub-feature of a relevant feature
+** It has a sub-feature which is relevant
 ** It is a composite feature, and any composed feature is relevant
 ** It affects target alternative selection for a main target
 ** It is a propagated feature and is relevant for any dependency
@@ -596,8 +596,8 @@ Where version is the version of STLport, for example `5.1.4`, headers is
 the location where STLport headers can be found, and libraries is the
 location where STLport libraries can be found. The version should always
 be provided, and the library path should be provided if you're using
-STLport's implementation of iostreams. Note that STLport 5.* always uses
-its own iostream implementation, so the library path is required.
+STLport's implementation of `iostreams`. Note that STLport 5.* always uses
+its own `iostream` implementation, so the library path is required.
 
 When STLport is configured, you can build with STLport by requesting
 `stdlib=stlport` on the command line.
@@ -727,7 +727,7 @@ Options for using python:
 
 `version`::
 The version of Python to use. Should be in Major.Minor format, for example
-2.3. Do not include the subminor version.
+2.3. Do not include the sub-minor version.
 
 `command-or-prefix`::
 Preferably, a command that invokes a Python interpreter. Alternatively, the
@@ -749,10 +749,10 @@ build configuration when Boost.Build selects a Python configuration to use.
 `extension-suffix`::
 A string to append to the name of extension modules before the true filename
 extension. Ordinarily we would just compute this based on the value of the
-`<python-debugging>` feature. However ubuntu's python-dbg package uses the
+`<python-debugging>` feature. However ubuntu's `python-dbg` package uses the
 windows convention of appending _d to debug-build extension modules. We have
 no way of detecting ubuntu, or of probing python for the "_d" requirement,
-and if you configure and build python using --with-pydebug, you'll be using
+and if you configure and build python using `--with-pydebug`, you'll be using
 the standard *nix convention. Defaults to "" (or "_d" when targeting windows
 and <python-debugging> is set).
 
@@ -874,7 +874,7 @@ stylesheets remotely.
 `DOCBOOK_DTD_DIR` From the environment (if available) or look in standard
 locations. Otherwise, we let the XML processor load the DTD remotely.
 
-`boostbook-dir` is the BoostBook directory with the DTD and XSL subdirs.
+`boostbook-dir` is the BoostBook directory with the DTD and XSL sub-dirs.
 
 The boostbook module depends on xsltproc. For pdf or ps output, it also
 depends on fop.
@@ -923,7 +923,7 @@ _`<option-name>option-value syntax`_:
 
 `doxygen:param`::
 +
-All the values of `doxygen:param` are added to the doxyfile.
+All the values of `doxygen:param` are added to the `doxyfile`.
 
 `prefix`::
 +
@@ -1194,7 +1194,7 @@ properties] are excluded.
 2.  An alternative is viable only if all properties in its condition are
 present in the build request.
 
-3.  If there's only one viable alternative, it's choosen. Otherwise, an
+3.  If there's only one viable alternative, it's chosen. Otherwise, an
 attempt is made to find the best alternative. An alternative a is better
 than another alternative b, if the set of properties in b's condition is
 a strict subset of the set of properties of a's condition. If one viable
@@ -1222,7 +1222,7 @@ unless it is overridden by a property in the requirements.
 
 4.  If either the build request, or the requirements (non-conditional or
 conditional) include an expandable property (either composite, or with a
-specified subfeature value), the behaviour is equivalent to explicitly
+specified sub-feature value), the behavior is equivalent to explicitly
 adding all the expanded properties to the build request or the
 requirements respectively.
 
@@ -1287,7 +1287,7 @@ project's build directory. For example,
 exe a : a.cpp : <location-prefix>subdir ;
 ----
 
-will create the files for `a` in bin/subdir/gcc-4.6.1/debug
+will create the files for `a` in `bin/subdir/gcc-4.6.1/debug`
 
 [[bbv2.reference.definitions]]
 == Definitions
@@ -1398,10 +1398,10 @@ in the feature's declaration. -- move this elsewhere - dwa]
 
 * [[bbv2.reference.features.attributes.symmetric]] _symmetric_
 +
-Normally a feature only generates a subvariant directory when its value
-differs from its default value, leading to an asymmetric subvariant
+Normally a feature only generates a sub-variant directory when its value
+differs from its default value, leading to an asymmetric sub-variant
 directory structure for certain values of the feature. A symmetric
-feature always generates a corresponding subvariant directory.
+feature always generates a corresponding sub-variant directory.
 
 * [[bbv2.reference.features.attributes.path]] _path_
 +

@@ -173,7 +173,7 @@ Using it everywhere might negatively affect performance.
 On Unix-like operating systems, the order in which static libraries are
 specified when invoking the linker is important, because by default, the
 linker uses one pass though the libraries list. Passing the libraries in
-the incorrect order will lead to a link error. Further, this behaviour
+the incorrect order will lead to a link error. Further, this behavior
 is often used to make one library override symbols from another. So,
 sometimes it is necessary to force specific library linking order.
 
@@ -214,7 +214,7 @@ local gtk_includes = [ SHELL "gtk-config --cflags" ] ;
 == How to get the project root (a.k.a. Jamroot) location?
 
 You might want to use your project's root location in your Jamfiles. To
-access it just declare a path constant in your Jamroot.jam file using:
+access it just declare a path constant in your `Jamroot.jam` file using:
 
 [source,jam]
 ----
@@ -366,10 +366,10 @@ alias my-lib
 ----
 
 The includes specified in usage requirements of `my-lib` are
-automatically added to all of its dependants' build properties. The
-dependants need not care if `my-lib` is a header-only or not, and it is
+automatically added to all of its dependents build properties. The
+dependents need not care if `my-lib` is a header-only or not, and it is
 possible to later make `my-lib` into a regular compiled library without
-having to add the includes to its dependants' declarations.
+having to add the includes to its dependents declarations.
 
 If you already have proper usage requirements declared for a project
 where a header-only library is defined, you do not need to duplicate

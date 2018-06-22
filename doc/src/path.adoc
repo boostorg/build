@@ -67,7 +67,7 @@ following special characters:
 * '?' matches any character
 * '*' matches an arbitrary number of characters
 +
-A file $(d)/e1/e2/e3 (where 'd' is in $(dirs)) matches the pattern
+A file `$(d)/e1/e2/e3` (where 'd' is in `$(dirs)`) matches the pattern
 p1/p2/p3 if and only if e1 matches p1, e2 matches p2 and so on. For
 example:
 +

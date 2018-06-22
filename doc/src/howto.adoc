@@ -12,9 +12,7 @@ link:#bbv2.overview[overview] and link:#bbv2.extender[extender manual].
 If there's anything you find unclear in this documentation, report the
 problem directly in the https://github.com/boostorg/build/issues[issue
 tracker]. For more general questions, please post them to our mailing
-list (http://boost.org/more/mailing_lists.htm#jamboost[]). The mailing
-list is also mirrored to the newsgroup
-news://news.gmane.org/gmane.comp.lib.boost.build[].
+list (http://boost.org/more/mailing_lists.htm#jamboost[]).
 
 ****
 Copyright 2006, 2014 http://vladimirprus.com[Vladimir Prus]. Distributed

@@ -11,7 +11,7 @@ ____
 
 Installing `B2` after building it is simply a matter of copying the
 generated executables someplace in your `PATH`. For building the
-executables there are a set of `build` bootstrap scripts to accomodate
+executables there are a set of `build` bootstrap scripts to accommodate
 particular environments. The scripts take one optional argument, the
 name of the toolset to build with. When the toolset is not given an
 attempt is made to detect an available toolset and use that. The build
@@ -221,7 +221,7 @@ The arguments immediately after the toolset are passed directly to the
 setup script of the toolset, if available and if it needs to be invoked.
 This allows one to configure the toolset ass needed to do non-default
 builds of `b2`. For example to build a Win64 version with `vc8`. See the
-toolset descriptiona above for when particular toolsets support this.
+toolset description above for when particular toolsets support this.
 
 The arguments starting with the `--option` forms are passed to the
 `build.jam` script and are used to further customize what gets built.
@@ -296,7 +296,7 @@ The essential `b2` data entity is a target. Build targets are files to
 be updated. Source targets are the files used in updating built targets.
 Built targets and source targets are collectively referred to as file
 targets, and frequently built targets are source targets for other built
-targets. Pseudotargets are symbols representing dependencies on other
+targets. Pseudo-targets are symbols representing dependencies on other
 targets, but which are not themselves associated with any real file.
 
 A file target's identifier is generally the file's name, which can be
@@ -412,8 +412,7 @@ on target $(var) field1 : field2 : ... : fieldN ;
 
 The variable's value names the rule (or rules) to be invoked. A rule is
 invoked for each element in the list of `$(var)`s values. The fields
-`field1 : field2
-        : ...` are passed as arguments for each invokation. For the [
+`field1 : field2 : ...` are passed as arguments for each invocation For the [
 ... ] forms, the return value is the concatenation of the return values
 for all of the invocations.
 
@@ -609,12 +608,12 @@ nonzero return code, dependent targets will still be built.
 rule NOTFILE ( targets * )
 ----
 
-Marks _targets_ as pseudotargets and not real files. No timestamp is
+Marks _targets_ as pseudo-targets and not real files. No timestamp is
 checked, and so the actions on such a target are only executed if the
 target's dependencies are updated, or if the target is also marked with
-`ALWAYS`. The default `b2` target `all` is a pseudotarget. In
+`ALWAYS`. The default `b2` target `all` is a pseudo-target In
 `Jambase`, `NOTFILE` is used to define several addition convenient
-pseudotargets.
+pseudo-targets
 
 [[jam.language.rules.builtins.modifying_binding._noupdate__]]
 ===== `NOUPDATE`
@@ -726,7 +725,7 @@ rules and not part of the language, like `include`.
 [[jam.language.rules.builtins.utility._glob__]]
 ===== `GLOB`
 
-The `GLOB` rule does filename globbing.
+The `GLOB` rule does filename globing
 
 [source]
 ----
@@ -745,12 +744,12 @@ If _downcase-opt_ is supplied, filenames are converted to all-lowercase
 before matching against the pattern; you can use this to do
 case-insensitive matching using lowercase patterns. The paths returned
 will still have mixed case if the OS supplies them. On Windows NT and
-Cygwin, and OpenVMS, filenames are always downcased before matching.
+Cygwin, and OpenVMS, filenames are always down-cased before matching.
 
 [[jam.language.rules.builtins.utility._glob_archive__]]
 ===== `GLOB_ARCHIVE`
 
-The `GLOB_ARCHIVE` rule does name globbing of object archive members.
+The `GLOB_ARCHIVE` rule does name globing of object archive members.
 
 [source]
 ----
@@ -771,7 +770,7 @@ If _downcase-opt_ is supplied, the member names are converted to
 all-lowercase before matching against the pattern; you can use this to
 do case-insensitive matching using lowercase patterns. The paths
 returned will still have mixed case if the OS supplies them. On Windows
-NT, Cygwin, and OpenVMS, filenames are always downcased before matching.
+NT, Cygwin, and OpenVMS, filenames are always down-cased before matching.
 
 Additionally, members can be matched with symbol/function patterns on
 supported platforms (currently, OpenVMS only). In this case, members
@@ -886,7 +885,7 @@ format and constraints, please see `W32_GETREG`.
 Depending on '_result-type_', the rule returns one of the following:
 
 `subkeys`::
-  Names of all direct subkeys of '_path_'.
+  Names of all direct sub-keys of '_path_'.
 `values`::
   Names of values contained in registry key given by '_path_'. The
   "default" value of the key appears in the returned list only if its
@@ -947,7 +946,7 @@ case.
 rule MD5 ( string )
 ----
 
-`MD5` computes the MD5 hash of the string passed as paramater and
+`MD5` computes the MD5 hash of the string passed as parameter and
 returns it.
 
 [[jam.language.rules.builtins.utility._split_by_characters__]]
@@ -1007,7 +1006,7 @@ rule UPDATE_NOW ( targets * : log ? : ignore-minus-n ? )
 ----
 
 The `UPDATE_NOW` caused the specified targets to be updated immediately.
-If update was successfull, non-empty string is returned. The _log_
+If update was successful, non-empty string is returned. The _log_
 parameter, if present, specifies a descriptor of a file where all output
 from building is redirected. If the _ignore-minus-n_ parameter is
 specified, the targets are updated even if the `-n` parameter is
@@ -1351,7 +1350,7 @@ Prepend _root_ to the whole file name, if not already rooted.
 Assign _value_ to the variable if it is unset.
 
 `:J=joinval`::
-Concatentate list elements into single element, separated by
+Concatenate list elements into single element, separated by
 _joinval_.
 
 On VMS, `$(var:P)` is the parent directory of `$(var:D)`.
@@ -1502,7 +1501,7 @@ platform:
 `JAMDATE`::
   Time and date at `b2` start-up as an ISO-8601 UTC value.
 `JAMUNAME`::
-  Ouput of uname(1) command (Unix only)
+  Output of uname(1) command (Unix only)
 `JAMVERSION`::
   `b2` version, currently "3.1.19"
 `JAM_VERSION`::
@@ -1997,7 +1996,7 @@ should probably be titled "Modifying Update Determination".
 * "Grist" is just a string prefix of the form <__characters__>. It is
 used in Jam to create unique target names based on simpler names. For
 example, the file name `test.exe` may be used by targets in separate
-subprojects, or for the debug and release variants of the "same"
+sub-projects, or for the debug and release variants of the "same"
 abstract target. Each distinct target bound to a file called "test.exe"
 has its own unique grist prefix. The Boost build system also takes full
 advantage of Jam's ability to divide strings on grist boundaries,
@@ -2013,7 +2012,7 @@ target, regardless of target file location (as allowed by setting
 ALL_LOCATE_TARGET).
 * When grist is extracted from a name with $(var:G), the result includes
 the leading and trailing angle brackets. When grist is added to a name
-with $(var:G=expr), existing grist is first stripped. Then, if expr is
+with `$(var:G=expr)`, existing grist is first stripped. Then, if `expr` is
 non-empty, leading <s and trailing >s are added if necessary to form an
 expression of the form <expr2>; <expr2> is then prepended.
 * When Jam is invoked it imports all environment variable settings into
@@ -2060,14 +2059,14 @@ and UPDATE_NOW. -- _Vladimir P._
 * Ensure all file descriptors are closed when executing actions
 complete on *nix. -- _Noel B._
 * Fix warnings, patch from Mateusz Loskot. -- _Vladimir P._
-* Add KEEP_GOING var to programatically override the '-q' option. -- _Vladimir P._
+* Add KEEP_GOING var to programmatically override the '-q' option. -- _Vladimir P._
 * Add more parameters, up to 19 from 9, to rule invocations. Patch
 from Jonathan Biggar. -- _Vladimir P._
 * Print failed command output even if the normally quite '-d0' option.
 -- _Vladimir P._
 * Build of bjam with vc10, aka Visual Studio 2010. -- _Vladimir P._
 * More macros for detection of OSPLAT, patch from John W. Bito. -- _Vladimir P._
-* Add PARALLELISM var to programatically override the '-j' option. -- _Vladimir P._
+* Add PARALLELISM var to programmatically override the '-j' option. -- _Vladimir P._
 * Tweak doc building to allow for PDF generation of docs. -- _John M._
 
 === Version 3.1.17
@@ -2082,7 +2081,7 @@ to fix handling of quoted arguments, options arguments, and arguments
 with "=". -- _Rene R._
 * Try to work around at least one compiler bug with GCC and variable
 aliasing that causes crashes with hashing file cache entries. -- _Rene R._
-* Add -Wc,-fno-strict-aliasing for QCC/QNX to avoid the same aliasing
+* Add `-Wc,-fno-strict-aliasing` for QCC/QNX to avoid the same aliasing
 crashes as in the general GCC 4.x series (thanks to Niklas Angare for
 the fix). -- _Rene R._
 * On Windows let the child bjam commands inherit stdin, as some
@@ -2107,10 +2106,10 @@ Now it reports the correct error location information when
 encountering an unexpected EOF. It now also reports where an invalid
 lexical token being read started instead of finished which makes it
 much easier to find errors like unclosed quotes or curly braces. -- _Jurko G._
-* Removed the -xarch=generic architecture from build.jam as this
+* Removed the `-xarch=generic` architecture from `build.jam` as this
 option is unknown so the Sun compilers on Linux. -- _Noel B._
-* Fixed a bug with T_FATE_ISTMP getting reported as T_FATE_ISTMP &
-T_FATE_NEEDTMP at the same time due to a missing break in a switch
+* Fixed a bug with `T_FATE_ISTMP` getting reported as `T_FATE_ISTMP` &
+`T_FATE_NEEDTMP` at the same time due to a missing break in a switch
 statement. -- _Jurko G._
 * Fixed a Boost Jam bug causing it to sometimes trigger actions
 depending on targets that have not been built yet. -- _Jurko G._
@@ -2130,7 +2129,7 @@ output to make that output more promptly displayed to the user. -- _Jurko G._
 * Made Boost Jam tests quote their bjam executable name when calling
 it allowing those executables to contain spaces in their name and/or
 path. -- _Jurko G._
-* Change execunix.c to always use fork() instead of vfork() on the
+* Change `execunix.c` to always use `fork()` instead of `vfork()` on the
 Mac. This works around known issues with bjam on PPC under Tiger and a
 problem reported by Rene with bjam on x86 under Leopard. -- _Noel B._
 * Corrected a bug in Boost Jam's base Jambase script causing it to
@@ -2138,21 +2137,21 @@ trim the error message displayed when its boost-build rule gets called
 multiple times. -- _Jurko G._
 * When importing from Python into an module with empty string as name,
 import into root module. -- _Vladimir P._
-* Patch for the NORMALIZE_PATH builtin Boost Jam rule as well as an
+* Patch for the `NORMALIZE_PATH` builtin Boost Jam rule as well as an
 appropriate update for the path.jam Boost Build module where that rule
 was being used to implement path join and related operations. -- _Jurko G._
 * Fixed a bug causing Boost Jam not to handle target file names
 specified as both short and long file names correctly. -- _Jurko G._
 * Relaxed test, ignoring case of drive letter. -- _Roland S._
 * Implemented a patch contributed by Igor Nazarenko reimplementing the
-list_sort() function to use a C qsort() function instead of a
-hand-crafted merge-sort algorithm. Makes some list sortings (e.g.
+`list_sort()` function to use a C `qsort()` function instead of a
+hand-crafted merge-sort algorithm. Makes some list sorts (e.g.
 1,2,1,2,1,2,1,2, ...) extremely faster, in turn significantly speeding
 up some project builds. -- _Jurko G._
 * Fixed a bug with bjam not handling the '' root Windows path
 correctly without its drive letter being specified. -- _Jurko G._
 * Solved the problem with child process returning the value 259
-(Windows constant STILL_ACTIVE) causing bjam never to detect that it
+(Windows constant `STILL_ACTIVE`) causing bjam never to detect that it
 exited and therefore keep running in an endless loop. -- _Jurko G._
 * Solved the problem with bjam going into an active wait state,
 hogging up processor resources, when waiting for one of its child
@@ -2162,7 +2161,7 @@ slots are being used. -- _Jurko G._
 termination detection and the child process's output
 generation/termination which could have caused bjam not to collect the
 terminated process's final output. -- _Jurko G._
-* Change from vfork to fork for executing actions on Darwin to improve
+* Change from `vfork` to `fork` for executing actions on Darwin to improve
 stability. -- _Noel B._
 * Code reformatting and cleanups. -- _Jurko G._
 * Implement ISFILE built-in. -- _Vladimir P._
@@ -2197,9 +2196,9 @@ GCC-4.2 crash problems. -- _Boris G._
 * Increased support for Python integration. -- _Vladimir P._, _Daniel W._
 * Allow specifying options with quotes, i.e. `--with-python=xyz`, to work
 around the CMD shell using `=` as an argument separator. -- _Rene R._
-* Add values of variables specified with -s to .EVNRION module, so
+* Add values of variables specified with -s to `.ENVIRON` module, so
 that we can override environment on command line. -- _Vladimir P._
-* Make NORMALIZE_PATH convert \ to /. -- _Vladimir P._
+* Make `NORMALIZE_PATH` convert `\` to `/`. -- _Vladimir P._
 
 === Version 3.1.15
 
@@ -2215,11 +2214,11 @@ Unix side of stuff.
 jumbled output when using parallel execution with -j option. This is
 implemented for Unix variants, and Windows (Win32/NT). -- _Rene R._, _Noel B._
 * Add "sun" as alias to Sun Workshop compiler tools. -- _Rene R._
-* Set MAXLINE in jam.h to 23k bytes for AIX. The piecemeal archive
-action was broken with the default MAXLINE of 102400. Because the AIX
+* Set `MAXLINE` in jam.h to 23k bytes for AIX. The piecemeal archive
+action was broken with the default `MAXLINE` of 102400. Because the AIX
 shell uses some of the 24k default buffer size for its own use, I
 reduced it to 23k. -- _Noel B._
-* Make use of output dir options of msvc to not polute src dir with
+* Make use of output dir options of msvc to not pollute src dir with
 compiled files. -- _Rene R._
 * A small fix, so -d+2 will always show the "real" commands being
 executed instead of casually the name of a temporary batch file. -- _Roland S._
@@ -2229,7 +2228,7 @@ executed instead of casually the name of a temporary batch file. -- _Roland S._
 be broken as it has been for a long time now because of the @ file
 feature. -- _Rene R._
 * Update GC support to work with Boehm GC 7.0. -- _Rene R._
-* Revert the BOOST_BUILD_PATH change, since the directory passed to
+* Revert the `BOOST_BUILD_PATH` change, since the directory passed to
 boost-build should be first in searched paths, else project local
 build system will not be picked correctly. The order had been changed
 to allow searching of alternate user-config.jam files from boost
@@ -2239,8 +2238,8 @@ similar. -- _Roland S._
 * Implement @() expansion during parse phase. -- _Rene R._
 * Define OSPLAT var unconditionally, and more generically, when
 possible. -- _Rene R._
-* Fix undeclared INT_MAX on some platforms, i.e. Linux. -- _Rene R._
-* Modified execunix.c to add support for terminating processes that
+* Fix undeclared `INT_MAX` on some platforms, i.e. Linux. -- _Rene R._
+* Modified `execunix.c` to add support for terminating processes that
 consume too much cpu or that hang and fail to consume cpu at all. This
 in support of the bjam -lx option. -- _Noel B._
 * Add internal dependencies for multi-file generating actions to
@@ -2254,5 +2253,5 @@ unix. -- _Rene R._
 instead of erroring out. -- _Rene R._
 * Various fixes to compile on SGI/Irix. -- _Noel B._
 * Add output for when actions timeout with -lN option. -- _Rene R._, _Noel B._
-* Add needed include (according to XOPEN) for definition of WIFEXITED
-and WEXITSTATUS. -- _Markus S._
+* Add needed include (according to XOPEN) for definition of `WIFEXITED`
+and `WEXITSTATUS`. -- _Markus S._
