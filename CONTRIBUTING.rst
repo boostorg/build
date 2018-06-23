@@ -23,7 +23,7 @@ Additional resources include
 
 - The issue tracker
 
-  http://trac.lvk.cs.msu.su/boost.build/
+  https://github.com/boostorg/build/issues
 
 - mailing list
 
@@ -34,7 +34,7 @@ Additional resources include
 BUGS and PATCHES
 ----------------
 
-Both bugs and patches can be send to our mailing list.
+Both bugs and patches can be submitted to the GitHub tracker.
 
 When reporting a bug, please try to provide the following information.
 
@@ -52,21 +52,20 @@ When reporting a bug, please try to provide the following information.
 - What you expected.
 
 - What version of Boost.Build and Boost.Jam did you use. If possible,
-  please try to test with the CVS HEAD state.
+  please try to test with the develop branch state.
 
 When submitting a patch, please:
 
 - make a single patch for a single logical change
 - follow the policies and coding conventions below,
-- send patches in unified diff format, (using either "cvs diff -u" or "diff -u")
-- provide a log message together with the patch
-- put the patch and the log message as attachment to your email.
+- send patches as pull requests
+- provide a good PR message together with the patch
 
-The purpose of log message serves to communicate what was changed, and *why*.
-Without a good log message, you might spend a lot of time later, wondering where
+The purpose of message serves to communicate what was changed, and *why*.
+Without a good message, you might spend a lot of time later, wondering where
 a strange piece of code came from and why it was necessary.
 
-The good log message mentions each changed file and each rule/method, saying
+The good message mentions each changed file and each rule/method, saying
 what happend to it, and why. Consider, the following log message
 
 ::
@@ -84,10 +83,10 @@ what happend to it, and why. Consider, the following log message
        (virtual-target.actualize-no-scanner): Call the above, to detected bugs,
        where two virtual target correspond to one Jam target name.
 
-The log messages for the last two files are good. They tell what was changed.
+The messages for the last two files are good. They tell what was changed.
 The change to the first file is clearly undercommented.
 
-It's OK to use terse log messages for uninteresting changes, like ones induced
+It's OK to use terse messages for uninteresting changes, like ones induced
 by interface changes elsewhere.
 
 POLICIES.

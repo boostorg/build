@@ -10,6 +10,84 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #          http://www.boost.org/LICENSE_1_0.txt)
 
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.gcc]]
+= GNU C++
+
+The `gcc` module supports the http://gcc.gnu.org[GNU C++ compiler] on
+Linux, a number of Unix-like system including SunOS and on Windows
+(either http://www.cygwin.com[Cygwin] or http://www.mingw.org[MinGW]).
+
+The `gcc` module is initialized using the following syntax:
+
+----
+using gcc : [version] : [c++-compile-command] : [compiler options] ;
+----
+
+This statement may be repeated several times, if you want to configure
+several versions of the compiler.
+
+If the version is not explicitly specified, it will be automatically
+detected by running the compiler with the `-v` option. If the command is
+not specified, the `g++` binary will be searched in PATH.
+
+The following options can be provided, using
+_`<option-name>option-value syntax`_:
+
+`cflags`::
+Specifies additional compiler flags that will be used when compiling C
+sources.
+
+`cxxflags`::
+Specifies additional compiler flags that will be used when compiling C++
+sources.
+
+`compileflags`::
+Specifies additional compiler flags that will be used when compiling both C
+and C++ sources.
+
+`linkflags`::
+Specifies additional command line options that will be passed to the linker.
+
+`root`::
+Specifies root directory of the compiler installation. This option is
+necessary only if it is not possible to detect this information from the
+compiler command--for example if the specified compiler command is a user
+script.
+
+`archiver`::
+Specifies the archiver command that is used to produce static
+libraries. Normally, it is autodetected using gcc `-print-prog-name`
+option or defaulted to `ar`, but in some cases you might want to
+override it, for example to explicitly use a system version instead of
+one included with gcc.
+
+`ranlib`::
+Specifies the ranlib command that is used to generated symbol table
+for static libraries. Normally, it is autodetected using gcc
+`-print-prog-name` option or defaulted to `ranlib`, but in some cases
+you might want to override it, for example to explicitly use a system
+version instead of one included with gcc.
+
+`rc`::
+Specifies the resource compiler command that will be used with the
+version of gcc that is being configured. This setting makes sense only
+for Windows and only if you plan to use resource files. By default
+`windres` will be used.
+
+`rc-type`::
+Specifies the type of resource compiler. The value can be either
+`windres` for msvc resource compiler, or `rc` for borland's resource
+compiler.
+
+In order to compile 64-bit applications, you have to specify
+`address-model=64`, and the `instruction-set` feature should refer to a 64
+bit processor. Currently, those include `nocona`, `opteron`, `athlon64` and
+`athlon-fx`.
+
+|# # end::doc[]
+
 import "class" : new ;
 import common ;
 import cygwin ;
