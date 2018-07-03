@@ -67,4 +67,4 @@ jobs:
         - popd
         - ./bootstrap.sh --with-toolset=${TOOLSET}
         - pushd doc
-        - ../b2 --website-doc-dir=manual/develop website
+        - ../b2 --website-doc-dir=manual/${TRAVIS_BRANCH} website
