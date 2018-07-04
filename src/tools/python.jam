@@ -700,12 +700,6 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     target-os ?= [ feature.defaults target-os ] ;
     target-os = $(target-os:G=) ;
 
-    if $(target-os) = windows && <python-debugging>on in $(condition)
-    {
-        extension-suffix ?= _d ;
-    }
-    extension-suffix ?= "" ;
-
     local cmds-to-try ;
 
     if ! $(cmd-or-prefix) || [ GLOB $(cmd-or-prefix) : * ]
@@ -949,8 +943,33 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
         toolset.add-requirements <target-os>$(target-os):<python>$(version:E=default) ;
     }
 
-    # Register the right suffix for extensions.
-    register-extension-suffix $(extension-suffix) : $(target-requirements) ;
+    #
+    # Discover and set extension suffix
+    #
+    debug-message "Checking for extension suffix..." ;
+    local full-cmd = "from __future__ import print_function; import sysconfig; print(sysconfig.get_config_var('SO'))" ;
+    local full-cmd = $(interpreter-cmd)" -c \"$(full-cmd)\"" ;
+    debug-message "running command '$(full-cmd)'" ;
+    local result = [ SHELL $(full-cmd) : strip-eol : exit-status ] ;
+    if $(result[2]) = 0
+    {
+        debug-message "Python extenssion suffix is $(result[1])" ;
+        type.set-generated-target-suffix PYTHON_EXTENSION : $(target-requirements) : <$(result[1])> ;
+    }
+    else
+    {
+        debug-message "Failed to determine python extension suffix" ;
+        debug-message "Falling back to old behaviour" ;
+        if $(target-os) = windows && <python-debugging>on in $(condition)
+        {
+            extension-suffix ?= _d ;
+        }
+        extension-suffix ?= "" ;
+
+        # Register the right suffix for extensions.
+        register-extension-suffix $(extension-suffix) : $(target-requirements) ;
+    }
+
 
     #
     # Declare the "python" target. This should really be called
