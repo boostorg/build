@@ -1535,6 +1535,8 @@ static void debug_parent_print( int argc, const char * * argv )
         debug_mi_format_token();
         printf( "^done\n(gdb) \n" );
     }
+
+    list_free( result );
 }
 
 static void debug_parent_backtrace( int argc, const char * * argv )
