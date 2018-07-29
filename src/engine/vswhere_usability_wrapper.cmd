@@ -16,8 +16,8 @@ set VSWHERE_REQ=-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
 set VSWHERE_PRP=-property installationPath
 set VSWHERE_LMT=-version "[15.0,16.0)"
 vswhere -prerelease > nul
-if "%~1"=="prerelase" set VSWHERE_WITH_PRERELASE=1
-if not errorlevel 1 if "%VSWHERE_WITH_PRERELASE%"=="1" set "VSWHERE_LMT=%VSWHERE_LMT% -prerelease"
+if "%~1"=="prerelease" set VSWHERE_WITH_PRERELEASE=1
+if not errorlevel 1 if "%VSWHERE_WITH_PRERELEASE%"=="1" set "VSWHERE_LMT=%VSWHERE_LMT% -prerelease"
 SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT%
 for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
     endlocal

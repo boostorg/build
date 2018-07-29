@@ -28,7 +28,7 @@ goto :eof
 :Guess
 REM Check the variable first. This can be set manually by the user (by running the tools commmand prompt).
 call :Clear_Error
-call vswhere_usability_wrapper.cmd
+call vswhere_usability_wrapper.cmd %1
 if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"

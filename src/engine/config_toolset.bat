@@ -161,7 +161,7 @@ set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
 :Skip_VC14
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc141_" goto Skip_VC141
-call vswhere_usability_wrapper.cmd
+call vswhere_usability_wrapper.cmd %1
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
 ver > nul 2> nul
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (

@@ -98,7 +98,7 @@ if errorlevel 1 (
     set "VS_ProgramFiles=%ProgramFiles%"
 )
 
-call guess_toolset.bat
+call guess_toolset.bat %isPrerelease%
 if errorlevel 1 (
     call :Error_Print "Could not find a suitable toolset."
     goto :eof)
@@ -114,6 +114,11 @@ goto :eof
 :Start
 set BOOST_JAM_TOOLSET=
 set BOOST_JAM_ARGS=
+
+if "%~1"=="prerelease" (
+  set isPrerelease=%~1
+  shift
+)
 
 REM If no arguments guess the toolset;
 REM or if first argument is an option guess the toolset;
@@ -159,7 +164,7 @@ if errorlevel 1 (
     goto Setup_Args
 )
 :Config_Toolset
-call config_toolset.bat 
+call config_toolset.bat %isPrerelease%
 if "_%_known_%_" == "__" (
     call :Error_Print "Unknown toolset: %BOOST_JAM_TOOLSET%"
 )
@@ -167,6 +172,7 @@ if errorlevel 1 goto Finish
 
 echo ###
 echo ### Using '%BOOST_JAM_TOOLSET%' toolset.
+echo ### Using '%BOOST_JAM_TOOLSET_ROOT%' toolset root.
 echo ###
 
 set YYACC_SOURCES=yyacc.c
