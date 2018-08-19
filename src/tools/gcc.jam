@@ -718,6 +718,12 @@ toolset.flags gcc.compile OPTIONS <warnings-as-errors>on : -Werror ;
 toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
 toolset.flags gcc.compile OPTIONS <profiling>on : -pg ;
 
+toolset.flags gcc.compile OPTIONS <visibility>hidden : -fvisibility=hidden ;
+toolset.flags gcc.compile.c++ OPTIONS <visibility>hidden : -fvisibility-inlines-hidden ;
+toolset.flags gcc.compile OPTIONS <visibility>protected : -fvisibility=protected ;
+toolset.flags gcc.compile OPTIONS <visibility>protected/<target-os>darwin : ;
+toolset.flags gcc.compile OPTIONS <visibility>global : -fvisibility=default ;
+
 toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
 
@@ -854,6 +860,12 @@ toolset.flags gcc.link LINKPATH <library-path> ;
 toolset.flags gcc.link FINDLIBS-ST <find-static-library> ;
 toolset.flags gcc.link FINDLIBS-SA <find-shared-library> ;
 toolset.flags gcc.link LIBRARIES <library-file> ;
+
+# Specify compile flags for linker as well as they may be needed for LTO
+toolset.flags gcc.link OPTIONS <visibility>hidden : -fvisibility=hidden -fvisibility-inlines-hidden ;
+toolset.flags gcc.link OPTIONS <visibility>protected : -fvisibility=protected ;
+toolset.flags gcc.link OPTIONS <visibility>protected/<target-os>darwin : ;
+toolset.flags gcc.link OPTIONS <visibility>global : -fvisibility=default ;
 
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;

@@ -135,6 +135,10 @@ flags sun.compile OPTIONS <warnings>on : -erroff=%none ;
 flags sun.compile OPTIONS <warnings>all  : -erroff=%none ;
 flags sun.compile OPTIONS <warnings-as-errors>on : -errwarn ;
 
+flags sun.compile OPTIONS <visibility>hidden : -xldscope=hidden ;
+flags sun.compile OPTIONS <visibility>protected : -xldscope=symbolic ;
+flags sun.compile OPTIONS <visibility>global : -xldscope=global ;
+
 flags sun.compile.c++ OPTIONS <inlining>off : +d ;
 
 # The -m32 and -m64 options are supported starting
