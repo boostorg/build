@@ -95,6 +95,10 @@ else
     # Linux PPC
     flags xlcpp.compile CFLAGS <link>shared : -qpic=large ;
     flags xlcpp FINDLIBS : rt ;
+
+    flags xlcpp.compile OPTIONS <visibility>hidden : -qvisibility=hidden ;
+    flags xlcpp.compile OPTIONS <visibility>protected : -qvisibility=protected ;
+    flags xlcpp.compile OPTIONS <visibility>global : -qvisibility=default ;
 }
 
 # Profiling
