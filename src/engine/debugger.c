@@ -978,7 +978,7 @@ static void debug_parent_on_end_stepping( void )
 /* Waits for events from the child. */
 static void debug_parent_wait( int print_message )
 {
-    char ch = fgetc( command_child );
+    int ch = fgetc( command_child );
     if ( ch == DEBUG_MSG_BREAKPOINT )
     {
         debug_parent_on_breakpoint();
