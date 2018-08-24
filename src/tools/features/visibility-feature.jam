@@ -7,4 +7,4 @@ import feature ;
 
 feature.feature visibility
     : global protected hidden
-    : propagated optional ;
+    : optional ;
