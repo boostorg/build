@@ -1077,6 +1077,11 @@ local rule set-setup-command ( targets * : properties * )
     if ! [ on $(targets) return $(.SETUP) ]
     {
         local setup-script = [ on $(targets) return $(.SETUP-SCRIPT) ] ;
+        # If no setup script was given, then we don't need to do anything.
+        if ! $(setup-script)
+        {
+            return ;
+        }
         local setup-options = [ on $(targets) return $(.SETUP-OPTIONS) ] ;
         local key = .setup-command-$(setup-script:E=)-$(setup-options:E=) ;
         if ! $($(key))
