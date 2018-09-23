@@ -283,7 +283,7 @@ If you allocate your own stack in client code, you will have to
 assign the pointer plus stack size to GC_stackbottom.
 
 The initial stack size of the target program can be compiled in by
-setting the __stack symbol (see SAS documentation). It can be over-
+setting the __stack symbol (see SAS documentaion). It can be over-
 ridden from the CLI by running the AmigaDOS "stack" program, or from
 the WorkBench by setting the stack size in the tool types window.
 
