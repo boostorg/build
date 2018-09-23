@@ -237,7 +237,7 @@ ECHO test-index: $(test-index:E=(unknown)) ;
 def _canSetEmptyEnvironmentVariable():
     """
       Unfortunately different OSs (and possibly Python implementations as well)
-    have different interpretations of what it means to set an evironment
+    have different interpretations of what it means to set an environment
     variable to an empty string. Some (e.g. Windows) interpret it as unsetting
     the variable and some (e.g. AIX or Darwin) actually set it to an empty
     string.

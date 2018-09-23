@@ -103,7 +103,7 @@ if [ os.name ] = AIX
     # searched during load-time. Note that the AIX linker does not have an
     # -soname equivalent, this is as close as it gets.
     #
-    # The above options are definately for AIX 5.x, and most likely also for
+    # The above options are definitely for AIX 5.x, and most likely also for
     # AIX 4.x and AIX 6.x. For details about the AIX linker see:
     # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
     #

@@ -201,7 +201,7 @@ rule try-build ( targets * : ps : what : retry ? )
     }       
     else if ! UPDATE_NOW in [ RULENAMES ]
     {
-        # Cannot determine. Assume existance.
+        # Cannot determine. Assume existence.
     }
     else
     {

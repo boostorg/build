@@ -125,7 +125,7 @@ def test_cross_product():
     t.write('Jamroot.jam', '''
     import feature : feature ;
     import toolset : flags ;
-    # Make features symmetric to make the paths easier to distingush
+    # Make features symmetric to make the paths easier to distinguish
     feature f1 : 11 12 13 14 15 : symmetric ;
     feature f2 : 21 22 23 : symmetric ;
     feature f3 : v1 v2 v3 v4 : implicit symmetric ;
