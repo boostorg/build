@@ -1577,7 +1577,7 @@ class basic-target : abstract-target
 
     # Constructs virtual targets for this abstract target and the dependency
     # graph. Returns a usage-requirements property-set and a list of virtual
-    # targets. Should be overriden in derived classes.
+    # targets. Should be overridden in derived classes.
     #
     rule construct ( name : source-targets * : properties * )
     {

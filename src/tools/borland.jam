@@ -157,7 +157,7 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 # -g255  allow an unlimited number of warnings
 # -q     no banner
 # -c     compile to object
-# -P     C++ code regardless of file extention
+# -P     C++ code regardless of file extension
 # -a8    8 byte alignment, this option is on in the IDE by default 
 #        and effects binary compatibility.
 #

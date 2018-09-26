@@ -29,7 +29,7 @@
 #
 # - Network libraries: Enable communication between processes on different
 #   compute nodes. Depends on the network hardware in the supercomputer.
-# - Compute node libraries: Depends on the hardware on the targetted
+# - Compute node libraries: Depends on the hardware on the targeted
 #   compute nodes.
 # - Language extension libraries: Depends on the language extensions used
 #   by the program (e.g. OpenMP, Unified Parallel C, et cetera).
@@ -39,7 +39,7 @@
 # based on the environment. This is primarily controlled by loading and
 # unloading modules (with the `module` command) to create a cross
 # compiling and linking environment suitable for the particular hardware
-# on the targetted Cray supercomputer.
+# on the targeted Cray supercomputer.
 #
 # CCE compilers come in two parts: the compiler itself, and the compiler
 # driver. Invoking a compiler directly is not supported. We must always
@@ -153,7 +153,7 @@ rule init ( : : options * : requirements * )
 
         # 'check-init-parameters' ensures that each time a toolset is initialized,
         # it is initialized with a unique configuration. The return value is a
-        # Boost.Build property condition which uniquely indentifies this
+        # Boost.Build property condition which uniquely identifies this
         # configured instance of this toolset. Typically, toolsets use the
         # returned condition as the conditional in a 'toolset.flags' call to set
         # flags specific to this configuration of this toolset.
@@ -283,7 +283,7 @@ feature.set-default toolset : cray ;
 # CCE is different from other compilers in that it optimizes, inlines, and
 # vectorizes by default. Boost.Build assumes that 'off' is the default for
 # all compilers. However, for CCE, 'off' and 'default' have different
-# meanings. For CCE, 'off' requries an additional command line argument to
+# meanings. For CCE, 'off' requires an additional command line argument to
 # turn the feature off. 'default' will not include an additional command
 # line argument, but will do optimization, inlining, and vectorizing at
 # whatever default level CCE uses.
@@ -296,7 +296,7 @@ feature.extend vectorize    : default ;
 ### Flags
 ###
 
-# Updating rules are named in a dotted hierarcy. For example:
+# Updating rules are named in a dotted hierarchy. For example:
 #
 # compile
 #  \_ compile.c++

@@ -151,7 +151,7 @@ flags hp_cxx.link OPTIONS <c++abi> : -model ansi : : hack-hack ;
 flags hp_cxx.link OPTIONS <c++abi>cxxarm : -model arm ;
 
 # Display a descriptive tag together with each compiler message. This tag can
-# be used by the user to explicitely suppress the compiler message.
+# be used by the user to explicitly suppress the compiler message.
 flags hp_cxx.compile OPTIONS : -msg_display_tag ;
 
 flags hp_cxx.compile OPTIONS <cflags> ;

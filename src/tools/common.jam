@@ -409,7 +409,7 @@ local rule check-tool-aux ( command )
 
 
 # Checks that a tool can be invoked by 'command'. If command is not an absolute
-# path, checks if it can be found in 'path'. If comand is an absolute path,
+# path, checks if it can be found in 'path'. If command is an absolute path,
 # check that it exists. Returns 'command' if ok or empty string otherwise.
 #
 local rule check-tool ( xcommand + )

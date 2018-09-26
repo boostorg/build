@@ -488,7 +488,7 @@ void exec_wait()
 
             /* If nothing else causes our select() call to exit, force it after
              * however long it takes for the next one of our child processes to
-             * crossed its alloted processing time so we can terminate it.
+             * crossed its allotted processing time so we can terminate it.
              */
             tv.tv_sec = select_timeout;
             tv.tv_usec = 0;
