@@ -7,4 +7,8 @@ import feature ;
 
 feature.feature visibility
     : global protected hidden
-    : optional ;
+    : optional composite propagated ;
+
+feature.compose <visibility>global : <local-visibility>global ;
+feature.compose <visibility>protected : <local-visibility>protected ;
+feature.compose <visibility>hidden : <local-visibility>hidden ;
