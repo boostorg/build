@@ -394,7 +394,7 @@ implement the rest of Boost.Build. This executable is formally called
 The Boost.Build engine is derived from an earlier build tool called
 Perforce Jam. Originally, there were just minor changes, and the
 filename was `bjam`. Later on, with more and more changes, the
-similarity of names because a disservice to users, and as of Boost
+similarity of names became a disservice to users, and as of Boost
 1.47.0, the official name of the executable was changed to `b2`. A copy
 named `bjam` is still created for compatibility, but you are encouraged
 to use the new name in all cases.
