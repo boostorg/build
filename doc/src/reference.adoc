@@ -533,7 +533,7 @@ The supported values have the following meaning:
 +
 * `global` - a.k.a. "default" in gcc documentation. Global symbols are considered
   public, they are exported from shared libraries and can be redefined by another
-  shared library or executable. This is the default value.
+  shared library or executable.
 * `protected` - a.k.a. "symbolic". Protected symbols are exported from shared
   libraries but cannot be redefined by another shared library or executable.
   This mode is not supported on some platforms, for example OS X.
@@ -541,6 +541,25 @@ The supported values have the following meaning:
   be redefined by a different shared library or executable loaded in a process.
   In this mode, public symbols have to be explicitly marked in the source code
   to be exported from shared libraries. This is the recommended mode.
++
+By default compiler default visibility mode is used (no compiler flags are added).
++
+NOTE: In Boost superproject Jamroot file this property is set to the default
+value of `hidden`. This means that Boost libraries are built with hidden
+visibility by default, unless the user overrides it with a different `visibility`
+or a library sets a different `local-visibility` (see below).
+
+[[bbv2.builtin.features.local-visibility]]`local-visibility`::
+*Allowed values:* `global`, `protected`, `hidden`.
++
+This feature has the same effect as the `visibility` feature but is intended
+to be used by targets that require a particular symbol visibility. Unlike
+the `visibility` feature, `local-visibility` is not inherited by the target
+dependencies and only affects the target to which it is applied.
++
+The `local-visibility` feature supports the same values with the same meaning
+as the `visibility` feature. By default, if `local-visibility` is not specified
+for a target, the value of the `visibility` feature is used.
 
 [[bbv2.reference.tools]]
 == Builtin tools
