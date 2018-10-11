@@ -16,7 +16,7 @@ script:
 stages:
   - name: test
   - name: website update
-    if: branch IN (develop,master)
+    if: branch IN (develop,master) AND type IN (push)
 jobs:
   include:
     - os: linux
