@@ -770,7 +770,7 @@ static void read_pipe
     for (;;)
     {
         /* check if we have any data to read */
-        if ( !PeekNamedPipe( in, ioBuffer, IO_BUFFER_SIZE, &bytesInBuffer,
+        if ( !PeekNamedPipe( in, NULL, IO_BUFFER_SIZE, NULL,
             &bytesAvailable, NULL ) || bytesAvailable == 0 )
             return;
 
