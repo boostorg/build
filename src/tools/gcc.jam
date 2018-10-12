@@ -1198,6 +1198,7 @@ cpu-flags gcc OPTIONS : x86 : broadwell : -march=broadwell ;
 cpu-flags gcc OPTIONS : x86 : skylake : -march=skylake ;
 cpu-flags gcc OPTIONS : x86 : skylake-avx512 : -march=skylake-avx512 ;
 cpu-flags gcc OPTIONS : x86 : cannonlake : -march=skylake-avx512 -mavx512vbmi -mavx512ifma -msha ;
+cpu-flags gcc OPTIONS : x86 : icelake : -march=icelake ;
 cpu-flags gcc OPTIONS : x86 : k6 : -march=k6 ;
 cpu-flags gcc OPTIONS : x86 : k6-2 : -march=k6-2 ;
 cpu-flags gcc OPTIONS : x86 : k6-3 : -march=k6-3 ;
