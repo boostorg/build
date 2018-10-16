@@ -44,15 +44,15 @@ __debug = None
 def debug():
     global __debug
     if __debug is None:
-        __debug = "--debug-configuration" in bjam.variable("ARGV")        
+        __debug = "--debug-configuration" in bjam.variable("ARGV")
     return __debug
 
 
-# It is not yet clear what to do with Cygwin on python port.    
+# It is not yet clear what to do with Cygwin on python port.
 def on_cygwin():
     return False
 
-    
+
 type.register('MANIFEST', ['manifest'])
 feature.feature('embed-manifest',['on','off'], ['incidental', 'propagated']) ;
 
@@ -113,7 +113,7 @@ def init(version = None, command = None, options = None):
 
     options = to_seq(options)
     command = to_seq(command)
-    
+
     if command:
         options.extend("<command>"+cmd for cmd in command)
     configure(version,options)
@@ -122,7 +122,7 @@ def configure(version=None, options=None):
     if version == "all":
         if options:
             raise RuntimeError("MSVC toolset configuration: options should be empty when '{}' is specified.".format(version))
-        
+
         # Configure (i.e. mark as used) all registered versions.
         all_versions = __versions.all()
         if not all_versions:
@@ -145,7 +145,7 @@ def configure(version=None, options=None):
 
 def extend_conditions(conditions,exts):
     return [ cond + '/' + ext for cond in conditions for ext in exts ]
-        
+
 def configure_version_specific(toolset_arg, version, conditions):
     # Starting with versions 7.0, the msvc compiler have the /Zc:forScope and
     # /Zc:wchar_t options that improve C++ standard conformance, but those
@@ -204,7 +204,7 @@ def configure_version_specific(toolset_arg, version, conditions):
         toolset.flags('{}.link'.format(toolset_arg), 'LINKFLAGS', extend_conditions(conditions, __cpu_arch_amd64), ['/MACHINE:X64'])
         toolset.flags('{}.link'.format(toolset_arg), 'LINKFLAGS', extend_conditions(conditions, __cpu_arch_i386), ['/MACHINE:X86'])
         toolset.flags('{}.link'.format(toolset_arg), 'LINKFLAGS', extend_conditions(conditions, __cpu_arch_ia64), ['/MACHINE:IA64'])
-        
+
         # Make sure that manifest will be generated even if there is no
         # dependencies to put there.
         toolset.flags('{}.link'.format(toolset_arg), 'LINKFLAGS', conditions, ['/MANIFEST'])
@@ -216,12 +216,12 @@ def configure_version_specific(toolset_arg, version, conditions):
 def register_toolset():
      if not 'msvc' in feature.values('toolset'):
         register_toolset_really()
-        
-    
+
+
 engine = get_manager().engine()
 
-# this rule sets up the pdb file that will be used when generating static 
-# libraries and the debug-store option is database, so that the compiler 
+# this rule sets up the pdb file that will be used when generating static
+# libraries and the debug-store option is database, so that the compiler
 # puts all debug info into a single .pdb file named after the library
 #
 # Poking at source targets this way is probably not clean, but it's the
@@ -252,7 +252,7 @@ $(LIBRARIES_MENTIONED_BY_FILE)
 "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib"
 "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"'''.format(rm=common.rm_command()),
         function=archive)
-        
+
 # For the assembler the following options are turned on by default:
 #
 #   -Zp4   align structures to 4 bytes
@@ -319,10 +319,10 @@ def compile_cpp_pch(targets,sources=[],properties=None):
 #
 # 1. PDB_CFLAG is only set for <debug-symbols>on/<debug-store>database, ensuring that the /Fd flag is dropped if PDB_CFLAG is empty
 #
-# 2. When compiling executables's source files, PDB_NAME is set on a per-source file basis by rule compile-c-c++. 
+# 2. When compiling executables's source files, PDB_NAME is set on a per-source file basis by rule compile-c-c++.
 #    The linker will pull these into the executable's PDB
 #
-# 3. When compiling library's source files, PDB_NAME is updated to <libname>.pdb for each source file by rule archive, 
+# 3. When compiling library's source files, PDB_NAME is updated to <libname>.pdb for each source file by rule archive,
 #    as in this case the compiler must be used to create a single PDB for our library.
 #
 
@@ -330,7 +330,7 @@ class SetupAction:
     def __init__(self, setup_func, function):
         self.setup_func = setup_func
         self.function = function
-            
+
     def __call__(self, targets, sources, property_set):
         assert(callable(self.setup_func))
         # This can modify sources.
@@ -344,7 +344,7 @@ class SetupAction:
 
 def register_setup_action(action_name,setup_function,function=None):
     global engine
-    if engine.actions.has_key(action_name):
+    if action_name in engine.actions:
         raise "Bjam action %s is already defined" % action_name
     engine.actions[action_name] = SetupAction(setup_function, function)
 
@@ -378,14 +378,14 @@ def setup_preprocess_c_cpp_action(targets, sources, properties):
     sources += bjam.call('get-target-variable',targets,'PCH_FILE')
     sources += bjam.call('get-target-variable',targets,'PCH_HEADER')
     return 'preprocess-c-c++'
-    
+
 register_setup_action(
-    'msvc.preprocess.c',
+    'msvc.compile.c.preprocess',
     setup_preprocess_c_cpp_action,
     function=compile_c_preprocess)
 
 register_setup_action(
-    'msvc.preprocess.c++',
+    'msvc.compile.c++.preprocess',
     setup_preprocess_c_cpp_action,
     function=compile_cpp_preprocess)
 
@@ -436,7 +436,7 @@ register_setup_action(
 engine.register_action(
     'msvc.compile.idl',
     '''$(.IDL) /nologo @"@($(<[1]:W).rsp:E=
-"$(>:W)" 
+"$(>:W)"
 -D$(DEFINES)
 "-I$(INCLUDES:W)"
 -U$(UNDEFS)
@@ -506,7 +506,7 @@ $(LIBRARIES)
 if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%''',
         function=link_dll,
         bound_list=['DEF_FILE','LIBRARIES_MENTIONED_BY_FILE'])
-    
+
     engine.register_action(
         'msvc.manifest.dll',
         '''if exist "$(<[1]).manifest" (
@@ -540,7 +540,7 @@ $(LIBRARIES)
 "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"''',
         function=link_dll,
         bound_list=['DEF_FILE','LIBRARIES_MENTIONED_BY_FILE'])
-    
+
     engine.register_action(
         'msvc.manifest.dll',
         '''if test -e "$(<[1]).manifest"; then
@@ -566,7 +566,7 @@ class MsvcPchGenerator(pch.PchGenerator):
                 pch_header = s
             elif type.is_derived(s.type(), 'CPP') or type.is_derived(s.type(), 'C'):
                 pch_source = s
-            
+
         if not pch_header:
             raise RuntimeError( "can not build pch without pch-header" )
 
@@ -589,7 +589,7 @@ class MsvcPchGenerator(pch.PchGenerator):
             result_props.append(Property('pch-header', pch_header))
         if pch_file:
             result_props.append(Property('pch-file', pch_file))
-            
+
         return property_set.PropertySet(result_props), generated
 
 
@@ -623,6 +623,102 @@ def auto_detect_toolset_versions():
             register_configuration(i,default_path(i))
 
 
+def maybe_rewrite_setup(toolset, setup_script, setup_options, version, rewrite_setup='off'):
+    """
+    Helper rule to generate a faster alternative to MSVC setup scripts.
+
+    We used to call MSVC setup scripts directly in every action, however in
+    newer MSVC versions (10.0+) they make long-lasting registry queries
+    which have a significant impact on build time.
+    """
+    result = '"{}" {}'.format(setup_script, setup_options)
+
+    # At the moment we only know how to rewrite scripts with cmd shell.
+    if os.name == 'nt' and rewrite_setup != 'off':
+        basename = os.path.basename(setup_script)
+        filename, _ = os.path.splitext(basename)
+        setup_script_id = 'b2_{}_{}_{}'.format(toolset, version, filename)
+        if setup_options:
+            setup_script_id = '{}_{}'.format(setup_script_id, setup_options)
+
+        tempdir = os.environ.get('TEMP')
+        replacement = os.path.join(tempdir, setup_script_id + '.cmd')
+        if rewrite_setup == 'always' or not os.path.exists(replacement):
+            import subprocess
+            # call the setup script and print the environment after doing so
+            p = subprocess.Popen([
+                    setup_script, setup_options, '>', 'nul', '&&', 'set',
+                ], stdout=subprocess.PIPE, shell=True
+            )
+            stdout, _ = p.communicate()
+
+            diff_vars = []
+            for var in stdout.splitlines():
+                # returns a tuple of ('var-name', '=', 'value').
+                # partition is being used here (over something like .split())
+                # for two reasons:
+                #     1) an environment variable may have a value that contains an '=';
+                #        .partition() will still return the correct key and value pair.
+                #     2) if the line doesn't contain an '=' at all, then the returned
+                #        tuple will contain only empty strings rather than raising
+                #        an exception.
+                key, _, value = var.partition('=')
+                # os.environ handles casing differences here. Usually the
+                # call to "set" above will produce pascal-cased environment
+                # variable names, so a normal python dict can't be used here.
+                # check for the existence of key in case the partitioning() above
+                # returned an empty key value pair.
+                if key and os.environ.get(key) != value:
+                    diff_vars.append('SET {}={}'.format(key, value))
+
+            if diff_vars:
+                with open(replacement, 'wb') as f:
+                    f.write(os.linesep.join(diff_vars))
+
+                result = '"{}"'.format(replacement)
+        else:
+            result = '"{}"'.format(replacement)
+
+    return result
+
+
+def generate_setup_cmd(version, command, parent, options, cpu, global_setup,
+                       default_global_setup_options, default_setup):
+    setup_prefix = "call "
+    setup_suffix = """ >nul\n"""
+    if on_cygwin():
+        setup_prefix = "cmd.exe /S /C call "
+        setup_suffix = " \">nul\" \"&&\" "
+
+    setup_options = ''
+    setup_cpu = feature.get_values('<setup-{}>'.format(cpu), options)
+
+    if not setup_cpu:
+        if global_setup:
+            setup_cpu = global_setup
+            # If needed we can easily add using configuration flags
+            # here for overriding which options get passed to the
+            # global setup command for which target platform:
+            # setup_options = feature.get_values('<setup-options-{}>'.format(cpu),options)
+            if not setup_options:
+                setup_options = default_global_setup_options[cpu]
+        else:
+            setup_cpu = locate_default_setup(command, parent, default_setup[cpu])
+    else:
+        setup_cpu = setup_cpu[0]
+
+    # Cygwin to Windows path translation.
+    # setup-$(c) = "\""$(setup-$(c):W)"\"" ;
+
+    # Append setup options to the setup name and add the final setup
+    # prefix & suffix.
+    rewrite = feature.get_values('<rewrite-setup-scripts>', options)
+    rewrite = rewrite[0] if rewrite else ''
+    setup = maybe_rewrite_setup(
+        'msvc', setup_cpu, setup_options, version, rewrite)
+    return '{}{}{}'.format(setup_prefix, setup, setup_suffix)
+
+
 # Worker rule for toolset version configuration. Takes an explicit version id or
 # nothing in case it should configure the default toolset version (the first
 # registered one or a new 'default' one in case no toolset versions have been
@@ -635,7 +731,7 @@ def configure_really(version=None, options=[]):
         # Take the first registered (i.e. auto-detected) version.
         version = __versions.first()
         v = version
-        
+
         # Note: 'version' can still be empty at this point if no versions have
         # been auto-detected.
         if not version:
@@ -665,18 +761,20 @@ def configure_really(version=None, options=[]):
         conditions = common.check_init_parameters('msvc', None, ('version', v))
         __versions.set(version, 'conditions', conditions)
         command = feature.get_values('<command>', options)
-        
+
         # If version is specified, we try to search first in default paths, and
         # only then in PATH.
         command = common.get_invocation_command('msvc', 'cl.exe', command, default_paths(version))
         common.handle_options('msvc', conditions, command, options)
-        
+
         if not version:
             # Even if version is not explicitly specified, try to detect the
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if re.search("Microsoft Visual Studio 14", command):
+            if re.search("Microsoft Visual Studio[\/\\]2017", command):
+                version = '15.0'
+            elif re.search("Microsoft Visual Studio 14", command):
                 version = '14.0'
             elif re.search("Microsoft Visual Studio 12", command):
                 version = '12.0'
@@ -718,7 +816,7 @@ def configure_really(version=None, options=[]):
             # MSVC 7.1 compiler even though it thinks it is using the msvc-9.0
             # toolset version.
             command = common.get_absolute_tool_path(command)
-        
+
         if command:
             parent = os.path.dirname(os.path.normpath(command))
             # Setup will be used if the command name has been specified. If
@@ -785,39 +883,15 @@ def configure_really(version=None, options=[]):
             elif somehow_detect_the_itanium_platform:
                 default_global_setup_options[ 'ia64' ] = 'ia64'
 
-            setup_prefix = "call "
-            setup_suffix = """ >nul\n"""
-            if on_cygwin():
-                setup_prefix = "cmd.exe /S /C call "
-                setup_suffix = " \">nul\" \"&&\" "
-
             for c in cpu:
-                setup_options = None
-                setup_cpu = feature.get_values('<setup-{}>'.format(c),options)
-
-                if not setup_cpu:
-                    if global_setup:
-                        setup_cpu = global_setup
-                        # If needed we can easily add using configuration flags
-                        # here for overriding which options get passed to the
-                        # global setup command for which target platform:
-                        # setup_options = feature.get_values('<setup-options-{}>'.format(c),options)
-                        if not setup_options:
-                            setup_options = default_global_setup_options[ c ]
-                    else:
-                        setup_cpu = locate_default_setup(command, parent, default_setup[ c ])
-
-                # Cygwin to Windows path translation.
-                # setup-$(c) = "\""$(setup-$(c):W)"\"" ;
-
-                # Append setup options to the setup name and add the final setup
-                # prefix & suffix.
-                setup_scripts[ c ] = '{}"{}" {}{}'.format(setup_prefix, setup_cpu, setup_options, setup_suffix)
+                setup_scripts[c] = generate_setup_cmd(
+                    version, command, parent, options, c, global_setup,
+                    default_global_setup_options, default_setup
+                )
 
         # Get tool names (if any) and finish setup.
         compiler = feature.get_values("<compiler>", options)
-        if not compiler:
-            compiler = "cl"
+        compiler = compiler[0] if compiler else 'cl'
 
         linker = feature.get_values("<linker>", options)
         if not linker:
@@ -834,7 +908,7 @@ def configure_really(version=None, options=[]):
         default_assembler_ia64  = 'ias'
 
         assembler = feature.get_values('<assembler>',options)
-        
+
         idl_compiler = feature.get_values('<idl-compiler>',options)
         if not idl_compiler:
             idl_compiler = 'midl'
@@ -851,7 +925,7 @@ def configure_really(version=None, options=[]):
 
         for c in cpu:
             cpu_conditions = [ condition + '/' + arch for arch in globals()['__cpu_arch_{}'.format(c)] for condition in conditions ]
-            
+
             setup_script = setup_scripts.get(c, '')
 
             if debug():
@@ -934,7 +1008,7 @@ class MsvcLinkingGenerator(builtin.LinkingGenerator):
         if result:
             name_main = result[0].name()
             action = result[0].action()
-            
+
             if prop_set.get('<debug-symbols>') == 'on':
                 # We force exact name on PDB. The reason is tagging -- the tag rule may
                 # reasonably special case some target types, like SHARED_LIB. The tag rule
@@ -947,7 +1021,7 @@ class MsvcLinkingGenerator(builtin.LinkingGenerator):
                     action.replace_targets(target,registered_target)
                 result.append(registered_target)
             if prop_set.get('<embed-manifest>') == 'off':
-                # Manifest is evil target. It has .manifest appened to the name of 
+                # Manifest is evil target. It has .manifest appened to the name of
                 # main target, including extension. E.g. a.exe.manifest. We use 'exact'
                 # name because to achieve this effect.
                 target = FileTarget(name_main+'.manifest', 'MANIFEST', project, action, True)
@@ -965,7 +1039,7 @@ def register_toolset_really():
     feature.extend('toolset', ['msvc'])
 
     # Intel and msvc supposedly have link-compatible objects.
-    feature.subfeature( 'toolset', 'msvc', 'vendor', 'intel', ['propagated', 'optional'])
+    feature.subfeature( 'toolset', 'msvc', 'vendor', ['intel'], ['propagated', 'optional'])
 
     # Inherit MIDL flags.
     toolset.inherit_flags('msvc', 'midl')
@@ -1151,14 +1225,14 @@ class MSVCConfigurations(Configurations):
 
     def first(self):
         return self.first_
-    
+
 
 # List of all registered configurations.
 __versions = MSVCConfigurations()
 
 # Supported CPU architectures.
 __cpu_arch_i386 = [
-    '<architecture>/<address-model>', 
+    '<architecture>/<address-model>',
     '<architecture>/<address-model>32',
     '<architecture>x86/<address-model>',
     '<architecture>x86/<address-model>32']
@@ -1191,7 +1265,7 @@ __cpu_type_itanium2 = ['itanium2', 'mckinley']
 
 
 # Known toolset versions, in order of preference.
-_known_versions = ['14.0', '12.0', '11.0', '10.0', '10.0express', '9.0', '9.0express', '8.0', '8.0express', '7.1', '7.1toolkit', '7.0', '6.0']
+_known_versions = ['15.0', '14.0', '12.0', '11.0', '10.0', '10.0express', '9.0', '9.0express', '8.0', '8.0express', '7.1', '7.1toolkit', '7.0', '6.0']
 
 # Version aliases.
 __version_alias_6 = '6.0'
@@ -1203,6 +1277,7 @@ __version_alias_10 = '10.0'
 __version_alias_11 = '11.0'
 __version_alias_12 = '12.0'
 __version_alias_14 = '14.0'
+__version_alias_15 = '15.0'
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -1218,6 +1293,7 @@ __version_10_0express_reg = "VCExpress\\10.0\\Setup\\VC"
 __version_11_0_reg = "VisualStudio\\11.0\\Setup\\VC"
 __version_12_0_reg = "VisualStudio\\12.0\\Setup\\VC"
 __version_14_0_reg = "VisualStudio\\14.0\\Setup\\VC"
+__version_15_0_reg = "VisualStudio\\15.0\\Setup\\VC"
 
 # Visual C++ Toolkit 2003 does not store its installation path in the registry.
 # The environment variable 'VCToolkitInstallDir' and the default installation

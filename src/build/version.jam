@@ -6,13 +6,13 @@
 import numbers ;
 
 
-.major = "2014" ;
-.minor = "03" ;
+.major = "2018" ;
+.minor = "02" ;
 
 
 rule boost-build ( )
 {
-    return "$(.major).$(.minor)-svn" ;
+    return "$(.major).$(.minor)-git" ;
 }
 
 
@@ -108,7 +108,7 @@ rule check-jam-version ( version + )
     if ! $(version-tag)
     {
         import errors ;
-        errors.error Invalid version specifier: : $(version:E="(undefined)") ;
+        errors.error Invalid version "specifier:" : $(version:E="(undefined)") ;
     }
 
     if ! $(.jam-version-check.$(version-tag))-is-defined

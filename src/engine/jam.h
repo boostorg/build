@@ -26,6 +26,43 @@
 #define HAVE_POPEN 1
 
 /*
+ * VMS, OPENVMS
+ */
+
+#ifdef VMS
+
+#include <types.h>
+#include <file.h>
+#include <stat.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <stdlib.h>
+#include <signal.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
+#include <unixlib.h>
+
+#define OSMINOR "OS=VMS"
+#define OSMAJOR "VMS=true"
+#define OS_VMS
+#define MAXLINE 1024 /* longest 'together' actions */
+#define PATH_DELIM '/'  /* use CRTL POSIX-style handling */
+#define SPLITPATH ','
+#define EXITOK EXIT_SUCCESS
+#define EXITBAD EXIT_FAILURE
+#define DOWNSHIFT_PATHS
+
+/* This may be inaccurate. */
+#ifndef __DECC
+#define OSPLAT "OSPLAT=VAX"
+#endif
+
+#define glob jam_glob  /* use jam's glob, not CRTL's */
+
+#endif
+
+/*
  * Windows NT
  */
 
@@ -415,7 +452,6 @@
 #define MAXSYM   1024  /* longest symbol in the environment */
 #define MAXJPATH 1024  /* longest filename */
 
-#define MAXJOBS  256   /* internally enforced -j limit */
 #define MAXARGC  32    /* words in $(JAMSHELL) */
 
 /* Jam private definitions below. */

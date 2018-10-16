@@ -10,6 +10,7 @@
 #include "compile.h"
 #include "constants.h"
 #include "cwd.h"
+#include "debugger.h"
 #include "filesys.h"
 #include "frames.h"
 #include "hash.h"
@@ -38,11 +39,25 @@
  */
 #include <winioctl.h>
 #endif
+
+/* With VC8 (VS2005) these are not defined:
+ *   FSCTL_GET_REPARSE_POINT  (expects WINVER >= 0x0500 _WIN32_WINNT >= 0x0500 )
+ *   IO_REPARSE_TAG_SYMLINK   (is part of a separate Driver SDK)
+ * So define them explicitly to their expected values.
+ */
+#ifndef FSCTL_GET_REPARSE_POINT
+# define FSCTL_GET_REPARSE_POINT 0x000900a8
 #endif
+#ifndef IO_REPARSE_TAG_SYMLINK
+# define IO_REPARSE_TAG_SYMLINK	(0xA000000CL)
+#endif
+#endif /* OS_NT */
 
 #if defined(USE_EXECUNIX)
 # include <sys/types.h>
 # include <sys/wait.h>
+#elif defined(OS_VMS)
+# include <wait.h>
 #else
 /*
  * NT does not have wait() and associated macros and uses the system() return
@@ -436,11 +451,28 @@ void load_builtins()
         char const * args [] = { "path", 0 };
         bind_builtin( "MAKEDIR", builtin_makedir, 0, args );
     }
-    
+
     {
         const char * args [] = { "path", 0 };
         bind_builtin( "READLINK", builtin_readlink, 0, args );
     }
+
+    {
+        char const * args[] = { "archives", "*",
+                                ":", "member-patterns", "*",
+                                ":", "case-insensitive", "?",
+                                ":", "symbol-patterns", "*", 0 };
+        bind_builtin( "GLOB_ARCHIVE", builtin_glob_archive, 0, args );
+    }
+
+#ifdef JAM_DEBUGGER
+
+	{
+		const char * args[] = { "list", "*", 0 };
+		bind_builtin("__DEBUG_PRINT_HELPER__", builtin_debug_print_helper, 0, args);
+	}
+
+#endif
 
     /* Initialize builtin modules. */
     init_set();
@@ -596,7 +628,21 @@ LIST * builtin_exit( FRAME * frame, int flags )
     list_print( lol_get( frame->args, 0 ) );
     out_printf( "\n" );
     if ( !list_empty( code ) )
-        exit( atoi( object_str( list_front( code ) ) ) );
+    {
+        int status = atoi( object_str( list_front( code ) ) );
+#ifdef OS_VMS
+        switch( status )
+        {
+        case 0:
+            status = EXITOK;
+            break;
+        case 1:
+            status = EXITBAD;
+            break;
+        }
+#endif
+        exit( status );
+    }
     else
         exit( EXITBAD );  /* yeech */
     return L0;
@@ -727,7 +773,7 @@ LIST * builtin_glob( FRAME * frame, int flags )
     globbing.patterns = r;
 
     globbing.case_insensitive =
-# if defined( OS_NT ) || defined( OS_CYGWIN )
+# if defined( OS_NT ) || defined( OS_CYGWIN ) || defined( OS_VMS )
        l;  /* Always case-insensitive if any files can be found. */
 # else
        lol_get( frame->args, 2 );
@@ -776,7 +822,7 @@ LIST * glob1( OBJECT * dirname, OBJECT * pattern )
     globbing.patterns = plist;
 
     globbing.case_insensitive
-# if defined( OS_NT ) || defined( OS_CYGWIN )
+# if defined( OS_NT ) || defined( OS_CYGWIN ) || defined( OS_VMS )
        = plist;  /* always case-insensitive if any files can be found */
 # else
        = L0;
@@ -1121,7 +1167,7 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
     else
         out_printf( "root module.\n" );
     backtrace( frame->prev );
-    exit( 1 );
+    exit( EXITBAD );
 }
 
 
@@ -1201,7 +1247,7 @@ LIST * builtin_import( FRAME * frame, int flags )
         list_print( target_rules );
         out_printf( "\n" );
         backtrace( frame->prev );
-        exit( 1 );
+        exit( EXITBAD );
     }
 
     return L0;
@@ -1527,7 +1573,7 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
     LIST * arg = lol_get( frame->args, 0 );
 
     /* First, we iterate over all '/'-separated elements, starting from the end
-     * of string. If we see a '..', we remove a preceeding path element. If we
+     * of string. If we see a '..', we remove a preceding path element. If we
      * see '.', we remove it. Removal is done by overwriting data using '\1'
      * characters. After the whole string has been processed, we do a second
      * pass, removing any entered '\1' characters.
@@ -1574,13 +1620,13 @@ LIST * builtin_normalize_path( FRAME * frame, int flags )
             *current = '/';
 
     /* Now we remove any extra path elements by overwriting them with '\1'
-     * characters and cound how many more unused '..' path elements there are
+     * characters and count how many more unused '..' path elements there are
      * remaining. Note that each remaining path element with always starts with
      * a '/' character.
      */
     for ( end = in->value + in->size - 1; end >= in->value; )
     {
-        /* Set 'current' to the next occurence of '/', which always exists. */
+        /* Set 'current' to the next occurrence of '/', which always exists. */
         for ( current = end; *current != '/'; --current );
 
         if ( current == end )
@@ -1673,7 +1719,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
         out_printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
             object_str( list_front( rule_name ) ), object_str( module->name ) );
         backtrace( frame->prev );
-        exit( 1 );
+        exit( EXITBAD );
     }
     return L0;
 }
@@ -1946,7 +1992,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         bufsize *= 2;
         buf = BJAM_MALLOC( bufsize );
     }
-    
+
     if ( buf != static_buf )
         BJAM_FREE( buf );
 
@@ -1954,6 +2000,15 @@ LIST *builtin_readlink( FRAME * frame, int flags )
 #endif
 }
 
+#ifdef JAM_DEBUGGER
+
+LIST *builtin_debug_print_helper( FRAME * frame, int flags )
+{
+    debug_print_result = list_copy( lol_get( frame->args, 0 ) );
+    return L0;
+}
+
+#endif
 
 #ifdef HAVE_PYTHON
 
@@ -2058,6 +2113,73 @@ void lol_build( LOL * lol, char const * * elements )
 
 #ifdef HAVE_PYTHON
 
+static LIST *jam_list_from_string(PyObject *a)
+{
+    return list_new( object_new( PyString_AsString( a ) ) );
+}
+
+static LIST *jam_list_from_sequence(PyObject *a)
+{
+    LIST * l = 0;
+
+    int i = 0;
+    int s = PySequence_Size( a );
+
+    for ( ; i < s; ++i )
+    {
+        /* PySequence_GetItem returns new reference. */
+        PyObject * e = PySequence_GetItem( a, i );
+        char * s = PyString_AsString( e );
+        if ( !s )
+        {
+            /* try to get the repr() on the object */
+            PyObject *repr = PyObject_Repr(e);
+            if (repr)
+            {
+                const char *str = PyString_AsString(repr);
+                PyErr_Format(PyExc_TypeError, "expecting type <str> got %s", str);
+            }
+            /* fall back to a dumb error */
+            else
+            {
+                PyErr_BadArgument();
+            }
+            return NULL;
+        }
+        l = list_push_back( l, object_new( s ) );
+        Py_DECREF( e );
+    }
+
+    return l;
+}
+
+static void make_jam_arguments_from_python(FRAME* inner, PyObject *args)
+{
+    int i;
+    int size;
+
+    /* Build up the list of arg lists. */
+    frame_init( inner );
+    inner->prev = 0;
+    inner->prev_user = 0;
+    inner->module = bindmodule( constant_python_interface );
+
+    size = PyTuple_Size( args );
+    for (i = 0 ; i < size; ++i)
+    {
+        PyObject * a = PyTuple_GetItem( args, i );
+        if ( PyString_Check( a ) )
+        {
+            lol_add( inner->args, jam_list_from_string(a) );
+        }
+        else if ( PySequence_Check( a ) )
+        {
+            lol_add( inner->args, jam_list_from_sequence(a) );
+        }
+    }
+}
+
+
 /*
  * Calls the bjam rule specified by name passed in 'args'. The name is looked up
  * in the context of bjam's 'python_interface' module. Returns the list of
@@ -2070,50 +2192,18 @@ PyObject * bjam_call( PyObject * self, PyObject * args )
     LIST   * result;
     PARSE  * p;
     OBJECT * rulename;
-
-    /* Build up the list of arg lists. */
-    frame_init( inner );
-    inner->prev = 0;
-    inner->prev_user = 0;
-    inner->module = bindmodule( constant_python_interface );
-
-    /* Extract the rule name and arguments from 'args'. */
+    PyObject *args_proper;
 
     /* PyTuple_GetItem returns borrowed reference. */
     rulename = object_new( PyString_AsString( PyTuple_GetItem( args, 0 ) ) );
+
+    args_proper = PyTuple_GetSlice(args, 1, PyTuple_Size(args));
+    make_jam_arguments_from_python (inner, args_proper);
+    if ( PyErr_Occurred() )
     {
-        int i = 1;
-        int size = PyTuple_Size( args );
-        for ( ; i < size; ++i )
-        {
-            PyObject * a = PyTuple_GetItem( args, i );
-            if ( PyString_Check( a ) )
-            {
-                lol_add( inner->args, list_new( object_new(
-                    PyString_AsString( a ) ) ) );
-            }
-            else if ( PySequence_Check( a ) )
-            {
-                LIST * l = 0;
-                int s = PySequence_Size( a );
-                int i = 0;
-                for ( ; i < s; ++i )
-                {
-                    /* PySequence_GetItem returns new reference. */
-                    PyObject * e = PySequence_GetItem( a, i );
-                    char * s = PyString_AsString( e );
-                    if ( !s )
-                    {
-                        err_printf( "Invalid parameter type passed from Python\n" );
-                        exit( 1 );
-                    }
-                    l = list_push_back( l, object_new( s ) );
-                    Py_DECREF( e );
-                }
-                lol_add( inner->args, l );
-            }
-        }
+        return NULL;
     }
+    Py_DECREF(args_proper);
 
     result = evaluate_rule( bindrule( rulename, inner->module), rulename, inner );
     object_free( rulename );
@@ -2390,15 +2480,6 @@ PyObject * bjam_caller( PyObject * self, PyObject * args )
 #endif  /* defined(_MSC_VER) || defined(__BORLANDC__) */
 
 
-static char * rtrim( char * const s )
-{
-    char * p = s;
-    while ( *p ) ++p;
-    for ( --p; p >= s && isspace( *p ); *p-- = 0 );
-    return s;
-}
-
-
 LIST * builtin_shell( FRAME * frame, int flags )
 {
     LIST   * command = lol_get( frame->args, 0 );
@@ -2445,11 +2526,15 @@ LIST * builtin_shell( FRAME * frame, int flags )
         buffer[ ret ] = 0;
         if ( !no_output_opt )
         {
-            if ( strip_eol_opt )
-                rtrim( buffer );
             string_append( &s, buffer );
         }
+
+        /* Explicit EOF check for systems with broken fread */
+        if ( feof( p ) ) break;
     }
+
+    if ( strip_eol_opt )
+        string_rtrim( &s );
 
     exit_status = pclose( p );
 
@@ -2464,6 +2549,11 @@ LIST * builtin_shell( FRAME * frame, int flags )
             exit_status = WEXITSTATUS( exit_status );
         else
             exit_status = -1;
+
+#ifdef OS_VMS
+        /* Harmonize VMS success status with POSIX */
+        if ( exit_status == 1 ) exit_status = EXIT_SUCCESS;
+#endif
         sprintf( buffer, "%d", exit_status );
         result = list_push_back( result, object_new( buffer ) );
     }
@@ -2479,3 +2569,147 @@ LIST * builtin_shell( FRAME * frame, int flags )
 }
 
 #endif  /* #ifdef HAVE_POPEN */
+
+
+/*
+ * builtin_glob_archive() - GLOB_ARCHIVE rule
+ */
+
+struct globbing2
+{
+    LIST * patterns[ 2 ];
+    LIST * results;
+    LIST * case_insensitive;
+};
+
+
+static void builtin_glob_archive_back( void * closure, OBJECT * member,
+    LIST * symbols, int status, timestamp const * const time )
+{
+    PROFILE_ENTER( BUILTIN_GLOB_ARCHIVE_BACK );
+
+    struct globbing2 * const globbing = (struct globbing2 *)closure;
+    PATHNAME f;
+    string buf[ 1 ];
+    LISTITER iter;
+    LISTITER end;
+    LISTITER iter_symbols;
+    LISTITER end_symbols;
+    int matched = 0;
+
+    /* Match member name.
+     */
+    path_parse( object_str( member ), &f );
+
+    if ( !strcmp( f.f_member.ptr, "" ) )
+    {
+        PROFILE_EXIT( BUILTIN_GLOB_ARCHIVE_BACK );
+        return;
+    }
+
+    string_new( buf );
+    string_append_range( buf, f.f_member.ptr, f.f_member.ptr + f.f_member.len );
+
+    if ( globbing->case_insensitive )
+        downcase_inplace( buf->value );
+
+    /* Glob with member patterns. If not matched, then match symbols.
+     */
+    matched = 0;
+    iter = list_begin( globbing->patterns[ 0 ] );
+    end = list_end( globbing->patterns[ 0 ] );
+    for ( ; !matched && iter != end;
+            iter = list_next( iter ) )
+    {
+        const char * pattern = object_str( list_item( iter ) );
+        int match_exact = ( !has_wildcards( pattern ) );
+        matched = ( match_exact ?
+            ( !strcmp( pattern, buf->value ) ) :
+            ( !glob( pattern, buf->value ) ) );
+    }
+
+
+    /* Glob with symbol patterns, if requested.
+     */
+    iter = list_begin( globbing->patterns[ 1 ] );
+    end = list_end( globbing->patterns[ 1 ] );
+
+    if ( iter != end ) matched = 0;
+
+    for ( ; !matched && iter != end;
+            iter = list_next( iter ) )
+    {
+        const char * pattern = object_str( list_item( iter ) );
+        int match_exact = ( !has_wildcards( pattern ) );
+
+        iter_symbols = list_begin( symbols );
+        end_symbols = list_end( symbols );
+
+        for ( ; !matched && iter_symbols != end_symbols;
+                iter_symbols = list_next( iter_symbols ) )
+        {
+            const char * symbol = object_str( list_item( iter_symbols ) );
+
+            string_copy( buf, symbol );
+            if ( globbing->case_insensitive )
+                downcase_inplace( buf->value );
+
+            matched = ( match_exact ?
+                ( !strcmp( pattern, buf->value ) ) :
+                ( !glob( pattern, buf->value ) ) );
+        }
+    }
+
+    if ( matched )
+    {
+        globbing->results = list_push_back( globbing->results,
+            object_copy( member ) );
+    }
+
+    string_free( buf );
+
+    PROFILE_EXIT( BUILTIN_GLOB_ARCHIVE_BACK );
+}
+
+
+LIST * builtin_glob_archive( FRAME * frame, int flags )
+{
+    LIST * const l = lol_get( frame->args, 0 );
+    LIST * const r1 = lol_get( frame->args, 1 );
+    LIST * const r2 = lol_get( frame->args, 2 );
+    LIST * const r3 = lol_get( frame->args, 3 );
+
+    LISTITER iter;
+    LISTITER end;
+    struct globbing2 globbing;
+
+    globbing.results = L0;
+    globbing.patterns[ 0 ] = r1;
+    globbing.patterns[ 1 ] = r3;
+
+    globbing.case_insensitive =
+# if defined( OS_NT ) || defined( OS_CYGWIN ) || defined( OS_VMS )
+       l;  /* Always case-insensitive. */
+# else
+       r2;
+# endif
+
+    if ( globbing.case_insensitive )
+    {
+        globbing.patterns[ 0 ] = downcase_list( globbing.patterns[ 0 ] );
+        globbing.patterns[ 1 ] = downcase_list( globbing.patterns[ 1 ] );
+    }
+
+    iter = list_begin( l );
+    end = list_end( l );
+    for ( ; iter != end; iter = list_next( iter ) )
+        file_archivescan( list_item( iter ), builtin_glob_archive_back, &globbing );
+
+    if ( globbing.case_insensitive )
+    {
+        list_free( globbing.patterns[ 0 ] );
+        list_free( globbing.patterns[ 1 ] );
+    }
+
+    return globbing.results;
+}

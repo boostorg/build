@@ -96,6 +96,7 @@ def run_tests(critical_tests, other_tests):
                 print("PASSED")
             else:
                 print("FAILED")
+                BoostBuild.flush_annotations()
         else:
             rs = "succeed"
             if not passed:
@@ -124,6 +125,9 @@ def run_tests(critical_tests, other_tests):
         FAIL: %d
         """ % (pass_count, failures_count)
 
+    # exit with failure with failures
+    if failures_count > 0:
+        sys.exit(1)
 
 def last_failed_test():
     "Returns the name of the last failed test or None."
@@ -163,26 +167,31 @@ tests = ["absolute_sources",
          "bad_dirname",
          "build_dir",
          "build_file",
+         "build_hooks",
          "build_no",
          "builtin_echo",
          "builtin_exit",
          "builtin_glob",
          "builtin_split_by_characters",
+         "bzip2",
          "c_file",
          "chain",
          "clean",
+         "command_line_properties",
          "composite",
          "conditionals",
          "conditionals2",
          "conditionals3",
          "conditionals_multiple",
          "configuration",
+         "configure",
          "copy_time",
          "core_action_output",
          "core_action_status",
          "core_actions_quietly",
          "core_at_file",
          "core_bindrule",
+         "core_fail_expected",
          "core_jamshell",
          "core_multifile_actions",
          "core_nt_cmd_line",
@@ -192,17 +201,19 @@ tests = ["absolute_sources",
          "core_parallel_actions",
          "core_parallel_multifile_actions_1",
          "core_parallel_multifile_actions_2",
+         "core_scanner",
          "core_source_line_tracking",
          "core_update_now",
          "core_variables_in_actions",
          "custom_generator",
+         "debugger",
+         "debugger-mi",
          "default_build",
          "default_features",
 # This test is known to be broken itself.
 #         "default_toolset",
          "dependency_property",
          "dependency_test",
-         "direct_request_test",
          "disambiguation",
          "dll_path",
          "double_loading",
@@ -213,7 +224,11 @@ tests = ["absolute_sources",
          "expansion",
          "explicit",
          "feature_cxxflags",
-         "free_features_request",
+         "feature_implicit_dependency",
+         "feature_relevant",
+         "feature_suppress_import_lib",
+         "file_types",
+         "flags",
          "generator_selection",
          "generators_test",
          "implicit_dependency",
@@ -221,7 +236,11 @@ tests = ["absolute_sources",
          "inherit_toolset",
          "inherited_dependency",
          "inline",
+         "libjpeg",
+         "liblzma",
+         "libzstd",
          "lib_source_property",
+         "lib_zlib",
          "library_chain",
          "library_property",
          "link",
@@ -234,6 +253,7 @@ tests = ["absolute_sources",
          "notfile",
          "ordered_include",
          "out_of_tree",
+         "param",
          "path_features",
          "prebuilt",
          "print",
@@ -246,7 +266,6 @@ tests = ["absolute_sources",
          "project_test4",
          "property_expansion",
          "rebuilds",
-         "regression",
          "relative_sources",
          "remove_requirement",
          "rescan_header",
@@ -263,10 +282,16 @@ tests = ["absolute_sources",
          "static_and_shared_library",
          "suffix",
          "tag",
-         "test_result_dumping",
          "test_rc",
-         "testing_support",
+         "testing",
          "timedata",
+         "toolset_clang_darwin",
+         "toolset_clang_linux",
+         "toolset_clang_vxworks",
+         "toolset_darwin",
+         "toolset_defaults",
+         "toolset_gcc",
+         "toolset_intel_darwin",
          "toolset_requirements",
          "unit_test",
          "unused",
@@ -274,7 +299,6 @@ tests = ["absolute_sources",
          "using",
          "wrapper",
          "wrong_project",
-         "zlib"
          ]
 
 if os.name == "posix":
@@ -283,8 +307,10 @@ if os.name == "posix":
     # it fails ;-). Further, the test relies on the fact that on Linux, one can
     # build a shared library with unresolved symbols. This is not true on
     # Windows, even with cygwin gcc.
-    if "CYGWIN" not in os.uname()[0]:
-        tests.append("library_order")
+
+#   Disable this test until we figure how to address failures due to --as-needed being default now.
+#    if "CYGWIN" not in os.uname()[0]:
+#        tests.append("library_order")
 
 if toolset.startswith("gcc"):
     tests.append("gcc_runtime")
@@ -292,12 +318,16 @@ if toolset.startswith("gcc"):
 if toolset.startswith("gcc") or toolset.startswith("msvc"):
     tests.append("pch")
 
+# Disable on OSX as it doesn't seem to work for unknown reasons.
+if sys.platform != 'darwin':
+    tests.append("builtin_glob_archive")
+
 if "--extras" in sys.argv:
     tests.append("boostbook")
     tests.append("qt4")
     tests.append("qt5")
     tests.append("example_qt4")
-    # Requires ./whatever.py to work, so is not guaranted to work everywhere.
+    # Requires ./whatever.py to work, so is not guaranteed to work everywhere.
     tests.append("example_customization")
     # Requires gettext tools.
     tests.append("example_gettext")

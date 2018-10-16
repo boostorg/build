@@ -3,8 +3,10 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #         http://www.boost.org/LICENSE_1_0.txt)
 
+import os ;
 import gcc ;
 import property ;
+import toolset ;
 
 rule properties-as-path ( properties * )
 {
@@ -19,6 +21,9 @@ rule properties-as-path ( properties * )
     return [ property.as-path
         [ property.remove incidental : $(r) ] ] ;
 }
+
+toolset.flags yfc-compile KNOWN-PROPERTIES : <toolset> <optimization> ;
+toolset.flags yfc-link KNOWN-PROPERTIES : <toolset> <optimization> ;
 
 rule yfc-compile ( target : sources * : property-set * )
 {
@@ -42,5 +47,21 @@ actions yfc-link
     echo $(>) >> $(<)
 }
 
+if [ os.name ] = VMS
+{
+    actions yfc-compile
+    {
+        PIPE WRITE SYS$OUTPUT "$(PROPERTIES)" | TYPE SYS$INPUT /OUT=$(<:W)
+        PIPE WRITE SYS$OUTPUT "$(>:J= ",")" | APPEND /NEW SYS$INPUT $(<:W)
+    }
+
+    actions yfc-link
+    {
+        PIPE WRITE SYS$OUTPUT "$(PROPERTIES)" | TYPE SYS$INPUT /OUT=$(<:W)
+        OPEN /APPEND FOUT $(<:W)
+        WRITE FOUT "$(>:J= ",")"
+        CLOSE FOUT
+    }
+}
 
 IMPORT $(__name__) : yfc-compile yfc-link : : yfc-compile yfc-link ;

@@ -1,10 +1,11 @@
-# Copyright 2002, 2003, 2005 Vladimir Prus 
-# Distributed under the Boost Software License, Version 1.0. 
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
+# Copyright 2002, 2003, 2005 Vladimir Prus
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-
+import os ;
 import gcc ;
 import property ;
+import toolset ;
 
 rule properties-as-path ( properties * )
 {
@@ -21,9 +22,13 @@ rule properties-as-path ( properties * )
 }
 
 
+toolset.flags yfc-compile KNOWN-PROPERTIES : <toolset> <optimization> ;
+toolset.flags yfc-link KNOWN-PROPERTIES : <toolset> <optimization> ;
+
+
 rule yfc-compile ( target : sources * : property-set * )
 {
-    PROPERTIES on $(target) = [ properties-as-path $(property-set) ] ;      
+    PROPERTIES on $(target) = [ properties-as-path $(property-set) ] ;
 }
 
 actions yfc-compile
@@ -43,5 +48,21 @@ actions yfc-link
     echo $(>) >> $(<)
 }
 
+if [ os.name ] = VMS
+{
+    actions yfc-compile
+    {
+        PIPE WRITE SYS$OUTPUT "$(PROPERTIES)" | TYPE SYS$INPUT /OUT=$(<:W)
+        PIPE WRITE SYS$OUTPUT "$(>:J= ",")" | APPEND /NEW SYS$INPUT $(<:W)
+    }
 
-IMPORT $(__name__) : yfc-compile yfc-link : : yfc-compile yfc-link ;
+    actions yfc-link
+    {
+        PIPE WRITE SYS$OUTPUT "$(PROPERTIES)" | TYPE SYS$INPUT /OUT=$(<:W)
+        OPEN /APPEND FOUT $(<:W)
+        WRITE FOUT "$(>:J= ",")"
+        CLOSE FOUT
+    }
+}
+
+#IMPORT $(__name__) : yfc-compile yfc-link : : yfc-compile yfc-link ;

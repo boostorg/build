@@ -13,9 +13,9 @@ options = {}
 # Set a value for a named option, to be used when not overridden on the command
 # line.
 def set(name, value=None):
-    
+
     global options
-    
+
     options[name] = value
 
 def get(name, default_value=None, implied_value=None):
@@ -29,7 +29,7 @@ def get(name, default_value=None, implied_value=None):
         m = b2.util.regex.transform(sys.argv, "--(" + re.escape(name) + ")")
         if m and implied_value:
             return implied_value
-        elif options.has_key(name) and options[name] != None:
+        elif options.get(name) is not None:
             return options[name]
         else:
             return default_value

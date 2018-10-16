@@ -10,46 +10,52 @@ import operator
 import re
 
 import b2.build.property_set as property_set
-import b2.util
 
-class BjamAction:
+from b2.util import set_jam_action, is_iterable
+
+class BjamAction(object):
     """Class representing bjam action defined from Python."""
-    
-    def __init__(self, action_name, function):
+
+    def __init__(self, action_name, function, has_command=False):
+        assert isinstance(action_name, basestring)
+        assert callable(function) or function is None
         self.action_name = action_name
         self.function = function
-            
-    def __call__(self, targets, sources, property_set):
+        self.has_command = has_command
 
-        # Bjam actions defined from Python have only the command
-        # to execute, and no associated jam procedural code. So
-        # passing 'property_set' to it is not necessary.
-        bjam_interface.call("set-update-action", self.action_name,
-                            targets, sources, [])
+    def __call__(self, targets, sources, property_set_):
+        assert is_iterable(targets)
+        assert is_iterable(sources)
+        assert isinstance(property_set_, property_set.PropertySet)
+        if self.has_command:
+            # Bjam actions defined from Python have only the command
+            # to execute, and no associated jam procedural code. So
+            # passing 'property_set' to it is not necessary.
+            bjam_interface.call("set-update-action", self.action_name,
+                                targets, sources, [])
         if self.function:
-            self.function(targets, sources, property_set)
+            self.function(targets, sources, property_set_)
 
-class BjamNativeAction:
+class BjamNativeAction(BjamAction):
     """Class representing bjam action defined by Jam code.
 
     We still allow to associate a Python callable that will
     be called when this action is installed on any target.
     """
-    
-    def __init__(self, action_name, function):
-        self.action_name = action_name
-        self.function = function
-        
-    def __call__(self, targets, sources, property_set):
+
+    def __call__(self, targets, sources, property_set_):
+        assert is_iterable(targets)
+        assert is_iterable(sources)
+        assert isinstance(property_set_, property_set.PropertySet)
         if self.function:
-            self.function(targets, sources, property_set)
-        
+            self.function(targets, sources, property_set_)
+
         p = []
         if property_set:
-            p = property_set.raw()
+            p = property_set_.raw()
 
-        b2.util.set_jam_action(self.action_name, targets, sources, p)
-        
+        set_jam_action(self.action_name, targets, sources, p)
+
 action_modifiers = {"updated": 0x01,
                     "together": 0x02,
                     "ignore": 0x04,
@@ -77,6 +83,8 @@ class Engine:
             targets = [targets]
         if isinstance (sources, str):
             sources = [sources]
+        assert is_iterable(targets)
+        assert is_iterable(sources)
 
         for target in targets:
             for source in sources:
@@ -105,6 +113,11 @@ class Engine:
             echo [ on $(targets) return $(MY-VAR) ] ;
             "Hello World"
         """
+        if isinstance(targets, str):
+            targets = [targets]
+        assert is_iterable(targets)
+        assert isinstance(variable, basestring)
+
         return bjam_interface.call('get-target-variable', targets, variable)
 
     def set_target_variable (self, targets, variable, value, append=0):
@@ -114,13 +127,22 @@ class Engine:
         where to generate targets, and will also be available to
         updating rule for that 'taret'.
         """
-        if isinstance (targets, str): 
+        if isinstance (targets, str):
             targets = [targets]
+        if isinstance(value, str):
+            value = [value]
 
-        for target in targets:
-            self.do_set_target_variable (target, variable, value, append)
+        assert is_iterable(targets)
+        assert isinstance(variable, basestring)
+        assert is_iterable(value)
 
-    def set_update_action (self, action_name, targets, sources, properties=property_set.empty()):
+        if targets:
+            if append:
+                bjam_interface.call("set-target-variable", targets, variable, value, "true")
+            else:
+                bjam_interface.call("set-target-variable", targets, variable, value)
+
+    def set_update_action (self, action_name, targets, sources, properties=None):
         """ Binds a target to the corresponding update action.
             If target needs to be updated, the action registered
             with action_name will be used.
@@ -128,12 +150,20 @@ class Engine:
             either 'register_action' or 'register_bjam_action'
             method.
         """
-        assert(isinstance(properties, property_set.PropertySet))
-        if isinstance (targets, str): 
+        if isinstance(targets, str):
             targets = [targets]
+        if isinstance(sources, str):
+            sources = [sources]
+        if properties is None:
+            properties = property_set.empty()
+        assert isinstance(action_name, basestring)
+        assert is_iterable(targets)
+        assert is_iterable(sources)
+        assert(isinstance(properties, property_set.PropertySet))
+
         self.do_set_update_action (action_name, targets, sources, properties)
 
-    def register_action (self, action_name, command, bound_list = [], flags = [],
+    def register_action (self, action_name, command='', bound_list = [], flags = [],
                          function = None):
         """Creates a new build engine action.
 
@@ -149,10 +179,11 @@ class Engine:
         This function will be called by set_update_action, and can
         set additional target variables.
         """
-        if self.actions.has_key(action_name):
-            raise "Bjam action %s is already defined" % action_name
-
-        assert(isinstance(flags, list))
+        assert isinstance(action_name, basestring)
+        assert isinstance(command, basestring)
+        assert is_iterable(bound_list)
+        assert is_iterable(flags)
+        assert function is None or callable(function)
 
         bjam_flags = reduce(operator.or_,
                             (action_modifiers[flag] for flag in flags), 0)
@@ -164,7 +195,8 @@ class Engine:
         if command:
             bjam_interface.define_action(action_name, command, bound_list, bjam_flags)
 
-        self.actions[action_name] = BjamAction(action_name, function)
+        self.actions[action_name] = BjamAction(
+            action_name, function, has_command=bool(command))
 
     def register_bjam_action (self, action_name, function=None):
         """Informs self that 'action_name' is declared in bjam.
@@ -178,25 +210,37 @@ class Engine:
         # action name.  This way, jamfile rules that take action names
         # can just register them without specially checking if
         # action is already registered.
-        if not self.actions.has_key(action_name):
+        assert isinstance(action_name, basestring)
+        assert function is None or callable(function)
+        if action_name not in self.actions:
             self.actions[action_name] = BjamNativeAction(action_name, function)
-    
+
     # Overridables
 
 
-    def do_set_update_action (self, action_name, targets, sources, property_set):
+    def do_set_update_action (self, action_name, targets, sources, property_set_):
+        assert isinstance(action_name, basestring)
+        assert is_iterable(targets)
+        assert is_iterable(sources)
+        assert isinstance(property_set_, property_set.PropertySet)
         action = self.actions.get(action_name)
         if not action:
             raise Exception("No action %s was registered" % action_name)
-        action(targets, sources, property_set)
+        action(targets, sources, property_set_)
 
     def do_set_target_variable (self, target, variable, value, append):
+        assert isinstance(target, basestring)
+        assert isinstance(variable, basestring)
+        assert is_iterable(value)
+        assert isinstance(append, int)  # matches bools
         if append:
             bjam_interface.call("set-target-variable", target, variable, value, "true")
         else:
             bjam_interface.call("set-target-variable", target, variable, value)
-        
+
     def do_add_dependency (self, target, source):
+        assert isinstance(target, basestring)
+        assert isinstance(source, basestring)
         bjam_interface.call("DEPENDS", target, source)
-         
-        
+
+

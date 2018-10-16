@@ -8,6 +8,7 @@
 
 import hashlib
 
+import bjam
 from b2.util.utility import *
 import property, feature
 import b2.build.feature
@@ -15,7 +16,7 @@ from b2.exceptions import *
 from b2.build.property import get_abbreviated_paths
 from b2.util.sequence import unique
 from b2.util.set import difference
-from b2.util import cached, abbreviate_dashed
+from b2.util import cached, abbreviate_dashed, is_iterable_typed
 
 from b2.manager import get_manager
 
@@ -36,19 +37,25 @@ def create (raw_properties = []):
     """ Creates a new 'PropertySet' instance for the given raw properties,
         or returns an already existing one.
     """
+    assert (is_iterable_typed(raw_properties, property.Property)
+            or is_iterable_typed(raw_properties, basestring))
     # FIXME: propagate to callers.
     if len(raw_properties) > 0 and isinstance(raw_properties[0], property.Property):
         x = raw_properties
     else:
         x = [property.create_from_string(ps) for ps in raw_properties]
-    x.sort()
-    x = unique(x, stable=True)
 
-    # FIXME: can we do better, e.g. by directly computing
-    # hash value of the list?
-    key = tuple(x)
+    # These two lines of code are optimized to the current state
+    # of the Property class. Since this function acts as the caching
+    # frontend to the PropertySet class modifying these two lines
+    # could have a severe performance penalty. Be careful.
+    # It would be faster to sort by p.id, but some projects may rely
+    # on the fact that the properties are ordered alphabetically. So,
+    # we maintain alphabetical sorting so as to maintain backward compatibility.
+    x = sorted(set(x), key=lambda p: (p.feature.name, p.value, p.condition))
+    key = tuple(p.id for p in x)
 
-    if not __cache.has_key (key):
+    if key not in __cache:
         __cache [key] = PropertySet(x)
 
     return __cache [key]
@@ -58,6 +65,7 @@ def create_with_validation (raw_properties):
         that all properties are valid and converting implicit
         properties into gristed form.
     """
+    assert is_iterable_typed(raw_properties, basestring)
     properties = [property.create_from_string(s) for s in raw_properties]
     property.validate(properties)
 
@@ -71,7 +79,9 @@ def empty ():
 def create_from_user_input(raw_properties, jamfile_module, location):
     """Creates a property-set from the input given by the user, in the
     context of 'jamfile-module' at 'location'"""
-
+    assert is_iterable_typed(raw_properties, basestring)
+    assert isinstance(jamfile_module, basestring)
+    assert isinstance(location, basestring)
     properties = property.create_from_strings(raw_properties, True)
     properties = property.translate_paths(properties, location)
     properties = property.translate_indirect(properties, jamfile_module)
@@ -95,7 +105,10 @@ def refine_from_user_input(parent_requirements, specification, jamfile_module,
      - project-module -- the module to which context indirect features
        will be bound.
      - location -- the path to which path features are relative."""
-
+    assert isinstance(parent_requirements, PropertySet)
+    assert is_iterable_typed(specification, basestring)
+    assert isinstance(jamfile_module, basestring)
+    assert isinstance(location, basestring)
 
     if not specification:
         return parent_requirements
@@ -145,16 +158,13 @@ class PropertySet:
         - several operations, like and refine and as_path are provided. They all use
           caching whenever possible.
     """
-    def __init__ (self, properties = []):
-
-
-        raw_properties = []
-        for p in properties:
-            raw_properties.append(p.to_raw())
+    def __init__ (self, properties=None):
+        if properties is None:
+            properties = []
+        assert is_iterable_typed(properties, property.Property)
 
         self.all_ = properties
-        self.all_raw_ = raw_properties
-        self.all_set_ = set(properties)
+        self._all_set = {p.id for p in properties}
 
         self.incidental_ = []
         self.free_ = []
@@ -198,38 +208,41 @@ class PropertySet:
         # A cache for already evaluated sets.
         self.evaluated_ = {}
 
-        for p in raw_properties:
-            if not get_grist (p):
-                raise BaseException ("Invalid property: '%s'" % p)
-
-            att = feature.attributes (get_grist (p))
-
-            if 'propagated' in att:
-                self.propagated_.append (p)
-
-            if 'link_incompatible' in att:
-                self.link_incompatible.append (p)
+        # stores the list of LazyProperty instances.
+        # these are being kept separate from the normal
+        # Property instances so that when this PropertySet
+        # tries to return one of its attributes, it
+        # will then try to evaluate the LazyProperty instances
+        # first before returning.
+        self.lazy_properties = []
 
         for p in properties:
-
+            f = p.feature
+            if isinstance(p, property.LazyProperty):
+                self.lazy_properties.append(p)
             # A feature can be both incidental and free,
             # in which case we add it to incidental.
-            if p.feature().incidental():
+            elif f.incidental:
                 self.incidental_.append(p)
-            elif p.feature().free():
+            elif f.free:
                 self.free_.append(p)
             else:
                 self.base_.append(p)
 
-            if p.condition():
+            if p.condition:
                 self.conditional_.append(p)
             else:
                 self.non_conditional_.append(p)
 
-            if p.feature().dependency():
+            if f.dependency:
                 self.dependency_.append (p)
-            else:
+            elif not isinstance(p, property.LazyProperty):
                 self.non_dependency_.append (p)
+
+            if f.propagated:
+                self.propagated_.append(p)
+            if f.link_incompatible:
+                self.link_incompatible.append(p)
 
 
     def all(self):
@@ -238,33 +251,48 @@ class PropertySet:
     def raw (self):
         """ Returns the list of stored properties.
         """
-        return self.all_raw_
+        # create a new list due to the LazyProperties.
+        # this gives them a chance to evaluate to their
+        # true Property(). This approach is being
+        # taken since calculations should not be using
+        # PropertySet.raw()
+        return [p._to_raw for p in self.all_]
 
     def __str__(self):
-        return ' '.join(str(p) for p in self.all_)
+        return ' '.join(p._to_raw for p in self.all_)
 
     def base (self):
         """ Returns properties that are neither incidental nor free.
         """
-        return self.base_
+        result = [p for p in self.lazy_properties
+                  if not(p.feature.incidental or p.feature.free)]
+        result.extend(self.base_)
+        return result
 
     def free (self):
         """ Returns free properties which are not dependency properties.
         """
-        return self.free_
+        result = [p for p in self.lazy_properties
+                  if not p.feature.incidental and p.feature.free]
+        result.extend(self.free_)
+        return result
 
     def non_free(self):
-        return self.base_ + self.incidental_
+        return self.base() + self.incidental()
 
     def dependency (self):
         """ Returns dependency properties.
         """
+        result = [p for p in self.lazy_properties if p.feature.dependency]
+        result.extend(self.dependency_)
         return self.dependency_
 
     def non_dependency (self):
         """ Returns properties that are not dependencies.
         """
-        return self.non_dependency_
+        result = [p for p in self.lazy_properties if not p.feature.dependency]
+        result.extend(self.non_dependency_)
+        return result
 
     def conditional (self):
         """ Returns conditional properties.
@@ -279,13 +307,15 @@ class PropertySet:
     def incidental (self):
         """ Returns incidental properties.
         """
-        return self.incidental_
+        result = [p for p in self.lazy_properties if p.feature.incidental]
+        result.extend(self.incidental_)
+        return result
 
     def refine (self, requirements):
         """ Refines this set's properties using the requirements passed as an argument.
         """
         assert isinstance(requirements, PropertySet)
-        if not self.refined_.has_key (requirements):
+        if requirements not in self.refined_:
             r = property.refine(self.all_, requirements.all_)
 
             self.refined_[requirements] = create(r)
@@ -304,10 +334,11 @@ class PropertySet:
         return self.subfeatures_
 
     def evaluate_conditionals(self, context=None):
+        assert isinstance(context, (PropertySet, type(None)))
         if not context:
             context = self
 
-        if not self.evaluated_.has_key(context):
+        if context not in self.evaluated_:
             # FIXME: figure why the call messes up first parameter
             self.evaluated_[context] = create(
                 property.evaluate_conditionals_in_context(self.all(), context))
@@ -332,13 +363,13 @@ class PropertySet:
 
             def path_order (p1, p2):
 
-                i1 = p1.feature().implicit()
-                i2 = p2.feature().implicit()
+                i1 = p1.feature.implicit
+                i2 = p2.feature.implicit
 
                 if i1 != i2:
                     return i2 - i1
                 else:
-                    return cmp(p1.feature().name(), p2.feature().name())
+                    return cmp(p1.feature.name, p2.feature.name)
 
             # trim redundancy
             properties = feature.minimize(self.base_)
@@ -348,15 +379,16 @@ class PropertySet:
 
             components = []
             for p in properties:
-                if p.feature().implicit():
-                    components.append(p.value())
+                f = p.feature
+                if f.implicit:
+                    components.append(p.value)
                 else:
-                    value = p.feature().name() + "-" + p.value()
+                    value = f.name.replace(':', '-') + "-" + p.value
                     if property.get_abbreviated_paths():
                         value = abbreviate_dashed(value)
                     components.append(value)
 
-            self.as_path_ = '/'.join (components)
+            self.as_path_ = '/'.join(components)
 
         return self.as_path_
 
@@ -410,7 +442,8 @@ class PropertySet:
         """ Creates a new property set containing the properties in this one,
             plus the ones of the property set passed as argument.
         """
-        if not self.added_.has_key(ps):
+        assert isinstance(ps, PropertySet)
+        if ps not in self.added_:
             self.added_[ps] = create(self.all_ + ps.all())
         return self.added_[ps]
 
@@ -428,33 +461,34 @@ class PropertySet:
             feature = feature[0]
         if not isinstance(feature, b2.build.feature.Feature):
             feature = b2.build.feature.get(feature)
+        assert isinstance(feature, b2.build.feature.Feature)
 
-        if not self.feature_map_:
+        if self.feature_map_ is None:
             self.feature_map_ = {}
 
             for v in self.all_:
-                if not self.feature_map_.has_key(v.feature()):
-                    self.feature_map_[v.feature()] = []
-                self.feature_map_[v.feature()].append(v.value())
+                if v.feature not in self.feature_map_:
+                    self.feature_map_[v.feature] = []
+                self.feature_map_[v.feature].append(v.value)
 
         return self.feature_map_.get(feature, [])
 
     @cached
     def get_properties(self, feature):
         """Returns all contained properties associated with 'feature'"""
-
         if not isinstance(feature, b2.build.feature.Feature):
             feature = b2.build.feature.get(feature)
+        assert isinstance(feature, b2.build.feature.Feature)
 
         result = []
         for p in self.all_:
-            if p.feature() == feature:
+            if p.feature == feature:
                 result.append(p)
         return result
 
     def __contains__(self, item):
-        return item in self.all_set_
-    
+        return item.id in self._all_set
+
 def hash(p):
     m = hashlib.md5()
     m.update(p)

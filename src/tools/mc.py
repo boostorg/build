@@ -7,7 +7,7 @@
 
 #  Support for Microsoft message compiler tool.
 #  Notes:
-#  - there's just message compiler tool, there's no tool for 
+#  - there's just message compiler tool, there's no tool for
 #    extracting message strings from sources
 #  - This file allows to use Microsoft message compiler
 #    with any toolset. In msvc.jam, there's more specific
@@ -34,7 +34,7 @@ feature('mc-set-customer-bit', ['no', 'yes'], ['free'])
 
 flags('mc.compile', 'MCFLAGS', ['<mc-input-encoding>ansi'], ['-a'])
 flags('mc.compile', 'MCFLAGS', ['<mc-input-encoding>unicode'], ['-u'])
-flags('mc.compile', 'MCFLAGS', ['<mc-output-encoding>ansi'], '-A')
+flags('mc.compile', 'MCFLAGS', ['<mc-output-encoding>ansi'], ['-A'])
 flags('mc.compile', 'MCFLAGS', ['<mc-output-encoding>unicode'], ['-U'])
 flags('mc.compile', 'MCFLAGS', ['<mc-set-customer-bit>no'], [])
 flags('mc.compile', 'MCFLAGS', ['<mc-set-customer-bit>yes'], ['-c'])
