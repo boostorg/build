@@ -16,8 +16,7 @@ t.set_tree("project-test3")
 os.remove("jamroot.jam")
 t.run_build_system(status=1)
 
-t.expect_output_lines("error: Could not find parent for project at '.'\n"
-    "error: Did not find Jamfile.jam or Jamroot.jam in any parent directory.")
+t.expect_output_lines("*.yfc-compile\" unknown in module*")
 
 t.set_tree("project-test3")
 t.run_build_system()
