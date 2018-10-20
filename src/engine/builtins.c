@@ -1842,7 +1842,7 @@ LIST * builtin_pad( FRAME * frame, int flags )
         return list_new( object_copy( string ) );
     else
     {
-        char * buffer = BJAM_MALLOC( desired + 1 );
+        char * buffer = (char *)BJAM_MALLOC( desired + 1 );
         int i;
         LIST * result;
 
@@ -1990,7 +1990,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         if ( buf != static_buf )
             BJAM_FREE( buf );
         bufsize *= 2;
-        buf = BJAM_MALLOC( bufsize );
+        buf = (char *)BJAM_MALLOC( bufsize );
     }
 
     if ( buf != static_buf )

@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#~ Copyright 2002-2005 Rene Rivera.
+#~ Copyright 2002-2018 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or copy at
 #~ http://www.boost.org/LICENSE_1_0.txt)
@@ -36,7 +36,7 @@ error_exit ()
     echo "###"
     echo "### A special toolset; cc, is available which is used as a fallback"
     echo "### when a more specific toolset is not found and the cc command is"
-    echo "### detected. The 'cc' toolset will use the CC, CFLAGS, and LIBS"
+    echo "### detected. The 'cxx' toolset will use the CXX, CXXFLAGS, and LIBS"
     echo "### environment variables, if present."
     echo "###"
     exit 1
@@ -70,7 +70,7 @@ Guess_Toolset ()
     elif test_uname QNX && test_path qcc ; then BOOST_JAM_TOOLSET=qcc
     elif test_uname Linux && test_path xlc; then 
        if /usr/bin/lscpu | grep Byte | grep Little > /dev/null 2>&1 ; then
-          # Little endian linux          
+          # Little endian linux
           BOOST_JAM_TOOLSET=xlcpp
        else
           #Big endian linux
@@ -105,11 +105,14 @@ Guess_Toolset ()
     elif test -r /opt/SUNWspro/bin/cc ; then
         BOOST_JAM_TOOLSET=sunpro
         BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
-    # Test for "cc" as the default fallback.
-    elif test_path $CC ; then BOOST_JAM_TOOLSET=cc
-    elif test_path cc ; then
-        BOOST_JAM_TOOLSET=cc
-        CC=cc
+    # Test for "cxx" as the default fallback.
+    elif test_path $CXX ; then BOOST_JAM_TOOLSET=cxx
+    elif test_path cxx ; then
+        BOOST_JAM_TOOLSET=cxx
+        CXX=cxx
+    elif test_path cpp ; then
+        BOOST_JAM_TOOLSET=cxx
+        CXX=cpp
     fi
     if test "$BOOST_JAM_TOOLSET" = "" ; then
         error_exit "Could not find a suitable toolset."
@@ -125,9 +128,21 @@ case "$1" in
     ?*) BOOST_JAM_TOOLSET=$1 ; shift ;;
     *) Guess_Toolset ;;
 esac
-BOOST_JAM_OPT_JAM="-o bootstrap/jam0"
-BOOST_JAM_OPT_MKJAMBASE="-o bootstrap/mkjambase0"
-BOOST_JAM_OPT_YYACC="-o bootstrap/yyacc0"
+BOOST_JAM_OPT_JAM="\
+ -DNDEBUG \
+ -DOPT_HEADER_CACHE_EXT \
+ -DOPT_GRAPH_DEBUG_EXT \
+ -DOPT_SEMAPHORE \
+ -DOPT_AT_FILES \
+ -DOPT_DEBUG_PROFILE \
+ -DJAM_DEBUGGER \
+ -DOPT_FIX_TARGET_VARIABLES_EXT \
+ -DOPT_IMPROVED_PATIENCE_EXT \
+ -DYYSTACKSIZE=5000 \
+ -DYYINITDEPTH=5000 \
+ -o b2"
+BOOST_JAM_OPT_MKJAMBASE="-o mkjambase"
+BOOST_JAM_OPT_YYACC="-o yyacc"
 case $BOOST_JAM_TOOLSET in
 
     gcc)
@@ -144,29 +159,29 @@ case $BOOST_JAM_TOOLSET in
         if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/gcc ; then
             export PATH=${BOOST_JAM_TOOLSET_ROOT}bin:$PATH
         fi
-        BOOST_JAM_CC="gcc -DNT"
+        BOOST_JAM_CXX="gcc -x c++ -O3 -DNT"
         BOOST_JAM_OS="NT"
         ;;
 
         *)
-        BOOST_JAM_CC=gcc
+        BOOST_JAM_CXX="gcc -x c++ -O3"
         esac
     ;;
 
     darwin)
-    BOOST_JAM_CC=cc
+    BOOST_JAM_CXX="clang -x c++ -O3"
     ;;
 
     intel-darwin)
-    BOOST_JAM_CC=icc
+    BOOST_JAM_CXX="icc -O3"
     ;;
 
     intel-linux)
     test_path icc >/dev/null 2>&1
     if test $? ; then
-	BOOST_JAM_CC=`test_path icc`
-	echo "Found $BOOST_JAM_CC in environment"
-	BOOST_JAM_TOOLSET_ROOT=`echo $BOOST_JAM_CC | sed -e 's/bin.*\/icc//'`
+	BOOST_JAM_CXX=`test_path icc`
+	echo "Found $BOOST_JAM_CXX in environment"
+	BOOST_JAM_TOOLSET_ROOT=`echo $BOOST_JAM_CXX | sed -e 's/bin.*\/icc//'`
 	# probably the most widespread
 	ARCH=intel64
     else
@@ -197,41 +212,42 @@ case $BOOST_JAM_TOOLSET in
         export LD_RUN_PATH
         . ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh $ARCH
     fi
-    if test -z "$BOOST_JAM_CC" ; then
-	BOOST_JAM_CC=icc
+    if test -z "$BOOST_JAM_CXX" ; then
+	BOOST_JAM_CXX=icc
     fi
+    BOOST_JAM_CXX="${BOOST_JAM_CXX} -Xlinker -s -O3"
     ;;
 
     vacpp)
-    BOOST_JAM_CC=xlc
+    BOOST_JAM_CXX="xlc -s -O3 -qstrict -qinline"
     ;;
     
     xlcpp)
-    BOOST_JAM_CC=xlc
+    BOOST_JAM_CXX="xlc -s -O3 -qstrict -qinline"
     ;;
 
     como)
-    BOOST_JAM_CC="como --c"
+    BOOST_JAM_CXX="como --c --inlining"
     ;;
 
     kcc)
-    BOOST_JAM_CC=KCC
+    BOOST_JAM_CXX="KCC -s +K2"
     ;;
 
     kylix)
-    BOOST_JAM_CC=bc++
+    BOOST_JAM_CXX="bc++ -O2 -vi -w-inl"
     ;;
 
     mipspro)
-    BOOST_JAM_CC=cc
+    BOOST_JAM_CXX="cc -s -O3 -g0 \"-INLINE:none\""
     ;;
 
     pathscale)
-    BOOST_JAM_CC=pathcc
+    BOOST_JAM_CXX="pathcc -s -O3"
     ;;
 
     pgi)
-    BOOST_JAM_CC=pgcc
+    BOOST_JAM_CXX="pgcc -s -O3"
     ;;
 
     sun*)
@@ -242,32 +258,32 @@ case $BOOST_JAM_TOOLSET in
         PATH=${BOOST_JAM_TOOLSET_ROOT}bin:${PATH}
         export PATH
     fi
-    BOOST_JAM_CC=cc
+    BOOST_JAM_CXX="cpp -s -xO3"
     ;;
 
     clang*)
-    BOOST_JAM_CC="clang -Wno-unused -Wno-format"
+    BOOST_JAM_CXX="clang -x c++ -O3"
     BOOST_JAM_TOOLSET=clang
     ;;
 
     tru64cxx)
-    BOOST_JAM_CC=cc
+    BOOST_JAM_CXX="cc -s -O5 -inline speed"
     ;;
 
     acc)
-    BOOST_JAM_CC="cc -Ae"
+    BOOST_JAM_CXX="cc -s -O3 -Ae"
     ;;
 
-    cc)
-    if test -z "$CC" ; then CC=cc ; fi
-    BOOST_JAM_CC=$CC
+    cxx)
+    if test -z "${CXX}" ; then CXX=cxx ; fi
+    BOOST_JAM_CXX=${CXX}
     BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $CFLAGS $LIBS"
     BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $CFLAGS $LIBS"
     BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CFLAGS $LIBS"
     ;;
 
     qcc)
-    BOOST_JAM_CC=qcc
+    BOOST_JAM_CXX="qcc -O3 -Wc,-finline-functions"
     ;;
 
     *)
@@ -282,12 +298,52 @@ echo "###"
 YYACC_SOURCES="yyacc.c"
 MKJAMBASE_SOURCES="mkjambase.c"
 BJAM_SOURCES="\
- command.c compile.c constants.c debug.c execcmd.c frames.c function.c glob.c\
- hash.c hdrmacro.c headers.c jam.c jambase.c jamgram.c lists.c make.c make1.c\
- object.c option.c output.c parse.c pathsys.c regexp.c rules.c\
- scan.c search.c subst.c timestamp.c variable.c modules.c strings.c filesys.c\
- builtins.c class.c cwd.c native.c md5.c w32_getreg.c modules/set.c\
- modules/path.c modules/regex.c modules/property-set.c modules/sequence.c\
+ command.c \
+ compile.c \
+ constants.c \
+ debug.c \
+ debugger.c \
+ execcmd.c \
+ frames.c \
+ function.c \
+ glob.c\
+ hash.c \
+ hcache.c \
+ hdrmacro.c \
+ headers.c \
+ jam.c \
+ jambase.c \
+ jamgram.c \
+ lists.c \
+ make.c \
+ make1.c\
+ mem.c \
+ object.c \
+ option.c \
+ output.c \
+ parse.c \
+ pathsys.c \
+ regexp.c \
+ rules.c \
+ scan.c \
+ search.c \
+ subst.c \
+ timestamp.c \
+ variable.c \
+ modules.c \
+ strings.c \
+ filesys.c \
+ builtins.c \
+ class.c \
+ cwd.c \
+ native.c \
+ md5.c \
+ w32_getreg.c \
+ modules/set.c\
+ modules/path.c \
+ modules/regex.c \
+ modules/property-set.c \
+ modules/sequence.c \
  modules/order.c"
 case $BOOST_JAM_OS in
     NT)
@@ -299,42 +355,26 @@ case $BOOST_JAM_OS in
     ;;
 esac
 
-BJAM_UPDATE=
-if test "$1" = "--update" -o "$2" = "--update" -o "$3" = "--update" -o "$4" = "--update" ; then
-    BJAM_UPDATE="update"
-fi
-if test "${BJAM_UPDATE}" = "update" -a ! -x "./bootstrap/jam0" ; then
-    BJAM_UPDATE=
-fi
-
-if test "${BJAM_UPDATE}" != "update" ; then
-    echo_run rm -rf bootstrap
-    echo_run mkdir bootstrap
-    if test ! -r jamgram.y -o ! -r jamgramtab.h ; then
-        echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
-        if test -x "./bootstrap/yyacc0" ; then
-            echo_run ./bootstrap/yyacc0 jamgram.y jamgramtab.h jamgram.yy
-        fi
+echo_run rm -rf bootstrap
+echo_run mkdir bootstrap
+if test ! -r jamgram.y -o ! -r jamgramtab.h ; then
+    echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
+    if test -x "./yyacc" ; then
+        echo_run ./yyacc jamgram.y jamgramtab.h jamgram.yy
     fi
-    if test ! -r jamgram.c -o ! -r jamgram.h ; then
-        if test_path yacc ; then YACC="yacc -d"
-        elif test_path bison ; then YACC="bison -y -d --yacc"
-        fi
-        echo_run $YACC jamgram.y
-        mv -f y.tab.c jamgram.c
-        mv -f y.tab.h jamgram.h
-    fi
-    if test ! -r jambase.c ; then
-        echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_MKJAMBASE} ${MKJAMBASE_SOURCES}
-        if test -x "./bootstrap/mkjambase0" ; then
-            echo_run ./bootstrap/mkjambase0 jambase.c Jambase
-        fi
-    fi
-    echo_run ${BOOST_JAM_CC} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
 fi
-if test -x "./bootstrap/jam0" ; then
-    if test "${BJAM_UPDATE}" != "update" ; then
-        echo_run ./bootstrap/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" "$@" clean
+if test ! -r jamgram.c -o ! -r jamgram.h ; then
+    if test_path yacc ; then YACC="yacc -d"
+    elif test_path bison ; then YACC="bison -y -d --yacc"
     fi
-    echo_run ./bootstrap/jam0 -f build.jam --toolset=$BOOST_JAM_TOOLSET "--toolset-root=$BOOST_JAM_TOOLSET_ROOT" "$@"
+    echo_run $YACC jamgram.y
+    mv -f y.tab.c jamgram.c
+    mv -f y.tab.h jamgram.h
 fi
+if test ! -r jambase.c ; then
+    echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_MKJAMBASE} ${MKJAMBASE_SOURCES}
+    if test -x "./mkjambase" ; then
+        echo_run ./mkjambase jambase.c Jambase
+    fi
+fi
+echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}

@@ -20,7 +20,7 @@
 
 struct keyword
 {
-    char * word;
+    const char * word;
     int    type;
 } keywords[] =
 {
@@ -94,7 +94,7 @@ void yyfparse( OBJECT * s )
     include * i = (include *)BJAM_MALLOC( sizeof( *i ) );
 
     /* Push this onto the incp chain. */
-    i->string = "";
+    i->string = (char*)"";
     i->strings = 0;
     i->file = 0;
     i->fname = object_copy( s );

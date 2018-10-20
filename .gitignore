@@ -10,3 +10,5 @@
 /bootstrap.log
 /test/test_results.txt
 /project-config.jam
+/src/engine/b2
+/src/engine/b2.exe

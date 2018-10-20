@@ -152,7 +152,7 @@ struct globs globs =
 };
 
 /* Symbols to be defined as true for use in Jambase. */
-static char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
+static const char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
 
 
 /* Known for sure:
@@ -577,9 +577,9 @@ int main( int argc, char * * argv, char * * arg_environ )
         {
             if ( arg_v[ n ][ 0 ] == '-' )
             {
-                char * f = "-:l:d:j:f:gs:t:ano:qv";
+                const char * f = "-:l:d:j:f:gs:t:ano:qv";
                 for ( ; *f; ++f ) if ( *f == arg_v[ n ][ 1 ] ) break;
-                if ( ( f[ 1 ] == ':' ) && ( arg_v[ n ][ 2 ] == '\0' ) ) ++n;
+                if ( f[0] && f[1] && ( f[ 1 ] == ':' ) && ( arg_v[ n ][ 2 ] == '\0' ) ) ++n;
             }
             else
             {

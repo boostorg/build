@@ -17,7 +17,7 @@
 
 struct module_t;
 
-void   var_defines( struct module_t *, char * const * e, int preprocess );
+void   var_defines( struct module_t *, const char * const * e, int preprocess );
 LIST * var_get( struct module_t *, OBJECT * symbol );
 void   var_set( struct module_t *, OBJECT * symbol, LIST * value, int flag );
 LIST * var_swap( struct module_t *, OBJECT * symbol, LIST * value );

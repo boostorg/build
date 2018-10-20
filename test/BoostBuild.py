@@ -212,7 +212,7 @@ class Tester(TestCmd.TestCmd):
                                     system output like the --verbose command
                                     line option does.
     """
-    def __init__(self, arguments=None, executable="bjam",
+    def __init__(self, arguments=None, executable="b2",
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
         ignore_toolset_requirements=False, workdir="", pass_d0=False,
@@ -238,45 +238,6 @@ class Tester(TestCmd.TestCmd):
 
         if not use_default_bjam:
             jam_build_dir = ""
-            if os.name == "nt":
-                jam_build_dir = "bin.ntx86"
-            elif (os.name == "posix") and os.__dict__.has_key("uname"):
-                if os.uname()[0].lower().startswith("cygwin"):
-                    jam_build_dir = "bin.cygwinx86"
-                    if ("TMP" in os.environ and
-                        os.environ["TMP"].find("~") != -1):
-                        print("Setting $TMP to /tmp to get around problem "
-                            "with short path names")
-                        os.environ["TMP"] = "/tmp"
-                elif os.uname()[0] == "Linux":
-                    cpu = os.uname()[4]
-                    if re.match("i.86", cpu):
-                        jam_build_dir = "bin.linuxx86"
-                    else:
-                        jam_build_dir = "bin.linux" + os.uname()[4]
-                elif os.uname()[0] == "SunOS":
-                    jam_build_dir = "bin.solaris"
-                elif os.uname()[0] == "Darwin":
-                    if os.uname()[4] == "i386":
-                        jam_build_dir = "bin.macosxx86"
-                    elif os.uname()[4] == "x86_64":
-                        jam_build_dir = "bin.macosxx86_64"
-                    else:
-                        jam_build_dir = "bin.macosxppc"
-                elif os.uname()[0] == "AIX":
-                    jam_build_dir = "bin.aix"
-                elif os.uname()[0] == "IRIX64":
-                    jam_build_dir = "bin.irix"
-                elif os.uname()[0] == "FreeBSD":
-                    jam_build_dir = "bin.freebsd"
-                elif os.uname()[0] == "OSF1":
-                    jam_build_dir = "bin.osf"
-                else:
-                    raise ("Do not know directory where Jam is built for this "
-                        "system: %s/%s" % (os.name, os.uname()[0]))
-            else:
-                raise ("Do not know directory where Jam is built for this "
-                    "system: %s" % os.name)
 
             # Find where jam_src is located. Try for the debug version if it is
             # lying around.
