@@ -104,7 +104,7 @@ void yyfparse( OBJECT * s )
 
     /* If the filename is "+", it means use the internal jambase. */
     if ( !strcmp( object_str( s ), "+" ) )
-        i->strings = jambase;
+        i->strings = (char**)jambase;
 }
 
 

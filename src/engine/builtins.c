@@ -51,6 +51,12 @@
 #ifndef IO_REPARSE_TAG_SYMLINK
 # define IO_REPARSE_TAG_SYMLINK	(0xA000000CL)
 #endif
+
+#include <io.h>
+#define dup _dup
+#define dup2 _dup2
+#define open _open
+#define close _close
 #endif /* OS_NT */
 
 #if defined(USE_EXECUNIX)

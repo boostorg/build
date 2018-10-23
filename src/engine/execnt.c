@@ -221,7 +221,7 @@ void exec_init( void )
 {
     if ( globs.jobs > cmdtab_size )
     {
-        cmdtab = BJAM_REALLOC( cmdtab, globs.jobs * sizeof( *cmdtab ) );
+        cmdtab = (_cmdtab_t*)BJAM_REALLOC( cmdtab, globs.jobs * sizeof( *cmdtab ) );
         memset( cmdtab + cmdtab_size, 0, ( globs.jobs - cmdtab_size ) * sizeof( *cmdtab ) );
         cmdtab_size = globs.jobs;
     }

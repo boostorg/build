@@ -298,12 +298,16 @@ echo "###"
 YYACC_SOURCES="yyacc.c"
 MKJAMBASE_SOURCES="mkjambase.c"
 BJAM_SOURCES="\
+ builtins.c \
+ class.c \
  command.c \
  compile.c \
  constants.c \
+ cwd.c \
  debug.c \
  debugger.c \
  execcmd.c \
+ filesys.c \
  frames.c \
  function.c \
  glob.c\
@@ -316,8 +320,11 @@ BJAM_SOURCES="\
  jamgram.c \
  lists.c \
  make.c \
- make1.c\
+ make1.c \
+ md5.c \
  mem.c \
+ modules.c \
+ native.c \
  object.c \
  option.c \
  output.c \
@@ -327,24 +334,18 @@ BJAM_SOURCES="\
  rules.c \
  scan.c \
  search.c \
+ strings.c \
  subst.c \
  timestamp.c \
  variable.c \
- modules.c \
- strings.c \
- filesys.c \
- builtins.c \
- class.c \
- cwd.c \
- native.c \
- md5.c \
  w32_getreg.c \
- modules/set.c\
+ modules/order.c \
  modules/path.c \
- modules/regex.c \
  modules/property-set.c \
+ modules/regex.c \
  modules/sequence.c \
- modules/order.c"
+ modules/set.c \
+ "
 case $BOOST_JAM_OS in
     NT)
     BJAM_SOURCES="${BJAM_SOURCES} execnt.c filent.c pathnt.c"
