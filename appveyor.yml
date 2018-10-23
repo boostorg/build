@@ -23,7 +23,6 @@ build_script:
   - cd src/engine
   - build.bat
   - cd ../..
-  - bootstrap.bat
 
 test_script:
   - cd test
