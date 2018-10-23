@@ -327,7 +327,7 @@ if "--extras" in sys.argv:
     tests.append("qt4")
     tests.append("qt5")
     tests.append("example_qt4")
-    # Requires ./whatever.py to work, so is not guaranted to work everywhere.
+    # Requires ./whatever.py to work, so is not guaranteed to work everywhere.
     tests.append("example_customization")
     # Requires gettext tools.
     tests.append("example_gettext")

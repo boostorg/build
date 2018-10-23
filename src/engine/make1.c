@@ -337,7 +337,7 @@ static void make1a( state * const pState )
      * anything from happening until we can notify all dependencies that they
      * are needed. This 1 is then accounted for when we enter MAKE1B ourselves,
      * below. Without this if a dependency gets built before we finish
-     * processing all of our other dependencies our build might be triggerred
+     * processing all of our other dependencies our build might be triggered
      * prematurely.
      */
     t->asynccnt = 1;

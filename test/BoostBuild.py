@@ -107,7 +107,7 @@ def prepare_prefixes_and_suffixes(toolset, target_os=default_os):
 def prepare_suffix_map(toolset, target_os=default_os):
     """
       Set up suffix translation performed by the Boost Build testing framework
-    to accomodate different toolsets generating targets of the same type using
+    to accommodate different toolsets generating targets of the same type using
     different filename extensions (suffixes).
 
     """

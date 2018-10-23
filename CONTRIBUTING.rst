@@ -66,7 +66,7 @@ Without a good message, you might spend a lot of time later, wondering where
 a strange piece of code came from and why it was necessary.
 
 The good message mentions each changed file and each rule/method, saying
-what happend to it, and why. Consider, the following log message
+what happened to it, and why. Consider, the following log message
 
 ::
 

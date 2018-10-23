@@ -596,7 +596,7 @@ Boost.Build recognizes the following command line options.
   Stop at the first error, as opposed to continuing to build targets
   that don't depend on the failed ones.
 `-j N`::
-  Run up to N commands in parallel.
+  Run up to N commands in parallel. Default number of jobs is `1`.
 `--config=filename`[[bbv2.reference.init.options.config]]::
   Override all link:#bbv2.overview.configuration[configuration files]
 `--site-config=filename`::

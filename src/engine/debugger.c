@@ -860,10 +860,11 @@ static const char * debug_format_message( const char * format, va_list vargs )
         result = vsnprintf( buf, sz, format, args );
         #endif
         va_end( args );
+        if ( 0 <= result && result < sz )
+	    return buf;
+        free( buf );
         if ( result < 0 )
             return 0;
-        if ( result < sz ) return buf;
-        free( buf );
         sz = result + 1;
     }
 }

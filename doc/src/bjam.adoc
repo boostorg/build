@@ -1948,7 +1948,7 @@ system.
 * Jam `rules` are actually simple procedural entities. Think of them
 as functions. Arguments are separated by colons.
 * A Jam *target* is an abstract entity identified by an arbitrary
-string. The build-in `DEPENDS` rule creates a link in the dependency
+string. The built-in `DEPENDS` rule creates a link in the dependency
 graph between the named targets.
 * Note that the original Jam documentation for the built-in `INCLUDES`
 rule is incorrect: `INCLUDES targets1 : targets2` causes everything that

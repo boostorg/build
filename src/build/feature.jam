@@ -220,7 +220,7 @@ rule valid ( names + )
 }
 
 
-# Returns the attibutes of the given feature.
+# Returns the attributes of the given feature.
 #
 rule attributes ( feature )
 {
@@ -662,7 +662,7 @@ rule subfeature (
     local f = [ utility.ungrist $(feature) ] ;
     feature $(f)-$(subfeature-name) : $(subvalues) : $(attributes) subfeature ;
 
-    # Features and subfeatures are always relevent as a group
+    # Features and subfeatures are always relevant as a group
     .feature-dependencies.$(f) += $(f)-$(subfeature-name) ;
     .feature-dependencies.$(f)-$(subfeature-name) += $(f) ;
 
