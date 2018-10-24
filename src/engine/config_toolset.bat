@@ -136,25 +136,25 @@ set "_known_=1"
 goto :eof
 
 :Config_COMO
-set "BOOST_JAM_CXX=como"
+set "BOOST_JAM_CXX=como --inlining"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
 goto :eof
 
 :Config_GCC
-set "BOOST_JAM_CXX=gcc"
+set "BOOST_JAM_CXX=gcc -pedantic -fno-strict-aliasing -s -O3"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
 goto :eof
 
 :Config_GCC_NOCYGWIN
-set "BOOST_JAM_CXX=gcc -mno-cygwin"
+set "BOOST_JAM_CXX=gcc -pedantic -fno-strict-aliasing -s -O3 -mno-cygwin"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
 goto :eof
 
 :Config_INTEL_WIN32
-set "BOOST_JAM_CXX=icl /nologo"
+set "BOOST_JAM_CXX=icl /nologo /MT /O2 /Ob2 /Gy /GF /GA /GB"
 set "BOOST_JAM_OPT_JAM=/Feb2"
 set "_known_=1"
 goto :eof
@@ -163,7 +163,7 @@ goto :eof
 if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
     )
-set "BOOST_JAM_CXX=gcc"
+set "BOOST_JAM_CXX=gcc -pedantic -fno-strict-aliasing -s -O3"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
 goto :eof
