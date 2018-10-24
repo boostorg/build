@@ -76,7 +76,7 @@ Guess_Toolset ()
           #Big endian linux
           BOOST_JAM_TOOLSET=vacpp
        fi
-    elif test_uname AIX && test_path xlc; then BOOST_JAM_TOOLSET=vacpp    
+    elif test_uname AIX && test_path xlc; then BOOST_JAM_TOOLSET=vacpp
     elif test_uname FreeBSD && test_path freebsd-version && test_path clang; then BOOST_JAM_TOOLSET=clang
     elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
     elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
@@ -235,7 +235,7 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     kylix)
-    BOOST_JAM_CXX="bc++ -O2 -vi -w-inl"
+    BOOST_JAM_CXX="bc++ -tC -q -O2 -vi -w-inl"
     ;;
 
     mipspro)
@@ -277,9 +277,9 @@ case $BOOST_JAM_TOOLSET in
     cxx)
     if test -z "${CXX}" ; then CXX=cxx ; fi
     BOOST_JAM_CXX=${CXX}
-    BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $CFLAGS $LIBS"
-    BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $CFLAGS $LIBS"
-    BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CFLAGS $LIBS"
+    BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $CXXFLAGS $LIBS"
+    BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $CXXFLAGS $LIBS"
+    BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CXXFLAGS $LIBS"
     ;;
 
     qcc)
