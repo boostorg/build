@@ -61,7 +61,7 @@ test_uname ()
 }
 
 # Try and guess the toolset to bootstrap the build with...
-Guess_Toolset ()
+guess_toolset ()
 {
     if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
     elif test_uname IRIX ; then BOOST_JAM_TOOLSET=mipspro
@@ -119,14 +119,38 @@ Guess_Toolset ()
     fi
 }
 
+check_debug_build ()
+{
+    while test $# -gt 0
+    do
+        case "$1" in
+            --debug) return 0 ;;
+        esac
+        shift
+    done
+    return 1
+}
+
+check_python_build ()
+{
+    while test $# -gt 0
+    do
+        case "$1" in
+            --python) return 0 ;;
+        esac
+        shift
+    done
+    return 1
+}
+
 # The one option we support in the invocation
 # is the name of the toolset to force building
 # with.
 case "$1" in
-    --guess-toolset) Guess_Toolset ; echo "$BOOST_JAM_TOOLSET" ; exit 1 ;;
-    -*) Guess_Toolset ;;
+    --guess-toolset) guess_toolset ; echo "$BOOST_JAM_TOOLSET" ; exit 1 ;;
+    -*) guess_toolset ;;
     ?*) BOOST_JAM_TOOLSET=$1 ; shift ;;
-    *) Guess_Toolset ;;
+    *) guess_toolset ;;
 esac
 BOOST_JAM_OPT_JAM="\
  -DNDEBUG \
@@ -159,21 +183,29 @@ case $BOOST_JAM_TOOLSET in
         if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/gcc ; then
             export PATH=${BOOST_JAM_TOOLSET_ROOT}bin:$PATH
         fi
-        BOOST_JAM_CXX="gcc -x c++ -O3 -DNT"
+        BOOST_JAM_CXX="gcc -x c++ -DNT"
+        BOOST_RELEASE="-O3 -s"
+        BOOST_DEBUG="-O0 -g"
         BOOST_JAM_OS="NT"
         ;;
 
         *)
-        BOOST_JAM_CXX="gcc -x c++ -O3"
+        BOOST_JAM_CXX="gcc -x c++"
+        BOOST_RELEASE="-O3 -s"
+        BOOST_DEBUG="-O0 -g"
         esac
     ;;
 
     darwin)
-    BOOST_JAM_CXX="clang -x c++ -O3"
+    BOOST_JAM_CXX="clang -x c++"
+    BOOST_RELEASE="-O3 -s -flto"
+    BOOST_DEBUG="-O0 -g"
     ;;
 
     intel-darwin)
-    BOOST_JAM_CXX="icc -O3"
+    BOOST_JAM_CXX="icc"
+    BOOST_RELEASE="-O3 -s"
+    BOOST_DEBUG="-O0 -g -p"
     ;;
 
     intel-linux)
@@ -215,39 +247,57 @@ case $BOOST_JAM_TOOLSET in
     if test -z "$BOOST_JAM_CXX" ; then
 	BOOST_JAM_CXX=icc
     fi
-    BOOST_JAM_CXX="${BOOST_JAM_CXX} -Xlinker -s -O3"
+    BOOST_JAM_CXX="${BOOST_JAM_CXX} -Xlinker"
+    BOOST_RELEASE="-O3 -s"
+    BOOST_DEBUG="-O0 -g -p"
     ;;
 
     vacpp)
-    BOOST_JAM_CXX="xlc -s -O3 -qstrict -qinline"
+    BOOST_JAM_CXX="xlc"
+    BOOST_RELEASE="-O3 -s -qstrict -qinline"
+    BOOST_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
     
     xlcpp)
-    BOOST_JAM_CXX="xlc -s -O3 -qstrict -qinline"
+    BOOST_JAM_CXX="xlC"
+    BOOST_RELEASE="-s -O3 -qstrict -qinline"
+    BOOST_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     como)
-    BOOST_JAM_CXX="como --c --inlining"
+    BOOST_JAM_CXX="como --c"
+    BOOST_RELEASE="--inlining"
+    BOOST_DEBUG="--no_inlining"
     ;;
 
     kcc)
-    BOOST_JAM_CXX="KCC -s +K2"
+    BOOST_JAM_CXX="KCC"
+    BOOST_RELEASE="+K2 -s"
+    BOOST_DEBUG="+K0 -g"
     ;;
 
     kylix)
-    BOOST_JAM_CXX="bc++ -tC -q -O2 -vi -w-inl"
+    BOOST_JAM_CXX="bc++ -tC -q"
+    BOOST_RELEASE="-O2 -vi -w-inl -s"
+    BOOST_DEBUG="-Od -v -vi-"
     ;;
 
     mipspro)
-    BOOST_JAM_CXX="cc -s -O3 -g0 \"-INLINE:none\""
+    BOOST_JAM_CXX="cc"
+    BOOST_RELEASE="-O3 -g0 \"-INLINE:none\" -s"
+    BOOST_DEBUG="-O0 -INLINE -g"
     ;;
 
     pathscale)
     BOOST_JAM_CXX="pathcc -s -O3"
+    BOOST_RELEASE="-O3 -s"
+    BOOST_DEBUG="-g"
     ;;
 
     pgi)
     BOOST_JAM_CXX="pgcc -s -O3"
+    BOOST_RELEASE="-O3 -s"
+    BOOST_DEBUG="-g"
     ;;
 
     sun*)
@@ -258,20 +308,28 @@ case $BOOST_JAM_TOOLSET in
         PATH=${BOOST_JAM_TOOLSET_ROOT}bin:${PATH}
         export PATH
     fi
-    BOOST_JAM_CXX="cpp -s -xO3"
+    BOOST_JAM_CXX="cpp"
+    BOOST_RELEASE="-xO3 -s"
+    BOOST_DEBUG="-g"
     ;;
 
     clang*)
     BOOST_JAM_CXX="clang -x c++ -O3"
     BOOST_JAM_TOOLSET=clang
+    BOOST_RELEASE="-O3 -s"
+    BOOST_DEBUG="-O0 -fno-inline"
     ;;
 
     tru64cxx)
-    BOOST_JAM_CXX="cc -s -O5 -inline speed"
+    BOOST_JAM_CXX="cc"
+    BOOST_RELEASE="-O5 -inline speed -s"
+    BOOST_DEBUG="-O0 -pg -g"
     ;;
 
     acc)
-    BOOST_JAM_CXX="cc -s -O3 -Ae"
+    BOOST_JAM_CXX="cc"
+    BOOST_RELEASE="-O3 -Ae -s"
+    BOOST_DEBUG="-g -pg"
     ;;
 
     cxx)
@@ -283,7 +341,9 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     qcc)
-    BOOST_JAM_CXX="qcc -O3 -Wc,-finline-functions"
+    BOOST_JAM_CXX="qcc"
+    BOOST_RELEASE="-O3 -Wc,-finline-functions"
+    BOOST_DEBUG="O0 -Wc,-fno-inline -g"
     ;;
 
     *)
@@ -377,5 +437,8 @@ if test ! -r jambase.c ; then
     if test -x "./mkjambase" ; then
         echo_run ./mkjambase jambase.c Jambase
     fi
+fi
+if check_debug_build "$@" ; then BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_DEBUG}"
+else BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_RELEASE}"
 fi
 echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
