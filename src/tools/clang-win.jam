@@ -71,12 +71,12 @@ rule init ( version ? : command * : options * )
         errors.error "Cannot configure toolset clang-win: no 'clang-cl.exe' command found or given" ;
     }
 
-    local compiler = [ path.native $(command) ] ;
-    compiler = "\"$(compiler)\"" ;
+    local compiler = "\"$(command)\"" ;
+    compiler = "$(compiler:J= )" ;
 
     version ?= [ MATCH "version ([0-9.]+)" : [ SHELL "$(compiler) --version" ] ] ;
 
-    .notice "configuring '$(command)' version '$(version)'" ;
+    .notice "using compiler '$(compiler)', version '$(version)'" ;
 
     local condition = [  common.check-init-parameters clang-win : version $(version) ] ;
 
@@ -102,6 +102,11 @@ rule init ( version ? : command * : options * )
 
         local ml = [ regex.replace $(items[1]) "x64\\\\+link\\.exe" "x64\\ml64.exe" ] ;
         ml = [ regex.replace $(ml) "x86\\\\+link\\.exe" "x86\\ml.exe" ] ;
+
+        if ! [ MATCH "(ml\\.exe)" "(ml64\\.exe)" : $(ml) ]
+        {
+            ml = ;
+        }
 
         local assembler = [ get-option "assembler" : $(addr) : $(options) ] ;
         assembler ?= $(ml) ;
