@@ -190,14 +190,14 @@ case $BOOST_JAM_TOOLSET in
         ;;
 
         *)
-        BOOST_JAM_CXX="gcc -x c++"
+        BOOST_JAM_CXX="gcc -x c++ -std=c++11"
         BOOST_RELEASE="-O3 -s"
         BOOST_DEBUG="-O0 -g"
         esac
     ;;
 
     darwin)
-    BOOST_JAM_CXX="clang -x c++"
+    BOOST_JAM_CXX="clang -x c++ -std=c++11"
     BOOST_RELEASE="-O3 -s -flto"
     BOOST_DEBUG="-O0 -g"
     ;;
@@ -314,7 +314,7 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     clang*)
-    BOOST_JAM_CXX="clang -x c++ -O3"
+    BOOST_JAM_CXX="clang -x c++ -O3 -std=c++11"
     BOOST_JAM_TOOLSET=clang
     BOOST_RELEASE="-O3 -s"
     BOOST_DEBUG="-O0 -fno-inline"
@@ -416,8 +416,6 @@ case $BOOST_JAM_OS in
     ;;
 esac
 
-echo_run rm -rf bootstrap
-echo_run mkdir bootstrap
 if test ! -r jamgram.y -o ! -r jamgramtab.h ; then
     echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
     if test -x "./yyacc" ; then
