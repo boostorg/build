@@ -5103,7 +5103,7 @@ static struct arg_list * arg_list_compile_python( PyObject * bjam_signature,
         }
 
         *num_arguments = c->args->size;
-        result = BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
+        result = (struct arg_list *)BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
         memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list )
             );
         argument_list_compiler_free( c );
@@ -5115,7 +5115,7 @@ static struct arg_list * arg_list_compile_python( PyObject * bjam_signature,
 
 FUNCTION * function_python( PyObject * function, PyObject * bjam_signature )
 {
-    PYTHON_FUNCTION * result = BJAM_MALLOC( sizeof( PYTHON_FUNCTION ) );
+    PYTHON_FUNCTION * result = (PYTHON_FUNCTION *)BJAM_MALLOC( sizeof( PYTHON_FUNCTION ) );
 
     result->base.type = FUNCTION_PYTHON;
     result->base.reference_count = 1;

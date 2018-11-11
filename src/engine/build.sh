@@ -193,6 +193,7 @@ case $BOOST_JAM_TOOLSET in
         BOOST_JAM_CXX="gcc -x c++ -std=c++11"
         BOOST_RELEASE="-O3 -s"
         BOOST_DEBUG="-O0 -g"
+        BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
         esac
     ;;
 
@@ -200,6 +201,7 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_CXX="clang -x c++ -std=c++11"
     BOOST_RELEASE="-O3 -s -flto"
     BOOST_DEBUG="-O0 -g"
+    BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
     ;;
 
     intel-darwin)
@@ -318,6 +320,7 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_TOOLSET=clang
     BOOST_RELEASE="-O3 -s"
     BOOST_DEBUG="-O0 -fno-inline"
+    BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
     ;;
 
     tru64cxx)
@@ -438,5 +441,7 @@ if test ! -r jambase.c ; then
 fi
 if check_debug_build "$@" ; then BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_DEBUG}"
 else BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_RELEASE}"
+fi
+if check_python_build "$@" ; then BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_PYTHON}"
 fi
 echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}

@@ -2367,7 +2367,7 @@ PyObject * bjam_backtrace( PyObject * self, PyObject * args )
     PyObject     * result = PyList_New( 0 );
     struct frame * f = frame_before_python_call;
 
-    for ( ; f = f->prev; )
+    for ( ; (f = f->prev); )
     {
         PyObject   * tuple = PyTuple_New( 4 );
         char const * file;
