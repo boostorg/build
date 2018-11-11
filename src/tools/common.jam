@@ -918,6 +918,7 @@ local rule toolset-tag ( name : type ? : property-set )
             {
                case darwin : tag += clang-darwin ;
                case linux  : tag += clang ;
+               case win    : tag += clangw ;
             }
         }
         case como* : tag += como ;
@@ -975,7 +976,7 @@ local rule toolset-tag ( name : type ? : property-set )
     }
 
     # Ditto, from Clang 4
-    if $(tag) = clang && [ numbers.less 3 $(version[1]) ]
+    if $(tag) in clang clangw && [ numbers.less 3 $(version[1]) ]
     {
         version = $(version[1]) ;
     }
