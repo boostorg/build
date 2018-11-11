@@ -193,18 +193,36 @@ static void debug_lol_read( FILE * in, LOL * lol )
     }
 }
 
+static void debug_format_rulename ( string * out, FRAME * frame )
+{
+    const char * pos = strchr( frame->rulename, '.' );
+    if ( frame->module->class_module && pos )
+    {
+        string_copy( out, object_str( frame->module->name ) );
+        string_push_back( out, '.' );
+        string_append( out, pos + 1 );
+    }
+    else
+    {
+        string_copy( out, frame->rulename );
+    }
+}
+
 static void debug_frame_write( FILE * out, FRAME * frame )
 {
+    string rulename_buffer [ 1 ];
     OBJECT * fullname = constant_builtin;
     OBJECT * file = frame->file;
     if ( file == NULL ) file = constant_builtin;
     else fullname = make_absolute_path( frame->file );
+    debug_format_rulename( rulename_buffer, frame );
     debug_object_write( out, file );
     debug_int_write( out, frame->line );
     debug_object_write( out, fullname );
     debug_lol_write( out, frame->args );
-    debug_string_write( out, frame->rulename );
+    debug_string_write( out, rulename_buffer->value );
     object_free( fullname );
+    string_free( rulename_buffer );
 }
 
 /*

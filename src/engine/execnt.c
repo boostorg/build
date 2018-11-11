@@ -766,6 +766,7 @@ static void read_pipe
 {
     DWORD bytesInBuffer = 0;
     DWORD bytesAvailable = 0;
+    int i;
 
     for (;;)
     {
@@ -780,7 +781,6 @@ static void read_pipe
             return;
 
         /* Clean up some illegal chars. */
-        int i;
         for ( i = 0; i < bytesInBuffer; ++i )
         {
             if ( ( (unsigned char)ioBuffer[ i ] < 1 ) )
