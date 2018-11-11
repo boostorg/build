@@ -10,7 +10,7 @@ use libraries, and finish with testing and installing features.
 
 The simplest project that Boost.Build can construct is stored in
 `example/hello/` directory. The project is described by a file called
-`Jamroot` that contains:
+`Jamfile` that contains:
 
 [source]
 ----
@@ -30,7 +30,7 @@ b2 release
 Note that the debug and release variants are created in different
 directories, so you can switch between variants or even build multiple
 variants at once, without any unnecessary recompilation. Let us extend
-the example by adding another line to our project's `Jamroot`:
+the example by adding another line to our project's `Jamfile`:
 
 [source]
 ----
@@ -118,7 +118,7 @@ request_—a description of the desired properties for building the
 requested targets (or, if no targets were explicitly requested, the
 project in the current directory). The _actual_ properties used for
 building targets are typically a combination of the build request and
-properties derived from the project's `Jamroot` (and its other Jamfiles,
+properties derived from the project's `Jamfile` (and its other Jamfiles,
 as described in
 link:#bbv2.tutorial.hierarchy[the section called “Project Hierarchies”]).
 For example, the locations of `#include`d header files are normally not
@@ -145,7 +145,7 @@ link:#bbv2.reference.features.attributes[the section called “Feature Attribute
 augment) the build request.
 
 TIP: The value of the `<include>` feature is relative to the location of
-`Jamroot` where it is used.
+`Jamfile` where it is used.
 
 [[bbv2.tutorial.properties.project_attributes]]
 === Project Attributes
@@ -173,18 +173,18 @@ The effect would be as if we specified the same requirement for both
 == Project Hierarchies
 
 So far we have only considered examples with one project, with one
-user-written Boost.Jam file, `Jamroot`. A typical large codebase would
+user-written `Jamfile` file. A typical large codebase would
 be composed of many projects organized into a tree. The top of the tree
 is called the _project root_. Every subproject is defined by a file called
 `Jamfile` in a descendant directory of the project root. The parent
-project of a subproject is defined by the nearest `Jamfile` or `Jamroot`
+project of a subproject is defined by the nearest Jamfile
 file in an ancestor directory. For example, in the following directory
 layout:
 
 ----
 top/
   |
-  +-- Jamroot
+  +-- Jamfile
   |
   +-- app/
   |    |
@@ -208,7 +208,7 @@ filename will be set as “`Jamfile`” or “`Jamroot`.”
 
 Projects inherit all attributes (such as requirements) from their
 parents. Inherited requirements are combined with any requirements
-specified by the subproject. For example, if `top/Jamroot` has
+specified by the subproject. For example, if `top/Jamfile` has
 
 [source]
 ----
@@ -226,7 +226,7 @@ Invoking `b2` without explicitly specifying any targets on the command
 line builds the project rooted in the current directory. Building a
 project does not automatically cause its sub-projects to be built unless
 the parent project's Jamfile explicitly requests it. In our example,
-`top/Jamroot` might contain:
+`top/Jamfile` might contain:
 
 [source]
 ----
@@ -308,7 +308,7 @@ can be used by many targets, and if they all use `Jamfile` location, a change
 in directory organization entails much work.
 The solution is to use project ids—symbolic names not tied to directory
 layout. First, we need to assign a project id by adding this code to
-`Jamroot`:
+`Jamfile`:
 
 [source]
 ----
@@ -324,8 +324,8 @@ exe app : app.cpp /library-example/foo//bar ;
 
 The `/library-example/foo//bar` syntax is used to refer to the target
 `bar` in the project with id `/library-example/foo`. We've achieved our
-goal—if the library is moved to a different directory, only `Jamroot` must be
-modified. Note that project ids are global—two Jamfiles
+goal—if the library is moved to a different directory, only `top/Jamfile`
+must be modified. Note that project ids are global—two Jamfiles
 are not allowed to assign the same project id to different directories.
 
 [TIP]
