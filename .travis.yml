@@ -1,8 +1,8 @@
 sudo: false
 branches:
   only:
-    - master
-    - develop
+    - /master.*/
+    - /develop.*/
     - /feature\/.*/
 language: cpp
 script:
