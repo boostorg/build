@@ -7,9 +7,8 @@ branches:
 language: cpp
 script:
   - pushd src/engine
-  - ./build.sh
+  - ./build.sh ${TOOLSET}
   - popd
-  - ./bootstrap.sh --with-toolset=${TOOLSET}
   - pushd test
   - python test_all.py ${TOOLSET}
   - popd
@@ -19,18 +18,194 @@ stages:
     if: branch IN (develop,master) AND type IN (push)
 jobs:
   include:
-    - os: linux
-      dist: trusty
-      env: TOOLSET=gcc
-    - os: linux
-      dist: trusty
-      env: TOOLSET=clang
-    - os: linux
-      dist: precise
-      env: TOOLSET=gcc
-    - os: linux
-      dist: precise
-      env: TOOLSET=clang
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-4.4
+      addons:
+        apt:
+          packages:
+            - g++-4.4
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-4.6
+      addons:
+        apt:
+          packages:
+            - g++-4.6
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-4.7
+      addons:
+        apt:
+          packages:
+            - g++-4.7
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-4.8
+      addons:
+        apt:
+          packages:
+            - g++-4.8
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-4.9
+      addons:
+        apt:
+          packages:
+            - g++-4.9
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-5
+      addons:
+        apt:
+          packages:
+            - g++-5
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-6
+      addons:
+        apt:
+          packages:
+            - g++-6
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-7
+      addons:
+        apt:
+          packages:
+            - g++-7
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=gcc
+      os: linux
+      compiler: g++-8
+      addons:
+        apt:
+          packages:
+            - g++-8
+          sources:
+            - ubuntu-toolchain-r-test
+    - env: TOOLSET=clang
+      os: linux
+      compiler: /usr/bin/clang++
+      addons:
+        apt:
+          packages:
+            - clang-3.3
+    - env: TOOLSET=clang
+      os: linux
+      compiler: /usr/bin/clang++
+      addons:
+        apt:
+          packages:
+            - clang-3.4
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-3.5
+      addons:
+        apt:
+          packages:
+            - clang-3.5
+            - libstdc++-4.9-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.5
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-3.6
+      addons:
+        apt:
+          packages:
+            - clang-3.6
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.6
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-3.7
+      addons:
+        apt:
+          packages:
+            - clang-3.7
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.7
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-3.8
+      addons:
+        apt:
+          packages:
+            - clang-3.8
+            - libstdc++-4.9-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.8
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-3.9
+      addons:
+        apt:
+          packages:
+            - clang-3.9
+            - libstdc++-4.9-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-precise-3.9
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-4.0
+      addons:
+        apt:
+          packages:
+            - clang-4.0
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-4.0
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-5.0
+      addons:
+        apt:
+          packages:
+            - clang-5.0
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-5.0
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-6.0
+      addons:
+        apt:
+          packages:
+            - clang-6.0
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-6.0
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-7
+      addons:
+        apt:
+          packages:
+            - clang-7
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-7
     - os: osx
       osx_image: xcode10
       env: TOOLSET=clang
