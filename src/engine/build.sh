@@ -184,14 +184,14 @@ case $BOOST_JAM_TOOLSET in
             export PATH=${BOOST_JAM_TOOLSET_ROOT}bin:$PATH
         fi
         BOOST_JAM_CXX="gcc -x c++ -DNT"
-        BOOST_RELEASE="-O3 -s"
+        BOOST_RELEASE="-O2 -s"
         BOOST_DEBUG="-O0 -g"
         BOOST_JAM_OS="NT"
         ;;
 
         *)
         BOOST_JAM_CXX="gcc -x c++ -std=c++11"
-        BOOST_RELEASE="-O3 -s"
+        BOOST_RELEASE="-O2 -s"
         BOOST_DEBUG="-O0 -g"
         BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
         esac
