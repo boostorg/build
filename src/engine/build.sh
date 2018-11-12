@@ -170,9 +170,9 @@ BOOST_JAM_OPT_YYACC="-o yyacc"
 case $BOOST_JAM_TOOLSET in
 
     gcc)
-        echo_run gcc --version
+        echo_run ${CXX:=gcc} --version
         # Check whether it's MinGW GCC, which has Windows headers and none of POSIX ones.
-        machine=$(gcc -dumpmachine 2>/dev/null)
+        machine=$(${CXX} -dumpmachine 2>/dev/null)
         if [ $? -ne 0 ]; then
             echo "BOOST_JAM_TOOLSET is gcc, but the 'gcc' command cannot be executed."
             echo "Make sure 'gcc' is in PATH, or use a different toolset."
@@ -184,14 +184,14 @@ case $BOOST_JAM_TOOLSET in
         if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/gcc ; then
             export PATH=${BOOST_JAM_TOOLSET_ROOT}bin:$PATH
         fi
-        BOOST_JAM_CXX="gcc -x c++ -DNT"
+        BOOST_JAM_CXX="${CXX} -x c++ -DNT"
         BOOST_RELEASE="-O2 -s"
         BOOST_DEBUG="-O0 -g"
         BOOST_JAM_OS="NT"
         ;;
 
         *)
-        BOOST_JAM_CXX="gcc -x c++ -std=c++11"
+        BOOST_JAM_CXX="${CXX} -x c++ -std=c++11"
         BOOST_RELEASE="-O2 -s"
         BOOST_DEBUG="-O0 -g"
         BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
@@ -199,8 +199,8 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     darwin)
-    echo_run clang --version
-    BOOST_JAM_CXX="clang -x c++ -std=c++11"
+    echo_run ${CXX:=clang} --version
+    BOOST_JAM_CXX="${CXX} -x c++ -std=c++11"
     BOOST_RELEASE="-O3 -s -flto"
     BOOST_DEBUG="-O0 -g"
     BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
@@ -318,8 +318,8 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     clang*)
-    echo_run clang --version
-    BOOST_JAM_CXX="clang -x c++ -O3 -std=c++11"
+    echo_run ${CXX:=clang} --version
+    BOOST_JAM_CXX="${CXX} -x c++ -O3 -std=c++11"
     BOOST_JAM_TOOLSET=clang
     BOOST_RELEASE="-O3 -s"
     BOOST_DEBUG="-O0 -fno-inline"
