@@ -170,6 +170,7 @@ BOOST_JAM_OPT_YYACC="-o yyacc"
 case $BOOST_JAM_TOOLSET in
 
     gcc)
+        echo_run gcc --version
         # Check whether it's MinGW GCC, which has Windows headers and none of POSIX ones.
         machine=$(gcc -dumpmachine 2>/dev/null)
         if [ $? -ne 0 ]; then
@@ -198,6 +199,7 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     darwin)
+    echo_run clang --version
     BOOST_JAM_CXX="clang -x c++ -std=c++11"
     BOOST_RELEASE="-O3 -s -flto"
     BOOST_DEBUG="-O0 -g"
@@ -316,6 +318,7 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     clang*)
+    echo_run clang --version
     BOOST_JAM_CXX="clang -x c++ -O3 -std=c++11"
     BOOST_JAM_TOOLSET=clang
     BOOST_RELEASE="-O3 -s"
