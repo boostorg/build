@@ -20,24 +20,6 @@ jobs:
   include:
     - env: TOOLSET=gcc
       os: linux
-      compiler: g++-4.4
-      addons:
-        apt:
-          packages:
-            - g++-4.4
-          sources:
-            - ubuntu-toolchain-r-test
-    - env: TOOLSET=gcc
-      os: linux
-      compiler: g++-4.6
-      addons:
-        apt:
-          packages:
-            - g++-4.6
-          sources:
-            - ubuntu-toolchain-r-test
-    - env: TOOLSET=gcc
-      os: linux
       compiler: g++-4.7
       addons:
         apt:
