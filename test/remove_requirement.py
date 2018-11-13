@@ -57,10 +57,10 @@ exe hello : hello.cpp ;
 
 t.run_build_system()
 
-t.expect_addition("sub/bin/$toolset/debug/link-static*/hello.exe")
-t.expect_addition("sub2/bin/$toolset/debug/link-static*/hello.exe")
-t.expect_addition("sub3/bin/$toolset/debug/threading-multi*/hello.exe")
-t.expect_addition("sub4/bin/$toolset/debug/threading-multi*/hello.exe")
+t.expect_addition("sub/bin/$toolset/debug*/link-static*/hello.exe")
+t.expect_addition("sub2/bin/$toolset/debug*/link-static*/hello.exe")
+t.expect_addition("sub3/bin/$toolset/debug*/threading-multi*/hello.exe")
+t.expect_addition("sub4/bin/$toolset/debug*/threading-multi*/hello.exe")
 
 t.rm(".")
 
