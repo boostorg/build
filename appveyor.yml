@@ -30,4 +30,4 @@ test_script:
   - cd ..
 
 after_test:
-  - src/engine/b2.exe --prefix=%HOME%/b2 install
+  - src\engine\b2.exe --prefix=%HOME%/b2 install
