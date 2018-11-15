@@ -12,6 +12,8 @@ script:
   - pushd test
   - python test_all.py ${TOOLSET}
   - popd
+  - src/engine/b2 --prefix=${HOME}/b2 install
+  - ls -laFR ${HOME}/b2
 stages:
   - name: test
   - name: website update

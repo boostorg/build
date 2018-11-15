@@ -14,7 +14,8 @@ if [ os.on-windows ] || [ os.on-vms ]
 package.install boost-build-engine boost-build
   : # properties
   : # binaries
-    b2$(ext) bjam$(ext)
+    $(SELF)/src/engine/b2$(ext)
+    $(SELF)/src/engine/bjam$(ext)
   ;
 
 local e1 = [ path.glob-tree $(SELF)/example : * : . .svn ] ;

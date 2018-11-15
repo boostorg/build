@@ -448,3 +448,4 @@ fi
 if check_python_build "$@" ; then BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_PYTHON}"
 fi
 echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
+echo_run cp b2 bjam

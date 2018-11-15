@@ -6,8 +6,8 @@
 
 branches:
   only:
-    - master
-    - develop
+    - /master.*/
+    - /develop.*/
     - /feature\/.*/
  
 image:
@@ -27,3 +27,4 @@ build_script:
 test_script:
   - cd test
   - python test_all.py msvc
+  - cd ..
