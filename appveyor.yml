@@ -28,3 +28,6 @@ test_script:
   - cd test
   - python test_all.py msvc
   - cd ..
+
+after_test:
+  - src/engine/b2.exe --prefix=%HOME%/b2 install
