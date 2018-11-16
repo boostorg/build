@@ -164,6 +164,6 @@ if "_%CXX%_" == "__" (
     set "CXX=gcc"
     )
 set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3"
-set "BOOST_JAM_OPT_JAM=-o b2.exe"
+set "BOOST_JAM_OPT_JAM=-o .\b2.exe"
 set "_known_=1"
 goto :eof
