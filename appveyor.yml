@@ -10,18 +10,34 @@ branches:
     - /develop.*/
     - /feature\/.*/
  
-image:
-  - Visual Studio 2017
-  - Visual Studio 2015
-  - Visual Studio 2013
-
 environment:
+  TEST_ALL_EXTRAS:
   matrix:
-  - TEST_ALL_EXTRAS:
+  - TOOLSET: msvc
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - TOOLSET: msvc
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+  - TOOLSET: msvc
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+  - TOOLSET: mingw
+    CXX: C:\MinGW\bin\g++.exe
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+  - TOOLSET: mingw
+    CXX: C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw64\bin\g++.exe
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+  - TOOLSET: mingw
+    CXX: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\g++.exe
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+  - TOOLSET: mingw
+    CXX: C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin\g++.exe
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+  - TOOLSET: mingw
+    CXX: C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin\g++.exe
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 
 build_script:
   - cd src/engine
-  - build.bat
+  - build.bat %TOOLSET%
   - cd ../..
 
 test_script:
