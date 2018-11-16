@@ -185,6 +185,7 @@ set BJAM_SOURCES=%BJAM_SOURCES% modules/set.c
 
 @echo ON
 %BOOST_JAM_CXX% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES% %BOOST_JAM_OPT_LINK%
+dir
 copy /b b2.exe bjam.exe
 
 :Finish

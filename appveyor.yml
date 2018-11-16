@@ -40,7 +40,6 @@ configuration:
 build_script:
   - cd src/engine
   - build.bat %TOOLSET%
-  - dir
   - cd ../..
 
 test_script:
