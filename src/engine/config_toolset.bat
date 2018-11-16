@@ -142,13 +142,13 @@ set "_known_=1"
 goto :eof
 
 :Config_GCC
-set "BOOST_JAM_CXX=gcc -pedantic -fno-strict-aliasing -s -O3"
+set "BOOST_JAM_CXX=gcc -x c++ -std=c++11 -s -O3"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
 goto :eof
 
 :Config_GCC_NOCYGWIN
-set "BOOST_JAM_CXX=gcc -pedantic -fno-strict-aliasing -s -O3 -mno-cygwin"
+set "BOOST_JAM_CXX=gcc -x c++ -std=c++11 -s -O3 -mno-cygwin"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
 goto :eof
@@ -160,10 +160,10 @@ set "_known_=1"
 goto :eof
 
 :Config_MINGW
-if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-    set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
+if not "_%CXX%_" == "__" (
+    set "CXX=gcc"
     )
-set "BOOST_JAM_CXX=gcc -pedantic -fno-strict-aliasing -s -O3"
+set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
 goto :eof
