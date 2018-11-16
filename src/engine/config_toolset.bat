@@ -160,7 +160,7 @@ set "_known_=1"
 goto :eof
 
 :Config_MINGW
-if not "_%CXX%_" == "__" (
+if "_%CXX%_" == "__" (
     set "CXX=gcc"
     )
 set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3"
