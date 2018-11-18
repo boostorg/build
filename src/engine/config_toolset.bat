@@ -36,6 +36,7 @@ if EXIST %1 call %*
 goto :eof
 
 :Config_MSVC
+if not defined CXX ( set "CXX=cl" )
 if NOT "_%MSVCDir%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
     )
@@ -43,12 +44,14 @@ call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%bin\VCVARS32.BAT"
 if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
     )
-set "BOOST_JAM_CXX=cl /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
+%CXX%
 goto :eof
 
 :Config_VC11
+if not defined CXX ( set "CXX=cl" )
 if NOT "_%VS110COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS110COMNTOOLS%..\..\VC\"
     )
@@ -57,12 +60,14 @@ if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if "_%VCINSTALLDIR%_" == "__" (
         set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
         ) )
-set "BOOST_JAM_CXX=cl /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
+%CXX%
 goto :eof
 
 :Config_VC12
+if not defined CXX ( set "CXX=cl" )
 if NOT "_%VS120COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET_ROOT=%VS120COMNTOOLS%..\..\VC\"
     )
@@ -75,12 +80,14 @@ if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if "_%VCINSTALLDIR%_" == "__" (
         set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
         ) )
-set "BOOST_JAM_CXX=cl /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
+%CXX%
 goto :eof
 
 :Config_VC14
+if not defined CXX ( set "CXX=cl" )
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if NOT "_%VS140COMNTOOLS%_" == "__" (
         set "BOOST_JAM_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
@@ -94,12 +101,14 @@ if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if "_%VCINSTALLDIR%_" == "__" (
         set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
         ) )
-set "BOOST_JAM_CXX=cl /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
+%CXX%
 goto :eof
 
 :Config_VC141
+if not defined CXX ( set "CXX=cl" )
 call vswhere_usability_wrapper.cmd
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
 ver > nul 2> nul
@@ -115,14 +124,16 @@ REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\So
 pushd %CD%
 if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
 popd
-set "BOOST_JAM_CXX=cl /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
+%CXX%
 goto :eof
 
 :Config_BORLAND
+if not defined CXX ( set "CXX=bcc32" )
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-    call :Test_Path bcc32.exe )
+    call :Test_Path %CXX%.exe )
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if not errorlevel 1 (
         set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
@@ -130,40 +141,51 @@ if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
 if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     set "PATH=%BOOST_JAM_TOOLSET_ROOT%Bin;%PATH%"
     )
-set "BOOST_JAM_CXX=bcc32 -WC -w- -q -I%BOOST_JAM_TOOLSET_ROOT%Include -L%BOOST_JAM_TOOLSET_ROOT%Lib -nbootstrap"
+set "BOOST_JAM_CXX=%CXX% -WC -w- -q -I%BOOST_JAM_TOOLSET_ROOT%Include -L%BOOST_JAM_TOOLSET_ROOT%Lib -nbootstrap"
 set "BOOST_JAM_OPT_JAM=-eb2"
 set "_known_=1"
+%CXX%
 goto :eof
 
 :Config_COMO
-set "BOOST_JAM_CXX=como --inlining"
+if not defined CXX ( set "CXX=como" )
+set "BOOST_JAM_CXX=%CXX% --inlining"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
+%CXX%
 goto :eof
 
 :Config_GCC
-set "BOOST_JAM_CXX=gcc -x c++ -std=c++11 -s -O3"
+if not defined CXX ( set "CXX=g++" )
+set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
+%CXX% --version
 goto :eof
 
 :Config_GCC_NOCYGWIN
-set "BOOST_JAM_CXX=gcc -x c++ -std=c++11 -s -O3 -mno-cygwin"
+if not defined CXX ( set "CXX=g++" )
+set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3 -mno-cygwin"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
+%CXX% --version
 goto :eof
 
 :Config_INTEL_WIN32
-set "BOOST_JAM_CXX=icl /nologo /MT /O2 /Ob2 /Gy /GF /GA /GB"
+if not defined CXX ( set "CXX=icl" )
+set "BOOST_JAM_CXX=%CXX% /nologo /MT /O2 /Ob2 /Gy /GF /GA /GB"
 set "BOOST_JAM_OPT_JAM=/Feb2"
 set "_known_=1"
+%CXX%
 goto :eof
 
 :Config_MINGW
-if "_%CXX%_" == "__" (
-    set "CXX=gcc"
+if not defined CXX ( set "CXX=g++" )
+if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+    set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
     )
 set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3"
-set "BOOST_JAM_OPT_JAM=-o .\b2.exe"
+set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
+%CXX% --version
 goto :eof
