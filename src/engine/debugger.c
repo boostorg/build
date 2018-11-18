@@ -1138,12 +1138,12 @@ static void debug_start_child( int argc, const char * * argv )
     assert( debug_state == DEBUG_NO_CHILD );
     if ( ! CreatePipe( &pipe1[ 0 ], &pipe1[ 1 ], &sa, 0 ) )
     {
-        printf("internal error\n");
+        printf("internal error: CreatePipe:1: 0x$08x\n", GetLastError());
         return;
     }
     if ( ! CreatePipe( &pipe2[ 0 ], &pipe2[ 1 ], &sa, 0 ) )
     {
-        printf("internal error\n");
+        printf("internal error: CreatePipe:2: 0x$08x\n", GetLastError());
         CloseHandle( pipe1[ 0 ] );
         CloseHandle( pipe1[ 1 ] );
         return;
@@ -1223,8 +1223,19 @@ static void debug_start_child( int argc, const char * * argv )
     int pid;
     int i;
     assert( debug_state == DEBUG_NO_CHILD );
-    pipe(pipe1);
-    pipe(pipe2);
+    if (pipe(pipe1) == -1)
+    {
+        printf("internal error: pipe:1: %s\n", strerror(errno));
+        return;
+    }
+    if (pipe(pipe2) == -1)
+    {
+        close( pipe1[ 0 ] );
+        close( pipe1[ 1 ] );
+        printf("internal error: pipe:2: %s\n", strerror(errno));
+        return;
+    }
+
     pid = fork();
     if ( pid == -1 )
     {
@@ -1233,6 +1244,8 @@ static void debug_start_child( int argc, const char * * argv )
         close( pipe1[ 1 ] );
         close( pipe2[ 0 ] );
         close( pipe1[ 1 ] );
+        printf("internal error: fork: %s\n", strerror(errno));
+        return;
     }
     else if ( pid == 0 )
     {
