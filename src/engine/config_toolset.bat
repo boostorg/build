@@ -32,6 +32,7 @@ set "BOOST_JAM_OPT_JAM=%BOOST_JAM_OPT_JAM% -DYYINITDEPTH=5000"
 exit /b %errorlevel%
 
 :Call_If_Exists
+ECHO Call_If_Exists %*
 if EXIST %1 call %*
 goto :eof
 
