@@ -1243,7 +1243,7 @@ static void debug_start_child( int argc, const char * * argv )
         close( pipe1[ 0 ] );
         close( pipe1[ 1 ] );
         close( pipe2[ 0 ] );
-        close( pipe1[ 1 ] );
+        close( pipe2[ 1 ] );
         printf("internal error: fork: %s\n", strerror(errno));
         return;
     }
