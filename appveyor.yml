@@ -9,14 +9,14 @@ branches:
     - /master.*/
     - /develop.*/
     - /feature\/.*/
- 
+
 environment:
   matrix:
-  - TOOLSET: msvc
+  - TOOLSET: vc141
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-  - TOOLSET: msvc
+  - TOOLSET: vc14
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - TOOLSET: msvc
+  - TOOLSET: vc12
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
   - TOOLSET: mingw
     CXX: C:\MinGW\bin\g++.exe
