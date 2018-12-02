@@ -257,7 +257,7 @@ def register_globals ():
         'power',
 
         # MIPS/SGI
-        'mips1', 'mips2', 'mips3', 'mips4', 'mips32', 'mips32r2', 'mips64',
+        'mips',
 
         # HP/PA-RISC
         'parisc',
