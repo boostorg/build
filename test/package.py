@@ -21,6 +21,7 @@ def setup():
       : a
       : b/<link>static b/<link>shared
       : a.h ;
+    package.install-data data : Test : a.txt ;
     """)
     t.write("a.cpp", "int main() {}")
     t.write("b.cpp", """
@@ -31,6 +32,7 @@ def setup():
     must_export_something;
     """)
     t.write("a.h", "")
+    t.write("a.txt", "")
     return t
 
 def test_defaults():
@@ -38,7 +40,7 @@ def test_defaults():
 
     # Since the default install location is outside out test area,
     # we don't want to actually execute the build.
-    t.run_build_system(["-n", "-d1", "install"])
+    t.run_build_system(["-n", "-d1", "install", "data"])
 
     installdir = "C:/Boost" if os.name == 'nt' else "/usr/local"
     t.expect_output_lines([
@@ -46,7 +48,8 @@ def test_defaults():
         ["common.copy %s/bin/%s" % (installdir, t.adjust_name("a.exe")),
          "common.copy %s/lib/%s" % (installdir, t.adjust_name("b.dll")),
          "common.copy %s/lib/%s" % (installdir, t.adjust_name("b.lib")),
-         "common.copy %s/include/a.h" % installdir]])
+         "common.copy %s/include/a.h" % installdir,
+         "common.copy %s/share/Test/a.txt" % installdir]])
 
     t.cleanup()
 
@@ -58,13 +61,15 @@ def test_prefix():
     option.set bindir : bad/bin ;
     option.set libdir : bad/lib ;
     option.set includedir : bad/include ;
+    option.set datarootdir : bad/share ;
     """)
 
-    t.run_build_system(["--prefix=installdir", "install"])
+    t.run_build_system(["--prefix=installdir", "install", "data"])
     t.expect_addition("installdir/bin/a.exe")
     t.expect_addition("installdir/lib/b.dll")
     t.expect_addition("installdir/lib/b.lib")
     t.expect_addition("installdir/include/a.h")
+    t.expect_addition("installdir/share/Test/a.txt")
 
     t.cleanup()
 
@@ -76,15 +81,19 @@ def test_subdirs():
     option.set bindir : bad/bin ;
     option.set libdir : bad/lib ;
     option.set includedir : bad/include ;
+    option.set datarootdir : bad/share ;
     """)
 
     t.run_build_system(["--libdir=installdir/lib64",
                         "--bindir=installdir/binx",
-                        "--includedir=installdir/includex", "install"])
+                        "--includedir=installdir/includex",
+                        "--datarootdir=installdir/sharex",
+                        "install", "data"])
     t.expect_addition("installdir/binx/a.exe")
     t.expect_addition("installdir/lib64/b.dll")
     t.expect_addition("installdir/lib64/b.lib")
     t.expect_addition("installdir/includex/a.h")
+    t.expect_addition("installdir/sharex/Test/a.txt")
 
     t.cleanup()
 
@@ -96,16 +105,20 @@ def test_subdirs_with_prefix():
     option.set bindir : bad/bin ;
     option.set libdir : bad/lib ;
     option.set includedir : bad/include ;
+    option.set datarootdir : bad/share ;
     """)
 
     t.run_build_system(["--prefix=bad",
                         "--libdir=installdir/lib64",
                         "--bindir=installdir/binx",
-                        "--includedir=installdir/includex", "install"])
+                        "--includedir=installdir/includex",
+                        "--datarootdir=installdir/sharex",
+                        "install", "data"])
     t.expect_addition("installdir/binx/a.exe")
     t.expect_addition("installdir/lib64/b.dll")
     t.expect_addition("installdir/lib64/b.lib")
     t.expect_addition("installdir/includex/a.h")
+    t.expect_addition("installdir/sharex/Test/a.txt")
 
     t.cleanup()
 
@@ -116,11 +129,12 @@ def test_prefix_config_file():
     option.set prefix : installdir ;
     """)
 
-    t.run_build_system(["install"])
+    t.run_build_system(["install", "data"])
     t.expect_addition("installdir/bin/a.exe")
     t.expect_addition("installdir/lib/b.dll")
     t.expect_addition("installdir/lib/b.lib")
     t.expect_addition("installdir/include/a.h")
+    t.expect_addition("installdir/share/Test/a.txt")
 
     t.cleanup()
 
@@ -132,13 +146,15 @@ def test_subdirs_config_file():
     option.set libdir : installdir/lib64 ;
     option.set bindir : installdir/binx ;
     option.set includedir : installdir/includex ;
+    option.set datarootdir : installdir/sharex ;
     """)
 
-    t.run_build_system(["install"])
+    t.run_build_system(["install", "data"])
     t.expect_addition("installdir/binx/a.exe")
     t.expect_addition("installdir/lib64/b.dll")
     t.expect_addition("installdir/lib64/b.lib")
     t.expect_addition("installdir/includex/a.h")
+    t.expect_addition("installdir/sharex/Test/a.txt")
 
     t.cleanup()
 
@@ -199,6 +215,7 @@ def test_paths():
     assert.result $(default-prefix)/lib : $(paths).libdir ;
     assert.result $(default-prefix)/bin : $(paths).bindir ;
     assert.result $(default-prefix)/include : $(paths).includedir ;
+    assert.result $(default-prefix)/share : $(paths).datarootdir ;
     package.add-path-option bardir : bar : libdir ;
     assert.result $(default-prefix)/lib/bar : $(paths).get bardir ;
     """)

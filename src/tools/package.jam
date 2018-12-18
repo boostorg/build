@@ -249,7 +249,7 @@ rule install-data ( target-name : package-name : data * : requirements * )
 {
     package-name ?= target-name ;
 
-    local paths = [ package-paths $(package-name) : $(requirements) ] ;
+    local paths = [ paths $(package-name) : $(requirements) ] ;
     local datadir = [ $(paths).datarootdir ] ;
 
     stage.install $(target-name) 
