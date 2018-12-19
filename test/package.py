@@ -42,7 +42,7 @@ def test_defaults():
     # we don't want to actually execute the build.
     t.run_build_system(["-n", "-d1", "install", "data"])
 
-    installdir = "C:/Boost" if os.name == 'nt' else "/usr/local"
+    installdir = "C:/Test" if os.name == 'nt' else "/usr/local"
     t.expect_output_lines([
         x.replace('/', os.sep) for x in
         ["common.copy %s/bin/%s" % (installdir, t.adjust_name("a.exe")),
