@@ -976,7 +976,7 @@ local rule toolset-tag ( name : type ? : property-set )
     }
 
     # Ditto, from Clang 4
-    if $(tag) in clang clangw && [ numbers.less 3 $(version[1]) ]
+    if ( $(tag) = clang || $(tag) = clangw ) && [ numbers.less 3 $(version[1]) ]
     {
         version = $(version[1]) ;
     }
