@@ -93,6 +93,12 @@ check h : source.input : <expected-define>CX_2 ;
 # If the default value of a feature is used, then the
 # default value of its subfeatures should also be used.
 check i : source.input : <expected-define>SF_1 ;
+
+# Subfeatures should be expanded when listed in a
+# target reference.
+check j-impl : source.input : <expected-define>CF_1 ;
+explicit j-impl ;
+alias j : j-impl/<cf>on-1 ;
 """)
 
 t.write("jamroot.jam", """
