@@ -184,7 +184,7 @@ set "_known_=1"
 :Skip_VC141
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto Skip_BORLAND
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
-    call :Test_Path bcc32.exe )
+    call guess_toolset.bat test_path bcc32.exe )
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     if not errorlevel 1 (
         set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"

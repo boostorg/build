@@ -5,6 +5,9 @@ REM ~ Distributed under the Boost Software License, Version 1.0.
 REM ~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 if "_%1_" == "_yacc_" goto Guess_Yacc
+if "_%1_" == "_test_path_" (
+    shift
+    goto Test_Path)
 goto Guess
 
 
