@@ -192,7 +192,7 @@ if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
 if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     set "PATH=%BOOST_JAM_TOOLSET_ROOT%Bin;%PATH%"
     )
-set "BOOST_JAM_CC=bcc32 -WC -w- -q -I%BOOST_JAM_TOOLSET_ROOT%Include -L%BOOST_JAM_TOOLSET_ROOT%Lib /DNT -nbootstrap"
+set "BOOST_JAM_CC=bcc32 -WC -w- -q -I"%BOOST_JAM_TOOLSET_ROOT%Include" -L"%BOOST_JAM_TOOLSET_ROOT%Lib" /DNT -nbootstrap"
 set "BOOST_JAM_OPT_JAM=-ejam0"
 set "BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0"
 set "BOOST_JAM_OPT_YYACC=-eyyacc0"
