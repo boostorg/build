@@ -364,7 +364,7 @@ class CScanner (scanner.Scanner):
             self.includes_.extend(i.split("&&"))
 
     def pattern (self):
-        return r'#[ \t]*include[ ]*(<(.*)>|"(.*)")'
+        return r'^[ \t]*#[ \t]*include[ ]*(<(.*)>|"(.*)")'
 
     def process (self, target, matches, binding):
         # since it's possible for this function to be called

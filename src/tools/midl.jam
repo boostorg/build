@@ -46,14 +46,14 @@ class midl-scanner : scanner
         self.re-importlib = "importlib[ \t]*[(]"$(self.re-strings)"[)][ \t]*;" ;
 
         # C preprocessor 'include' directive
-        self.re-include-angle  = "#[ \t]*include[ \t]*<(.*)>" ;
-        self.re-include-quoted = "#[ \t]*include[ \t]*\"(.*)\"" ;
+        self.re-include-angle  = "^[ \t]*#[ \t]*include[ \t]*<(.*)>" ;
+        self.re-include-quoted = "^[ \t]*#[ \t]*include[ \t]*\"(.*)\"" ;
     }    
 
     rule pattern ( )
     {
         # Match '#include', 'import' and 'importlib' directives
-        return "((#[ \t]*include|import(lib)?).+(<(.*)>|\"(.*)\").+)" ;
+        return "^[ \t]*((#[ \t]*include|import(lib)?).+(<(.*)>|\"(.*)\").+)" ;
     }
 
     rule process ( target : matches * : binding )

@@ -38,12 +38,12 @@ class MidlScanner(scanner.Scanner):
         self.re_importlib = "importlib[ \t]*[(]" + re_strings + "[)][ \t]*;" ;
 
         # C preprocessor 'include' directive
-        self.re_include_angle  = "#[ \t]*include[ \t]*<(.*)>" ;
-        self.re_include_quoted = "#[ \t]*include[ \t]*\"(.*)\"" ;
+        self.re_include_angle  = "^[ \t]*#[ \t]*include[ \t]*<(.*)>" ;
+        self.re_include_quoted = "^[ \t]*#[ \t]*include[ \t]*\"(.*)\"" ;
 
     def pattern():
         # Match '#include', 'import' and 'importlib' directives
-        return "((#[ \t]*include|import(lib)?).+(<(.*)>|\"(.*)\").+)"
+        return "^[ \t]*((#[ \t]*include|import(lib)?).+(<(.*)>|\"(.*)\").+)"
 
     def process(self, target, matches, binding):
         included_angle  = regex.transform(matches, self.re_include_angle)
