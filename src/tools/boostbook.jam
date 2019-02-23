@@ -438,8 +438,8 @@ rule docbook-dtd-dir
 rule dtdxml-to-boostbook ( target : source : properties * )
 {
     lock-config ;
-    xsltproc.xslt $(target) : $(source)
-        "$(.boostbook-xsl-dir)/dtd/dtd2boostbook.xsl" : $(properties) ;
+    local stylesheet = [ path.native $(.boostbook-xsl-dir)/dtd/dtd2boostbook.xsl ] ;
+    xsltproc.xslt $(target) : $(source) $(stylesheet) : $(properties) ;
 }
 
 
