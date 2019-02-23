@@ -235,7 +235,7 @@ rule init ( version ? : command * : options * : requirement * )
     # Information about the gcc command...
     #   The command.
     local command = $(tool-command) ;
-    #   The 'command' variable can have multiple elements but when calling the    
+    #   The 'command' variable can have multiple elements but when calling the
     # SHELL builtin we need a single string, and we need to quote elements
     # with spaces.
     local command-string = \"$(command)\" ;
@@ -353,7 +353,7 @@ rule init ( version ? : command * : options * : requirement * )
         rc-type = null ;
     }
     rc.configure $(rc) : $(condition) : <rc-type>$(rc-type) ;
-    
+
     toolset.flags gcc VERSION $(condition) : [ regex.split $(version) "[.]" ] ;
 
     init-cxxstd-flags $(condition) : $(version) ;
@@ -712,7 +712,9 @@ toolset.flags gcc.compile OPTIONS <inlining>full : -finline-functions -Wno-inlin
 
 toolset.flags gcc.compile OPTIONS <warnings>off : -w ;
 toolset.flags gcc.compile OPTIONS <warnings>on  : -Wall ;
-toolset.flags gcc.compile OPTIONS <warnings>all : -Wall -pedantic ;
+toolset.flags gcc.compile OPTIONS <warnings>all : -Wall ;
+toolset.flags gcc.compile OPTIONS <warnings>extra : -Wall -Wextra ;
+toolset.flags gcc.compile OPTIONS <warnings>pedantic : -Wall -Wextra -pedantic ;
 toolset.flags gcc.compile OPTIONS <warnings-as-errors>on : -Werror ;
 
 toolset.flags gcc.compile OPTIONS <debug-symbols>on : -g ;
@@ -916,7 +918,7 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
 
     # See note [1]
     toolset.flags gcc.link OPTIONS <target-os>darwin/<runtime-link>static : -static ;
-        
+
     # vxworks
     # On VxWorks we want to reflect what ever special flags have been set in the
     # environment for the CPU we are targeting in the cross build
@@ -924,7 +926,7 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<link>static : [ os.environ LDFLAGS_STATIC ]  ;
     toolset.flags gcc.link.dll OPTIONS     <target-os>vxworks              : [ os.environ LDFLAGS_SO ]      ;
     toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<link>shared : [ os.environ LDFLAGS_DYNAMIC ] ;
-  
+
     # default
 
     local generic-os = [ set.difference $(all-os) : aix darwin vxworks solaris osf hpux ] ;
@@ -993,7 +995,7 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
 
     toolset.flags gcc.link OPTIONS <target-os>hpux/<strip>on : -Wl,-s ;
 
-    toolset.flags gcc.link HAVE_SONAME <target-os>hpux : "" ; 
+    toolset.flags gcc.link HAVE_SONAME <target-os>hpux : "" ;
     toolset.flags gcc.link SONAME_OPTION <target-os>hpux : +h ;
 
     # osf
