@@ -429,6 +429,7 @@ local rule check-tool ( xcommand + )
 # - OPTIONS for compile         to the value of <compileflags> in $(options)
 # - OPTIONS for compile.c       to the value of <cflags>       in $(options)
 # - OPTIONS for compile.c++     to the value of <cxxflags>     in $(options)
+# - OPTIONS for compile.asm     to the value of <asmflags>     in $(options)
 # - OPTIONS for compile.fortran to the value of <fflags>       in $(options)
 # - OPTIONS for link            to the value of <linkflags>    in $(options)
 #
@@ -453,6 +454,9 @@ rule handle-options ( toolset : condition * : command * : options * )
 
     toolset.flags $(toolset).compile.c++     OPTIONS $(condition) :
         [ feature.get-values <cxxflags>     : $(options) ] : unchecked ;
+
+    toolset.flags $(toolset).compile.asm     OPTIONS $(condition) :
+        [ feature.get-values <asmflags>     : $(options) ] : unchecked ;
 
     toolset.flags $(toolset).compile.fortran OPTIONS $(condition) :
         [ feature.get-values <fflags>       : $(options) ] : unchecked ;
@@ -976,7 +980,7 @@ local rule toolset-tag ( name : type ? : property-set )
     }
 
     # Ditto, from Clang 4
-    if $(tag) in clang clangw && [ numbers.less 3 $(version[1]) ]
+    if ( $(tag) = clang || $(tag) = clangw ) && [ numbers.less 3 $(version[1]) ]
     {
         version = $(version[1]) ;
     }
