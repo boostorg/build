@@ -587,6 +587,18 @@ Boost.Build recognizes the following command line options.
   Paths”].
 `--version`::
   Prints information on the Boost.Build and Boost.Jam versions.
+`--layout`::
+  Determines the build layout. This controls the naming of the resulting
+  libraries and the location of installed files. Default is `versioned`.
+  Values are:
+  1.  `versioned`: Use the standard names, including Boost version number
+      and compiler name. Also installs includes in a versioned 
+      subdirectory.
+  2.  `tagged`: Include the encoded build properties, such as variant
+      and threading, but do not include compiler name/version or Boost
+      version.
+  3.  `system`: Do not use standard Boost names, and do not install
+      includes in a versioned subdirectory.
 `-a`::
   Causes all files to be rebuilt.
 `-n`::
