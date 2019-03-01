@@ -21,6 +21,7 @@ http://msdn.microsoft.com/visualc/[Microsoft Visual C++] command-line
 tools on Microsoft Windows. The supported products and versions of
 command line tools are listed below:
 
+* Visual Studio 2019-14.2
 * Visual Studio 2017—14.1
 * Visual Studio 2015—14.0
 * Visual Studio 2013—12.0
@@ -37,7 +38,7 @@ equal to `msvc-[version number]` for example to build with Visual Studio
 2017 one could run:
 
 ----
-.\b2 toolset=msvc-14.1 target
+.\b2 toolset=msvc-14.2 target
 ----
 
 The `msvc` module is initialized using the following syntax:
@@ -1015,7 +1016,15 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.1)" : $(version) ]
+            if [ MATCH "(14.2)" : $(version) ]
+            {
+                if $(.debug-configuration)
+                {
+                    ECHO 'notice\: "[generate-setup-cmd]" $(version) is 14.2' ;
+                }
+                parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
+            }
+            else if [ MATCH "(14.1)" : $(version) ]
             {
                 if $(.debug-configuration)
                 {
@@ -1173,9 +1182,9 @@ local rule configure-really ( version ? : options * )
 
         local command = [ feature.get-values <command> : $(options) ] ;
 
-        # For 14.1 we need the exact version as MS is planning rolling updates
+        # For 14.1+ we need the exact version as MS is planning rolling updates
         # that will cause our `setup-cmd` to become invalid
-        exact-version = [ MATCH "(14\.10\.[0-9\.]+)" : $(command) ] ;
+        exact-version = [ MATCH "(14\.[1-9][0-9]\.[0-9\.]+)" : $(command) ] ;
 
         # If version is specified, we try to search first in default paths, and
         # only then in PATH.
@@ -1204,7 +1213,11 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(MSVC\\14.1)" : $(command) ]
+            if [ MATCH "(MSVC\\14.2)" : $(command) ]
+            {
+                version = 14.2 ;
+            }
+            else if [ MATCH "(MSVC\\14.1)" : $(command) ]
             {
                 version = 14.1 ;
             }
@@ -1533,8 +1546,26 @@ local rule default-path ( version )
     else
     {
         # try to use vswhere
-        local pseudo_env_VS150 ;
-        if $(version) = 14.1 || $(version) = "default"
+        local pseudo_env_VSCOMNTOOLS ;
+        if $(version) = 14.2 || $(version) = "default"
+        {
+            local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
+            local prop = "-property installationPath" ;
+            local limit = "-version \"[16.0,17.0)\"" ;
+            local root = [ os.environ "ProgramFiles(x86)" ] ;
+            if ( ! $(root) )
+            {
+                root = [ os.environ "ProgramFiles" ] ;
+            }
+            local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
+            if ( [ path.exists $(vswhere) ] )
+            {
+                local vmwhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
+                local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vmwhere_cmd) ] : "\n" ] ;
+                pseudo_env_VSCOMNTOOLS = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
+            }
+        }
+        else if $(version) = 14.1
         {
             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
             local prop = "-property installationPath" ;
@@ -1549,7 +1580,7 @@ local rule default-path ( version )
             {
                 local vmwhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
                 local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vmwhere_cmd) ] : "\n" ] ;
-                pseudo_env_VS150 = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
+                pseudo_env_VSCOMNTOOLS = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
             }
         }
 
@@ -1557,9 +1588,9 @@ local rule default-path ( version )
         for local env in $(.version-$(version)-env)
         {
             local env-path ;
-            if ( $(pseudo_env_VS150) && [ path.exists $(pseudo_env_VS150) ] )
+            if ( $(pseudo_env_VSCOMNTOOLS) && [ path.exists $(pseudo_env_VSCOMNTOOLS) ] )
             {
-                env-path = $(pseudo_env_VS150) ;
+                env-path = $(pseudo_env_VSCOMNTOOLS) ;
             }
             else
             {
@@ -1956,7 +1987,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
                      armv7 armv7s ;
 
 # Known toolset versions, in order of preference.
-.known-versions = 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+.known-versions = 14.2 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
     7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
@@ -1970,6 +2001,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-12 = 12.0 ;
 .version-alias-14 = 14.0 ;
 .version-alias-14.1 = 14.1 ;
+.version-alias-14.2 = 14.2 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
@@ -1999,6 +2031,11 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
     "Microsoft Visual Studio/2017/*/VC/Tools/MSVC/*/bin/Host*/*"
     ;
 .version-14.1-env = VS150COMNTOOLS ProgramFiles ProgramFiles(x86) ;
+.version-14.2-path =
+    "../../VC/Tools/MSVC/*/bin/Host*/*"
+    "Microsoft Visual Studio/2017/*/VC/Tools/MSVC/*/bin/Host*/*"
+    ;
+.version-14.2-env = VS150COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 # Auto-detect all the available msvc installations on the system.
 auto-detect-toolset-versions ;

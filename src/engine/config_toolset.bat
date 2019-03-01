@@ -182,6 +182,50 @@ set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
 set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
 set "_known_=1"
 :Skip_VC141
+if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc142_" goto Skip_VC142
+call vswhere_usability_wrapper.cmd
+REM Reset ERRORLEVEL since from now on it's all based on ENV vars
+ver > nul 2> nul
+if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+    if NOT "_%VS160COMNTOOLS%_" == "__" (
+        set "BOOST_JAM_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
+    ))
+
+if "_%BOOST_JAM_ARCH%_" == "__" set BOOST_JAM_ARCH=x86
+set BOOST_JAM_ARGS=%BOOST_JAM_ARGS% %BOOST_JAM_ARCH%
+
+REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
+pushd %CD%
+if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
+popd
+set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
+set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
+set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
+set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+set "_known_=1"
+:Skip_VC142
+if NOT "_%BOOST_JAM_TOOLSET%_" == "_vcunk_" goto Skip_VCUNK
+call vswhere_usability_wrapper.cmd
+REM Reset ERRORLEVEL since from now on it's all based on ENV vars
+ver > nul 2> nul
+if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
+    if NOT "_%VSUNKCOMNTOOLS%_" == "__" (
+        set "BOOST_JAM_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
+    ))
+
+if "_%BOOST_JAM_ARCH%_" == "__" set BOOST_JAM_ARCH=x86
+set BOOST_JAM_ARGS=%BOOST_JAM_ARGS% %BOOST_JAM_ARCH%
+
+REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
+pushd %CD%
+if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
+popd
+set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
+set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
+set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
+set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+set "_known_=1"
+:Skip_VCUNK
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto Skip_BORLAND
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     call guess_toolset.bat test_path bcc32.exe )

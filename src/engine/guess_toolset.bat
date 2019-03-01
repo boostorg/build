@@ -36,6 +36,14 @@ if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
+if NOT "_%VS160COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vc142"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
+    goto :eof)
+if NOT "_%VSUNKCOMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vcunk"
+    set "BOOST_JAM_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
+    goto :eof)
 
 :skip_vswhere
 call :Clear_Error
