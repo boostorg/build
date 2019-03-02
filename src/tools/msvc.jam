@@ -1797,6 +1797,8 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile CFLAGS <warnings>on : /W3 ;
     toolset.flags msvc.compile CFLAGS <warnings>off : /W0 ;
     toolset.flags msvc.compile CFLAGS <warnings>all : /W4 ;
+    toolset.flags msvc.compile CFLAGS <warnings>extra : /W4 ;
+    toolset.flags msvc.compile CFLAGS <warnings>pedantic : /W4 ;
     toolset.flags msvc.compile CFLAGS <warnings-as-errors>on : /WX ;
 
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>off : /EHs ;
