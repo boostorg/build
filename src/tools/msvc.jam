@@ -223,6 +223,7 @@ import project ;
 import property ;
 import property-set ;
 import rc ;
+import sequence ;
 import set ;
 import toolset ;
 import type ;
@@ -1547,55 +1548,46 @@ local rule default-path ( version )
     {
         # try to use vswhere
         local pseudo_env_VSCOMNTOOLS ;
-        if $(version) = 14.2 || $(version) = "default"
+        local all-env-paths ;
+        local root = [ os.environ "ProgramFiles(x86)" ] ;
+        if ( ! $(root) )
         {
-            local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
-            local prop = "-property installationPath" ;
-            local limit = "-version \"[16.0,17.0)\"" ;
-            local root = [ os.environ "ProgramFiles(x86)" ] ;
-            if ( ! $(root) )
-            {
-                root = [ os.environ "ProgramFiles" ] ;
-            }
-            local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
-            if ( [ path.exists $(vswhere) ] )
-            {
-                local vmwhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
-                local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vmwhere_cmd) ] : "\n" ] ;
-                pseudo_env_VSCOMNTOOLS = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
-            }
+            root = [ os.environ "ProgramFiles" ] ;
         }
-        else if $(version) = 14.1
+        local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
+        if $(version) in 14.1 14.2 default && [ path.exists $(vswhere) ]
         {
             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
             local prop = "-property installationPath" ;
-            local limit = "-version \"[15.0,16.0)\"" ;
-            local root = [ os.environ "ProgramFiles(x86)" ] ;
-            if ( ! $(root) )
+            local limit ;
+
+            if $(version) = 14.2 || $(version) = "default"
             {
-                root = [ os.environ "ProgramFiles" ] ;
+                limit = "-version \"[16.0,17.0)\"" ;
             }
-            local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
-            if ( [ path.exists $(vswhere) ] )
+            else if $(version) = 14.1
             {
-                local vmwhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
-                local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vmwhere_cmd) ] : "\n" ] ;
-                pseudo_env_VSCOMNTOOLS = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
+                limit = "-version \"[15.0,16.0)\"" ;
             }
+
+            local vswhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
+            local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vswhere_cmd) ] : "\n" ] ;
+            pseudo_env_VSCOMNTOOLS = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
+            if ! [ path.exists $(pseudo_env_VSCOMNTOOLS) ]
+            {
+                return ; # Not found.  If we have vswhere, assume that it works.
+            }
+            all-env-paths = $(pseudo_env_VSCOMNTOOLS) ;
+        }
+        else
+        {
+            all-env-paths = [ sequence.transform os.environ
+                : $(.version-$(version)-env) ] ;
         }
 
         # Check environment or previous path_VS150
-        for local env in $(.version-$(version)-env)
+        for local env-path in $(all-env-paths)
         {
-            local env-path ;
-            if ( $(pseudo_env_VSCOMNTOOLS) && [ path.exists $(pseudo_env_VSCOMNTOOLS) ] )
-            {
-                env-path = $(pseudo_env_VSCOMNTOOLS) ;
-            }
-            else
-            {
-                env-path = [ os.environ $(env) ] ;
-            }
             if $(env-path) && $(.version-$(version)-path)
             {
                 for local bin-path in $(.version-$(version)-path)
@@ -2033,9 +2025,9 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-14.1-env = VS150COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 .version-14.2-path =
     "../../VC/Tools/MSVC/*/bin/Host*/*"
-    "Microsoft Visual Studio/2017/*/VC/Tools/MSVC/*/bin/Host*/*"
+    "Microsoft Visual Studio/2019/*/VC/Tools/MSVC/*/bin/Host*/*"
     ;
-.version-14.2-env = VS150COMNTOOLS ProgramFiles ProgramFiles(x86) ;
+.version-14.2-env = VS160COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 # Auto-detect all the available msvc installations on the system.
 auto-detect-toolset-versions ;
