@@ -32,21 +32,20 @@ goto :eof
 REM Check the variable first. This can be set manually by the user (by running the tools command prompt).
 call :Clear_Error
 call vswhere_usability_wrapper.cmd
-if NOT "_%VS150COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc141"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
+call :Clear_Error
+REM VSUNKCOMNTOOLS represents unknown but detected version from vswhere
+if NOT "_%VSUNKCOMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vcunk"
+    set "BOOST_JAM_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
     goto :eof)
 if NOT "_%VS160COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc142"
     set "BOOST_JAM_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
     goto :eof)
-if NOT "_%VSUNKCOMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vcunk"
-    set "BOOST_JAM_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
+if NOT "_%VS150COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vc141"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
-
-:skip_vswhere
-call :Clear_Error
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
