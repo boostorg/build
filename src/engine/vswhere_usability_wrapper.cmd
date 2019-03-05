@@ -56,4 +56,4 @@ for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
 :no-vswhere
 endlocal
 echo could not find "vswhere"
-exit /B 1
+exit /B 0
