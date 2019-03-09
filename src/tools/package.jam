@@ -66,13 +66,25 @@ class package-paths
             option.set datarootdir : ;
         }
 
-        self.prefix = [ path.make [ option.get prefix : $(default-prefix) ] ] ;
-        self.libdir = [ path.make [ option.get libdir : $(self.prefix)/lib ] ] ;
-        self.bindir = [ path.make [ option.get bindir : $(self.prefix)/bin ] ] ;
-        self.includedir =
-            [ path.make [ option.get includedir : $(self.prefix)/include ] ] ;
-        self.datarootdir =
-            [ path.make [ option.get datarootdir : $(self.prefix)/share ] ] ;
+        handle-path prefix : $(default-prefix) ;
+        handle-path libdir : $(self.prefix)/lib ;
+        handle-path bindir : $(self.prefix)/bin ;
+        handle-path includedir : $(self.prefix)/include ;
+        handle-path datarootdir : $(self.prefix)/share ;
+    }
+
+    local rule handle-path ( option : default-value )
+    {
+        local opt = [ option.get $(option) ] ;
+        if $(opt)
+        {
+            opt = [ path.root $(opt) [ path.pwd ] ] ;
+        }
+        else
+        {
+            opt = $(default-value) ;
+        }
+        self.$(option) = $(opt) ;
     }
 
     rule prefix ( )
@@ -118,8 +130,7 @@ class package-paths
             }
             local adjusted-default =
                 [ path.join [ get $(relative-to) ] $(default-value) ] ;
-            self.$(option) =
-                [ path.make [ option.get $(option) : $(adjusted-default) ] ] ;
+            handle-path $(option) : $(adjusted-default) ;
         }
         return $(self.$(option)) ;
     }
