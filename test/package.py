@@ -10,10 +10,11 @@ import BoostBuild
 import os
 
 def setup():
-    t = BoostBuild.Tester(use_test_config=False)
+    t = BoostBuild.Tester(["p//install", "p//data"],
+                          use_test_config=False)
 
-    t.write("jamroot.jam", "")
-    t.write("jamfile.jam", """\
+    t.write("p/jamroot.jam", "")
+    t.write("p/jamfile.jam", """\
     import package ;
     exe a : a.cpp ;
     lib b : b.cpp ;
@@ -23,16 +24,16 @@ def setup():
       : a.h ;
     package.install-data data : Test : a.txt ;
     """)
-    t.write("a.cpp", "int main() {}")
-    t.write("b.cpp", """
+    t.write("p/a.cpp", "int main() {}")
+    t.write("p/b.cpp", """
     int
     #ifdef _WIN32
     __declspec(dllexport)
     #endif
     must_export_something;
     """)
-    t.write("a.h", "")
-    t.write("a.txt", "")
+    t.write("p/a.h", "")
+    t.write("p/a.txt", "")
     return t
 
 def test_defaults():
@@ -40,7 +41,7 @@ def test_defaults():
 
     # Since the default install location is outside out test area,
     # we don't want to actually execute the build.
-    t.run_build_system(["-n", "-d1", "install", "data"])
+    t.run_build_system(["-n", "-d1"])
 
     installdir = "C:/Test" if os.name == 'nt' else "/usr/local"
     t.expect_output_lines([
@@ -64,7 +65,7 @@ def test_prefix():
     option.set datarootdir : bad/share ;
     """)
 
-    t.run_build_system(["--prefix=installdir", "install", "data"])
+    t.run_build_system(["--prefix=installdir"])
     t.expect_addition("installdir/bin/a.exe")
     t.expect_addition("installdir/lib/b.dll")
     t.expect_addition("installdir/lib/b.lib")
@@ -87,8 +88,7 @@ def test_subdirs():
     t.run_build_system(["--libdir=installdir/lib64",
                         "--bindir=installdir/binx",
                         "--includedir=installdir/includex",
-                        "--datarootdir=installdir/sharex",
-                        "install", "data"])
+                        "--datarootdir=installdir/sharex"])
     t.expect_addition("installdir/binx/a.exe")
     t.expect_addition("installdir/lib64/b.dll")
     t.expect_addition("installdir/lib64/b.lib")
@@ -112,8 +112,7 @@ def test_subdirs_with_prefix():
                         "--libdir=installdir/lib64",
                         "--bindir=installdir/binx",
                         "--includedir=installdir/includex",
-                        "--datarootdir=installdir/sharex",
-                        "install", "data"])
+                        "--datarootdir=installdir/sharex"])
     t.expect_addition("installdir/binx/a.exe")
     t.expect_addition("installdir/lib64/b.dll")
     t.expect_addition("installdir/lib64/b.lib")
@@ -129,7 +128,7 @@ def test_prefix_config_file():
     option.set prefix : installdir ;
     """)
 
-    t.run_build_system(["install", "data"])
+    t.run_build_system()
     t.expect_addition("installdir/bin/a.exe")
     t.expect_addition("installdir/lib/b.dll")
     t.expect_addition("installdir/lib/b.lib")
@@ -149,7 +148,7 @@ def test_subdirs_config_file():
     option.set datarootdir : installdir/sharex ;
     """)
 
-    t.run_build_system(["install", "data"])
+    t.run_build_system()
     t.expect_addition("installdir/binx/a.exe")
     t.expect_addition("installdir/lib64/b.dll")
     t.expect_addition("installdir/lib64/b.lib")
@@ -163,8 +162,8 @@ def test_multiple():
     install prefixes.'''
     t = BoostBuild.Tester(use_test_config=False)
 
-    t.write("jamroot.jam", "")
-    t.write("jamfile.jam", """\
+    t.write("p/jamroot.jam", "")
+    t.write("p/jamfile.jam", """\
     import package ;
     exe a : a.cpp ;
     lib b : b.cpp ;
@@ -177,24 +176,24 @@ def test_multiple():
       : b/<link>static b/<link>shared
       : a.h ;
     """)
-    t.write("a.cpp", "int main() {}")
-    t.write("b.cpp", """
+    t.write("p/a.cpp", "int main() {}")
+    t.write("p/b.cpp", """
     int
     #ifdef _WIN32
     __declspec(dllexport)
     #endif
     must_export_something;
     """)
-    t.write("a.h", "")
-    t.run_build_system(["installx", "instally"])
-    t.expect_addition("xxx/bin/a.exe")
-    t.expect_addition("xxx/lib/b.dll")
-    t.expect_addition("xxx/lib/b.lib")
-    t.expect_addition("xxx/include/a.h")
-    t.expect_addition("yyy/bin/a.exe")
-    t.expect_addition("yyy/lib/b.dll")
-    t.expect_addition("yyy/lib/b.lib")
-    t.expect_addition("yyy/include/a.h")
+    t.write("p/a.h", "")
+    t.run_build_system(["p//installx", "p//instally"])
+    t.expect_addition("p/xxx/bin/a.exe")
+    t.expect_addition("p/xxx/lib/b.dll")
+    t.expect_addition("p/xxx/lib/b.lib")
+    t.expect_addition("p/xxx/include/a.h")
+    t.expect_addition("p/yyy/bin/a.exe")
+    t.expect_addition("p/yyy/lib/b.dll")
+    t.expect_addition("p/yyy/lib/b.lib")
+    t.expect_addition("p/yyy/include/a.h")
 
 def test_paths():
     t = BoostBuild.Tester(pass_toolset=False)
