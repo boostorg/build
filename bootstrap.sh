@@ -23,6 +23,10 @@ do
       TOOLSET=`expr "x$option" : "x-*with-toolset=\(.*\)"`
       ;;
 
+    -with-b2=* | --with-b2=* )
+      B2=`expr "x$option" : "x-*with-b2=\(.*\)"`
+      ;;    
+
     -*)
       { echo "error: unrecognized option: $option
 Try \`$0 --help' for more information." >&2
