@@ -8,13 +8,13 @@
 import feature ;
 
 feature.feature address-sanitizer
-    : off on
+    : off on on-no-recover
     : propagated optional ;
 
 feature.feature undefined-sanitizer
-    : off on
+    : off on on-no-recover
     : propagated optional ;
 
 feature.feature thread-sanitizer
-    : off on
+    : off on on-no-recover
     : propagated optional ;
