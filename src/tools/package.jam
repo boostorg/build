@@ -78,7 +78,7 @@ class package-paths
         local opt = [ option.get $(option) ] ;
         if $(opt)
         {
-            opt = [ path.root $(opt) [ path.pwd ] ] ;
+            opt = [ path.root [ path.make $(opt) ] [ path.pwd ] ] ;
         }
         else
         {
