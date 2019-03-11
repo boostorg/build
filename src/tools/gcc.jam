@@ -731,9 +731,9 @@ toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions 
 toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>on : -fsanitize=address ;
 toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>on : -fsanitize=undefined ;
 toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>on : -fsanitize=thread ;
-toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>on-no-recover : -fsanitize=address -fno-sanitize-recover=address ;
-toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>on-no-recover : -fsanitize=undefined -fno-sanitize-recover=undefined ;
-toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>on-no-recover : -fsanitize=thread -fno-sanitize-recover=thread ;
+toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address ;
+toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined ;
+toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread ;
 
 # configure Dinkum STL to match compiler options
 toolset.flags gcc.compile.c++ DEFINES <rtti>off/<target-os>vxworks : _NO_RTTI ;
@@ -877,9 +877,9 @@ toolset.flags gcc.link OPTIONS <local-visibility>global : -fvisibility=default ;
 toolset.flags gcc.link OPTIONS <address-sanitizer>on : -fsanitize=address ;
 toolset.flags gcc.link OPTIONS <undefined-sanitizer>on : -fsanitize=undefined ;
 toolset.flags gcc.link OPTIONS <thread-sanitizer>on : -fsanitize=thread ;
-toolset.flags gcc.link OPTIONS <address-sanitizer>on-no-recover : -fsanitize=address -fno-sanitize-recover=address ;
-toolset.flags gcc.link OPTIONS <undefined-sanitizer>on-no-recover : -fsanitize=undefined -fno-sanitize-recover=undefined ;
-toolset.flags gcc.link OPTIONS <thread-sanitizer>on-no-recover : -fsanitize=thread -fno-sanitize-recover=thread ;
+toolset.flags gcc.link OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address ;
+toolset.flags gcc.link OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined ;
+toolset.flags gcc.link OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread ;
 
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
