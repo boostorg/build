@@ -1126,12 +1126,15 @@ local rule set-setup-command ( targets * : properties * )
 #
 local rule configure-really ( version ? : options * )
 {
-    local v = $(version) ;
+    local command = [ feature.get-values <command> : $(options) ] ;
 
-    # Decide what the 'default' version is.
-    if ! $(v)
+    if ! $(version) && ! $(command)
     {
+        # We were given neither a command, nor a version.
         # Take the best registered (i.e. auto-detected) version.
+        # FIXME: consider whether an explicitly specified setup script
+        # should disable this logic.  We already won't get here if
+        # there is a user specified command.
         version = [ $(.versions).all ] ;
         for local known in $(.known-versions)
         {
@@ -1141,59 +1144,31 @@ local rule configure-really ( version ? : options * )
                 break ;
             }
         }
+        # version might still have multiple elements if no versions
+        # were auto-detected, but an unknown version was configured
+        # manually.
         version = $(version[1]) ;
-        v = $(version) ;
-
-        # Note: 'version' can still be empty at this point if no versions have
-        # been auto-detected.
-        version ?= "default" ;
     }
 
-    # Version alias -> real version number.
-    version = [ resolve-possible-msvc-version-alias $(version) ] ;
-
-    # Check whether the selected configuration is already in use.
-    if $(version) in [ $(.versions).used ]
+    # Handle a user-provided command, and deduce the version if necessary.
+    # If the user-requested version was not autodetected and no command
+    # was given, attempt to find it in PATH
+    if $(command) || ! ( $(version:E=default) in [ $(.versions).all ] )
     {
-        # Allow multiple 'toolset.using' calls for the same configuration if the
-        # identical sets of options are used.
-        if $(options) && ( $(options) != [ $(.versions).get $(version) : options ] )
+        local found-command = [ common.get-invocation-command-nodefault msvc : cl.exe : $(command) ] ;
+
+        if $(found-command)
         {
-            import errors ;
-            errors.error "MSVC toolset configuration: Toolset version"
-                "'$(version)' already configured." ;
+            command = $(found-command) ;
+            if ! $(command:D)
+            {
+                local path = [ common.get-absolute-tool-path $(command) ] ;
+                command = $(command:R=$(path)) ;
+            }
         }
-    }
-    else
-    {
-        # Register a new configuration.
-        $(.versions).register $(version) ;
-
-        # Add user-supplied to auto-detected options.
-        options = [ $(.versions).get $(version) : options ] $(options) ;
-
-        # Mark the configuration as 'used'.
-        $(.versions).use $(version) ;
-
-        # Generate conditions and save them.
-        local conditions = [ common.check-init-parameters msvc : version $(v) ]
-            ;
-
-        $(.versions).set $(version) : conditions : $(conditions) ;
-
-        local command = [ feature.get-values <command> : $(options) ] ;
-
-        # For 14.1+ we need the exact version as MS is planning rolling updates
-        # that will cause our `setup-cmd` to become invalid
-        exact-version = [ MATCH "(14\.[1-9][0-9]\.[0-9\.]+)" : $(command) ] ;
-
-        # If version is specified, we try to search first in default paths, and
-        # only then in PATH.
-        command = [ common.get-invocation-command msvc : cl.exe : $(command) :
-            [ default-paths $(version) ] : $(version) ] ;
-
-        if ( ! $(version) || $(version) = "default" ) && ! $(command:D)
+        else
         {
+            # If we still failed to find cl.exe, bail out.
             ECHO ;
             ECHO warning\:
                 "Did not find command for MSVC toolset."
@@ -1204,9 +1179,8 @@ local rule configure-really ( version ? : options * )
                 "build from the 'Visual Studio Command Prompt for VS 2017'."
                 ;
             ECHO ;
+            command ?= cl.exe ;
         }
-
-        common.handle-options msvc : $(conditions) : $(command) : $(options) ;
 
         if ! $(version)
         {
@@ -1214,11 +1188,11 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(MSVC\\14.2)" : $(command) ]
+            if [ MATCH "(MSVC\\\\14.2)" : $(command) ]
             {
                 version = 14.2 ;
             }
-            else if [ MATCH "(MSVC\\14.1)" : $(command) ]
+            else if [ MATCH "(MSVC\\\\14.1)" : $(command) ]
             {
                 version = 14.1 ;
             }
@@ -1264,6 +1238,44 @@ local rule configure-really ( version ? : options * )
                 version = 6.0 ;
             }
         }
+    }
+
+    # Version alias -> real version number.
+    version = [ resolve-possible-msvc-version-alias $(version) ] ;
+
+    # Check whether the selected configuration is already in use.
+    if $(version) in [ $(.versions).used ]
+    {
+        # Allow multiple 'toolset.using' calls for the same configuration if the
+        # identical sets of options are used.
+        if $(options) && ( $(options) != [ $(.versions).get $(version) : options ] )
+        {
+            import errors ;
+            errors.user-error "MSVC toolset configuration: Toolset version"
+                "'$(version)' already configured." ;
+        }
+    }
+    else
+    {
+        # Register a new configuration.
+        $(.versions).register $(version) ;
+        $(.versions).set $(version) : options : $(options) ;
+
+        # Mark the configuration as 'used'.
+        $(.versions).use $(version) ;
+
+        # Generate conditions and save them.
+        local conditions = [ common.check-init-parameters msvc : version $(version) ] ;
+
+        $(.versions).set $(version) : conditions : $(conditions) ;
+
+        command ?= [ $(.versions).get $(version) : default-command ] ;
+
+        # For 14.1+ we need the exact version as MS is planning rolling updates
+        # that will cause our `setup-cmd` to become invalid
+        exact-version = [ MATCH "(14\.[1-9][0-9]\.[0-9\.]+)" : $(command) ] ;
+
+        common.handle-options msvc : $(conditions) : $(command) : $(options) ;
 
         # Generate and register setup command.
 
@@ -1458,7 +1470,7 @@ local rule configure-really ( version ? : options * )
             {
                 for local cpu-condition in $(cpu-conditions)
                 {
-                    ECHO "notice: [msvc-cfg] condition: '$(cpu-condition)', setup: '$(setup-$(c))'" ;
+                    ECHO "notice: [msvc-cfg] condition: '$(cpu-condition)', setup: '$(setup-$(c):J= )'" ;
                 }
             }
 
@@ -1536,15 +1548,7 @@ local rule configure-really ( version ? : options * )
 #
 local rule default-path ( version )
 {
-    # Use auto-detected path if possible.
-    local result = [ feature.get-values <command> : [ $(.versions).get $(version)
-        : options ] ] ;
-
-    if $(result)
-    {
-        result = $(result:D) ;
-    }
-    else
+    local result ;
     {
         # try to use vswhere
         local pseudo_env_VSCOMNTOOLS ;
@@ -1610,28 +1614,6 @@ local rule default-path ( version )
     return $(result) ;
 }
 
-
-# Returns either the default installation path (if 'version' is not empty) or
-# list of all known default paths (if no version is given)
-#
-local rule default-paths ( version ? )
-{
-    local possible-paths ;
-
-    if $(version)
-    {
-        possible-paths += [ default-path $(version) ] ;
-    }
-    else
-    {
-        for local i in $(.known-versions)
-        {
-            possible-paths += [ default-path $(i) ] ;
-        }
-    }
-
-    return $(possible-paths) ;
-}
 
 
 rule get-rspline ( target : lang-opt )
@@ -1908,7 +1890,7 @@ local rule register-configuration ( version : path ? )
             }
 
             $(.versions).register $(version) ;
-            $(.versions).set $(version) : options : <command>$(command) ;
+            $(.versions).set $(version) : default-command : $(command) ;
         }
     }
 }
@@ -1992,8 +1974,6 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .version-alias-11 = 11.0 ;
 .version-alias-12 = 12.0 ;
 .version-alias-14 = 14.0 ;
-.version-alias-14.1 = 14.1 ;
-.version-alias-14.2 = 14.2 ;
 
 # Names of registry keys containing the Visual C++ installation path (relative
 # to "HKEY_LOCAL_MACHINE\SOFTWARE\\Microsoft").
