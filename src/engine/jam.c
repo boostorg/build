@@ -601,6 +601,30 @@ int main( int argc, char * * argv, char * * arg_environ )
             }
         }
 
+        /* The build system may set the PARALLELISM variable to override -j
+         * options.
+         */
+        {
+            LIST * const p = var_get( root_module(), constant_PARALLELISM );
+            if ( !list_empty( p ) )
+            {
+                int const j = atoi( object_str( list_front( p ) ) );
+                if ( j < 1 )
+                    out_printf( "Invalid value of PARALLELISM: %s.\n",
+                        object_str( list_front( p ) ) );
+                else
+                    globs.jobs = j;
+            }
+        }
+
+        /* KEEP_GOING overrides -q option. */
+        {
+            LIST * const p = var_get( root_module(), constant_KEEP_GOING );
+            if ( !list_empty( p ) )
+                globs.quitquick = atoi( object_str( list_front( p ) ) ) ? 0 : 1;
+        }
+
+        
         if ( list_empty( targets_to_update() ) )
             mark_target_for_updating( constant_all );
 
@@ -629,28 +653,6 @@ int main( int argc, char * * argv, char * * arg_environ )
             object_free( target );
         }
 
-        /* The build system may set the PARALLELISM variable to override -j
-         * options.
-         */
-        {
-            LIST * const p = var_get( root_module(), constant_PARALLELISM );
-            if ( !list_empty( p ) )
-            {
-                int const j = atoi( object_str( list_front( p ) ) );
-                if ( j < 1 )
-                    out_printf( "Invalid value of PARALLELISM: %s.\n",
-                        object_str( list_front( p ) ) );
-                else
-                    globs.jobs = j;
-            }
-        }
-
-        /* KEEP_GOING overrides -q option. */
-        {
-            LIST * const p = var_get( root_module(), constant_KEEP_GOING );
-            if ( !list_empty( p ) )
-                globs.quitquick = atoi( object_str( list_front( p ) ) ) ? 0 : 1;
-        }
 
         /* Now make target. */
         {
