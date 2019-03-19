@@ -11,31 +11,62 @@ import toolset : flags ;
 import gcc ;
 import common ;
 import errors ;
+import set ;
 import generators ;
-
+import string ;
 
 feature.extend-subfeature toolset clang : platform : vxworks ;
 
-toolset.inherit-generators clang-vxworks 
-  <toolset>clang <toolset-clang:platform>vxworks 
-  : gcc 
+toolset.inherit-generators clang-vxworks
+  <toolset>clang <toolset-clang:platform>vxworks
+  : gcc
   # Don't inherit PCH generators. They were not tested, and probably
   # don't work for this compiler.
   : gcc.mingw.link gcc.mingw.link.dll gcc.compile.c.pch gcc.compile.c++.pch
+    gcc.link.ld gcc.link.dll.ld
   ;
 
 generators.override clang-vxworks.prebuilt : builtin.lib-generator ;
 generators.override clang-vxworks.prebuilt : builtin.prebuilt ;
 generators.override clang-vxworks.searched-lib-generator : searched-lib-generator ;
 
-
 toolset.inherit-rules clang-vxworks : gcc ;
-toolset.inherit-flags clang-vxworks : gcc 
-        : <inlining>full
-          <architecture>x86/<address-model>32
-          <architecture>x86/<address-model>64
-        ;
-        
+
+# Declare flags and action for compilation.
+toolset.flags clang-vxworks.compile OPTIONS <optimization>off   : -O0 ;
+toolset.flags clang-vxworks.compile OPTIONS <optimization>speed : -O3 ;
+toolset.flags clang-vxworks.compile OPTIONS <optimization>space : -Os ;
+
+toolset.flags clang-vxworks.compile OPTIONS <inlining>off  : -fno-inline ;
+toolset.flags clang-vxworks.compile OPTIONS <inlining>on   : -Wno-inline ;
+toolset.flags clang-vxworks.compile OPTIONS <inlining>full : -finline-functions -Wno-inline ;
+
+toolset.flags clang-vxworks.compile OPTIONS <warnings>off : -w ;
+toolset.flags clang-vxworks.compile OPTIONS <warnings>on  : -Wall ;
+toolset.flags clang-vxworks.compile OPTIONS <warnings>all : -Wall -pedantic ;
+toolset.flags clang-vxworks.compile OPTIONS <warnings-as-errors>on : -Werror ;
+
+toolset.flags clang-vxworks.compile OPTIONS <debug-symbols>on : -g ;
+toolset.flags clang-vxworks.compile OPTIONS <profiling>on : -pg ;
+
+toolset.flags clang-vxworks.link    OPTIONS <target-os>vxworks/<strip>on : -Wl,--strip-all ;
+toolset.flags clang-vxworks.link FINDLIBS-ST <find-static-library> ;
+toolset.flags clang-vxworks.link FINDLIBS-SA <find-shared-library> ;
+toolset.flags clang-vxworks.link USER_OPTIONS <linkflags> ;
+
+toolset.flags clang-vxworks.compile.c DEFINES <define> ;
+
+# configure Dinkum STL to match compiler options
+toolset.flags clang-vxworks.compile.c++ DEFINES <define> ;
+toolset.flags clang-vxworks.compile.c++ DEFINES <rtti>off/<target-os>vxworks : _NO_RTTI ;
+toolset.flags clang-vxworks.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
+
+# No-exceptions has not been tested, and is unlikely to work, if you need it
+# please file an issue with Windriver compiler support
+toolset.flags clang-vxworks.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
+toolset.flags clang-vxworks.compile.c++ DEFINES <exception-handling>off/<target-os>vxworks : _NO_EX=1 ;
+
+
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
     .debug-configuration = true ;
@@ -45,35 +76,76 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 #   compile and link options allow you to specify addition command line options for each version
 rule init ( version ? :  command * : options * )
 {
-    command = [ common.get-invocation-command clang-vxworks : ccllvm 
+    command = [ common.get-invocation-command clang-vxworks : ccllvm
         : $(command) ] ;
-    
-    linker = [ get-values <linker> : $(options) ] ;
-    linker   ?= ld ;
-    
+
     # Determine the version
     local command-string = $(command:J=" ") ;
     if $(command)
-    {    
+    {
         version ?= [ MATCH "^([0-9.]+)"
-            : [ SHELL "$(command-string) -dumpversion" ] ] ;
+            : [ SHELL "$(command-string) --version" ] ] ;
     }
 
     local condition = [ common.check-init-parameters clang-vxworks
-        : version $(version) ] ;    
+        : version $(version) ] ;
 
+#   OPTIONS for compile         to the value of <compileflags>
+#   OPTIONS for compile.c       to the value of <cflags>
+#   OPTIONS for compile.c++     to the value of <cxxflags>
+#   OPTIONS for link            to the value of <linkflags>
     common.handle-options clang-vxworks : $(condition) : $(command) : $(options) ;
 
+    local linker = [ get-values <linker> : $(options) ] ;
+    linker   ?= ld ;
     toolset.flags clang-vxworks.link      .LD  : $(linker) ;
 
     # - Archive builder.
     local archiver = [ feature.get-values <archiver> : $(options) ] ;
+    archiver ?= ar ;
     toolset.flags clang-vxworks.archive .AR $(condition) : $(archiver[1]) ;
+
+    # - Link flags specific to shared libaries
+    local linkflags-so = [ get-values <linkflags-so> : $(options) ] ;
+    toolset.flags clang-vxworks.link.dll SO_OPTIONS $(condition) : $(linkflags-so) ;
+
+    # - Compile flags specific to shared libaries
+    local compileflags-so = [ get-values <compileflags-so> : $(options) ] ;
+    compileflags-so ?= -fpic ;
+    toolset.flags clang-vxworks.compile OPTIONS  <target-os>vxworks/<link>shared : $(compileflags-so) ;
+
+    # - Link flags specific to static libaries
+    local linkflags-static = [ get-values <linkflags-static> : $(options) ] ;
+    linkflags-static ?= -static ;
+    toolset.flags clang-vxworks.link PRELIB_OPTIONS <target-os>vxworks/<link>static  : $(linkflags-static) ;
+
+    # - Link flags specific to static libaries
+    local linkflags-dynamic = [ get-values <linkflags-dynamic> : $(options) ] ;
+    toolset.flags clang-vxworks.link OPTIONS <target-os>vxworks/<link>shared  : $(linkflags-dynamic) ;
+
+    # - __init symbol object when the default supplied by compiler is not for VxWorks
+    local crt0-obj = [ get-values <crt0-obj> : $(options) ] ;
+    toolset.flags clang-vxworks.link CRT0_OBJ $(condition)  : $(crt0-obj) ;
+
+    local library-path = [ get-values <library-path> : $(options) ] ;
+    toolset.flags clang-vxworks.link LINKPATH  $(condition)  : $(library-path) ;
+
+    local library-file = [ get-values <library-file> : $(options) ] ;
+    toolset.flags clang-vxworks.link LIBRARIES  $(condition) : $(library-file) ;
+
+    if $(library-file)
+    {
+       local excludelib = "-ldl" "-lsyscall" ;
+       local libraries-so = [ set.difference  [ string.words "$(library-file)" ] : $(excludelib) ] ;
+       toolset.flags clang-vxworks.link.dll LIBS_SO  $(condition) : $(libraries-so) ;
+    }
 }
 
 SPACE = " " ;
 
 toolset.flags clang-vxworks.compile OPTIONS <cflags> ;
+toolset.flags clang-vxworks.compile.asm OPTIONS <architecture>x86/<address-model>32 : --target=i386 -m32  ;
+toolset.flags clang-vxworks.compile.asm OPTIONS <cflags> ;
 toolset.flags clang-vxworks.compile.c++ OPTIONS <cxxflags> ;
 toolset.flags clang-vxworks.compile INCLUDES <include> ;
 
@@ -82,6 +154,9 @@ toolset.flags clang-vxworks.compile OPTIONS <inlining>full : -Wno-inline ;
 
 toolset.flags clang-vxworks.compile OPTIONS <flags> ;
 
+# tool configured to use ld<arch>, rather than cxx<arch> use without -Wl, prefix
+toolset.flags clang-vxworks.link START-GROUP  : --start-group ;
+toolset.flags clang-vxworks.link END-GROUP  : --end-group ;
 
 actions compile.c
 {
@@ -93,15 +168,10 @@ actions compile.c++
     "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
-
-
-# Default value. Mostly for the sake of clang-linux
-# that inherits from gcc, but does not has the same
-# logic to set the .AR variable. We can put the same
-# logic in clang-linux, but that's hardly worth the trouble
-# as on Linux, 'ar' is always available.
-.AR = ar ;
-
+actions compile.asm
+{
+    "$(CONFIG_COMMAND)" -x assembler-with-cpp   $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
 
 actions piecemeal archive
 {
@@ -114,15 +184,15 @@ rule link ( targets * : sources * : properties * )
   SPACE on $(targets) = " " ;
   # Serialize execution of the 'link' action, since
   # running N links in parallel is just slower.
-  JAM_SEMAPHORE on $(targets) = <s>clang-vxworks-link-semaphore ;
+  #JAM_SEMAPHORE on $(targets) = <s>clang-vxworks-link-semaphore ;
 }
 
 actions link bind LIBRARIES
 {
-    "$(.LD)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" $(START-GROUP) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) 
-    }
+    $(.LD) $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" $(CRT0_OBJ) "$(>)" $(PRELIB_OPTIONS) $(START-GROUP) $(LIBRARIES) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP)  $(OPTIONS)
+}
 
 actions link.dll bind LIBRARIES
 {
-    "$(.LD)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" $(START-GROUP) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) -fpic -shared -non-static
+    $(.LD) $(SO_OPTIONS) -L"$(LINKPATH)" -o "$(<)"  "$(>)" $(START-GROUP) $(LIBS_SO) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP)
 }

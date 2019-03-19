@@ -458,6 +458,9 @@ rule handle-options ( toolset : condition * : command * : options * )
     toolset.flags $(toolset).compile.asm     OPTIONS $(condition) :
         [ feature.get-values <asmflags>     : $(options) ] : unchecked ;
 
+    toolset.flags $(toolset).compile.asm     OPTIONS $(condition) :
+        [ feature.get-values <cflags>     : $(options) ] : unchecked ;
+
     toolset.flags $(toolset).compile.fortran OPTIONS $(condition) :
         [ feature.get-values <fflags>       : $(options) ] : unchecked ;
 
