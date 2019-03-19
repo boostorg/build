@@ -107,6 +107,8 @@ import type ;
 import unix ;
 import virtual-target ;
 import errors ;
+import string ;
+import path ;
 
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -128,7 +130,7 @@ generators.override gcc.searched-lib-generator : searched-lib-generator ;
 type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
 type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>windows : o ;
 type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
-
+type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>vxworks : o ;
 
 # Initializes the gcc toolset for the given version. If necessary, command may
 # be used to specify where the compiler is located. The parameter 'options' is a
@@ -357,6 +359,56 @@ rule init ( version ? : command * : options * : requirement * )
     toolset.flags gcc VERSION $(condition) : [ regex.split $(version) "[.]" ] ;
 
     init-cxxstd-flags $(condition) : $(version) ;
+
+    if ( [ feature.get-values <target-os> : $(requirement)  ] in vxworks )
+    {
+
+        # - Archive builder.
+        # VxWorks uses <gnutool><arch>
+        # instead of the typical cross compile triplet <gnutool>-<platform>-<arch>
+        .AR ?= arppc ;
+
+        local linker = [ feature.get-values <linker> : $(options) ] ;
+        linker  ?= ldppc ;
+        toolset.flags gcc.link.ld .LD $(condition)  : $(linker) ;
+
+        # - Link flags specific to shared libaries
+        local linkflags-so = [ feature.get-values <linkflags-so> : $(options) ] ;
+        toolset.flags gcc.link.dll.ld SO_OPTIONS $(condition) : $(linkflags-so) ;
+        toolset.flags gcc.link.dll.ld .LD $(condition)  : $(linker) ;
+
+        # - Compile flags specific to shared libraries
+        local compileflags-so = [ feature.get-values <compileflags-so> : $(options) ] ;
+        compileflags-so ?= -fpic -D__SO_PICABILINUX__  -ftls-model=global-dynamic ;
+        toolset.flags gcc.compile OPTIONS  <link>shared : $(compileflags-so) ;
+
+        # - Link flags specific to static libraries
+        local linkflags-static = [ feature.get-values <linkflags-static> : $(options) ] ;
+        linkflags-static ?= -static ;
+        toolset.flags gcc.link.ld PRELIB_OPTIONS <link>static  : $(linkflags-static) ;
+
+        # - Link flags specific to dynamic libraries
+        local linkflags-dynamic = [ feature.get-values <linkflags-dynamic> : $(options) ] ;
+        toolset.flags gcc.link.ld OPTIONS <link>shared  : $(linkflags-dynamic) ;
+
+        # - __init symbol object when the default supplied by compiler is not for VxWorks
+        local crt0-obj = [ feature.get-values <crt0-obj> : $(options) ] ;
+        toolset.flags gcc.link.ld CRT0_OBJ $(condition)  : $(crt0-obj) ;
+
+        local library-path = [ feature.get-values <library-path> : $(options) ] ;
+        toolset.flags gcc.link.ld LINKPATH  $(condition)  : $(library-path) ;
+        toolset.flags gcc.link.dll.ld LINKPATH  $(condition)  : $(library-path) ;
+
+        local library-file = [ feature.get-values <library-file> : $(options) ] ;
+        toolset.flags gcc.link.ld LIBRARIES  $(condition) : $(library-file) ;
+
+        if $(library-file)
+        {
+            local excludelib = "-ldl" "-lsyscall" ;
+            local libraries-so = [ set.difference  [ string.words $(library-file) ] : $(excludelib) ] ;
+            toolset.flags gcc.link.dll.ld LIBS_SO  $(condition) : $(libraries-so) ;
+        }
+    }
 }
 
 if [ os.name ] = NT
@@ -435,7 +487,7 @@ local rule compile-link-flags ( * )
     compile-link-flags <target-os>hpux/<address-model>32 : -milp32 ;
     compile-link-flags <target-os>hpux/<address-model>64 : -mlp64 ;
 
-    local generic-os = [ set.difference $(all-os) : aix hpux ] ;
+    local generic-os = [ set.difference $(all-os) : aix hpux vxworks ] ;
     local arch = power sparc x86 ;
     compile-link-flags <target-os>$(generic-os)/<architecture>$(arch)/<address-model>32 : -m32 ;
     compile-link-flags <target-os>$(generic-os)/<architecture>$(arch)/<address-model>64 : -m64 ;
@@ -853,6 +905,47 @@ generators.register $(g) ;
 generators.override gcc.cygwin.link : gcc.link ;
 generators.override gcc.cygwin.link.dll : gcc.link.dll ;
 
+g = [ new gcc-linking-generator gcc.link.ld
+      : LIB OBJ
+      : EXE
+      : <toolset>gcc <target-os>vxworks ] ;
+generators.register $(g) ;
+generators.override gcc.link.ld : gcc.link ;
+
+generators.register
+  [ new gcc-linking-generator gcc.link.dll.ld
+      : LIB OBJ
+      : SHARED_LIB
+      : <toolset>gcc <target-os>vxworks ] ;
+generators.override gcc.link.dll.ld : gcc.link.dll ;
+
+rule link.ld ( targets * : sources * : properties * )
+{
+  SPACE on $(targets) = " " ;
+  # Serialize execution of the 'link' action.
+  #JAM_SEMAPHORE on $(targets) = <s>gcc-link-ld-semaphore ;
+}
+
+rule link.dll.ld ( targets * : sources * : properties * )
+{
+  SPACE on $(targets) = " " ;
+  # Serialize execution of the 'link' action.
+  #JAM_SEMAPHORE on $(targets) = <s>gcc-link-ld-semaphore ;
+}
+
+.LD ?= ld ;
+
+actions link.ld bind LIBRARIES
+{
+    $(.LD) $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" $(CRT0_OBJ) "$(>)" $(PRELIB_OPTIONS) $(START-GROUP) $(LIBRARIES) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP)  $(OPTIONS)
+}
+
+actions link.dll.ld bind LIBS_SO
+{
+    $(.LD) -o "$(<)" $(SO_OPTIONS) -L"$(LINKPATH)" $(CRT0_OBJ) "$(>)" $(START-GROUP) $(LIBS_SO) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP)  $(OPTIONS)
+}
+
+
 # Declare flags for linking.
 # First, the common flags.
 toolset.flags gcc.link OPTIONS <debug-symbols>on : -g ;
@@ -920,12 +1013,10 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     toolset.flags gcc.link OPTIONS <target-os>darwin/<runtime-link>static : -static ;
 
     # vxworks
-    # On VxWorks we want to reflect what ever special flags have been set in the
-    # environment for the CPU we are targeting in the cross build
-    toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<strip>on    : -Wl,--strip-all                ;
-    toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<link>static : [ os.environ LDFLAGS_STATIC ]  ;
-    toolset.flags gcc.link.dll OPTIONS     <target-os>vxworks              : [ os.environ LDFLAGS_SO ]      ;
-    toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<link>shared : [ os.environ LDFLAGS_DYNAMIC ] ;
+    # used 'ld' to link so does not use -W, prefix
+    toolset.flags gcc.link     OPTIONS     <target-os>vxworks/<strip>on    : ---strip-all ;
+    toolset.flags gcc.link     START-GROUP   <target-os>vxworks : --start-group ;
+    toolset.flags gcc.link     END-GROUP   <target-os>vxworks : --end-group ;
 
     # default
 
