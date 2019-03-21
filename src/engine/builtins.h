@@ -7,6 +7,7 @@
 #ifndef JAM_BUILTINS_H
 # define JAM_BUILTINS_H
 
+# include "config.h"
 # include "frames.h"
 
 /*

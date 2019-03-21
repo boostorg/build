@@ -11,6 +11,7 @@
 #ifndef VARIABLE_SW20111119_H
 #define VARIABLE_SW20111119_H
 
+#include "config.h"
 #include "lists.h"
 #include "object.h"
 
