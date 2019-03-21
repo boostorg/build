@@ -104,13 +104,10 @@ JAMROOT ?= project-root.jam "[Jj]amroot" "[Jj]amroot." "[Jj]amroot.jam" ;
 rule load-parent ( location )
 {
     local found = [ path.glob-in-parents $(location) : $(JAMROOT) $(JAMFILE) ] ;
-    if ! $(found)
+    if $(found)
     {
-        import errors ;
-        errors.error Could not find parent "for" project at '$(location)' :
-            Did not find Jamfile.jam or Jamroot.jam "in" any parent directory. ;
+        return [ load $(found[1]:D) ] ;
     }
-    return [ load $(found[1]:D) ] ;
 }
 
 
@@ -507,25 +504,30 @@ rule initialize (
     {
         parent-module = user-config ;
     }
-    else if $(location) && ! [ MATCH ^($(JAMROOT))$ : $(basename) ]
-    {
-        # We search for parent/jamroot only if this is a jamfile project, i.e.
-        # if is not a standalone or a jamroot project.
-        parent-module = [ load-parent $(location) ] ;
-    }
     else if $(location)
     {
-        # We have a jamroot project. Inherit from user-config (or project-config
-        # if it exists).
-        if $(project-config.attributes)
+        if ! [ MATCH ^($(JAMROOT))$ : $(basename) ]
         {
-            parent-module = project-config ;
+            # We search for parent/jamroot only if this is a jamfile project, i.e.
+            # if is not a standalone or a jamroot project.
+            parent-module = [ load-parent $(location) ] ;
         }
-        else
+        if ! $(parent-module)
         {
-            parent-module = user-config ;
+            # We have a jamroot project, or a jamfile project
+            # without a parent that becomes a jamroot. Inherit from
+            # user-config (or project-config
+            # if it exists).
+            if $(project-config.attributes)
+            {
+                parent-module = project-config ;
+            }
+            else
+            {
+                parent-module = user-config ;
+            }
+            jamroot = true ;
         }
-        jamroot = true ;
     }
 
     # TODO: need to consider if standalone projects can do anything but define

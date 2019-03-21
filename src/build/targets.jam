@@ -893,7 +893,7 @@ rule resolve-reference ( target-reference : project )
     if $(split[3])
     {
         sproperties = [ property.make [ feature.split $(split[3]) ] ] ;
-        sproperties = [ feature.expand-composites $(sproperties) ] ;
+        sproperties = [ feature.expand $(sproperties) ] ;
     }
 
     # Find the target.

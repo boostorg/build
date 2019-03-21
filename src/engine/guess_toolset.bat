@@ -4,7 +4,11 @@ REM ~ Copyright 2002-2018 Rene Rivera.
 REM ~ Distributed under the Boost Software License, Version 1.0.
 REM ~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-call :Guess
+if "_%1_" == "_yacc_" goto Guess_Yacc
+if "_%1_" == "_test_path_" (
+    shift
+    goto Test_Path)
+goto Guess
 
 
 :Clear_Error
@@ -28,12 +32,20 @@ goto :eof
 REM Let vswhere tell us where msvc is at, if available.
 call :Clear_Error
 call vswhere_usability_wrapper.cmd
+call :Clear_Error
+REM VSUNKCOMNTOOLS represents unknown but detected version from vswhere
+if NOT "_%VSUNKCOMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vcunk"
+    set "BOOST_JAM_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
+    goto :eof)
+if NOT "_%VS160COMNTOOLS%_" == "__" (
+    set "BOOST_JAM_TOOLSET=vc142"
+    set "BOOST_JAM_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
+    goto :eof)
 if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
-    exit /b 0)
-
-call :Clear_Error
+    goto :eof)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "BOOST_JAM_TOOLSET=vc141"
     set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"

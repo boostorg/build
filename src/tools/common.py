@@ -441,6 +441,7 @@ def handle_options(tool, condition, command, options):
         - OPTIOns for compile to the value of <compileflags> in options
         - OPTIONS for compile.c to the value of <cflags> in options
         - OPTIONS for compile.c++ to the value of <cxxflags> in options
+        - OPTIONS for compile.asm to the value of <asmflags> in options
         - OPTIONS for compile.fortran to the value of <fflags> in options
         - OPTIONs for link to the value of <linkflags> in options
     """
@@ -454,6 +455,7 @@ def handle_options(tool, condition, command, options):
     toolset.flags(tool + '.compile', 'OPTIONS', condition, feature.get_values('<compileflags>', options))
     toolset.flags(tool + '.compile.c', 'OPTIONS', condition, feature.get_values('<cflags>', options))
     toolset.flags(tool + '.compile.c++', 'OPTIONS', condition, feature.get_values('<cxxflags>', options))
+    toolset.flags(tool + '.compile.asm', 'OPTIONS', condition, feature.get_values('<asmflags>', options))
     toolset.flags(tool + '.compile.fortran', 'OPTIONS', condition, feature.get_values('<fflags>', options))
     toolset.flags(tool + '.link', 'OPTIONS', condition, feature.get_values('<linkflags>', options))
 

@@ -40,6 +40,12 @@ error_exit ()
     echo "### detected. The 'cxx' toolset will use the CXX, CXXFLAGS, and LIBS"
     echo "### environment variables, if present."
     echo "###"
+    echo "### Similarly, the cross-cc toolset is available for cross-compiling"
+    echo "### by using the BUILD_CC, BUILD_CFLAGS, and BUILD_LDFLAGS environment"
+    echo "### variables to compile binaries that will be executed on the build"
+    echo "### system. This allows CC etc. to be set for cross-compilers to be"
+    echo "### propagated to subprocesses."
+    echo "###"
     exit 1
 }
 
@@ -338,6 +344,15 @@ case $BOOST_JAM_TOOLSET in
     BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $CXXFLAGS $LIBS"
     BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $CXXFLAGS $LIBS"
     BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CXXFLAGS $LIBS"
+    ;;
+
+    cross-cc)
+    if test -z "$BUILD_CC" ; then BUILD_CC=cc ; fi
+    BOOST_JAM_CC=$BUILD_CC
+    BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $BUILD_CFLAGS $BUILD_LDFLAGS"
+    BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $BUILD_CFLAGS $BUILD_LDFLAGS"
+    BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $BUILD_CFLAGS $BUILD_LDFLAGS"
+    BOOST_JAM_TOOLSET=cc
     ;;
 
     qcc)

@@ -41,7 +41,7 @@ Boost.Build has a few unique concepts that are introduced in this
 section. The best way to explain the concepts is by comparison with more
 classical build tools.
 
-When using any flavour of make, you directly specify _targets_ and
+When using any flavor of make, you directly specify _targets_ and
 commands that are used to create them from other target. The below
 example creates `a.o` from `a.c` using a hardcoded compiler invocation
 command.
@@ -71,8 +71,8 @@ immediately when the build description is parsed, which makes it
 impossible to perform multi-variant builds. Often, change in any build
 property requires a complete reconfiguration of the build tree.
 
-In order to support true multivariant builds, Boost.Build introduces the
-concept of a metatarget definition main target metataget
+In order to support true multi-variant builds, Boost.Build introduces the
+concept of a metatarget definition main target metatarget
 _metatarget_ -- an object that is created when the build description is
 parsed and can be called later with specific build properties to
 generate actual targets.
@@ -371,7 +371,7 @@ TIP: You can use the `--debug-configuration` option to find which
 configuration files are actually loaded.
 
 Usually, `user-config.jam` just defines the available compilers and
-other tools (see link:#bbv2.recipies.site-config[the section called “Targets
+other tools (see link:#bbv2.recipes.site-config[the section called “Targets
 in site-config.jam”] for more advanced usage). A tool is configured using
 the following syntax:
 
@@ -476,9 +476,9 @@ using gcc : 5 : : <cxxflags>"-std=c++14 -O2" ;
 using clang : 3.9 : : <cxxflags>-std=c++14 <cxxflags>-O2 ;
 ----
 
-Multiple varaiations of the same tool can be used for most tools. These
-are deliniated by the version passed in. Because the dash '-' cannot be
-used here, the convention has become to use the tilde '~' to deliniate
+Multiple variations of the same tool can be used for most tools. These
+are delineated by the version passed in. Because the dash '-' cannot be
+used here, the convention has become to use the tilde '~' to delineate
 variations.
 
 [source]
@@ -557,7 +557,7 @@ Boost.Build recognizes the following command line options.
   Invokes the online help system. This prints general information on how
   to use the help system with additional --help* options.
 `--clean`::
-  Cleans all targets in the current directory and in any subprojects.
+  Cleans all targets in the current directory and in any sub-projects.
   Note that unlike the `clean` target in make, you can use `--clean`
   together with target names to clean specific targets.
 `--clean-all`::
@@ -571,7 +571,6 @@ Boost.Build recognizes the following command line options.
   concatenating the value of the `--build-dir` option, the project name
   specified in Jamroot, and the build dir specified in Jamroot (or
   `bin`, if none is specified).
-  +
   The option is primarily useful when building from read-only media,
   when you can't modify Jamroot.
 `--abbreviate-paths`::
@@ -1081,7 +1080,7 @@ _Source location_ specifies the directory where sources for the project
 are located.
 
 _Project requirements_ are requirements that apply to all the targets in
-the projects as well as all subprojects.
+the projects as well as all sub-projects.
 
 _Default build_ is the build request that should be used when no build
 request is specified explicitly.
@@ -1119,13 +1118,14 @@ link:#bbv2.reference.rules[the section called “Builtin rules”].
 Each subproject inherits attributes, constants and rules from its parent
 project, which is defined by the nearest Jamfile in an ancestor
 directory above the subproject. The top-level project is declared in a
-file called `Jamroot` rather than `Jamfile`. When loading a project,
+file called `Jamroot`, or `Jamfile`. When loading a project,
 Boost.Build looks for either `Jamroot` or `Jamfile`. They are handled
 identically, except that if the file is called `Jamroot`, the search for
-a parent project is not performed.
+a parent project is not performed. A `Jamfile` without a parent project
+is also considered the top-level project.
 
 Even when building in a subproject directory, parent project files are
-always loaded before those of their subprojects, so that every
+always loaded before those of their sub-projects, so that every
 definition made in a parent project is always available to its children.
 The loading order of any other projects is unspecified. Even if one
 project refers to another via the `use-project` or a target reference,

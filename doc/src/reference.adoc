@@ -544,7 +544,7 @@ The supported values have the following meaning:
 +
 By default compiler default visibility mode is used (no compiler flags are added).
 +
-NOTE: In Boost superproject Jamroot file this property is set to the default
+NOTE: In Boost super-project Jamroot file this property is set to the default
 value of `hidden`. This means that Boost libraries are built with hidden
 visibility by default, unless the user overrides it with a different `visibility`
 or a library sets a different `local-visibility` (see below).

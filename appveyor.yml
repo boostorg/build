@@ -12,6 +12,8 @@ branches:
 
 environment:
   matrix:
+  - TOOLSET: vc142
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
   - TOOLSET: vc141
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - TOOLSET: vc14

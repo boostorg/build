@@ -14,6 +14,7 @@
 
 /* This file is ALSO:
  * Copyright 2001-2004 David Abrahams.
+ * Copyright 2018 Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or copy at
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -98,7 +99,18 @@
 
 
 #include "jam.h"
+
 #include "patchlevel.h"
+
+/* Keep JAMVERSYM in sync with VERSION. */
+/* It can be accessed as $(JAMVERSION) in the Jamfile. */
+#define JAM_STRINGIZE(X) JAM_DO_STRINGIZE(X)
+#define JAM_DO_STRINGIZE(X) #X
+#define VERSION_MAJOR_SYM JAM_STRINGIZE(VERSION_MAJOR)
+#define VERSION_MINOR_SYM JAM_STRINGIZE(VERSION_MINOR)
+#define VERSION_PATCH_SYM JAM_STRINGIZE(VERSION_PATCH)
+#define VERSION VERSION_MAJOR_SYM "." VERSION_MINOR_SYM
+#define JAMVERSYM "JAMVERSION=" VERSION
 
 #include "builtins.h"
 #include "class.h"
@@ -274,7 +286,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 #ifdef JAM_DEBUGGER
 
     is_debugger = 0;
-    
+
     if ( getoptions( argc - 1, argv + 1, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
         usage( progname );
 
@@ -589,6 +601,30 @@ int main( int argc, char * * argv, char * * arg_environ )
             }
         }
 
+        /* The build system may set the PARALLELISM variable to override -j
+         * options.
+         */
+        {
+            LIST * const p = var_get( root_module(), constant_PARALLELISM );
+            if ( !list_empty( p ) )
+            {
+                int const j = atoi( object_str( list_front( p ) ) );
+                if ( j < 1 )
+                    out_printf( "Invalid value of PARALLELISM: %s.\n",
+                        object_str( list_front( p ) ) );
+                else
+                    globs.jobs = j;
+            }
+        }
+
+        /* KEEP_GOING overrides -q option. */
+        {
+            LIST * const p = var_get( root_module(), constant_KEEP_GOING );
+            if ( !list_empty( p ) )
+                globs.quitquick = atoi( object_str( list_front( p ) ) ) ? 0 : 1;
+        }
+
+        
         if ( list_empty( targets_to_update() ) )
             mark_target_for_updating( constant_all );
 
@@ -617,28 +653,6 @@ int main( int argc, char * * argv, char * * arg_environ )
             object_free( target );
         }
 
-        /* The build system may set the PARALLELISM variable to override -j
-         * options.
-         */
-        {
-            LIST * const p = var_get( root_module(), constant_PARALLELISM );
-            if ( !list_empty( p ) )
-            {
-                int const j = atoi( object_str( list_front( p ) ) );
-                if ( j < 1 )
-                    out_printf( "Invalid value of PARALLELISM: %s.\n",
-                        object_str( list_front( p ) ) );
-                else
-                    globs.jobs = j;
-            }
-        }
-
-        /* KEEP_GOING overrides -q option. */
-        {
-            LIST * const p = var_get( root_module(), constant_KEEP_GOING );
-            if ( !list_empty( p ) )
-                globs.quitquick = atoi( object_str( list_front( p ) ) ) ? 0 : 1;
-        }
 
         /* Now make target. */
         {

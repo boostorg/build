@@ -101,8 +101,8 @@ if errorlevel 1 (
 
 call guess_toolset.bat
 if errorlevel 1 (
-    call :Error_Print "Could not find a suitable toolset."
-    goto :eof)
+    call :Error_Print "Could not find a suitable toolset.")
+goto :eof
 
 endlocal
 goto :eof
