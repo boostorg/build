@@ -31,7 +31,7 @@ error_exit ()
     echo "###     ./build.sh gcc"
     echo "###"
     echo "### Toolsets supported by this script are:"
-    echo "###     acc, clang, como, darwin, gcc, intel-darwin, intel-linux,"
+    echo "###     acc, clang, como, gcc, intel-darwin, intel-linux,"
     echo "###     kcc, kylix, mipspro, pathscale, pgi, qcc, sun, sunpro,"
     echo "###     tru64cxx, vacpp"
     echo "###"
@@ -64,12 +64,12 @@ test_uname ()
 # Try and guess the toolset to bootstrap the build with...
 guess_toolset ()
 {
-    if test_uname Darwin ; then BOOST_JAM_TOOLSET=darwin
+    if test_uname Darwin ; then BOOST_JAM_TOOLSET=clang
     elif test_uname IRIX ; then BOOST_JAM_TOOLSET=mipspro
     elif test_uname IRIX64 ; then BOOST_JAM_TOOLSET=mipspro
     elif test_uname OSF1 ; then BOOST_JAM_TOOLSET=tru64cxx
     elif test_uname QNX && test_path qcc ; then BOOST_JAM_TOOLSET=qcc
-    elif test_uname Linux && test_path xlc; then 
+    elif test_uname Linux && test_path xlc; then
        if /usr/bin/lscpu | grep Byte | grep Little > /dev/null 2>&1 ; then
           # Little endian linux
           BOOST_JAM_TOOLSET=xlcpp
@@ -200,14 +200,6 @@ case $BOOST_JAM_TOOLSET in
         esac
     ;;
 
-    darwin)
-    echo_run ${CXX:=clang} --version
-    BOOST_JAM_CXX="${CXX} -x c++ -std=c++11"
-    BOOST_RELEASE="-O3 -s -flto"
-    BOOST_DEBUG="-O0 -g"
-    BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
-    ;;
-
     intel-darwin)
     BOOST_JAM_CXX="icc"
     BOOST_RELEASE="-O3 -s"
@@ -263,7 +255,7 @@ case $BOOST_JAM_TOOLSET in
     BOOST_RELEASE="-O3 -s -qstrict -qinline"
     BOOST_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
-    
+
     xlcpp)
     BOOST_JAM_CXX="xlC"
     BOOST_RELEASE="-s -O3 -qstrict -qinline"
@@ -323,8 +315,8 @@ case $BOOST_JAM_TOOLSET in
     echo_run ${CXX:=clang} --version
     BOOST_JAM_CXX="${CXX} -x c++ -O3 -std=c++11"
     BOOST_JAM_TOOLSET=clang
-    BOOST_RELEASE="-O3 -s"
-    BOOST_DEBUG="-O0 -fno-inline"
+    BOOST_RELEASE="-O3 -s -flto"
+    BOOST_DEBUG="-O0 -fno-inline -g"
     BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
     ;;
 
