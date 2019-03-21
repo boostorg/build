@@ -156,7 +156,7 @@ if errorlevel 1 (
     goto Setup_Args
 )
 :Config_Toolset
-call config_toolset.bat 
+call config_toolset.bat
 if "_%_known_%_" == "__" (
     call :Error_Print "Unknown toolset: %BOOST_JAM_TOOLSET%"
 )
@@ -185,7 +185,7 @@ set BJAM_SOURCES=%BJAM_SOURCES% modules/set.c
 
 @echo ON
 %BOOST_JAM_CXX% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES% %BOOST_JAM_OPT_LINK%
-dir
+dir *.exe
 copy /b .\b2.exe .\bjam.exe
 
 :Finish
