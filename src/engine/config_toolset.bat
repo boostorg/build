@@ -4,6 +4,8 @@ REM ~ Copyright 2002-2018 Rene Rivera.
 REM ~ Distributed under the Boost Software License, Version 1.0.
 REM ~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
+SETLOCAL EnableExtensions
+
 :Start
 REM Setup the toolset command and options.
 if "_%BOOST_JAM_TOOLSET%_" == "_msvc_" call :Config_MSVC
