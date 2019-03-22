@@ -226,7 +226,7 @@ if not defined CXX ( set "CXX=g++" )
 if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     set "PATH=%BOOST_JAM_TOOLSET_ROOT%bin;%PATH%"
     )
-for /F "delims=" %P in (%CXX%) do SET PATH=%PATH%;%~dP%~pP
+for /F "delims=" %%P in (%CXX%) do SET PATH=%PATH%;%~dpP
 set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
