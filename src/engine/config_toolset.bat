@@ -124,7 +124,7 @@ set "_known_=1"
 %CXX%
 goto :eof
 
-:Config_142
+:Config_VC142
 if not defined CXX ( set "CXX=cl" )
 call vswhere_usability_wrapper.cmd
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
