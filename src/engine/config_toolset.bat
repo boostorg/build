@@ -11,6 +11,7 @@ if "_%BOOST_JAM_TOOLSET%_" == "_vc11_" call :Config_VC11
 if "_%BOOST_JAM_TOOLSET%_" == "_vc12_" call :Config_VC12
 if "_%BOOST_JAM_TOOLSET%_" == "_vc14_" call :Config_VC14
 if "_%BOOST_JAM_TOOLSET%_" == "_vc141_" call :Config_VC141
+if "_%BOOST_JAM_TOOLSET%_" == "_vc142_" call :Config_VC142
 if "_%BOOST_JAM_TOOLSET%_" == "_borland_" call :Config_BORLAND
 if "_%BOOST_JAM_TOOLSET%_" == "_como_" call :Config_COMO
 if "_%BOOST_JAM_TOOLSET%_" == "_gcc_" call :Config_GCC
@@ -120,8 +121,11 @@ popd
 set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-:Skip_VC141
-if NOT "_%BOOST_JAM_TOOLSET%_" == "_vc142_" goto Skip_VC142
+%CXX%
+goto :eof
+
+:Config_142
+if not defined CXX ( set "CXX=cl" )
 call vswhere_usability_wrapper.cmd
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
 ver > nul 2> nul
@@ -137,12 +141,13 @@ REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\So
 pushd %CD%
 if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
 popd
-set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
-set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
-set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
-set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-:Skip_VC142
+%CXX%
+goto :eof
+
+:Config_VCUNK
 if NOT "_%BOOST_JAM_TOOLSET%_" == "_vcunk_" goto Skip_VCUNK
 call vswhere_usability_wrapper.cmd
 REM Reset ERRORLEVEL since from now on it's all based on ENV vars
@@ -159,13 +164,14 @@ REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\So
 pushd %CD%
 if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%BOOST_JAM_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %BOOST_JAM_ARGS%
 popd
-set "BOOST_JAM_CC=cl /nologo /RTC1 /Zi /MTd /Fobootstrap/ /Fdbootstrap/ -DNT -DYYDEBUG -wd4996 kernel32.lib advapi32.lib user32.lib"
-set "BOOST_JAM_OPT_JAM=/Febootstrap\jam0"
-set "BOOST_JAM_OPT_MKJAMBASE=/Febootstrap\mkjambase0"
-set "BOOST_JAM_OPT_YYACC=/Febootstrap\yyacc0"
+set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-:Skip_VCUNK
-if NOT "_%BOOST_JAM_TOOLSET%_" == "_borland_" goto Skip_BORLAND
+%CXX%
+goto :eof
+
+:Config_BORLAND
+if not defined CXX ( set "CXX=bcc32" )
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
     call guess_toolset.bat test_path bcc32.exe )
 if "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
