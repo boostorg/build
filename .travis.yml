@@ -90,6 +90,7 @@ jobs:
         apt:
           packages:
             - clang-3.3
+            - llvm-3.3-dev
     - env: TOOLSET=clang
       os: linux
       compiler: /usr/bin/clang++
@@ -97,6 +98,7 @@ jobs:
         apt:
           packages:
             - clang-3.4
+            - llvm-3.4-dev
     - env: TOOLSET=clang
       os: linux
       compiler: clang++-3.5
@@ -104,6 +106,7 @@ jobs:
         apt:
           packages:
             - clang-3.5
+            - llvm-3.5-dev
             - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
@@ -115,6 +118,7 @@ jobs:
         apt:
           packages:
             - clang-3.6
+            - llvm-3.6-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.6
@@ -125,6 +129,7 @@ jobs:
         apt:
           packages:
             - clang-3.7
+            - llvm-3.7-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.7
@@ -135,6 +140,7 @@ jobs:
         apt:
           packages:
             - clang-3.8
+            - llvm-3.8-dev
             - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
@@ -146,6 +152,7 @@ jobs:
         apt:
           packages:
             - clang-3.9
+            - llvm-3.9-dev
             - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
@@ -157,6 +164,7 @@ jobs:
         apt:
           packages:
             - clang-4.0
+            - llvm-4.0-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-4.0
@@ -167,6 +175,7 @@ jobs:
         apt:
           packages:
             - clang-5.0
+            - llvm-5.0-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-5.0
@@ -177,6 +186,7 @@ jobs:
         apt:
           packages:
             - clang-6.0
+            - llvm-6.0-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-6.0
@@ -187,9 +197,21 @@ jobs:
         apt:
           packages:
             - clang-7
+            - llvm-7-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-7
+    - env: TOOLSET=clang
+      os: linux
+      compiler: clang++-8
+      addons:
+        apt:
+          packages:
+            - clang-8
+            - llvm-8-dev
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-8
     - os: osx
       osx_image: xcode10
       env: TOOLSET=clang
