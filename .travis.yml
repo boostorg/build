@@ -18,6 +18,7 @@ stages:
   - name: test
   - name: website update
     if: branch IN (develop,master) AND type IN (push)
+dist: xenial
 jobs:
   include:
     - env: TOOLSET=gcc
