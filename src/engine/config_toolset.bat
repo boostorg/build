@@ -1,3 +1,4 @@
+FOR /?
 @ECHO OFF
 
 REM ~ Copyright 2002-2018 Rene Rivera.
