@@ -86,6 +86,7 @@ jobs:
             - ubuntu-toolchain-r-test
     - env: TOOLSET=clang
       os: linux
+      dist: trusty
       compiler: /usr/bin/clang++
       addons:
         apt:
@@ -94,6 +95,7 @@ jobs:
             - llvm-3.3-dev
     - env: TOOLSET=clang
       os: linux
+      dist: trusty
       compiler: /usr/bin/clang++
       addons:
         apt:
@@ -142,7 +144,7 @@ jobs:
           packages:
             - clang-3.8
             - llvm-3.8-dev
-            - libstdc++-4.9-dev
+            # - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.8
@@ -154,7 +156,7 @@ jobs:
           packages:
             - clang-3.9
             - llvm-3.9-dev
-            - libstdc++-4.9-dev
+            # - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-precise-3.9
@@ -168,7 +170,7 @@ jobs:
             - llvm-4.0-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-4.0
+            - llvm-toolchain-xenial-4.0
     - env: TOOLSET=clang
       os: linux
       compiler: clang++-5.0
@@ -179,7 +181,7 @@ jobs:
             - llvm-5.0-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-5.0
+            - llvm-toolchain-xenial-5.0
     - env: TOOLSET=clang
       os: linux
       compiler: clang++-6.0
@@ -190,7 +192,7 @@ jobs:
             - llvm-6.0-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-6.0
+            - llvm-toolchain-xenial-6.0
     - env: TOOLSET=clang
       os: linux
       compiler: clang++-7
@@ -201,7 +203,7 @@ jobs:
             - llvm-7-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-7
+            - llvm-toolchain-xenial-7
     - env: TOOLSET=clang
       os: linux
       compiler: clang++-8
@@ -212,7 +214,7 @@ jobs:
             - llvm-8-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-8
+            - llvm-toolchain-xenial-8
     - os: osx
       osx_image: xcode10
       env: TOOLSET=clang
