@@ -12,9 +12,6 @@ branches:
 
 environment:
   matrix:
-  # - TOOLSET: vc142
-  #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
-  #   TEST_TOOLSET: msvc
   - TOOLSET: vc141
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     TEST_TOOLSET: msvc
@@ -55,7 +52,7 @@ configuration:
 
 build_script:
   - cd src/engine
-  - set PATH=PATH;%CXX_PATH%
+  - set PATH=%PATH%;%CXX_PATH%
   - build.bat %TOOLSET%
   - cd ../..
 
