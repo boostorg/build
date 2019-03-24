@@ -124,16 +124,16 @@ test_glob_archive([archive1], '[ GLOB_ARCHIVE $archive1 : "\\b?match[\.]*" ]',
                   ["$archive1(b_match$obj)"])
 
 ## glob wildcards:3
-test_glob_archive([archive1], "[ GLOB_ARCHIVE $archive1 : b* ]",
+test_glob_archive([archive1], "[ SORT [ GLOB_ARCHIVE $archive1 : b* ] ]",
                   ["$archive1(b$obj)", "$archive1(b_match$obj)"])
 
 ## glob multiple patterns with multiple results.
-test_glob_archive([archive1], "[ GLOB_ARCHIVE $archive1 : b.* b_* ]",
+test_glob_archive([archive1], "[ SORT [ GLOB_ARCHIVE $archive1 : b.* b_* ] ]",
                   ["$archive1(b$obj)", "$archive1(b_match$obj)"])
 
 ## glob multiple archives and patterns.
 test_glob_archive([archive1, archive2],
-                  "[ GLOB_ARCHIVE $archive1 $archive2 : b.* b_* ]",
+                  "[ SORT [ GLOB_ARCHIVE $archive1 $archive2 : b.* b_* ] ]",
                   ["$archive1(b$obj)", "$archive1(b_match$obj)",
                    "$archive2(b$obj)", "$archive2(b_match$obj)"])
 
@@ -164,7 +164,7 @@ elif vms:
 
 ## test the order of matched members, in general it should match the
 ## insertion sequence.
-test_glob_archive([archive1], "[ GLOB_ARCHIVE $archive1 : seq_check*$obj ]",
+test_glob_archive([archive1], "[ SORT [ GLOB_ARCHIVE $archive1 : seq_check*$obj ] ]",
                   ["$archive1(seq_check1$obj)", "$archive1(seq_check2$obj)",
                    "$archive1(seq_check3$obj)"])
 

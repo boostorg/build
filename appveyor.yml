@@ -10,43 +10,56 @@ branches:
     - /develop.*/
     - /feature\/.*/
 
+image: Visual Studio 2015
+
 environment:
   matrix:
-  - TOOLSET: vc142
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
+  # - TOOLSET: vc142
+  #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019 Preview
+  #   TEST_TOOLSET: msvc
   - TOOLSET: vc141
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+    TEST_TOOLSET: msvc
   - TOOLSET: vc14
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    TEST_TOOLSET: msvc
   - TOOLSET: vc12
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-  - TOOLSET: mingw
+    TEST_TOOLSET: msvc
+  - TOOLSET: gcc
     CXX: C:\MinGW\bin\g++.exe
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - TOOLSET: mingw
+    TEST_TOOLSET: gcc
+    CXX_PATH: C:\MinGW\bin
+  - TOOLSET: gcc
     CXX: C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw64\bin\g++.exe
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - TOOLSET: mingw
+    TEST_TOOLSET: gcc
+    CXX_PATH: C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw64\bin
+  - TOOLSET: gcc
     CXX: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin\g++.exe
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - TOOLSET: mingw
+    TEST_TOOLSET: gcc
+    CXX_PATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
+  - TOOLSET: gcc
     CXX: C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin\g++.exe
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - TOOLSET: mingw
+    TEST_TOOLSET: gcc
+    CXX_PATH: C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin
+  - TOOLSET: gcc
     CXX: C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin\g++.exe
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+    TEST_TOOLSET: gcc
+    CXX_PATH: C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin
 
 configuration:
   - release
 
 build_script:
   - cd src/engine
+  - set PATH=PATH;%CXX_PATH%
   - build.bat %TOOLSET%
   - cd ../..
 
 test_script:
   - cd test
-  - python test_all.py msvc
+  - echo using %TEST_TOOLSET% ; > %HOME%/user-config.jam
+  - python test_all.py %TEST_TOOLSET%
   - cd ..
 
 after_test:
