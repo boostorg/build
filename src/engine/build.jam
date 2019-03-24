@@ -184,7 +184,7 @@ toolset borland bcc32 : -e -n : "-Nd /D" " /D" ""
     : $(--python-lib[1]) ;
 ## Generic Unix cc
 if ! $(CC) { CC = cc ; }
-toolset cc $(CC) : "-o " : -D
+toolset cc $(CC:J= ) : "-o " : -D
     : $(CFLAGS)
     [ opt --release : -s -O ]
     [ opt --debug : -g ]
