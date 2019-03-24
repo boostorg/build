@@ -62,7 +62,7 @@ build_script:
 test_script:
   - cd test
   - echo using %TEST_TOOLSET% ; > %HOME%/user-config.jam
-  - python test_all.py %TEST_TOOLSET%
+  - C:/Python27-x64/python.exe test_all.py %TEST_TOOLSET%
   - cd ..
 
 after_test:
