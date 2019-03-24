@@ -8,6 +8,7 @@ if [ os.name ] in CYGWIN NT
    if [ MATCH ^(gcc) : $toolset ]
    {
       dll-suffix = dll ;
+      prefix = lib ;
    }
    else
    {
@@ -16,7 +17,7 @@ if [ os.name ] in CYGWIN NT
 }
 else
 {
-   prefix = "lib" ;      
+   prefix = "lib" ;
 }
 if [ os.name ] in MACOSX
 {
@@ -25,15 +26,15 @@ if [ os.name ] in MACOSX
 
 project ext ;
 
-lib a : 
+lib a :
     : <file>debug/$(prefix)a.$(dll-suffix) <variant>debug
     :
     : <include>debug
     ;
-    
+
 lib a :
     : <file>release/$(prefix)a.$(dll-suffix) <variant>release
     :
     : <include>release
     ;
-    
+
