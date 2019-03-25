@@ -7,6 +7,7 @@
             "label": "B2 Engine Build",
             "type": "shell",
             "windows": {
+                "command": "build.bat"
             },
             "osx": {
                 "command": "./build.sh"
@@ -19,15 +20,22 @@
             },
             "problemMatcher": {
                 "owner": "cpptools",
-                "fileLocation": [ "relative", "${workspaceFolder}/src/engine" ],
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/src/engine"
+                ],
                 "pattern": {
-                "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                "file": 1,
-                "line": 2,
-                "column": 3,
-                "severity": 4,
-                "message": 5
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
                 }
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
             }
         }
     ]
