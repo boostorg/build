@@ -6,12 +6,12 @@
 import os ;
 
 local dll-suffix = so ;
-local prefix = "" ;
-if [ os.name ] in CYGWIN NT
+local prefix = "lib" ;
+if [ os.name ] in NT
 {
    if [ MATCH ^(gcc) : $toolset ]
    {
-      dll-suffix = dll ;
+      dll-suffix = dll.a ;
       prefix = lib ;
    }
    else
@@ -19,11 +19,11 @@ if [ os.name ] in CYGWIN NT
       dll-suffix = lib ;
    }
 }
-else
+else if [ os.name ] in CYGWIN
 {
-   prefix = "lib" ;
+    dll-suffix = dll ;
 }
-if [ os.name ] in MACOSX
+else if [ os.name ] in MACOSX
 {
    dll-suffix = dylib ;
 }
