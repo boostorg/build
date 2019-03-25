@@ -13,6 +13,7 @@ if [ os.name ] in NT
    else
    {
       dll-suffix = lib ;
+      prefix = "" ;
    }
 }
 else if [ os.name ] in CYGWIN
