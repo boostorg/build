@@ -311,7 +311,7 @@ case $BOOST_JAM_TOOLSET in
 
     clang*)
     echo_run ${CXX:=clang} --version
-    BOOST_JAM_CXX="${CXX} -x c++ -O3 -std=c++11"
+    BOOST_JAM_CXX="${CXX} -x c++ -O3 -std=c++11 -v"
     BOOST_JAM_TOOLSET=clang
     BOOST_RELEASE="-O3 -s -flto"
     BOOST_DEBUG="-O0 -fno-inline -g"

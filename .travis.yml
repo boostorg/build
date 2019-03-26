@@ -102,7 +102,7 @@ jobs:
             - g++-7
           sources:
             - ubuntu-toolchain-r-test
-    - compiler: clang++-3.4
+    - compiler: clang++
       env: TOOLSET=clang
       os: linux
       dist: trusty
