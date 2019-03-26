@@ -2410,7 +2410,9 @@ PyObject * bjam_caller( PyObject * self, PyObject * args )
 #ifdef HAVE_POPEN
 
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW64__) || defined(__MINGW32__)
+    #undef popen
     #define popen windows_popen_wrapper
+    #undef pclose
     #define pclose _pclose
 
     /*
