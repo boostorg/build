@@ -170,7 +170,8 @@ BOOST_JAM_OPT_YYACC="-o yyacc"
 case $BOOST_JAM_TOOLSET in
 
     gcc)
-        echo_run ${CXX:=gcc} --version
+        CXX=${CXX:=gcc}
+        echo_run ${CXX} --version
         # Check whether it's MinGW GCC, which has Windows headers and none of POSIX ones.
         machine=$(${CXX} -dumpmachine 2>/dev/null)
         if [ $? -ne 0 ]; then
@@ -199,33 +200,35 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     intel-darwin)
-    BOOST_JAM_CXX="icc"
+    CXX=${CXX:=icc}
+    echo_run ${CXX} --version
+    BOOST_JAM_CXX="${CXX} -xc++"
     BOOST_RELEASE="-O3 -s"
     BOOST_DEBUG="-O0 -g -p"
     ;;
 
     intel-linux)
-    test_path icc >/dev/null 2>&1
+    CXX=${CXX:=icc}
+    test_path ${CXX} >/dev/null 2>&1
     if test $? ; then
-	BOOST_JAM_CXX=`test_path icc`
-	echo "Found $BOOST_JAM_CXX in environment"
-	BOOST_JAM_TOOLSET_ROOT=`echo $BOOST_JAM_CXX | sed -e 's/bin.*\/icc//'`
-	# probably the most widespread
-	ARCH=intel64
+        echo "Found ${CXX} in environment"
+        BOOST_JAM_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icc//'`
+        # probably the most widespread
+        ARCH=intel64
     else
-	echo "No intel compiler in current path"
-	echo "Look in a few old place for legacy reason"
-	if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
+        echo "No intel compiler in current path"
+        echo "Look in a few old place for legacy reason"
+        if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
             BOOST_JAM_TOOLSET_ROOT=/opt/intel/cc/9.0/
-	elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
+        elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
             BOOST_JAM_TOOLSET_ROOT=/opt/intel_cc_80/
-	elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
+        elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
             BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
-	elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
+        elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
             BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
-	elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+        elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
             BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
-	fi
+        fi
     fi
     if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh ; then
         # iccvars does not change LD_RUN_PATH. We adjust LD_RUN_PATH here in
@@ -240,10 +243,7 @@ case $BOOST_JAM_TOOLSET in
         export LD_RUN_PATH
         . ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh $ARCH
     fi
-    if test -z "$BOOST_JAM_CXX" ; then
-	BOOST_JAM_CXX=icc
-    fi
-    BOOST_JAM_CXX="${BOOST_JAM_CXX} -Xlinker"
+    BOOST_JAM_CXX="${CXX} -xc++"
     BOOST_RELEASE="-O3 -s"
     BOOST_DEBUG="-O0 -g -p"
     ;;

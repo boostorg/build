@@ -110,10 +110,9 @@ jobs:
         apt:
           packages:
             - clang-3.4
-            - llvm-3.4-dev
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty
     - compiler: clang++-3.5
       env: TOOLSET=clang
       os: linux
@@ -122,10 +121,9 @@ jobs:
         apt:
           packages:
             - clang-3.5
-            - llvm-3.5-dev
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty
     - compiler: clang++-3.6
       env: TOOLSET=clang
       os: linux
@@ -134,10 +132,9 @@ jobs:
         apt:
           packages:
             - clang-3.6
-            - llvm-3.6-dev
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty
     - compiler: clang++-3.7
       env: TOOLSET=clang
       os: linux
@@ -146,10 +143,9 @@ jobs:
         apt:
           packages:
             - clang-3.7
-            - llvm-3.7-dev
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty
     - compiler: clang++-3.8
       env: TOOLSET=clang
       os: linux
@@ -158,10 +154,9 @@ jobs:
         apt:
           packages:
             - clang-3.8
-            - llvm-3.8-dev
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty
     - compiler: clang++-3.9
       env: TOOLSET=clang
       os: linux
@@ -170,10 +165,9 @@ jobs:
         apt:
           packages:
             - clang-3.9
-            - llvm-3.9-dev
+            - libstdc++-4.9-dev
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty
     - compiler: clang++-4.0
       env: TOOLSET=clang
       os: linux
