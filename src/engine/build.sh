@@ -313,7 +313,7 @@ case $BOOST_JAM_TOOLSET in
     echo_run ${CXX:=clang} --version
     BOOST_JAM_CXX="${CXX} -x c++ -O3 -std=c++11 -v"
     BOOST_JAM_TOOLSET=clang
-    BOOST_RELEASE="-O3 -s -flto"
+    BOOST_RELEASE="-O3 -s"
     BOOST_DEBUG="-O0 -fno-inline -g"
     BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
     ;;
