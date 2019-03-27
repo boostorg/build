@@ -249,21 +249,24 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     vacpp)
-    BOOST_JAM_CXX="xlc"
+    CXX=${CXX:=xlC_r}
+    BOOST_JAM_CXX="${CXX}"
     BOOST_RELEASE="-O3 -s -qstrict -qinline"
     BOOST_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     xlcpp)
-    BOOST_JAM_CXX="xlC"
+    CXX=${CXX:=xlC_r}
+    BOOST_JAM_CXX="${CXX}"
     BOOST_RELEASE="-s -O3 -qstrict -qinline"
     BOOST_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     como)
-    BOOST_JAM_CXX="como --c"
-    BOOST_RELEASE="--inlining"
-    BOOST_DEBUG="--no_inlining"
+    CXX=${CXX:=como}
+    BOOST_JAM_CXX="${CXX}"
+    BOOST_RELEASE="-O3 --inlining"
+    BOOST_DEBUG="-O0 -g --no_inlining --long_long"
     ;;
 
     kcc)
@@ -279,15 +282,17 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     mipspro)
-    BOOST_JAM_CXX="cc"
-    BOOST_RELEASE="-O3 -g0 \"-INLINE:none\" -s"
+    CXX=${CXX:=CC}
+    BOOST_JAM_CXX="${CXX} -FE:template_in_elf_section -ptused"
+    BOOST_RELEASE="-Ofast -g0 \"-INLINE:none\" -s"
     BOOST_DEBUG="-O0 -INLINE -g"
     ;;
 
     pathscale)
-    BOOST_JAM_CXX="pathcc -s -O3"
-    BOOST_RELEASE="-O3 -s"
-    BOOST_DEBUG="-g"
+    CXX=${CXX:=pathCC}
+    BOOST_JAM_CXX="${CXX}"
+    BOOST_RELEASE="-O3 -inline -s"
+    BOOST_DEBUG="-O0 -noinline -ggdb"
     ;;
 
     pgi)
