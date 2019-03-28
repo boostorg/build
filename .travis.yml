@@ -105,14 +105,11 @@ jobs:
     - compiler: clang++
       env: TOOLSET=clang
       os: linux
-      dist: trusty
+      dist: precise
       addons:
         apt:
           packages:
             - clang-3.4
-            - libstdc++-4.9-dev
-          sources:
-            - ubuntu-toolchain-r-test
     - compiler: clang++-3.5
       env: TOOLSET=clang
       os: linux

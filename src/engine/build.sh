@@ -296,26 +296,28 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     pgi)
-    BOOST_JAM_CXX="pgcc -s -O3"
-    BOOST_RELEASE="-O3 -s"
-    BOOST_DEBUG="-g"
+    CXX=${CXX:=pgc++}
+    BOOST_JAM_CXX="${CXX} -std=c++11"
+    BOOST_RELEASE="-fast -s"
+    BOOST_DEBUG="-O0 -gopt"
     ;;
 
     sun*)
-    if test -z "${BOOST_JAM_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/cc ; then
+    CXX=${CXX:=CC}
+    if test -z "${BOOST_JAM_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/CC ; then
         BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
     fi
-    if test -r "${BOOST_JAM_TOOLSET_ROOT}bin/cc" ; then
+    if test -r "${BOOST_JAM_TOOLSET_ROOT}/bin/CC" ; then
         PATH=${BOOST_JAM_TOOLSET_ROOT}bin:${PATH}
         export PATH
     fi
-    BOOST_JAM_CXX="cpp"
-    BOOST_RELEASE="-xO3 -s"
+    BOOST_JAM_CXX="${CXX}"
+    BOOST_RELEASE="-xO4 -s"
     BOOST_DEBUG="-g"
     ;;
 
     clang*)
-    echo_run ${CXX:=clang} --version
+    CXX=${CXX:=clang++}
     BOOST_JAM_CXX="${CXX} -x c++ -O3 -std=c++11 -v"
     BOOST_JAM_TOOLSET=clang
     BOOST_RELEASE="-O3 -s"
@@ -330,26 +332,20 @@ case $BOOST_JAM_TOOLSET in
     ;;
 
     acc)
-    BOOST_JAM_CXX="cc"
-    BOOST_RELEASE="-O3 -Ae -s"
-    BOOST_DEBUG="-g -pg"
+    CXX=${CXX:=aCC}
+    BOOST_JAM_CXX="${CXX} -AA"
+    BOOST_RELEASE="-O3 -s"
+    BOOST_DEBUG="+d -g"
     ;;
 
     cxx)
-    if test -z "${CXX}" ; then CXX=cxx ; fi
-    BOOST_JAM_CXX=${CXX}
-    BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $CXXFLAGS $LIBS"
-    BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $CXXFLAGS $LIBS"
-    BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $CXXFLAGS $LIBS"
+    CXX=${CXX:=cxx}
+    BOOST_JAM_CXX="${CXX}"
     ;;
 
-    cross-cc)
-    if test -z "$BUILD_CC" ; then BUILD_CC=cc ; fi
-    BOOST_JAM_CC=$BUILD_CC
-    BOOST_JAM_OPT_JAM="$BOOST_JAM_OPT_JAM $BUILD_CFLAGS $BUILD_LDFLAGS"
-    BOOST_JAM_OPT_MKJAMBASE="$BOOST_JAM_OPT_MKJAMBASE $BUILD_CFLAGS $BUILD_LDFLAGS"
-    BOOST_JAM_OPT_YYACC="$BOOST_JAM_OPT_YYACC $BUILD_CFLAGS $BUILD_LDFLAGS"
-    BOOST_JAM_TOOLSET=cc
+    cross-cxx)
+    CXX=${BUILD_CXX:=cxx}
+    BOOST_JAM_CXX="${CXX}"
     ;;
 
     qcc)
