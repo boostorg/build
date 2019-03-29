@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#~ Copyright 2002-2018 Rene Rivera.
+#~ Copyright 2002-2019 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or copy at
 #~ http://www.boost.org/LICENSE_1_0.txt)
@@ -24,28 +24,29 @@ echo_run ()
 # Print an error message, and exit with a status of 1.
 error_exit ()
 {
-    echo "###"
-    echo "###" "$@"
-    echo "###"
-    echo "### You can specify the toolset as the argument, i.e.:"
-    echo "###     ./build.sh gcc"
-    echo "###"
-    echo "### Toolsets supported by this script are:"
-    echo "###     acc, clang, como, gcc, intel-darwin, intel-linux,"
-    echo "###     kcc, kylix, mipspro, pathscale, pgi, qcc, sun, sunpro,"
-    echo "###     tru64cxx, vacpp"
-    echo "###"
-    echo "### A special toolset; cxx, is available which is used as a fallback"
-    echo "### when a more specific toolset is not found and the cxx command is"
-    echo "### detected. The 'cxx' toolset will use the CXX, CXXFLAGS, and LIBS"
-    echo "### environment variables, if present."
-    echo "###"
-    echo "### Similarly, the cross-cxx toolset is available for cross-compiling"
-    echo "### by using the BUILD_CXX, BUILD_CXXFLAGS, and BUILD_LDFLAGS environment"
-    echo "### variables to compile binaries that will be executed on the build"
-    echo "### system. This allows CXX etc. to be set for cross-compilers to be"
-    echo "### propagated to subprocesses."
-    echo "###"
+    echo "
+${@}
+
+You can specify the toolset as the argument, i.e.:
+    ./build.sh gcc
+
+Toolsets supported by this script are:
+    acc, clang, como, gcc, intel-darwin, intel-linux, kcc, kylix, mipspro,
+    pathscale, pgi, qcc, sun, sunpro, tru64cxx, vacpp
+
+For any toolset you can override the path to the compiler with the CXX
+environment variable. You can also use additional flags for the compiler
+with the CXXFLAGS environment variable.
+
+A special toolset; cxx, is available which is used as a fallback when a more
+specific toolset is not found and the cxx command is detected. The 'cxx'
+toolset will use the CXX, CXXFLAGS, and LIBS environment variables, if present.
+
+Similarly, the cross-cxx toolset is available for cross-compiling by using the
+BUILD_CXX, BUILD_CXXFLAGS, and BUILD_LDFLAGS environment variables to compile
+binaries that will be executed on the build system. This allows CXX etc. to be
+set for cross-compilers to be propagated to subprocesses.
+"
     exit 1
 }
 
