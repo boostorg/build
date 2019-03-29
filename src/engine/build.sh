@@ -6,8 +6,8 @@
 #~ http://www.boost.org/LICENSE_1_0.txt)
 
 # Reset the toolset.
-BOOST_JAM_TOOLSET=
-BOOST_JAM_OS=
+B2_TOOLSET=
+B2_OS=
 
 # Run a command, and echo before doing so. Also checks the exit status and quits
 # if there was an error.
@@ -35,15 +35,15 @@ error_exit ()
     echo "###     kcc, kylix, mipspro, pathscale, pgi, qcc, sun, sunpro,"
     echo "###     tru64cxx, vacpp"
     echo "###"
-    echo "### A special toolset; cc, is available which is used as a fallback"
-    echo "### when a more specific toolset is not found and the cc command is"
+    echo "### A special toolset; cxx, is available which is used as a fallback"
+    echo "### when a more specific toolset is not found and the cxx command is"
     echo "### detected. The 'cxx' toolset will use the CXX, CXXFLAGS, and LIBS"
     echo "### environment variables, if present."
     echo "###"
-    echo "### Similarly, the cross-cc toolset is available for cross-compiling"
-    echo "### by using the BUILD_CC, BUILD_CFLAGS, and BUILD_LDFLAGS environment"
+    echo "### Similarly, the cross-cxx toolset is available for cross-compiling"
+    echo "### by using the BUILD_CXX, BUILD_CXXFLAGS, and BUILD_LDFLAGS environment"
     echo "### variables to compile binaries that will be executed on the build"
-    echo "### system. This allows CC etc. to be set for cross-compilers to be"
+    echo "### system. This allows CXX etc. to be set for cross-compilers to be"
     echo "### propagated to subprocesses."
     echo "###"
     exit 1
@@ -70,59 +70,62 @@ test_uname ()
 # Try and guess the toolset to bootstrap the build with...
 guess_toolset ()
 {
-    if test_uname Darwin ; then BOOST_JAM_TOOLSET=clang
-    elif test_uname IRIX ; then BOOST_JAM_TOOLSET=mipspro
-    elif test_uname IRIX64 ; then BOOST_JAM_TOOLSET=mipspro
-    elif test_uname OSF1 ; then BOOST_JAM_TOOLSET=tru64cxx
-    elif test_uname QNX && test_path qcc ; then BOOST_JAM_TOOLSET=qcc
+    if test_uname Darwin ; then B2_TOOLSET=clang
+    elif test_uname IRIX ; then B2_TOOLSET=mipspro
+    elif test_uname IRIX64 ; then B2_TOOLSET=mipspro
+    elif test_uname OSF1 ; then B2_TOOLSET=tru64cxx
+    elif test_uname QNX && test_path qcc ; then B2_TOOLSET=qcc
     elif test_uname Linux && test_path xlc; then
        if /usr/bin/lscpu | grep Byte | grep Little > /dev/null 2>&1 ; then
           # Little endian linux
-          BOOST_JAM_TOOLSET=xlcpp
+          B2_TOOLSET=xlcpp
        else
           #Big endian linux
-          BOOST_JAM_TOOLSET=vacpp
+          B2_TOOLSET=vacpp
        fi
-    elif test_uname AIX && test_path xlc; then BOOST_JAM_TOOLSET=vacpp
-    elif test_uname FreeBSD && test_path freebsd-version && test_path clang; then BOOST_JAM_TOOLSET=clang
-    elif test_path gcc ; then BOOST_JAM_TOOLSET=gcc
-    elif test_path clang ; then BOOST_JAM_TOOLSET=clang
-    elif test_path icc ; then BOOST_JAM_TOOLSET=intel-linux
+    elif test_uname AIX && test_path xlc; then B2_TOOLSET=vacpp
+    elif test_uname FreeBSD && test_path freebsd-version && test_path clang; then B2_TOOLSET=clang
+    elif test_path gcc ; then B2_TOOLSET=gcc
+    elif test_path clang ; then B2_TOOLSET=clang
+    elif test_path icc ; then B2_TOOLSET=intel-linux
     elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
-        BOOST_JAM_TOOLSET=intel-linux
-        BOOST_JAM_TOOLSET_ROOT=/opt/intel/cc/9.0
+        B2_TOOLSET=intel-linux
+        B2_TOOLSET_ROOT=/opt/intel/cc/9.0
     elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
-        BOOST_JAM_TOOLSET=intel-linux
-        BOOST_JAM_TOOLSET_ROOT=/opt/intel_cc_80
+        B2_TOOLSET=intel-linux
+        B2_TOOLSET_ROOT=/opt/intel_cc_80
     elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
-        BOOST_JAM_TOOLSET=intel-linux
-        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
+        B2_TOOLSET=intel-linux
+        B2_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
     elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
-        BOOST_JAM_TOOLSET=intel-linux
-        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
+        B2_TOOLSET=intel-linux
+        B2_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
     elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
-        BOOST_JAM_TOOLSET=intel-linux
-        BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
-    elif test_path pgcc ; then BOOST_JAM_TOOLSET=pgi
-    elif test_path pathcc ; then BOOST_JAM_TOOLSET=pathscale
-    elif test_path como ; then BOOST_JAM_TOOLSET=como
-    elif test_path KCC ; then BOOST_JAM_TOOLSET=kcc
-    elif test_path bc++ ; then BOOST_JAM_TOOLSET=kylix
-    elif test_path aCC ; then BOOST_JAM_TOOLSET=acc
-    elif test_uname HP-UX ; then BOOST_JAM_TOOLSET=acc
+        B2_TOOLSET=intel-linux
+        B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
+    elif test_path pgcc ; then B2_TOOLSET=pgi
+    elif test_path pathcc ; then B2_TOOLSET=pathscale
+    elif test_path como ; then B2_TOOLSET=como
+    elif test_path KCC ; then B2_TOOLSET=kcc
+    elif test_path bc++ ; then B2_TOOLSET=kylix
+    elif test_path aCC ; then B2_TOOLSET=acc
+    elif test_uname HP-UX ; then B2_TOOLSET=acc
     elif test -r /opt/SUNWspro/bin/cc ; then
-        BOOST_JAM_TOOLSET=sunpro
-        BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
-    # Test for "cxx" as the default fallback.
-    elif test_path $CXX ; then BOOST_JAM_TOOLSET=cxx
+        B2_TOOLSET=sunpro
+        B2_TOOLSET_ROOT=/opt/SUNWspro/
+    # Test for some common compile command as the default fallback.
+    elif test_path $CXX ; then B2_TOOLSET=cxx
     elif test_path cxx ; then
-        BOOST_JAM_TOOLSET=cxx
+        B2_TOOLSET=cxx
         CXX=cxx
     elif test_path cpp ; then
-        BOOST_JAM_TOOLSET=cxx
+        B2_TOOLSET=cxx
         CXX=cpp
+    elif test_path CC ; then
+        B2_TOOLSET=cxx
+        CXX=CC
     fi
-    if test "$BOOST_JAM_TOOLSET" = "" ; then
+    if test "$B2_TOOLSET" = "" ; then
         error_exit "Could not find a suitable toolset."
     fi
 }
@@ -139,72 +142,51 @@ check_debug_build ()
     return 1
 }
 
-check_python_build ()
-{
-    while test $# -gt 0
-    do
-        case "$1" in
-            --python) return 0 ;;
-        esac
-        shift
-    done
-    return 1
-}
-
 # The one option we support in the invocation
 # is the name of the toolset to force building
 # with.
 case "$1" in
-    --guess-toolset) guess_toolset ; echo "$BOOST_JAM_TOOLSET" ; exit 1 ;;
+    --guess-toolset) guess_toolset ; echo "$B2_TOOLSET" ; exit 1 ;;
     -*) guess_toolset ;;
-    ?*) BOOST_JAM_TOOLSET=$1 ; shift ;;
+    ?*) B2_TOOLSET=$1 ; shift ;;
     *) guess_toolset ;;
 esac
-BOOST_JAM_OPT_JAM="\
- -DNDEBUG \
- -DYYSTACKSIZE=5000 \
- -DYYINITDEPTH=5000 \
- -o b2"
-BOOST_JAM_OPT_MKJAMBASE="-o mkjambase"
-BOOST_JAM_OPT_YYACC="-o yyacc"
-case $BOOST_JAM_TOOLSET in
+case $B2_TOOLSET in
 
     gcc)
         CXX=${CXX:=gcc}
-        echo_run ${CXX} --version
         # Check whether it's MinGW GCC, which has Windows headers and none of POSIX ones.
         machine=$(${CXX} -dumpmachine 2>/dev/null)
         if [ $? -ne 0 ]; then
-            echo "BOOST_JAM_TOOLSET is gcc, but the 'gcc' command cannot be executed."
+            echo "B2_TOOLSET is gcc, but the 'gcc' command cannot be executed."
             echo "Make sure 'gcc' is in PATH, or use a different toolset."
             exit 1
         fi
         case $machine in
         *mingw*)
         # MinGW insists that its bin directory be in PATH.
-        if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/gcc ; then
-            export PATH=${BOOST_JAM_TOOLSET_ROOT}bin:$PATH
+        if test -r ${B2_TOOLSET_ROOT}bin/gcc ; then
+            export PATH=${B2_TOOLSET_ROOT}bin:$PATH
         fi
-        BOOST_JAM_CXX="${CXX} -x c++ -DNT"
-        BOOST_RELEASE="-O2 -s"
-        BOOST_DEBUG="-O0 -g"
-        BOOST_JAM_OS="NT"
+        B2_CXX="${CXX} -x c++ -DNT"
+        B2_CXXFLAGS_RELEASE="-O2 -s"
+        B2_CXXFLAGS_DEBUG="-O0 -g"
+        B2_OS="NT"
         ;;
 
         *)
-        BOOST_JAM_CXX="${CXX} -x c++ -std=c++11"
-        BOOST_RELEASE="-O2 -s"
-        BOOST_DEBUG="-O0 -g"
-        BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
+        B2_CXX="${CXX} -x c++ -std=c++11"
+        B2_CXXFLAGS_RELEASE="-O2 -s"
+        B2_CXXFLAGS_DEBUG="-O0 -g"
         esac
     ;;
 
     intel-darwin)
     CXX=${CXX:=icc}
     echo_run ${CXX} --version
-    BOOST_JAM_CXX="${CXX} -xc++"
-    BOOST_RELEASE="-O3 -s"
-    BOOST_DEBUG="-O0 -g -p"
+    B2_CXX="${CXX} -xc++"
+    B2_CXXFLAGS_RELEASE="-O3 -s"
+    B2_CXXFLAGS_DEBUG="-O0 -g -p"
     ;;
 
     intel-linux)
@@ -212,160 +194,158 @@ case $BOOST_JAM_TOOLSET in
     test_path ${CXX} >/dev/null 2>&1
     if test $? ; then
         echo "Found ${CXX} in environment"
-        BOOST_JAM_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icc//'`
+        B2_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icc//'`
         # probably the most widespread
         ARCH=intel64
     else
         echo "No intel compiler in current path"
         echo "Look in a few old place for legacy reason"
         if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
-            BOOST_JAM_TOOLSET_ROOT=/opt/intel/cc/9.0/
+            B2_TOOLSET_ROOT=/opt/intel/cc/9.0/
         elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
-            BOOST_JAM_TOOLSET_ROOT=/opt/intel_cc_80/
+            B2_TOOLSET_ROOT=/opt/intel_cc_80/
         elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
-            BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
+            B2_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
         elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
-            BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
+            B2_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
         elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
-            BOOST_JAM_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
+            B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
         fi
     fi
-    if test -r ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh ; then
+    if test -r ${B2_TOOLSET_ROOT}bin/iccvars.sh ; then
         # iccvars does not change LD_RUN_PATH. We adjust LD_RUN_PATH here in
         # order not to have to rely on ld.so.conf knowing the icc library
         # directory. We do this before running iccvars.sh in order to allow a
         # user to add modifications to LD_RUN_PATH in iccvars.sh.
         if test -z "${LD_RUN_PATH}"; then
-            LD_RUN_PATH="${BOOST_JAM_TOOLSET_ROOT}lib"
+            LD_RUN_PATH="${B2_TOOLSET_ROOT}lib"
         else
-            LD_RUN_PATH="${BOOST_JAM_TOOLSET_ROOT}lib:${LD_RUN_PATH}"
+            LD_RUN_PATH="${B2_TOOLSET_ROOT}lib:${LD_RUN_PATH}"
         fi
         export LD_RUN_PATH
-        . ${BOOST_JAM_TOOLSET_ROOT}bin/iccvars.sh $ARCH
+        . ${B2_TOOLSET_ROOT}bin/iccvars.sh $ARCH
     fi
-    BOOST_JAM_CXX="${CXX} -xc++"
-    BOOST_RELEASE="-O3 -s"
-    BOOST_DEBUG="-O0 -g -p"
+    B2_CXX="${CXX} -xc++"
+    B2_CXXFLAGS_RELEASE="-O3 -s"
+    B2_CXXFLAGS_DEBUG="-O0 -g -p"
     ;;
 
     vacpp)
     CXX=${CXX:=xlC_r}
-    BOOST_JAM_CXX="${CXX}"
-    BOOST_RELEASE="-O3 -s -qstrict -qinline"
-    BOOST_DEBUG="-g -qNOOPTimize -qnoinline -pg"
+    B2_CXX="${CXX}"
+    B2_CXXFLAGS_RELEASE="-O3 -s -qstrict -qinline"
+    B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     xlcpp)
     CXX=${CXX:=xlC_r}
-    BOOST_JAM_CXX="${CXX}"
-    BOOST_RELEASE="-s -O3 -qstrict -qinline"
-    BOOST_DEBUG="-g -qNOOPTimize -qnoinline -pg"
+    B2_CXX="${CXX}"
+    B2_CXXFLAGS_RELEASE="-s -O3 -qstrict -qinline"
+    B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     como)
     CXX=${CXX:=como}
-    BOOST_JAM_CXX="${CXX}"
-    BOOST_RELEASE="-O3 --inlining"
-    BOOST_DEBUG="-O0 -g --no_inlining --long_long"
+    B2_CXX="${CXX}"
+    B2_CXXFLAGS_RELEASE="-O3 --inlining"
+    B2_CXXFLAGS_DEBUG="-O0 -g --no_inlining --long_long"
     ;;
 
     kcc)
-    BOOST_JAM_CXX="KCC"
-    BOOST_RELEASE="+K2 -s"
-    BOOST_DEBUG="+K0 -g"
+    B2_CXX="KCC"
+    B2_CXXFLAGS_RELEASE="+K2 -s"
+    B2_CXXFLAGS_DEBUG="+K0 -g"
     ;;
 
     kylix)
-    BOOST_JAM_CXX="bc++ -tC -q"
-    BOOST_RELEASE="-O2 -vi -w-inl -s"
-    BOOST_DEBUG="-Od -v -vi-"
+    B2_CXX="bc++ -tC -q"
+    B2_CXXFLAGS_RELEASE="-O2 -vi -w-inl -s"
+    B2_CXXFLAGS_DEBUG="-Od -v -vi-"
     ;;
 
     mipspro)
     CXX=${CXX:=CC}
-    BOOST_JAM_CXX="${CXX} -FE:template_in_elf_section -ptused"
-    BOOST_RELEASE="-Ofast -g0 \"-INLINE:none\" -s"
-    BOOST_DEBUG="-O0 -INLINE -g"
+    B2_CXX="${CXX} -FE:template_in_elf_section -ptused"
+    B2_CXXFLAGS_RELEASE="-Ofast -g0 \"-INLINE:none\" -s"
+    B2_CXXFLAGS_DEBUG="-O0 -INLINE -g"
     ;;
 
     pathscale)
     CXX=${CXX:=pathCC}
-    BOOST_JAM_CXX="${CXX}"
-    BOOST_RELEASE="-O3 -inline -s"
-    BOOST_DEBUG="-O0 -noinline -ggdb"
+    B2_CXX="${CXX}"
+    B2_CXXFLAGS_RELEASE="-O3 -inline -s"
+    B2_CXXFLAGS_DEBUG="-O0 -noinline -ggdb"
     ;;
 
     pgi)
     CXX=${CXX:=pgc++}
-    BOOST_JAM_CXX="${CXX} -std=c++11"
-    BOOST_RELEASE="-fast -s"
-    BOOST_DEBUG="-O0 -gopt"
+    B2_CXX="${CXX} -std=c++11"
+    B2_CXXFLAGS_RELEASE="-fast -s"
+    B2_CXXFLAGS_DEBUG="-O0 -gopt"
     ;;
 
     sun*)
     CXX=${CXX:=CC}
-    if test -z "${BOOST_JAM_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/CC ; then
-        BOOST_JAM_TOOLSET_ROOT=/opt/SUNWspro/
+    if test -z "${B2_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/CC ; then
+        B2_TOOLSET_ROOT=/opt/SUNWspro/
     fi
-    if test -r "${BOOST_JAM_TOOLSET_ROOT}/bin/CC" ; then
-        PATH=${BOOST_JAM_TOOLSET_ROOT}bin:${PATH}
+    if test -r "${B2_TOOLSET_ROOT}/bin/CC" ; then
+        PATH=${B2_TOOLSET_ROOT}bin:${PATH}
         export PATH
     fi
-    BOOST_JAM_CXX="${CXX}"
-    BOOST_RELEASE="-xO4 -s"
-    BOOST_DEBUG="-g"
+    B2_CXX="${CXX}"
+    B2_CXXFLAGS_RELEASE="-xO4 -s"
+    B2_CXXFLAGS_DEBUG="-g"
     ;;
 
     clang*)
     CXX=${CXX:=clang++}
-    BOOST_JAM_CXX="${CXX} -x c++ -O3 -std=c++11 -v"
-    BOOST_JAM_TOOLSET=clang
-    BOOST_RELEASE="-O3 -s"
-    BOOST_DEBUG="-O0 -fno-inline -g"
-    BOOST_PYTHON="`python-config --includes --libs` -DHAVE_PYTHON -Wno-deprecated-register"
+    B2_CXX="${CXX} -x c++ -O3 -std=c++11"
+    B2_TOOLSET=clang
+    B2_CXXFLAGS_RELEASE="-O3 -s"
+    B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g"
     ;;
 
     tru64cxx)
-    BOOST_JAM_CXX="cc"
-    BOOST_RELEASE="-O5 -inline speed -s"
-    BOOST_DEBUG="-O0 -pg -g"
+    B2_CXX="cc"
+    B2_CXXFLAGS_RELEASE="-O5 -inline speed -s"
+    B2_CXXFLAGS_DEBUG="-O0 -pg -g"
     ;;
 
     acc)
     CXX=${CXX:=aCC}
-    BOOST_JAM_CXX="${CXX} -AA"
-    BOOST_RELEASE="-O3 -s"
-    BOOST_DEBUG="+d -g"
+    B2_CXX="${CXX} -AA"
+    B2_CXXFLAGS_RELEASE="-O3 -s"
+    B2_CXXFLAGS_DEBUG="+d -g"
+    ;;
+
+    qcc)
+    CXX=${CXX:=QCC}
+    B2_CXX="${CXX}"
+    B2_CXXFLAGS_RELEASE="-O3 -Wc,-finline-functions"
+    B2_CXXFLAGS_DEBUG="O0 -Wc,-fno-inline -gstabs+"
     ;;
 
     cxx)
     CXX=${CXX:=cxx}
-    BOOST_JAM_CXX="${CXX}"
+    B2_CXX="${CXX}"
     ;;
 
     cross-cxx)
     CXX=${BUILD_CXX:=cxx}
-    BOOST_JAM_CXX="${CXX}"
-    ;;
-
-    qcc)
-    BOOST_JAM_CXX="qcc"
-    BOOST_RELEASE="-O3 -Wc,-finline-functions"
-    BOOST_DEBUG="O0 -Wc,-fno-inline -g"
+    CXXFLAGS=${BUILD_CXXFLAGS}
+    B2_CXX="${CXX}"
     ;;
 
     *)
-    error_exit "Unknown toolset: $BOOST_JAM_TOOLSET"
+    error_exit "Unknown toolset: $B2_TOOLSET"
     ;;
 esac
 
 echo "###"
-echo "### Using '$BOOST_JAM_TOOLSET' toolset."
+echo "### Using '$B2_TOOLSET' toolset."
 echo "###"
-
-YYACC_SOURCES="yyacc.c"
-MKJAMBASE_SOURCES="mkjambase.c"
-BJAM_SOURCES="\
+B2_SOURCES="\
  builtins.c \
  class.c \
  command.c \
@@ -414,40 +394,24 @@ BJAM_SOURCES="\
  modules/sequence.c \
  modules/set.c \
  "
-case $BOOST_JAM_OS in
+case $B2_OS in
     NT)
-    BJAM_SOURCES="${BJAM_SOURCES} execnt.c filent.c pathnt.c"
+    B2_SOURCES="${B2_SOURCES} execnt.c filent.c pathnt.c"
     ;;
 
     *)
-    BJAM_SOURCES="${BJAM_SOURCES} execunix.c fileunix.c pathunix.c"
+    B2_SOURCES="${B2_SOURCES} execunix.c fileunix.c pathunix.c"
     ;;
 esac
 
-if test ! -r jamgram.y -o ! -r jamgramtab.h ; then
-    echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_YYACC} ${YYACC_SOURCES}
-    if test -x "./yyacc" ; then
-        echo_run ./yyacc jamgram.y jamgramtab.h jamgram.yy
-    fi
+B2_CXXFLAGS="\
+ -DNDEBUG \
+ -DYYSTACKSIZE=5000 \
+ -DYYINITDEPTH=5000 \
+ -o b2"
+if check_debug_build "$@" ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG} ${B2_CXXFLAGS}"
+else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} ${B2_CXXFLAGS}"
 fi
-if test ! -r jamgram.c -o ! -r jamgram.h ; then
-    if test_path yacc ; then YACC="yacc -d"
-    elif test_path bison ; then YACC="bison -y -d --yacc"
-    fi
-    echo_run $YACC jamgram.y
-    mv -f y.tab.c jamgram.c
-    mv -f y.tab.h jamgram.h
-fi
-if test ! -r jambase.c ; then
-    echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_MKJAMBASE} ${MKJAMBASE_SOURCES}
-    if test -x "./mkjambase" ; then
-        echo_run ./mkjambase jambase.c Jambase
-    fi
-fi
-if check_debug_build "$@" ; then BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_DEBUG}"
-else BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_RELEASE}"
-fi
-if check_python_build "$@" ; then BOOST_JAM_CXX="${BOOST_JAM_CXX} ${BOOST_PYTHON}"
-fi
-echo_run ${BOOST_JAM_CXX} ${BOOST_JAM_OPT_JAM} ${BJAM_SOURCES}
+B2_CXXFLAGS="${CXXFLAGS} ${B2_CXXFLAGS}"
+echo_run ${B2_CXX} ${B2_CXXFLAGS} ${B2_SOURCES}
 echo_run cp b2 bjam
