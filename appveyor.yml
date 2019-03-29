@@ -2,7 +2,7 @@
 # subject to the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
-# Copyright Rene Rivera 2015-2018.
+# Copyright Rene Rivera 2015-2019.
 
 branches:
   only:
@@ -12,6 +12,9 @@ branches:
 
 environment:
   matrix:
+  - TOOLSET: gcc
+    APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    TEST_TOOLSET: gcc
   - TOOLSET: vc141
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
     TEST_TOOLSET: msvc
@@ -45,17 +48,36 @@ environment:
 configuration:
   - release
 
+install:
+  - sh: |
+    uname -a
+    which g++
+    which clang++
+
 build_script:
-  - cd src/engine
-  - set PATH=%PATH%;%CXX_PATH%
-  - build.bat %TOOLSET%
-  - cd ../..
+  - cmd: |
+    cd src/engine
+    set PATH=%PATH%;%CXX_PATH%
+    build.bat %TOOLSET%
+    cd ../..
+  - sh: |
+    cd src/engine
+    set PATH=${PATH};${CXX_PATH}
+    ./build.sh ${TOOLSET}
+    cd ../..
 
 test_script:
-  - cd test
-  - echo using %TEST_TOOLSET% ; > %HOME%/user-config.jam
-  - C:/Python27-x64/python.exe test_all.py %TEST_TOOLSET%
-  - cd ..
+  - cmd: |
+    cd test
+    echo using %TEST_TOOLSET% : : %CXX% ; > %HOME%/user-config.jam
+    C:/Python27-x64/python.exe test_all.py %TEST_TOOLSET%
+    cd ..
+  - sh: |
+    cd test
+    echo "using ${TEST_TOOLSET} : : ${CXX} ;" > ${HOME}/user-config.jam
+    python test_all.py ${TEST_TOOLSET}
+    cd ..
 
 after_test:
-  - src\engine\b2.exe --prefix=%HOME%/b2 install
+  - cmd: src\engine\b2.exe --prefix=%HOME%/b2 install
+  - sh: src/engine/b2 --prefix=${HOME}/b2 install
