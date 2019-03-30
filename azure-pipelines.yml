@@ -45,7 +45,7 @@ jobs:
   - powershell: |
         cd src/engine
         $env:path += ';' + $env:CXX_PATH
-        build.bat $env:TOOLSET
+        cmd /c build.bat $env:TOOLSET
         cd ../..
     displayName: Build
   - powershell: |
