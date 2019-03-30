@@ -4,6 +4,9 @@
 #
 # Copyright Rene Rivera 2015-2019.
 
+trigger:
+- feature/cxx
+
 jobs:
 
 - job: 'Linux'
