@@ -28,7 +28,6 @@ jobs:
     displayName: Install
   - bash: |
         set -e
-        which ${CXX}
         cd src/engine
         set PATH=${PATH};${CXX_PATH}
         ./build.sh ${TOOLSET}
@@ -36,9 +35,9 @@ jobs:
     displayName: Build
   - bash: |
         set -e
-        which ${CXX}
+        CXX_PATH=`which ${CXX}`
         cd test
-        echo "using ${TEST_TOOLSET} : : ${CXX} ;" > ${HOME}/user-config.jam
+        echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         python test_all.py ${TEST_TOOLSET}
         cd ..
     displayName: Test
