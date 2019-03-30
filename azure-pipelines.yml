@@ -20,22 +20,23 @@ jobs:
         CXX: g++-8
   steps:
   - bash: |
+        set -e
         uname -a
         sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
         sudo -E apt-get -yq --no-install-suggests --no-install-recommends install g++-8
         which g++-8
-        which clang++
-        g++ --version
-        clang++ --version
-        g++-8 --version
     displayName: Install
   - bash: |
+        set -e
+        which ${CXX}
         cd src/engine
         set PATH=${PATH};${CXX_PATH}
         ./build.sh ${TOOLSET}
         cd ../..
     displayName: Build
   - bash: |
+        set -e
+        which ${CXX}
         cd test
         echo "using ${TEST_TOOLSET} : : ${CXX} ;" > ${HOME}/user-config.jam
         python test_all.py ${TEST_TOOLSET}
