@@ -14,7 +14,7 @@ jobs:
     vmImage: 'ubuntu-16.04'
   strategy:
     matrix:
-      GCC:
+      GCC 8.0:
         TOOLSET: gcc
         TEST_TOOLSET: gcc
         CXX: g++-8
@@ -48,13 +48,22 @@ jobs:
     displayName: Test
 
 - job: 'Windows'
-  pool:
-    vmImage: 'vs2017-win2016'
   strategy:
     matrix:
-      MSVC 14.1:
+      VS 2017:
         TOOLSET: vc141
         TEST_TOOLSET: msvc
+        VM_IMAGE: 'vs2017-win2016'
+      VS 2015:
+        TOOLSET: vc140
+        TEST_TOOLSET: msvc
+        VM_IMAGE: 'vs2015-win2012r2'
+      VS 2013:
+        TOOLSET: vc12
+        TEST_TOOLSET: msvc
+        VM_IMAGE: 'vs2015-win2012r2'
+  pool:
+    vmImage: $VM_IMAGE
   steps:
   - task: UsePythonVersion@0
     inputs:
