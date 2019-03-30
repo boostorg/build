@@ -4,59 +4,61 @@
 #
 # Copyright Rene Rivera 2015-2019.
 
-strategy:
-  matrix:
-    Linux_GCC:
-      imageName: 'ubuntu-16.04'
-      TOOLSET: gcc
-      TEST_TOOLSET: gcc
-    Windows_MSVC:
-      imageName: 'vs2017-win2016'
-      TOOLSET: msvc
-      TEST_TOOLSET: msvc
-
-pool:
-  vmImage: $(imageName)
-
-steps:
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '2.7'
-    architecture: 'x64'
-    addToPath: true
-# Linux
-- displayName: Install (Linux)
-  condition: eq( variables['Agent.OS'], 'Linux' )
-  bash: |
-      uname -a
-      which g++
-      which clang++
-- displayName: Build (Linux)
-  condition: eq( variables['Agent.OS'], 'Linux' )
-  bash: |
-      cd src/engine
-      set PATH=${PATH};${CXX_PATH}
-      ./build.sh ${TOOLSET}
-      cd ../..
-- displayName: Test (Linux)
-  condition: eq( variables['Agent.OS'], 'Linux' )
-  bash: |
-      cd test
-      echo "using ${TEST_TOOLSET} : : ${CXX} ;" > ${HOME}/user-config.jam
-      python test_all.py ${TEST_TOOLSET}
-      cd ..
-# Windows
-- displayName: Build (Windows)
-  condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  powershell: |
-      cd src/engine
-      $env:path += ';' + $env:CXX_PATH
-      build.bat $env:TOOLSET
-      cd ../..
-- displayName: Test (Windows)
-  condition: eq( variables['Agent.OS'], 'Windows_NT' )
-  powershell: |
-      cd test
-      echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
-      python test_all.py $env:TEST_TOOLSET
-      cd ..
+jobs:
+- job: 'Linux'
+  pool:
+    vmImage: 'ubuntu-16.04'
+  strategy:
+    matrix:
+      GCC:
+        TOOLSET: gcc
+        TEST_TOOLSET: gcc
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '2.7'
+      architecture: 'x64'
+      addToPath: true
+  - displayName: Install
+    bash: |
+        uname -a
+        which g++
+        which clang++
+  - displayName: Build
+    bash: |
+        cd src/engine
+        set PATH=${PATH};${CXX_PATH}
+        ./build.sh ${TOOLSET}
+        cd ../..
+  - displayName: Test
+    bash: |
+        cd test
+        echo "using ${TEST_TOOLSET} : : ${CXX} ;" > ${HOME}/user-config.jam
+        python test_all.py ${TEST_TOOLSET}
+        cd ..
+- job: 'Windows'
+  pool:
+    vmImage: 'vs2017-win2016'
+  strategy:
+    matrix:
+      MSVC:
+        TOOLSET: msvc
+        TEST_TOOLSET: msvc
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: '2.7'
+      architecture: 'x64'
+      addToPath: true
+  - displayName: Build
+    powershell: |
+        cd src/engine
+        $env:path += ';' + $env:CXX_PATH
+        build.bat $env:TOOLSET
+        cd ../..
+  - displayName: Test
+    powershell: |
+        cd test
+        echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
+        python test_all.py $env:TEST_TOOLSET
+        cd ..
