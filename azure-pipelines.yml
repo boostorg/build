@@ -5,6 +5,7 @@
 # Copyright Rene Rivera 2015-2019.
 
 jobs:
+
 - job: 'Linux'
   pool:
     vmImage: 'ubuntu-16.04'
@@ -14,28 +15,24 @@ jobs:
         TOOLSET: gcc
         TEST_TOOLSET: gcc
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '2.7'
-      architecture: 'x64'
-      addToPath: true
-  - displayName: Install
-    bash: |
+  - bash: |
         uname -a
         which g++
         which clang++
-  - displayName: Build
-    bash: |
+    displayName: Install
+  - bash: |
         cd src/engine
         set PATH=${PATH};${CXX_PATH}
         ./build.sh ${TOOLSET}
         cd ../..
-  - displayName: Test
-    bash: |
+    displayName: Build
+  - bash: |
         cd test
         echo "using ${TEST_TOOLSET} : : ${CXX} ;" > ${HOME}/user-config.jam
         python test_all.py ${TEST_TOOLSET}
         cd ..
+    displayName: Test
+
 - job: 'Windows'
   pool:
     vmImage: 'vs2017-win2016'
@@ -45,20 +42,15 @@ jobs:
         TOOLSET: msvc
         TEST_TOOLSET: msvc
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '2.7'
-      architecture: 'x64'
-      addToPath: true
-  - displayName: Build
-    powershell: |
+  - powershell: |
         cd src/engine
         $env:path += ';' + $env:CXX_PATH
         build.bat $env:TOOLSET
         cd ../..
-  - displayName: Test
-    powershell: |
+    displayName: Build
+  - powershell: |
         cd test
         echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
         python test_all.py $env:TEST_TOOLSET
         cd ..
+    displayName: Test
