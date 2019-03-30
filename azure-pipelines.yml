@@ -8,14 +8,12 @@ strategy:
   matrix:
     Linux_GCC:
       imageName: 'ubuntu-16.04'
-      variables:
-        TOOLSET: gcc
-        TEST_TOOLSET: gcc
+      TOOLSET: gcc
+      TEST_TOOLSET: gcc
     Windows_MSVC:
       imageName: 'vs2017-win2016'
-      variables:
-        TOOLSET: msvc
-        TEST_TOOLSET: msvc
+      TOOLSET: msvc
+      TEST_TOOLSET: msvc
 
 pool:
   vmImage: $(imageName)
