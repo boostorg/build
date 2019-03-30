@@ -47,8 +47,8 @@ jobs:
     vmImage: 'vs2017-win2016'
   strategy:
     matrix:
-      MSVC:
-        TOOLSET: msvc
+      MSVC 14.1:
+        TOOLSET: vc141
         TEST_TOOLSET: msvc
   steps:
   - powershell: |
