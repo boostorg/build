@@ -75,8 +75,8 @@ guess_toolset ()
     elif test_uname IRIX ; then B2_TOOLSET=mipspro
     elif test_uname IRIX64 ; then B2_TOOLSET=mipspro
     elif test_uname OSF1 ; then B2_TOOLSET=tru64cxx
-    elif test_uname QNX && test_path qcc ; then B2_TOOLSET=qcc
-    elif test_uname Linux && test_path xlc; then
+    elif test_uname QNX && test_path QCC ; then B2_TOOLSET=qcc
+    elif test_uname Linux && test_path xlC_r; then
        if /usr/bin/lscpu | grep Byte | grep Little > /dev/null 2>&1 ; then
           # Little endian linux
           B2_TOOLSET=xlcpp
@@ -84,10 +84,10 @@ guess_toolset ()
           #Big endian linux
           B2_TOOLSET=vacpp
        fi
-    elif test_uname AIX && test_path xlc; then B2_TOOLSET=vacpp
-    elif test_uname FreeBSD && test_path freebsd-version && test_path clang; then B2_TOOLSET=clang
-    elif test_path gcc ; then B2_TOOLSET=gcc
-    elif test_path clang ; then B2_TOOLSET=clang
+    elif test_uname AIX && test_path xlC_r; then B2_TOOLSET=vacpp
+    elif test_uname FreeBSD && test_path freebsd-version && test_path clang++; then B2_TOOLSET=clang
+    elif test_path g++ ; then B2_TOOLSET=gcc
+    elif test_path clang++ ; then B2_TOOLSET=clang
     elif test_path icc ; then B2_TOOLSET=intel-linux
     elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
         B2_TOOLSET=intel-linux
@@ -104,8 +104,8 @@ guess_toolset ()
     elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
-    elif test_path pgcc ; then B2_TOOLSET=pgi
-    elif test_path pathcc ; then B2_TOOLSET=pathscale
+    elif test_path pgc++ ; then B2_TOOLSET=pgi
+    elif test_path pathCC ; then B2_TOOLSET=pathscale
     elif test_path como ; then B2_TOOLSET=como
     elif test_path KCC ; then B2_TOOLSET=kcc
     elif test_path bc++ ; then B2_TOOLSET=kylix
@@ -155,7 +155,7 @@ esac
 case $B2_TOOLSET in
 
     gcc)
-        CXX=${CXX:=gcc}
+        CXX=${CXX:=g++}
         # Check whether it's MinGW GCC, which has Windows headers and none of POSIX ones.
         machine=$(${CXX} -dumpmachine 2>/dev/null)
         if [ $? -ne 0 ]; then
