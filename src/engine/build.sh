@@ -156,6 +156,7 @@ case $B2_TOOLSET in
 
     gcc)
         CXX=${CXX:=g++}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
         # Check whether it's MinGW GCC, which has Windows headers and none of POSIX ones.
         machine=$(${CXX} -dumpmachine 2>/dev/null)
         if [ $? -ne 0 ]; then
@@ -183,168 +184,191 @@ case $B2_TOOLSET in
     ;;
 
     intel-darwin)
-    CXX=${CXX:=icc}
-    echo_run ${CXX} --version
-    B2_CXX="${CXX} -xc++"
-    B2_CXXFLAGS_RELEASE="-O3 -s"
-    B2_CXXFLAGS_DEBUG="-O0 -g -p"
+        CXX=${CXX:=icc}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX} -xc++"
+        B2_CXXFLAGS_RELEASE="-O3 -s"
+        B2_CXXFLAGS_DEBUG="-O0 -g -p"
     ;;
 
     intel-linux)
-    CXX=${CXX:=icc}
-    test_path ${CXX} >/dev/null 2>&1
-    if test $? ; then
-        echo "Found ${CXX} in environment"
-        B2_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icc//'`
-        # probably the most widespread
-        ARCH=intel64
-    else
-        echo "No intel compiler in current path"
-        echo "Look in a few old place for legacy reason"
-        if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
-            B2_TOOLSET_ROOT=/opt/intel/cc/9.0/
-        elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
-            B2_TOOLSET_ROOT=/opt/intel_cc_80/
-        elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
-            B2_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
-        elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
-            B2_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
-        elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
-            B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
-        fi
-    fi
-    if test -r ${B2_TOOLSET_ROOT}bin/iccvars.sh ; then
-        # iccvars does not change LD_RUN_PATH. We adjust LD_RUN_PATH here in
-        # order not to have to rely on ld.so.conf knowing the icc library
-        # directory. We do this before running iccvars.sh in order to allow a
-        # user to add modifications to LD_RUN_PATH in iccvars.sh.
-        if test -z "${LD_RUN_PATH}"; then
-            LD_RUN_PATH="${B2_TOOLSET_ROOT}lib"
+        CXX=${CXX:=icc}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        test_path ${CXX} >/dev/null 2>&1
+        if test $? ; then
+            echo "Found ${CXX} in environment"
+            B2_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icc//'`
+            # probably the most widespread
+            ARCH=intel64
         else
-            LD_RUN_PATH="${B2_TOOLSET_ROOT}lib:${LD_RUN_PATH}"
+            echo "No intel compiler in current path"
+            echo "Look in a few old place for legacy reason"
+            if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
+                B2_TOOLSET_ROOT=/opt/intel/cc/9.0/
+            elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
+                B2_TOOLSET_ROOT=/opt/intel_cc_80/
+            elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
+                B2_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
+            elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
+                B2_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
+            elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+                B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
+            fi
         fi
-        export LD_RUN_PATH
-        . ${B2_TOOLSET_ROOT}bin/iccvars.sh $ARCH
-    fi
-    B2_CXX="${CXX} -xc++"
-    B2_CXXFLAGS_RELEASE="-O3 -s"
-    B2_CXXFLAGS_DEBUG="-O0 -g -p"
+        if test -r ${B2_TOOLSET_ROOT}bin/iccvars.sh ; then
+            # iccvars does not change LD_RUN_PATH. We adjust LD_RUN_PATH here in
+            # order not to have to rely on ld.so.conf knowing the icc library
+            # directory. We do this before running iccvars.sh in order to allow a
+            # user to add modifications to LD_RUN_PATH in iccvars.sh.
+            if test -z "${LD_RUN_PATH}"; then
+                LD_RUN_PATH="${B2_TOOLSET_ROOT}lib"
+            else
+                LD_RUN_PATH="${B2_TOOLSET_ROOT}lib:${LD_RUN_PATH}"
+            fi
+            export LD_RUN_PATH
+            . ${B2_TOOLSET_ROOT}bin/iccvars.sh $ARCH
+        fi
+        B2_CXX="${CXX} -xc++"
+        B2_CXXFLAGS_RELEASE="-O3 -s"
+        B2_CXXFLAGS_DEBUG="-O0 -g -p"
     ;;
 
     vacpp)
-    CXX=${CXX:=xlC_r}
-    B2_CXX="${CXX}"
-    B2_CXXFLAGS_RELEASE="-O3 -s -qstrict -qinline"
-    B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
+        CXX=${CXX:=xlC_r}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX}"
+        B2_CXXFLAGS_RELEASE="-O3 -s -qstrict -qinline"
+        B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     xlcpp)
-    CXX=${CXX:=xlC_r}
-    B2_CXX="${CXX}"
-    B2_CXXFLAGS_RELEASE="-s -O3 -qstrict -qinline"
-    B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
+        CXX=${CXX:=xlC_r}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX}"
+        B2_CXXFLAGS_RELEASE="-s -O3 -qstrict -qinline"
+        B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     como)
-    CXX=${CXX:=como}
-    B2_CXX="${CXX}"
-    B2_CXXFLAGS_RELEASE="-O3 --inlining"
-    B2_CXXFLAGS_DEBUG="-O0 -g --no_inlining --long_long"
+        CXX=${CXX:=como}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX}"
+        B2_CXXFLAGS_RELEASE="-O3 --inlining"
+        B2_CXXFLAGS_DEBUG="-O0 -g --no_inlining --long_long"
     ;;
 
     kcc)
-    B2_CXX="KCC"
-    B2_CXXFLAGS_RELEASE="+K2 -s"
-    B2_CXXFLAGS_DEBUG="+K0 -g"
+        CXX=${CXX:=KCC}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="KCC"
+        B2_CXXFLAGS_RELEASE="+K2 -s"
+        B2_CXXFLAGS_DEBUG="+K0 -g"
     ;;
 
     kylix)
-    B2_CXX="bc++ -tC -q"
-    B2_CXXFLAGS_RELEASE="-O2 -vi -w-inl -s"
-    B2_CXXFLAGS_DEBUG="-Od -v -vi-"
+        CXX=${CXX:=bc++}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="bc++ -tC -q"
+        B2_CXXFLAGS_RELEASE="-O2 -vi -w-inl -s"
+        B2_CXXFLAGS_DEBUG="-Od -v -vi-"
     ;;
 
     mipspro)
-    CXX=${CXX:=CC}
-    B2_CXX="${CXX} -FE:template_in_elf_section -ptused"
-    B2_CXXFLAGS_RELEASE="-Ofast -g0 \"-INLINE:none\" -s"
-    B2_CXXFLAGS_DEBUG="-O0 -INLINE -g"
+        CXX=${CXX:=CC}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX} -FE:template_in_elf_section -ptused"
+        B2_CXXFLAGS_RELEASE="-Ofast -g0 \"-INLINE:none\" -s"
+        B2_CXXFLAGS_DEBUG="-O0 -INLINE -g"
     ;;
 
     pathscale)
-    CXX=${CXX:=pathCC}
-    B2_CXX="${CXX}"
-    B2_CXXFLAGS_RELEASE="-O3 -inline -s"
-    B2_CXXFLAGS_DEBUG="-O0 -noinline -ggdb"
+        CXX=${CXX:=pathCC}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX}"
+        B2_CXXFLAGS_RELEASE="-O3 -inline -s"
+        B2_CXXFLAGS_DEBUG="-O0 -noinline -ggdb"
     ;;
 
     pgi)
-    CXX=${CXX:=pgc++}
-    B2_CXX="${CXX} -std=c++11"
-    B2_CXXFLAGS_RELEASE="-fast -s"
-    B2_CXXFLAGS_DEBUG="-O0 -gopt"
+        CXX=${CXX:=pgc++}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX} -std=c++11"
+        B2_CXXFLAGS_RELEASE="-fast -s"
+        B2_CXXFLAGS_DEBUG="-O0 -gopt"
     ;;
 
     sun*)
-    CXX=${CXX:=CC}
-    if test -z "${B2_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/CC ; then
-        B2_TOOLSET_ROOT=/opt/SUNWspro/
-    fi
-    if test -r "${B2_TOOLSET_ROOT}/bin/CC" ; then
-        PATH=${B2_TOOLSET_ROOT}bin:${PATH}
-        export PATH
-    fi
-    B2_CXX="${CXX}"
-    B2_CXXFLAGS_RELEASE="-xO4 -s"
-    B2_CXXFLAGS_DEBUG="-g"
+        CXX=${CXX:=CC}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        if test -z "${B2_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/CC ; then
+            B2_TOOLSET_ROOT=/opt/SUNWspro/
+        fi
+        if test -r "${B2_TOOLSET_ROOT}/bin/CC" ; then
+            PATH=${B2_TOOLSET_ROOT}bin:${PATH}
+            export PATH
+        fi
+        B2_CXX="${CXX}"
+        B2_CXXFLAGS_RELEASE="-xO4 -s"
+        B2_CXXFLAGS_DEBUG="-g"
     ;;
 
     clang*)
-    CXX=${CXX:=clang++}
-    B2_CXX="${CXX} -x c++ -O3 -std=c++11"
-    B2_TOOLSET=clang
-    B2_CXXFLAGS_RELEASE="-O3 -s"
-    B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g"
+        CXX=${CXX:=clang++}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX} -x c++ -O3 -std=c++11"
+        B2_TOOLSET=clang
+        B2_CXXFLAGS_RELEASE="-O3 -s"
+        B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g"
     ;;
 
     tru64cxx)
-    B2_CXX="cc"
-    B2_CXXFLAGS_RELEASE="-O5 -inline speed -s"
-    B2_CXXFLAGS_DEBUG="-O0 -pg -g"
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="cc"
+        B2_CXXFLAGS_RELEASE="-O5 -inline speed -s"
+        B2_CXXFLAGS_DEBUG="-O0 -pg -g"
     ;;
 
     acc)
-    CXX=${CXX:=aCC}
-    B2_CXX="${CXX} -AA"
-    B2_CXXFLAGS_RELEASE="-O3 -s"
-    B2_CXXFLAGS_DEBUG="+d -g"
+        CXX=${CXX:=aCC}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX} -AA"
+        B2_CXXFLAGS_RELEASE="-O3 -s"
+        B2_CXXFLAGS_DEBUG="+d -g"
     ;;
 
     qcc)
-    CXX=${CXX:=QCC}
-    B2_CXX="${CXX}"
-    B2_CXXFLAGS_RELEASE="-O3 -Wc,-finline-functions"
-    B2_CXXFLAGS_DEBUG="O0 -Wc,-fno-inline -gstabs+"
+        CXX=${CXX:=QCC}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX}"
+        B2_CXXFLAGS_RELEASE="-O3 -Wc,-finline-functions"
+        B2_CXXFLAGS_DEBUG="O0 -Wc,-fno-inline -gstabs+"
     ;;
 
     cxx)
-    CXX=${CXX:=cxx}
-    B2_CXX="${CXX}"
+        CXX=${CXX:=cxx}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX}"
     ;;
 
     cross-cxx)
-    CXX=${BUILD_CXX:=cxx}
-    CXXFLAGS=${BUILD_CXXFLAGS}
-    B2_CXX="${CXX}"
+        CXX=${BUILD_CXX:=cxx}
+        CXXFLAGS=${BUILD_CXXFLAGS}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        B2_CXX="${CXX}"
     ;;
 
     *)
-    error_exit "Unknown toolset: $B2_TOOLSET"
+        error_exit "Unknown toolset: $B2_TOOLSET"
     ;;
 esac
 
 echo "###"
+echo "###"
 echo "### Using '$B2_TOOLSET' toolset."
+echo "###"
+echo "###"
+echo_run ${CXX} ${CXX_VERSION_OPT}
+echo "###"
 echo "###"
 B2_SOURCES="\
  builtins.c \
