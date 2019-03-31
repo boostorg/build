@@ -430,6 +430,10 @@ class TestCmd:
             if type(stdin) is list:
                 stdin = "".join(stdin)
         out, err = p.communicate(stdin)
+        if not type(out) is str:
+            out = out.decode()
+        if not type(err) is str:
+            err = err.decode()
         self._stdout.append(out)
         self._stderr.append(err)
         self.status = p.returncode
