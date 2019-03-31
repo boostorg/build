@@ -9,7 +9,10 @@
 
 import os
 import sys
-import StringIO
+try:
+    from StringIO import StringIO
+except:
+    from io import StringIO
 import BoostBuild
 
 vms = ( os.name == 'posix' and sys.platform == 'OpenVMS')
@@ -37,7 +40,7 @@ def create_sources(path, sources):
     for s in sources :
         f = os.path.join(path, s)
         t.write(f, "")
-        output = StringIO.StringIO()
+        output = StringIO()
         for sym in sources[s] :
             output.write("int %s() { return 0; }\n" % sym)
         t.write(f, output.getvalue())
@@ -48,7 +51,7 @@ def setup_archive(name, sources):
     global obj_suffix
     archive = t.adjust_names(name)[0]
     obj_suffix = t.adjust_names(".obj")[0]
-    output = StringIO.StringIO()
+    output = StringIO()
     t.write("jamroot.jam","")
     output.write("""\
 static-lib %s :
@@ -71,7 +74,7 @@ static-lib %s :
 
 
 def test_glob_archive(archives, glob, expected, sort_results = False):
-    output = StringIO.StringIO()
+    output = StringIO()
     ## replace placeholders
     glob = glob.replace("$archive1", archives[0]).replace("$obj", obj_suffix)
     expected = [ m.replace("$archive1",

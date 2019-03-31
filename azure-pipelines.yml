@@ -19,6 +19,11 @@ jobs:
         TEST_TOOLSET: gcc
         CXX: g++-8
         PACKAGES: g++-8
+      Clang 8:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-8
+        PACKAGES: clang-8
   steps:
   - bash: |
         set -e
@@ -50,13 +55,17 @@ jobs:
         TEST_TOOLSET: msvc
         VM_IMAGE: 'vs2017-win2016'
       VS 2015:
-        TOOLSET: vc140
+        TOOLSET: vc14
         TEST_TOOLSET: msvc
         VM_IMAGE: 'vs2015-win2012r2'
       VS 2013:
         TOOLSET: vc12
         TEST_TOOLSET: msvc
         VM_IMAGE: 'vs2015-win2012r2'
+      MinGW 8.1.0:
+        TOOLSET: mingw
+        TEST_TOOLSET: gcc
+        VM_IMAGE: 'vs2017-win2016'
   pool:
     vmImage: $(VM_IMAGE)
   steps:
@@ -83,6 +92,56 @@ jobs:
         TEST_TOOLSET: clang
         CXX: clang++
         XCODE_APP: /Applications/Xcode_10.1.app
+      # Xcode 10.0:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_10.app
+      # Xcode 9.4.1:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_9.4.1.app
+      # Xcode 9.4:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_9.4.app
+      # Xcode 9.3.1:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_9.3.1.app
+      # Xcode 9.3:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_9.3.app
+      # Xcode 9.2:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_9.2.app
+      # Xcode 9.1:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_9.1.app
+      # Xcode 9.0.1:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_9.0.1.app
+      # Xcode 9.0:
+      #   TOOLSET: clang
+      #   TEST_TOOLSET: clang
+      #   CXX: clang++
+      #   XCODE_APP: /Applications/Xcode_9.0.app
+      Xcode 8.3.3:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_8.3.3.app
   steps:
   - bash: |
         set -e
