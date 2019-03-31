@@ -42,14 +42,14 @@ HDRSCAN on b foo.h bar.h = \"#include <(.*)>\" ;
 # contains '#include <foo.h>' and no rules for foo.h are given. The system
 # should error out on the first invocation.
 t.run_build_system("-f-", stdin=code)
-t.fail_test(string.find(t.stdout(), "...skipped a for lack of foo.h...") == -1)
+t.fail_test(t.stdout().find("...skipped a for lack of foo.h...") == -1)
 
 t.rm('b')
 
 # Now test that if target 'c' also depends on 'b', then it will not be built, as
 # well.
 t.run_build_system("-f-", stdin=code + " copy c : b ; DEPENDS c : b ; DEPENDS all : c ; ")
-t.fail_test(string.find(t.stdout(), "...skipped c for lack of foo.h...") == -1)
+t.fail_test(t.stdout().find("...skipped c for lack of foo.h...") == -1)
 
 t.rm('b')
 
@@ -68,8 +68,8 @@ t.run_build_system("-f-", stdin=code)
 
 def mk_correct_order_func(s1, s2):
     def correct_order(s):
-        n1 = string.find(s, s1)
-        n2 = string.find(s, s2)
+        n1 = s.find(s1)
+        n2 = s.find(s2)
         return ( n1 != -1 ) and ( n2 != -1 ) and ( n1 < n2 )
     return correct_order
 
@@ -89,7 +89,7 @@ t.rm(["a", "b"])
 t.write("foo.h", "#include <bar.h>")
 t.write("bar.h", "#include <biz.h>")
 t.run_build_system("-d+2 -f-", stdin=code)
-t.fail_test(string.find(t.stdout(), "...skipped a for lack of biz.h...") == -1)
+t.fail_test(t.stdout().find("...skipped a for lack of biz.h...") == -1)
 
 # Add an action for biz.h.
 code += """

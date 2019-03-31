@@ -170,7 +170,7 @@ lib foobar ;
 """)
 
 t.run_build_system(["-n", "-d2"])
-t.fail_test(string.find(t.stdout(), "foobar") == -1)
+t.fail_test(t.stdout().find("foobar") == -1)
 
 
 # Make sure plain "lib foo bar ; " works.
@@ -180,7 +180,7 @@ lib foo bar ;
 """)
 
 t.run_build_system(["-n", "-d2"])
-t.fail_test(string.find(t.stdout(), "foo") == -1)
-t.fail_test(string.find(t.stdout(), "bar") == -1)
+t.fail_test(t.stdout().find("foo") == -1)
+t.fail_test(t.stdout().find("bar") == -1)
 
 t.cleanup()

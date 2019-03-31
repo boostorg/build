@@ -61,7 +61,7 @@ t.write("jamroot.jam", "")
 
 # Test that we get an error when no project id is specified.
 t.run_build_system(["--build-dir=foo"])
-t.fail_test(string.find(t.stdout(),
+t.fail_test(t.stdout().find(
                    "warning: the --build-dir option will be ignored") == -1)
 
 t.write("jamroot.jam", """\
@@ -98,10 +98,10 @@ t.write("jamroot.jam", """\
 project foo : build-dir %s ;
 exe a : a.cpp ;
 build-project sub ;
-""" % string.replace(os.getcwd(), '\\', '\\\\'))
+""" % os.getcwd().replace('\\', '\\\\'))
 
 t.run_build_system(["--build-dir=build"], status=1)
-t.fail_test(string.find(t.stdout(),
+t.fail_test(t.stdout().find(
     "Absolute directory specified via 'build-dir' project attribute") == -1)
 
 t.cleanup()

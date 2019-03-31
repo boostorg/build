@@ -28,7 +28,7 @@ def string_of_length(n):
     n -= 1
     y = ['', '$(1x10-1)', '$(10x10-1)', '$(100x10-1)', '$(1000x10-1)']
     result = []
-    for i in reversed(xrange(5)):
+    for i in reversed(range(5)):
         x, n = divmod(n, 10 ** i)
         result += [y[i]] * x
     result.append('x')

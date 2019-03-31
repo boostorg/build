@@ -140,8 +140,8 @@ t.expect_addition("bin/$toolset/debug*/mp.pathlist")
 es1 = t.adjust_name("a/bin/$toolset/debug*")
 es2 = t.adjust_name("b/bin/$toolset/debug*")
 
-t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es1);
-t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es2);
+t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es1)
+t.expect_content_lines("bin/$toolset/debug*/mp.pathlist", "*" + es2)
 
 t.rm("bin/$toolset/debug*/mp.pathlist")
 

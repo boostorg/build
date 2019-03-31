@@ -20,11 +20,6 @@ jobs:
         CXX: g++-8
         PACKAGES: g++-8
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '2.7'
-      architecture: 'x64'
-      addToPath: true
   - bash: |
         set -e
         uname -a
@@ -65,11 +60,6 @@ jobs:
   pool:
     vmImage: $(VM_IMAGE)
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '3.6'
-      architecture: 'x64'
-      addToPath: true
   - powershell: |
         cd src/engine
         $env:path += ';' + $env:CXX_PATH
@@ -94,11 +84,6 @@ jobs:
         CXX: clang++
         XCODE_APP: /Applications/Xcode_10.1.app
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: '2.7'
-      architecture: 'x64'
-      addToPath: true
   - bash: |
         set -e
         uname -a

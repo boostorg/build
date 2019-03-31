@@ -47,8 +47,7 @@ as a full file system or incorrect permissions).
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #         http://www.boost.org/LICENSE_1_0.txt)
 
-
-from string import join, split
+from __future__ import print_function
 
 __author__ = "Steven Knight <knight@baldmt.com>"
 __revision__ = "TestCmd.py 0.D002 2001/08/31 14:56:12 software"
@@ -117,7 +116,7 @@ def fail_test(self=None, condition=True, function=None, skip=0):
     sep = " "
     if not self is None:
         if self.program:
-            of = " of " + join(self.program, " ")
+            of = " of " + " ".join(self.program)
             sep = "\n\t"
         if self.description:
             desc = " [" + self.description + "]"
@@ -187,10 +186,10 @@ def match_exact(lines=None, matches=None):
     using newline characters contain exactly the same data.
 
     """
-    if not type(lines) is ListType:
-        lines = split(lines, "\n")
-    if not type(matches) is ListType:
-        matches = split(matches, "\n")
+    if not type(lines) is list:
+        lines = lines.split("\n")
+    if not type(matches) is list:
+        matches = matches.split("\n")
     if len(lines) != len(matches):
         return
     for i in range(len(lines)):
@@ -213,10 +212,10 @@ def match_re(lines=None, res=None):
     res parameter as regular expressions.
 
     """
-    if not type(lines) is ListType:
-        lines = split(lines, "\n")
-    if not type(res) is ListType:
-        res = split(res, "\n")
+    if not type(lines) is list:
+        lines = lines.split("\n")
+    if not type(res) is list:
+        res = res.split("\n")
     for i in range(min(len(lines), len(res))):
         if not re.compile("^" + res[i] + "$").search(lines[i]):
             return MatchError("Mismatch at line %d\n- %s\n+ %s\n" %
@@ -384,12 +383,12 @@ class TestCmd:
         default is 'rb' (binary read).
 
         """
-        if type(file) is ListType:
-            file = apply(os.path.join, tuple(file))
+        if type(file) is list:
+            file = os.path.join(*file)
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
         if mode[0] != 'r':
-            raise ValueError, "mode must begin with 'r'"
+            raise ValueError("mode must begin with 'r'")
         return open(file, mode).read()
 
     def run(self, program=None, arguments=None, chdir=None, stdin=None,
@@ -422,13 +421,13 @@ class TestCmd:
         if arguments:
             cmd += arguments.split(" ")
         if self.verbose:
-            sys.stderr.write(join(cmd, " ") + "\n")
+            sys.stderr.write(" ".join(cmd) + "\n")
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=chdir,
             universal_newlines=universal_newlines)
 
         if stdin:
-            if type(stdin) is ListType:
+            if type(stdin) is list:
                 stdin = "".join(stdin)
         out, err = p.communicate(stdin)
         self._stdout.append(out)
@@ -490,8 +489,8 @@ class TestCmd:
         for sub in subdirs:
             if sub is None:
                 continue
-            if type(sub) is ListType:
-                sub = apply(os.path.join, tuple(sub))
+            if type(sub) is list:
+                sub = os.path.join(*tuple(sub))
             new = os.path.join(self.workdir, sub)
             try:
                 os.mkdir(new)
@@ -509,8 +508,8 @@ class TestCmd:
         unless it is an absolute path name.
 
         """
-        if type(file) is ListType:
-            file = apply(os.path.join, tuple(file))
+        if type(file) is list:
+            file = os.path.join(*tuple(file))
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
         os.unlink(file)
@@ -558,7 +557,7 @@ class TestCmd:
         directory name with the specified arguments using os.path.join().
 
         """
-        return apply(os.path.join, (self.workdir,) + tuple(args))
+        return os.path.join(self.workdir, *tuple(args))
 
     def writable(self, top, write):
         """
@@ -574,15 +573,16 @@ class TestCmd:
                 st = os.stat(fullname)
                 os.chmod(fullname, arg(st[stat.ST_MODE]))
 
-        _mode_writable = lambda mode: stat.S_IMODE(mode|0200)
-        _mode_non_writable = lambda mode: stat.S_IMODE(mode&~0200)
+        _mode_writable = lambda mode: stat.S_IMODE(mode|0o200)
+        _mode_non_writable = lambda mode: stat.S_IMODE(mode&~0o200)
 
         if write:
             f = _mode_writable
         else:
             f = _mode_non_writable
         try:
-            os.path.walk(top, _walk_chmod, f)
+            for root, _, files in os.walk(top):
+                _walk_chmod(f, root, files)
         except:
             pass  # Ignore any problems changing modes.
 
@@ -596,10 +596,10 @@ class TestCmd:
         and must begin with a 'w'. The default is 'wb' (binary write).
 
         """
-        if type(file) is ListType:
-            file = apply(os.path.join, tuple(file))
+        if type(file) is list:
+            file = os.path.join(*tuple(file))
         if not os.path.isabs(file):
             file = os.path.join(self.workdir, file)
         if mode[0] != 'w':
-            raise ValueError, "mode must begin with 'w'"
+            raise ValueError("mode must begin with 'w'")
         open(file, mode).write(content)

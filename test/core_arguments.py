@@ -10,7 +10,7 @@ import BoostBuild
 
 
 def simple_args(start, finish):
-    return " : ".join("%d" % x for x in xrange(start, finish + 1))
+    return " : ".join("%d" % x for x in range(start, finish + 1))
 
 
 def test(t, type, input, output, status=0):
@@ -19,7 +19,7 @@ def test(t, type, input, output, status=0):
     code.append(";")
     t.write("file.jam", " ".join(code))
     t.run_build_system(["-ffile.jam"], status=status)
-    t.expect_output_lines(output);
+    t.expect_output_lines(output)
 
 
 def test_args(t, *args, **kwargs):

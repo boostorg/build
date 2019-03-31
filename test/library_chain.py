@@ -89,9 +89,9 @@ t.run_build_system(["-a", "-d+2"], status=None, stderr=None)
 # Try to find the "zzz" string either in response file (for Windows compilers),
 # or in the standard output.
 rsp = t.adjust_names("bin/$toolset/debug*/main.exe.rsp")[0]
-if os.path.exists(rsp) and ( string.find(open(rsp).read(), "zzz") != -1 ):
+if os.path.exists(rsp) and ( open(rsp).read().find("zzz") != -1 ):
     pass
-elif string.find(t.stdout(), "zzz") != -1:
+elif t.stdout().find("zzz") != -1:
     pass
 else:
     t.fail_test(1)
