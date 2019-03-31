@@ -24,16 +24,17 @@ jobs:
         TEST_TOOLSET: clang
         CXX: clang++-8
         PACKAGES: clang-8
-        LLVM_DEB: llvm-toolchain-xenial-8
+        LLVM_REPO: llvm-toolchain-xenial-8
   steps:
   - bash: |
         set -e
         uname -a
         sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
-        if test -n "${LLVM_DEB}" ; then
-          sudo -E deb http://apt.llvm.org/xenial/ ${LLVM_DEB} main
-          sudo -E deb-src http://apt.llvm.org/xenial/ ${LLVM_DEB} main
+        if test -n "${LLVM_REPO}" ; then
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo -E apt-add-repository http://apt.llvm.org/xenial/ ${LLVM_REPO} main
         fi
+        sudo -E apt-get update
         sudo -E apt-get -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
     displayName: Install
   - bash: |
