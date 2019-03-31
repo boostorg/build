@@ -24,11 +24,16 @@ jobs:
         TEST_TOOLSET: clang
         CXX: clang++-8
         PACKAGES: clang-8
+        LLVM_DEB: llvm-toolchain-xenial-8
   steps:
   - bash: |
         set -e
         uname -a
         sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
+        if test -n "${LLVM_DEB}" ; then
+          sudo -E deb http://apt.llvm.org/xenial/ ${LLVM_DEB} main
+          sudo -E deb-src http://apt.llvm.org/xenial/ ${LLVM_DEB} main
+        fi
         sudo -E apt-get -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
     displayName: Install
   - bash: |
@@ -62,10 +67,10 @@ jobs:
         TOOLSET: vc12
         TEST_TOOLSET: msvc
         VM_IMAGE: 'vs2015-win2012r2'
-      MinGW 8.1.0:
-        TOOLSET: mingw
-        TEST_TOOLSET: gcc
-        VM_IMAGE: 'vs2017-win2016'
+      # MinGW 8.1.0:
+      #   TOOLSET: mingw
+      #   TEST_TOOLSET: gcc
+      #   VM_IMAGE: 'vs2017-win2016'
   pool:
     vmImage: $(VM_IMAGE)
   steps:
