@@ -107,7 +107,7 @@ def test_toolset(toolset, version, property_sets):
         def path(t):
             return toolset.split("-")[0] + "-*" + version + compute_path(properties, t)
         os.environ["B2_PROPERTIES"] = " ".join(expand_properties(properties))
-        t.run_build_system(["--user-config="] + properties)
+        t.run_build_system(["--user-config=", "-sPYTHON_CMD=%s" % sys.executable] + properties)
         t.expect_addition("bin/%s/lib.obj" % (path("obj")))
         if "link=static" not in properties:
             t.expect_addition("bin/%s/l1.dll" % (path("dll")))
