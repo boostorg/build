@@ -14,22 +14,22 @@ jobs:
     vmImage: 'ubuntu-16.04'
   strategy:
     matrix:
-      GCC 8.0:
+      GCC 8:
         TOOLSET: gcc
         TEST_TOOLSET: gcc
         CXX: g++-8
         PACKAGES: g++-8
-      GCC 7.0:
+      GCC 7:
         TOOLSET: gcc
         TEST_TOOLSET: gcc
         CXX: g++-7
         PACKAGES: g++-7
-      GCC 6.0:
+      GCC 6:
         TOOLSET: gcc
         TEST_TOOLSET: gcc
         CXX: g++-6
         PACKAGES: g++-6
-      GCC 5.0:
+      GCC 5:
         TOOLSET: gcc
         TEST_TOOLSET: gcc
         CXX: g++-5
@@ -61,19 +61,19 @@ jobs:
         CXX: clang++-7
         PACKAGES: clang-7
         LLVM_REPO: llvm-toolchain-xenial-7
-      Clang 6.0:
+      Clang 6:
         TOOLSET: clang
         TEST_TOOLSET: clang
         CXX: clang++-6.0
         PACKAGES: clang-6.0
         LLVM_REPO: llvm-toolchain-xenial-6.0
-      Clang 5.0:
+      Clang 5:
         TOOLSET: clang
         TEST_TOOLSET: clang
         CXX: clang++-5.0
         PACKAGES: clang-5.0
         LLVM_REPO: llvm-toolchain-xenial-5.0
-      Clang 4.0:
+      Clang 4:
         TOOLSET: clang
         TEST_TOOLSET: clang
         CXX: clang++-4.0
@@ -221,7 +221,7 @@ jobs:
         TOOLSET: clang
         TEST_TOOLSET: clang
         CXX: clang++
-        XCODE_APP: /Applications/Xcode_9.0.app
+        XCODE_APP: /Applications/Xcode_9.app
       Xcode 8.3.3:
         TOOLSET: clang
         TEST_TOOLSET: clang
