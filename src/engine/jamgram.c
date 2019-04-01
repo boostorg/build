@@ -73,6 +73,7 @@
 #include "object.h"
 #include "rules.h"
 
+# define YYINITDEPTH 5000 /* for C++ parsing */
 # define YYMAXDEPTH 10000	/* for OSF and other less endowed yaccs */
 
 # define F0 -1

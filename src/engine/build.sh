@@ -429,14 +429,8 @@ case $B2_OS in
     ;;
 esac
 
-B2_CXXFLAGS="\
- -DNDEBUG \
- -DYYSTACKSIZE=5000 \
- -DYYINITDEPTH=5000 \
- -o b2"
-if check_debug_build "$@" ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG} ${B2_CXXFLAGS}"
-else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} ${B2_CXXFLAGS}"
+if check_debug_build "$@" ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"
+else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} -DNDEBUG"
 fi
-B2_CXXFLAGS="${CXXFLAGS} ${B2_CXXFLAGS}"
-echo_run ${B2_CXX} ${B2_CXXFLAGS} ${B2_SOURCES}
+echo_run ${B2_CXX} ${CXXFLAGS} ${B2_CXXFLAGS} ${B2_SOURCES} -o b2
 echo_run cp b2 bjam
