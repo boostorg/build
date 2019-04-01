@@ -12,3 +12,4 @@
 /project-config.jam
 /src/engine/b2
 /src/engine/b2.exe
+infer-out
