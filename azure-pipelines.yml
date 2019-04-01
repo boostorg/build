@@ -19,12 +19,91 @@ jobs:
         TEST_TOOLSET: gcc
         CXX: g++-8
         PACKAGES: g++-8
+      GCC 7.0:
+        TOOLSET: gcc
+        TEST_TOOLSET: gcc
+        CXX: g++-7
+        PACKAGES: g++-7
+      GCC 6.0:
+        TOOLSET: gcc
+        TEST_TOOLSET: gcc
+        CXX: g++-6
+        PACKAGES: g++-6
+      GCC 5.0:
+        TOOLSET: gcc
+        TEST_TOOLSET: gcc
+        CXX: g++-5
+        PACKAGES: g++-5
+      GCC 4.9:
+        TOOLSET: gcc
+        TEST_TOOLSET: gcc
+        CXX: g++-4.9
+        PACKAGES: g++-4.9
+      GCC 4.8:
+        TOOLSET: gcc
+        TEST_TOOLSET: gcc
+        CXX: g++-4.8
+        PACKAGES: g++-4.8
+      GCC 4.7:
+        TOOLSET: gcc
+        TEST_TOOLSET: gcc
+        CXX: g++-4.7
+        PACKAGES: g++-4.7
       Clang 8:
         TOOLSET: clang
         TEST_TOOLSET: clang
         CXX: clang++-8
         PACKAGES: clang-8
         LLVM_REPO: llvm-toolchain-xenial-8
+      Clang 7:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-7
+        PACKAGES: clang-7
+        LLVM_REPO: llvm-toolchain-xenial-7
+      Clang 6.0:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-6.0
+        PACKAGES: clang-6.0
+        LLVM_REPO: llvm-toolchain-xenial-6.0
+      Clang 5.0:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-5.0
+        PACKAGES: clang-5.0
+        LLVM_REPO: llvm-toolchain-xenial-5.0
+      Clang 4.0:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-4.0
+        PACKAGES: clang-4.0
+        LLVM_REPO: llvm-toolchain-xenial-4.0
+      Clang 3.9:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-3.9
+        PACKAGES: clang-3.9
+      Clang 3.8:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-3.8
+        PACKAGES: clang-3.8
+      Clang 3.7:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-3.7
+        PACKAGES: clang-3.7
+      Clang 3.6:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-3.6
+        PACKAGES: clang-3.6
+      Clang 3.5:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++-3.5
+        PACKAGES: clang-3.5
   steps:
   - bash: |
         set -e
@@ -98,51 +177,51 @@ jobs:
         TEST_TOOLSET: clang
         CXX: clang++
         XCODE_APP: /Applications/Xcode_10.1.app
-      # Xcode 10.0:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_10.app
-      # Xcode 9.4.1:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_9.4.1.app
-      # Xcode 9.4:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_9.4.app
-      # Xcode 9.3.1:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_9.3.1.app
-      # Xcode 9.3:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_9.3.app
-      # Xcode 9.2:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_9.2.app
-      # Xcode 9.1:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_9.1.app
-      # Xcode 9.0.1:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_9.0.1.app
-      # Xcode 9.0:
-      #   TOOLSET: clang
-      #   TEST_TOOLSET: clang
-      #   CXX: clang++
-      #   XCODE_APP: /Applications/Xcode_9.0.app
+      Xcode 10.0:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_10.app
+      Xcode 9.4.1:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_9.4.1.app
+      Xcode 9.4:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_9.4.app
+      Xcode 9.3.1:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_9.3.1.app
+      Xcode 9.3:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_9.3.app
+      Xcode 9.2:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_9.2.app
+      Xcode 9.1:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_9.1.app
+      Xcode 9.0.1:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_9.0.1.app
+      Xcode 9.0:
+        TOOLSET: clang
+        TEST_TOOLSET: clang
+        CXX: clang++
+        XCODE_APP: /Applications/Xcode_9.0.app
       Xcode 8.3.3:
         TOOLSET: clang
         TEST_TOOLSET: clang
