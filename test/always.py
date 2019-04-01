@@ -18,13 +18,13 @@ always test ;
 """)
 
 t.run_build_system()
-t.expect_addition("bin/$toolset/debug/main.obj")
-t.expect_addition("bin/$toolset/debug/test.exe")
+t.expect_addition("bin/$toolset/debug*/main.obj")
+t.expect_addition("bin/$toolset/debug*/test.exe")
 t.expect_nothing_more()
 
 t.run_build_system()
-t.expect_touch("bin/$toolset/debug/main.obj")
-t.expect_touch("bin/$toolset/debug/test.exe")
+t.expect_touch("bin/$toolset/debug*/main.obj")
+t.expect_touch("bin/$toolset/debug*/test.exe")
 t.expect_nothing_more()
 
 t.cleanup()
