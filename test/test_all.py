@@ -164,6 +164,7 @@ if xml:
 tests = ["absolute_sources",
          "alias",
          "alternatives",
+         "always",
          "bad_dirname",
          "build_dir",
          "build_file",
