@@ -64,10 +64,6 @@ if test "x$TOOLSET" = x; then
     TOOLSET=intel
     ;;
 
-    mingw )
-    TOOLSET=gcc
-    ;;
-
     clang* )
     TOOLSET=clang
     ;;
