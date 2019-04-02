@@ -39,7 +39,6 @@ if not "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
 set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_VC11
@@ -55,7 +54,6 @@ if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
 set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_VC12
@@ -75,7 +73,6 @@ if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
 set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_VC14
@@ -96,7 +93,6 @@ if NOT "_%BOOST_JAM_TOOLSET_ROOT%_" == "__" (
 set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_VC141
@@ -119,7 +115,6 @@ popd
 set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_VC142
@@ -142,7 +137,6 @@ popd
 set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_VCUNK
@@ -165,7 +159,6 @@ popd
 set "BOOST_JAM_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
 set "BOOST_JAM_OPT_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_BORLAND
@@ -184,7 +177,6 @@ set "BOOST_JAM_OPT_JAM=-ejam0"
 set "BOOST_JAM_OPT_MKJAMBASE=-emkjambasejam0"
 set "BOOST_JAM_OPT_YYACC=-eyyacc0"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_COMO
@@ -192,7 +184,6 @@ if not defined CXX ( set "CXX=como" )
 set "BOOST_JAM_CXX=%CXX% --inlining"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_GCC
@@ -200,7 +191,6 @@ if not defined CXX ( set "CXX=g++" )
 set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
-%CXX% --version
 goto :eof
 
 :Config_GCC_NOCYGWIN
@@ -208,7 +198,6 @@ if not defined CXX ( set "CXX=g++" )
 set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3 -mno-cygwin"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
-%CXX% --version
 goto :eof
 
 :Config_INTEL_WIN32
@@ -216,7 +205,6 @@ if not defined CXX ( set "CXX=icl" )
 set "BOOST_JAM_CXX=%CXX% /nologo /MT /O2 /Ob2 /Gy /GF /GA /GB"
 set "BOOST_JAM_OPT_JAM=/Feb2"
 set "_known_=1"
-%CXX%
 goto :eof
 
 :Config_MINGW
@@ -228,5 +216,4 @@ for /F "delims=" %%I in ("%CXX%") do set "PATH=%PATH%;%%~dpI"
 set "BOOST_JAM_CXX=%CXX% -x c++ -std=c++11 -s -O3"
 set "BOOST_JAM_OPT_JAM=-o b2.exe"
 set "_known_=1"
-%CXX% --version
 goto :eof
