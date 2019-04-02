@@ -127,13 +127,18 @@ def prepare_suffix_map(toolset, target_os=default_os):
     """
     global suffixes
     suffixes = {}
-    if target_os in ["windows", "cygwin"]:
+    if target_os == "cygwin":
+        suffixes[".lib"] = ".a"
+        suffixes[".obj"] = ".o"
+        suffixes[".implib"] = ".lib.a"
+    elif target_os == "windows":
         if toolset == "gcc":
-            suffixes[".lib"] = ".a"  # mingw static libs use suffix ".a".
+            # MinGW
+            suffixes[".lib"] = ".a"
             suffixes[".obj"] = ".o"
-        if target_os == "cygwin":
-            suffixes[".implib"] = ".lib.a"
+            suffixes[".implib"] = ".dll.a"
         else:
+            # Everything else Windows
             suffixes[".implib"] = ".lib"
     else:
         suffixes[".exe"] = ""
@@ -801,7 +806,7 @@ class Tester(TestCmd.TestCmd):
                 if lib_prefix:
                     tail = lib_prefix + tail
                     result = os.path.join(head, tail)
-            elif suffix == ".dll":
+            elif suffix == ".dll" or suffix == ".implib":
                 (head, tail) = os.path.split(name)
                 if dll_prefix:
                     tail = dll_prefix + tail

@@ -10,6 +10,7 @@
 import BoostBuild
 import os
 import string
+import sys
 
 t = BoostBuild.Tester(use_test_config=False)
 
@@ -116,14 +117,13 @@ void a() {}
 t.run_build_system(subdir="a")
 t.expect_addition("a/dist/a.dll")
 
-if ( os.name == 'nt' or os.uname()[0].lower().startswith('cygwin') ) and \
-    BoostBuild.get_toolset() != 'gcc':
-    # This is a Windows import library -- we know the exact name.
-    file = "a/dist/a.lib"
+if sys.platform == 'win32':
+    # This is a Windows import library.
+    file = t.adjust_name("a.implib")
 else:
-    file = t.adjust_names("a/dist/a.dll")[0]
+    file = t.adjust_name("a.dll")
 
-t.write("b/jamfile.jam", "lib b : b.cpp ../%s ;" % file)
+t.write("b/jamfile.jam", "lib b : b.cpp ../a/dist/%s ;" % file)
 
 t.write("b/b.cpp", """\
 #if defined(_WIN32)
