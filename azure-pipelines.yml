@@ -142,6 +142,10 @@ jobs:
 - job: 'Windows'
   strategy:
     matrix:
+      VS 2019:
+        TOOLSET: vc142
+        TEST_TOOLSET: msvc
+        VM_IMAGE: 'windows-2019'
       VS 2017:
         TOOLSET: vc141
         TEST_TOOLSET: msvc
