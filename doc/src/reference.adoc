@@ -152,7 +152,7 @@ implicitly when their containing project is built.
 
 [[bbv2.reference.rules.always]]`always`::
 The `always` function takes a single parameter—a list of metatarget
-names. The top-level targets produced by the named metatargets will be
+names. The targets produced by the named metatargets will be
 always considered out of date. Consider this example:
 +
 ----
@@ -161,10 +161,9 @@ exe bye : bye.cpp ;
 always hello ;
 ----
 +
-If a build of `hello` is requested, then the binary will always be
-relinked. The object files will not be recompiled, though. Note that
+If a build of `hello` is requested, then it will always be recompiled. Note that
 if a build of `hello` is not requested, for example you specify just
-`bye` on the command line, `hello` will not be relinked.
+`bye` on the command line, `hello` will not be recompiled.
 
 [[bbv2.reference.rules.constant]]`constant`::
 Sets project-wide constant. Takes two parameters: variable name and a
