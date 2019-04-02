@@ -318,7 +318,9 @@ if os.name == "posix":
 #    if "CYGWIN" not in os.uname()[0]:
 #        tests.append("library_order")
 
-if toolset.startswith("gcc"):
+if toolset.startswith("gcc") and os.name != "nt":
+    # On Windows it's allowed to have a static runtime with gcc. But this test
+    # assumes otherwise. Hence enable it only when not on Windows.
     tests.append("gcc_runtime")
 
 # PCH test seems broken in strange ways. Disable it.
