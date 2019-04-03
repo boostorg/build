@@ -29,9 +29,9 @@ ECHO ###     .\build.bat msvc
 ECHO ###
 ECHO ### Toolsets supported by this script are: borland, como, gcc,
 ECHO ###     gcc-nocygwin, intel-win32, metrowerks, mingw,
-ECHO ###     vc11, vc12, vc14, vc141
+ECHO ###     vc11, vc12, vc14, vc141, vc142
 ECHO ###
-ECHO ### If you have Visual Studio 2017 installed you will need either update
+ECHO ### If you have Visual Studio 2017 installed you will need to either update
 ECHO ### the Visual Studio 2017 installer or run from VS 2017 Command Prompt
 ECHO ### as we where unable to detect your toolset installation.
 ECHO ###
@@ -81,15 +81,15 @@ goto :eof
 :Guess_Toolset
 set local
 REM Try and guess the toolset to bootstrap the build with...
-REM Sets BOOST_JAM_TOOLSET to the first found toolset.
-REM May also set BOOST_JAM_TOOLSET_ROOT to the
+REM Sets B2_TOOLSET to the first found toolset.
+REM May also set B2_TOOLSET_ROOT to the
 REM location of the found toolset.
 
 call :Clear_Error
 call :Test_Empty "%ProgramFiles%"
 if not errorlevel 1 set "ProgramFiles=C:\Program Files"
 
-REM Visual studio is by default installed to %ProgramFiles% on 32-bit machines and
+REM Visual Studio is by default installed to %ProgramFiles% on 32-bit machines and
 REM %ProgramFiles(x86)% on 64-bit machines. Making a common variable for both.
 call :Clear_Error
 call :Test_Empty "%ProgramFiles(x86)%"
@@ -109,8 +109,8 @@ goto :eof
 
 
 :Start
-set BOOST_JAM_TOOLSET=
-set BOOST_JAM_ARGS=
+set B2_TOOLSET=
+set B2_BUILD_ARGS=
 
 REM If no arguments guess the toolset;
 REM or if first argument is an option guess the toolset;
@@ -130,7 +130,7 @@ if not errorlevel 1 (
 )
 
 call :Clear_Error
-set BOOST_JAM_TOOLSET=%1
+set B2_TOOLSET=%1
 shift
 goto Setup_Toolset
 
@@ -151,40 +151,42 @@ if not errorlevel 1 goto Config_Toolset
 call :Clear_Error
 call :Test_Option %1
 if errorlevel 1 (
-    set BOOST_JAM_ARGS=%BOOST_JAM_ARGS% %1
+    set B2_BUILD_ARGS=%B2_BUILD_ARGS% %1
     shift
     goto Setup_Args
 )
 :Config_Toolset
 call config_toolset.bat
 if "_%_known_%_" == "__" (
-    call :Error_Print "Unknown toolset: %BOOST_JAM_TOOLSET%"
+    call :Error_Print "Unknown toolset: %B2_TOOLSET%"
 )
 if errorlevel 1 goto Finish
 
 echo ###
-echo ### Using '%BOOST_JAM_TOOLSET%' toolset.
+echo ### Using '%B2_TOOLSET%' toolset.
 echo ###
 
-set BJAM_SOURCES=
-set BJAM_SOURCES=%BJAM_SOURCES% builtins.c class.c
-set BJAM_SOURCES=%BJAM_SOURCES% command.c compile.c constants.c cwd.c
-set BJAM_SOURCES=%BJAM_SOURCES% debug.c debugger.c
-set BJAM_SOURCES=%BJAM_SOURCES% execcmd.c execnt.c filent.c filesys.c frames.c function.c
-set BJAM_SOURCES=%BJAM_SOURCES% glob.c hash.c hcache.c hdrmacro.c headers.c jam.c
-set BJAM_SOURCES=%BJAM_SOURCES% jambase.c jamgram.c lists.c make.c make1.c md5.c mem.c modules.c
-set BJAM_SOURCES=%BJAM_SOURCES% native.c object.c option.c output.c parse.c pathnt.c
-set BJAM_SOURCES=%BJAM_SOURCES% pathsys.c regexp.c rules.c scan.c search.c strings.c
-set BJAM_SOURCES=%BJAM_SOURCES% subst.c timestamp.c variable.c w32_getreg.c
-set BJAM_SOURCES=%BJAM_SOURCES% modules/order.c
-set BJAM_SOURCES=%BJAM_SOURCES% modules/path.c
-set BJAM_SOURCES=%BJAM_SOURCES% modules/property-set.c
-set BJAM_SOURCES=%BJAM_SOURCES% modules/regex.c
-set BJAM_SOURCES=%BJAM_SOURCES% modules/sequence.c
-set BJAM_SOURCES=%BJAM_SOURCES% modules/set.c
+set B2_SOURCES=
+set B2_SOURCES=%B2_SOURCES% builtins.c class.c
+set B2_SOURCES=%B2_SOURCES% command.c compile.c constants.c cwd.c
+set B2_SOURCES=%B2_SOURCES% debug.c debugger.c
+set B2_SOURCES=%B2_SOURCES% execcmd.c execnt.c filent.c filesys.c frames.c function.c
+set B2_SOURCES=%B2_SOURCES% glob.c hash.c hcache.c hdrmacro.c headers.c jam.c
+set B2_SOURCES=%B2_SOURCES% jambase.c jamgram.c lists.c make.c make1.c md5.c mem.c modules.c
+set B2_SOURCES=%B2_SOURCES% native.c object.c option.c output.c parse.c pathnt.c
+set B2_SOURCES=%B2_SOURCES% pathsys.c regexp.c rules.c scan.c search.c strings.c
+set B2_SOURCES=%B2_SOURCES% subst.c timestamp.c variable.c w32_getreg.c
+set B2_SOURCES=%B2_SOURCES% modules/order.c
+set B2_SOURCES=%B2_SOURCES% modules/path.c
+set B2_SOURCES=%B2_SOURCES% modules/property-set.c
+set B2_SOURCES=%B2_SOURCES% modules/regex.c
+set B2_SOURCES=%B2_SOURCES% modules/sequence.c
+set B2_SOURCES=%B2_SOURCES% modules/set.c
+
+set B2_CXXFLAGS=%B2_CXXFLAGS% -DNT -DNDEBUG
 
 @echo ON
-%BOOST_JAM_CXX% %BOOST_JAM_OPT_JAM% %BJAM_SOURCES% %BOOST_JAM_OPT_LINK%
+%B2_CXX% %CXXFLAGS% %B2_CXXFLAGS% %B2_SOURCES%
 dir *.exe
 copy /b .\b2.exe .\bjam.exe
 

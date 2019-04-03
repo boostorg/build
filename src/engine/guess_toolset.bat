@@ -35,81 +35,81 @@ call vswhere_usability_wrapper.cmd
 call :Clear_Error
 REM VSUNKCOMNTOOLS represents unknown but detected version from vswhere
 if NOT "_%VSUNKCOMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vcunk"
-    set "BOOST_JAM_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
+    set "B2_TOOLSET=vcunk"
+    set "B2_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
     goto :eof)
 if NOT "_%VS160COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc142"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
+    set "B2_TOOLSET=vc142"
+    set "B2_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
     goto :eof)
 if NOT "_%VS150COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc141"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
+    set "B2_TOOLSET=vc141"
+    set "B2_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     goto :eof)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc141"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
+    set "B2_TOOLSET=vc141"
+    set "B2_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\"
     exit /b 0)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc141"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\"
+    set "B2_TOOLSET=vc141"
+    set "B2_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\"
     exit /b 0)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"  (
-    set "BOOST_JAM_TOOLSET=vc141"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\"
+    set "B2_TOOLSET=vc141"
+    set "B2_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\"
     exit /b 0)
 if NOT "_%VS140COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc14"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
+    set "B2_TOOLSET=vc14"
+    set "B2_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
     exit /b 0)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 14.0\VC\VCVARSALL.BAT" (
-    set "BOOST_JAM_TOOLSET=vc14"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 14.0\VC\"
+    set "B2_TOOLSET=vc14"
+    set "B2_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 14.0\VC\"
     exit /b 0)
 if NOT "_%VS120COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc12"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS120COMNTOOLS%..\..\VC\"
+    set "B2_TOOLSET=vc12"
+    set "B2_TOOLSET_ROOT=%VS120COMNTOOLS%..\..\VC\"
     exit /b 0)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\VCVARSALL.BAT" (
-    set "BOOST_JAM_TOOLSET=vc12"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\"
+    set "B2_TOOLSET=vc12"
+    set "B2_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\"
     exit /b 0)
 if NOT "_%VS110COMNTOOLS%_" == "__" (
-    set "BOOST_JAM_TOOLSET=vc11"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS110COMNTOOLS%..\..\VC\"
+    set "B2_TOOLSET=vc11"
+    set "B2_TOOLSET_ROOT=%VS110COMNTOOLS%..\..\VC\"
     exit /b 0)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\VCVARSALL.BAT" (
-    set "BOOST_JAM_TOOLSET=vc11"
-    set "BOOST_JAM_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\"
+    set "B2_TOOLSET=vc11"
+    set "B2_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\"
     exit /b 0)
 call :Test_Path cl.exe
 if not errorlevel 1 (
-    set "BOOST_JAM_TOOLSET=msvc"
-    set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
+    set "B2_TOOLSET=msvc"
+    set "B2_TOOLSET_ROOT=%FOUND_PATH%..\"
     exit /b 0)
 call :Test_Path vcvars32.bat
 if not errorlevel 1 (
-    set "BOOST_JAM_TOOLSET=msvc"
+    set "B2_TOOLSET=msvc"
     call "%FOUND_PATH%VCVARS32.BAT"
-    set "BOOST_JAM_TOOLSET_ROOT=%MSVCDir%\"
+    set "B2_TOOLSET_ROOT=%MSVCDir%\"
     exit /b 0)
 if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" (
-    set "BOOST_JAM_TOOLSET=borland"
-    set "BOOST_JAM_TOOLSET_ROOT=C:\Borland\BCC55\"
+    set "B2_TOOLSET=borland"
+    set "B2_TOOLSET_ROOT=C:\Borland\BCC55\"
     exit /b 0)
 call :Test_Path bcc32.exe
 if not errorlevel 1 (
-    set "BOOST_JAM_TOOLSET=borland"
-    set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
+    set "B2_TOOLSET=borland"
+    set "B2_TOOLSET_ROOT=%FOUND_PATH%..\"
     exit /b 0)
 call :Test_Path icl.exe
 if not errorlevel 1 (
-    set "BOOST_JAM_TOOLSET=intel-win32"
-    set "BOOST_JAM_TOOLSET_ROOT=%FOUND_PATH%..\"
+    set "B2_TOOLSET=intel-win32"
+    set "B2_TOOLSET_ROOT=%FOUND_PATH%..\"
     exit /b 0)
 if EXIST "C:\MinGW\bin\gcc.exe" (
-    set "BOOST_JAM_TOOLSET=mingw"
-    set "BOOST_JAM_TOOLSET_ROOT=C:\MinGW\"
+    set "B2_TOOLSET=mingw"
+    set "B2_TOOLSET_ROOT=C:\MinGW\"
     exit /b 0)
 REM Could not find a suitable toolset
 exit /b 1
