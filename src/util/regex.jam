@@ -198,6 +198,7 @@ rule __test__ ( )
     assert.result "&nbsp;string&nbsp;string" : replace " string string" " " "&nbsp;" ;
     assert.result "string&nbsp;&nbsp;string" : replace "string  string" " " "&nbsp;" ;
     assert.result "-" : replace "&" "&" "-" ;
+    assert.result "x" : replace "" "" "x" ;
 
     assert.result "-" "a-b" : replace-list "&" "a&b" : "&" : "-" ;
 }

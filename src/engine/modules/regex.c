@@ -108,7 +108,13 @@ LIST * regex_replace( FRAME * frame, int flags )
     {
         string_append_range( buf, pos, re->startp[ 0 ] );
         string_append( buf, object_str( replacement ) );
-        pos = re->endp[ 0 ];
+        /* Handle empty matches */
+        if ( *pos == '\0' )
+            break;
+        else if ( pos == re->endp[ 0 ] )
+            ++pos;
+        else
+            pos = re->endp[ 0 ];
     }
     string_append( buf, pos );
 
