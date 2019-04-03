@@ -186,7 +186,7 @@ set B2_SOURCES=%B2_SOURCES% modules/set.c
 set B2_CXXFLAGS=%B2_CXXFLAGS% -DNT -DNDEBUG
 
 @echo ON
-%B2_CXX% %CXXFLAGS% %B2_CXXFLAGS% %B2_SOURCES%
+%B2_CXX% %CXXFLAGS% %B2_CXXFLAGS% %B2_SOURCES% %B2_CXX_LINK%
 dir *.exe
 copy /b .\b2.exe .\bjam.exe
 
