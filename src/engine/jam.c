@@ -364,12 +364,11 @@ int main( int argc, char * * argv, char * * arg_environ )
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
-        out_printf( "Boost.Jam  Version %s. %s.\n", VERSION, OSMINOR );
-        out_printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce "
-            "Software, Inc.\n" );
+        out_printf( "B2 Version %s. %s.\n", VERSION, OSMINOR );
+        out_printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.\n" );
         out_printf( "   Copyright 2001 David Turner.\n" );
         out_printf( "   Copyright 2001-2004 David Abrahams.\n" );
-        out_printf( "   Copyright 2002-2015 Rene Rivera.\n" );
+        out_printf( "   Copyright 2002-2019 Rene Rivera.\n" );
         out_printf( "   Copyright 2003-2015 Vladimir Prus.\n" );
         return EXITOK;
     }
@@ -624,7 +623,7 @@ int main( int argc, char * * argv, char * * arg_environ )
                 globs.quitquick = atoi( object_str( list_front( p ) ) ) ? 0 : 1;
         }
 
-        
+
         if ( list_empty( targets_to_update() ) )
             mark_target_for_updating( constant_all );
 

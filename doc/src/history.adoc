@@ -1,0 +1,15 @@
+[[b2.history]]
+= History
+
+== Version 4.0.0
+
+After even more years of development the landscape of build systems has changed
+considerably, and so has the landscape of compilers. This version marks the
+start of B2 transitioning to a C++ implementation. Initially this means that
+the engine will be compiled as C++ source but that source is still the base
+C implementation. Over time it will transform to a C++ code base in both the
+engine and build system. Some changes in this start:
+
+* Requires C++ 11 to build engine.
+* Simplified build scripts to make it easier to maintain.
+* Building with C++ optimizations gives an immediate performance improvement.
