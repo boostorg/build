@@ -374,9 +374,6 @@ local rule dump-full-version ( command-string )
 
 local rule dump-version ( command-string )
 {
-    # -dumpfullversion is only supported for gcc 7+.
-    # Passing both options works, as the first one that's
-    # recognized will be used.
     return [ MATCH "^([0-9.]+)" :
         [ SHELL "$(command-string) -dumpversion" ] ] ;
 }
