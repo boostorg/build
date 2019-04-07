@@ -167,21 +167,21 @@ echo ### Using '%B2_TOOLSET%' toolset.
 echo ###
 
 set B2_SOURCES=
-set B2_SOURCES=%B2_SOURCES% builtins.c class.c
-set B2_SOURCES=%B2_SOURCES% command.c compile.c constants.c cwd.c
-set B2_SOURCES=%B2_SOURCES% debug.c debugger.c
-set B2_SOURCES=%B2_SOURCES% execcmd.c execnt.c filent.c filesys.c frames.c function.c
-set B2_SOURCES=%B2_SOURCES% glob.c hash.c hcache.c hdrmacro.c headers.c jam.c
-set B2_SOURCES=%B2_SOURCES% jambase.c jamgram.c lists.c make.c make1.c md5.c mem.c modules.c
-set B2_SOURCES=%B2_SOURCES% native.c object.c option.c output.c parse.c pathnt.c
-set B2_SOURCES=%B2_SOURCES% pathsys.c regexp.c rules.c scan.c search.c strings.c
-set B2_SOURCES=%B2_SOURCES% subst.c timestamp.c variable.c w32_getreg.c
-set B2_SOURCES=%B2_SOURCES% modules/order.c
-set B2_SOURCES=%B2_SOURCES% modules/path.c
-set B2_SOURCES=%B2_SOURCES% modules/property-set.c
-set B2_SOURCES=%B2_SOURCES% modules/regex.c
-set B2_SOURCES=%B2_SOURCES% modules/sequence.c
-set B2_SOURCES=%B2_SOURCES% modules/set.c
+set B2_SOURCES=%B2_SOURCES% builtins.cpp class.cpp
+set B2_SOURCES=%B2_SOURCES% command.cpp compile.cpp constants.cpp cwd.cpp
+set B2_SOURCES=%B2_SOURCES% debug.cpp debugger.cpp
+set B2_SOURCES=%B2_SOURCES% execcmd.cpp execnt.cpp filent.cpp filesys.cpp frames.cpp function.cpp
+set B2_SOURCES=%B2_SOURCES% glob.cpp hash.cpp hcache.cpp hdrmacro.cpp headers.cpp jam.cpp
+set B2_SOURCES=%B2_SOURCES% jambase.cpp jamgram.cpp lists.cpp make.cpp make1.cpp md5.cpp mem.cpp modules.cpp
+set B2_SOURCES=%B2_SOURCES% native.cpp object.cpp option.cpp output.cpp parse.cpp pathnt.cpp
+set B2_SOURCES=%B2_SOURCES% pathsys.cpp regexp.cpp rules.cpp scan.cpp search.cpp strings.cpp
+set B2_SOURCES=%B2_SOURCES% subst.cpp timestamp.cpp variable.cpp w32_getreg.cpp
+set B2_SOURCES=%B2_SOURCES% modules/order.cpp
+set B2_SOURCES=%B2_SOURCES% modules/path.cpp
+set B2_SOURCES=%B2_SOURCES% modules/property-set.cpp
+set B2_SOURCES=%B2_SOURCES% modules/regex.cpp
+set B2_SOURCES=%B2_SOURCES% modules/sequence.cpp
+set B2_SOURCES=%B2_SOURCES% modules/set.cpp
 
 set B2_CXXFLAGS=%B2_CXXFLAGS% -DNT -DNDEBUG
 

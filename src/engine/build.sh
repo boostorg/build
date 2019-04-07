@@ -371,61 +371,61 @@ echo_run ${CXX} ${CXX_VERSION_OPT}
 echo "###"
 echo "###"
 B2_SOURCES="\
- builtins.c \
- class.c \
- command.c \
- compile.c \
- constants.c \
- cwd.c \
- debug.c \
- debugger.c \
- execcmd.c \
- filesys.c \
- frames.c \
- function.c \
- glob.c\
- hash.c \
- hcache.c \
- hdrmacro.c \
- headers.c \
- jam.c \
- jambase.c \
- jamgram.c \
- lists.c \
- make.c \
- make1.c \
- md5.c \
- mem.c \
- modules.c \
- native.c \
- object.c \
- option.c \
- output.c \
- parse.c \
- pathsys.c \
- regexp.c \
- rules.c \
- scan.c \
- search.c \
- strings.c \
- subst.c \
- timestamp.c \
- variable.c \
- w32_getreg.c \
- modules/order.c \
- modules/path.c \
- modules/property-set.c \
- modules/regex.c \
- modules/sequence.c \
- modules/set.c \
+ builtins.cpp \
+ class.cpp \
+ command.cpp \
+ compile.cpp \
+ constants.cpp \
+ cwd.cpp \
+ debug.cpp \
+ debugger.cpp \
+ execcmd.cpp \
+ filesys.cpp \
+ frames.cpp \
+ function.cpp \
+ glob.cpp\
+ hash.cpp \
+ hcache.cpp \
+ hdrmacro.cpp \
+ headers.cpp \
+ jam.cpp \
+ jambase.cpp \
+ jamgram.cpp \
+ lists.cpp \
+ make.cpp \
+ make1.cpp \
+ md5.cpp \
+ mem.cpp \
+ modules.cpp \
+ native.cpp \
+ object.cpp \
+ option.cpp \
+ output.cpp \
+ parse.cpp \
+ pathsys.cpp \
+ regexp.cpp \
+ rules.cpp \
+ scan.cpp \
+ search.cpp \
+ strings.cpp \
+ subst.cpp \
+ timestamp.cpp \
+ variable.cpp \
+ w32_getreg.cpp \
+ modules/order.cpp \
+ modules/path.cpp \
+ modules/property-set.cpp \
+ modules/regex.cpp \
+ modules/sequence.cpp \
+ modules/set.cpp \
  "
 case $B2_OS in
     NT)
-    B2_SOURCES="${B2_SOURCES} execnt.c filent.c pathnt.c"
+    B2_SOURCES="${B2_SOURCES} execnt.cpp filent.cpp pathnt.cpp"
     ;;
 
     *)
-    B2_SOURCES="${B2_SOURCES} execunix.c fileunix.c pathunix.c"
+    B2_SOURCES="${B2_SOURCES} execunix.cpp fileunix.cpp pathunix.cpp"
     ;;
 esac
 

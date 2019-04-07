@@ -1,9 +1,22 @@
+# Copyright 2019 Rene Rivera
+# Copyright 2017 Steven Watanabe
+# Copyright 2016 Vladimir Prus
+# Copyright 2017 Edward Diener
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 path-constant SELF : . ;
 
 import path ;
 import package ;
 import os ;
+import feature ;
+import set ;
+
+
+#|
+Installation of the engine, build, and example files.
+|#
 
 local ext = "" ;
 if [ os.on-windows ] || [ os.on-vms ]
@@ -12,38 +25,77 @@ if [ os.on-windows ] || [ os.on-vms ]
 }
 
 package.install boost-build-engine boost-build
-  : # properties
-  : # binaries
-    $(SELF)/src/engine/b2$(ext)
-    $(SELF)/src/engine/bjam$(ext)
-  ;
+    : # properties
+    : # binaries
+        $(SELF)/src/engine/b2$(ext)
+    ;
+explicit boost-build-engine ;
 
-local e1 = [ path.glob-tree $(SELF)/example : * : . .svn ] ;
-local e2 ;
-for e in $(e1)
+local examples ;
+for local e in [ glob-tree-ex $(SELF)/example : * : . .svn ]
 {
-    e = [ path.native $(e) ] ;
-    if [ CHECK_IF_FILE $(e) ]
+    if [ CHECK_IF_FILE [ path.native $(e) ] ]
     {
-        e2 += $(e) ;
-    }    
+        examples += $(e) ;
+    }
 }
 
 package.install-data boost-build-core
-  : # Which subdir of $prefix/share
-    boost-build  
-  : # What to install
-    $(SELF)/boost-build.jam
-    $(SELF)/src/build-system.jam
-    [ path.glob-tree $(SELF)/src/build : *.jam *.py ]
-    [ path.glob-tree $(SELF)/src/contrib : *.jam *.py ]
-    [ path.glob-tree $(SELF)/src/kernel : *.jam *.py ]
-    [ path.glob-tree $(SELF)/src/options : *.jam *.py ]
-    [ path.glob-tree $(SELF)/src/util : *.jam *.py ]
-    [ path.glob-tree $(SELF)/src/tools : *.jam *.py *.xml *.xsl *.doxyfile *.hpp ]
-    $(e2)
-  : # What is the root of the directory
-    <install-source-root>.
-  ;
-  
+    : # Which subdir of $prefix/share
+        boost-build
+    : # What to install
+        $(SELF)/boost-build.jam
+        $(SELF)/src/build-system.jam
+        [ path.glob-tree $(SELF)/src/build : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/contrib : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/kernel : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/options : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/util : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/tools : *.jam *.py *.xml *.xsl *.doxyfile *.hpp ]
+        $(examples)
+    : # What is the root of the directory
+        <install-source-root>.
+    ;
+explicit boost-build-core ;
+
 alias install : boost-build-engine boost-build-core ;
+explicit install ;
+
+#|
+Build the engine and its dependencies outside of the simple core build scripts.
+This allows us to keep the core build scripts as simple as possible. And lets
+us support more functionality for development of the engine core.
+|#
+
+rule grammar ( target : source : properties * )
+{
+    LOCATE on $(target) = $(source:D) ;
+}
+actions grammar
+{
+    bison --yacc --defines -o $(<[1]) $(>)
+}
+make jamgram.cpp
+    :   src/engine/jamgram.y
+    :   @grammar ;
+explicit jamgram.cpp ;
+
+local b2_src =
+    [ glob src/engine/*.cpp src/engine/modules/*.cpp :
+        src/engine/*nt.cpp src/engine/*unix.cpp src/engine/*vms.cpp
+        src/engine/yyacc.cpp src/engine/mkjambase.cpp
+        ] ;
+local b2_src_nt = [ glob src/engine/*nt.cpp ] ;
+local b2_src_unix = [ glob src/engine/*unix.cpp ] ;
+local b2_src_vms = [ glob src/engine/*vms.cpp ] ;
+local unix_os = [ set.difference [ feature.values <target-os> ] : windows vms ] ;
+
+exe b2
+    :   $(b2_src)
+    :   <target-os>windows:<define>NT
+        <target-os>windows:<source>$(b2_src_nt)
+        <target-os>vms:<define>VMS
+        <target-os>vms:<source>$(b2_src_vms)
+        <target-os>$(unix_os):<source>$(b2_src_unix)
+    ;
+explicit b2 ;
