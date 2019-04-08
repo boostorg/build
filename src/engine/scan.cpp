@@ -15,7 +15,7 @@
 
 #include "constants.h"
 #include "jambase.h"
-#include "jamgram.h"
+#include "jamgram.hpp"
 
 
 struct keyword
@@ -684,7 +684,7 @@ int yylex()
         if ( !notkeyword && !( isalpha( *buf ) && ( scanmode == SCAN_PUNCT || scanmode == SCAN_PARAMS || scanmode == SCAN_ASSIGN ) ) )
             for ( k = keywords; k->word; ++k )
                 if ( ( *buf == *k->word ) && !strcmp( k->word, buf ) )
-                { 
+                {
                     yylval.type = k->type;
                     yylval.keyword = k->word;  /* used by symdump */
                     break;
