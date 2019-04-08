@@ -77,14 +77,13 @@ us support more functionality for development of the engine core.
 Define custom yyacc tool.
 |#
 
+feature.feature yyacc : : dependency free ;
+toolset.flags yyacc TOOL <yyacc> ;
+
 exe yyacc
     :   src/engine/yyacc.cpp
     :   ;
 explicit yyacc ;
-
-feature.feature yyacc : : dependency free ;
-
-toolset.flags yyacc YYACC <yyacc> ;
 
 rule yyacc-gen ( project name : property-set : sources * )
 {
@@ -101,21 +100,16 @@ rule yyacc-gen ( project name : property-set : sources * )
     return $(targets) ;
 }
 
-rule yyacc ( targets * : sources * : properties * )
+actions yyacc bind TOOL
 {
-    DEPENDS $(targets) : [ on $(targets) return $(YYACC) ] ;
-}
-
-actions yyacc bind YYACC
-{
-    "$(YYACC:E=yyacc)" "$(<)" "$(>)"
+    "$(TOOL)" "$(<)" "$(>)"
 }
 
 generate jamgram.y
     :   src/engine/jamgram.yy
     :   <generating-rule>@yyacc-gen
-        <yyacc>yyacc
         <location>src/engine
+        <yyacc>yyacc <dependency>yyacc
     ;
 explicit jamgram.y ;
 
@@ -144,6 +138,30 @@ make jamgram.cpp
 explicit jamgram.cpp ;
 
 #|
+Generate the embedded jambase.
+|#
+
+feature.feature mkjambase : : dependency free ;
+toolset.flags mkjambase TOOL <mkjambase> ;
+
+exe mkjambase
+    :   src/engine/mkjambase.cpp
+    ;
+explicit mkjambase ;
+
+actions mkjambase bind TOOL
+{
+    "$(TOOL)" "$(<)" "$(>)"
+}
+
+make jambase.cpp
+    :   src/engine/Jambase
+    :   @mkjambase
+    :   <location>src/engine
+        <mkjambase>mkjambase <dependency>mkjambase ;
+explicit jambase.cpp ;
+
+#|
 Define the b2 executable. Sources are based on platform.
 TODO: Make platform specific source be no-ops when not needed.
 |#
@@ -166,5 +184,6 @@ exe b2
         <target-os>vms:<source>$(b2_src_vms)
         <target-os>$(unix_os):<source>$(b2_src_unix)
         <dependency>jamgram.cpp
+        <dependency>jambase.cpp
     ;
 explicit b2 ;
