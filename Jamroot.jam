@@ -12,6 +12,12 @@ import package ;
 import os ;
 import feature ;
 import set ;
+import toolset ;
+import bison ;
+import indirect ;
+import "class" : new ;
+import type ;
+import virtual-target ;
 
 
 #|
@@ -67,18 +73,80 @@ This allows us to keep the core build scripts as simple as possible. And lets
 us support more functionality for development of the engine core.
 |#
 
+#|
+Define custom yyacc tool.
+|#
+
+exe yyacc
+    :   src/engine/yyacc.cpp
+    :   ;
+explicit yyacc ;
+
+feature.feature yyacc : : dependency free ;
+
+toolset.flags yyacc YYACC <yyacc> ;
+
+rule yyacc-gen ( project name : property-set : sources * )
+{
+    local relevant = [ toolset.relevant $(__name__).yyacc ] ;
+    local a = [ new action $(sources[1]) : $(__name__).yyacc : [ $(property-set).add $(relevant) ] ] ;
+    local targets ;
+    for local n in $(name:S=).y $(name:S=)tab.h
+    {
+        targets += [ virtual-target.register
+            [ new file-target $(n) exact : [ type.type $(n) ]
+                : $(project) : $(a)
+                ] ] ;
+    }
+    return $(targets) ;
+}
+
+rule yyacc ( targets * : sources * : properties * )
+{
+    DEPENDS $(targets) : [ on $(targets) return $(YYACC) ] ;
+}
+
+actions yyacc bind YYACC
+{
+    "$(YYACC:E=yyacc)" "$(<)" "$(>)"
+}
+
+generate jamgram.y
+    :   src/engine/jamgram.yy
+    :   <generating-rule>@yyacc-gen
+        <yyacc>yyacc
+        <location>src/engine
+    ;
+explicit jamgram.y ;
+
+#|
+Define grammar translation with Bison.
+|#
+
 rule grammar ( target : source : properties * )
 {
-    LOCATE on $(target) = $(source:D) ;
+    # LOCATE on $(target) = $(source:D) ;
+    local BISON = [ os.environ BISON ] ;
+    BISON ?= bison ;
+    BISON on $(target) = $(BISON) ;
 }
+
 actions grammar
 {
-    bison --yacc --defines -o $(<[1]) $(>)
+    "$(BISON)" --yacc --defines -o "$(<[1])" "$(>)"
 }
+
 make jamgram.cpp
     :   src/engine/jamgram.y
-    :   @grammar ;
+    :   @grammar
+    :   <dependency>jamgram.y
+        <location>src/engine ;
 explicit jamgram.cpp ;
+
+#|
+Define the b2 executable. Sources are based on platform.
+TODO: Make platform specific source be no-ops when not needed.
+|#
 
 local b2_src =
     [ glob src/engine/*.cpp src/engine/modules/*.cpp :
@@ -97,5 +165,6 @@ exe b2
         <target-os>vms:<define>VMS
         <target-os>vms:<source>$(b2_src_vms)
         <target-os>$(unix_os):<source>$(b2_src_unix)
+        <dependency>jamgram.cpp
     ;
 explicit b2 ;
