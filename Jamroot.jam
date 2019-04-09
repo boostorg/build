@@ -145,10 +145,16 @@ explicit b2 ;
 Installation of the engine, build, and example files.
 |#
 
+local ext = "" ;
+if [ os.on-windows ] || [ os.on-vms ]
+{
+    ext = ".exe" ;
+}
+
 package.install boost-build-engine boost-build
     : # properties
     : # binaries
-        b2
+        $(SELF)/src/engine/b2$(ext)
     ;
 explicit boost-build-engine ;
 
