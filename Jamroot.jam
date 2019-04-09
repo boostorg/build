@@ -21,53 +21,6 @@ import virtual-target ;
 
 
 #|
-Installation of the engine, build, and example files.
-|#
-
-local ext = "" ;
-if [ os.on-windows ] || [ os.on-vms ]
-{
-    ext = ".exe" ;
-}
-
-package.install boost-build-engine boost-build
-    : # properties
-    : # binaries
-        $(SELF)/src/engine/b2$(ext)
-    ;
-explicit boost-build-engine ;
-
-local examples ;
-for local e in [ glob-tree-ex $(SELF)/example : * : . .svn ]
-{
-    if [ CHECK_IF_FILE [ path.native $(e) ] ]
-    {
-        examples += $(e) ;
-    }
-}
-
-package.install-data boost-build-core
-    : # Which subdir of $prefix/share
-        boost-build
-    : # What to install
-        $(SELF)/boost-build.jam
-        $(SELF)/src/build-system.jam
-        [ path.glob-tree $(SELF)/src/build : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/contrib : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/kernel : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/options : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/util : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/tools : *.jam *.py *.xml *.xsl *.doxyfile *.hpp ]
-        $(examples)
-    : # What is the root of the directory
-        <install-source-root>.
-    ;
-explicit boost-build-core ;
-
-alias install : boost-build-engine boost-build-core ;
-explicit install ;
-
-#|
 Build the engine and its dependencies outside of the simple core build scripts.
 This allows us to keep the core build scripts as simple as possible. And lets
 us support more functionality for development of the engine core.
@@ -187,3 +140,44 @@ exe b2
         <dependency>jambase.cpp
     ;
 explicit b2 ;
+
+#|
+Installation of the engine, build, and example files.
+|#
+
+package.install boost-build-engine boost-build
+    : # properties
+    : # binaries
+        b2
+    ;
+explicit boost-build-engine ;
+
+local examples ;
+for local e in [ glob-tree-ex $(SELF)/example : * : . .svn ]
+{
+    if [ CHECK_IF_FILE [ path.native $(e) ] ]
+    {
+        examples += $(e) ;
+    }
+}
+
+package.install-data boost-build-core
+    : # Which subdir of $prefix/share
+        boost-build
+    : # What to install
+        $(SELF)/boost-build.jam
+        $(SELF)/src/build-system.jam
+        [ path.glob-tree $(SELF)/src/build : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/contrib : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/kernel : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/options : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/util : *.jam *.py ]
+        [ path.glob-tree $(SELF)/src/tools : *.jam *.py *.xml *.xsl *.doxyfile *.hpp ]
+        $(examples)
+    : # What is the root of the directory
+        <install-source-root>.
+    ;
+explicit boost-build-core ;
+
+alias install : boost-build-engine boost-build-core ;
+explicit install ;
