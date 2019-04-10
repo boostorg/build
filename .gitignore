@@ -6,7 +6,7 @@
 /bjam
 /b2.exe
 /bjam.exe
-/bin
+/.build
 /bootstrap.log
 /test/test_results.txt
 /project-config.jam

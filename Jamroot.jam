@@ -5,8 +5,6 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-path-constant SELF : . ;
-
 import path ;
 import package ;
 import os ;
@@ -19,6 +17,11 @@ import "class" : new ;
 import type ;
 import virtual-target ;
 
+path-constant SELF : . ;
+
+project b2
+    : build-dir .build
+    ;
 
 #|
 Build the engine and its dependencies outside of the simple core build scripts.
