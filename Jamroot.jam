@@ -119,6 +119,33 @@ Define the b2 executable. Sources are based on platform.
 TODO: Make platform specific source be no-ops when not needed.
 |#
 
+local python-exe = [ MATCH --with-python=(.*) : [ modules.peek : ARGV ] ] ;
+local python-include ;
+local python-ldlib ;
+if $(python-exe)
+{
+    python-include = [ SHELL
+        "$(python-exe) -c \"import sysconfig; print(sysconfig.get_path('include'));\""
+        : strip-eol ] ;
+    python-libdir = [ SHELL
+        "$(python-exe) -c \"import sysconfig; import os.path; print(sysconfig.get_config_var('LIBDIR'));\""
+        : strip-eol ] ;
+    python-ldlib = [ MATCH ".*(python.*)" : [ SHELL
+        "$(python-exe) -c \"import sysconfig; import os.path; print(sysconfig.get_config_var('LIBRARY'));\""
+        : strip-eol ] ] ;
+    python-ldlib = $(python-ldlib:S=) ;
+
+    lib python
+        :
+        : <name>$(python-ldlib) <search>$(python-libdir)
+        :
+        : <include>$(python-include) <define>HAVE_PYTHON ;
+}
+else
+{
+    alias python ;
+}
+
 local b2_src =
     [ glob src/engine/*.cpp src/engine/modules/*.cpp :
         src/engine/*nt.cpp src/engine/*unix.cpp src/engine/*vms.cpp
@@ -131,6 +158,7 @@ local unix_os = [ set.difference [ feature.values <target-os> ] : windows vms ] 
 
 exe b2
     :   $(b2_src)
+        python
     :   <target-os>windows:<define>NT
         <target-os>windows:<source>$(b2_src_nt)
         <target-os>vms:<define>VMS
