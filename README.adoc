@@ -1,0 +1,18 @@
+= B2
+
+B2 makes it easy to build C++ projects, everywhere.
+
+image:https://img.shields.io/badge/license-BSL%201.0-blue.svg["Boost Software License 1.0", link="LICENSE.txt"]
+image:https://img.shields.io/github/languages/code-size/boostorg/build.svg[GitHub code size in bytes]
+
+== License
+
+Distributed under the Boost Software License, Version 1.0. (See accompanying
+file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
+== More
+
+See the link:https://boostorg.github.io/build/[website] for more information.
+
+See the link:CONTRIBUTING.rst[guidelines for contributing] if you would like
+to get involved in the development.
