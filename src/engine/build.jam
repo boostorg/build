@@ -343,15 +343,15 @@ toolset vacpp xlc : "-o " : -D
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
     -I$(--python-include) -I$(--extra-include)
     : -L$(--python-lib[1]) -l$(--python-lib[2]) [ if-os AIX : "-bmaxdata:0x40000000" ] ;
-    
+
 ## IBM XL C/C++ for Linux (little endian)
 toolset xlcpp xlC :  "-o " : -D
     : -Wno-unused -Wno-format
     [ opt --release : -s  ]
     [ opt --debug : -g -qNOOPTimize -qnoinline -pg ]
     -I$(--python-include) -I$(--extra-include)
-    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;    
-    
+    : -L$(--python-lib[1]) -l$(--python-lib[2]) ;
+
 ## Microsoft Visual C++ .NET 7.x
 toolset vc7 cl : /Fe /Fe /Fd /Fo : -D
     : /nologo
@@ -525,25 +525,25 @@ if --show-locate-target in $(ARGV)
 
 # We have some different files for UNIX, VMS, and NT.
 jam.source =
-    command.c compile.c constants.c debug.c debugger.c execcmd.c frames.c function.c glob.c
-    hash.c hcache.c headers.c hdrmacro.c jam.c jambase.c jamgram.c lists.c
-    make.c make1.c mem.c object.c option.c output.c parse.c pathsys.c regexp.c
-    rules.c scan.c search.c subst.c w32_getreg.c timestamp.c variable.c
-    modules.c strings.c filesys.c builtins.c class.c cwd.c native.c md5.c
-    [ .path modules set.c ] [ .path modules path.c ] [ .path modules regex.c ]
-    [ .path modules property-set.c ] [ .path modules sequence.c ] [ .path modules order.c ] ;
+    command.cpp compile.cpp constants.cpp debug.cpp debugger.cpp execcmd.cpp frames.cpp function.cpp glob.cpp
+    hash.cpp hcache.cpp headers.cpp hdrmacro.cpp jam.cpp jambase.cpp jamgram.cpp lists.cpp
+    make.cpp make1.cpp mem.cpp object.cpp option.cpp output.cpp parse.cpp pathsys.cpp regexp.cpp
+    rules.cpp scan.cpp search.cpp subst.cpp w32_getreg.cpp timestamp.cpp variable.cpp
+    modules.cpp strings.cpp filesys.cpp builtins.cpp class.cpp cwd.cpp native.cpp md5.cpp
+    [ .path modules set.cpp ] [ .path modules path.cpp ] [ .path modules regex.cpp ]
+    [ .path modules property-set.cpp ] [ .path modules sequence.cpp ] [ .path modules order.cpp ] ;
 if $(OS) = NT
 {
-    jam.source += execnt.c filent.c pathnt.c ;
+    jam.source += execnt.cpp filent.cpp pathnt.cpp ;
 }
 else if $(OS) = VMS
 {
-    jam.source += execvms.c filevms.c pathvms.c ;
+    jam.source += execvms.cpp filevms.cpp pathvms.cpp ;
     --flags += /INCLUDE=(\""./modules"\") ;
 }
 else
 {
-    jam.source += execunix.c fileunix.c pathunix.c ;
+    jam.source += execunix.cpp fileunix.cpp pathunix.cpp ;
 }
 
 # Debug assertions, or not.
@@ -757,7 +757,7 @@ if $(OS) = VMS { actions "[MOVE]" {
 # Generate the grammar tokens table, and the real yacc grammar.
 rule .yyacc
 {
-    local exe = [ .exe yyacc : yyacc.c ] ;
+    local exe = [ .exe yyacc : yyacc.cpp ] ;
     NOUPDATE $(exe) ;
     DEPENDS $(<) : $(exe) $(>) ;
     LEAVES $(<) ;
@@ -775,7 +775,7 @@ if $(grammar)
 }
 else if $(debug)
 {
-    .exe yyacc : yyacc.c ;
+    .exe yyacc : yyacc.cpp ;
 }
 
 # How to build the grammar.
@@ -841,13 +841,13 @@ if $(grammar) && ! $(yacc)
 }
 if $(grammar) && $(yacc)
 {
-    .yacc jamgram.c jamgram.h : jamgram.y ;
+    .yacc jamgram.cpp jamgram.h : jamgram.y ;
 }
 
 # How to build the compiled in jambase.
 rule .mkjambase
 {
-    local exe = [ .exe mkjambase : mkjambase.c ] ;
+    local exe = [ .exe mkjambase : mkjambase.cpp ] ;
     DEPENDS $(<) : $(exe) $(>) ;
     LEAVES $(<) ;
     mkjambase.exe on $(<) = $(exe:R=$(locate-target)) ;
@@ -859,7 +859,7 @@ actions "[MKJAMBASE]" {
 }
 if $(debug)
 {
-    .mkjambase jambase.c : Jambase ;
+    .mkjambase jambase.cpp : Jambase ;
 }
 
 # How to build Jam.
@@ -919,7 +919,7 @@ dist.docs = $(dist.docs:D=)
     [ GLOB [ .path jam ] : *.html ]
     ;
 dist.source =
-    [ GLOB . : *.c *.h ]
+    [ GLOB . : *.cpp *.h ]
     ;
 dist.source = $(dist.source:D=)
     $(dist.license[1])
@@ -927,12 +927,12 @@ dist.source = $(dist.source:D=)
     build.jam build.bat build.sh build_vms.com
     Jambase
     jamgram.y jamgram.yy
-    [ .path modules set.c ]
-    [ .path modules path.c ]
-    [ .path modules regex.c ]
-    [ .path modules property-set.c ]
-    [ .path modules sequence.c ]
-    [ .path modules order.c ]
+    [ .path modules set.cpp ]
+    [ .path modules path.cpp ]
+    [ .path modules regex.cpp ]
+    [ .path modules property-set.cpp ]
+    [ .path modules sequence.cpp ]
+    [ .path modules order.cpp ]
     [ GLOB [ .path boehm_gc ] : * ]
     [ GLOB [ .path boehm_gc include ] : * ]
     [ GLOB [ .path boehm_gc include private ] : * ]
