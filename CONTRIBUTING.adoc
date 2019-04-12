@@ -63,18 +63,18 @@ The good message mentions each changed file and each rule/method, saying
 what happened to it, and why. Consider, the following log message
 
 ----
-    Better direct request handling.
+Better direct request handling.
 
-    * new/build-request.jam
-      (directly-requested-properties-adjuster): Redo.
+* new/build-request.jam
+    (directly-requested-properties-adjuster): Redo.
 
-    * new/targets.jam
-      (main-target.generate-really): Adjust properties here.
+* new/targets.jam
+    (main-target.generate-really): Adjust properties here.
 
-    * new/virtual-target.jam
-      (register-actual-name): New rule.
-      (virtual-target.actualize-no-scanner): Call the above, to detected bugs,
-        where two virtual target correspond to one Jam target name.
+* new/virtual-target.jam
+    (register-actual-name): New rule.
+    (virtual-target.actualize-no-scanner): Call the above, to detected bugs,
+    where two virtual target correspond to one Jam target name.
 ----
 
 The messages for the last two files are good. They tell what was changed.
