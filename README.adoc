@@ -14,5 +14,5 @@ file LICENSE.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 See the link:https://boostorg.github.io/build/[website] for more information.
 
-See the link:CONTRIBUTING.rst[guidelines for contributing] if you would like
+See the link:CONTRIBUTING.adoc[guidelines for contributing] if you would like
 to get involved in the development.
