@@ -20,7 +20,7 @@ Continuously tested on:
 * Windows MinGW 8.1.0
 * Windows VS 2013, 2015, 2017, 2019
 
-image:https://img.shields.io/azure-devops/build/grafikrobot/200cb3a3-3fcf-4a47-85ad-3cc17f2bec9e/3/develop.svg?label=develop&logo=azuredevops["Linux/Windows/macOS: master", link="https://dev.azure.com/grafikrobot/B2"]
+image:https://img.shields.io/azure-devops/build/grafikrobot/200cb3a3-3fcf-4a47-85ad-3cc17f2bec9e/3/master.svg?label=master&logo=azuredevops["Linux/Windows/macOS: master", link="https://dev.azure.com/grafikrobot/B2"]
 image:https://img.shields.io/azure-devops/build/grafikrobot/200cb3a3-3fcf-4a47-85ad-3cc17f2bec9e/3/develop.svg?label=develop&logo=azuredevops["Linux/Windows/macOS: develop", link="https://dev.azure.com/grafikrobot/B2"]
 
 == More
