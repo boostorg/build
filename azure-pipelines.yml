@@ -5,7 +5,15 @@
 # Copyright Rene Rivera 2015-2019.
 
 trigger:
-- feature/cxx
+  branches:
+    include:
+    - develop
+    - master
+    - feature/*
+pr:
+  branches:
+    include:
+    - develop
 
 jobs:
 
