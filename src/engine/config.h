@@ -22,7 +22,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 #if defined(_WIN32) || defined(_WIN64) || \
     defined(__WIN32__) || defined(__TOS_WIN__) || \
     defined(__WINDOWS__)
-    #define NT
+    #define NT 1
 #endif
 
 #if defined(__VMS) || defined(__VMS_VER)
