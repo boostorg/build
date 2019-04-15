@@ -162,9 +162,7 @@ local unix_os = [ set.difference [ feature.values <target-os> ] : windows vms ] 
 exe b2
     :   $(b2_src)
         python
-    :   <target-os>windows:<define>NT
-        <target-os>windows:<source>$(b2_src_nt)
-        <target-os>vms:<define>VMS
+    :   <target-os>windows:<source>$(b2_src_nt)
         <target-os>vms:<source>$(b2_src_vms)
         <target-os>$(unix_os):<source>$(b2_src_unix)
         <dependency>jamgram.cpp
