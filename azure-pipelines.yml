@@ -129,6 +129,7 @@ jobs:
         cd src/engine
         set PATH=${PATH};${CXX_PATH}
         ./build.sh ${TOOLSET}
+        ./b2 -v
         cd ../..
     displayName: Build
   - bash: |
@@ -177,6 +178,7 @@ jobs:
         cd src/engine
         $env:path += ';' + $env:CXX_PATH
         cmd /c build.bat $env:TOOLSET
+        ./b2.exe -v
         cd ../..
     displayName: Build
   - powershell: |
@@ -263,6 +265,7 @@ jobs:
         set -e
         cd src/engine
         ./build.sh ${TOOLSET}
+        ./b2 -v
         cd ../..
     displayName: Build
   - bash: |
