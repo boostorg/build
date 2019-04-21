@@ -13,4 +13,6 @@ from.
 
 include::../../example/hello/readme.adoc[]
 
+include::../../example/sanitizers/readme.adoc[]
+
 :leveloffset: -1
