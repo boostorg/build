@@ -287,7 +287,8 @@ stages:
         ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
 
-- stage: 'Website Update'
+- stage: WebsiteUpdate
+  displayName: 'Website Update'
   condition: in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/develop')
   jobs:
 
