@@ -296,6 +296,8 @@ stages:
     pool:
       vmImage: 'ubuntu-16.04'
     steps:
+    - task: UsePythonVersion@0
+    - task: UseRubyVersion@0
     - bash: |
         gem install asciidoctor
         gem install pygments.rb
@@ -306,4 +308,5 @@ stages:
         echo "using asciidoctor ;" >> project-config.jam
         ./bootstrap.sh
         pushd doc
-        ../b2 --website-doc-dir=manual/${TRAVIS_BRANCH} website
+        ../b2 --website-doc-dir=manual/$(Build.SourceBranchName) website
+      displayName: 'Build & Publish'
