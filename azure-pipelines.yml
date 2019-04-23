@@ -299,10 +299,10 @@ stages:
     - task: UsePythonVersion@0
     - task: UseRubyVersion@0
     - bash: |
-        gem install asciidoctor
-        gem install pygments.rb
         pip install --user Pygments
         pip install --user "https://github.com/bfgroup/jam_pygments/archive/master.zip"
+        gem install asciidoctor
+        gem install pygments.rb
         git config user.email "b2-bot"
         git config user.name "b2-bot"
         echo "using asciidoctor ;" >> project-config.jam
@@ -310,3 +310,5 @@ stages:
         pushd doc
         ../b2 --website-doc-dir=manual/$(Build.SourceBranchName) website
       displayName: 'Build & Publish'
+      env:
+        GH_TOKEN: $(GitHubToken)
