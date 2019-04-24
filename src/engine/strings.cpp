@@ -148,7 +148,8 @@ void string_append_range( string * self, char const * start, char const * finish
 
     maybe_reserve( self, new_size );
 
-    memcpy( self->value + self->size, start, rhs_size );
+    if ( start != finish )
+        memcpy( self->value + self->size, start, rhs_size );
     self->size = new_size;
     self->value[ new_size ] = 0;
 

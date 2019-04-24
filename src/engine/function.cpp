@@ -1537,8 +1537,9 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
     memcpy( result->code, c->code->data, c->code->size * sizeof( instruction ) );
 
     result->constants = (OBJECT**)BJAM_MALLOC( c->constants->size * sizeof( OBJECT * ) );
-    memcpy( result->constants, c->constants->data, c->constants->size * sizeof(
-        OBJECT * ) );
+    if ( c->constants->size != 0 )
+        memcpy( result->constants, c->constants->data,
+                c->constants->size * sizeof( OBJECT * ) );
     result->num_constants = c->constants->size;
 
     result->num_subfunctions = c->rules->size;
@@ -1555,8 +1556,9 @@ static JAM_FUNCTION * compile_to_function( compiler * c )
     }
 
     result->actions = (SUBACTION*)BJAM_MALLOC( c->actions->size * sizeof( SUBACTION ) );
-    memcpy( result->actions, c->actions->data, c->actions->size * sizeof(
-        SUBACTION ) );
+    if ( c->actions->size != 0 )
+        memcpy( result->actions, c->actions->data,
+                c->actions->size * sizeof( SUBACTION ) );
     result->num_subactions = c->actions->size;
 
     result->generic = 0;
@@ -3417,8 +3419,9 @@ static struct arg_list arg_compile_impl( struct argument_compiler * c,
     }
     result.size = c->args->size;
     result.args = (struct argument*)BJAM_MALLOC( c->args->size * sizeof( struct argument ) );
-    memcpy( result.args, c->args->data, c->args->size * sizeof( struct argument
-        ) );
+    if ( c->args->size != 0 )
+        memcpy( result.args, c->args->data,
+                c->args->size * sizeof( struct argument ) );
     return result;
 }
 
@@ -3515,8 +3518,9 @@ static struct arg_list * arg_list_compile_builtin( char const * * args,
         }
         *num_arguments = c->args->size;
         result = (struct arg_list *)BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
-        memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list )
-            );
+        if ( c->args->size != 0 )
+            memcpy( result, c->args->data,
+                    c->args->size * sizeof( struct arg_list ) );
         argument_list_compiler_free( c );
         return result;
     }
