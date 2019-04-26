@@ -55,6 +55,7 @@ html index : src/standalone.adoc :
         <flags>--require=$(PYGMENTS_DIR)/pygments_init.rb
         <flags>--trace
         <flags>--verbose
+        <dependency>$(PYGMENTS_DIR)/pygments_init.rb
     ;
 explicit index ;
 

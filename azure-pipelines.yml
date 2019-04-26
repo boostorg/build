@@ -297,6 +297,7 @@ stages:
       vmImage: 'ubuntu-16.04'
     steps:
     - task: UsePythonVersion@0
+      versionSpec: '2.x'
     - task: UseRubyVersion@0
     - bash: |
         pip install --user Pygments
