@@ -33,8 +33,8 @@ feature.feature architecture
         # RISC-V
         riscv
 
-        # z Systems (aka s390)
-        s390
+        # z Systems (aka s390x)
+        s390x
 
         # Combined architectures for platforms/toolsets that support building for
         # multiple architectures at once. "combined" would be the default multi-arch
