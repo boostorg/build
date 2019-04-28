@@ -814,7 +814,7 @@ using python
 : # conditions
 ;
 
-using python 
+using python
 : 3.5 # version
 : # Interpreter/path to dir
 : /usr/include/python3.5 # includes
@@ -828,7 +828,7 @@ using python
 : C:\\Python27-32\\python.exe # Interperter/path to dir
 : C:\\Python27-32\\include # includes
 : C:\\Python27-32\\libs # libs
-: <address-model>32 <address-model> # conditions - both 32 and unspecified 
+: <address-model>32 <address-model> # conditions - both 32 and unspecified
 ;
 
 using python
@@ -1519,9 +1519,9 @@ passing a command line option to it. You would not want to pass that
 option to other compilers. Conditional properties allow you to do just
 that. Their syntax is:
 
-----
+....
 property ( "," property ) * ":" property
-----
+....
 
 For example, the problem above would be solved by:
 
@@ -1542,14 +1542,14 @@ exe hello : hello.cpp : <os>NT,<toolset>gcc:<link>static ;
 
 _Target identifier_ is used to denote a target. The syntax is:
 
-----
+....
 target-id -> (target-name | file-name | project-id | directory-name)
               | (project-id | directory-name) "//" target-name
 project-id -> path
 target-name -> path
 file-name -> path
 directory-name -> path
-----
+....
 
 This grammar allows some elements to be recognized as either
 
@@ -1583,10 +1583,10 @@ _Target reference_ is used to specify a source target, and may
 additionally specify desired properties for that target. It has this
 syntax:
 
-----
+....
 target-reference -> target-id [ "/" requested-properties ]
 requested-properties -> property-path
-----
+....
 
 For example,
 

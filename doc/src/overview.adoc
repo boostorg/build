@@ -46,6 +46,7 @@ commands that are used to create them from other target. The below
 example creates `a.o` from `a.c` using a hardcoded compiler invocation
 command.
 
+[source,make]
 ----
 a.o: a.c
     g++ -o a.o -g a.c
@@ -59,6 +60,7 @@ To improve portability, most modern build system provide a set of
 higher-level functions that can be used in build description files.
 Consider this example:
 
+[source,cmake]
 ----
 add_program ("a", "a.c")
 ----

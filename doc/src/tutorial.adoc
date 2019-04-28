@@ -181,7 +181,7 @@ project of a subproject is defined by the nearest Jamfile
 file in an ancestor directory. For example, in the following directory
 layout:
 
-----
+....
 top/
   |
   +-- Jamfile
@@ -197,7 +197,7 @@ top/
        .    |
        .    +-- Jamfile
        .    `-- bar.cpp
-----
+....
 
 the project root is `top/`. The projects in `top/app/` and
 `top/util/foo/` are immediate children of the root project.
