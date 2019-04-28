@@ -13,3 +13,9 @@ engine and build system. Some changes in this start:
 * Requires {CPP} 11 to build engine.
 * Simplified build scripts to make it easier to maintain.
 * Building with {CPP} optimizations gives an immediate performance improvement.
+
+Other changes in this release:
+
+* Add support for using prebuilt OpenSSL. -- _Damian Jarek_
+* Define the riscv architecture feature. -- _Andreas Schwab_
+* Add ARM64 as a valid architecture for MSVC. -- _Marc Sweetgall_
