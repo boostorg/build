@@ -305,8 +305,6 @@ stages:
         pip install --user "https://github.com/bfgroup/jam_pygments/archive/master.zip"
         gem install asciidoctor
         gem install pygments.rb
-        git config user.email "b2-bot"
-        git config user.name "b2-bot"
         echo "using asciidoctor ;" >> project-config.jam
         ./bootstrap.sh
         pushd doc

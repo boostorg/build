@@ -102,6 +102,8 @@ actions website-publish
 {
     CD=${PWD}
     cd "$(website-dir)/$(website-doc-dir)"
+    git config user.email "b2-bot"
+    git config user.name "b2-bot"
     git add --verbose . || exit 1
     git commit -m "Update user manual."
     git push || exit 1
