@@ -265,6 +265,9 @@ def register_globals ():
         # Advanced RISC Machines
         'arm',
 
+	# z Systems (aka s390x)
+	's390x',
+
         # Combined architectures for platforms/toolsets that support building for
         # multiple architectures at once. "combined" would be the default multi-arch
         # for the toolset.
@@ -310,7 +313,10 @@ def register_globals ():
 
         # Advanced RISC Machines
         'armv2', 'armv2a', 'armv3', 'armv3m', 'armv4', 'armv4t', 'armv5',
-        'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312'],
+        'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312',
+
+	# z Systems (aka s390x)
+	'z196', 'zEC12', 'z13', 'z13', 'z14'],
 
         ['propagated', 'optional'])
 
