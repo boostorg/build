@@ -19,3 +19,6 @@ Other changes in this release:
 * Add support for using prebuilt OpenSSL. -- _Damian Jarek_
 * Define the riscv architecture feature. -- _Andreas Schwab_
 * Add ARM64 as a valid architecture for MSVC. -- _Marc Sweetgall_
+* Set coverage flags, from coverage feature, for gcc and clang. -- _Damian Jarek_
+* Add s390x CPU and support in gcc/clang. -- _Neale Ferguson_
+* Support importing pkg-config packages. -- _Dmitry Arkhipov_
