@@ -176,6 +176,12 @@ case $B2_TOOLSET in
         B2_OS="NT"
         ;;
 
+        *cygwin*)
+        B2_CXX="${CXX} -x c++ -std=gnu11"
+        B2_CXXFLAGS_RELEASE="-O2 -s"
+        B2_CXXFLAGS_DEBUG="-O0 -g"
+        ;;
+
         *)
         B2_CXX="${CXX} -x c++ -std=c++11"
         B2_CXXFLAGS_RELEASE="-O2 -s"
