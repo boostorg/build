@@ -18,3 +18,7 @@ feature.feature undefined-sanitizer
 feature.feature thread-sanitizer
     : on norecover
     : propagated optional ;
+feature.feature leak-sanitizer
+    : on norecover
+    : propagated optional ;
+
