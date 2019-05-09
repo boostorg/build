@@ -53,10 +53,12 @@
 #endif
 
 #include <io.h>
+#if !defined(__BORLANDC__)
 #define dup _dup
 #define dup2 _dup2
 #define open _open
 #define close _close
+#endif /* __BORLANDC__ */
 #endif /* OS_NT */
 
 #if defined(USE_EXECUNIX)
