@@ -392,6 +392,8 @@ using gcc ;
 
 will make the http://gcc.gnu.org[GCC] compiler available.
 
+NOTE: Use the `using` rule exclusively in the configuration files.
+
 All the supported tools are documented in
 link:#bbv2.reference.tools[the section called “Builtin tools”], including the
 specific options they take. Some general notes that apply to most {CPP}
