@@ -22,3 +22,4 @@ Other changes in this release:
 * Set coverage flags, from coverage feature, for gcc and clang. -- _Damian Jarek_
 * Add s390x CPU and support in gcc/clang. -- _Neale Ferguson_
 * Support importing pkg-config packages. -- _Dmitry Arkhipov_
+* Support for leak sanitizer. -- _Damian Jarek_
