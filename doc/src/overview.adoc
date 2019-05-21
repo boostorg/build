@@ -392,6 +392,12 @@ using gcc ;
 
 will make the http://gcc.gnu.org[GCC] compiler available.
 
+TIP: You can put `using <tool> ;` with no other argument in a Jamfile
+that needs the `tool`, provided that the `tool` supports this usage.
+In all other cases, the `using` rule should be in a configuration file.
+The general principle is that descriptions in Jamfile should be
+maintained as portable while configuration files are system specific.
+
 All the supported tools are documented in
 link:#bbv2.reference.tools[the section called “Builtin tools”], including the
 specific options they take. Some general notes that apply to most {CPP}
