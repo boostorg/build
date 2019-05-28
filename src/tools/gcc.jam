@@ -1308,5 +1308,10 @@ cpu-flags gcc OPTIONS : s390x : z196 : -march=z196 ;
 cpu-flags gcc OPTIONS : s390x : zEC12 : -march=zEC12 ;
 cpu-flags gcc OPTIONS : s390x : z13 : -march=z13 ;
 cpu-flags gcc OPTIONS : s390x : z14 : -march=z14 ;
+# ARM
+cpu-flags gcc OPTIONS : arm : cortex-a9+vfpv3 : -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard ;
+cpu-flags gcc OPTIONS : arm : cortex-a53 : -mcpu=cortex-a53 ;
+cpu-flags gcc OPTIONS : arm : cortex-r5 : -mcpu=cortex-r5 ;
+cpu-flags gcc OPTIONS : arm : cortex-r5+vfpv3-d16 : -mcpu=cortex-r5 -mfpu=vfpv3-d16 -mfloat-abi=hard ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;
