@@ -134,6 +134,7 @@
 #include "timestamp.h"
 #include "variable.h"
 #include "execcmd.h"
+#include "sysinfo.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC
@@ -372,6 +373,11 @@ int main( int argc, char * * argv, char * * arg_environ )
         out_printf( "   Copyright 2003-2015 Vladimir Prus.\n" );
         return EXITOK;
     }
+
+    /* Set default parallel jobs to match cpu threads. This can be overridden
+    the usual way with -jX or PARALLELISM env var. */
+    b2::system_info sys_info;
+    globs.jobs = sys_info.cpu_thread_count();
 
     /* Pick up interesting options. */
     if ( ( s = getoptval( optv, 'n', 0 ) ) )

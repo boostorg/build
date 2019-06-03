@@ -415,6 +415,7 @@ B2_SOURCES="\
  search.cpp \
  strings.cpp \
  subst.cpp \
+ sysinfo.cpp \
  timestamp.cpp \
  variable.cpp \
  w32_getreg.cpp \

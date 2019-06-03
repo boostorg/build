@@ -23,3 +23,6 @@ Other changes in this release:
 * Add s390x CPU and support in gcc/clang. -- _Neale Ferguson_
 * Support importing pkg-config packages. -- _Dmitry Arkhipov_
 * Support for leak sanitizer. -- _Damian Jarek_
+* Fix missing `/manifest` option in clang-win to fix admin elevation for exes with "update" in the name. -- Peter Dimov
+* Add `freertos` to `os` feature. -- tee3
+* Default parallel jobs (`-jX`) to the available CPU threads. -- _Rene Rivera_
