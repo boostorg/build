@@ -7,9 +7,12 @@
 #include "jam.h"
 #include "output.h"
 
-#ifdef OS_MACOSX
+#if defined(OS_MACOSX)
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#endif
+#if !defined(OS_NT)
+#include <unistd.h>
 #endif
 
 
@@ -21,7 +24,7 @@ unsigned int b2::system_info::cpu_core_count()
 {
     if (cpu_core_count_ == 0)
     {
-        #ifdef OS_MACOSX
+        #if defined(OS_MACOSX)
         int out_hw_ncpu = 0;
         size_t len_hw_ncpu = sizeof(out_hw_ncpu);
         int result = ::sysctlbyname(
@@ -30,8 +33,10 @@ unsigned int b2::system_info::cpu_core_count()
         {
             cpu_core_count_ = out_hw_ncpu;
         }
+        #elif defined(_SC_NPROCESSORS_CONF)
+        cpu_thread_count_ = ::sysconf(_SC_NPROCESSORS_CONF);
         #endif
-        if (cpu_core_count_ == 0)
+        if (cpu_core_count_ <= 0)
         {
             cpu_core_count_ = 1;
         }
@@ -43,7 +48,7 @@ unsigned int b2::system_info::cpu_thread_count()
 {
     if (cpu_thread_count_ == 0)
     {
-        #ifdef OS_MACOSX
+        #if defined(OS_MACOSX)
         int out_hw_ncpu = 0;
         size_t len_hw_ncpu = sizeof(out_hw_ncpu);
         int result = ::sysctlbyname(
@@ -52,8 +57,10 @@ unsigned int b2::system_info::cpu_thread_count()
         {
             cpu_thread_count_ = out_hw_ncpu;
         }
+        #elif defined(_SC_NPROCESSORS_ONLN)
+        cpu_thread_count_ = ::sysconf(_SC_NPROCESSORS_ONLN);
         #endif
-        if (cpu_thread_count_ == 0)
+        if (cpu_thread_count_ <= 0)
         {
             cpu_thread_count_ = cpu_core_count();
         }
