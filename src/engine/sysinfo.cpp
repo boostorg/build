@@ -15,6 +15,8 @@
 #include <unistd.h>
 #endif
 
+#include <thread>
+
 
 b2::system_info::system_info()
 {
@@ -59,6 +61,8 @@ unsigned int b2::system_info::cpu_thread_count()
         }
         #elif defined(_SC_NPROCESSORS_ONLN)
         cpu_thread_count_ = ::sysconf(_SC_NPROCESSORS_ONLN);
+        #else
+        cpu_thread_count_ = std::thread::hardware_concurrency();
         #endif
         if (cpu_thread_count_ <= 0)
         {
