@@ -25,6 +25,11 @@ stages:
       vmImage: 'ubuntu-16.04'
     strategy:
       matrix:
+        GCC 9:
+          TOOLSET: gcc
+          TEST_TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
         GCC 8:
           TOOLSET: gcc
           TEST_TOOLSET: gcc
@@ -198,65 +203,87 @@ stages:
       displayName: Bootstrap
 
   - job: 'macOS'
-    pool:
-      vmImage: 'macOS-10.13'
     strategy:
       matrix:
+        Xcode 10.2.1:
+          TOOLSET: clang
+          TEST_TOOLSET: clang
+          CXX: clang++
+          XCODE_APP: /Applications/Xcode_10.2.1.app
+          VM_IMAGE: 'macOS-10.14'
+        Xcode 10.2:
+          TOOLSET: clang
+          TEST_TOOLSET: clang
+          CXX: clang++
+          XCODE_APP: /Applications/Xcode_10.2.app
+          VM_IMAGE: 'macOS-10.14'
         Xcode 10.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_10.1.app
+          VM_IMAGE: 'macOS-10.14'
         Xcode 10.0:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_10.app
+          VM_IMAGE: 'macOS-10.14'
         Xcode 9.4.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.4.1.app
+          VM_IMAGE: 'macOS-10.14'
         Xcode 9.4:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.4.app
+          VM_IMAGE: 'macOS-10.13'
         Xcode 9.3.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.3.1.app
+          VM_IMAGE: 'macOS-10.13'
         Xcode 9.3:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.3.app
+          VM_IMAGE: 'macOS-10.13'
         Xcode 9.2:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.2.app
+          VM_IMAGE: 'macOS-10.13'
         Xcode 9.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.1.app
+          VM_IMAGE: 'macOS-10.13'
         Xcode 9.0.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.0.1.app
+          VM_IMAGE: 'macOS-10.13'
         Xcode 9.0:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.app
+          VM_IMAGE: 'macOS-10.13'
         Xcode 8.3.3:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_8.3.3.app
+    pool:
+      vmImage: $(VM_IMAGE)
     steps:
     - bash: |
         set -e
