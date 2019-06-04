@@ -282,6 +282,7 @@ stages:
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_8.3.3.app
+          VM_IMAGE: 'macOS-10.13'
     pool:
       vmImage: $(VM_IMAGE)
     steps:
