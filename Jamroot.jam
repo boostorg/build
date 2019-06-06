@@ -195,24 +195,57 @@ for local e in [ glob-tree-ex $(SELF)/example : * : . .svn ]
         examples += $(e) ;
     }
 }
+package.install-data boost-build-examples
+    : # Which subdir of $prefix/share
+        boost-build
+    : # What to install
+        $(examples)
+    : # What is the root of the directory
+        <install-source-root>.
+    ;
+explicit boost-build-examples ;
+
+local .core-sources =
+    $(SELF)/boost-build.jam
+    $(SELF)/src/build-system.jam
+    [ path.glob-tree $(SELF)/src/build : *.jam ]
+    [ path.glob-tree $(SELF)/src/contrib : *.jam ]
+    [ path.glob-tree $(SELF)/src/kernel : *.jam ]
+    [ path.glob-tree $(SELF)/src/options : *.jam ]
+    [ path.glob-tree $(SELF)/src/util : *.jam ]
+    [ path.glob-tree $(SELF)/src/tools : *.jam *.xml *.xsl *.doxyfile *.hpp doxproc.py ]
+    ;
+if $(python-exe)
+{
+    .core-sources +=
+        [ path.glob-tree $(SELF)/src/build : *.py ]
+        [ path.glob-tree $(SELF)/src/contrib : *.py ]
+        [ path.glob-tree $(SELF)/src/kernel : *.py ]
+        [ path.glob-tree $(SELF)/src/options : *.py ]
+        [ path.glob-tree $(SELF)/src/util : *.py ]
+        [ path.glob-tree $(SELF)/src/tools : *.py : doxproc.py ]
+        ;
+}
 
 package.install-data boost-build-core
     : # Which subdir of $prefix/share
         boost-build
     : # What to install
-        $(SELF)/boost-build.jam
-        $(SELF)/src/build-system.jam
-        [ path.glob-tree $(SELF)/src/build : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/contrib : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/kernel : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/options : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/util : *.jam *.py ]
-        [ path.glob-tree $(SELF)/src/tools : *.jam *.py *.xml *.xsl *.doxyfile *.hpp ]
-        $(examples)
+        $(.core-sources)
     : # What is the root of the directory
         <install-source-root>.
     ;
 explicit boost-build-core ;
 
-alias install : boost-build-engine boost-build-core ;
+#|
+Only install example files when requested to avoid bloating install footprint.
+|#
+if --with-examples in [ modules.peek : ARGV ]
+{
+    alias install : boost-build-engine boost-build-core boost-build-examples ;
+}
+else
+{
+    alias install : boost-build-engine boost-build-core ;
+}
 explicit install ;
