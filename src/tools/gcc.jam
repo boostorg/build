@@ -738,9 +738,7 @@ toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>norecover : -fsanitize=
 toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined ;
 toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread ;
 toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak ;
-toolset.flags gcc.compile.c++ OPTIONS <coverage>all : --coverage ;
-toolset.flags gcc.compile.c++ OPTIONS <coverage>profile : -fprofile-arcs ;
-toolset.flags gcc.compile.c++ OPTIONS <coverage>test : -ftest-coverage ;
+toolset.flags gcc.compile.c++ OPTIONS <coverage>on : --coverage ;
 
 # configure Dinkum STL to match compiler options
 toolset.flags gcc.compile.c++ DEFINES <rtti>off/<target-os>vxworks : _NO_RTTI ;
@@ -889,9 +887,7 @@ toolset.flags gcc.link OPTIONS <address-sanitizer>norecover : -fsanitize=address
 toolset.flags gcc.link OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined ;
 toolset.flags gcc.link OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread ;
 toolset.flags gcc.link OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak ;
-toolset.flags gcc.link OPTIONS <coverage>all : --coverage ;
-toolset.flags gcc.link OPTIONS <coverage>profile : -fprofile-arcs ;
-toolset.flags gcc.link OPTIONS <coverage>test : -lgcov ;
+toolset.flags gcc.link OPTIONS <coverage>on : --coverage ;
 
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
