@@ -8,6 +8,6 @@ import feature ;
 
 feature.feature coverage
     :
+    off         # Disable coverage generation for the tool (default).
     on          # Enable coverage generation for the tool.
-    off         # Disable coverage generation for the tool.
     : incidental propagated ;

@@ -198,8 +198,8 @@ def register_globals ():
         ['incidental', 'propagated'])
 
     feature.feature('coverage', [
-        'on',         # Enable coverage generation for the tool.
-        'off'],       # Disable coverage generation for the tool.
+        'off',        # Disable coverage generation for the tool.
+        'on'],        # Enable coverage generation for the tool.
         ['incidental', 'propagated'])
 
     feature.feature('c++-template-depth',
