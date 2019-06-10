@@ -11,14 +11,14 @@ feature.feature address-sanitizer
     : on norecover
     : propagated optional ;
 
-feature.feature undefined-sanitizer
+feature.feature leak-sanitizer
     : on norecover
     : propagated optional ;
 
 feature.feature thread-sanitizer
     : on norecover
     : propagated optional ;
-feature.feature leak-sanitizer
+
+feature.feature undefined-sanitizer
     : on norecover
     : propagated optional ;
-
