@@ -728,16 +728,19 @@ toolset.flags gcc.compile OPTIONS <local-visibility>protected : -fvisibility=pro
 toolset.flags gcc.compile OPTIONS <local-visibility>protected/<target-os>darwin : ;
 toolset.flags gcc.compile OPTIONS <local-visibility>global : -fvisibility=default ;
 
-toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
-toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>on : -fsanitize=address ;
-toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>on : -fsanitize=undefined ;
-toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>on : -fsanitize=thread ;
-toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>on : -fsanitize=leak ;
-toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address ;
-toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined ;
-toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread ;
-toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak ;
+toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
+
+# sanitizers
+toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>on : -fsanitize=address -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>on : -fsanitize=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>on : -fsanitize=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>on : -fsanitize=undefined -fno-omit-frame-pointer ;
+toolset.flags gcc.compile.c++ OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer ;
+
 toolset.flags gcc.compile.c++ OPTIONS <coverage>on : --coverage ;
 
 # configure Dinkum STL to match compiler options
@@ -879,14 +882,17 @@ toolset.flags gcc.link OPTIONS <local-visibility>hidden : -fvisibility=hidden -f
 toolset.flags gcc.link OPTIONS <local-visibility>protected : -fvisibility=protected ;
 toolset.flags gcc.link OPTIONS <local-visibility>protected/<target-os>darwin : ;
 toolset.flags gcc.link OPTIONS <local-visibility>global : -fvisibility=default ;
-toolset.flags gcc.link OPTIONS <address-sanitizer>on : -fsanitize=address ;
-toolset.flags gcc.link OPTIONS <undefined-sanitizer>on : -fsanitize=undefined ;
-toolset.flags gcc.link OPTIONS <thread-sanitizer>on : -fsanitize=thread ;
-toolset.flags gcc.link OPTIONS <leak-sanitizer>on : -fsanitize=leak ;
-toolset.flags gcc.link OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address ;
-toolset.flags gcc.link OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined ;
-toolset.flags gcc.link OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread ;
-toolset.flags gcc.link OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak ;
+
+# sanitizers
+toolset.flags gcc.link OPTIONS <address-sanitizer>on : -fsanitize=address -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <leak-sanitizer>on : -fsanitize=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <leak-sanitizer>norecover : -fsanitize=leak -fno-sanitize-recover=leak -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <thread-sanitizer>on : -fsanitize=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <thread-sanitizer>norecover : -fsanitize=thread -fno-sanitize-recover=thread -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <undefined-sanitizer>on : -fsanitize=undefined -fno-omit-frame-pointer ;
+toolset.flags gcc.link OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer ;
+
 toolset.flags gcc.link OPTIONS <coverage>on : --coverage ;
 
 toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
