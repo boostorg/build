@@ -27,3 +27,5 @@ Other changes in this release:
   with "update" in the name. -- _Peter Dimov_
 * Add `freertos` to `os` feature. -- tee3
 * Default parallel jobs (`-jX`) to the available CPU threads. -- _Rene Rivera_
+* Simpler coverage feature. -- _Hans Dembinski_
+* Better stacks for sanitizers. -- _James E. King III_
