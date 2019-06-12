@@ -272,6 +272,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     char            const * progname = argv[ 0 ];
     module_t              * environ_module;
     int                     is_debugger;
+    b2::system_info sys_info;
 
     saved_argv0 = argv[ 0 ];
 
@@ -362,22 +363,22 @@ int main( int argc, char * * argv, char * * arg_environ )
         usage( progname );
     }
 
+    /* Set default parallel jobs to match cpu threads. This can be overridden
+    the usual way with -jX or PARALLELISM env var. */
+    globs.jobs = sys_info.cpu_thread_count();
+
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
         out_printf( "B2 Version %s. %s.\n", VERSION, OSMINOR );
-        out_printf( "   Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.\n" );
-        out_printf( "   Copyright 2001 David Turner.\n" );
-        out_printf( "   Copyright 2001-2004 David Abrahams.\n" );
-        out_printf( "   Copyright 2002-2019 Rene Rivera.\n" );
-        out_printf( "   Copyright 2003-2015 Vladimir Prus.\n" );
+        out_printf( "  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.\n" );
+        out_printf( "  Copyright 2001 David Turner.\n" );
+        out_printf( "  Copyright 2001-2004 David Abrahams.\n" );
+        out_printf( "  Copyright 2002-2019 Rene Rivera.\n" );
+        out_printf( "  Copyright 2003-2015 Vladimir Prus.\n" );
+        out_printf( "\n  DEFAULTS: jobs = %i\n", globs.jobs);
         return EXITOK;
     }
-
-    /* Set default parallel jobs to match cpu threads. This can be overridden
-    the usual way with -jX or PARALLELISM env var. */
-    b2::system_info sys_info;
-    globs.jobs = sys_info.cpu_thread_count();
 
     /* Pick up interesting options. */
     if ( ( s = getoptval( optv, 'n', 0 ) ) )
