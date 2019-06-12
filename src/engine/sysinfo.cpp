@@ -19,9 +19,12 @@
 #endif
 
 #if defined(OS_LINUX)
+// Need to define this in case it's not as that's the only way to get the
+// sched_* APIs.
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 #include <sched.h>
-#undef _GNU_SOURCE
 #endif
 
 
