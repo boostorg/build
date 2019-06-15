@@ -377,6 +377,7 @@ echo_run ${CXX} ${CXX_VERSION_OPT}
 echo "###"
 echo "###"
 B2_SOURCES="\
+ bindjam.cpp \
  builtins.cpp \
  class.cpp \
  command.cpp \
