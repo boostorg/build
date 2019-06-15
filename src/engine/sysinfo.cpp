@@ -100,10 +100,10 @@ unsigned int b2::system_info::cpu_core_count()
     {
         cpu_thread_count_ = macosx_physicalcpu();
     }
-    if (cpu_thread_count_ == 0)
-    {
-        cpu_thread_count_ = sysconf_nprocs_configured();
-    }
+    // if (cpu_thread_count_ == 0)
+    // {
+    //     cpu_thread_count_ = sysconf_nprocs_configured();
+    // }
     if (cpu_core_count_ <= 0)
     {
         cpu_core_count_ = 1;
@@ -117,14 +117,14 @@ unsigned int b2::system_info::cpu_thread_count()
     {
         cpu_thread_count_ = macosx_logicalcpu();
     }
-    if (cpu_thread_count_ == 0)
-    {
-        cpu_thread_count_ = sched_affinity_cpu_count();
-    }
-    if (cpu_thread_count_ == 0)
-    {
-        cpu_thread_count_ = sysconf_nprocs_online();
-    }
+    // if (cpu_thread_count_ == 0)
+    // {
+    //     cpu_thread_count_ = sched_affinity_cpu_count();
+    // }
+    // if (cpu_thread_count_ == 0)
+    // {
+    //     cpu_thread_count_ = sysconf_nprocs_online();
+    // }
     if (cpu_thread_count_ == 0)
     {
         cpu_thread_count_ = std_thread_hardware_concurrency();
