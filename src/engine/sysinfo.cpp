@@ -60,11 +60,11 @@ namespace
 
     unsigned int sched_affinity_cpu_count()
     {
-        #if defined(CPU_COUNT)
+        #if defined(CPU_COUNT_S)
         ::cpu_set_t cpu_set;
         if (::sched_getaffinity(0, sizeof(cpu_set_t), &cpu_set) == 0)
         {
-            return CPU_COUNT(sizeof(cpu_set_t), &cpu_set);
+            return CPU_COUNT_S(sizeof(cpu_set_t), &cpu_set);
         }
         #endif
         return 0;
