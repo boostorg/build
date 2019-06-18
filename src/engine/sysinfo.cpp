@@ -60,11 +60,11 @@ namespace
 
     unsigned int sched_affinity_cpu_count()
     {
-        #if defined(CPU_COUNT_S)
+        #if defined(CPU_COUNT)
         ::cpu_set_t cpu_set;
         if (::sched_getaffinity(0, sizeof(cpu_set_t), &cpu_set) == 0)
         {
-            return CPU_COUNT_S(sizeof(cpu_set_t), &cpu_set);
+            return CPU_COUNT(sizeof(cpu_set_t), &cpu_set);
         }
         #endif
         return 0;
@@ -100,10 +100,10 @@ unsigned int b2::system_info::cpu_core_count()
     {
         cpu_thread_count_ = macosx_physicalcpu();
     }
-    // if (cpu_thread_count_ == 0)
-    // {
-    //     cpu_thread_count_ = sysconf_nprocs_configured();
-    // }
+    if (cpu_thread_count_ == 0)
+    {
+        cpu_thread_count_ = sysconf_nprocs_configured();
+    }
     if (cpu_core_count_ <= 0)
     {
         cpu_core_count_ = 1;
@@ -117,14 +117,14 @@ unsigned int b2::system_info::cpu_thread_count()
     {
         cpu_thread_count_ = macosx_logicalcpu();
     }
-    // if (cpu_thread_count_ == 0)
-    // {
-    //     cpu_thread_count_ = sched_affinity_cpu_count();
-    // }
-    // if (cpu_thread_count_ == 0)
-    // {
-    //     cpu_thread_count_ = sysconf_nprocs_online();
-    // }
+    if (cpu_thread_count_ == 0)
+    {
+        cpu_thread_count_ = sched_affinity_cpu_count();
+    }
+    if (cpu_thread_count_ == 0)
+    {
+        cpu_thread_count_ = sysconf_nprocs_online();
+    }
     if (cpu_thread_count_ == 0)
     {
         cpu_thread_count_ = std_thread_hardware_concurrency();
