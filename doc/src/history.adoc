@@ -29,3 +29,8 @@ Other changes in this release:
 * Default parallel jobs (`-jX`) to the available CPU threads. -- _Rene Rivera_
 * Simpler coverage feature. -- _Hans Dembinski_
 * Better stacks for sanitizers. -- _James E. King III_
+
+WARNING: The default number of parallel jobs has changed in this release from
+"1" to the number of cores. There are circumstances when that default can be
+larger than the allocated cpu resources, for instance in some virtualized
+container installs.
