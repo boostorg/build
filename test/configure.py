@@ -187,6 +187,53 @@ obj foo : foo.cpp :
 
     t.cleanup()
 
+def test_translation():
+    """Tests scoping for targets, paths, and rules within check-target-builds"""
+    t = BoostBuild.Tester(use_test_config=0)
+    t.write("Jamroot", "")
+    t.write("subdir/Jamfile", """
+import configure ;
+obj pass : pass.cpp ;
+obj fail : fail.cpp ;
+explicit pass fail ;
+obj foo : :
+  [ configure.check-target-builds pass
+    : [ configure.check-target-builds fail : <define>FAIL
+        : <define>PASS <include>include1 <conditional>@c1 ]
+    : <define>FAIL ] ;
+obj bar : :
+  [ configure.choose "which one?" : pass
+     [ configure.choose "Try again?" : pass
+        <define>PASS <include>include1 <conditional>@c1 ] ] ;
+rule c1 ( properties * )
+{
+  return <include>include2 <source>foo.cpp ;
+}
+""")
+    t.write("subdir/include1/a.h", "")
+    t.write("subdir/include2/b.h", "")
+    t.write("subdir/pass.cpp", "void f() {}\n")
+    t.write("subdir/fail.cpp", "#error fail.cpp\n")
+    t.write("subdir/foo.cpp", """
+#include <a.h>
+#include <b.h>
+#ifndef PASS
+#error PASS not defined
+#endif
+#ifdef FAIL
+#error FAIL is defined
+#endif
+""")
+    t.run_build_system(["subdir"])
+    t.expect_output_lines([
+        "    - pass builds              : yes",
+        "    - fail builds              : no"])
+    t.expect_addition("subdir/bin/$toolset/debug*/pass.obj")
+    t.expect_addition("subdir/bin/$toolset/debug*/foo.obj")
+    t.expect_addition("subdir/bin/$toolset/debug*/bar.obj")
+    t.expect_nothing_more()
+    t.cleanup()
+
 def test_choose_none():
     """Tests choose when none of the alternatives match."""
     t = BoostBuild.Tester(use_test_config=0)
@@ -216,4 +263,5 @@ obj foo : foo.cpp :
 
 test_check_target_builds()
 test_choose()
+test_translation()
 test_choose_none()

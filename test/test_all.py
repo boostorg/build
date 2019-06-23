@@ -6,6 +6,8 @@
 #    (See accompanying file LICENSE_1_0.txt or copy at
 #         http://www.boost.org/LICENSE_1_0.txt)
 
+from __future__ import print_function
+
 import BoostBuild
 
 import os
@@ -52,7 +54,8 @@ def run_tests(critical_tests, other_tests):
 
     for test in all_tests:
         if not xml:
-            print("%%-%ds :" % max_test_name_len % test),
+            s = "%%-%ds :" % max_test_name_len % test
+            print(s, end='')
 
         passed = 0
         try:
@@ -101,16 +104,16 @@ def run_tests(critical_tests, other_tests):
             rs = "succeed"
             if not passed:
                 rs = "fail"
-            print """
+            print('''
 <test-log library="build" test-name="%s" test-type="run" toolset="%s" test-program="%s" target-directory="%s">
-<run result="%s">""" % (test, toolset, "tools/build/v2/test/" + test + ".py",
-                "boost/bin.v2/boost.build.tests/" + toolset + "/" + test, rs)
+<run result="%s">''' % (test, toolset, "tools/build/v2/test/" + test + ".py",
+                "boost/bin.v2/boost.build.tests/" + toolset + "/" + test, rs))
             if not passed:
                 BoostBuild.flush_annotations(1)
-            print """
+            print('''
 </run>
 </test-log>
-"""
+''')
         sys.stdout.flush()  # Makes testing under emacs more entertaining.
         BoostBuild.clear_annotations()
 
@@ -119,11 +122,11 @@ def run_tests(critical_tests, other_tests):
         open("test_results.txt", "w").close()
 
     if not xml:
-        print """
+        print('''
         === Test summary ===
         PASS: %d
         FAIL: %d
-        """ % (pass_count, failures_count)
+        ''' % (pass_count, failures_count))
 
     # exit with failure with failures
     if failures_count > 0:
@@ -164,6 +167,7 @@ if xml:
 tests = ["absolute_sources",
          "alias",
          "alternatives",
+         "always",
          "bad_dirname",
          "build_dir",
          "build_file",
@@ -314,11 +318,14 @@ if os.name == "posix":
 #    if "CYGWIN" not in os.uname()[0]:
 #        tests.append("library_order")
 
-if toolset.startswith("gcc"):
+if toolset.startswith("gcc") and os.name != "nt":
+    # On Windows it's allowed to have a static runtime with gcc. But this test
+    # assumes otherwise. Hence enable it only when not on Windows.
     tests.append("gcc_runtime")
 
-if toolset.startswith("gcc") or toolset.startswith("msvc"):
-    tests.append("pch")
+# PCH test seems broken in strange ways. Disable it.
+# if toolset.startswith("gcc") or toolset.startswith("msvc"):
+#     tests.append("pch")
 
 # Disable on OSX as it doesn't seem to work for unknown reasons.
 if sys.platform != 'darwin':

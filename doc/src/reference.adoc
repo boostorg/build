@@ -11,7 +11,8 @@ Immediately upon starting, the Boost.Build engine (*`b2`*) loads the Jam
 code that implements the build system. To do this, it searches for a
 file called `boost-build.jam`, first in the invocation directory, then
 in its parent and so forth up to the filesystem root, and finally in the
-directories specified by the environment variable BOOST_BUILD_PATH. When
+directories specified by the environment variable BOOST_BUILD_PATH. On
+Unix BOOST_BUILD_PATH defaults to `/usr/share/boost-build`. When
 found, the file is interpreted, and should specify the build system
 location by calling the boost-build rule:
 
@@ -152,7 +153,7 @@ implicitly when their containing project is built.
 
 [[bbv2.reference.rules.always]]`always`::
 The `always` function takes a single parameter—a list of metatarget
-names. The top-level targets produced by the named metatargets will be
+names. The targets produced by the named metatargets will be
 always considered out of date. Consider this example:
 +
 ----
@@ -161,10 +162,9 @@ exe bye : bye.cpp ;
 always hello ;
 ----
 +
-If a build of `hello` is requested, then the binary will always be
-relinked. The object files will not be recompiled, though. Note that
+If a build of `hello` is requested, then it will always be recompiled. Note that
 if a build of `hello` is not requested, for example you specify just
-`bye` on the command line, `hello` will not be relinked.
+`bye` on the command line, `hello` will not be recompiled.
 
 [[bbv2.reference.rules.constant]]`constant`::
 Sets project-wide constant. Takes two parameters: variable name and a
@@ -352,6 +352,11 @@ The `<warnings-as-errors>` makes it possible to treat warnings as
 errors and abort compilation on a warning. The value `on` enables this
 behavior. The default value is `off`.
 
+[[bbv2.builtin.features.coverage]]`coverage`::
+The `<coverage>` feature controls whether the code is instrumented to
+generate coverage data during execution.
+The value `on` enables this. The default value is `off`.
+
 [[bbv2.builtin.features.build]]`build`::
 *Allowed values:* `no`
 +
@@ -426,7 +431,7 @@ for details of cross-compilation.
 [[bbv2.builtin.features.architecture]]`architecture`::
 *Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips1`, `mips2`,
 `mips3`, `mips4`, `mips32`, `mips32r2`, `mips64`, `parisc`, `arm`,
-`combined`, `combined-x86-power`.
+`s390x`, `combined`, `combined-x86-power`.
 +
 The `architecture` features specifies the general processor family to
 generate code for.
@@ -815,7 +820,7 @@ using python
 : # conditions
 ;
 
-using python 
+using python
 : 3.5 # version
 : # Interpreter/path to dir
 : /usr/include/python3.5 # includes
@@ -829,7 +834,7 @@ using python
 : C:\\Python27-32\\python.exe # Interperter/path to dir
 : C:\\Python27-32\\include # includes
 : C:\\Python27-32\\libs # libs
-: <address-model>32 <address-model> # conditions - both 32 and unspecified 
+: <address-model>32 <address-model> # conditions - both 32 and unspecified
 ;
 
 using python
@@ -1520,9 +1525,9 @@ passing a command line option to it. You would not want to pass that
 option to other compilers. Conditional properties allow you to do just
 that. Their syntax is:
 
-----
+....
 property ( "," property ) * ":" property
-----
+....
 
 For example, the problem above would be solved by:
 
@@ -1543,14 +1548,14 @@ exe hello : hello.cpp : <os>NT,<toolset>gcc:<link>static ;
 
 _Target identifier_ is used to denote a target. The syntax is:
 
-----
+....
 target-id -> (target-name | file-name | project-id | directory-name)
               | (project-id | directory-name) "//" target-name
 project-id -> path
 target-name -> path
 file-name -> path
 directory-name -> path
-----
+....
 
 This grammar allows some elements to be recognized as either
 
@@ -1584,10 +1589,10 @@ _Target reference_ is used to specify a source target, and may
 additionally specify desired properties for that target. It has this
 syntax:
 
-----
+....
 target-reference -> target-id [ "/" requested-properties ]
 requested-properties -> property-path
-----
+....
 
 For example,
 

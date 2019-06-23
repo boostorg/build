@@ -16,7 +16,7 @@ def split_stdin_stdout(text):
     may contain regular expressions enclosed in {{}}."""
     prompt = re.escape('(b2db) ')
     pattern = re.compile('(?<=%s)(.*\n)' % prompt)
-    text = text.replace("{{bjam}}", "{{.*}}bjam{{(?:\\.exe)?}}")
+    text = text.replace("{{bjam}}", "{{.*}}b2{{(?:\\.exe)?}}")
     stdin = ''.join(re.findall(pattern, text))
     stdout = re.sub(pattern, '', text)
     outside_pattern = re.compile(r'(?:\A|(?<=\}\}))(?:[^\{]|(?:\{(?!\{)))*(?:(?=\{\{)|\Z)')

@@ -55,8 +55,8 @@ tester.expect_addition("bin/$toolset/debug*/test1.obj")
 tester.expect_addition("test2i/test2.obj")
 tester.expect_nothing_more()
 
-test2src = tester.read("test2i/test2.obj")
-test2dest = tester.read("bin/$toolset/debug*/test2.obj")
+test2src = tester.read("test2i/test2.obj", binary=True)
+test2dest = tester.read("bin/$toolset/debug*/test2.obj", binary=True)
 if test2src != test2dest:
     BoostBuild.annotation("failure", "The object file was not copied "
         "correctly")

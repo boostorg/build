@@ -6,6 +6,7 @@
 # http://www.boost.org/LICENSE_1_0.txt)
 
 import BoostBuild
+from time import sleep
 
 
 t = BoostBuild.Tester()
@@ -22,6 +23,7 @@ THIS WILL NOT COMPILE
 
 # Note that pch.hpp is written after pch.hpp.bad, so its timestamp will not be
 # less than timestamp of pch.hpp.bad.
+sleep(1)
 t.write("pch.hpp", """
 class TestClass
 {

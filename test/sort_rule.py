@@ -7,6 +7,8 @@
 
 # Tests for the Boost Jam builtin SORT rule.
 
+from __future__ import print_function
+
 import BoostBuild
 
 
@@ -63,19 +65,19 @@ def testSORTDuration():
         use_test_config=False)
 
     f = open(t.workpath("test.jam"), "w")
-    print >> f, "data = "
+    print("data = ", file=f)
     for i in range(0, 20000):
         if i % 2:
-            print >> f, '"aaa"'
+            print('"aaa"', file=f)
         else:
-            print >> f, '"bbb"'
-    print >> f, """;
+            print('"bbb"', file=f)
+    print(""";
 
 ECHO "starting up" ;
 sorted = [ SORT $(data) ] ;
 ECHO "done" ;
 NOCARE all ;
-"""
+""", file=f)
     f.close()
 
     t.run_build_system(expected_duration=1)

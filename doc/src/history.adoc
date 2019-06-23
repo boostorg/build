@@ -1,0 +1,36 @@
+[[b2.history]]
+= History
+
+== Version 4.0.0
+
+After even more years of development the landscape of build systems has changed
+considerably, and so has the landscape of compilers. This version marks the
+start of B2 transitioning to a {CPP} implementation. Initially this means that
+the engine will be compiled as C++ source but that source is still the base
+C implementation. Over time it will transform to a {CPP} code base in both the
+engine and build system. Some changes in this start:
+
+* Requires {CPP} 11 to build engine.
+* Simplified build scripts to make it easier to maintain.
+* Building with {CPP} optimizations gives an immediate performance improvement.
+
+Other changes in this release:
+
+* Add support for using prebuilt OpenSSL. -- _Damian Jarek_
+* Define the riscv architecture feature. -- _Andreas Schwab_
+* Add ARM64 as a valid architecture for MSVC. -- _Marc Sweetgall_
+* Set coverage flags, from coverage feature, for gcc and clang. -- _Damian Jarek_
+* Add s390x CPU and support in gcc/clang. -- _Neale Ferguson_
+* Support importing pkg-config packages. -- _Dmitry Arkhipov_
+* Support for leak sanitizer. -- _Damian Jarek_
+* Fix missing `/manifest` option in clang-win to fix admin elevation for exes
+  with "update" in the name. -- _Peter Dimov_
+* Add `freertos` to `os` feature. -- tee3
+* Default parallel jobs (`-jX`) to the available CPU threads. -- _Rene Rivera_
+* Simpler coverage feature. -- _Hans Dembinski_
+* Better stacks for sanitizers. -- _James E. King III_
+
+WARNING: The default number of parallel jobs has changed in this release from
+"1" to the number of cores. There are circumstances when that default can be
+larger than the allocated cpu resources, for instance in some virtualized
+container installs.
