@@ -315,6 +315,47 @@ stages:
         ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
 
+  - job: 'Linux'
+    pool:
+      vmImage: 'ubuntu-16.04'
+    strategy:
+      matrix:
+        Boost 1.70.0 .. GCC 9:
+          BOOST_VERSION: 1.70.0
+          BOOST_VERSION_U: 1_70_0
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
+    steps:
+    - bash: |
+          set -e
+          uname -a
+          sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
+          if test -n "${LLVM_REPO}" ; then
+            wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+            sudo -E apt-add-repository "deb http://apt.llvm.org/xenial/ ${LLVM_REPO} main"
+          fi
+          sudo -E apt-get update
+          sudo -E apt-get -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
+      displayName: Install
+    - bash: |
+          set -e
+          cd src/engine
+          set PATH=${PATH};${CXX_PATH}
+          ./build.sh ${TOOLSET}
+          ./b2 -v
+      displayName: Build
+    - bash: |
+          set -e
+          pushd ${HOME}
+          wget https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.bz2
+          tar -jxvf boost_${BOOST_VERSION_U}.tar.bz2
+          cd boost_${BOOST_VERSION_U}
+          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+          "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+          popd
+      displayName: Test
+
 - stage: WebsiteUpdate
   displayName: 'Website Update'
   condition: in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/develop')
