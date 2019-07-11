@@ -383,8 +383,8 @@ stages:
     - bash: |
           set -e
           pushd ${HOME}
-          wget https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.bz2
-          tar -jxvf boost_${BOOST_VERSION_U}.tar.bz2
+          wget -nv https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.bz2
+          tar -jxf boost_${BOOST_VERSION_U}.tar.bz2
           cd boost_${BOOST_VERSION_U}
           CXX_PATH=`which ${CXX}`
           echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
