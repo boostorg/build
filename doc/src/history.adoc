@@ -1,6 +1,12 @@
 [[b2.history]]
 = History
 
+== Version 4.1.0
+
+Other changes in this release:
+
+* Support for VS2019 for intel-vin 19.0. -- _Edward Diener_
+
 == Version 4.0.0
 
 After even more years of development the landscape of build systems has changed
