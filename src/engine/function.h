@@ -14,15 +14,19 @@
 #include "parse.h"
 #include "strings.h"
 
+#include <functional>
+
 typedef struct _function FUNCTION;
 typedef struct _stack STACK;
+
+typedef std::function<LIST* (FRAME *, int flags)> function_builtin_t;
 
 STACK * stack_global( void );
 void stack_push( STACK * s, LIST * l );
 LIST * stack_pop( STACK * s );
 
 FUNCTION * function_compile( PARSE * parse );
-FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ), int flags, const char * * args );
+FUNCTION * function_builtin( function_builtin_t func, int flags, const char * * args );
 void function_refer( FUNCTION * );
 void function_free( FUNCTION * );
 OBJECT * function_rulename( FUNCTION * );

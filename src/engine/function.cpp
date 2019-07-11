@@ -181,7 +181,7 @@ struct _function
 typedef struct _builtin_function
 {
     FUNCTION base;
-    LIST * ( * func )( FRAME *, int flags );
+    function_builtin_t func;
     int flags;
 } BUILTIN_FUNCTION;
 
@@ -2987,8 +2987,9 @@ void function_location( FUNCTION * function_, OBJECT * * file, int * line )
 static struct arg_list * arg_list_compile_builtin( char const * * args,
     int * num_arguments );
 
-FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ),
-    int flags, char const * * args )
+FUNCTION * function_builtin(
+    std::function<LIST* (FRAME *, int flags)> func,
+    int flags, const char * * args )
 {
     BUILTIN_FUNCTION * result = (BUILTIN_FUNCTION*)BJAM_MALLOC( sizeof( BUILTIN_FUNCTION ) );
     result->base.type = FUNCTION_BUILTIN;
@@ -2996,7 +2997,7 @@ FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ),
     result->base.rulename = 0;
     result->base.formal_arguments = arg_list_compile_builtin( args,
         &result->base.num_formal_arguments );
-    result->func = func;
+    new (&(result->func)) function_builtin_t(func);
     result->flags = flags;
     return (FUNCTION *)result;
 }
@@ -3831,6 +3832,8 @@ void function_free( FUNCTION * function_ )
     {
         assert( function_->type == FUNCTION_BUILTIN );
         if ( function_->rulename ) object_free( function_->rulename );
+        BUILTIN_FUNCTION * func = (BUILTIN_FUNCTION *)function_;
+        func->func.~function_builtin_t();
     }
 
     BJAM_FREE( function_ );
@@ -4904,7 +4907,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             PROFILE_ENTER_LOCAL(function_run_INSTR_CLASS);
             LIST * bases = stack_pop( s );
             LIST * name = stack_pop( s );
-            OBJECT * class_module = make_class_module( name, bases, frame );
+            OBJECT * class_module = make_class_module( name, bases );
 
             module_t * const outer_module = frame->module;
             frame->module = bindmodule( class_module );

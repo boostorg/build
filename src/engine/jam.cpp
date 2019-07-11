@@ -112,6 +112,7 @@
 #define VERSION VERSION_MAJOR_SYM "." VERSION_MINOR_SYM
 #define JAMVERSYM "JAMVERSION=" VERSION
 
+#include "bind.h"
 #include "builtins.h"
 #include "class.h"
 #include "compile.h"
@@ -589,6 +590,9 @@ int main( int argc, char * * argv, char * * arg_environ )
 
         /* Initialize built-in rules. */
         load_builtins();
+
+        /* Initialize the native API bindings. */
+        b2::bind_jam();
 
         /* Add the targets in the command line to the update list. */
         for ( n = 1; n < arg_c; ++n )
