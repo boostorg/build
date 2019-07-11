@@ -326,6 +326,42 @@ stages:
           TOOLSET: gcc
           CXX: g++-9
           PACKAGES: g++-9
+        1.69.0 .. GCC 9:
+          BOOST_VERSION: 1.69.0
+          BOOST_VERSION_U: 1_69_0
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
+        1.68.0 .. GCC 9:
+          BOOST_VERSION: 1.68.0
+          BOOST_VERSION_U: 1_68_0
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
+        1.67.0 .. GCC 9:
+          BOOST_VERSION: 1.67.0
+          BOOST_VERSION_U: 1_67_0
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
+        1.66.0 .. GCC 9:
+          BOOST_VERSION: 1.66.0
+          BOOST_VERSION_U: 1_66_0
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
+        1.65.1 .. GCC 9:
+          BOOST_VERSION: 1.65.1
+          BOOST_VERSION_U: 1_65_1
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
+        1.64.0 .. GCC 9:
+          BOOST_VERSION: 1.64.0
+          BOOST_VERSION_U: 1_64_0
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
     steps:
     - bash: |
           set -e
@@ -352,7 +388,7 @@ stages:
           cd boost_${BOOST_VERSION_U}
           CXX_PATH=`which ${CXX}`
           echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+          "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
           popd
       displayName: Test
 
