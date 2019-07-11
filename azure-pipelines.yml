@@ -315,12 +315,12 @@ stages:
         ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
 
-  - job: 'Linux'
+  - job: 'Boost'
     pool:
       vmImage: 'ubuntu-16.04'
     strategy:
       matrix:
-        Boost 1.70.0 .. GCC 9:
+        1.70.0 .. GCC 9:
           BOOST_VERSION: 1.70.0
           BOOST_VERSION_U: 1_70_0
           TOOLSET: gcc
