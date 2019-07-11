@@ -1,6 +1,14 @@
 [[b2.history]]
 = History
 
+== Version 4.1.0
+
+Other changes in this release:
+
+* Support for VS2019 for intel-vin 19.0. -- _Edward Diener_
+* Fix compiler warnings about -std=gnu11 when building b2 on Cygwin. --
+  _Andrey Semashev_
+
 == Version 4.0.0
 
 After even more years of development the landscape of build systems has changed
@@ -29,3 +37,8 @@ Other changes in this release:
 * Default parallel jobs (`-jX`) to the available CPU threads. -- _Rene Rivera_
 * Simpler coverage feature. -- _Hans Dembinski_
 * Better stacks for sanitizers. -- _James E. King III_
+
+WARNING: The default number of parallel jobs has changed in this release from
+"1" to the number of cores. There are circumstances when that default can be
+larger than the allocated cpu resources, for instance in some virtualized
+container installs.
