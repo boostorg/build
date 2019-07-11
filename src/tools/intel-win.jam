@@ -163,15 +163,16 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
     
-    local root ;
-    if $(command)
+    local root = [ feature.get-values <root> : $(options) ] ;
+    if $(command) || $(root)
     {
-        root = [ common.get-absolute-tool-path $(command[-1]) ] ;
+        local bin = [ common.get-absolute-tool-path $(command[-1]) ] ;
         if $(major) >= 12
         {
-            root = [ path.make $(root) ] ;
-            root = [ path.parent $(root) ] ;
+            bin = [ path.make $(bin) ] ;
+            bin = [ path.parent $(bin) ] ;
         }
+        root ?= bin ;
         root = $(root)/ ;
     }
 
@@ -491,8 +492,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .iclvars-16.0-supported-vcs = "14.0 12.0 11.0 10.0 9.0" ;
 .iclvars-17.0-supported-vcs = "14.0 12.0 11.0 10.0" ;
 .iclvars-18.0-supported-vcs = "14.1 14.0 12.0 11.0 10.0" ;
-.iclvars-19.0-supported-vcs = "14.2 14.1 14.0 12.0 11.0 10.0" ;
-.iclvars-version-alias-vc14.2 = vs2019 ;
+.iclvars-19.0-supported-vcs = "14.1 14.0 12.0" ;
 .iclvars-version-alias-vc14.1 = vs2017 ;
 .iclvars-version-alias-vc14 = vs2015 ;
 .iclvars-version-alias-vc12 = vs2013 ;
