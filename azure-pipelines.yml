@@ -341,7 +341,6 @@ stages:
     - bash: |
           set -e
           cd src/engine
-          set PATH=${PATH};${CXX_PATH}
           ./build.sh ${TOOLSET}
           ./b2 -v
       displayName: Build
@@ -351,7 +350,8 @@ stages:
           wget https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.bz2
           tar -jxvf boost_${BOOST_VERSION_U}.tar.bz2
           cd boost_${BOOST_VERSION_U}
-          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+          CXX_PATH=`which ${CXX}`
+          echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
           "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
           popd
       displayName: Test
