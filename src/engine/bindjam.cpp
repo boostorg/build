@@ -19,6 +19,7 @@
 #include "sysinfo.h"
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <tuple>
@@ -120,13 +121,17 @@ struct jam_cxx_self
     static Class * get(FRAME * frame)
     {
         OBJECT * cxx_self_name = object_new("__cxx_self__");
-        const jam_cxx_self * cxx_self_value
-            = reinterpret_cast<const jam_cxx_self *>(
-                object_str(list_front(var_get(
-                    frame->module, cxx_self_name)))
-            );
+        const char * cxx_self_value
+            = object_str(list_front(var_get(frame->module, cxx_self_name)));
         object_free(cxx_self_name);
-        return static_cast<Class *>(cxx_self_value->cxx_self);
+        std::intptr_t result = 0;
+        for (int i = sizeof(void*)-1; i >= 0; --i)
+        {
+            result = (result << 8) + (cxx_self_value[i*2+0] - 'a') +
+                ((cxx_self_value[i*2+1] - 'a') << 4);
+        }
+        Class * self = reinterpret_cast<Class *>(result);
+        return self;
     }
 
     // Set the hidden C++ self instance for the jam class instance.
@@ -135,19 +140,24 @@ struct jam_cxx_self
     {
         // We hide the instance in a string value by appending the raw
         // pointer past the end of the string.
-        jam_cxx_self cxx_self_value {"CXX", self};
+        // jam_cxx_self cxx_self_value {"CXX", self};
+        char cxx_self_value[sizeof(void*)*2+1];
+        std::intptr_t self_int = reinterpret_cast<std::intptr_t>(self);
+        for (int i = 0; i < sizeof(void*); ++i)
+        {
+            cxx_self_value[i*2+0] = char(self_int & 0xf) + 'a';
+            cxx_self_value[i*2+1] = char((self_int & 0xf0) >> 4) + 'a';
+            self_int >>= 8;
+        }
+        cxx_self_value[sizeof(void*)*2] = 0;
         OBJECT * cxx_self_name = object_new("__cxx_self__");
+        OBJECT * cxx_self_obj = object_new(cxx_self_value);
         var_set(
             frame->module, cxx_self_name,
-            list_new(object_new_range(
-                reinterpret_cast<const char *>(&cxx_self_value),
-                sizeof(cxx_self_value))),
+            list_new(cxx_self_obj),
             VAR_SET);
         object_free(cxx_self_name);
     }
-
-    const char cxx_tag[4];
-    void * cxx_self;
 };
 
 // Bound init/constructor function that forwards from jam __init__ to C++.
@@ -241,7 +251,7 @@ void jam_native_bind(
         np->procedure,
         object_new((module_name+"."+rule_name).c_str()));
     // Define the native rule in the class module.
-    // new_rule_body(module, np->name, np->procedure, 1);
+    new_rule_body(module, np->name, np->procedure, 1);
 
     object_free(module_name_obj);
     object_free(rule_name_obj);
@@ -363,8 +373,8 @@ struct jam_binder : bind::binder_<jam_binder>
 
 void bind_jam()
 {
-    // jam_binder()
-    //     .bind(sysinfo_module());
+    jam_binder()
+        .bind(sysinfo_module());
 }
 
 } // namespace b2
