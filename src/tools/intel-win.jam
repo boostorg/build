@@ -243,7 +243,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
             }
             else if $(rewrite-setupscript) = off || [ os.name ] != NT
             {
-                setup-call = "call \"$(setup)\" $(c) $(iclvars_vs_arg)" ;
+                setup-call = "call \"$(setup)\" $(c) $(iclvars_vs_arg) > nul " ;
             }
             else
             {
