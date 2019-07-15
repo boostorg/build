@@ -247,7 +247,7 @@ void jam_bind(
     const std::string & rule_name,
     Return (Class::*method)(Args...))
 {
-    out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
+    // out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
     jam_native_bind(
         module_name, rule_name,
         [method](FRAME * frame, int flags) -> LIST *
@@ -268,7 +268,7 @@ void jam_bind(
     const std::string & rule_name,
     Return (Class::*method)(Args...) const)
 {
-    out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
+    // out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
     jam_native_bind(
         module_name, rule_name,
         [method](FRAME * frame, int flags) -> LIST *
@@ -290,7 +290,7 @@ void jam_bind(
     Class *,
     ::b2::bind::init_<Args...>)
 {
-    out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
+    // out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
     jam_native_bind(
         module_name, rule_name,
         [module_name, rule_name](FRAME * frame, int flags) -> LIST *
