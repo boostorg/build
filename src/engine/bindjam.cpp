@@ -205,7 +205,6 @@ void jam_native_bind(
     OBJECT * rule_name_obj = object_new(rule_name.c_str());
     module_t * module = bindmodule(module_name_obj);
 
-    // RULE * const r = enter_rule( rulename, target_module );
     int found = 0;
     RULE * const rule
         = (RULE *)hash_insert(demand_rules(module), rule_name_obj, &found);
@@ -214,24 +213,6 @@ void jam_native_bind(
     rule->module = module;
     rule->actions = 0;
     rule->exported = 0;
-    // RULE * const local = define_rule( m, rulename, m );
-    // if ( r->module != src_module )
-    // {
-    //     /* If the rule was imported from elsewhere, clear it now. */
-    //     set_rule_body( r, 0 );
-    //     set_rule_actions( r, 0 );
-    //     /* r will be executed in the source module. */
-    //     r->module = src_module;
-    // }
-    // local->exported = exported;
-    // set_rule_body( local, procedure );
-    /* Mark the procedure with the global rule name, regardless of whether the
-     * rule is exported. That gives us something reasonably identifiable that we
-     * can use, e.g. in profiling output. Only do this once, since this could be
-     * called multiple times with the same procedure.
-     */
-    // if ( !function_rulename( procedure ) )
-    //     function_set_rulename( procedure, global_rule_name( local ) );
     // Register the function as a native jam rule.
     declare_native_rule(
         module_name.c_str(),
@@ -243,9 +224,6 @@ void jam_native_bind(
     // for the obvious reason that we just created it a few lines above.
     native_rule_t * np
         = (native_rule_t *)hash_find(module->native_rules, rule_name_obj );
-    // Do we need this for native-only rules?
-    // function_refer(np->procedure);
-    // rule->procedure = np->procedure;
     // Set a global name for the native rule.
     function_set_rulename(
         np->procedure,
@@ -349,7 +327,6 @@ struct jam_binder : bind::binder_<jam_binder>
         LIST * class_name_list = list_new(class_name_obj);
         OBJECT * class_module = make_class_module(class_name_list, L0);
         object_free(class_name_obj);
-        list_free(class_name_list);
     }
 
     template <class Function>
