@@ -98,11 +98,11 @@ unsigned int b2::system_info::cpu_core_count()
 {
     if (cpu_core_count_ == 0)
     {
-        cpu_thread_count_ = macosx_physicalcpu();
+        cpu_core_count_ = macosx_physicalcpu();
     }
-    if (cpu_thread_count_ == 0)
+    if (cpu_core_count_ == 0)
     {
-        cpu_thread_count_ = sysconf_nprocs_configured();
+        cpu_core_count_ = sysconf_nprocs_configured();
     }
     if (cpu_core_count_ <= 0)
     {
