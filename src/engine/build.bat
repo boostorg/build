@@ -167,7 +167,7 @@ echo ### Using '%B2_TOOLSET%' toolset.
 echo ###
 
 set B2_SOURCES=
-set B2_SOURCES=%B2_SOURCES% builtins.cpp class.cpp
+set B2_SOURCES=%B2_SOURCES% bimjam.cpp builtins.cpp class.cpp
 set B2_SOURCES=%B2_SOURCES% command.cpp compile.cpp constants.cpp cwd.cpp
 set B2_SOURCES=%B2_SOURCES% debug.cpp debugger.cpp
 set B2_SOURCES=%B2_SOURCES% execcmd.cpp execnt.cpp filent.cpp filesys.cpp frames.cpp function.cpp
