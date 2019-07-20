@@ -219,8 +219,6 @@ static LIST *jam_call_method(
     // .. Return r = call(..);
     Return r = cxx_call(jam_cxx_self::get<Class>(frame));
     // Marshal result to LIST.
-    // return jam_marshal<Return>::convert(r);
-    // return bind::convert_<jam_binder, Return, LIST *>::from(r);
     return jam_binder::convert_to_bind_value<LIST*>(r);
 }
 
@@ -262,12 +260,6 @@ void jam_native_bind(
     object_free(module_name_obj);
     object_free(rule_name_obj);
 }
-
-// template <typename Return, typename Class, typename... Args>
-// struct member_function
-// {
-//     typedef Return (Class::*pointer_t)(Args...);
-// };
 
 template <typename Return, typename Class, typename... Args>
 void jam_bind(
