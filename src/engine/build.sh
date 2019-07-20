@@ -416,7 +416,6 @@ B2_SOURCES="\
  search.cpp \
  strings.cpp \
  subst.cpp \
- sysinfo.cpp \
  timestamp.cpp \
  variable.cpp \
  w32_getreg.cpp \
@@ -426,6 +425,7 @@ B2_SOURCES="\
  modules/regex.cpp \
  modules/sequence.cpp \
  modules/set.cpp \
+ modules/sysinfo.cpp \
  "
 case $B2_OS in
     NT)

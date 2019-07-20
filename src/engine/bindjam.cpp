@@ -16,7 +16,7 @@
 #include "rules.h"
 #include "variable.h"
 
-#include "sysinfo.h"
+#include "modules/sysinfo.h"
 
 #include <cstddef>
 #include <cstdint>

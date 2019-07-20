@@ -4,8 +4,8 @@
  */
 
 #include "sysinfo.h"
-#include "jam.h"
-#include "output.h"
+#include "../jam.h"
+#include "../output.h"
 
 #include <thread>
 

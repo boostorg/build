@@ -6,8 +6,8 @@
 #ifndef B2_SYSINFO_H
 #define B2_SYSINFO_H
 
-#include "config.h"
-#include "bind.h"
+#include "../config.h"
+#include "../bind.h"
 
 namespace b2
 {
