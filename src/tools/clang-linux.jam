@@ -89,7 +89,7 @@ rule init ( version ? :  command * : options * ) {
     
   # - Ranlib.
   local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
-  if ! $(ranlib) && $(root)
+  if (! $(ranlib)) && $(root)
     {
     ranlib = $(root)/bin/ranlib ;
     }
@@ -97,7 +97,7 @@ rule init ( version ? :  command * : options * ) {
 
   # - Archive builder.
   local archiver = [ feature.get-values <archiver> : $(options) ] ;
-  if ! $(archiver) && $(root)
+  if (! $(archiver)) && $(root)
     {
     archiver = $(root)/bin/ar ;
     }
