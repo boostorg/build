@@ -177,7 +177,7 @@ case $B2_TOOLSET in
         ;;
 
         *cygwin*)
-        B2_CXX="${CXX} -x c++ -std=gnu11"
+        B2_CXX="${CXX} -x c++ -std=gnu++11"
         B2_CXXFLAGS_RELEASE="-O2 -s"
         B2_CXXFLAGS_DEBUG="-O0 -g"
         ;;

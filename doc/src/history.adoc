@@ -1,6 +1,14 @@
 [[b2.history]]
 = History
 
+== Version 4.1.0
+
+Other changes in this release:
+
+* Support for VS2019 for intel-vin 19.0. -- _Edward Diener_
+* Fix compiler warnings about -std=gnu11 when building b2 on Cygwin. --
+  _Andrey Semashev_
+
 == Version 4.0.0
 
 After even more years of development the landscape of build systems has changed
