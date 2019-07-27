@@ -41,10 +41,18 @@ and C++ sources.
 Specifies additional command line options that will be passed to the linker.
 
 `root`::
-Specifies root directory of the compiler installation. This option is
-necessary only if it is not possible to detect this information from the
-compiler command -- for example if the specified compiler command is a user
-script.
+For the Linux version, specifies the root directory of the compiler installation.
+This option is necessary only if it is not possible to detect this information
+from the compiler command -- for example if the specified compiler command is
+a user script.
+
+For the Windows version, specifies the directory where the 'iclvars.bat' file for
+configuring the compiler exists. This directory must be specified without any
+trailing forward slash. Specifying the 'root' option without specifying the
+compiler command allows the end-user not to have to worry about whether
+he is compiling 32-bit or 64-bit code, as the toolset will automatically
+configure the compiler for the appropriate address model and compiler command
+using the iclvars.bat batch file.
 
 |# # end::doc[]
 
