@@ -44,7 +44,7 @@ Specifies additional command line options that will be passed to the linker.
 For the Linux version, specifies the root directory of the compiler installation.
 This option is necessary only if it is not possible to detect this information
 from the compiler command -- for example if the specified compiler command is
-a user script. For the Windows version, specifies the directory where the 
+a user script. For the Windows version, specifies the directory where the
 `iclvars.bat` file for configuring the compiler exists. Specifying the `root`
 option without specifying the compiler command allows the end-user not to have
 to worry about whether he is compiling 32-bit or 64-bit code, as the toolset will
