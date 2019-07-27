@@ -172,7 +172,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
             bin = [ path.make $(bin) ] ;
             bin = [ path.parent $(bin) ] ;
         }
-        root ?= bin ;
+        root ?= $(bin) ;
         root = $(root)/ ;
     }
 
