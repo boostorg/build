@@ -65,7 +65,7 @@ rule init ( version ? :  command * : options * ) {
   # Support for gcc root as the backend, this is mainly useful for clang/gcc on Windows
   # since on Linux gcc will be the default compiler already located on the PATH.
   # On Windows it is possible to have multiple versions of mingw(-64)/gcc installed
-  # in different paths. The <root>option can be given so that the gcc backend
+  # in different directories. The <root>option can be given so that the gcc backend
   # can be found at runtime, while the $(command) can be a script that sets the
   # PATH for both the clang directory and the backende gcc directory
   # before calling clang++ when compiling/linking.
