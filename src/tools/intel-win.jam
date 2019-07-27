@@ -164,7 +164,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
     
     local root = [ feature.get-values <root> : $(options) ] ;
-    if $(command) && ! $(root)
+    if $(command) || $(root)
     {
         local bin = [ common.get-absolute-tool-path $(command[-1]) ] ;
         if $(major) >= 12
@@ -172,7 +172,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
             bin = [ path.make $(bin) ] ;
             bin = [ path.parent $(bin) ] ;
         }
-        root = bin ;
+        root ?= bin ;
         root = $(root)/ ;
     }
 
