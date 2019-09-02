@@ -36,7 +36,7 @@
 #include "object.h"
 #include "parse.h"
 #include "rules.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "subst.h"
 #include "variable.h"
 #include "output.h"

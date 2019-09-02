@@ -7,7 +7,7 @@
 
 #include "debugger.h"
 #include "constants.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "pathsys.h"
 #include "cwd.h"
 #include "function.h"

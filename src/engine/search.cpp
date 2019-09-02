@@ -20,7 +20,7 @@
 #include "lists.h"
 #include "object.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "timestamp.h"
 #include "variable.h"
 #include "output.h"

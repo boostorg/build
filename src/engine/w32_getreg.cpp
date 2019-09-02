@@ -12,7 +12,7 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 # include "object.h"
 # include "parse.h"
 # include "frames.h"
-# include "strings.h"
+# include "jam_strings.h"
 
 # define WIN32_LEAN_AND_MEAN
 # include <windows.h>
