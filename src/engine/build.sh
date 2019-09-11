@@ -413,7 +413,7 @@ B2_SOURCES="\
  rules.cpp \
  scan.cpp \
  search.cpp \
- strings.cpp \
+ jam_strings.cpp \
  subst.cpp \
  sysinfo.cpp \
  timestamp.cpp \

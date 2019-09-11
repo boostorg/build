@@ -7,7 +7,7 @@
 
 #include "../mem.h"
 #include "../native.h"
-#include "../strings.h"
+#include "../jam_strings.h"
 #include "../subst.h"
 
 /*

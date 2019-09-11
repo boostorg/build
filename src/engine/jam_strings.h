@@ -5,8 +5,8 @@
  * http://www.boost.org/LICENSE_1_0.txt)
  */
 
-#ifndef STRINGS_DWA20011024_H
-#define STRINGS_DWA20011024_H
+#ifndef JAM_STRINGS_DWA20011024_H
+#define JAM_STRINGS_DWA20011024_H
 
 #include "config.h"
 #include <stddef.h>
