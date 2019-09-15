@@ -13,7 +13,7 @@
 #include "lists.h"
 #include "object.h"
 #include "rules.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "variable.h"
 #include "output.h"
 

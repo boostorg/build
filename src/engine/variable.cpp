@@ -38,7 +38,7 @@
 #include "modules.h"
 #include "parse.h"
 #include "pathsys.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "output.h"
 
 #include <stdio.h>
