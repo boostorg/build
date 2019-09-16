@@ -1568,7 +1568,8 @@ local rule default-path ( version )
         # causing [ SHELL "C:\\...\\Installer/vswhere.exe" ] to succeed.
         # And fortunately, forward slashes do also work in native Windows.
         local vswhere = "$(root)/Microsoft Visual Studio/Installer/vswhere.exe" ;
-        if $(version) in 14.1 14.2 default && [ path.exists $(vswhere) ]
+        # The check for $(root) is to avoid a segmentation fault if not found.
+        if $(version) in 14.1 14.2 default && $(root) && [ path.exists $(vswhere) ]
         {
             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
             local prop = "-property installationPath" ;
