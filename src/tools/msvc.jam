@@ -1563,6 +1563,18 @@ local rule default-path ( version )
         {
             root = [ os.environ "ProgramFiles" ] ;
         }
+        if ( ! $(root) ) && [ os.name ] in CYGWIN
+        {
+            # We probably are in an 'env -i' Cygwin session, where the user
+            # was unable restore the "ProgramFiles(x86)" environment variable,
+            # because it is an invalid environment variable name in Cygwin.
+            # However, we can try to query cygpath instead.
+            root = [ SHELL "cygpath -w -F 42" : strip-eol ] ; # CSIDL_PROGRAM_FILESX86
+            if ( ! $(root) )
+            {
+                root = [ SHELL "cygpath -w -F 38" : strip-eol ] ; # CSIDL_PROGRAM_FILES
+            }
+        }
         # When we are a Cygwin build, [ SHELL ] does execute using "/bin/sh -c".
         # When /bin/sh does find a forward slash, no PATH search is performed,
         # causing [ SHELL "C:\\...\\Installer/vswhere.exe" ] to succeed.
