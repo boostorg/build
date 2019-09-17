@@ -38,8 +38,8 @@ namespace b2
 
         private:
 
-        unsigned int cpu_core_count_ = 0;
-        unsigned int cpu_thread_count_ = 0;
+        unsigned int cpu_core_count_;
+        unsigned int cpu_thread_count_;
     };
 }
 

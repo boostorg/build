@@ -7,7 +7,9 @@
 #include "jam.h"
 #include "output.h"
 
+#if __cplusplus >= 201103L
 #include <thread>
+#endif
 
 #if defined(OS_MACOSX)
 #include <sys/types.h>
@@ -29,6 +31,7 @@
 
 
 b2::system_info::system_info()
+    : cpu_core_count_(0), cpu_thread_count_(0)
 {
 }
 
@@ -90,7 +93,11 @@ namespace
 
     unsigned int std_thread_hardware_concurrency()
     {
+        #if __cplusplus >= 201103L
         return std::thread::hardware_concurrency();
+        #else
+        return 0;
+        #endif
     }
 }
 
