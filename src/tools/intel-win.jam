@@ -374,7 +374,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     # specified name of the PCH file. Of course, Boost.Build is not
     # happy when compiler produces not the file it was asked for.
     # The option below stops this behaviour.
-    toolset.flags intel-win CFLAGS : -Qpchi- ;
+    toolset.flags intel-win CFLAGS $(condition) : -Qpchi- ;
 
     if ! $(compatibility)
     {
