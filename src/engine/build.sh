@@ -426,6 +426,7 @@ B2_SOURCES="\
  modules/sequence.cpp \
  modules/set.cpp \
  modules/sysinfo.cpp \
+ modules/version.cpp \
  "
 case $B2_OS in
     NT)

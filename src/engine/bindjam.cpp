@@ -10,6 +10,7 @@
 #include "hash.h"
 #include "lists.h"
 #include "modules.h"
+#include "mp.h"
 #include "native.h"
 #include "object.h"
 #include "output.h"
@@ -17,6 +18,7 @@
 #include "variable.h"
 
 #include "modules/sysinfo.h"
+#include "modules/version.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -49,6 +51,11 @@ struct jam_binder : bind::binder_<jam_binder>
     void bind_init(
         const char *module_name, const char *class_name,
         Class *c, Init i);
+
+    template <class Function>
+    void bind_function(
+        const char *module_name,
+        const char *function_name, Function f);
 };
 
 // Marshaling of arguments and results end up calling one of from_jam or
@@ -79,6 +86,28 @@ template <>
 OBJECT *to_jam(unsigned int v)
 {
     return to_jam(std::to_string(v));
+}
+
+template <>
+int from_jam<int>(OBJECT *jv)
+{
+    return std::stoi(from_jam<std::string>(jv));
+}
+template <>
+OBJECT *to_jam(int v)
+{
+    return to_jam(std::to_string(v));
+}
+
+template <>
+bool from_jam<bool>(OBJECT *jv)
+{
+    return object_str(jv) != nullptr && object_str(jv)[0] != '\0';
+}
+template <>
+OBJECT *to_jam(bool v)
+{
+    return object_new(v ? "1" : "");
 }
 
 // Utility to get the first type in a parameter pack.
@@ -189,6 +218,33 @@ struct jam_cxx_self
     }
 };
 
+// Marshals arguments from Jam LOL to C++ tuple..
+
+template <typename ArgsTuple, std::size_t N, typename Enable = void>
+struct jam_marshal_args
+{
+    static void convert(ArgsTuple & to_args, LOL * from_args)
+    {
+    }
+};
+template <typename ArgsTuple, std::size_t N>
+struct jam_marshal_args<ArgsTuple, N,
+    typename std::enable_if< (N < std::tuple_size<ArgsTuple>::value) >::type>
+{
+    static void convert(ArgsTuple & to_args, LOL * from_args)
+    {
+        using arg_type = typename std::tuple_element<N, ArgsTuple>::type;
+        LIST * arg_value = lol_get(from_args, N);
+        std::get<N>(to_args)
+            = jam_binder::convert_from_bind_value<arg_type>(arg_value);
+
+        if (N < std::tuple_size<ArgsTuple>::value)
+        {
+            jam_marshal_args<ArgsTuple, N+1>::convert(to_args, from_args);
+        }
+    }
+};
+
 // Bound init/constructor function that forwards from jam __init__ to C++.
 template <typename Call, typename Class, typename... Args>
 static LIST *jam_call_init(
@@ -196,14 +252,27 @@ static LIST *jam_call_init(
     Call cxx_call,
     Class *(*)(Args...))
 {
-    // Marshal arguments from frame->args.
-    // ..
-    // Construct the class instance, and set the hidden jam instance var
-    // to keep track of it.
-    Class *self = cxx_call();
-    jam_cxx_self::set(frame, self);
-    // Nothing to return from an init.
-    return L0;
+    using namespace mp;
+    try
+    {
+        // Marshal arguments from frame->args.
+        using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
+        ArgsTuple args;
+        jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+        // Construct the class instance, and set the hidden jam instance var
+        // to keep track of it.
+        Class * self = invoke<Class *>(
+            cxx_call,
+            args,
+            make_index_sequence<std::tuple_size<ArgsTuple>::value>{});
+        jam_cxx_self::set(frame, self);
+        // Nothing to return from an init.
+        return L0;
+    }
+    catch(const std::exception& e)
+    {
+        return L0;
+    }
 }
 
 // Bound plain function that forwards from jam to C++ with a return
@@ -214,12 +283,56 @@ static LIST *jam_call_method(
     Call cxx_call,
     Return (*)(Class *, Args...))
 {
-    // Marshal arguments from frame->args.
-    // Invoke call.
-    // .. Return r = call(..);
-    Return r = cxx_call(jam_cxx_self::get<Class>(frame));
-    // Marshal result to LIST.
-    return jam_binder::convert_to_bind_value<LIST*>(r);
+    using namespace mp;
+    try
+    {
+        // Marshal arguments from frame->args.
+        using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
+        ArgsTuple args;
+        jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+        // Invoke call.
+        Return r = invoke<Return>(
+            cxx_call,
+            std::tuple_cat(
+                std::make_tuple(jam_cxx_self::get<Class>(frame)),
+                args
+            ),
+            make_index_sequence<1+std::tuple_size<ArgsTuple>::value>{});
+        // Return r = cxx_call(jam_cxx_self::get<Class>(frame));
+        // Marshal result to LIST.
+        return jam_binder::convert_to_bind_value<LIST*>(r);
+    }
+    catch(const std::exception& e)
+    {
+        return L0;
+    }
+}
+
+// Bound plain function...
+template <typename Call, typename... Args, typename Return>
+static LIST *jam_call_function(
+    FRAME *frame, int flags,
+    Call cxx_call,
+    Return (*)(Args...))
+{
+    using namespace mp;
+    try
+    {
+        // Marshal arguments from frame->args.
+        using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
+        ArgsTuple args;
+        jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+        // Invoke call.
+        Return r = invoke<Return>(
+            cxx_call, args,
+            make_index_sequence<std::tuple_size<ArgsTuple>::value>{});
+        // Marshal result to LIST.
+        return jam_binder::convert_to_bind_value<LIST*>(r);
+    }
+    catch(const std::exception& e)
+    {
+        return L0;
+    }
 }
 
 template <typename Return, typename... Args>
@@ -301,6 +414,25 @@ void jam_bind(
         static_cast<Return (*)(Class *, Args...)>(nullptr));
 }
 
+template <typename Return, typename... Args>
+void jam_bind(
+    const std::string &module_name,
+    const std::string &rule_name,
+    Return (*function)(Args...))
+{
+    jam_native_bind(
+        module_name, rule_name,
+        [function](FRAME *frame, int flags) -> LIST * {
+            return jam_call_function(
+                frame, flags,
+                [function](Args... args) -> Return {
+                    return (*function)(args...);
+                },
+                static_cast<Return (*)(Args...)>(nullptr));
+        },
+        static_cast<Return (*)(Args...)>(nullptr));
+}
+
 template <class Class, typename... Args>
 void jam_bind(
     const std::string &module_name,
@@ -357,10 +489,19 @@ void jam_binder::bind_init(
     jam_bind(std::string("class@") + class_name, "__init__", c, i);
 }
 
+template <class Function>
+void jam_binder::bind_function(
+    const char *module_name,
+    const char *function_name, Function f)
+{
+    jam_bind(module_name, function_name, f);
+}
+
 void bind_jam()
 {
     jam_binder()
-        .bind(sysinfo_module());
+        .bind(sysinfo_module())
+        .bind(version_module());
 }
 
 } // namespace b2

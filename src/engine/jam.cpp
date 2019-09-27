@@ -135,7 +135,7 @@
 #include "timestamp.h"
 #include "variable.h"
 #include "execcmd.h"
-#include "sysinfo.h"
+#include "modules/sysinfo.h"
 
 /* Macintosh is "special" */
 #ifdef OS_MAC

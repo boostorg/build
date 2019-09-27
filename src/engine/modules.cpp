@@ -20,6 +20,9 @@
 #include <assert.h>
 #include <string.h>
 
+#include <string>
+#include <vector>
+
 static struct hash * module_hash = 0;
 static module_t root;
 
@@ -428,4 +431,36 @@ int module_get_fixed_var( struct module_t * m_, OBJECT * name )
 
     v = (struct fixed_variable *)hash_find( m->variable_indices, name );
     return v && v->n < m_->num_fixed_variables ? v->n : -1;
+}
+
+namespace b2
+{
+
+static module_t * get_module(const std::string & name)
+{
+    if (name.size() == 0)
+    {
+        return root_module();
+    }
+    else
+    {
+        OBJECT * name_obj = object_new(name.c_str());
+        struct module_t * module = bindmodule(name_obj);
+        object_free(name_obj);
+        return module;
+    }
+}
+
+std::vector<std::string> modules_peek(const std::string & module_name, const std::vector<std::string> variables)
+{
+    std::vector<std::string> values;
+    struct module_t * module = get_module(module_name);
+    for (auto & variable : variables)
+    {
+        OBJECT *variable_obj = object_new(variable.c_str());
+        values.emplace_back(object_str(list_front(var_get(module, variable_obj))));
+        object_free(variable_obj);
+    }
+    return values;
+}
 }

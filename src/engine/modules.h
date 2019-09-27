@@ -7,6 +7,7 @@
 #define MODULES_DWA10182001_H
 
 #include "config.h"
+#include "bind.h"
 #include "lists.h"
 #include "object.h"
 
@@ -49,5 +50,10 @@ void module_set_fixed_variables( module_t *, int n );
 int module_get_fixed_var( module_t *, OBJECT * name );
 
 void modules_done();
+
+namespace b2
+{
+std::vector<std::string> modules_peek(const std::string & module_name, const std::vector<std::string> variables);
+}
 
 #endif

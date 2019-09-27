@@ -47,56 +47,9 @@ rule verify-engine-version ( )
 }
 
 
-# Utility rule for testing whether all elements in a sequence are equal to 0.
-#
-local rule is-all-zeroes ( sequence * )
-{
-    local result = "true" ;
-    for local e in $(sequence)
-    {
-        if $(e) != "0"
-        {
-            result = "" ;
-        }
-    }
-    return $(result) ;
-}
-
-
 # Returns "true" if the first version is less than the second one.
 #
-rule version-less ( lhs + : rhs + )
-{
-    numbers.check $(lhs) ;
-    numbers.check $(rhs) ;
-
-    local done ;
-    local result ;
-
-    while ! $(done) && $(lhs) && $(rhs)
-    {
-        if [ numbers.less $(lhs[1]) $(rhs[1]) ]
-        {
-            done = "true" ;
-            result = "true" ;
-        }
-        else if [ numbers.less $(rhs[1]) $(lhs[1])  ]
-        {
-            done = "true" ;
-        }
-        else
-        {
-            lhs = $(lhs[2-]) ;
-            rhs = $(rhs[2-]) ;
-        }
-    }
-    if ( ! $(done) && ! $(lhs) && ! [ is-all-zeroes $(rhs) ] )
-    {
-        result = "true" ;
-    }
-
-    return $(result) ;
-}
+# rule version-less ( lhs + : rhs + ) # BUILTIN
 
 
 # Returns "true" if the current JAM version version is at least the given

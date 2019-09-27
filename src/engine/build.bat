@@ -183,6 +183,7 @@ set B2_SOURCES=%B2_SOURCES% modules/regex.cpp
 set B2_SOURCES=%B2_SOURCES% modules/sequence.cpp
 set B2_SOURCES=%B2_SOURCES% modules/set.cpp
 set B2_SOURCES=%B2_SOURCES% modules/sysinfo.cpp
+set B2_SOURCES=%B2_SOURCES% modules/version.cpp
 
 set B2_CXXFLAGS=%B2_CXXFLAGS% -DNDEBUG
 

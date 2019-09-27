@@ -8,6 +8,9 @@
 
 #include "config.h"
 #include <functional>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 
 /** tag::binder[]
 
@@ -201,6 +204,24 @@ struct binder_
         return class_<Class, Binder>(name, self());
     }
 
+    /** tag::binder_binder[]
+
+    === `b2::bind::binder_::def_class`
+
+    === `b2::bind::binder_::def(const char *name, F function) -> binder_ &`
+
+    Defines a function which is bound with the given `name` which calls the given
+    `function`.
+
+    end::binder_binder[] */
+    template <class F>
+    binder_ &def(const char *name, F function)
+    {
+        // Forward to the language specific binder.
+        self().def_function(name, function);
+        return *this;
+    }
+
     // Internal..
 
     // Returns the subclass reference to this binder.
@@ -235,20 +256,26 @@ struct binder_
         self().bind_init(current_module_name, class_name, c, i);
     }
 
+    // Respond to a function definition of a module. This calls the subclass
+    // method `bind_function(module_name, function_name, function)`.
+    template <class Function>
+    void def_function(const char *function_name, Function f)
+    {
+        self().bind_function(current_module_name, function_name, f);
+    }
+
+    // Generic, shim, to convert from a C++ value to a binding specific value.
+    // Forwards to the `converter_` template specialization.
     template <class BindValue, class CxxValue>
     static BindValue convert_to_bind_value(const CxxValue &source)
     {
         return converter_<Binder, CxxValue, BindValue>::to_bind_value(source);
     }
 
+    // Generic, shim, to convert from a binding specific value to a C++ value.
+    // Forwards to the `converter_` template specialization.
     template <class CxxValue, class BindValue>
     static CxxValue convert_from_bind_value(const BindValue &source)
-    {
-        return converter_<Binder, CxxValue, BindValue>::from_bind_value(source);
-    }
-
-    template <class CxxValue, class BindValue>
-    static CxxValue convert_from_bind_value(BindValue source)
     {
         return converter_<Binder, CxxValue, BindValue>::from_bind_value(source);
     }
