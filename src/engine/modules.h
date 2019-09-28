@@ -1,5 +1,6 @@
 /*
  *  Copyright 2001-2004 David Abrahams.
+ *  Copyright 2019 Rene Rivera.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
  */
@@ -10,6 +11,9 @@
 #include "bind.h"
 #include "lists.h"
 #include "object.h"
+
+#include <string>
+#include <vector>
 
 typedef struct module_t module_t ;
 struct module_t
