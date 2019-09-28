@@ -119,10 +119,12 @@ struct pack_front
 template <class... T>
 using pack_front_t = typename pack_front<T...>::type;
 
+namespace bind
+{
 // General marshaling of one jam value list. Default converts the first item
 // to/from the list.
 template <class CxxValue>
-struct bind::converter_<jam_binder, CxxValue, LIST*>
+struct converter_<jam_binder, CxxValue, LIST*>
 {
     static LIST *to_bind_value(const CxxValue &cpp_value)
     {
@@ -136,7 +138,7 @@ struct bind::converter_<jam_binder, CxxValue, LIST*>
 
 // Specialize for void to reduce code duplication.
 template <>
-struct bind::converter_<jam_binder, void, LIST*>
+struct converter_<jam_binder, void, LIST*>
 {
     static LIST *to_bind_value(void)
     {
@@ -150,7 +152,7 @@ struct bind::converter_<jam_binder, void, LIST*>
 // Marshaling specialization for vector container.
 // TODO: Generalize to more containers.
 template <typename Value>
-struct bind::converter_<jam_binder, std::vector<Value>, LIST *>
+struct converter_<jam_binder, std::vector<Value>, LIST *>
 {
     static LIST *to_bind_value(const std::vector<Value> &cpp_value)
     {
@@ -172,6 +174,7 @@ struct bind::converter_<jam_binder, std::vector<Value>, LIST *>
         return result;
     }
 };
+}
 
 struct jam_cxx_self
 {
