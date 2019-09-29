@@ -105,6 +105,15 @@ else
 flags xlcpp CFLAGS <profiling>on : -pg ;
 flags xlcpp LINKFLAGS <profiling>on : -pg ;
 
+# Declare flags and actions for compilation
+flags xlcpp.compile.c++ OPTIONS <cxxstd>98 : -std=c++03 ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>03 : -std=c++03 ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>0x : -std=c++11 ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>11 : -std=c++11 ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>1y : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>14 : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>latest : -std=c++1y ;
+
 flags xlcpp.compile OPTIONS <cflags> ;
 flags xlcpp.compile.c++ OPTIONS <cxxflags> ;
 flags xlcpp DEFINES <define> ;

@@ -457,12 +457,13 @@ local rule compile-link-flags ( * )
     threading-flags <target-os>windows : -mthreads ;
     threading-flags <target-os>cygwin  : -mthreads ;
     threading-flags <target-os>solaris  : -pthreads : rt ;
+    threading-flags <target-os>qnx : -pthread ;
 
     local bsd = [ MATCH ^(.*bsd)$ : $(all-os) ] ;
     threading-flags <target-os>$(bsd) : -pthread ;
 
     local no-threading = android beos haiku sgi darwin vxworks ;
-    local threading-generic-os = [ set.difference $(all-os) : $(no-threading) $(bsd) windows cygwin solaris ] ;
+    local threading-generic-os = [ set.difference $(all-os) : $(no-threading) $(bsd) windows cygwin solaris qnx ] ;
     threading-flags <target-os>$(threading-generic-os) : -pthread : rt ;
 }
 
@@ -1310,5 +1311,6 @@ cpu-flags gcc OPTIONS : s390x : z196 : -march=z196 ;
 cpu-flags gcc OPTIONS : s390x : zEC12 : -march=zEC12 ;
 cpu-flags gcc OPTIONS : s390x : z13 : -march=z13 ;
 cpu-flags gcc OPTIONS : s390x : z14 : -march=z14 ;
+cpu-flags gcc OPTIONS : s390x : z15 : -march=z15 ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;

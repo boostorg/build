@@ -241,7 +241,7 @@ case $B2_TOOLSET in
 
     vacpp)
         CXX=${CXX:=xlC_r}
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=-qversion}
         B2_CXX="${CXX}"
         B2_CXXFLAGS_RELEASE="-O3 -s -qstrict -qinline"
         B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
@@ -249,7 +249,7 @@ case $B2_TOOLSET in
 
     xlcpp)
         CXX=${CXX:=xlC_r}
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=-qversion}
         B2_CXX="${CXX}"
         B2_CXXFLAGS_RELEASE="-s -O3 -qstrict -qinline"
         B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
@@ -305,7 +305,7 @@ case $B2_TOOLSET in
 
     sun*)
         CXX=${CXX:=CC}
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:=-V}
         if test -z "${B2_TOOLSET_ROOT}" -a -r /opt/SUNWspro/bin/CC ; then
             B2_TOOLSET_ROOT=/opt/SUNWspro/
         fi
@@ -414,7 +414,7 @@ B2_SOURCES="\
  rules.cpp \
  scan.cpp \
  search.cpp \
- strings.cpp \
+ jam_strings.cpp \
  subst.cpp \
  timestamp.cpp \
  variable.cpp \

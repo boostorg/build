@@ -12,7 +12,7 @@
 #include "frames.h"
 #include "lists.h"
 #include "parse.h"
-#include "strings.h"
+#include "jam_strings.h"
 
 #include <functional>
 

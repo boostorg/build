@@ -23,7 +23,7 @@
 #include "parse.h"
 #include "pathsys.h"
 #include "rules.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "subst.h"
 #include "timestamp.h"
 #include "variable.h"

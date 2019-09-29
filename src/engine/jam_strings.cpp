@@ -3,7 +3,7 @@
 /* file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) */
 
 #include "jam.h"
-#include "strings.h"
+#include "jam_strings.h"
 
 #include <assert.h>
 #include <stdlib.h>
