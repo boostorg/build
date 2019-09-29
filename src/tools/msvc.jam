@@ -1563,8 +1563,25 @@ local rule default-path ( version )
         {
             root = [ os.environ "ProgramFiles" ] ;
         }
-        local vswhere = "$(root)\\Microsoft Visual Studio\\Installer\\vswhere.exe" ;
-        if $(version) in 14.1 14.2 default && [ path.exists $(vswhere) ]
+        if ( ! $(root) ) && [ os.name ] in CYGWIN
+        {
+            # We probably are in an 'env -i' Cygwin session, where the user
+            # was unable restore the "ProgramFiles(x86)" environment variable,
+            # because it is an invalid environment variable name in Cygwin.
+            # However, we can try to query cygpath instead.
+            root = [ SHELL "cygpath -w -F 42" : strip-eol ] ; # CSIDL_PROGRAM_FILESX86
+            if ( ! $(root) )
+            {
+                root = [ SHELL "cygpath -w -F 38" : strip-eol ] ; # CSIDL_PROGRAM_FILES
+            }
+        }
+        # When we are a Cygwin build, [ SHELL ] does execute using "/bin/sh -c".
+        # When /bin/sh does find a forward slash, no PATH search is performed,
+        # causing [ SHELL "C:\\...\\Installer/vswhere.exe" ] to succeed.
+        # And fortunately, forward slashes do also work in native Windows.
+        local vswhere = "$(root)/Microsoft Visual Studio/Installer/vswhere.exe" ;
+        # The check for $(root) is to avoid a segmentation fault if not found.
+        if $(version) in 14.1 14.2 default && $(root) && [ path.exists $(vswhere) ]
         {
             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
             local prop = "-property installationPath" ;
@@ -1579,8 +1596,10 @@ local rule default-path ( version )
                 limit = "-version \"[15.0,16.0)\"" ;
             }
 
-            local vswhere_cmd = "\"$(vswhere)\" -latest -products * $(req) $(prop) $(limit)" ;
-            local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vswhere_cmd) ] : "\n" ] ;
+            # Quoting the "*" is for when we are a Cygwin build, to bypass /bin/sh.
+            local vswhere_cmd = "\"$(vswhere)\" -latest -products \"*\" $(req) $(prop) $(limit)" ;
+            # The split character "\r" is for when we are a Cygwin build.
+            local shell_ret = [ SPLIT_BY_CHARACTERS [ SHELL $(vswhere_cmd) ] : "\r\n" ] ;
             pseudo_env_VSCOMNTOOLS = [ path.native [ path.join $(shell_ret) "\\Common7\\Tools" ] ] ;
             if ! [ path.exists $(pseudo_env_VSCOMNTOOLS) ]
             {
