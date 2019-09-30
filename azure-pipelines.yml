@@ -320,6 +320,12 @@ stages:
       vmImage: 'ubuntu-16.04'
     strategy:
       matrix:
+        1.71.0 .. GCC 9:
+          BOOST_VERSION: 1.71.0
+          BOOST_VERSION_U: 1_71_0
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
         1.70.0 .. GCC 9:
           BOOST_VERSION: 1.70.0
           BOOST_VERSION_U: 1_70_0
