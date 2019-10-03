@@ -864,6 +864,7 @@ cpu_flags('gcc', 'OPTIONS', 's390x',  'z196', ['-march=z196'])
 cpu_flags('gcc', 'OPTIONS', 's390x',  'zEC12', ['-march=zEC12'])
 cpu_flags('gcc', 'OPTIONS', 's390x',  'z13', ['-march=z13'])
 cpu_flags('gcc', 'OPTIONS', 's390x',  'z14', ['-march=z14'])
+cpu_flags('gcc', 'OPTIONS', 's390x',  'z15', ['-march=z15'])
 # AIX variant of RS/6000 & PowerPC
 flags('gcc', 'OPTIONS', ['<architecture>power/<address-model>32/<target-os>aix'], ['-maix32'])
 flags('gcc', 'OPTIONS', ['<architecture>power/<address-model>64/<target-os>aix'], ['-maix64'])

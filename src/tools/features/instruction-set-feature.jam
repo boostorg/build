@@ -44,7 +44,7 @@ feature.feature instruction-set
         armv7 armv7s
 	
 	# z Systems (aka s390x)
-	z196 zEC12 z13 z14
+	z196 zEC12 z13 z14 z15
 
     :
         propagated optional
