@@ -322,7 +322,10 @@ stages:
       displayName: Bootstrap
 
 - stage: Boost
+  jobs:
+
   - job: 'Release_Linux'
+    displayName: 'Release Linux'
     pool:
       vmImage: 'ubuntu-16.04'
     strategy:
@@ -406,6 +409,7 @@ stages:
       displayName: Test
 
   - job: 'Dev_Linux'
+    displayName: 'Dev Linux'
     pool:
       vmImage: 'ubuntu-16.04'
     strategy:
