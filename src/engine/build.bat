@@ -176,6 +176,7 @@ set B2_SOURCES=%B2_SOURCES% jambase.cpp jamgram.cpp lists.cpp make.cpp make1.cpp
 set B2_SOURCES=%B2_SOURCES% native.cpp object.cpp option.cpp output.cpp parse.cpp pathnt.cpp
 set B2_SOURCES=%B2_SOURCES% pathsys.cpp regexp.cpp rules.cpp scan.cpp search.cpp jam_strings.cpp
 set B2_SOURCES=%B2_SOURCES% subst.cpp timestamp.cpp variable.cpp w32_getreg.cpp
+set B2_SOURCES=%B2_SOURCES% modules/mod_string.cpp
 set B2_SOURCES=%B2_SOURCES% modules/order.cpp
 set B2_SOURCES=%B2_SOURCES% modules/path.cpp
 set B2_SOURCES=%B2_SOURCES% modules/property-set.cpp

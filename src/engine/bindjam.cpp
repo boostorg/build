@@ -17,6 +17,7 @@
 #include "rules.h"
 #include "variable.h"
 
+#include "modules/mod_string.h"
 #include "modules/sysinfo.h"
 #include "modules/version.h"
 
@@ -159,7 +160,7 @@ struct converter_<jam_binder, std::vector<Value>, LIST *>
         LIST *result = L0;
         for (auto &v : cpp_value)
         {
-            list_append(to_jam(v));
+            result = list_push_back(result, to_jam(v));
         }
         return result;
     }
@@ -238,8 +239,9 @@ struct jam_marshal_args<ArgsTuple, N,
     {
         using arg_type = typename std::tuple_element<N, ArgsTuple>::type;
         LIST * arg_value = lol_get(from_args, N);
-        std::get<N>(to_args)
-            = jam_binder::convert_from_bind_value<arg_type>(arg_value);
+        if (arg_value != L0)
+            std::get<N>(to_args)
+                = jam_binder::convert_from_bind_value<arg_type>(arg_value);
 
         if (N < std::tuple_size<ArgsTuple>::value)
         {
@@ -504,7 +506,8 @@ void bind_jam()
 {
     jam_binder()
         .bind(sysinfo_module())
-        .bind(version_module());
+        .bind(version_module())
+        .bind(string_module());
 }
 
 } // namespace b2

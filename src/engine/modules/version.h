@@ -12,6 +12,23 @@
 
 namespace b2
 {
+/* tag::version[]
+
+= `version` module.
+
+end::version[] */
+
+/* tag::version[]
+
+== `version_less`
+
+Returns `true` if the first version, `lhs`, is semantically less than the
+second version, `rhs`.
+
+Jam::
+`rule version-less ( lhs + : rhs + )`
+
+end::version[] */
 bool version_less(const std::vector<int> &lhs, const std::vector<int> &rhs);
 
 struct version_module
