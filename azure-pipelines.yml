@@ -321,7 +321,9 @@ stages:
         ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
 
-  - job: 'Boost Release Linux'
+- stage: Boost
+  - job: 'ReleaseLinux'
+    displayName: 'Release Linux'
     pool:
       vmImage: 'ubuntu-16.04'
     strategy:
@@ -404,7 +406,8 @@ stages:
           popd
       displayName: Test
 
-  - job: 'Boost Dev Linux'
+  - job: 'DevLinux'
+    displayName: 'Dev Linux'
     pool:
       vmImage: 'ubuntu-16.04'
     strategy:
