@@ -15,12 +15,11 @@ std::string b2::string_whitespace()
 
 std::vector<std::string> b2::string_chars(std::string s)
 {
-    std::vector<std::string> result{s.size()};
-    std::transform(
-        s.cbegin(), s.cend(),
-        result.begin(),
-        [](std::string::value_type c) { return std::string{c}; });
-    return result;
+    std::vector<std::string> chars;
+    chars.reserve(s.size());
+    for (auto ch : s)
+        chars.emplace_back(1, ch);
+    return chars;
 }
 
 std::string b2::string_abbreviate(std::string s)
@@ -57,10 +56,12 @@ std::string b2::string_abbreviate(std::string s)
     return s;
 }
 
-std::string b2::string_join(const std::vector<std::string> &strings, std::string separator)
+std::string b2::string_join(const std::vector<std::string> &strings, optval<std::string> separator)
 {
     if (strings.empty())
         return "";
+    if (!separator.has_value())
+        separator = "";
     std::string result = strings.front();
     auto strings_i = strings.cbegin() + 1;
     auto strings_e = strings.cend();
@@ -91,7 +92,7 @@ std::vector<std::string> b2::string_words(std::string s, const std::vector<std::
     return words;
 }
 
-bool b2::string_is_whitespace(std::string s)
+bool b2::string_is_whitespace(optval<std::string> s)
 {
-    return s.find_first_not_of(whitespace_chars) == std::string::npos;
+    return !s.has_value() || s->find_first_not_of(whitespace_chars) == std::string::npos;
 }

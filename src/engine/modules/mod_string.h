@@ -8,6 +8,7 @@
 
 #include "../config.h"
 #include "../bind.h"
+#include "../optval.h"
 #include <string>
 #include <vector>
 
@@ -68,7 +69,7 @@ Jam::
 `rule join ( strings * : separator ? )`
 
 end::string[] */
-std::string string_join(const std::vector<std::string> & strings, std::string separator);
+std::string string_join(const std::vector<std::string> &strings, optval<std::string> separator);
 
 /* tag::string[]
 
@@ -80,7 +81,7 @@ Jam::
 `rule words ( string : whitespace * )`
 
 end::string[] */
-std::vector<std::string> string_words(std::string s, const std::vector<std::string> & whitespace);
+std::vector<std::string> string_words(std::string s, const std::vector<std::string> &whitespace);
 
 /* tag::string[]
 
@@ -92,7 +93,7 @@ Jam::
 `rule is-whitespace ( string ? )`
 
 end::string[] */
-bool string_is_whitespace(std::string s);
+bool string_is_whitespace(optval<std::string> s);
 
 struct string_module
     : b2::bind::module_<string_module>
@@ -100,7 +101,7 @@ struct string_module
     const char *module_name = "string";
 
     template <class Binder>
-    void def(Binder& binder)
+    void def(Binder &binder)
     {
         binder
             .def("whitespace", &b2::string_whitespace)
@@ -108,10 +109,9 @@ struct string_module
             .def("abbreviate", &b2::string_abbreviate)
             .def("join", &b2::string_join)
             .def("words", &b2::string_words)
-            .def("is-whitespace", &b2::string_is_whitespace)
-            ;
+            .def("is-whitespace", &b2::string_is_whitespace);
     }
 };
-}
+} // namespace b2
 
 #endif

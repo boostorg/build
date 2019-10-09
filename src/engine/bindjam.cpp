@@ -13,6 +13,7 @@
 #include "mp.h"
 #include "native.h"
 #include "object.h"
+#include "optval.h"
 #include "output.h"
 #include "rules.h"
 #include "variable.h"
@@ -125,7 +126,7 @@ namespace bind
 // General marshaling of one jam value list. Default converts the first item
 // to/from the list.
 template <class CxxValue>
-struct converter_<jam_binder, CxxValue, LIST*>
+struct converter_<jam_binder, CxxValue, LIST *>
 {
     static LIST *to_bind_value(const CxxValue &cpp_value)
     {
@@ -139,7 +140,7 @@ struct converter_<jam_binder, CxxValue, LIST*>
 
 // Specialize for void to reduce code duplication.
 template <>
-struct converter_<jam_binder, void, LIST*>
+struct converter_<jam_binder, void, LIST *>
 {
     static LIST *to_bind_value(void)
     {
@@ -175,7 +176,28 @@ struct converter_<jam_binder, std::vector<Value>, LIST *>
         return result;
     }
 };
-}
+
+// Marshaling for optval container.
+template <typename ValueType>
+struct converter_<jam_binder, optval<ValueType>, LIST *>
+{
+    static LIST *to_bind_value(const optval<ValueType> &cpp_value)
+    {
+        LIST *result = L0;
+        if (cpp_value.has_value())
+        {
+            list_push_back(result, to_jam(static_cast<ValueType>(cpp_value)));
+        }
+        return result;
+    }
+    static optval<ValueType> from_bind_value(LIST *jam_value)
+    {
+        if (list_length(jam_value) == 0)
+            return optval<ValueType>{};
+        return from_jam<ValueType>(list_front(jam_value));
+    }
+};
+} // namespace bind
 
 struct jam_cxx_self
 {
@@ -227,25 +249,24 @@ struct jam_cxx_self
 template <typename ArgsTuple, std::size_t N, typename Enable = void>
 struct jam_marshal_args
 {
-    static void convert(ArgsTuple & to_args, LOL * from_args)
+    static void convert(ArgsTuple &to_args, LOL *from_args)
     {
     }
 };
 template <typename ArgsTuple, std::size_t N>
 struct jam_marshal_args<ArgsTuple, N,
-    typename std::enable_if< (N < std::tuple_size<ArgsTuple>::value) >::type>
+                        typename std::enable_if<(N < std::tuple_size<ArgsTuple>::value)>::type>
 {
-    static void convert(ArgsTuple & to_args, LOL * from_args)
+    static void convert(ArgsTuple &to_args, LOL *from_args)
     {
         using arg_type = typename std::tuple_element<N, ArgsTuple>::type;
-        LIST * arg_value = lol_get(from_args, N);
+        LIST *arg_value = lol_get(from_args, N);
         if (arg_value != L0)
-            std::get<N>(to_args)
-                = jam_binder::convert_from_bind_value<arg_type>(arg_value);
+            std::get<N>(to_args) = jam_binder::convert_from_bind_value<arg_type>(arg_value);
 
         if (N < std::tuple_size<ArgsTuple>::value)
         {
-            jam_marshal_args<ArgsTuple, N+1>::convert(to_args, from_args);
+            jam_marshal_args<ArgsTuple, N + 1>::convert(to_args, from_args);
         }
     }
 };
@@ -266,7 +287,7 @@ static LIST *jam_call_init(
         jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
         // Construct the class instance, and set the hidden jam instance var
         // to keep track of it.
-        Class * self = invoke<Class *>(
+        Class *self = invoke<Class *>(
             cxx_call,
             args,
             make_index_sequence<std::tuple_size<ArgsTuple>::value>{});
@@ -274,7 +295,7 @@ static LIST *jam_call_init(
         // Nothing to return from an init.
         return L0;
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         return L0;
     }
@@ -300,14 +321,13 @@ static LIST *jam_call_method(
             cxx_call,
             std::tuple_cat(
                 std::make_tuple(jam_cxx_self::get<Class>(frame)),
-                args
-            ),
-            make_index_sequence<1+std::tuple_size<ArgsTuple>::value>{});
+                args),
+            make_index_sequence<1 + std::tuple_size<ArgsTuple>::value>{});
         // Return r = cxx_call(jam_cxx_self::get<Class>(frame));
         // Marshal result to LIST.
-        return jam_binder::convert_to_bind_value<LIST*>(r);
+        return jam_binder::convert_to_bind_value<LIST *>(r);
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         return L0;
     }
@@ -332,9 +352,9 @@ static LIST *jam_call_function(
             cxx_call, args,
             make_index_sequence<std::tuple_size<ArgsTuple>::value>{});
         // Marshal result to LIST.
-        return jam_binder::convert_to_bind_value<LIST*>(r);
+        return jam_binder::convert_to_bind_value<LIST *>(r);
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
         return L0;
     }
