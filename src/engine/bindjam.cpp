@@ -18,6 +18,7 @@
 #include "rules.h"
 #include "variable.h"
 
+#include "modules/mod_set.h"
 #include "modules/mod_string.h"
 #include "modules/sysinfo.h"
 #include "modules/version.h"
@@ -303,7 +304,9 @@ static LIST *jam_call_init(
 
 // Bound plain function that forwards from jam to C++ with a return
 // converted back to jam.
-template <typename Call, typename Class, typename... Args, typename Return>
+template <
+    typename Call, typename Class, typename... Args, typename Return,
+    typename std::enable_if<!std::is_void<Return>{}, int>::type = 0>
 static LIST *jam_call_method(
     FRAME *frame, int flags,
     Call cxx_call,
@@ -316,16 +319,45 @@ static LIST *jam_call_method(
         using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
         ArgsTuple args;
         jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
-        // Invoke call.
-        Return r = invoke<Return>(
+        // Invoke call, and return marshaled result.
+        return jam_binder::convert_to_bind_value<LIST *>(
+            invoke<Return>(
+                cxx_call,
+                std::tuple_cat(
+                    std::make_tuple(jam_cxx_self::get<Class>(frame)),
+                    args),
+                make_index_sequence<1 + std::tuple_size<ArgsTuple>::value>{}));
+    }
+    catch (const std::exception &e)
+    {
+        return L0;
+    }
+}
+
+// Bound plain function that forwards from jam to C++ with a void return.
+template <
+    typename Call, typename Class, typename... Args, typename Return,
+    typename std::enable_if<std::is_void<Return>{}, int>::type = 0>
+static LIST *jam_call_method(
+    FRAME *frame, int flags,
+    Call cxx_call,
+    Return (*)(Class *, Args...))
+{
+    using namespace mp;
+    try
+    {
+        // Marshal arguments from frame->args.
+        using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
+        ArgsTuple args;
+        jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+        // Invoke call, and return marshaled result.
+        invoke<Return>(
             cxx_call,
             std::tuple_cat(
                 std::make_tuple(jam_cxx_self::get<Class>(frame)),
                 args),
             make_index_sequence<1 + std::tuple_size<ArgsTuple>::value>{});
-        // Return r = cxx_call(jam_cxx_self::get<Class>(frame));
-        // Marshal result to LIST.
-        return jam_binder::convert_to_bind_value<LIST *>(r);
+        return L0;
     }
     catch (const std::exception &e)
     {
@@ -334,7 +366,9 @@ static LIST *jam_call_method(
 }
 
 // Bound plain function...
-template <typename Call, typename... Args, typename Return>
+template <
+    typename Call, typename... Args, typename Return,
+    typename std::enable_if<!std::is_void<Return>{}, int>::type = 0>
 static LIST *jam_call_function(
     FRAME *frame, int flags,
     Call cxx_call,
@@ -347,12 +381,37 @@ static LIST *jam_call_function(
         using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
         ArgsTuple args;
         jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
-        // Invoke call.
-        Return r = invoke<Return>(
+        // Invoke call, and return marshaled result.
+        return jam_binder::convert_to_bind_value<LIST *>(
+            invoke<Return>(
+                cxx_call, args,
+                make_index_sequence<std::tuple_size<ArgsTuple>::value>{}));
+    }
+    catch (const std::exception &e)
+    {
+        return L0;
+    }
+}
+template <
+    typename Call, typename... Args, typename Return,
+    typename std::enable_if<std::is_void<Return>{}, int>::type = 0>
+static LIST *jam_call_function(
+    FRAME *frame, int flags,
+    Call cxx_call,
+    Return (*)(Args...))
+{
+    using namespace mp;
+    try
+    {
+        // Marshal arguments from frame->args.
+        using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
+        ArgsTuple args;
+        jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+        // Invoke call, and return marshaled result.
+        invoke<Return>(
             cxx_call, args,
             make_index_sequence<std::tuple_size<ArgsTuple>::value>{});
-        // Marshal result to LIST.
-        return jam_binder::convert_to_bind_value<LIST *>(r);
+        return L0;
     }
     catch (const std::exception &e)
     {
@@ -527,7 +586,8 @@ void bind_jam()
     jam_binder()
         .bind(sysinfo_module())
         .bind(version_module())
-        .bind(string_module());
+        .bind(string_module())
+        .bind(set_module());
 }
 
 } // namespace b2

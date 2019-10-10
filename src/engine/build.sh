@@ -419,13 +419,13 @@ B2_SOURCES="\
  timestamp.cpp \
  variable.cpp \
  w32_getreg.cpp \
+ modules/mod_set.cpp \
  modules/mod_string.cpp \
  modules/order.cpp \
  modules/path.cpp \
  modules/property-set.cpp \
  modules/regex.cpp \
  modules/sequence.cpp \
- modules/set.cpp \
  modules/sysinfo.cpp \
  modules/version.cpp \
  "

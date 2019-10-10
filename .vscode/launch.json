@@ -5,13 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(lldb) Launch, ASAN",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.build/clang-darwin-10.0/debug/address-sanitizer-on/cxxstd-11-iso/b2",
+            "args": ["-n" "-a" "toolset=clang"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/example/hello",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb"
+        },
+        {
             "name": "(lldb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/src/engine/b2",
-            "args": ["-sBOOST_BUILD_PATH=${workspaceFolder}" "toolset=clang"],
-            "stopAtEntry": true,
-            "cwd": "${workspaceFolder}/test",
+            "program": "${workspaceFolder}/.build/clang-darwin-10.0/debug/cxxstd-11-iso/b2",
+            "args": ["-n" "-a" "toolset=clang"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/example/hello",
             "environment": [],
             "externalConsole": true,
             "MIMode": "lldb"

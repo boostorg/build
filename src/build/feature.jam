@@ -1017,7 +1017,6 @@ rule compress-subproperties ( properties * )
             all-subs += $(p) ;
         }
     }
-    assert.result true : set.equal $(all-subs) : $(matched-subs) ;
     return $(result) ;
 }
 
