@@ -306,7 +306,7 @@ static LIST *jam_call_init(
 // converted back to jam.
 template <
     typename Call, typename Class, typename... Args, typename Return,
-    typename std::enable_if<!std::is_void<Return>{}, int>::type = 0>
+    typename std::enable_if<!std::is_void<Return>::value, int>::type = 0>
 static LIST *jam_call_method(
     FRAME *frame, int flags,
     Call cxx_call,
@@ -337,7 +337,7 @@ static LIST *jam_call_method(
 // Bound plain function that forwards from jam to C++ with a void return.
 template <
     typename Call, typename Class, typename... Args, typename Return,
-    typename std::enable_if<std::is_void<Return>{}, int>::type = 0>
+    typename std::enable_if<std::is_void<Return>::value, int>::type = 0>
 static LIST *jam_call_method(
     FRAME *frame, int flags,
     Call cxx_call,
@@ -368,7 +368,7 @@ static LIST *jam_call_method(
 // Bound plain function...
 template <
     typename Call, typename... Args, typename Return,
-    typename std::enable_if<!std::is_void<Return>{}, int>::type = 0>
+    typename std::enable_if<!std::is_void<Return>::value, int>::type = 0>
 static LIST *jam_call_function(
     FRAME *frame, int flags,
     Call cxx_call,
@@ -394,7 +394,7 @@ static LIST *jam_call_function(
 }
 template <
     typename Call, typename... Args, typename Return,
-    typename std::enable_if<std::is_void<Return>{}, int>::type = 0>
+    typename std::enable_if<std::is_void<Return>::value, int>::type = 0>
 static LIST *jam_call_function(
     FRAME *frame, int flags,
     Call cxx_call,
