@@ -4,7 +4,6 @@
  */
 
 #include "bindjam.h"
-#include "bind.h"
 #include "class.h"
 #include "function.h"
 #include "hash.h"
@@ -12,7 +11,6 @@
 #include "modules.h"
 #include "mp.h"
 #include "native.h"
-#include "object.h"
 #include "optval.h"
 #include "output.h"
 #include "rules.h"
@@ -32,42 +30,9 @@
 namespace b2
 {
 
-struct jam_binder : bind::binder_<jam_binder>
-{
-    void bind_module(
-        const char *module_name);
-
-    // Register the class "meta-class". Which in the case of jam is a module
-    // with the rules and variables that gets imported and copied into the
-    // specific instance module as needed.
-    template <class Class>
-    void bind_class(
-        const char *module_name, const char *class_name,
-        ::b2::bind::type_<Class>);
-
-    template <class Function>
-    void bind_method(
-        const char *module_name, const char *class_name,
-        const char *method_name, Function f);
-
-    template <class Class, class Init>
-    void bind_init(
-        const char *module_name, const char *class_name,
-        Class *c, Init i);
-
-    template <class Function>
-    void bind_function(
-        const char *module_name,
-        const char *function_name, Function f);
-};
-
-// Marshaling of arguments and results end up calling one of from_jam or
-// to_jam functions. These are specialized on some core types as needed.
-
-template <class Value>
-Value from_jam(OBJECT *jam_value);
-template <class Value>
-OBJECT *to_jam(Value value);
+/*
+Basic core types to marshal..
+*/
 
 template <>
 std::string from_jam<std::string>(OBJECT *jv)
@@ -113,15 +78,6 @@ OBJECT *to_jam(bool v)
     return object_new(v ? "1" : "");
 }
 
-// Utility to get the first type in a parameter pack.
-template <class... T>
-struct pack_front
-{
-    using type = typename std::tuple_element<0, std::tuple<T...>>::type;
-};
-template <class... T>
-using pack_front_t = typename pack_front<T...>::type;
-
 namespace bind
 {
 // General marshaling of one jam value list. Default converts the first item
@@ -136,19 +92,6 @@ struct converter_<jam_binder, CxxValue, LIST *>
     static CxxValue from_bind_value(LIST *jam_value)
     {
         return from_jam<CxxValue>(list_front(jam_value));
-    }
-};
-
-// Specialize for void to reduce code duplication.
-template <>
-struct converter_<jam_binder, void, LIST *>
-{
-    static LIST *to_bind_value(void)
-    {
-        return L0;
-    }
-    static void from_bind_value(LIST *jam_value)
-    {
     }
 };
 

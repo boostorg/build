@@ -167,12 +167,15 @@ struct class_
     }
 };
 
+/* tag::binder[]
+
+Interface that converts between binder values and C++ values.
+
+end::binder[] */
 template <class Binder, class CxxValue, class BindValue>
 struct converter_
 {
     static BindValue to_bind_value(const CxxValue &);
-    static CxxValue from_bind_value(const BindValue &);
-    static BindValue to_bind_value(CxxValue);
     static CxxValue from_bind_value(BindValue);
 };
 
@@ -275,7 +278,8 @@ struct binder_
     // Generic, shim, to convert from a binding specific value to a C++ value.
     // Forwards to the `converter_` template specialization.
     template <class CxxValue, class BindValue>
-    static CxxValue convert_from_bind_value(const BindValue &source)
+    static CxxValue convert_from_bind_value(BindValue source)
+    // static CxxValue convert_from_bind_value(const BindValue &source)
     {
         return converter_<Binder, CxxValue, BindValue>::from_bind_value(source);
     }
