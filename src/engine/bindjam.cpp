@@ -15,7 +15,9 @@
 #include "output.h"
 #include "rules.h"
 #include "variable.h"
+#include "types.h"
 
+#include "modules/mod_regex.h"
 #include "modules/mod_set.h"
 #include "modules/mod_string.h"
 #include "modules/sysinfo.h"
@@ -35,34 +37,34 @@ Basic core types to marshal..
 */
 
 template <>
-std::string from_jam<std::string>(OBJECT *jv)
+string_t from_jam<string_t>(OBJECT *jv)
 {
     return object_str(jv);
 }
 template <>
-OBJECT *to_jam(std::string v)
+OBJECT *to_jam(string_t v)
 {
     return object_new(v.c_str());
 }
 
 template <>
-unsigned int from_jam<unsigned int>(OBJECT *jv)
+uint_t from_jam<uint_t>(OBJECT *jv)
 {
-    return std::stoul(from_jam<std::string>(jv));
+    return std::stoul(from_jam<string_t>(jv));
 }
 template <>
-OBJECT *to_jam(unsigned int v)
+OBJECT *to_jam(uint_t v)
 {
     return to_jam(std::to_string(v));
 }
 
 template <>
-int from_jam<int>(OBJECT *jv)
+int_t from_jam<int_t>(OBJECT *jv)
 {
-    return std::stoi(from_jam<std::string>(jv));
+    return std::stoi(from_jam<string_t>(jv));
 }
 template <>
-OBJECT *to_jam(int v)
+OBJECT *to_jam(int_t v)
 {
     return to_jam(std::to_string(v));
 }
@@ -130,7 +132,7 @@ struct converter_<jam_binder, optval<ValueType>, LIST *>
         LIST *result = L0;
         if (cpp_value.has_value())
         {
-            list_push_back(result, to_jam(static_cast<ValueType>(cpp_value)));
+            result = list_push_back(result, to_jam(static_cast<ValueType>(cpp_value)));
         }
         return result;
     }
@@ -141,6 +143,43 @@ struct converter_<jam_binder, optval<ValueType>, LIST *>
         return from_jam<ValueType>(list_front(jam_value));
     }
 };
+
+// Marshaling of tuples as multi-param arguments.
+template <typename... ValueTypes>
+struct converter_<jam_binder, std::tuple<ValueTypes...>, LIST *>
+{
+    using TupleType = std::tuple<ValueTypes...>;
+    template <std::size_t... I>
+    static LIST *to_bind_value(LIST *result, const TupleType &cpp_value, mp::index_sequence<I...>)
+    {
+        using std::get;
+        OBJECT *jam_val[]{nullptr, to_jam(get<I>(cpp_value))...};
+        for (int i = 1; i <= std::tuple_size<TupleType>::value; ++i)
+        {
+            result = list_push_back(result, jam_val[i]);
+        }
+        return result;
+    }
+    static LIST *to_bind_value(const TupleType &cpp_value)
+    {
+        return to_bind_value(L0, cpp_value, mp::make_index_sequence<std::tuple_size<TupleType>::value>{});
+    }
+    template <std::size_t... I>
+    static TupleType from_bind_value(LIST *jam_value, mp::index_sequence<I...>)
+    {
+        TupleType result;
+        LISTITER jam_value_i = list_begin(jam_value);
+        LISTITER jam_value_e = list_end(jam_value);
+        using K = int[];
+        (void)K{0, ((void)(std::get<I>(result) = from_jam<typename std::tuple_element<I, TupleType>::type>(jam_value_i[I])), 0)...};
+        return result;
+    }
+    static TupleType from_bind_value(LIST *jam_value)
+    {
+        return from_bind_value(jam_value, mp::make_index_sequence<std::tuple_size<TupleType>::value>{});
+    }
+};
+
 } // namespace bind
 
 struct jam_cxx_self
@@ -364,8 +403,8 @@ static LIST *jam_call_function(
 
 template <typename Return, typename... Args>
 void jam_native_bind(
-    const std::string &module_name,
-    const std::string &rule_name,
+    const string_t &module_name,
+    const string_t &rule_name,
     function_builtin_t native_rule,
     Return (*)(Args...))
 {
@@ -403,8 +442,8 @@ void jam_native_bind(
 
 template <typename Return, typename Class, typename... Args>
 void jam_bind(
-    const std::string &module_name,
-    const std::string &rule_name,
+    const string_t &module_name,
+    const string_t &rule_name,
     Return (Class::*method)(Args...))
 {
     // out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
@@ -423,8 +462,8 @@ void jam_bind(
 
 template <typename Return, typename Class, typename... Args>
 void jam_bind(
-    const std::string &module_name,
-    const std::string &rule_name,
+    const string_t &module_name,
+    const string_t &rule_name,
     Return (Class::*method)(Args...) const)
 {
     // out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
@@ -443,8 +482,8 @@ void jam_bind(
 
 template <typename Return, typename... Args>
 void jam_bind(
-    const std::string &module_name,
-    const std::string &rule_name,
+    const string_t &module_name,
+    const string_t &rule_name,
     Return (*function)(Args...))
 {
     jam_native_bind(
@@ -462,8 +501,8 @@ void jam_bind(
 
 template <class Class, typename... Args>
 void jam_bind(
-    const std::string &module_name,
-    const std::string &rule_name,
+    const string_t &module_name,
+    const string_t &rule_name,
     Class *,
     ::b2::bind::init_<Args...>)
 {
@@ -505,7 +544,7 @@ void jam_binder::bind_method(
     const char *module_name, const char *class_name,
     const char *method_name, Function f)
 {
-    jam_bind(std::string("class@") + class_name, method_name, f);
+    jam_bind(string_t("class@") + class_name, method_name, f);
 }
 
 template <class Class, class Init>
@@ -513,7 +552,7 @@ void jam_binder::bind_init(
     const char *module_name, const char *class_name,
     Class *c, Init i)
 {
-    jam_bind(std::string("class@") + class_name, "__init__", c, i);
+    jam_bind(string_t("class@") + class_name, "__init__", c, i);
 }
 
 template <class Function>
@@ -530,7 +569,8 @@ void bind_jam()
         .bind(sysinfo_module())
         .bind(version_module())
         .bind(string_module())
-        .bind(set_module());
+        .bind(set_module())
+        .bind(regex_module());
 }
 
 } // namespace b2

@@ -24,7 +24,7 @@ for local r in $(required-rules)
     }
 }
 
-local native = regex transform 2 ;
+local native ;
 while $(native)
 {
     if ! [ HAS_NATIVE_RULE $(native[1]) : $(native[2]) : $(native[3]) ]

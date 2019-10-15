@@ -42,7 +42,7 @@ LIST * regex_split( FRAME * frame, int flags )
     LISTITER iter = list_begin( args );
     s = list_item( iter );
     separator = list_item( list_next( iter ) );
-    
+
     re = regex_compile( separator );
 
     prev = pos = object_str( s );
@@ -105,9 +105,9 @@ LIST * regex_replace( FRAME * frame, int flags )
     match = list_item( iter );
     iter = list_next( iter );
     replacement = list_item(iter );
-    
+
     re = regex_compile( match );
-    
+
     string_new( buf );
 
     pos = object_str( s );
@@ -218,16 +218,16 @@ LIST * regex_transform( FRAME * frame, int flags )
 
 void init_regex()
 {
-    {
-        char const * args[] = { "string", "separator", 0  };
-        declare_native_rule( "regex", "split", args, regex_split, 1 );
-    }
+    // {
+    //     char const * args[] = { "string", "separator", 0  };
+    //     declare_native_rule( "regex", "split", args, regex_split, 1 );
+    // }
     {
         char const * args[] = { "string", "match", "replacement", 0  };
         declare_native_rule( "regex", "replace", args, regex_replace, 1 );
     }
-    {
-        char const * args[] = { "list", "*", ":", "pattern", ":", "indices", "*", 0 };
-        declare_native_rule( "regex", "transform", args, regex_transform, 2 );
-    }
+    // {
+    //     char const * args[] = { "list", "*", ":", "pattern", ":", "indices", "*", 0 };
+    //     declare_native_rule( "regex", "transform", args, regex_transform, 2 );
+    // }
 }
