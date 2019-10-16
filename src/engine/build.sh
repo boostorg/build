@@ -425,7 +425,6 @@ B2_SOURCES="\
  modules/order.cpp \
  modules/path.cpp \
  modules/property-set.cpp \
- modules/regex.cpp \
  modules/sequence.cpp \
  modules/sysinfo.cpp \
  modules/version.cpp \

@@ -148,19 +148,42 @@ string_t b2::regex_escape(
     return result;
 }
 
+namespace b2
+{
+namespace
+{
+string_t regex_replace(
+    const string_t &string,
+    regex_ptr::pointer re,
+    const string_t &replacement)
+{
+    std::string result;
+    auto pos = string.c_str();
+    while (regexec(re, pos))
+    {
+        result.append(pos, re->startp[0]);
+        result.append(replacement);
+        /* Handle empty matches */
+        if (*pos == '\0')
+            break;
+        else if (pos == re->endp[0])
+            pos++;
+        else
+            pos = re->endp[0];
+    }
+    result.append(pos);
+    return result;
+}
+} // namespace
+} // namespace b2
+
 string_t b2::regex_replace(
     const std::tuple<string_t, string_t, string_t> &string_match_replacement)
 {
     string_t string = std::get<0>(string_match_replacement);
-    const string_t &match = std::get<1>(string_match_replacement);
+    auto re = make_regex(std::get<1>(string_match_replacement));
     const string_t &replacement = std::get<2>(string_match_replacement);
-    string_t::size_type i = 0;
-    for (i = string.find(match, i); i != string_t::npos; i = string.find(match, i))
-    {
-        string.replace(i, match.length(), replacement);
-        i += replacement.length();
-    }
-    return string;
+    return regex_replace(string, re.get(), replacement);
 }
 
 std::vector<string_t> b2::regex_replace_each(
@@ -169,15 +192,10 @@ std::vector<string_t> b2::regex_replace_each(
     const string_t &replacement)
 {
     std::vector<string_t> result;
+    auto re = make_regex(match);
     for (string_t string : list)
     {
-        string_t::size_type i = 0;
-        for (i = string.find(match, i); i != string_t::npos; i = string.find(match, i))
-        {
-            string.replace(i, match.length(), replacement);
-            i += replacement.length();
-        }
-        result.push_back(string);
+        result.push_back(regex_replace(string, re.get(), replacement));
     }
     return result;
 }

@@ -105,6 +105,7 @@ rule __test__ ( )
     # assert.result "x" : replace "" "" "x" ;
     # assert.result "xax" : replace "a" "" "x" ;
     # assert.result "xaxbx" : replace "ab" "" "x" ;
+    assert.result "a-b-c-d" : replace "a_b.c/d" "[_./]" "-" ;
 
     assert.result "-" "a-b" : replace-list "&" "a&b" : "&" : "-" ;
 }
