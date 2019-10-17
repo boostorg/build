@@ -84,7 +84,7 @@ namespace bind
 {
 // General marshaling of one jam value list. Default converts the first item
 // to/from the list.
-template <class CxxValue>
+template <typename CxxValue>
 struct converter_<jam_binder, CxxValue, LIST *>
 {
     static LIST *to_bind_value(const CxxValue &cpp_value)
@@ -499,7 +499,7 @@ void jam_bind(
         static_cast<Return (*)(Args...)>(nullptr));
 }
 
-template <class Class, typename... Args>
+template <typename Class, typename... Args>
 void jam_bind(
     const string_t &module_name,
     const string_t &rule_name,
@@ -528,7 +528,7 @@ void jam_binder::bind_module(
     object_free(module_name_obj);
 }
 
-template <class Class>
+template <typename Class>
 void jam_binder::bind_class(
     const char *module_name, const char *class_name,
     ::b2::bind::type_<Class>)
@@ -539,7 +539,7 @@ void jam_binder::bind_class(
     object_free(class_name_obj);
 }
 
-template <class Function>
+template <typename Function>
 void jam_binder::bind_method(
     const char *module_name, const char *class_name,
     const char *method_name, Function f)
@@ -547,7 +547,7 @@ void jam_binder::bind_method(
     jam_bind(string_t("class@") + class_name, method_name, f);
 }
 
-template <class Class, class Init>
+template <typename Class, typename Init>
 void jam_binder::bind_init(
     const char *module_name, const char *class_name,
     Class *c, Init i)
@@ -555,7 +555,7 @@ void jam_binder::bind_init(
     jam_bind(string_t("class@") + class_name, "__init__", c, i);
 }
 
-template <class Function>
+template <typename Function>
 void jam_binder::bind_function(
     const char *module_name,
     const char *function_name, Function f)
