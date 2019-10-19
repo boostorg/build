@@ -528,15 +528,29 @@ void jam_binder::bind_module(
     object_free(module_name_obj);
 }
 
-template <typename Class>
+template <typename Class, typename... Bases>
 void jam_binder::bind_class(
     const char *module_name, const char *class_name,
-    ::b2::bind::type_<Class>)
+    ::b2::bind::type_<Class>,
+    ::b2::bind::type_<Bases>...)
 {
     OBJECT *class_name_obj = object_new(class_name);
     LIST *class_name_list = list_new(class_name_obj);
-    /* OBJECT * class_module = */ make_class_module(class_name_list, L0);
+    OBJECT *bases_name_obj[] = {
+        object_new(::b2::bind::class_<Bases, jam_binder>::name())...,
+    };
+    LIST *bases_name_list = L0;
+    for (OBJECT *base_name_obj : bases_name_obj)
+    {
+        bases_name_list = list_push_back(bases_name_list, base_name_obj);
+    }
+    /* OBJECT * class_module = */ make_class_module(class_name_list, bases_name_list);
     object_free(class_name_obj);
+    for (OBJECT *base_name_obj : bases_name_obj)
+    {
+        object_free(base_name_obj);
+    }
+    list_free(bases_name_list);
 }
 
 template <typename Function>

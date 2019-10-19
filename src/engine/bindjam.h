@@ -34,10 +34,11 @@ struct jam_binder : bind::binder_<jam_binder>
     with the rules and variables that gets imported and copied into the
     specific instance module as needed.
     */
-    template <typename Class>
+    template <typename Class, typename... Bases>
     void bind_class(
         const char *module_name, const char *class_name,
-        ::b2::bind::type_<Class>);
+        ::b2::bind::type_<Class>,
+        ::b2::bind::type_<Bases>...);
 
     /*
     Bind the init ctor function `i` as a constructor for the class.

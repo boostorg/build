@@ -8,6 +8,7 @@
 
 #include "config.h"
 #include <functional>
+#include <string>
 #include <tuple>
 #include <type_traits>
 #include <utility>
@@ -124,12 +125,17 @@ end::binder_class[] */
 template <typename Class, typename Binder>
 struct class_
 {
-    const char *name = nullptr;
     Binder &binder;
 
     class_(const char *name, Binder &binder)
-        : name(name), binder(binder)
+        : binder(binder)
     {
+        name_ref() = name;
+    }
+
+    static const char * name()
+    {
+        return name_ref().c_str();
     }
 
     /** tag::binder_class[]
@@ -146,7 +152,7 @@ struct class_
     class_ &def(init_<Args...> init_args)
     {
         // Forward to the language specific binder.
-        binder.def_init(this->name, (Class *)nullptr, init_args);
+        binder.def_init(this->name(), (Class *)nullptr, init_args);
         return *this;
     }
 
@@ -162,8 +168,15 @@ struct class_
     class_ &def(const char *name, F function)
     {
         // Forward to the language specific binder.
-        binder.def_method(this->name, name, function);
+        binder.def_method(this->name(), name, function);
         return *this;
+    }
+
+private:
+    static std::string &name_ref()
+    {
+        static std::string name;
+        return name;
     }
 };
 
@@ -197,14 +210,16 @@ struct binder_
     === `b2::bind::binder_::def_class`
 
     Declares the definition of a class, given in the `type_` wrapper, in the
-    module.
+    module. Optional base class types can be given as additional arguments.
+    The base classes need to be bound before this subclass is bound.
 
     end::binder_binder[] */
-    template <typename Class>
-    class_<Class, Binder> def_class(const char *name, type_<Class> class_type)
+    template <typename Class, typename... Bases>
+    class_<Class, Binder> def_class(const char *name, type_<Class> class_type, type_<Bases>... bases)
     {
-        self().bind_class(current_module_name, name, class_type);
-        return class_<Class, Binder>(name, self());
+        class_<Class, Binder> class_def{name, self()};
+        self().bind_class(current_module_name, name, class_type, bases...);
+        return class_def;
     }
 
     /** tag::binder_binder[]
