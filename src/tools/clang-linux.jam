@@ -20,7 +20,7 @@ import numbers ;
 
 feature.extend-subfeature toolset clang : platform : linux ;
 
-toolset.inherit-generators clang-linux 
+toolset.inherit-generators clang-linux
     <toolset>clang <toolset-clang:platform>linux : gcc
   : gcc.mingw.link gcc.mingw.link.dll gcc.cygwin.link gcc.cygwin.link.dll ;
 generators.override clang-linux.prebuilt : builtin.lib-generator ;
@@ -30,26 +30,26 @@ generators.override clang-linux.searched-lib-generator : searched-lib-generator 
 # Override default do-nothing generators.
 generators.override clang-linux.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override clang-linux.compile.c++.pch : pch.default-cpp-pch-generator ;
- 
+
 type.set-generated-target-suffix PCH
   : <toolset>clang <toolset-clang:platform>linux : pth ;
 
 toolset.inherit-rules clang-linux : gcc ;
-toolset.inherit-flags clang-linux : gcc 
+toolset.inherit-flags clang-linux : gcc
   : <inlining>full
     <threading>multi/<target-os>windows
   ;
-        
+
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
   .debug-configuration = true ;
 }
-                       
+
 rule init ( version ? :  command * : options * ) {
-  command = [ common.get-invocation-command clang-linux : clang++ 
+  command = [ common.get-invocation-command clang-linux : clang++
     : $(command) ] ;
-                
+
   # Determine the version
-  if $(command) {    
+  if $(command) {
     local command-string = \"$(command)\" ;
     command-string = $(command-string:J=" ") ;
     version ?= [ MATCH "version ([0-9.]+)"
@@ -58,7 +58,7 @@ rule init ( version ? :  command * : options * ) {
 
   local condition = [ common.check-init-parameters clang-linux
     : version $(version) ] ;
-    
+
   common.handle-options clang-linux : $(condition) : $(command) : $(options) ;
   clang.init-cxxstd-flags clang-linux : $(condition) : $(version) ;
 
@@ -69,9 +69,9 @@ rule init ( version ? :  command * : options * ) {
   # can be found at runtime, while the $(command) can be a script that sets the
   # PATH for both the clang directory and the backende gcc directory
   # before calling clang++ when compiling/linking.
-  
+
   local root = [ feature.get-values <root> : $(options) ] ;
-    
+
   if $(root)
     {
         # On multilib 64-bit boxes, there are both 32-bit and 64-bit libraries
@@ -86,7 +86,7 @@ rule init ( version ? :  command * : options * ) {
         }
         toolset.flags clang-linux.link RUN_PATH $(condition) : $(lib_path) ;
     }
-    
+
   # - Ranlib.
   local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
   if ( ! $(ranlib) ) && $(root)
@@ -113,6 +113,10 @@ toolset.flags clang-linux.compile OPTIONS <inlining>full : -Wno-inline ;
 
 toolset.flags clang-linux.compile OPTIONS <threading>multi/<target-os>windows : -pthread ;
 toolset.flags clang-linux.link OPTIONS <threading>multi/<target-os>windows : -pthread ;
+
+# LTO
+toolset.flags clang-linux.compile OPTIONS <lto>on : -flto=thin ;
+toolset.flags clang-linux.link OPTIONS <lto>on : -flto=thin ;
 
 ###############################################################################
 # C and C++ compilation
