@@ -38,6 +38,8 @@ toolset.inherit-rules clang-linux : gcc ;
 toolset.inherit-flags clang-linux : gcc
   : <inlining>full
     <threading>multi/<target-os>windows
+    <lto>on/<lto-mode>full
+    <lto>on/<lto-mode>fat
   ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
@@ -115,8 +117,11 @@ toolset.flags clang-linux.compile OPTIONS <threading>multi/<target-os>windows : 
 toolset.flags clang-linux.link OPTIONS <threading>multi/<target-os>windows : -pthread ;
 
 # LTO
-toolset.flags clang-linux.compile OPTIONS <lto>on : -flto=thin ;
-toolset.flags clang-linux.link OPTIONS <lto>on : -flto=thin ;
+toolset.flags clang-linux.compile OPTIONS <lto>on/<lto-mode>thin : -flto=thin ;
+toolset.flags clang-linux.link OPTIONS <lto>on/<lto-mode>thin : -flto=thin ;
+
+toolset.flags clang-linux.compile OPTIONS <lto>on/<lto-mode>full : -flto=full ;
+toolset.flags clang-linux.link OPTIONS <lto>on/<lto-mode>full : -flto=full ;
 
 ###############################################################################
 # C and C++ compilation

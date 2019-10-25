@@ -12,6 +12,18 @@ This feature enables link time optimizations (also known as interprocedural
 optimizations or whole-program optimizations). Currently supported toolsets
 are <<bbv2.reference.tools.compiler.gcc>>, clang
 and <<bbv2.reference.tools.compiler.msvc>>.
++
+The `lto-mode` subfeature specifies the type of LTO to use.
++
+`deafult`::: Use toolset default.
+`full`::: Use the monolithic LTO: on linking all input is merged into a single
+  module.
+`thin`::: Use clang's ThinLTO: each compiled file contains a summary of the
+  module, these summaries are merged into a single index. This allows to avoid
+  merging all modules together, which greatly reduces linking time.
+`fat`::: Produce gcc's fat LTO objects: compiled files contain both the
+  intermidiate language suitable for LTO and object code suitable for regular
+  linking.
 
 |# # end::doc[]
 
@@ -19,4 +31,9 @@ import feature ;
 
 feature.feature lto
     : off on
+    : propagated ;
+
+feature.subfeature lto
+    : mode
+    : default full thin fat
     : propagated ;

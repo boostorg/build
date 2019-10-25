@@ -749,8 +749,14 @@ toolset.flags gcc.compile.c++ DEFINES <rtti>off/<target-os>vxworks : _NO_RTTI ;
 toolset.flags gcc.compile.c++ DEFINES <exception-handling>off/<target-os>vxworks : _NO_EX=1 ;
 
 # LTO
-toolset.flags gcc.compile OPTIONS <lto>on : -flto ;
-toolset.flags gcc.link OPTIONS <lto>on : -flto ;
+toolset.flags gcc.compile OPTIONS <lto>on/<lto-mode>default : -flto ;
+toolset.flags gcc.link OPTIONS <lto>on/<lto-mode>default : -flto ;
+
+toolset.flags gcc.compile OPTIONS <lto>on/<lto-mode>full : -flto -ffat-lto-objects ;
+toolset.flags gcc.link OPTIONS <lto>on/<lto-mode>full : -flto ;
+
+toolset.flags gcc.compile OPTIONS <lto>on/<lto-mode>fat : -flto -ffat-lto-objects ;
+toolset.flags gcc.link OPTIONS <lto>on/<lto-mode>fat : -flto ;
 
 
 ###
