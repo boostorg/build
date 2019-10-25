@@ -3,7 +3,17 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
+#| tag::doc[]
+
+[[bbv2.builtin.features.lto]]`lto`::
+*Allowed values:* `off`, `on`.
++
+This feature enables link time optimizations (also known as interprocedural
+optimizations or whole-program optimizations). Currently supported toolsets
+are <<bbv2.reference.tools.compiler.gcc>>, clang
+and <<bbv2.reference.tools.compiler.msvc>>.
+
+|# # end::doc[]
 
 import feature ;
 
