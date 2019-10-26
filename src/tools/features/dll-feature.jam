@@ -3,13 +3,40 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.dll-path]]`dll-path`::
+Specify an additional directory where the system should look for shared
+libraries when the executable or shared library is run. This feature only
+affects Unix compilers. Please see
+link:#bbv2.faq.dll-path[the FAQ: “Why are the dll-path and hardcode-dll-paths properties useful? ”]
+in link:#bbv2.faq[Frequently Asked Questions] for details.
+
+|# # end::doc[]
 
 feature.feature dll-path
     :
     : free path ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.hardcode-dll-paths]]`hardcode-dll-paths`::
+*Allowed values:* `true`, `false`.
++
+Controls automatic generation of dll-path properties.
++
+This property is specific to Unix systems. If an executable is built with
+`<hardcode-dll-paths>true`, the generated binary will contain the list of all
+the paths to the used shared libraries. As the result, the executable can be
+run without changing system paths to shared libraries or installing the
+libraries to system paths. This is very convenient during development. Please
+see the link:#bbv2.faq.dll-path[FAQ entry] for details. Note that on Mac OSX,
+the paths are unconditionally hardcoded by the linker, and it is not possible
+to disable that behavior
+
+|# # end::doc[]
 
 feature.feature hardcode-dll-paths
     : true false

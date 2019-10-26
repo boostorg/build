@@ -3,9 +3,21 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.warnings]]`warnings`::
+The `<warnings>` feature controls the warning level of compilers. It has the
+following values:
++
+* `off` - disables all warnings.
+* `on` - enables default warning level for the tool.
+* `all` - enables all warnings.
++
+Default value is `all`.
+
+|# # end::doc[]
 
 feature.feature warnings
     :
@@ -15,6 +27,15 @@ feature.feature warnings
     pedantic    # Enable likely inconsequential, and conflicting, warnings.
     off         # Disable all warnings issued by the tool.
     : incidental propagated ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.warnings-as-errors]]`warnings-as-errors`::
+The `<warnings-as-errors>` makes it possible to treat warnings as errors and
+abort compilation on a warning. The value `on` enables this behavior. The
+default value is `off`.
+
+|# # end::doc[]
 
 feature.feature warnings-as-errors
     :

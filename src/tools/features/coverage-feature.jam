@@ -6,6 +6,15 @@
 
 import feature ;
 
+#| tag::doc[]
+
+[[bbv2.builtin.features.coverage]]`coverage`::
+The `<coverage>` feature controls whether the code is instrumented to generate
+coverage data during execution.  The value `on` enables this. The default value
+is `off`.
+
+|# # end::doc[]
+
 feature.feature coverage
     :
     off         # Disable coverage generation for the tool (default).

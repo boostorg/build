@@ -3,9 +3,20 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.debug-symbols]]`debug-symbols`::
+*Allowed values:* `on`, `off`.
++
+The `debug-symbols` feature specifies if produced object files, executables,
+and libraries should include debug information.  Typically, the value of this
+feature is implicitly set by the `variant` feature, but it can be explicitly
+specified by the user. The most common usage is to build release variant with
+debugging information.
+
+|# # end::doc[]
 
 feature.feature debug-symbols
     : on off

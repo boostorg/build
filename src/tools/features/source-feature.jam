@@ -3,9 +3,20 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# TODO: Documentation.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.source]]`source`::
+The `<source>X` feature has the same effect on building a target as
+putting X in the list of sources. It is useful when you want to add
+the same source to all targets in the project (you can put <source> in
+requirements) or to conditionally include a source (using conditional
+requirements, see
+link:#bbv2.tutorial.conditions[the section called “Conditions and alternatives”]).
+See also the link:#bbv2.builtin.features.library[`<library>`] feature.
+
+|# # end::doc[]
 
 feature.feature source
     :
