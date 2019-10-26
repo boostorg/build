@@ -3,9 +3,14 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# See cflags-feature.jam for documentation
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.linkflags]]`linkflags`::
+See link:bbv2.builtin.features.cflags[`<cflags>`].
+
+|# # end::doc[]
 
 feature.feature linkflags
     :
