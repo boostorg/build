@@ -36,9 +36,8 @@ feature.feature dependency
 
 [[bbv2.builtin.features.implicit-dependency]]`implicit-dependency`::
 Indicates that the target named by the value of this feature may produce files
-that are included by the sources of the target being declared. See
-link:#bbv2.reference.generated_headers[the section called “Generated headers”]
-for more information.
+that are included by the sources of the target being declared. See the section
+<<Generated headers>> for more information.
 
 |# # end::impl-doc[]
 

@@ -11,9 +11,9 @@ import numbers ;
 [[bbv2.builtin.features.cpp-template-depth]]`c++-template-depth`::
 *Allowed values:* Any positive integer.
 +
-This feature allows configuring a {CPP} compiler with the maximal template
-instantiation depth parameter. Specific toolsets may or may not provide support
-for this feature depending on whether their compilers provide a corresponding
+Allows configuring a {CPP} compiler with the maximal template instantiation
+depth parameter. Specific toolsets may or may not provide support for this
+feature depending on whether their compilers provide a corresponding
 command-line option.
 +
 NOTE: Due to some internal details in the current Boost.Build implementation it

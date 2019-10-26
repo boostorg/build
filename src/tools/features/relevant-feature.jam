@@ -10,10 +10,10 @@ import feature ;
 [[bbv2.builtin.features.relevant]]`relevant`::
 *Allowed values:* the name of any feature.
 +
-This feature is used to indicate which other features are relevant for a
-given target. It is usually not necessary to manage it explicitly, as
-Boost.Build can deduce it in most cases. Features which are not relevant
-will not affect target paths, and will not cause conflicts.
+Indicates which other features are relevant for a given target. It is usually
+not necessary to manage it explicitly, as Boost.Build can deduce it in most
+cases. Features which are not relevant will not affect target paths, and will
+not cause conflicts.
 +
 * A feature will be considered relevant if any of the following are true
 +

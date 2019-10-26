@@ -12,8 +12,7 @@ import feature ;
 `mips3`, `mips4`, `mips32`, `mips32r2`, `mips64`, `parisc`, `arm`,
 `s390x`, `combined`, `combined-x86-power`.
 +
-The `architecture` features specifies the general processor family to
-generate code for.
+Specifies the general processor family to generate code for.
 
 |# # end::doc[]
 

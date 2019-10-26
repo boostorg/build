@@ -10,14 +10,13 @@ import feature ;
 [[bbv2.builtin.features.instruction-set]]`instruction-set`::
 *Allowed values:* depends on the used toolset.
 +
-The `instruction-set` specifies for which specific instruction set the code
-should be generated. The code in general might not run on processors with
-older/different instruction sets.
+Specifies for which specific instruction set the code should be generated. The
+code in general might not run on processors with older/different instruction
+sets.
 +
 While Boost.Build allows a large set of possible values for this features,
 whether a given value works depends on which compiler you use. Please see
-link:#bbv2.reference.tools.compilers[the section called “C++ Compilers”]
-for details.
+the section <<C++ Compilers>> for details.
 
 |# # end::doc[]
 

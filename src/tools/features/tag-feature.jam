@@ -8,8 +8,8 @@ import feature ;
 #| tag::doc[]
 
 [[bbv2.builtin.features.tag]]`tag`::
-The `tag` feature is used to customize the name of the generated files. The
-value should have the form:
+Used to customize the name of the generated files. The value should have the
+form:
 +
 ----
 @rulename

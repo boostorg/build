@@ -10,7 +10,7 @@ import feature ;
 [[bbv2.builtin.features.link]]`link`::
 *Allowed values:* `shared`, `static`
 +
-A feature controlling how libraries are built.
+Controls how libraries are built.
 
 |# # end::doc[]
 

@@ -8,7 +8,7 @@ import feature ;
 #| tag::doc[]
 
 [[bbv2.builtin.features.linkflags]]`linkflags`::
-See link:bbv2.builtin.features.cflags[`<cflags>`].
+See <<bbv2.builtin.features.cflags,`<cflags>`>>.
 
 |# # end::doc[]
 

@@ -10,10 +10,10 @@ import feature ;
 [[bbv2.builtin.features.build]]`build`::
 *Allowed values:* `no`
 +
-The `build` feature is used to conditionally disable build of a target. If
-`<build>no` is in properties when building a target, build of that target is
-skipped. Combined with conditional requirements this allows you to skip
-building some target in configurations where the build is known to fail.
+Used to conditionally disable build of a target. If `<build>no` is in
+properties when building a target, build of that target is skipped. Combined
+with conditional requirements this allows you to skip building some target in
+configurations where the build is known to fail.
 
 |# # end::doc[]
 

@@ -10,12 +10,12 @@ import feature ;
 [[bbv2.builtin.features.threading]]`threading`::
 *Allowed values:* `single`, `multi`
 +
-Controls if the project should be built in multi-threaded mode. This
-feature does not necessary change code generation in the compiler, but
-it causes the compiler to link to additional or different runtime
-libraries, and define additional preprocessor symbols (for example,
-`_MT` on Windows and `_REENTRANT` on Linux). How those symbols affect
-the compiled code depends on the code itself.
+Controls if the project should be built in multi-threaded mode. This feature
+does not necessary change code generation in the compiler, but it causes the
+compiler to link to additional or different runtime libraries, and define
+additional preprocessor symbols (for example, `_MT` on Windows and `_REENTRANT`
+on Linux). How those symbols affect the compiled code depends on the code
+itself.
 
 |# # end::doc[]
 

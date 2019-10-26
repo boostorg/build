@@ -7,6 +7,23 @@ import feature ;
 
 #| tag::doc[]
 
+[[bbv2.builtin.features.runtime-debugging]]`runtime-debugging`::
+*Allowed values:* `on`, `off`.
++
+Specifies whether produced object files, executables, and libraries should
+include behavior useful only for debugging, such as asserts. Typically, the
+value of this feature is implicitly set by the `variant` feature, but it can be
+explicitly specified by the user. The most common usage is to build release
+variant with debugging output.
+
+|# # end::doc[]
+
+feature.feature runtime-debugging
+    : on off
+    : propagated ;
+
+#| tag::doc[]
+
 [[bbv2.builtin.features.runtime-link]]`runtime-link`::
 *Allowed values:* `shared`, `static`
 +
@@ -20,22 +37,4 @@ your compiler documentation for more details.
 
 feature.feature runtime-link
     : shared static
-    : propagated ;
-
-#| tag::doc[]
-
-[[bbv2.builtin.features.runtime-debugging]]`runtime-debugging`::
-*Allowed values:* `on`, `off`.
-+
-The `runtime-debugging` feature specifies whether produced object
-files, executables, and libraries should include behavior useful only
-for debugging, such as asserts. Typically, the value of this feature
-is implicitly set by the `variant` feature, but it can be explicitly
-specified by the user. The most common usage is to build release
-variant with debugging output.
-
-|# # end::doc[]
-
-feature.feature runtime-debugging
-    : on off
     : propagated ;

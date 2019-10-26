@@ -10,7 +10,8 @@ import feature ;
 [[bbv2.builtin.features.local-visibility]]`local-visibility`::
 *Allowed values:* `global`, `protected`, `hidden`.
 +
-This feature has the same effect as the `visibility` feature but is intended
+This feature has the same effect as the
+<<bbv2.builtin.features.visibility,`visibility`>> feature but is intended
 to be used by targets that require a particular symbol visibility. Unlike the
 `visibility` feature, `local-visibility` is not inherited by the target
 dependencies and only affects the target to which it is applied.
