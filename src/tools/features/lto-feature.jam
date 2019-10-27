@@ -3,17 +3,31 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
+import feature ;
+
 #| tag::doc[]
 
 [[bbv2.builtin.features.lto]]`lto`::
-*Allowed values:* `off`, `on`.
+*Allowed values:* `on`.
 +
-This feature enables link time optimizations (also known as interprocedural
-optimizations or whole-program optimizations). Currently supported toolsets
-are <<bbv2.reference.tools.compiler.gcc>>, clang
-and <<bbv2.reference.tools.compiler.msvc>>.
+Enables link time optimizations (also known as interprocedural optimizations or
+whole-program optimizations). Currently supported toolsets are <<GNU {CPP}>>,
+clang and <<Microsoft Visual {CPP}>>. The feature is optional.
+
+|# # end::doc[]
+
+feature.feature lto
+    : on
+    : optional propagated ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.lto-mode]]`lto-mode`::
+*Subfeature of* `lto`
 +
-The `lto-mode` subfeature specifies the type of LTO to use.
+*Allowed values:* `full`, `thin`, `fat`.
++
+Specifies the type of LTO to use.
 +
 `full`::: Use the monolithic LTO: on linking all input is merged into a single
   module.
@@ -25,12 +39,6 @@ The `lto-mode` subfeature specifies the type of LTO to use.
   linking.
 
 |# # end::doc[]
-
-import feature ;
-
-feature.feature lto
-    : off on
-    : propagated ;
 
 feature.subfeature lto
     : mode
