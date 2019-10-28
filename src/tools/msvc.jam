@@ -480,9 +480,9 @@ rule configure-version-specific ( toolset : version : conditions )
 
 # Feature for handling targeting different Windows API sets.
 feature.feature windows-api : desktop store phone : propagated composite link-incompatible ;
-feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602 
+feature.compose <windows-api>store : <define>WINAPI_FAMILY=WINAPI_FAMILY_APP <define>_WIN32_WINNT=0x0602
     <linkflags>/APPCONTAINER ;
-feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602 
+feature.compose <windows-api>phone : <define>WINAPI_FAMILY=WINAPI_FAMILY_PHONE_APP <define>_WIN32_WINNT=0x0602
     <linkflags>/APPCONTAINER <linkflags>"/NODEFAULTLIB:ole32.lib" <linkflags>"/NODEFAULTLIB:kernel32.lib" <linkflags>WindowsPhoneCore.lib ;
 feature.set-default windows-api : desktop ;
 
@@ -729,7 +729,7 @@ rule link ( targets + : sources * : properties * )
             DEPENDS $(<) : [ on $(<) return $(EMBED_MANIFEST_FILE) ] ;
             msvc.manifest.user $(targets) $(EMBED_MANIFEST_FILE) : $(sources) : $(properties) ;
         }
-        else 
+        else
         {
             msvc.manifest $(targets) : $(sources) : $(properties) ;
         }
@@ -763,7 +763,7 @@ rule link.dll ( targets + : sources * : properties * )
             DEPENDS $(<) : [ on $(<) return $(EMBED_MANIFEST_FILE) ] ;
             msvc.manifest.dll.user $(targets) $(EMBED_MANIFEST_FILE) : $(sources) : $(properties) ;
         }
-        else 
+        else
         {
             msvc.manifest.dll $(targets) : $(sources) : $(properties) ;
         }
@@ -1003,13 +1003,13 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
 {
     local setup-options ;
     local setup = [ feature.get-values <setup-$(cpu)> : $(options) ] ;
-    
+
     if ! $(setup)-is-defined
     {
         if $(global-setup)-is-defined
         {
             setup = $(global-setup) ;
-                        
+
             # If needed we can easily add using configuration flags
             # here for overriding which options get passed to the
             # global setup command for which target platform:
@@ -1038,7 +1038,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
             setup ?= [ path.join  $(parent) "vcvarsall.bat" ] ;
         }
     }
-    
+
     return $(setup) "$(setup-options:J= )" ;
 }
 
@@ -1081,7 +1081,7 @@ IMPORT msvc : rewrite-setup : : msvc.rewrite-setup ;
 
 # Helper rule to generate a faster alternative to MSVC setup scripts.
 # We used to call MSVC setup scripts directly in every action, however in
-# newer MSVC versions (10.0+) they make long-lasting registry queries 
+# newer MSVC versions (10.0+) they make long-lasting registry queries
 # which have a significant impact on build time.
 local rule set-setup-command ( targets * : properties * )
 {
@@ -1282,7 +1282,7 @@ local rule configure-really ( version ? : options * )
 
         local below-8.0 = [ MATCH "^([67]\\.)" : $(version) ] ;
         local below-11.0 = [ MATCH "^([6789]\\.|10\\.)" : $(version) ] ;
-        
+
         local cpu = i386 amd64 ia64 arm arm64 ;
         if $(below-8.0)
         {
@@ -1292,7 +1292,7 @@ local rule configure-really ( version ? : options * )
         {
             cpu = i386 amd64 ia64 ;
         }
-        
+
         local setup-amd64 ;
         local setup-i386 ;
         local setup-ia64 ;
@@ -1403,7 +1403,7 @@ local rule configure-really ( version ? : options * )
                 exact-version ?= $(version) ;
                 setup-$(c) = [ generate-setup-cmd $(exact-version) : $(command) : $(parent) : $(options) : $(c) : $(global-setup) : $(default-global-setup-options-$(c)) : $(default-setup-$(c)) ] ;
             }
-            
+
             # Windows phone has different setup scripts, located in a different directory hierarchy.
             # The 11.0 toolset can target Windows Phone 8.0 and the 12.0 toolset can target Windows Phone 8.1,
             # each of which have a different directory for their vcvars setup scripts.
@@ -1418,7 +1418,7 @@ local rule configure-really ( version ? : options * )
                 phone-directory = [ path.native [ path.join $(phone-directory) WP81 ] ] ;
             }
             global-setup-phone ?= [ locate-default-setup $(phone-directory) : $(phone-parent) : vcvarsphoneall.bat ] ;
-                
+
             # If can't locate default phone setup script then this VS version doesn't support Windows Phone.
             if $(global-setup-phone)-is-defined
             {
@@ -1492,7 +1492,7 @@ local rule configure-really ( version ? : options * )
 
                 if <rewrite-setup-scripts>always in $(options)
                 {
-                    toolset.flags msvc .REWRITE-SETUP <windows-api>$(api)/$(cpu-conditions) : true ; 
+                    toolset.flags msvc .REWRITE-SETUP <windows-api>$(api)/$(cpu-conditions) : true ;
                 }
 
                 if ! $(setup-script)
@@ -1542,6 +1542,10 @@ local rule configure-really ( version ? : options * )
             toolset.flags msvc.link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-amd64) : [ path.native [ path.join $(storeLibPath) "amd64" ] ] ;
             toolset.flags msvc.link LINKPATH $(conditions)/<windows-api>store/$(.cpu-arch-arm) : [ path.native [ path.join $(storeLibPath) "arm" ] ] ;
         }
+
+        # LTO
+        toolset.flags msvc.compile OPTIONS $(conditions)/<lto>on : /GL ;
+        toolset.flags msvc.link OPTIONS $(conditions)/<lto>on : /LTCG ;
 
         # Set version-specific flags.
         configure-version-specific msvc : $(version) : $(conditions) ;
@@ -1863,7 +1867,7 @@ local rule register-toolset-really ( )
         toolset.flags msvc.link FINDLIBS_SA <find-shared-library> ;
         toolset.flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
         toolset.flags msvc.link LIBRARIES_MENTIONED_BY_FILE : <library-file> ;
-        
+
         toolset.flags msvc.link.dll LINKFLAGS <suppress-import-lib>true : /NOENTRY ;
     }
 

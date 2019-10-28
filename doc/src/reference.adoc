@@ -566,6 +566,8 @@ The `local-visibility` feature supports the same values with the same meaning
 as the `visibility` feature. By default, if `local-visibility` is not specified
 for a target, the value of the `visibility` feature is used.
 
+include::../../src/tools/features/lto-feature.jam[tag=doc]
+
 [[bbv2.reference.tools]]
 == Builtin tools
 
