@@ -99,6 +99,13 @@ toolset.flags clang-darwin.link OPTIONS <lto>on/<lto-mode>thin : -flto=thin ;
 toolset.flags clang-darwin.compile OPTIONS <lto>on/<lto-mode>full : -flto=full ;
 toolset.flags clang-darwin.link OPTIONS <lto>on/<lto-mode>full : -flto=full ;
 
+# stdlib selection
+toolset.flags clang-darwin.compile OPTIONS <stdlib>gnu <stdlib>gnu11 : -stdlib=libstdc++ ;
+toolset.flags clang-darwin.link OPTIONS <stdlib>gnu <stdlib>gnu11 : -stdlib=libstdc++ ;
+
+toolset.flags clang-darwin.compile OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
+toolset.flags clang-darwin.link OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
+
 actions compile.c
 {
     "$(CONFIG_COMMAND)" -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
