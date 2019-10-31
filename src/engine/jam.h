@@ -64,6 +64,33 @@
 
 #endif
 
+
+/*
+ * Windows MingW32 or Mingw64
+ */
+
+#if defined(__MINGW64__) || defined(__MINGW32__)
+
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <malloc.h>
+#include <memory.h>
+#include <signal.h>
+#include <string.h>
+#include <time.h>
+
+#define OSMAJOR "MINGW=true"
+#define OSMINOR "OS=MINGW"
+#define OS_NT
+#define SPLITPATH ';'
+#define MAXLINE 996  /* max chars per command line */
+#define USE_EXECUNIX
+#define PATH_DELIM '\\'
+
+#else
+
 /*
  * Windows NT
  */
@@ -107,33 +134,9 @@
 #endif
 
 #endif  /* #ifdef NT */
-
-
-/*
- * Windows MingW32 or Mingw64
- */
-
-#if defined(__MINGW64__) || defined(__MINGW32__)
-
-#include <fcntl.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <malloc.h>
-#include <memory.h>
-#include <signal.h>
-#include <string.h>
-#include <time.h>
-
-#define OSMAJOR "MINGW=true"
-#define OSMINOR "OS=MINGW"
-#define OS_NT
-#define SPLITPATH ';'
-#define MAXLINE 996  /* max chars per command line */
-#define USE_EXECUNIX
-#define PATH_DELIM '\\'
-
 #endif  /* #if defined(__MINGW64__) || defined(__MINGW32__) */
+
+
 
 
 /*
