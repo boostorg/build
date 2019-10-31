@@ -86,7 +86,7 @@
 #define OS_NT
 #define SPLITPATH ';'
 #define MAXLINE 996  /* max chars per command line */
-#define USE_EXECUNIX
+#define USE_EXECNT
 #define PATH_DELIM '\\'
 
 #else
