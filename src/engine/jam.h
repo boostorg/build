@@ -110,10 +110,10 @@
 
 
 /*
- * Windows MingW32
+ * Windows MingW32 or Mingw64
  */
 
-#ifdef MINGW
+#if defined(__MINGW64__) || defined(__MINGW32__)
 
 #include <fcntl.h>
 #include <stdlib.h>
@@ -133,7 +133,7 @@
 #define USE_EXECUNIX
 #define PATH_DELIM '\\'
 
-#endif  /* #ifdef MINGW */
+#endif  /* #if defined(__MINGW64__) || defined(__MINGW32__) */
 
 
 /*
