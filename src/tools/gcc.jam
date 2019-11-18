@@ -606,7 +606,7 @@ actions compile.asm
 }
 
 ###
-### Preconpiled header use and generation.
+### Precompiled header use and generation.
 ###
 
 # The compiler looks for a precompiled header in each directory just before it
