@@ -1,6 +1,14 @@
 [[b2.history]]
 = History
 
+== Version 4.0.1
+
+This patch release fixes a minor issue when trying to configure toolsets that
+override the toolset version with a non-version tag. Currently this is only
+known to be a problem if you: (a) configure a toolset version to something
+like "`tot`" (b) in Boost 1.72.0 when it creates cmake install artifacts.
+Fix for this was provided Peter Dimov.
+
 == Version 4.0.0
 
 After even more years of development the landscape of build systems has changed
