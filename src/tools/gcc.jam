@@ -320,6 +320,8 @@ rule init ( version ? : command * : options * : requirement * )
     {
         ECHO "notice:" using gcc archiver "::" $(condition) "::" $(archiver[1]) ;
     }
+    local arflags = [ feature.get-values <arflags> : $(options) ] ;
+    toolset.flags gcc.archive .ARFLAGS $(condition) : $(arflags) ;
 
     # - Ranlib.
     local ranlib = [ common.get-invocation-command gcc
@@ -1130,6 +1132,7 @@ actions link.dll bind LIBRARIES
 # logic in intel-linux, but that is hardly worth the trouble as on Linux, 'ar'
 # is always available.
 .AR = ar ;
+.ARFLAGS = rc ;
 .RANLIB = ranlib ;
 
 toolset.flags gcc.archive AROPTIONS <archiveflags> ;
@@ -1171,7 +1174,7 @@ rule archive ( targets * : sources * : properties * )
 #
 actions piecemeal archive
 {
-    "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
+    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" "$(>)"
     "$(.RANLIB)" "$(<)"
 }
 
