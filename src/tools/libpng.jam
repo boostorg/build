@@ -24,6 +24,10 @@ import property ;
 import property-set ;
 
 header = png.h ;
+
+# On Windows, binary distributions of libpng and package managers
+# name the library differently (e.g. vcpkg installs libpng16.lib).
+# Listing popular names increases chances of successful look-up.
 names = libpng libpng16 png png16 ;
 
 sources =   png.c pngerror.c pngget.c pngmem.c pngpread.c pngread.c pngrio.c pngrtran.c pngrutil.c
