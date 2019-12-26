@@ -39,6 +39,10 @@ Thank to all the users that contributed to this release with these changes:
 * Allow arflags override in gcc toolset specifications. -- _hyc_
 * Fix founds libs not making it to the clang-win link command line.
   -- _Peter Dimov_
+* Updated intel-win toolset to support for Intel C++ 19.1.
+  -- _Edward Diener_
+* Detect difference between MIPS32 and MIPS64 for OS in b2 engine.
+  -- _YunQiang Su_
 
 == Version 4.0.0
 
