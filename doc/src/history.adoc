@@ -4,7 +4,7 @@
 == Version 4.1.0
 
 Many small bug fixes in this release. But there are some new features also.
-There's now an `lto` feature to specify the to use LTO, and what kind. The
+There's now an `lto` feature to specify the use of LTO, and what kind. The
 existing `stdlib` feature now has real values and corresponding options
 for some toolsets. But most importantly there's new documentation for all
 the features.
