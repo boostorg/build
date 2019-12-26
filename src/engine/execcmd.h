@@ -17,7 +17,7 @@
 
 #include "config.h"
 #include "lists.h"
-#include "strings.h"
+#include "jam_strings.h"
 #include "timestamp.h"
 
 

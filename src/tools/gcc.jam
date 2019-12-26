@@ -320,6 +320,8 @@ rule init ( version ? : command * : options * : requirement * )
     {
         ECHO "notice:" using gcc archiver "::" $(condition) "::" $(archiver[1]) ;
     }
+    local arflags = [ feature.get-values <arflags> : $(options) ] ;
+    toolset.flags gcc.archive .ARFLAGS $(condition) : $(arflags) ;
 
     # - Ranlib.
     local ranlib = [ common.get-invocation-command gcc
@@ -457,12 +459,13 @@ local rule compile-link-flags ( * )
     threading-flags <target-os>windows : -mthreads ;
     threading-flags <target-os>cygwin  : -mthreads ;
     threading-flags <target-os>solaris  : -pthreads : rt ;
+    threading-flags <target-os>qnx : -pthread ;
 
     local bsd = [ MATCH ^(.*bsd)$ : $(all-os) ] ;
     threading-flags <target-os>$(bsd) : -pthread ;
 
     local no-threading = android beos haiku sgi darwin vxworks ;
-    local threading-generic-os = [ set.difference $(all-os) : $(no-threading) $(bsd) windows cygwin solaris ] ;
+    local threading-generic-os = [ set.difference $(all-os) : $(no-threading) $(bsd) windows cygwin solaris qnx ] ;
     threading-flags <target-os>$(threading-generic-os) : -pthread : rt ;
 }
 
@@ -605,7 +608,7 @@ actions compile.asm
 }
 
 ###
-### Preconpiled header use and generation.
+### Precompiled header use and generation.
 ###
 
 # The compiler looks for a precompiled header in each directory just before it
@@ -746,6 +749,17 @@ toolset.flags gcc.compile.c++ OPTIONS <coverage>on : --coverage ;
 # configure Dinkum STL to match compiler options
 toolset.flags gcc.compile.c++ DEFINES <rtti>off/<target-os>vxworks : _NO_RTTI ;
 toolset.flags gcc.compile.c++ DEFINES <exception-handling>off/<target-os>vxworks : _NO_EX=1 ;
+
+# LTO
+toolset.flags gcc.compile OPTIONS <lto>on/<lto-mode>full : -flto ;
+toolset.flags gcc.link OPTIONS <lto>on/<lto-mode>full : -flto ;
+
+toolset.flags gcc.compile OPTIONS <lto>on/<lto-mode>fat : -flto -ffat-lto-objects ;
+toolset.flags gcc.link OPTIONS <lto>on/<lto-mode>fat : -flto ;
+
+# ABI selection
+toolset.flags gcc.compile.c++ DEFINES <stdlib>gnu : _GLIBCXX_USE_CXX11_ABI=0 ;
+toolset.flags gcc.compile.c++ DEFINES <stdlib>gnu11 : _GLIBCXX_USE_CXX11_ABI=1 ;
 
 ###
 ### User free feature options.
@@ -1118,6 +1132,7 @@ actions link.dll bind LIBRARIES
 # logic in intel-linux, but that is hardly worth the trouble as on Linux, 'ar'
 # is always available.
 .AR = ar ;
+.ARFLAGS = rc ;
 .RANLIB = ranlib ;
 
 toolset.flags gcc.archive AROPTIONS <archiveflags> ;
@@ -1159,7 +1174,7 @@ rule archive ( targets * : sources * : properties * )
 #
 actions piecemeal archive
 {
-    "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
+    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" "$(>)"
     "$(.RANLIB)" "$(<)"
 }
 
@@ -1310,5 +1325,6 @@ cpu-flags gcc OPTIONS : s390x : z196 : -march=z196 ;
 cpu-flags gcc OPTIONS : s390x : zEC12 : -march=zEC12 ;
 cpu-flags gcc OPTIONS : s390x : z13 : -march=z13 ;
 cpu-flags gcc OPTIONS : s390x : z14 : -march=z14 ;
+cpu-flags gcc OPTIONS : s390x : z15 : -march=z15 ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;

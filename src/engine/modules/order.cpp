@@ -8,7 +8,7 @@
 #include "../mem.h"
 #include "../native.h"
 #include "../object.h"
-#include "../strings.h"
+#include "../jam_strings.h"
 #include "../variable.h"
 
 

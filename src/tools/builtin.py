@@ -321,7 +321,7 @@ def register_globals ():
         'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312',
 
 	# z Systems (aka s390x)
-	'z196', 'zEC12', 'z13', 'z13', 'z14'],
+	'z196', 'zEC12', 'z13', 'z13', 'z14', 'z15'],
 
         ['propagated', 'optional'])
 

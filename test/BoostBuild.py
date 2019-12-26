@@ -114,8 +114,13 @@ elif hasattr(os, "uname"):
     default_os = os.uname()[0].lower()
 
 def prepare_prefixes_and_suffixes(toolset, target_os=default_os):
-    prepare_suffix_map(toolset, target_os)
-    prepare_library_prefix(toolset, target_os)
+    ind = toolset.find('-')
+    if ind == -1:
+        rtoolset = toolset
+    else:
+        rtoolset = toolset[:ind]
+    prepare_suffix_map(rtoolset, target_os)
+    prepare_library_prefix(rtoolset, target_os)
 
 
 def prepare_suffix_map(toolset, target_os=default_os):

@@ -10,7 +10,7 @@
 
 #include "lists.h"
 #include "output.h"
-#include "strings.h"
+#include "jam_strings.h"
 
 #include <errno.h>
 #include <signal.h>
