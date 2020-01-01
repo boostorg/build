@@ -178,4 +178,6 @@ rule init ( version ? : command * : options * )
         toolset.flags clang-win.compile .RC $(cond) : $(resource-compiler) /nologo ;
         toolset.flags clang-win.compile .IDL $(cond) : $(idl-compiler) ;
     }
+
+    toolset.flags clang-win.link LIBRARY_OPTION <toolset>clang-win : "" : unchecked ;
 }

@@ -6,6 +6,7 @@
 # Copyright (c) 2007-2017 Rene Rivera
 # Copyright (c) 2008 Jurko Gospodnetic
 # Copyright (c) 2014 Microsoft Corporation
+# Copyright (c) 2019 Michał Janiszewski
 #
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
@@ -561,15 +562,9 @@ rule compile.asm ( targets + : sources * : properties * )
     set-setup-command $(targets) : $(properties) ;
 }
 
-# For the assembler the following options are turned on by default:
-#
-#   -Zp4   align structures to 4 bytes
-#   -Cp    preserve case of user identifiers
-#   -Cx    preserve case in publics, externs
-#
 actions compile.asm
 {
-    $(.SETUP) $(.ASM) -c -Zp4 -Cp -Cx -D$(DEFINES) $(ASMFLAGS) $(USER_ASMFLAGS) -Fo "$(<:W)" "$(>:W)"
+    $(.SETUP) $(.ASM) -D$(ASMDEFINES) $(ASMFLAGS) $(USER_ASMFLAGS) $(.ASM_OUTPUT) "$(<:W)" "$(>:W)"
 }
 
 
@@ -1048,7 +1043,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
             {
                 if $(.debug-configuration)
                 {
-                    ECHO 'notice\: "[generate-setup-cmd]" $(version) is 14.2' ;
+                    ECHO "notice: [generate-setup-cmd] $(version) is 14.2" ;
                 }
                 parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
             }
@@ -1056,7 +1051,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
             {
                 if $(.debug-configuration)
                 {
-                    ECHO 'notice\: "[generate-setup-cmd]" $(version) is 14.1' ;
+                    ECHO "notice: [generate-setup-cmd] $(version) is 14.1" ;
                 }
                 parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
             }
@@ -1473,8 +1468,26 @@ local rule configure-really ( version ? : options * )
         local default-assembler-amd64 = ml64 ;
         local default-assembler-i386  = "ml -coff" ;
         local default-assembler-ia64  = ias ;
-        local default-assembler-ia64  = armasm ;
+        local default-assembler-arm   = armasm ;
         local default-assembler-arm64 = armasm64 ;
+
+        # For the assembler the following options are turned on by default:
+        #
+        #   -Zp4   align structures to 4 bytes
+        #   -Cp    preserve case of user identifiers
+        #   -Cx    preserve case in publics, externs
+        #
+        local assembler-flags-amd64 = "-c -Zp4 -Cp -Cx" ;
+        local assembler-flags-i386  = "-c -Zp4 -Cp -Cx" ;
+        local assembler-flags-ia64  = "-c -Zp4 -Cp -Cx" ;
+        local assembler-flags-arm   = "" ;
+        local assembler-flags-arm64 = "" ;
+
+        local assembler-output-flag-amd64 = -Fo ;
+        local assembler-output-flag-i386  = -Fo ;
+        local assembler-output-flag-ia64  = -Fo ;
+        local assembler-output-flag-arm   = -o ;
+        local assembler-output-flag-arm64 = -o ;
 
         assembler = [ feature.get-values <assembler> : $(options) ] ;
 
@@ -1507,6 +1520,8 @@ local rule configure-really ( version ? : options * )
 
             local cpu-assembler = $(assembler) ;
             cpu-assembler ?= $(default-assembler-$(c)) ;
+            local assembler-flags = $(assembler-flags-$(c)) ;
+            local assembler-output-flag = $(assembler-output-flag-$(c)) ;
 
             for local api in desktop store phone
             {
@@ -1548,7 +1563,8 @@ local rule configure-really ( version ? : options * )
                 {
                     toolset.flags msvc.compile .CC  <windows-api>$(api)/$(cpu-conditions) : $(compiler) /Zm800 /ZW /EHsc -nologo ;
                 }
-                toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(cpu-assembler) -nologo ;
+                toolset.flags msvc.compile .ASM <windows-api>$(api)/$(cpu-conditions) : $(cpu-assembler) $(assembler-flags) -nologo ;
+                toolset.flags msvc.compile .ASM_OUTPUT <windows-api>$(api)/$(cpu-conditions) : $(assembler-output-flag) ;
                 toolset.flags msvc.link    .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /NOLOGO "/INCREMENTAL:NO" ;
                 toolset.flags msvc.archive .LD  <windows-api>$(api)/$(cpu-conditions) : $(linker) /lib /NOLOGO  ;
             }
@@ -1861,14 +1877,14 @@ local rule register-toolset-really ( )
     # Declare flags for the assembler.
     toolset.flags msvc.compile.asm USER_ASMFLAGS <asmflags> ;
 
-    toolset.flags msvc.compile.asm ASMFLAGS <debug-symbols>on : "/Zi /Zd" ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<debug-symbols>on : "/Zi /Zd" ;
 
-    toolset.flags msvc.compile.asm ASMFLAGS <warnings>on : /W3 ;
-    toolset.flags msvc.compile.asm ASMFLAGS <warnings>off : /W0 ;
-    toolset.flags msvc.compile.asm ASMFLAGS <warnings>all : /W4 ;
-    toolset.flags msvc.compile.asm ASMFLAGS <warnings-as-errors>on : /WX ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<warnings>on : /W3 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<warnings>off : /W0 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<warnings>all : /W4 ;
+    toolset.flags msvc.compile.asm ASMFLAGS <architecture>x86/<warnings-as-errors>on : /WX ;
 
-    toolset.flags msvc.compile.asm DEFINES <define> ;
+    toolset.flags msvc.compile.asm ASMDEFINES <architecture>x86 : <define> ;
 
     # Declare flags for linking.
     {

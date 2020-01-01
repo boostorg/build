@@ -412,7 +412,11 @@
 #endif
 
 #ifdef __mips__
-    #define OSPLAT "OSPLAT=MIPS"
+  #if defined(_ABI64)
+    #define OSPLAT "OSPLAT=MIPS64"
+  #elif defined(_ABIO32)
+    #define OSPLAT "OSPLAT=MIPS32"
+  #endif
 #endif
 
 #if defined( __arm__ ) || \
