@@ -21,8 +21,9 @@
 #ifndef PATHSYS_VP_20020211_H
 #define PATHSYS_VP_20020211_H
 
+#include "config.h"
 #include "object.h"
-#include "strings.h"
+#include "jam_strings.h"
 
 
 typedef struct _pathpart

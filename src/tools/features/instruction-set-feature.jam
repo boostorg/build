@@ -3,9 +3,22 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# The specific instruction set in an architecture to compile.
-
 import feature ;
+
+#| tag::doc[]
+
+[[bbv2.builtin.features.instruction-set]]`instruction-set`::
+*Allowed values:* depends on the used toolset.
++
+Specifies for which specific instruction set the code should be generated. The
+code in general might not run on processors with older/different instruction
+sets.
++
+While Boost.Build allows a large set of possible values for this features,
+whether a given value works depends on which compiler you use. Please see
+the section <<C++ Compilers>> for details.
+
+|# # end::doc[]
 
 feature.feature instruction-set
     :
@@ -42,6 +55,9 @@ feature.feature instruction-set
         # Advanced RISC Machines
         armv2 armv2a armv3 armv3m armv4 armv4t armv5 armv5t armv5te armv6 armv6j iwmmxt ep9312
         armv7 armv7s
+
+        # z Systems (aka s390x)
+        z196 zEC12 z13 z14 z15
 
     :
         propagated optional

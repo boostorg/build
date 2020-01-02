@@ -9,6 +9,7 @@ import sys
 
 def create(t):
   t.write('''mockinfo.py''', '''
+from __future__ import print_function
 import re
 import optparse
 import os
@@ -39,7 +40,7 @@ class MockInfo(object):
       command = command.split()
     self.commands.append((command, status))
   def check(self, command):
-    print "Testing command", command
+    print("Testing command", command)
     for (raw, status) in self.commands:
       if self.matches(raw, command):
         return status
@@ -48,10 +49,10 @@ class MockInfo(object):
     options = command[0]
     input_files = list(command[1])
     if self.verbose:
-      print "  - matching against", (expected_options, expected_args)
+      print("  - matching against", (expected_options, expected_args))
     if len(expected_args) != len(input_files):
       if self.verbose:
-        print "  argument list sizes differ"
+        print("  argument list sizes differ")
       return False
     for arg in expected_args:
       if arg.startswith('$'):
@@ -68,24 +69,24 @@ class MockInfo(object):
           input_files.remove(matching_file)
         else:
           if self.verbose:
-            print "    Failed to match input file contents: %s" % arg
+            print("    Failed to match input file contents: %s" % arg)
           return False
       else:
         if arg in input_files:
           input_files.remove(arg)
         else:
           if self.verbose:
-            print "    Failed to match input file: %s" % arg
+            print("    Failed to match input file: %s" % arg)
           return False
 
     if options.language != expected_options.language:
       if self.verbose:
-        print "    Failed to match -c"
+        print("    Failed to match -c")
       return False
 
     if options.compile != expected_options.compile:
       if self.verbose:
-        print "    Failed to match -x"
+        print("    Failed to match -x")
       return False
 
     # Normalize a path for comparison purposes
@@ -97,11 +98,11 @@ class MockInfo(object):
       options.includes = []
     if expected_options.includes is None:
       expected_options.includes = []
-    if map(adjust_path, options.includes) != \
-        map(adjust_path, expected_options.includes):
+    if list(map(adjust_path, options.includes)) != \
+        list(map(adjust_path, expected_options.includes)):
       if self.verbose:
-        print "    Failed to match -I ",  map(adjust_path, options.includes), \
-          " != ", map(adjust_path, expected_options.includes)
+        print("    Failed to match -I ",  list(map(adjust_path, options.includes)), \
+          " != ", list(map(adjust_path, expected_options.includes)))
       return False
 
     if options.defines is None:
@@ -110,39 +111,39 @@ class MockInfo(object):
       expected_options.defines = []
     if options.defines != expected_options.defines:
       if self.verbose:
-        print "    Failed to match -I ",  options.defines, \
-          " != ", expected_options.defines
+        print("    Failed to match -I ",  options.defines, \
+          " != ", expected_options.defines)
       return False
 
     if options.library_path is None:
       options.library_path = []
     if expected_options.library_path is None:
       expected_options.library_path = []
-    if map(adjust_path, options.library_path) != \
-        map(adjust_path, expected_options.library_path):
+    if list(map(adjust_path, options.library_path)) != \
+        list(map(adjust_path, expected_options.library_path)):
       if self.verbose:
-        print "    Failed to match -L ",  map(adjust_path, options.library_path), \
-          " != ", map(adjust_path, expected_options.library_path)
+        print("    Failed to match -L ",  list(map(adjust_path, options.library_path)), \
+          " != ", list(map(adjust_path, expected_options.library_path)))
       return False
 
     if options.static_libraries != expected_options.static_libraries:
       if self.verbose:
-        print "    Failed to match --static-lib"
+        print("    Failed to match --static-lib")
       return False
 
     if options.shared_libraries != expected_options.shared_libraries:
       if self.verbose:
-        print "    Failed to match --shared-lib"
+        print("    Failed to match --shared-lib")
       return False
 
     if options.dll != expected_options.dll:
       if self.verbose:
-        print "    Failed to match --dll"
+        print("    Failed to match --dll")
       return False
 
     if options.archive != expected_options.archive:
       if self.verbose:
-        print "    Failed to match --archive"
+        print("    Failed to match --archive")
       return False
 
     # The output must be handled after everything else
@@ -159,20 +160,21 @@ class MockInfo(object):
             output.write(fileid)
       else:
         if self.verbose:
-          print "Failed to match -o"
+          print("Failed to match -o")
         return False
     elif options.output_file is not None:
       if self.verbose:
-        print "Failed to match -o"
+        print("Failed to match -o")
       return False
 
     # if we've gotten here, then everything matched
     if self.verbose:
-      print "    Matched"
+      print("    Matched")
     return True
 ''')
 
   t.write('mock.py', '''
+from __future__ import print_function
 import mockinfo
 import markup
 import sys
@@ -262,4 +264,4 @@ def source_file(name, contents):
   info.source_file(name, contents)
 def action(command, status=0):
   info.action(command, status)
-''' % verbose + markup)
+''' % (verbose) + markup)

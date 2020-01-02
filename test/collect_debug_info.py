@@ -69,7 +69,7 @@ def _collect(results, prefix, name, t):
 
 
 def _collectDebugInfo_environ(t):
-    dummyVars = ["WOOF_WOOFIE_%d" % x for x in xrange(4)]
+    dummyVars = ["WOOF_WOOFIE_%d" % x for x in range(4)]
     global tag
 
     tag = "XXX in os.environ"

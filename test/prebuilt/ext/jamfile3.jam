@@ -6,23 +6,25 @@
 import os ;
 
 local dll-suffix = so ;
-local prefix = "" ;
-if [ os.name ] in CYGWIN NT
+local prefix = "lib" ;
+if [ os.name ] in NT
 {
    if [ MATCH ^(gcc) : $toolset ]
    {
-      dll-suffix = dll ;
+      dll-suffix = dll.a ;
+      prefix = lib ;
    }
    else
    {
       dll-suffix = lib ;
+      prefix = "" ;
    }
 }
-else
+else if [ os.name ] in CYGWIN
 {
-   prefix = "lib" ;      
+    dll-suffix = dll ;
 }
-if [ os.name ] in MACOSX
+else if [ os.name ] in MACOSX
 {
    dll-suffix = dylib ;
 }
@@ -32,15 +34,15 @@ project ext ;
 # Assumed bjam was invoked from the project root
 local pwd = [ PWD ] ;
 
-lib a : 
+lib a :
     : <file>$(pwd)/ext/debug/$(prefix)a.$(dll-suffix) <variant>debug
     :
     : <include>debug
     ;
-    
+
 lib a :
     : <file>$(pwd)/ext/release/$(prefix)a.$(dll-suffix) <variant>release
     :
     : <include>release
     ;
-    
+

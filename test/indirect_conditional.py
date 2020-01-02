@@ -61,6 +61,48 @@ rule a3-rule-2 ( properties * )
 
     t.cleanup()
 
+def test_inherit():
+    """Tests that paths etc. are handled correctly when an indirect
+    conditional is inherited by a subproject."""
+    t = BoostBuild.Tester(use_test_config=False)
+    t.write("Jamroot.jam", """
+import feature ;
+import indirect ;
+exe d1 : d1.cpp ;
+explicit d1 ;
+project : requirements <conditional>@c1 ;
+build-project subdir ;
+feature.feature myrule : : free ;
+rule c1 ( properties * )
+{
+  return <dependency>d1 <include>include <myrule>@parent-generate ;
+}
+rule parent-generate ( project name : property-set : sources * )
+{
+  return $(sources) ;
+}
+rule my-generate ( project name : property-set : sources * )
+{
+  local r = [ $(property-set).get <myrule> ] ;
+  r = [ MATCH @(.*) : $(r) ] ;
+  return [ indirect.call
+    $(r) $(project) $(name) : $(property-set) : $(sources) ] ;
+}
+""")
+    t.write("d1.cpp", "int main(){}\n")
+    t.write("subdir/Jamfile", """
+generate srcs : main.cpp : <generating-rule>@my-generate ;
+exe main : srcs ;
+""")
+    t.write("include/a.h", "")
+    t.write("subdir/main.cpp", "#include <a.h>\nint main() {}\n")
+    t.run_build_system()
+    t.expect_addition("bin/$toolset/debug*/d1.obj")
+    t.expect_addition("bin/$toolset/debug*/d1.exe")
+    t.expect_addition("subdir/bin/$toolset/debug*/main.obj")
+    t.expect_addition("subdir/bin/$toolset/debug*/main.exe")
+    t.expect_nothing_more()
+    t.cleanup()
 
 def test_glob_in_indirect_conditional():
     """
@@ -102,4 +144,5 @@ lib bar : bar.cpp : <conditional>@print-my-sources ;
 
 
 test_basic()
+test_inherit()
 test_glob_in_indirect_conditional()

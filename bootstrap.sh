@@ -1,7 +1,8 @@
 #!/bin/sh
 # Copyright (C) 2005, 2006 Douglas Gregor.
 # Copyright (C) 2006 The Trustees of Indiana University
-# Copyright (C) 2010 Bryce Lelbach 
+# Copyright (C) 2010 Bryce Lelbach
+# Copyright 2018-2019 Rene Rivera
 #
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
@@ -27,7 +28,7 @@ do
       { echo "error: unrecognized option: $option
 Try \`$0 --help' for more information." >&2
       { (exit 1); exit 1; }; }
-      ;; 
+      ;;
 
     esac
 done
@@ -36,14 +37,12 @@ if test "x$want_help" = xyes; then
   cat <<EOF
 \`./bootstrap.sh' creates minimal Boost.Build, which can install itself.
 
-Usage: $0 [OPTION]... 
+Usage: $0 [OPTION]...
 
 Defaults for the options are specified in brackets.
 
 Configuration:
   -h, --help                display this help and exit
-  --with-b2=B2              use existing Boost.Build executable (b2)
-                            [automatically built]
   --with-toolset=TOOLSET    use specific Boost.Build toolset
                             [automatically detected]
 EOF
@@ -60,15 +59,11 @@ if test "x$TOOLSET" = x; then
     acc | darwin | gcc | como | mipspro | pathscale | pgi | qcc | vacpp | xlcpp | clang )
     TOOLSET=$guessed_toolset
     ;;
-    
+
     intel-* )
     TOOLSET=intel
     ;;
-    
-    mingw )
-    TOOLSET=gcc
-    ;;
-    
+
     clang* )
     TOOLSET=clang
     ;;
@@ -76,14 +71,14 @@ if test "x$TOOLSET" = x; then
     sun* )
     TOOLSET=sun
     ;;
-    
+
     * )
     # Not supported by Boost.Build
     ;;
   esac
 fi
 
-case $TOOLSET in 
+case $TOOLSET in
   clang*)
   TOOLSET=clang
   ;;
@@ -94,21 +89,18 @@ rm -f config.log
 
 # Build b2
 if test "x$B2" = x; then
-  echo -n "Bootstrapping the build engine with toolset $TOOLSET... "
+  echo "Bootstrapping the build engine with toolset $TOOLSET... "
   pwd=`pwd`
   (cd "$my_dir/src/engine" && ./build.sh "$TOOLSET") > bootstrap.log 2>&1
   if [ $? -ne 0 ]; then
       echo
-      echo "Failed to bootstrap the build engine" 
+      echo "Failed to bootstrap the build engine"
       echo "Consult 'bootstrap.log' for more details"
       exit 1
   fi
   cd "$pwd"
-  arch=`cd $my_dir/src/engine && ./bootstrap/jam0 -d0 -f build.jam --toolset=$TOOLSET --toolset-root= --show-locate-target && cd ..`
-  B2="$my_dir/src/engine/$arch/b2"
-  echo "engine/$arch/b2"
+  B2="$my_dir/src/engine/b2"
   cp "$B2" .
-  cp "$my_dir/src/engine/$arch/bjam" .
 fi
 
 cat << EOF

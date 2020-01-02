@@ -20,6 +20,8 @@
 #
 ###############################################################################
 
+from __future__ import print_function
+
 import os
 import os.path
 import stat
@@ -100,10 +102,10 @@ class TreeDifference:
     def ignore_directories(self):
         """Removes directories from our lists of found differences."""
         not_dir = lambda x : x[-1] != "/"
-        self.added_files = filter(not_dir, self.added_files)
-        self.removed_files = filter(not_dir, self.removed_files)
-        self.modified_files = filter(not_dir, self.modified_files)
-        self.touched_files = filter(not_dir, self.touched_files)
+        self.added_files = list(filter(not_dir, self.added_files))
+        self.removed_files = list(filter(not_dir, self.removed_files))
+        self.modified_files = list(filter(not_dir, self.modified_files))
+        self.touched_files = list(filter(not_dir, self.touched_files))
 
     def pprint(self, file=sys.stdout):
         file.write("Added files   : %s\n" % self.added_files)
@@ -199,7 +201,7 @@ def _traverse_tree(t, parent_path):
 
 def _get_text(path):
     """Return a string with the textual contents of a file at PATH."""
-    fp = open(path, 'r')
+    fp = open(path, 'rb')
     try:
         return fp.read()
     finally:

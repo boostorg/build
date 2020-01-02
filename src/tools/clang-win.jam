@@ -100,22 +100,36 @@ rule init ( version ? : command * : options * )
             }
         }
 
-        local ml = [ regex.replace $(items[1]) "x64\\\\+link\\.exe" "x64\\ml64.exe" ] ;
-        ml = [ regex.replace $(ml) "x86\\\\+link\\.exe" "x86\\ml.exe" ] ;
-
-        if ! [ MATCH "(ml\\.exe)" "(ml64\\.exe)" : $(ml) ]
+        local ml ;
+        
+        if $(items)
         {
-            ml = ;
+            ml = [ regex.replace $(items[1]) "x64\\\\+link\\.exe" "x64\\ml64.exe" ] ;
+            ml = [ regex.replace $(ml) "x86\\\\+link\\.exe" "x86\\ml.exe" ] ;
+
+            if ! [ MATCH "(ml\\.exe)" "(ml64\\.exe)" : $(ml) ]
+            {
+                ml = ;
+            }
         }
 
         local assembler = [ get-option "assembler" : $(addr) : $(options) ] ;
         assembler ?= $(ml) ;
         if $(addr) = 32 { assembler ?= ml.exe ; } else { assembler ?= ml64.exe ; }
 
-        local link = [ regex.replace $(items[1]) "\\\\+HostX64\\\\+x86\\\\+" "\\HostX86\\x86\\" ] ;
+        local link ;
+        
+        if $(items)
+        {
+            link = [ regex.replace $(items[1]) "\\\\+HostX64\\\\+x86\\\\+" "\\HostX86\\x86\\" ] ;
+        }
 
         local archiver = [ get-option "archiver" : $(addr) : $(options) ] ;
-        archiver ?= "$(link) /lib" ;
+        
+        if $(link)
+        {
+            archiver ?= "$(link) /lib" ;
+        }
         archiver ?= lib.exe ;
 
         .notice "$(addr):" "using assembler '$(assembler)'" ;
@@ -156,7 +170,7 @@ rule init ( version ? : command * : options * )
         if $(addr) = 32 { cond += "$(condition)/<architecture>/<address-model>" ; }
 
         toolset.flags clang-win.compile .CC $(cond) : $(compiler) -m$(addr) ;
-        toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) /link "/incremental:no" ;
+        toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) /link "/incremental:no" "/manifest" ;
         toolset.flags clang-win.compile .ASM $(cond) : $(assembler) -nologo ;
         toolset.flags clang-win.archive .LD $(cond) : $(archiver) /nologo ;
         toolset.flags clang-win.link .MT $(cond) : $(manifest-tool) -nologo ;
@@ -164,4 +178,6 @@ rule init ( version ? : command * : options * )
         toolset.flags clang-win.compile .RC $(cond) : $(resource-compiler) /nologo ;
         toolset.flags clang-win.compile .IDL $(cond) : $(idl-compiler) ;
     }
+
+    toolset.flags clang-win.link LIBRARY_OPTION <toolset>clang-win : "" : unchecked ;
 }

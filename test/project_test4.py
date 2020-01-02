@@ -43,7 +43,7 @@ t.copy("lib/jamfile3.jam", "lib/jamfile.jam")
 # Link-compatibility check for rtti is disabled...
 #t.run_build_system(status=None)
 #import string
-#t.fail_test(string.find(t.stdout(),
+#t.fail_test(t.stdout().find(
 #"""warning: targets produced from b.obj are link incompatible
 #warning: with main target a.exe""") !=-0)
 

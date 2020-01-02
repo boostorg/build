@@ -23,10 +23,10 @@ alias libjpeg : /libjpeg//libjpeg : : <link>static <link>shared ;
 """)
 
 MockToolset.set_expected(t, '''
-source_file('jpeg.c', 'jpeg')
-action('-c -x c -I./libjpeg -o $jpeg.o $jpeg.c')
-action('--dll $jpeg.o -o $jpeg.so')
-action('--archive $jpeg.o -o $jpeg.a')
+source_file('jerror.c', 'jpeg')
+action('-c -x c -I./libjpeg -o $jerror.o $jerror.c')
+action('--dll $jerror.o -o $jpeg.so')
+action('--archive $jerror.o -o $jpeg.a')
 ''')
 
 t.run_build_system()

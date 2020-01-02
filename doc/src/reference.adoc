@@ -11,7 +11,8 @@ Immediately upon starting, the Boost.Build engine (*`b2`*) loads the Jam
 code that implements the build system. To do this, it searches for a
 file called `boost-build.jam`, first in the invocation directory, then
 in its parent and so forth up to the filesystem root, and finally in the
-directories specified by the environment variable BOOST_BUILD_PATH. When
+directories specified by the environment variable BOOST_BUILD_PATH. On
+Unix BOOST_BUILD_PATH defaults to `/usr/share/boost-build`. When
 found, the file is interpreted, and should specify the build system
 location by calling the boost-build rule:
 
@@ -152,7 +153,7 @@ implicitly when their containing project is built.
 
 [[bbv2.reference.rules.always]]`always`::
 The `always` function takes a single parameter—a list of metatarget
-names. The top-level targets produced by the named metatargets will be
+names. The targets produced by the named metatargets will be
 always considered out of date. Consider this example:
 +
 ----
@@ -161,10 +162,9 @@ exe bye : bye.cpp ;
 always hello ;
 ----
 +
-If a build of `hello` is requested, then the binary will always be
-relinked. The object files will not be recompiled, though. Note that
+If a build of `hello` is requested, then it will always be recompiled. Note that
 if a build of `hello` is not requested, for example you specify just
-`bye` on the command line, `hello` will not be relinked.
+`bye` on the command line, `hello` will not be recompiled.
 
 [[bbv2.reference.rules.constant]]`constant`::
 Sets project-wide constant. Takes two parameters: variable name and a
@@ -206,360 +206,73 @@ This section documents the features that are built-in into Boost.Build.
 For features with a fixed set of values, that set is provided, with the
 default value listed first.
 
-[[bbv2.builtin.features.variant]]`variant`::
-*Allowed values:* `debug`, `release`, `profile`.
-+
-A feature combining several low-level features, making it easy to
-request common build configurations.
-+
-The value `debug` expands to
-+
-----
-<optimization>off <debug-symbols>on <inlining>off <runtime-debugging>on
-----
-+
-The value `release` expands to
-+
-----
-<optimization>speed <debug-symbols>off <inlining>full <runtime-debugging>off
-----
-+
-The value `profile` expands to the same as `release`, plus:
-+
-----
-<profiling>on <debug-symbols>on
-----
-+
-Users can define their own build variants using the `variant` rule
-from the `common` module.
-+
-NOTE: Runtime debugging is on in debug builds to suit the expectations of
-people used to various IDEs.
+include::../../src/tools/features/address-model-feature.jam[tag=doc]
+include::../../src/tools/features/sanitizers-feature.jam[tag=addr-doc]
+include::../../src/tools/features/allow-feature.jam[tag=doc]
+include::../../src/tools/features/architecture-feature.jam[tag=doc]
+include::../../src/tools/features/archiveflags-feature.jam[tag=doc]
+include::../../src/tools/features/asmflags-feature.jam[tag=doc]
+include::../../src/tools/features/exception-feature.jam[tag=asynch-doc]
+include::../../src/tools/features/build-feature.jam[tag=doc]
+include::../../src/tools/features/cflags-feature.jam[tag=doc]
+include::../../src/tools/features/conditional-feature.jam[tag=doc]
+include::../../src/tools/features/coverage-feature.jam[tag=doc]
+include::../../src/tools/features/cxxflags-feature.jam[tag=doc]
+include::../../src/tools/features/cxxstd-feature.jam[tag=doc]
+include::../../src/tools/features/cxxabi-feature.jam[tag=doc]
+include::../../src/tools/features/cxx-template-depth-feature.jam[tag=doc]
+include::../../src/tools/features/debug-feature.jam[tag=doc]
+include::../../src/tools/features/define-feature.jam[tag=doc]
+include::../../src/tools/features/dll-feature.jam[tag=def-doc]
+include::../../src/tools/features/dependency-feature.jam[tag=doc]
+include::../../src/tools/features/dll-feature.jam[tag=doc]
+include::../../src/tools/msvc.jam[tag=embed-doc]
+include::../../src/tools/features/exception-feature.jam[tag=doc]
+include::../../src/tools/features/fflags-feature.jam[tag=doc]
+include::../../src/tools/features/file-feature.jam[tag=doc]
+include::../../src/tools/features/find-lib-feature.jam[tag=doc]
+include::../../src/tools/features/flags-feature.jam[tag=doc]
+include::../../src/tools/features/dll-feature.jam[tag=hardcode-doc]
+include::../../src/tools/features/dependency-feature.jam[tag=impl-doc]
+include::../../src/tools/features/include-feature.jam[tag=doc]
+include::../../src/tools/features/optimization-feature.jam[tag=inline-doc]
+include::../../src/tools/features/instruction-set-feature.jam[tag=doc]
+include::../../src/tools/features/library-feature.jam[tag=doc]
+include::../../src/tools/features/find-lib-feature.jam[tag=path-doc]
+include::../../src/tools/features/sanitizers-feature.jam[tag=leak-doc]
+include::../../src/tools/features/link-feature.jam[tag=doc]
+include::../../src/tools/features/linkflags-feature.jam[tag=doc]
+include::../../src/tools/features/local-visibility-feature.jam[tag=doc]
+include::../../src/tools/features/location-feature.jam[tag=doc]
+include::../../src/tools/features/location-prefix-feature.jam[tag=doc]
+include::../../src/tools/features/objcflags-feature.jam[tag=doc]
+include::../../src/tools/features/name-feature.jam[tag=doc]
+include::../../src/tools/features/optimization-feature.jam[tag=doc]
+include::../../src/tools/features/debug-feature.jam[tag=prof-doc]
+include::../../src/tools/features/relevant-feature.jam[tag=doc]
+include::../../src/tools/features/rtti-feature.jam[tag=doc]
+include::../../src/tools/features/runtime-feature.jam[tag=doc]
+include::../../src/tools/features/search-feature.jam[tag=doc]
+include::../../src/tools/features/source-feature.jam[tag=doc]
+include::../../src/tools/features/stdlib-feature.jam[tag=doc]
+include::../../src/tools/features/strip-feature.jam[tag=doc]
+include::../../src/tools/features/dll-feature.jam[tag=suppress-doc]
+include::../../src/tools/features/tag-feature.jam[tag=doc]
+include::../../src/tools/features/os-feature.jam[tag=doc]
+include::../../src/tools/features/threading-feature.jam[tag=doc]
+include::../../src/tools/features/sanitizers-feature.jam[tag=thread-doc]
+include::../../src/tools/features/toolset-feature.jam[tag=doc]
+include::../../src/tools/features/define-feature.jam[tag=undef-doc]
+include::../../src/tools/features/sanitizers-feature.jam[tag=undef-doc]
+include::../../src/tools/features/dependency-feature.jam[tag=use-doc]
+include::../../src/tools/features/user-interface-feature.jam[tag=doc]
+include::../../src/tools/features/variant-feature.jam[tag=doc]
+include::../../src/tools/features/optimization-feature.jam[tag=vector-doc]
+include::../../src/tools/features/version-feature.jam[tag=doc]
+include::../../src/tools/features/visibility-feature.jam[tag=doc]
+include::../../src/tools/features/warnings-feature.jam[tag=doc]
 
-[[bbv2.builtin.features.link]]`link`::
-*Allowed values:* `shared`, `static`
-+
-A feature controlling how libraries are built.
-
-[[bbv2.builtin.features.runtime-link]]`runtime-link`::
-*Allowed values:* `shared`, `static`
-+
-Controls if a static or shared C/{CPP} runtime should be used. There are
-some restrictions how this feature can be used, for example on some
-compilers an application using static runtime should not use shared
-libraries at all, and on some compilers, mixing static and shared
-runtime requires extreme care. Check your compiler documentation for
-more details.
-
-[[bbv2.builtin.features.threading]]`threading`::
-*Allowed values:* `single`, `multi`
-+
-Controls if the project should be built in multi-threaded mode. This
-feature does not necessary change code generation in the compiler, but
-it causes the compiler to link to additional or different runtime
-libraries, and define additional preprocessor symbols (for example,
-`_MT` on Windows and `_REENTRANT` on Linux). How those symbols affect
-the compiled code depends on the code itself.
-
-[[bbv2.builtin.features.source]]`source`::
-The `<source>X` feature has the same effect on building a target as
-putting X in the list of sources. It is useful when you want to add
-the same source to all targets in the project (you can put <source> in
-requirements) or to conditionally include a source (using conditional
-requirements, see
-link:#bbv2.tutorial.conditions[the section called “Conditions and alternatives”]).
-See also the `<library>` feature.
-
-[[bbv2.builtin.features.library]]`library`::
-This feature is almost equivalent to the `<source>` feature, except
-that it takes effect only for linking. When you want to link all
-targets in a Jamfile to certain library, the `<library>` feature is
-preferred over `<source>X`--the latter will add the library to all
-targets, even those that have nothing to do with libraries.
-
-[[bbv2.builtin.features.dependency]]`dependency`::
-Introduces a dependency on the target named by the value of this
-feature (so it will be brought up-to-date whenever the target being
-declared is). The dependency is not used in any other way.
-
-[[bbv2.builtin.features.implicit-dependency]]`implicit-dependency`::
-Indicates that the target named by the value of this feature may
-produce files that are included by the sources of the target being
-declared. See
-link:#bbv2.reference.generated_headers[the section called “Generated headers”]
-for more information.
-
-[[bbv2.builtin.features.use]]`use`::
-Introduces a dependency on the target named by the value of this
-feature (so it will be brought up-to-date whenever the target being
-declared is), and adds its usage requirements to the build properties
-of the target being declared. The dependency is not used in any other
-way. The primary use case is when you want the usage requirements
-(such as `#include` paths) of some library to be applied, but do not
-want to link to it.
-
-[[bbv2.builtin.features.dll-path]]`dll-path`::
-Specify an additional directory where the system should look for
-shared libraries when the executable or shared library is run. This
-feature only affects Unix compilers. Please see
-link:#bbv2.faq.dll-path[the FAQ: “Why are the dll-path and hardcode-dll-paths properties useful? ”]
-in link:#bbv2.faq[Frequently Asked Questions] for details.
-
-[[bbv2.builtin.features.hardcode-dll-paths]]`hardcode-dll-paths`::
-*Allowed values:* `true`, `false`.
-+
-Controls automatic generation of dll-path properties.
-+
-This property is specific to Unix systems. If an executable is built with
-`<hardcode-dll-paths>true`, the generated binary will contain the list of all
-the paths to the used shared libraries. As the result, the executable can be
-run without changing system paths to shared libraries or installing the
-libraries to system paths. This is very convenient during development.
-Please see the link:#bbv2.faq.dll-path[FAQ entry] for details. Note
-that on Mac OSX, the paths are unconditionally hardcoded by the
-linker, and it is not possible to disable that behavior
-
-[[bbv2.builtin.features.flags]]`cflags`; `cxxflags`; `linkflags`::
-The value of those features is passed without modification to the
-corresponding tools. For `cflags` that is both the C and {CPP}
-compilers, for `cxxflags` that is the {CPP} compiler, and for
-`linkflags` that is the linker. The features are handy when you are
-trying to do something special that cannot be achieved by a
-higher-level feature in Boost.Build.
-
-[[bbv2.builtin.features.include]]`include`::
-Specifies an additional include path that is to be passed to C and {CPP}
-compilers.
-
-[[bbv2.builtin.features.define]]`define`::
-Specifies an preprocessor symbol that should be defined on the command
-line. You may either specify just the symbol, which will be defined
-without any value, or both the symbol and the value, separated by
-equal sign.
-
-[[bbv2.builtin.features.warnings]]`warnings`::
-The `<warnings>` feature controls the warning level of compilers. It
-has the following values:
-+
-* `off` - disables all warnings.
-* `on` - enables default warning level for the tool.
-* `all` - enables all warnings.
-+
-Default value is `all`.
-
-[[bbv2.builtin.features.warnings-as-errors]]`warnings-as-errors`::
-The `<warnings-as-errors>` makes it possible to treat warnings as
-errors and abort compilation on a warning. The value `on` enables this
-behavior. The default value is `off`.
-
-[[bbv2.builtin.features.build]]`build`::
-*Allowed values:* `no`
-+
-The `build` feature is used to conditionally disable build of a
-target. If `<build>no` is in properties when building a target, build
-of that target is skipped. Combined with conditional requirements this
-allows you to skip building some target in configurations where the
-build is known to fail.
-
-[[bbv2.builtin.features.tag]]`tag`::
-The `tag` feature is used to customize the name of the generated
-files. The value should have the form:
-+
-----
-@rulename
-----
-+
-where _rulename_ should be a name of a rule with the following
-signature:
-+
-----
-rule tag ( name : type ? : property-set )
-----
-+
-The rule will be called for each target with the default name computed
-by Boost.Build, the type of the target, and property set. The rule can
-either return a string that must be used as the name of the target, or
-an empty string, in which case the default name will be used.
-+
-Most typical use of the `tag` feature is to encode build properties,
-or library version in library target names. You should take care to
-return non-empty string from the tag rule only for types you care
-about -- otherwise, you might end up modifying names of object files,
-generated header file and other targets for which changing names does
-not make sense.
-
-[[bbv2.builtin.features.debug-symbols]]`debug-symbols`::
-*Allowed values:* `on`, `off`.
-+
-The `debug-symbols` feature specifies if produced object files,
-executables, and libraries should include debug information.
-Typically, the value of this feature is implicitly set by the
-`variant` feature, but it can be explicitly specified by the user. The
-most common usage is to build release variant with debugging
-information.
-
-[[bbv2.builtin.features.runtime-debugging]]`runtime-debugging`::
-*Allowed values:* `on`, `off`.
-+
-The `runtime-debugging` feature specifies whether produced object
-files, executables, and libraries should include behavior useful only
-for debugging, such as asserts. Typically, the value of this feature
-is implicitly set by the `variant` feature, but it can be explicitly
-specified by the user. The most common usage is to build release
-variant with debugging output.
-
-[[bbv2.builtin.features.target-os]]`target-os`::
-The operating system for which the code is to be generated. The
-compiler you used should be the compiler for that operating system.
-This option causes Boost.Build to use naming conventions suitable for
-that operating system, and adjust build process accordingly. For
-example, with gcc, it controls if import libraries are produced for
-shared libraries or not.
-+
-The complete list of possible values for this feature is: `aix`,
-`appletv`, `bsd`, `cygwin`, `darwin`, `freebsd`, `hpux`, `iphone`, `linux`, `netbsd`,
-`openbsd`, `osf`, `qnx`, `qnxnto`, `sgi`, `solaris`, `unix`, `unixware`, `windows`.
-+
-See link:#bbv2.tasks.crosscompile[the section called “Cross-compilation”]
-for details of cross-compilation.
-
-[[bbv2.builtin.features.architecture]]`architecture`::
-*Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips1`, `mips2`,
-`mips3`, `mips4`, `mips32`, `mips32r2`, `mips64`, `parisc`, `arm`,
-`combined`, `combined-x86-power`.
-+
-The `architecture` features specifies the general processor family to
-generate code for.
-
-[[bbv2.builtin.features.instruction-set]]`instruction-set`::
-*Allowed values:* depends on the used toolset.
-+
-The `instruction-set` specifies for which specific instruction set the
-code should be generated. The code in general might not run on
-processors with older/different instruction sets.
-+
-While Boost.Build allows a large set of possible values for this
-features, whether a given value works depends on which compiler you
-use. Please see
-link:#bbv2.reference.tools.compilers[the section called “C++ Compilers”]
-for details.
-
-[[bbv2.builtin.features.address-model]]`address-model`::
-*Allowed values:* `32`, `64`.
-+
-The `address-model` specifies if 32-bit or 64-bit code should be
-generated by the compiler. Whether this feature works depends on the
-used compiler, its version, how the compiler is configured, and the
-values of the `architecture` `instruction-set` features. Please see
-link:#bbv2.reference.tools.compilers[the section called “C++ Compilers”]
-for details.
-
-[[bbv2.builtin.features.cpp-template-depth]]`c++-template-depth`::
-*Allowed values:* Any positive integer.
-+
-This feature allows configuring a {CPP} compiler with the maximal
-template instantiation depth parameter. Specific toolsets may or may
-not provide support for this feature depending on whether their
-compilers provide a corresponding command-line option.
-+
-NOTE: Due to some internal details in the current Boost.Build
-implementation it is not possible to have features whose valid values
-are all positive integer. As a workaround a large set of allowed
-values has been defined for this feature and, if a different one is
-needed, user can easily add it by calling the feature.extend rule.
-
-[[bbv2.builtin.features.embed-manifest]]`embed-manifest`::
-*Allowed values:* `on`, `off`.
-+
-This feature is specific to the msvc toolset (see
-link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual {CPP}”]),
-and controls whether the manifest files should be embedded inside executables
-and shared libraries, or placed alongside them. This feature corresponds
-to the IDE option found in the project settings dialog, under
-Configuration Properties -> Manifest Tool -> Input and Output -> Embed
-manifest.
-
-[[bbv2.builtin.features.embed-manifest-file]]`embed-manifest-file`::
-This feature is specific to the msvc toolset (see
-link:#bbv2.reference.tools.compiler.msvc[the section called “Microsoft Visual {CPP}”]),
-and controls which manifest files should be embedded inside executables and
-shared libraries. This feature corresponds to the IDE option found in the
-project settings dialog, under Configuration Properties -> Manifest
-Tool -> Input and Output -> Additional Manifest Files.
-
-[[bbv2.builtin.features.relevant]]`relevant`::
-*Allowed values:* the name of any feature.
-+
-This feature is used to indicate which other features are relevant for a
-given target. It is usually not necessary to manage it explicitly, as
-Boost.Build can deduce it in most cases. Features which are not relevant
-will not affect target paths, and will not cause conflicts.
-+
-* A feature will be considered relevant if any of the following are true
-+
-** It is referenced by `toolset.flags` or `toolset.uses-features`
-** It is used by the requirements of a generator
-** It is a sub-feature of a relevant feature
-** It has a sub-feature which is relevant
-** It is a composite feature, and any composed feature is relevant
-** It affects target alternative selection for a main target
-** It is a propagated feature and is relevant for any dependency
-** It is relevant for any dependency created by the same main target
-** It is used in the condition of a conditional property and the corresponding
-  value is relevant
-** It is explicitly named as relevant
-+
-* Relevant features cannot be automatically deduced in the following cases:
-+
-** Indirect conditionals. Solution: return properties of the form
-`<relevant>result-feature:<relevant>condition-feature`
-+
-NOTE: This isn't really a conditional, although for most purposes it
-functions like one. In particular, it does not support multiple
-comma-separated elements in the condition, and it does work correctly even
-in contexts where conditional properties are not allowed
-** Action rules that read properties. Solution: add toolset.uses-features to
-tell Boost.Build that the feature is actually used.
-** Generators and targets that manipulate property-sets directly. Solution: set <relevant> manually.
-
-[[bbv2.builtin.features.visibility]]`visibility`::
-*Allowed values:* `global`, `protected`, `hidden`.
-+
-This feature is used to specify the default symbol visibility in compiled
-binaries. Not all values are supported on all platforms and on some
-platforms (for example, Windows) symbol visibility is not supported at all.
-+
-The supported values have the following meaning:
-+
-* `global` - a.k.a. "default" in gcc documentation. Global symbols are considered
-  public, they are exported from shared libraries and can be redefined by another
-  shared library or executable.
-* `protected` - a.k.a. "symbolic". Protected symbols are exported from shared
-  libraries but cannot be redefined by another shared library or executable.
-  This mode is not supported on some platforms, for example OS X.
-* `hidden` - Hidden symbols are not exported from shared libraries and cannot
-  be redefined by a different shared library or executable loaded in a process.
-  In this mode, public symbols have to be explicitly marked in the source code
-  to be exported from shared libraries. This is the recommended mode.
-+
-By default compiler default visibility mode is used (no compiler flags are added).
-+
-NOTE: In Boost super-project Jamroot file this property is set to the default
-value of `hidden`. This means that Boost libraries are built with hidden
-visibility by default, unless the user overrides it with a different `visibility`
-or a library sets a different `local-visibility` (see below).
-
-[[bbv2.builtin.features.local-visibility]]`local-visibility`::
-*Allowed values:* `global`, `protected`, `hidden`.
-+
-This feature has the same effect as the `visibility` feature but is intended
-to be used by targets that require a particular symbol visibility. Unlike
-the `visibility` feature, `local-visibility` is not inherited by the target
-dependencies and only affects the target to which it is applied.
-+
-The `local-visibility` feature supports the same values with the same meaning
-as the `visibility` feature. By default, if `local-visibility` is not specified
-for a target, the value of the `visibility` feature is used.
+include::../../src/tools/features/lto-feature.jam[tag=doc]
 
 [[bbv2.reference.tools]]
 == Builtin tools
@@ -815,7 +528,7 @@ using python
 : # conditions
 ;
 
-using python 
+using python
 : 3.5 # version
 : # Interpreter/path to dir
 : /usr/include/python3.5 # includes
@@ -829,7 +542,7 @@ using python
 : C:\\Python27-32\\python.exe # Interperter/path to dir
 : C:\\Python27-32\\include # includes
 : C:\\Python27-32\\libs # libs
-: <address-model>32 <address-model> # conditions - both 32 and unspecified 
+: <address-model>32 <address-model> # conditions - both 32 and unspecified
 ;
 
 using python
@@ -1520,9 +1233,9 @@ passing a command line option to it. You would not want to pass that
 option to other compilers. Conditional properties allow you to do just
 that. Their syntax is:
 
-----
+....
 property ( "," property ) * ":" property
-----
+....
 
 For example, the problem above would be solved by:
 
@@ -1543,14 +1256,14 @@ exe hello : hello.cpp : <os>NT,<toolset>gcc:<link>static ;
 
 _Target identifier_ is used to denote a target. The syntax is:
 
-----
+....
 target-id -> (target-name | file-name | project-id | directory-name)
               | (project-id | directory-name) "//" target-name
 project-id -> path
 target-name -> path
 file-name -> path
 directory-name -> path
-----
+....
 
 This grammar allows some elements to be recognized as either
 
@@ -1584,10 +1297,10 @@ _Target reference_ is used to specify a source target, and may
 additionally specify desired properties for that target. It has this
 syntax:
 
-----
+....
 target-reference -> target-id [ "/" requested-properties ]
 requested-properties -> property-path
-----
+....
 
 For example,
 

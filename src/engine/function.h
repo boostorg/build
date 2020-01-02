@@ -7,11 +7,12 @@
 #ifndef FUNCTION_SW20111123_H
 #define FUNCTION_SW20111123_H
 
+#include "config.h"
 #include "object.h"
 #include "frames.h"
 #include "lists.h"
 #include "parse.h"
-#include "strings.h"
+#include "jam_strings.h"
 
 typedef struct _function FUNCTION;
 typedef struct _stack STACK;

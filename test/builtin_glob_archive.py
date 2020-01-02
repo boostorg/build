@@ -9,7 +9,10 @@
 
 import os
 import sys
-import StringIO
+try:
+    from StringIO import StringIO
+except:
+    from io import StringIO
 import BoostBuild
 
 vms = ( os.name == 'posix' and sys.platform == 'OpenVMS')
@@ -37,7 +40,7 @@ def create_sources(path, sources):
     for s in sources :
         f = os.path.join(path, s)
         t.write(f, "")
-        output = StringIO.StringIO()
+        output = StringIO()
         for sym in sources[s] :
             output.write("int %s() { return 0; }\n" % sym)
         t.write(f, output.getvalue())
@@ -48,7 +51,7 @@ def setup_archive(name, sources):
     global obj_suffix
     archive = t.adjust_names(name)[0]
     obj_suffix = t.adjust_names(".obj")[0]
-    output = StringIO.StringIO()
+    output = StringIO()
     t.write("jamroot.jam","")
     output.write("""\
 static-lib %s :
@@ -71,7 +74,7 @@ static-lib %s :
 
 
 def test_glob_archive(archives, glob, expected, sort_results = False):
-    output = StringIO.StringIO()
+    output = StringIO()
     ## replace placeholders
     glob = glob.replace("$archive1", archives[0]).replace("$obj", obj_suffix)
     expected = [ m.replace("$archive1",
@@ -124,16 +127,16 @@ test_glob_archive([archive1], '[ GLOB_ARCHIVE $archive1 : "\\b?match[\.]*" ]',
                   ["$archive1(b_match$obj)"])
 
 ## glob wildcards:3
-test_glob_archive([archive1], "[ GLOB_ARCHIVE $archive1 : b* ]",
+test_glob_archive([archive1], "[ SORT [ GLOB_ARCHIVE $archive1 : b* ] ]",
                   ["$archive1(b$obj)", "$archive1(b_match$obj)"])
 
 ## glob multiple patterns with multiple results.
-test_glob_archive([archive1], "[ GLOB_ARCHIVE $archive1 : b.* b_* ]",
+test_glob_archive([archive1], "[ SORT [ GLOB_ARCHIVE $archive1 : b.* b_* ] ]",
                   ["$archive1(b$obj)", "$archive1(b_match$obj)"])
 
 ## glob multiple archives and patterns.
 test_glob_archive([archive1, archive2],
-                  "[ GLOB_ARCHIVE $archive1 $archive2 : b.* b_* ]",
+                  "[ SORT [ GLOB_ARCHIVE $archive1 $archive2 : b.* b_* ] ]",
                   ["$archive1(b$obj)", "$archive1(b_match$obj)",
                    "$archive2(b$obj)", "$archive2(b_match$obj)"])
 
@@ -164,7 +167,7 @@ elif vms:
 
 ## test the order of matched members, in general it should match the
 ## insertion sequence.
-test_glob_archive([archive1], "[ GLOB_ARCHIVE $archive1 : seq_check*$obj ]",
+test_glob_archive([archive1], "[ SORT [ GLOB_ARCHIVE $archive1 : seq_check*$obj ] ]",
                   ["$archive1(seq_check1$obj)", "$archive1(seq_check2$obj)",
                    "$archive1(seq_check3$obj)"])
 
