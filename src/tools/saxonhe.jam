@@ -7,6 +7,7 @@
 #
 
 import common ;
+import os ;
 
 rule init ( saxonhe_jar ? : java_exe ? )
 {
@@ -34,8 +35,19 @@ actions saxonhe
 # execute the saxonhe jar file passing directories as inputs and outputs.
 # saxonhe requires that the output directory already exists
 #
-actions saxonhe_dir
+if [ os.on-windows ]
 {
-    mkdir -p "$(<)"
-    "$(.java_exe)" -jar "$(.saxonhe_jar)" -o:"$(<)" -s:"$(>[1])" -xsl:"$(>[2])"
+    actions saxonhe_dir
+    {
+        if not exist "$(<)\\" mkdir "$(<)"
+        "$(.java_exe)" -jar "$(.saxonhe_jar)" -o:"$(<)" -s:"$(>[1])" -xsl:"$(>[2])"
+    }
+}
+else
+{
+    actions saxonhe_dir
+    {
+        mkdir -p "$(<)"
+        "$(.java_exe)" -jar "$(.saxonhe_jar)" -o:"$(<)" -s:"$(>[1])" -xsl:"$(>[2])"
+    }
 }
