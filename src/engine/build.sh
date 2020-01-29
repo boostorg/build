@@ -313,8 +313,8 @@ case $B2_TOOLSET in
             PATH=${B2_TOOLSET_ROOT}bin:${PATH}
             export PATH
         fi
-        B2_CXX="${CXX}"
-        B2_CXXFLAGS_RELEASE="-xO4 -s -std=c++11"
+        B2_CXX="${CXX} -std=c++11"
+        B2_CXXFLAGS_RELEASE="-xO4 -s"
         B2_CXXFLAGS_DEBUG="-g"
     ;;
 
