@@ -887,6 +887,7 @@ rule resolve-reference ( target-reference : project )
     local id = $(split[1]) ;
     if ! $(split) || ! $(id)
     {
+        IMPORT errors : error : : error ;
         error "Malformed target reference $(target-reference)" ;
     }
     local sproperties = ;
