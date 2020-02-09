@@ -264,7 +264,7 @@ stages:
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.4.1.app
-          VM_IMAGE: 'macOS-10.14'
+          VM_IMAGE: 'macOS-10.13'
         Xcode 9.4:
           TOOLSET: clang
           TEST_TOOLSET: clang
