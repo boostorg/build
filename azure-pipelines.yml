@@ -205,24 +205,36 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
+        Xcode 11.3.1:
+          TOOLSET: clang
+          TEST_TOOLSET: clang
+          CXX: clang++
+          XCODE_APP: /Applications/Xcode_11.3.1.app
+          VM_IMAGE: 'macOS-10.15'
+        Xcode 11.3:
+          TOOLSET: clang
+          TEST_TOOLSET: clang
+          CXX: clang++
+          XCODE_APP: /Applications/Xcode_11.3.app
+          VM_IMAGE: 'macOS-10.15'
         Xcode 11.2:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_11.2.app
-          VM_IMAGE: 'macOS-10.14'
+          VM_IMAGE: 'macOS-10.15'
         Xcode 11.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_11.1.app
-          VM_IMAGE: 'macOS-10.14'
+          VM_IMAGE: 'macOS-10.15'
         Xcode 11.0:
           TOOLSET: clang
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_11.app
-          VM_IMAGE: 'macOS-10.14'
+          VM_IMAGE: 'macOS-10.15'
         Xcode 10.2.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
@@ -252,7 +264,7 @@ stages:
           TEST_TOOLSET: clang
           CXX: clang++
           XCODE_APP: /Applications/Xcode_9.4.1.app
-          VM_IMAGE: 'macOS-10.13'
+          VM_IMAGE: 'macOS-10.14'
         Xcode 9.4:
           TOOLSET: clang
           TEST_TOOLSET: clang
@@ -342,6 +354,12 @@ stages:
       vmImage: 'ubuntu-16.04'
     strategy:
       matrix:
+        1.72.0 .. GCC 9:
+          BOOST_VERSION: 1.72.0
+          BOOST_VERSION_U: 1_72_0
+          TOOLSET: gcc
+          CXX: g++-9
+          PACKAGES: g++-9
         1.71.0 .. GCC 9:
           BOOST_VERSION: 1.71.0
           BOOST_VERSION_U: 1_71_0
@@ -469,45 +487,51 @@ stages:
   - job: 'Release_macOS'
     displayName: 'Release macOS'
     pool:
-      vmImage: 'macOS-10.14'
+      vmImage: 'macOS-10.15'
     strategy:
       matrix:
-        1.71.0 .. Xcode 11.1:
+        1.72.0 .. Xcode 11.3.1:
+          BOOST_VERSION: 1.72.0
+          BOOST_VERSION_U: 1_72_0
+          TOOLSET: clang
+          CXX: clang++
+          XCODE_APP: /Applications/Xcode_11.3.1.app
+        1.71.0 .. Xcode 11.3.1:
           BOOST_VERSION: 1.71.0
           BOOST_VERSION_U: 1_71_0
           TOOLSET: clang
           CXX: clang++
-          XCODE_APP: /Applications/Xcode_11.1.app
-        1.70.0 .. Xcode 11.1:
+          XCODE_APP: /Applications/Xcode_11.3.1.app
+        1.70.0 .. Xcode 11.3.1:
           BOOST_VERSION: 1.70.0
           BOOST_VERSION_U: 1_70_0
           TOOLSET: clang
           CXX: clang++
-          XCODE_APP: /Applications/Xcode_11.1.app
-        1.69.0 .. Xcode 11.1:
+          XCODE_APP: /Applications/Xcode_11.3.1.app
+        1.69.0 .. Xcode 11.3.1:
           BOOST_VERSION: 1.69.0
           BOOST_VERSION_U: 1_69_0
           TOOLSET: clang
           CXX: clang++
-          XCODE_APP: /Applications/Xcode_11.1.app
-        1.68.0 .. Xcode 11.1:
+          XCODE_APP: /Applications/Xcode_11.3.1.app
+        1.68.0 .. Xcode 11.3.1:
           BOOST_VERSION: 1.68.0
           BOOST_VERSION_U: 1_68_0
           TOOLSET: clang
           CXX: clang++
-          XCODE_APP: /Applications/Xcode_11.1.app
-        1.67.0 .. Xcode 11.1:
+          XCODE_APP: /Applications/Xcode_11.2.app
+        1.67.0 .. Xcode 11.3.1:
           BOOST_VERSION: 1.67.0
           BOOST_VERSION_U: 1_67_0
           TOOLSET: clang
           CXX: clang++
-          XCODE_APP: /Applications/Xcode_11.1.app
-        1.66.0 .. Xcode 11.1:
+          XCODE_APP: /Applications/Xcode_11.3.1.app
+        1.66.0 .. Xcode 11.3.1:
           BOOST_VERSION: 1.66.0
           BOOST_VERSION_U: 1_66_0
           TOOLSET: clang
           CXX: clang++
-          XCODE_APP: /Applications/Xcode_11.1.app
+          XCODE_APP: /Applications/Xcode_11.3.1.app
     steps:
     - bash: |
         set -e
@@ -536,19 +560,19 @@ stages:
   - job: 'Dev_macOS'
     displayName: 'Dev macOS'
     pool:
-      vmImage: 'macOS-10.14'
+      vmImage: 'macOS-10.15'
     strategy:
       matrix:
-        Master .. Xcode 11.1:
+        Master .. Xcode 11.3.1:
           BOOST_BRANCH: master
           TOOLSET: clang
           CXX: clang++
-          XCODE_APP: /Applications/Xcode_11.1.app
-        Develop .. GCC 9:
+          XCODE_APP: /Applications/Xcode_11.3.1.app
+        Develop .. Xcode 11.3.1:
           BOOST_BRANCH: develop
           TOOLSET: clang
           CXX: clang++
-          XCODE_APP: /Applications/Xcode_11.app
+          XCODE_APP: /Applications/Xcode_11.3.1.app
     steps:
     - bash: |
         set -e
