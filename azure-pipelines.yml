@@ -351,7 +351,7 @@ stages:
   - job: 'Release_Linux'
     displayName: 'Release Linux'
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-latest'
     strategy:
       matrix:
         1.72.0 .. GCC 9:
@@ -429,7 +429,7 @@ stages:
   - job: 'Dev_Linux'
     displayName: 'Dev Linux'
     pool:
-      vmImage: 'ubuntu-16.04'
+      vmImage: 'ubuntu-latest'
     strategy:
       matrix:
         Master .. GCC 9:
@@ -487,7 +487,7 @@ stages:
   - job: 'Release_macOS'
     displayName: 'Release macOS'
     pool:
-      vmImage: 'macOS-10.15'
+      vmImage: 'macOS-latest'
     strategy:
       matrix:
         1.72.0 .. Xcode 11.3.1:
@@ -560,7 +560,7 @@ stages:
   - job: 'Dev_macOS'
     displayName: 'Dev macOS'
     pool:
-      vmImage: 'macOS-10.15'
+      vmImage: 'macOS-latest'
     strategy:
       matrix:
         Master .. Xcode 11.3.1:
@@ -596,6 +596,57 @@ stages:
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
+      displayName: Test
+
+  - job: 'Release_Windows'
+    displayName: 'Release Windows'
+    pool:
+      vmImage: 'windows-latest'
+    strategy:
+      matrix:
+        1.72.0 .. VS 2019:
+          BOOST_VERSION: 1.72.0
+          BOOST_VERSION_U: 1_72_0
+          TOOLSET: vc142
+        1.71.0 .. VS 2019:
+          BOOST_VERSION: 1.71.0
+          BOOST_VERSION_U: 1_71_0
+          TOOLSET: vc142
+        1.70.0 .. VS 2019:
+          BOOST_VERSION: 1.70.0
+          BOOST_VERSION_U: 1_70_0
+          TOOLSET: vc142
+        1.69.0 .. VS 2019:
+          BOOST_VERSION: 1.69.0
+          BOOST_VERSION_U: 1_69_0
+          TOOLSET: vc142
+        1.68.0 .. VS 2019:
+          BOOST_VERSION: 1.68.0
+          BOOST_VERSION_U: 1_68_0
+          TOOLSET: vc142
+        1.67.0 .. VS 2019:
+          BOOST_VERSION: 1.67.0
+          BOOST_VERSION_U: 1_67_0
+          TOOLSET: vc142
+        1.66.0 .. VS 2019:
+          BOOST_VERSION: 1.66.0
+          BOOST_VERSION_U: 1_66_0
+          TOOLSET: vc142
+    steps:
+    - powershell: |
+        cd src/engine
+        $env:path += ';' + $env:CXX_PATH
+        cmd /c build.bat $env:TOOLSET
+        ./b2.exe -v
+        cd ../..
+      displayName: Build
+    - powershell: |
+        cd $env:HOME
+        wget -nv https://dl.bintray.com/boostorg/release/$env:BOOST_VERSION/source/boost_$env:BOOST_VERSION_U.zip
+        7z x boost_$env:BOOST_VERSION_U.zip
+        cd boost_$env:BOOST_VERSION_U
+        echo "using" "msvc" ;" > $env:HOME/user-config.jam
+        "$env:BUILD_SOURCESDIRECTORY/src/engine/b2.exe" "--boost-build=$env:BUILD_SOURCESDIRECTORY/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
 
 - stage: WebsiteUpdate
