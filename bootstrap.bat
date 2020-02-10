@@ -1,16 +1,16 @@
 @ECHO OFF
 
 REM Copyright (C) 2009 Vladimir Prus
-REM Copyright 2019 Rene Rivera
+REM Copyright 2019-2020 Rene Rivera
 REM
 REM Distributed under the Boost Software License, Version 1.0.
 REM (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 
-:b2_bootstrap
-ECHO Bootstrapping the build engine
+:b2_build
+ECHO Building the B2 engine..
 pushd src\engine
-call .\build.bat %* > ..\..\bootstrap.log
+call .\build.bat %* > ..\..\build.log
 @ECHO OFF
 popd
 if exist ".\src\engine\b2.exe" (
@@ -21,7 +21,7 @@ goto :b2_failure
 
 :b2_built
 ECHO.
-ECHO Bootstrapping is done. To build, run:
+ECHO Building is done. To install, run:
 ECHO.
 ECHO     .\b2 --prefix=DIR install
 ECHO.
@@ -30,8 +30,8 @@ goto :end
 
 :b2_failure
 ECHO.
-ECHO Failed to bootstrap the build engine
-ECHO Please consult bootstrap.log for further diagnostics.
+ECHO Failed to build the B2 engine.
+ECHO Please consult build.log for further diagnostics.
 ECHO.
 goto :end
 
