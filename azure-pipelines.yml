@@ -635,18 +635,18 @@ stages:
     steps:
     - powershell: |
         cd src/engine
-        $env:path += ';' + $env:CXX_PATH
-        cmd /c build.bat $env:TOOLSET
+        $env:path += ';' + $env:{CXX_PATH}
+        cmd /c build.bat $env:{TOOLSET}
         ./b2.exe -v
         cd ../..
       displayName: Build
     - powershell: |
         cd $env:HOME
-        wget -nv https://dl.bintray.com/boostorg/release/$env:BOOST_VERSION/source/boost_$env:BOOST_VERSION_U.zip
-        7z x boost_$env:BOOST_VERSION_U.zip
-        cd boost_$env:BOOST_VERSION_U
-        echo "using" "msvc" ;" > $env:HOME/user-config.jam
-        "$env:BUILD_SOURCESDIRECTORY/src/engine/b2.exe" "--boost-build=$env:BUILD_SOURCESDIRECTORY/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
+        wget -nv https://dl.bintray.com/boostorg/release/$env:{BOOST_VERSION}/source/boost_$env:{BOOST_VERSION_U}.zip
+        7z x boost_$env:{BOOST_VERSION_U}.zip
+        cd boost_$env:{BOOST_VERSION_U}
+        echo "using" "msvc" ;" > $env:{HOME}/user-config.jam
+        "$env:{BUILD_SOURCESDIRECTORY}/src/engine/b2.exe" "--boost-build=$env:{BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
 
 - stage: WebsiteUpdate
