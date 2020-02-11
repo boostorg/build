@@ -645,7 +645,7 @@ stages:
         wget -nv https://dl.bintray.com/boostorg/release/${env:BOOST_VERSION}/source/boost_${env:BOOST_VERSION_U}.zip
         7z x boost_${env:BOOST_VERSION_U}.zip
         cd boost_${env:BOOST_VERSION_U}
-        echo "using" "msvc" ;" > ${env:HOME}/user-config.jam
+        echo "using" "msvc" ";" > ${env:HOME}/user-config.jam
         "${env:BUILD_SOURCESDIRECTORY}/src/engine/b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
 
