@@ -641,7 +641,7 @@ stages:
         cd ../..
       displayName: Build
     - powershell: |
-        cd $env:HOME
+        cd ${env:HOME}
         wget -nv https://dl.bintray.com/boostorg/release/${env:BOOST_VERSION}/source/boost_${env:BOOST_VERSION_U}.zip
         7z x boost_${env:BOOST_VERSION_U}.zip
         cd boost_${env:BOOST_VERSION_U}
