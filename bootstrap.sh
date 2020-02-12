@@ -10,11 +10,11 @@
 # Build b2
 echo "Building the B2 engine.."
 pwd=`pwd`
-(cd "./src/engine" && ./build.sh) > build.log 2>&1
+(cd "./src/engine" && ./build.sh) > bootstrap.log 2>&1
 if [ $? -ne 0 ]; then
     echo
     echo "Failed to build the B2 engine."
-    echo "Please consult build.log for further diagnostics."
+    echo "Please consult bootstrap.log for further diagnostics."
     exit 1
 fi
 cd "$pwd"
