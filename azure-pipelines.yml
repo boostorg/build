@@ -652,6 +652,36 @@ stages:
         & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
 
+  - job: 'Dev_Windows'
+    displayName: 'Dev Windows'
+    pool:
+      vmImage: 'windows-latest'
+    strategy:
+      matrix:
+        Master .. VS 2019:
+          BOOST_BRANCH: master
+          TOOLSET: vc142
+        Develop .. VS 2019:
+          BOOST_BRANCH: develop
+          TOOLSET: vc142
+    steps:
+    - powershell: |
+        cd src/engine
+        $env:path += ';' + ${env:CXX_PATH}
+        cmd /c build.bat ${env:TOOLSET}
+        ./b2.exe -v
+        cd ../..
+      displayName: Build
+    - powershell: |
+        $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
+        cd "${env:HOME}"
+        git clone --recursive https://github.com/boostorg/boost.git
+        cd boost
+        git checkout "${env:BOOST_BRANCH}"
+        echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
+        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
+      displayName: Test
+
 - stage: WebsiteUpdate
   displayName: 'Website Update'
   condition: in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/develop')
