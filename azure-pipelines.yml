@@ -645,7 +645,7 @@ stages:
     - powershell: |
         $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
         cd ${env:HOME}
-        wget -nv https://dl.bintray.com/boostorg/release/${env:BOOST_VERSION}/source/boost_${env:BOOST_VERSION_U}.zip
+        wget https://dl.bintray.com/boostorg/release/${env:BOOST_VERSION}/source/boost_${env:BOOST_VERSION_U}.zip
         7z x boost_${env:BOOST_VERSION_U}.zip
         cd boost_${env:BOOST_VERSION_U}
         echo "using" "msvc" ";" > ${env:HOME}/user-config.jam
