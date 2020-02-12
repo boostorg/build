@@ -190,12 +190,14 @@ stages:
           cd ../..
       displayName: Build
     - powershell: |
+          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
           cd test
           echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
           python test_all.py $env:TEST_TOOLSET
           cd ..
       displayName: Test
     - powershell: |
+          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
           $env:path += ';' + $env:CXX_PATH
           echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
           ./bootstrap.bat
@@ -641,6 +643,7 @@ stages:
         cd ../..
       displayName: Build
     - powershell: |
+        $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
         cd ${env:HOME}
         wget -nv https://dl.bintray.com/boostorg/release/${env:BOOST_VERSION}/source/boost_${env:BOOST_VERSION_U}.zip
         7z x boost_${env:BOOST_VERSION_U}.zip
