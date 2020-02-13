@@ -677,7 +677,10 @@ stages:
         cd "${env:HOME}"
         git clone --recursive https://github.com/boostorg/boost.git
         cd boost
-        git checkout "${env:BOOST_BRANCH}" 2>&1
+        $OriginalErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference= 'silentlycontinue'
+        git checkout "${env:BOOST_BRANCH}"
+        $ErrorActionPreference = $OriginalErrorActionPreference
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
         & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
