@@ -10,12 +10,12 @@ REM (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.t
 :b2_build
 ECHO Building the B2 engine..
 pushd src\engine
-call .\build.bat %* > ..\..\bootstrap.log
+call .\build.bat %*
 @ECHO OFF
 popd
 if exist ".\src\engine\b2.exe" (
-   copy .\src\engine\b2.exe . > nul
-   goto :b2_built)
+    copy .\src\engine\b2.exe . > nul
+    goto :b2_built)
 goto :b2_failure
 
 
@@ -31,7 +31,6 @@ goto :end
 :b2_failure
 ECHO.
 ECHO Failed to build the B2 engine.
-ECHO Please consult bootstrap.log for further diagnostics.
 ECHO.
 goto :end
 

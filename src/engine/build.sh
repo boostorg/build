@@ -13,7 +13,7 @@ B2_OS=
 # if there was an error.
 echo_run ()
 {
-    echo "$@"
+    echo "> $@"
     $@
     r=$?
     if test $r -ne 0 ; then
@@ -46,7 +46,7 @@ Similarly, the cross-cxx toolset is available for cross-compiling by using the
 BUILD_CXX, BUILD_CXXFLAGS, and BUILD_LDFLAGS environment variables to compile
 binaries that will be executed on the build system. This allows CXX etc. to be
 set for cross-compilers to be propagated to subprocesses.
-"
+" 1>&2
     exit 1
 }
 
@@ -68,15 +68,51 @@ test_uname ()
     fi
 }
 
+# Check that the given command runs.
+test_exec ()
+{
+    "$*" 1>/dev/null 2>/dev/null
+}
+
+# Check that the compiler can do C++11.
+test_cxx11 ()
+{
+    if ! test $NO_CXX11_CHECK ; then
+        case $1 in
+            gcc) ( ${CXX:=g++} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            intel-darwin) ( ${CXX:=icc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            intel-linux) ( ${CXX:=icc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            vacpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            xlcpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            como) ( ${CXX:=como} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            kcc) ( ${CXX:=KCC} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            kylix) ( ${CXX:=bc++} -tC -q check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            mipspro) ( ${CXX:=CC} -FE:template_in_elf_section -ptused check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            pathscale) ( ${CXX:=pathCC} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            pgi) ( ${CXX:=pgc++} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            sun*) ( ${CXX:=CC} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            clang*) ( ${CXX:=clang++} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            tru64cxx) ( ${CXX:=cc} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            acc) ( ${CXX:=aCC} -AA check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            qcc) ( ${CXX:=QCC} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            cxx) ( ${CXX:=cxx} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            cross-cxx) ( ${CXX:=cxx} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            *) test "0" = "1" ;;
+        esac
+    else
+        test $NO_CXX11_CHECK
+    fi
+}
+
 # Try and guess the toolset to bootstrap the build with...
 guess_toolset ()
 {
-    if test_uname Darwin ; then B2_TOOLSET=clang
-    elif test_uname IRIX ; then B2_TOOLSET=mipspro
-    elif test_uname IRIX64 ; then B2_TOOLSET=mipspro
-    elif test_uname OSF1 ; then B2_TOOLSET=tru64cxx
-    elif test_uname QNX && test_path QCC ; then B2_TOOLSET=qcc
-    elif test_uname Linux && test_path xlC_r; then
+    if test_uname Darwin && test_cxx11 clang ; then B2_TOOLSET=clang
+    elif test_uname IRIX && test_cxx11 mipspro ; then B2_TOOLSET=mipspro
+    elif test_uname IRIX64 && test_cxx11 mipspro ; then B2_TOOLSET=mipspro
+    elif test_uname OSF1 && test_cxx11 tru64cxx ; then B2_TOOLSET=tru64cxx
+    elif test_uname QNX && test_path QCC && test_cxx11 qcc ; then B2_TOOLSET=qcc
+    elif test_uname Linux && test_path xlC_r ; then
        if /usr/bin/lscpu | grep Byte | grep Little > /dev/null 2>&1 ; then
           # Little endian linux
           B2_TOOLSET=xlcpp
@@ -84,34 +120,34 @@ guess_toolset ()
           #Big endian linux
           B2_TOOLSET=vacpp
        fi
-    elif test_uname AIX && test_path xlC_r; then B2_TOOLSET=vacpp
-    elif test_uname FreeBSD && test_path freebsd-version && test_path clang++; then B2_TOOLSET=clang
-    elif test_path g++ ; then B2_TOOLSET=gcc
-    elif test_path clang++ ; then B2_TOOLSET=clang
-    elif test_path icc ; then B2_TOOLSET=intel-linux
-    elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
+    elif test_uname AIX && test_path xlC_r && test_cxx11 vacpp ; then B2_TOOLSET=vacpp
+    elif test_uname FreeBSD && test_path freebsd-version && test_path clang++ && test_cxx11 clang ; then B2_TOOLSET=clang
+    elif test_path g++ && test_cxx11 gcc ; then B2_TOOLSET=gcc
+    elif test_path clang++ && test_cxx11 clang ; then B2_TOOLSET=clang
+    elif test_path icc && test_cxx11 intel-linux ; then B2_TOOLSET=intel-linux
+    elif test -r /opt/intel/cc/9.0/bin/iccvars.sh && test_cxx11 intel-linux ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel/cc/9.0
-    elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
+    elif test -r /opt/intel_cc_80/bin/iccvars.sh && test_cxx11 intel-linux ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel_cc_80
-    elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh ; then
+    elif test -r /opt/intel/compiler70/ia32/bin/iccvars.sh && test_cxx11 intel-linux ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel/compiler70/ia32/
-    elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh ; then
+    elif test -r /opt/intel/compiler60/ia32/bin/iccvars.sh && test_cxx11 intel-linux ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel/compiler60/ia32/
-    elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh ; then
+    elif test -r /opt/intel/compiler50/ia32/bin/iccvars.sh && test_cxx11 intel-linux ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
-    elif test_path pgc++ ; then B2_TOOLSET=pgi
-    elif test_path pathCC ; then B2_TOOLSET=pathscale
-    elif test_path como ; then B2_TOOLSET=como
-    elif test_path KCC ; then B2_TOOLSET=kcc
-    elif test_path bc++ ; then B2_TOOLSET=kylix
-    elif test_path aCC ; then B2_TOOLSET=acc
+    elif test_path pgc++ && test_cxx11 pgi ; then B2_TOOLSET=pgi
+    elif test_path pathCC && test_cxx11 pathscale ; then B2_TOOLSET=pathscale
+    elif test_path como && test_cxx11 como ; then B2_TOOLSET=como
+    elif test_path KCC && test_cxx11 kcc ; then B2_TOOLSET=kcc
+    elif test_path bc++ && test_cxx11 kylix ; then B2_TOOLSET=kylix
+    elif test_path aCC && test_cxx11 acc ; then B2_TOOLSET=acc
     elif test_uname HP-UX ; then B2_TOOLSET=acc
-    elif test -r /opt/SUNWspro/bin/cc ; then
+    elif test -r /opt/SUNWspro/bin/cc && test_cxx11 sunpro ; then
         B2_TOOLSET=sunpro
         B2_TOOLSET_ROOT=/opt/SUNWspro/
     # Test for some common compile command as the default fallback.
@@ -147,11 +183,20 @@ check_debug_build ()
 # is the name of the toolset to force building
 # with.
 case "$1" in
-    --guess-toolset) guess_toolset ; echo "$B2_TOOLSET" ; exit 1 ;;
+    --guess-toolset) NO_CXX11_CHECK=1 ; guess_toolset ; echo "$B2_TOOLSET" ; exit 1 ;;
     -*) guess_toolset ;;
     ?*) B2_TOOLSET=$1 ; shift ;;
     *) guess_toolset ;;
 esac
+
+# We need a C++11 compiler. Check here and given some feedback about it.
+if ! test_cxx11 $B2_TOOLSET ; then
+    error_exit "
+A C++11 capable compiler is required for building the B2 engine.
+Toolset '$B2_TOOLSET' does not appear to support C++11.
+"
+fi
+
 case $B2_TOOLSET in
 
     gcc)
@@ -159,7 +204,7 @@ case $B2_TOOLSET in
         CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
         # Check whether it's MinGW GCC, which has Windows headers and none of POSIX ones.
         machine=$(${CXX} -dumpmachine 2>/dev/null)
-        if [ $? -ne 0 ]; then
+        if test $? -ne 0 ; then
             echo "B2_TOOLSET is gcc, but the 'gcc' command cannot be executed."
             echo "Make sure 'gcc' is in PATH, or use a different toolset."
             exit 1
@@ -321,7 +366,7 @@ case $B2_TOOLSET in
     clang*)
         CXX=${CXX:=clang++}
         CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
-        B2_CXX="${CXX} -x c++ -O3 -std=c++11"
+        B2_CXX="${CXX} -x c++ -std=c++11"
         B2_TOOLSET=clang
         B2_CXXFLAGS_RELEASE="-O3 -s"
         B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g"
@@ -368,14 +413,18 @@ case $B2_TOOLSET in
     ;;
 esac
 
-echo "###"
-echo "###"
-echo "### Using '$B2_TOOLSET' toolset."
-echo "###"
-echo "###"
+echo "
+###
+###
+### Using '$B2_TOOLSET' toolset.
+###
+###
+"
 echo_run ${CXX} ${CXX_VERSION_OPT}
-echo "###"
-echo "###"
+echo "
+###
+###
+"
 B2_SOURCES="\
  builtins.cpp \
  class.cpp \
