@@ -6,8 +6,9 @@
 import numbers ;
 
 
+# Mirror engine JAM_VERSION
 .major = "4" ;
-.minor = "1" ;
+.minor = "2" ;
 
 
 rule boost-build ( )
