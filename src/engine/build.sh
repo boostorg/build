@@ -194,6 +194,10 @@ if ! test_cxx11 $B2_TOOLSET ; then
     error_exit "
 A C++11 capable compiler is required for building the B2 engine.
 Toolset '$B2_TOOLSET' does not appear to support C++11.
+
+** Note, the C++11 capable compiler is _only_ required for building the B2
+** engine. The B2 build system allows for using any C++ level and any other
+** supported language and resource in your projects.
 "
 fi
 
