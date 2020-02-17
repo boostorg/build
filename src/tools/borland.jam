@@ -1,8 +1,8 @@
-# Copyright 2005 Dave Abrahams
-# Copyright 2003 Rene Rivera
-# Copyright 2003, 2004, 2005 Vladimir Prus
-# Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# Copyright 2005 Dave Abrahams 
+# Copyright 2003 Rene Rivera 
+# Copyright 2003, 2004, 2005 Vladimir Prus 
+# Distributed under the Boost Software License, Version 1.0. 
+# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt) 
 
 #| tag::doc[]
 
@@ -30,7 +30,7 @@ using borland : [version] : [c++-compile-command] : [compiler options] ;
 This statement may be repeated several times, if you want to configure
 several versions of the compiler.
 
-If the command is not specified, B2 will search for a binary
+If the command is not specified, Boost.Build will search for a binary
 named `bcc32` in PATH.
 
 The following options can be provided, using
@@ -62,6 +62,7 @@ import toolset : flags ;
 import feature : get-values ;
 import type ;
 import common ;
+import version ;
 
 feature.extend toolset : borland ;
 
@@ -69,24 +70,76 @@ rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters borland :
         version $(version) ] ;
-
-    local command = [ common.get-invocation-command borland : bcc32.exe
+    
+    local command = [ common.get-invocation-command borland : bcc32.exe 
         : $(command) ] ;
-
-    common.handle-options borland : $(condition) : $(command) : $(options) ;
-
+     
+    common.handle-options borland : $(condition) : $(command) : $(options) ;    
+    
     if $(command)
     {
         command = [ common.get-absolute-tool-path $(command[-1]) ] ;
-    }
-    root = $(command:D) ;
-
+    }   
+    root = $(command:D) ;    
+    
     flags borland.compile STDHDRS $(condition) : $(root)/include/ ;
     flags borland.link STDLIBPATH $(condition) : $(root)/lib ;
     flags borland.link RUN_PATH $(condition) : $(root)/bin ;
-    flags borland .root $(condition) : $(root)/bin/ ;
+    flags borland .root $(condition) : $(root)/bin/ ;    
+    
+    local jv ;
+    
+    if $(version)
+        {
+        jv = [ MATCH "^([0-9.]+)" : $(version) ] ;
+        }
+    if ! $(jv) || [ version.version-less [ version.version-split $(jv) ] : 6 30 ]
+        {
+        init-earlier-releases $(condition) ;
+        }
+    else
+        {
+        init-later-releases $(condition) ;
+        }
 }
 
+local rule init-earlier-releases ( condition )
+{
+
+# Deal with various runtime configs...
+
+# This should be not for DLL
+flags borland OPTIONS $(condition)/<user-interface>console : -tWC ;
+
+# -tWR sets -tW as well, so we turn it off here and then turn it 
+# on again later if we need it:
+flags borland OPTIONS $(condition)/<runtime-link>shared : -tWR -tWC ;
+
+flags borland OPTIONS $(condition)/<main-target-type>LIB/<link>shared : -tWD ;
+# Hmm.. not sure what's going on here.
+flags borland OPTIONS $(condition) : -WM- ;
+flags borland OPTIONS $(condition)/<threading>multi : -tWM ;
+
+flags borland.link OPTIONS $(condition)/<link>shared : -tWD ;
+
+}
+
+local rule init-later-releases ( condition )
+{
+
+# Deal with various runtime configs...
+
+# This should be not for DLL
+flags borland OPTIONS $(condition)/<user-interface>console : -tC ;
+
+flags borland OPTIONS $(condition)/<runtime-link>shared : -tR ;
+
+flags borland OPTIONS $(condition)/<main-target-type>LIB/<link>shared : -tD ;
+flags borland OPTIONS $(condition)/<threading>multi : -tM ;
+
+flags borland.link OPTIONS $(condition)/<link>shared : -tD ;
+
+}
 
 # A borland-specific target type
 type.register BORLAND.TDS : tds ;
@@ -101,7 +154,7 @@ generators.register-c-compiler borland.compile.c++ : CPP : OBJ : <toolset>borlan
 generators.register-c-compiler borland.compile.c : C : OBJ : <toolset>borland ;
 generators.register-standard borland.asm : ASM : OBJ : <toolset>borland ;
 
-# Declare flags
+# Declare flags 
 
 flags borland.compile OPTIONS <debug-symbols>on : -v ;
 flags borland.link OPTIONS <debug-symbols>on : -v ;
@@ -125,23 +178,7 @@ flags borland.compile OPTIONS <warnings>off : -w- ;
 flags borland.compile OPTIONS <warnings>all : -w ;
 flags borland.compile OPTIONS <warnings-as-errors>on : -w! ;
 
-
-# Deal with various runtime configs...
-
-# This should be not for DLL
-flags borland OPTIONS <user-interface>console : -tWC ;
-
-# -tWR sets -tW as well, so we turn it off here and then turn it
-# on again later if we need it:
-flags borland OPTIONS <runtime-link>shared : -tWR -tWC ;
 flags borland OPTIONS <user-interface>gui : -tW ;
-
-flags borland OPTIONS <main-target-type>LIB/<link>shared : -tWD ;
-# Hmm.. not sure what's going on here.
-flags borland OPTIONS : -WM- ;
-flags borland OPTIONS <threading>multi : -tWM ;
-
-
 
 flags borland.compile OPTIONS <cflags> ;
 flags borland.compile.c++ OPTIONS <cxxflags> ;
@@ -158,7 +195,7 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 # -q     no banner
 # -c     compile to object
 # -P     C++ code regardless of file extension
-# -a8    8 byte alignment, this option is on in the IDE by default
+# -a8    8 byte alignment, this option is on in the IDE by default 
 #        and effects binary compatibility.
 #
 
@@ -185,7 +222,6 @@ toolset.flags borland.link FINDLIBS_SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 
 flags borland.link OPTIONS <linkflags> ;
-flags borland.link OPTIONS <link>shared : -tWD ;
 
 flags borland.link LIBRARY_PATH_OPTION <toolset>borland : -L : unchecked ;
 flags borland.link LIBRARY_OPTION <toolset>borland : "" : unchecked ;
@@ -205,7 +241,7 @@ flags borland.archive AROPTIONS <archiveflags> ;
 # values tlib fails when building large applications.
 # CONSIDER: don't know what 'together' is for...
 actions updated together piecemeal archive
-{
+{ 
     $(.set-path)$(.root:W)$(.old-path)
     tlib $(AROPTIONS) /P256 /u /a /C "$(<:W)" +-"$(>:W)"
 }
@@ -215,7 +251,7 @@ if [ os.name ] = CYGWIN
 {
     .set-path = "cmd /S /C set \"PATH=" ;
     .old-path = ";%PATH%\" \"&&\"" ;
-
+    
 
     # Couldn't get TLIB to stop being confused about pathnames
     # containing dashes (it seemed to treat them as option separators
@@ -224,11 +260,11 @@ if [ os.name ] = CYGWIN
     # about pathname style! Forward slashes, too, are treated as
     # options.
     actions updated together piecemeal archive
-    {
+    { 
        chdir $(<:D)
        echo +-$(>:BS) > $(<:BS).rsp
        $(.set-path)$(.root)$(.old-path) "tlib.exe" $(AROPTIONS) /P256 /C $(<:BS) @$(<:BS).rsp && $(RM) $(<:BS).rsp
-    }
+    }    
 }
 else if [ os.name ] = NT
 {
