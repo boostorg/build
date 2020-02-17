@@ -14,14 +14,6 @@ running on Microsoft Windows. This is the bcc32 executable for all
 versions of Borland C++ and C++ Builder, as well as the command line
 compatible compiler bcc32c on later versions of C++ Builder.
 
-The supported products are listed below. The version reported by the
-command lines tools is also listed for reference.:
-
-* C++ Builder 2006 -- 5.8.2
-* CBuilderX -- 5.6.5, 5.6.4 (depending on release)
-* CBuilder6 -- 5.6.4
-* Free command line tools -- 5.5.1
-
 The module is initialized using the following syntax:
 
 ----
@@ -150,7 +142,7 @@ flags borland OPTIONS $(condition)/<runtime-link>shared : -tR ;
 flags borland OPTIONS $(condition)/<main-target-type>LIB/<link>shared : -tD ;
 flags borland OPTIONS $(condition)/<threading>multi : -tM ;
 
-flags borland.link OPTIONS $(condition)/<link>shared : -tD ;
+flags borland.link.dll OPTIONS $(condition)/<link>shared : -tD ;
 
 }
 
