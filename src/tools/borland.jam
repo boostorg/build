@@ -9,9 +9,10 @@
 [[bbv2.reference.tools.compiler.borland]]
 = Borland C++ Compiler
 
-The `borland` module supports the command line C++ compiler included in
-http://www.borland.com/us/products/cbuilder/index.html[C++ Builder 2006]
-product and earlier version of it, running on Microsoft Windows.
+The `borland` module supports the 32-bit command line C++ compilers
+running on Microsoft Windows. This is the bcc32 executable for all
+versions of Borland C++ and C++ Builder, as well as the command line
+compatible compiler bcc32c on later versions of C++ Builder.
 
 The supported products are listed below. The version reported by the
 command lines tools is also listed for reference.:
@@ -51,6 +52,10 @@ and C++ sources.
 `linkflags`::
 Specifies additional command line options that will be passed to the linker.
 
+`user-interface`::
+Specifies the user interface for applications. Valid choices are `console`
+for a console applicatiuon and `gui` for a Windows application.
+
 |# # end::doc[]
 
 #  Support for the Borland's command line compiler
@@ -68,13 +73,16 @@ feature.extend toolset : borland ;
 
 rule init ( version ? : command * : options * )
 {
+
     local condition = [ common.check-init-parameters borland :
         version $(version) ] ;
     
     local command = [ common.get-invocation-command borland : bcc32.exe 
         : $(command) ] ;
      
-    common.handle-options borland : $(condition) : $(command) : $(options) ;    
+    common.handle-options borland : $(condition) : $(command) : $(options) ;
+    
+    local just_bcc32 = [ MATCH ".*(bcc32)([^a-z0-9]|$)" : $(command:L) ] ;
     
     if $(command)
     {
@@ -100,6 +108,11 @@ rule init ( version ? : command * : options * )
     else
         {
         init-later-releases $(condition) ;
+        }
+        
+    if $(just_bcc32) && ( $(just_bcc32[1]) = bcc32 )
+        {
+        flags borland.compile OPTIONS $(condition) : -g255 -Vx- -Ve- ;
         }
 }
 
@@ -204,13 +217,13 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -P -a8 -Vx- -Ve- -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -q -c -P -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 # For C, we don't pass -P flag
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -j5 -g255 -q -c -a8 -Vx- -Ve- -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -q -c -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 
