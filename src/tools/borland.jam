@@ -62,6 +62,7 @@ import toolset : flags ;
 import feature : get-values ;
 import type ;
 import common ;
+import version ;
 
 feature.extend toolset : borland ;
 
@@ -85,8 +86,60 @@ rule init ( version ? : command * : options * )
     flags borland.link STDLIBPATH $(condition) : $(root)/lib ;
     flags borland.link RUN_PATH $(condition) : $(root)/bin ;
     flags borland .root $(condition) : $(root)/bin/ ;    
+    
+    local jv ;
+    
+    if $(version)
+        {
+        jv = [ MATCH "^([0-9.]+)" : $(version) ] ;
+        }
+    if ! $(jv) || [ version.version-less [ version.version-split $(jv) ] : 6 30 ]
+        {
+        init-earlier-releases $(condition) ;
+        }
+    else
+        {
+        init-later-releases $(condition) ;
+        }
 }
 
+local rule init-earlier-releases ( condition )
+{
+
+# Deal with various runtime configs...
+
+# This should be not for DLL
+flags borland OPTIONS $(condition)/<user-interface>console : -tWC ;
+
+# -tWR sets -tW as well, so we turn it off here and then turn it 
+# on again later if we need it:
+flags borland OPTIONS $(condition)/<runtime-link>shared : -tWR -tWC ;
+
+flags borland OPTIONS $(condition)/<main-target-type>LIB/<link>shared : -tWD ;
+# Hmm.. not sure what's going on here.
+flags borland OPTIONS $(condition) : -WM- ;
+flags borland OPTIONS $(condition)/<threading>multi : -tWM ;
+
+flags borland.link OPTIONS $(condition)/<link>shared : -tWD ;
+
+}
+
+local rule init-later-releases ( condition )
+{
+
+# Deal with various runtime configs...
+
+# This should be not for DLL
+flags borland OPTIONS $(condition)/<user-interface>console : -tC ;
+
+flags borland OPTIONS $(condition)/<runtime-link>shared : -tR ;
+
+flags borland OPTIONS $(condition)/<main-target-type>LIB/<link>shared : -tD ;
+flags borland OPTIONS $(condition)/<threading>multi : -tM ;
+
+flags borland.link OPTIONS $(condition)/<link>shared : -tD ;
+
+}
 
 # A borland-specific target type
 type.register BORLAND.TDS : tds ;
@@ -125,23 +178,7 @@ flags borland.compile OPTIONS <warnings>off : -w- ;
 flags borland.compile OPTIONS <warnings>all : -w ;
 flags borland.compile OPTIONS <warnings-as-errors>on : -w! ;
 
-
-# Deal with various runtime configs...
-
-# This should be not for DLL
-flags borland OPTIONS <user-interface>console : -tWC ;
-
-# -tWR sets -tW as well, so we turn it off here and then turn it 
-# on again later if we need it:
-flags borland OPTIONS <runtime-link>shared : -tWR -tWC ;
 flags borland OPTIONS <user-interface>gui : -tW ;
-
-flags borland OPTIONS <main-target-type>LIB/<link>shared : -tWD ;
-# Hmm.. not sure what's going on here.
-flags borland OPTIONS : -WM- ;
-flags borland OPTIONS <threading>multi : -tWM ;
-
-
 
 flags borland.compile OPTIONS <cflags> ;
 flags borland.compile.c++ OPTIONS <cxxflags> ;
@@ -185,7 +222,6 @@ toolset.flags borland.link FINDLIBS_SA <find-shared-library> ;
 toolset.flags borland.link LIBRARIES <library-file> ;
 
 flags borland.link OPTIONS <linkflags> ;
-flags borland.link OPTIONS <link>shared : -tWD ;
 
 flags borland.link LIBRARY_PATH_OPTION <toolset>borland : -L : unchecked ;
 flags borland.link LIBRARY_OPTION <toolset>borland : "" : unchecked ;
