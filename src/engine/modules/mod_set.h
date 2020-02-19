@@ -113,14 +113,14 @@ struct set_module
     void def(Binder &binder)
     {
         binder
-            .def("difference", &set::difference)
-            .def("intersection", &set::intersection)
-            .def("equal", &set::equal);
+            .def(&set::difference, "difference", "set1"_n | "set2"_n)
+            .def(&set::intersection, "intersection", "set1"_n | "set2"_n)
+            .def(&set::equal, "equal", "set1"_n | "set2"_n);
         binder.def_class("set", type_<set>())
             .def(init_<>())
-            .def("add", static_cast<void (set::*)(const std::vector<std::string> &)>(&set::add))
-            .def("contains", &set::contains)
-            .def("list", &set::to_vector);
+            .def(static_cast<void (set::*)(const std::vector<std::string> &)>(&set::add), "add", "elemets"_n)
+            .def(&set::contains, "contains", "element"_1)
+            .def(&set::to_vector, "list");
     }
 };
 

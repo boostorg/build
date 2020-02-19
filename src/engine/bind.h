@@ -65,6 +65,10 @@ struct init_
 {
 };
 
+// Forward declare..
+template <int C> struct arg_;
+template <class... A> struct args_;
+
 /** tag::binder_param[]
 
 A single parameter of an argument.
@@ -245,7 +249,7 @@ struct class_
 
     /** tag::binder_class[]
 
-    === `b2::bind::class_::def(init_<Args...> init_args) -> class_ &`
+    === `b2::bind::class_::def(init_<Args...> init_args, ...) -> class_ &`
 
     Defines an init method, i.e. constructor, with the given `init_args` types.
     The given `init_args` will match an appropriate constructor. And the
@@ -270,24 +274,7 @@ struct class_
 
     /** tag::binder_class[]
 
-    === `b2::bind::class_::def(const char *name, F function) -> class_ &`
-
-    Defines a method which it bound with the given `name` which calls the given
-    `function`.
-
-    end::binder_class[] */
-    template <class F>
-    class_ &def(const char *name, F function)
-    {
-        // Forward to the language specific binder.
-        binder.def_method(this->name(), name, args_<>{}, function);
-        return *this;
-    }
-
-
-    /** tag::binder_class[]
-
-    === `class_ & b2::bind::class_::def(F function, const char *name, args_<A...> args)`
+    === `b2::bind::class_::def(F function, const char *name, args_<A...> args) -> class_ &`
 
     Defines a method which is bound with the given `name` which calls the given
     `function`.
@@ -299,6 +286,21 @@ struct class_
         // Forward to the language specific binder.
         binder.def_method(this->name(), name, args, function);
         return *this;
+    }
+    template <class F, int C>
+    class_ &def(F function, const char *name, arg_<C> args)
+    {
+        return this->def(function, name, args_<arg_<C>>{std::make_tuple(args)});
+    }
+    template <class F>
+    class_ &def(F function, const char *name, param_ args)
+    {
+        return this->def(function, name, args_<arg_<1>>{std::make_tuple(arg_<1>{args})});
+    }
+    template <class F>
+    class_ &def(F function, const char *name)
+    {
+        return this->def(function, name, args_<>{});
     }
 
 private:
@@ -355,19 +357,12 @@ struct binder_
 
     === `b2::bind::binder_::def_class`
 
-    === `b2::bind::binder_::def(const char *name, F function) -> binder_ &`
+    === `b2::bind::binder_::def(F function, const char *name, ...) -> binder_ &`
 
     Defines a function which is bound with the given `name` which calls the given
     `function`.
 
     end::binder_binder[] */
-    template <class F>
-    binder_ &def(const char *name, F function)
-    {
-        // Forward to the language specific binder.
-        self().def_function(name, args_<>{}, function);
-        return *this;
-    }
     template <class F, class... A>
     binder_ &def(F function, const char *name, args_<A...> args)
     {
@@ -378,8 +373,17 @@ struct binder_
     template <class F, int C>
     binder_ &def(F function, const char *name, arg_<C> args)
     {
-        this->def(function, name, args_<arg_<C>>{std::make_tuple(args)});
-        return *this;
+        return this->def(function, name, args_<arg_<C>>{std::make_tuple(args)});
+    }
+    template <class F>
+    binder_ &def(F function, const char *name, param_ args)
+    {
+        return this->def(function, name, args_<arg_<1>>{std::make_tuple(arg_<1>{args})});
+    }
+    template <class F>
+    binder_ &def(F function, const char *name)
+    {
+        return this->def(function, name, args_<>{});
     }
 
     // Internal..
