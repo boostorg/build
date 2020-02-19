@@ -34,7 +34,7 @@ struct jam_binder : bind::binder_<jam_binder>
     with the rules and variables that gets imported and copied into the
     specific instance module as needed.
     */
-    template <typename Class, typename... Bases>
+    template <class Class, class... Bases>
     void bind_class(
         const char *module_name, const char *class_name,
         ::b2::bind::type_<Class>,
@@ -43,27 +43,29 @@ struct jam_binder : bind::binder_<jam_binder>
     /*
     Bind the init ctor function `i` as a constructor for the class.
     */
-    template <typename Class, typename Init>
+    template <class Class, class Init, class... A>
     void bind_init(
         const char *module_name, const char *class_name,
-        Class *c, Init i);
+        Class *c, Init i, ::b2::bind::args_<A...> args);
 
     /*
     Bind the given method of a class. THe function can be any invocable whose
     interface will be reflected to Jam.
     */
-    template <typename Function>
+    template <class Function, class... A>
     void bind_method(
         const char *module_name, const char *class_name,
-        const char *method_name, Function f);
+        const char *method_name, ::b2::bind::args_<A...> args,
+        Function f);
 
     /*
     Bind a module scoped plain function, i.e. Jam rule.
     */
-    template <typename Function>
+    template <class Function, class... A>
     void bind_function(
         const char *module_name,
-        const char *function_name, Function f);
+        const char *function_name, ::b2::bind::args_<A...> args,
+        Function f);
 };
 
 /*
@@ -72,10 +74,10 @@ Marshaling of arguments and results end up calling one of `from_jam` or
 `std::string`, `unsigned int`, `int`, `bool`
 */
 
-template <typename Value>
+template <class Value>
 Value from_jam(OBJECT *jam_value);
 
-template <typename Value>
+template <class Value>
 OBJECT *to_jam(Value value);
 
 } // namespace b2

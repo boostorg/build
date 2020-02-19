@@ -47,13 +47,13 @@ struct regex_module
     void def(Binder &binder)
     {
         binder
-            .def("split", &regex_split)
-            .def("split-list", &regex_split_each)
-            .def("match", &regex_match)
-            .def("transform", &regex_transform)
-            .def("escape", &regex_escape)
-            .def("replace", &regex_replace)
-            .def("replace-list", &regex_replace_each);
+            .def(&regex_split, "split", "string"_1 + "separator"_1)
+            .def(&regex_split_each, "split-list", "list"_n | "separator"_1)
+            .def(&regex_match, "match", "pattern"_1 | "string"_1 | "indices"_n)
+            .def(&regex_transform, "transform", "list"_n | "pattern"_1 | "indices"_n)
+            .def(&regex_escape, "escape", "string"_1 | "symbols"_1 | "escape-symbol"_1)
+            .def(&regex_replace, "replace", "string"_1 + "match"_1 + "replacement"_1)
+            .def(&regex_replace_each, "replace-list", "list"_n | "match"_1 | "replacement"_1);
     }
 };
 } // namespace b2

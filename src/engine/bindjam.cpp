@@ -84,7 +84,7 @@ namespace bind
 {
 // General marshaling of one jam value list. Default converts the first item
 // to/from the list.
-template <typename CxxValue>
+template <class CxxValue>
 struct converter_<jam_binder, CxxValue, LIST *>
 {
     static LIST *to_bind_value(const CxxValue &cpp_value)
@@ -99,7 +99,7 @@ struct converter_<jam_binder, CxxValue, LIST *>
 
 // Marshaling specialization for vector container.
 // TODO: Generalize to more containers.
-template <typename Value>
+template <class Value>
 struct converter_<jam_binder, std::vector<Value>, LIST *>
 {
     static LIST *to_bind_value(const std::vector<Value> &cpp_value)
@@ -124,7 +124,7 @@ struct converter_<jam_binder, std::vector<Value>, LIST *>
 };
 
 // Marshaling for optval container.
-template <typename ValueType>
+template <class ValueType>
 struct converter_<jam_binder, optval<ValueType>, LIST *>
 {
     static LIST *to_bind_value(const optval<ValueType> &cpp_value)
@@ -145,7 +145,7 @@ struct converter_<jam_binder, optval<ValueType>, LIST *>
 };
 
 // Marshaling of tuples as multi-param arguments.
-template <typename... ValueTypes>
+template <class... ValueTypes>
 struct converter_<jam_binder, std::tuple<ValueTypes...>, LIST *>
 {
     using TupleType = std::tuple<ValueTypes...>;
@@ -185,7 +185,7 @@ struct converter_<jam_binder, std::tuple<ValueTypes...>, LIST *>
 struct jam_cxx_self
 {
     // Get the hidden C++ self instance for the jam class instance.
-    template <typename Class>
+    template <class Class>
     static Class *get(FRAME *frame)
     {
         OBJECT *cxx_self_name = object_new("__cxx_self__");
@@ -202,12 +202,9 @@ struct jam_cxx_self
     }
 
     // Set the hidden C++ self instance for the jam class instance.
-    template <typename Class>
+    template <class Class>
     static void set(FRAME *frame, Class *self)
     {
-        // We hide the instance in a string value by appending the raw
-        // pointer past the end of the string.
-        // jam_cxx_self cxx_self_value {"CXX", self};
         char cxx_self_value[sizeof(void *) * 2 + 1];
         std::intptr_t self_int = reinterpret_cast<std::intptr_t>(self);
         for (int i = 0; i < sizeof(void *); ++i)
@@ -229,14 +226,14 @@ struct jam_cxx_self
 
 // Marshals arguments from Jam LOL to C++ tuple..
 
-template <typename ArgsTuple, std::size_t N, typename Enable = void>
+template <class ArgsTuple, std::size_t N, class Enable = void>
 struct jam_marshal_args
 {
     static void convert(ArgsTuple &to_args, LOL *from_args)
     {
     }
 };
-template <typename ArgsTuple, std::size_t N>
+template <class ArgsTuple, std::size_t N>
 struct jam_marshal_args<ArgsTuple, N,
                         typename std::enable_if<(N < std::tuple_size<ArgsTuple>::value)>::type>
 {
@@ -255,7 +252,7 @@ struct jam_marshal_args<ArgsTuple, N,
 };
 
 // Bound init/constructor function that forwards from jam __init__ to C++.
-template <typename Call, typename Class, typename... Args>
+template <class Call, class Class, class... Args>
 static LIST *jam_call_init(
     FRAME *frame, int flags,
     Call cxx_call,
@@ -287,7 +284,7 @@ static LIST *jam_call_init(
 // Bound plain function that forwards from jam to C++ with a return
 // converted back to jam.
 template <
-    typename Call, typename Class, typename... Args, typename Return,
+    class Call, class Class, class... Args, class Return,
     typename std::enable_if<!std::is_void<Return>::value, int>::type = 0>
 static LIST *jam_call_method(
     FRAME *frame, int flags,
@@ -318,7 +315,7 @@ static LIST *jam_call_method(
 
 // Bound plain function that forwards from jam to C++ with a void return.
 template <
-    typename Call, typename Class, typename... Args, typename Return,
+    class Call, class Class, class... Args, class Return,
     typename std::enable_if<std::is_void<Return>::value, int>::type = 0>
 static LIST *jam_call_method(
     FRAME *frame, int flags,
@@ -349,7 +346,7 @@ static LIST *jam_call_method(
 
 // Bound plain function...
 template <
-    typename Call, typename... Args, typename Return,
+    class Call, class... Args, class Return,
     typename std::enable_if<!std::is_void<Return>::value, int>::type = 0>
 static LIST *jam_call_function(
     FRAME *frame, int flags,
@@ -375,7 +372,7 @@ static LIST *jam_call_function(
     }
 }
 template <
-    typename Call, typename... Args, typename Return,
+    class Call, class... Args, class Return,
     typename std::enable_if<std::is_void<Return>::value, int>::type = 0>
 static LIST *jam_call_function(
     FRAME *frame, int flags,
@@ -401,10 +398,87 @@ static LIST *jam_call_function(
     }
 }
 
-template <typename Return, typename... Args>
+template <class... A>
+struct jam_arg_spec_count_sum
+{
+};
+template <>
+struct jam_arg_spec_count_sum<>
+{
+    static constexpr std::size_t value = 0;
+};
+template <class X, class... A>
+struct jam_arg_spec_count_sum<X, A...>
+{
+    static constexpr std::size_t value
+        = X::count + jam_arg_spec_count_sum<A...>::value;
+};
+
+template <class... A>
+struct jam_arg_spec_max_size
+{
+    static constexpr std::size_t value
+        = ::b2::bind::args_<A...>::count
+        + jam_arg_spec_count_sum<A...>::value*2
+        + 2;
+};
+
+// Builds the jam argument specifier for a rule from the bind arguments
+// specification.
+template <class... A>
+struct jam_arg_spec
+{
+    using args_t = ::b2::bind::args_<A...>;
+
+    // The jam specification, terminated by a `nullptr`. Note, the `spec` will
+    // be larger than the actual specification. Hence use the `count` if one
+    // needs to know the range.
+    const char * spec[jam_arg_spec_max_size<A...>::value];
+
+    // The number of strings in the specification, exclusive of the terminating
+    // n`nullptr`.
+    int count;
+
+    jam_arg_spec(const args_t & args)
+        : jam_arg_spec(args, mp::make_index_sequence<sizeof...(A)>{})
+    {
+    }
+
+    template <std::size_t... I>
+    jam_arg_spec(const args_t & args, mp::index_sequence<I...>)
+    {
+        count = 0;
+        using std::get;
+        bool _[]{
+            false,
+            append_arg_list_to_spec(get<I>(args.arg))... };
+        if (count == 0) spec[count++] = "*";
+        spec[count] = nullptr;
+    }
+
+    template <int C>
+    bool append_arg_list_to_spec(const ::b2::bind::arg_<C> & arg)
+    {
+        if (count > 0) spec[count++] = ":";
+        for (int i = 0; i < C; ++i)
+        {
+            spec[count++] = arg.args[i].name;
+            switch (arg.args[i].count)
+            {
+                case ::b2::bind::param_::any: spec[count++] = "*"; break;
+                case ::b2::bind::param_::many: spec[count++] = "+"; break;
+                case ::b2::bind::param_::optional: spec[count++] = "?"; break;
+            }
+        }
+        return true;
+    }
+};
+
+template <class Return, class ArgSpec, class... Args>
 void jam_native_bind(
     const string_t &module_name,
     const string_t &rule_name,
+    ArgSpec &arg_spec,
     function_builtin_t native_rule,
     Return (*)(Args...))
 {
@@ -423,7 +497,7 @@ void jam_native_bind(
     declare_native_rule(
         module_name.c_str(),
         rule_name.c_str(),
-        nullptr, // TODO: Argument list.
+        arg_spec.spec,
         native_rule,
         0);
     // Note, we don't check results of not finding the existing native rule,
@@ -440,15 +514,16 @@ void jam_native_bind(
     object_free(rule_name_obj);
 }
 
-template <typename Return, typename Class, typename... Args>
+template <class Return, class Class, class ArgSpec, class... Args>
 void jam_bind(
     const string_t &module_name,
     const string_t &rule_name,
+    ArgSpec &arg_spec,
     Return (Class::*method)(Args...))
 {
     // out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
     jam_native_bind(
-        module_name, rule_name,
+        module_name, rule_name, arg_spec,
         [method](FRAME *frame, int flags) -> LIST * {
             return jam_call_method(
                 frame, flags,
@@ -460,15 +535,16 @@ void jam_bind(
         static_cast<Return (*)(Class *, Args...)>(nullptr));
 }
 
-template <typename Return, typename Class, typename... Args>
+template <class Return, class Class, class ArgSpec, class... Args>
 void jam_bind(
     const string_t &module_name,
     const string_t &rule_name,
+    ArgSpec &arg_spec,
     Return (Class::*method)(Args...) const)
 {
     // out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
     jam_native_bind(
-        module_name, rule_name,
+        module_name, rule_name, arg_spec,
         [method](FRAME *frame, int flags) -> LIST * {
             return jam_call_method(
                 frame, flags,
@@ -480,14 +556,15 @@ void jam_bind(
         static_cast<Return (*)(Class *, Args...)>(nullptr));
 }
 
-template <typename Return, typename... Args>
+template <class Return, class ArgSpec, class... Args>
 void jam_bind(
     const string_t &module_name,
     const string_t &rule_name,
+    ArgSpec &arg_spec,
     Return (*function)(Args...))
 {
     jam_native_bind(
-        module_name, rule_name,
+        module_name, rule_name, arg_spec,
         [function](FRAME *frame, int flags) -> LIST * {
             return jam_call_function(
                 frame, flags,
@@ -499,16 +576,17 @@ void jam_bind(
         static_cast<Return (*)(Args...)>(nullptr));
 }
 
-template <typename Class, typename... Args>
+template <class Class, class ArgSpec, class... Args>
 void jam_bind(
     const string_t &module_name,
     const string_t &rule_name,
+    ArgSpec &arg_spec,
     Class *,
     ::b2::bind::init_<Args...>)
 {
     // out_printf( "jam_bind: %s.%s.\n", module_name.c_str(), rule_name.c_str() );
     jam_native_bind(
-        module_name, rule_name,
+        module_name, rule_name, arg_spec,
         [module_name, rule_name](FRAME *frame, int flags) -> LIST * {
             return jam_call_init(
                 frame, flags,
@@ -528,7 +606,7 @@ void jam_binder::bind_module(
     object_free(module_name_obj);
 }
 
-template <typename Class, typename... Bases>
+template <class Class, class... Bases>
 void jam_binder::bind_class(
     const char *module_name, const char *class_name,
     ::b2::bind::type_<Class>,
@@ -555,28 +633,33 @@ void jam_binder::bind_class(
     list_free(bases_name_list);
 }
 
-template <typename Function>
+template <class Function, class... A>
 void jam_binder::bind_method(
     const char *module_name, const char *class_name,
-    const char *method_name, Function f)
+    const char *method_name, ::b2::bind::args_<A...> args,
+    Function f)
 {
-    jam_bind(string_t("class@") + class_name, method_name, f);
+    jam_arg_spec<A...> arg_spec{args};
+    jam_bind(string_t("class@") + class_name, method_name, arg_spec, f);
 }
 
-template <typename Class, typename Init>
+template <class Class, class Init, class... A>
 void jam_binder::bind_init(
     const char *module_name, const char *class_name,
-    Class *c, Init i)
+    Class *c, Init i, ::b2::bind::args_<A...> args)
 {
-    jam_bind(string_t("class@") + class_name, "__init__", c, i);
+    jam_arg_spec<A...> arg_spec{args};
+    jam_bind(string_t("class@") + class_name, "__init__", arg_spec, c, i);
 }
 
-template <typename Function>
+template <class Function, class... A>
 void jam_binder::bind_function(
     const char *module_name,
-    const char *function_name, Function f)
+    const char *function_name, ::b2::bind::args_<A...> args,
+    Function f)
 {
-    jam_bind(module_name, function_name, f);
+    jam_arg_spec<A...> arg_spec{args};
+    jam_bind(module_name, function_name, arg_spec, f);
 }
 
 void bind_jam()

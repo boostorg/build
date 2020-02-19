@@ -40,7 +40,7 @@ binder.def_class("system_info", type_<b2::system_info>());
 ```
 
 end::binder_type[] */
-template <typename T>
+template <class T>
 struct type_
 {
     typedef T type;
@@ -60,10 +60,115 @@ binder.def_class("system_info", type_<b2::system_info>())
 ```
 
 end::binder_init[] */
-template <typename... Args>
+template <class... Args>
 struct init_
 {
 };
+
+/** tag::binder_param[]
+
+A single parameter of an argument.
+
+end::binder_param[] */
+struct param_
+{
+    enum count_
+    {
+        one,
+        any,
+        many,
+        optional
+    };
+
+    // The symbolic name of this argument.
+    const char * name = nullptr;
+
+    // How many values this argument can accept.
+    count_ count = one;
+
+    param_() {}
+    param_(const char * n, count_ c) : name(n), count(c) {}
+};
+
+/** tag::binder_arg[]
+
+A single argument's list of definitions.
+
+end::binder_arg[] */
+template <int C>
+struct arg_
+{
+    static constexpr int count = C;
+    param_ args[C];
+};
+
+inline arg_<2> operator+ (const param_ &a, const param_ &b)
+{
+    return {{a,b}};
+}
+
+inline arg_<3> operator+ (const arg_<2> &a, const param_ &b)
+{
+    return {{a.args[0],a.args[1],b}};
+}
+
+inline arg_<4> operator+ (const arg_<3> &a, const param_ &b)
+{
+    return {{a.args[0],a.args[1],a.args[2],b}};
+}
+
+template <int C>
+arg_<C+1> operator+ (const arg_<C> &a, const param_ &b)
+{
+    arg_<C+1> result;
+    for (std::size_t i = 0; i < C-1; ++i) result.args[i] = a.args[i];
+    result.args[C] = b;
+    return result;
+}
+
+/** tag::binder_args[]
+end::binder_args[] */
+template <class... A>
+struct args_
+{
+    static constexpr int count = sizeof...(A);
+    std::tuple<A...> arg;
+};
+
+template <class... A, int BC>
+auto operator| (const args_<A...> &a, const arg_<BC> &b)
+    -> args_<A..., arg_<BC>>
+{
+    return {std::tuple_cat(a.arg, std::make_tuple(b))};
+}
+
+template <int AC, int BC>
+auto operator| (const arg_<AC> &a, const arg_<BC> &b)
+    -> args_<arg_<AC>, arg_<BC>>
+{
+    return {{a,b}};
+}
+
+inline auto operator| (const param_ &a, const param_ &b)
+    -> args_<arg_<1>, arg_<1>>
+{
+    return arg_<1>{{a}} | arg_<1>{{b}};
+}
+
+template <int AC>
+auto operator| (const arg_<AC> &a, const param_ &b)
+    -> args_<arg_<AC>, arg_<1>>
+{
+    return a | arg_<1>{{b}};
+}
+
+template <class... A>
+auto operator| (const args_<A...> &a, const param_ &b)
+    -> args_<A..., arg_<1>>
+{
+    return a | arg_<1>{b};
+}
+
 
 /** tag::binder_module[]
 
@@ -72,7 +177,7 @@ struct init_
 The base type for a module binding. Modules are a collection of class and other
 binding declarations. A module is specified as a concrete class with at minimum
 a `module_name` and a definition method
-(`template <typename Binder> void def(Binder & binder)`).
+(`template <class Binder> void def(Binder & binder)`).
 For example:
 
 ```
@@ -81,7 +186,7 @@ struct sysinfo_module
 {
     const char *module_name = "sysinfo";
 
-    template <typename Binder>
+    template <class Binder>
     void def(Binder & binder)
     {
         // ...
@@ -90,15 +195,15 @@ struct sysinfo_module
 ```
 
 end::binder_module[] */
-template <typename Module>
+template <class Module>
 struct module_
 {
     // Alias shorthand for `b2::bind::type_` to avoid namespace qualification.
-    template <typename T>
+    template <class T>
     using type_ = ::b2::bind::type_<T>;
 
     // Alias shorthand for `b2::bind::init_` to avoid namespace qualification.
-    template <typename... A>
+    template <class... A>
     using init_ = ::b2::bind::init_<A...>;
 
     // Get the sub-typed, from CRTP, `*this` reference.
@@ -122,7 +227,7 @@ binder.def_class("system_info", type_<b2::system_info>())
 ```
 
 end::binder_class[] */
-template <typename Class, typename Binder>
+template <class Class, class Binder>
 struct class_
 {
     Binder &binder;
@@ -148,11 +253,18 @@ struct class_
     language. For example for `jam` it will call the `__init__` rule.
 
     end::binder_class[] */
-    template <typename... Args>
+    template <class... Args>
     class_ &def(init_<Args...> init_args)
     {
         // Forward to the language specific binder.
-        binder.def_init(this->name(), (Class *)nullptr, init_args);
+        binder.def_init(this->name(), (Class *)nullptr, init_args, args_<>{});
+        return *this;
+    }
+    template <class... Args, class... A>
+    class_ &def(init_<Args...> init_args, args_<A...> args)
+    {
+        // Forward to the language specific binder.
+        binder.def_init(this->name(), (Class *)nullptr, init_args, args);
         return *this;
     }
 
@@ -164,11 +276,28 @@ struct class_
     `function`.
 
     end::binder_class[] */
-    template <typename F>
+    template <class F>
     class_ &def(const char *name, F function)
     {
         // Forward to the language specific binder.
-        binder.def_method(this->name(), name, function);
+        binder.def_method(this->name(), name, args_<>{}, function);
+        return *this;
+    }
+
+
+    /** tag::binder_class[]
+
+    === `class_ & b2::bind::class_::def(F function, const char *name, args_<A...> args)`
+
+    Defines a method which is bound with the given `name` which calls the given
+    `function`.
+
+    end::binder_class[] */
+    template <class F, class... A>
+    class_ &def(F function, const char *name, args_<A...> args)
+    {
+        // Forward to the language specific binder.
+        binder.def_method(this->name(), name, args, function);
         return *this;
     }
 
@@ -185,7 +314,7 @@ private:
 Interface that converts between binder values and C++ values.
 
 end::binder[] */
-template <typename Binder, typename CxxValue, typename BindValue>
+template <class Binder, class CxxValue, class BindValue>
 struct converter_
 {
     static BindValue to_bind_value(const CxxValue &);
@@ -197,12 +326,12 @@ struct converter_
 == `b2::bind::binder_`
 
 Interface for a language agnostic binder. This is passed to the module
-definition function (`template <typename B> def(B & binder)`). What is passed
+definition function (`template <class B> def(B & binder)`). What is passed
 is a language specific subclass that will generate the needed bindings for
 that language.
 
 end::binder_binder[] */
-template <typename Binder>
+template <class Binder>
 struct binder_
 {
     /** tag::binder_binder[]
@@ -214,7 +343,7 @@ struct binder_
     The base classes need to be bound before this subclass is bound.
 
     end::binder_binder[] */
-    template <typename Class, typename... Bases>
+    template <class Class, class... Bases>
     class_<Class, Binder> def_class(const char *name, type_<Class> class_type, type_<Bases>... bases)
     {
         class_<Class, Binder> class_def{name, self()};
@@ -232,11 +361,24 @@ struct binder_
     `function`.
 
     end::binder_binder[] */
-    template <typename F>
+    template <class F>
     binder_ &def(const char *name, F function)
     {
         // Forward to the language specific binder.
-        self().def_function(name, function);
+        self().def_function(name, args_<>{}, function);
+        return *this;
+    }
+    template <class F, class... A>
+    binder_ &def(F function, const char *name, args_<A...> args)
+    {
+        // Forward to the language specific binder.
+        self().def_function(name, args, function);
+        return *this;
+    }
+    template <class F, int C>
+    binder_ &def(F function, const char *name, arg_<C> args)
+    {
+        this->def(function, name, args_<arg_<C>>{{args}});
         return *this;
     }
 
@@ -249,7 +391,7 @@ struct binder_
     // `bind_module(module_name)` method to do any binding work for the module.
     // And then calls the `def(binder)` method on the module to run through the
     // definitions of the module for this binder.
-    template <typename Module>
+    template <class Module>
     Binder &bind(Module m)
     {
         current_module_name = m.module_name;
@@ -260,31 +402,31 @@ struct binder_
 
     // Respond to a method definition of a class. This calls the subclass
     // method `bind_method(module_name, class_name, method_name, function)`.
-    template <typename Function>
-    void def_method(const char *class_name, const char *method_name, Function f)
+    template <class Function, class... A>
+    void def_method(const char *class_name, const char *method_name, args_<A...> args, Function f)
     {
-        self().bind_method(current_module_name, class_name, method_name, f);
+        self().bind_method(current_module_name, class_name, method_name, args, f);
     }
 
     // Respond to a constructor definition of a class. This calls the subclass
     // method `bind_init(module_name, class_name, class_nullptr, init)`.
-    template <typename Class, typename Init>
-    void def_init(const char *class_name, Class *c, Init i)
+    template <class Class, class Init, class... A>
+    void def_init(const char *class_name, Class *c, Init i, args_<A...> args)
     {
-        self().bind_init(current_module_name, class_name, c, i);
+        self().bind_init(current_module_name, class_name, c, i, args);
     }
 
     // Respond to a function definition of a module. This calls the subclass
     // method `bind_function(module_name, function_name, function)`.
-    template <typename Function>
-    void def_function(const char *function_name, Function f)
+    template <class Function, class... A>
+    void def_function(const char *function_name, args_<A...> args, Function f)
     {
-        self().bind_function(current_module_name, function_name, f);
+        self().bind_function(current_module_name, function_name, args, f);
     }
 
     // Generic, shim, to convert from a C++ value to a binding specific value.
     // Forwards to the `converter_` template specialization.
-    template <typename BindValue, typename CxxValue>
+    template <class BindValue, class CxxValue>
     static BindValue convert_to_bind_value(const CxxValue &source)
     {
         return converter_<Binder, CxxValue, BindValue>::to_bind_value(source);
@@ -292,7 +434,7 @@ struct binder_
 
     // Generic, shim, to convert from a binding specific value to a C++ value.
     // Forwards to the `converter_` template specialization.
-    template <typename CxxValue, typename BindValue>
+    template <class CxxValue, class BindValue>
     static CxxValue convert_from_bind_value(BindValue source)
     // static CxxValue convert_from_bind_value(const BindValue &source)
     {
@@ -304,6 +446,26 @@ protected:
 };
 
 }; // namespace bind
+
+inline bind::param_ operator"" _1(const char * name, std::size_t)
+{
+    return bind::param_{name, bind::param_::one};
+}
+
+inline bind::param_ operator"" _n(const char * name, std::size_t)
+{
+    return bind::param_{name, bind::param_::any};
+}
+
+inline bind::param_ operator"" _1n(const char * name, std::size_t)
+{
+    return bind::param_{name, bind::param_::many};
+}
+
+inline bind::param_ operator"" _01(const char * name, std::size_t)
+{
+    return bind::param_{name, bind::param_::optional};
+}
 
 // Bind B2 API to jam interpreter.
 void bind_jam();
