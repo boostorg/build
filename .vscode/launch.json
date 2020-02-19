@@ -5,22 +5,29 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(gdb) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.build/gcc-9.2.0/debug/b2",
+            "args": ["-n" "-a" "toolset=gcc"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/example/hello",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
             "name": "(lldb) Launch, ASAN",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/clang-darwin-10.0/debug/address-sanitizer-on/cxxstd-11-iso/b2",
-            "args": ["-n" "-a" "toolset=clang"],
-            "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/example/hello",
-            "environment": [],
-            "externalConsole": true,
-            "MIMode": "lldb"
-        },
-        {
-            "name": "(lldb) Launch",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/.build/clang-darwin-10.0/debug/cxxstd-11-iso/b2",
             "args": ["-n" "-a" "toolset=clang"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/example/hello",
