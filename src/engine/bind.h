@@ -146,7 +146,7 @@ template <int AC, int BC>
 auto operator| (const arg_<AC> &a, const arg_<BC> &b)
     -> args_<arg_<AC>, arg_<BC>>
 {
-    return {{a,b}};
+    return {std::make_tuple(a,b)};
 }
 
 inline auto operator| (const param_ &a, const param_ &b)
@@ -378,7 +378,7 @@ struct binder_
     template <class F, int C>
     binder_ &def(F function, const char *name, arg_<C> args)
     {
-        this->def(function, name, args_<arg_<C>>{{args}});
+        this->def(function, name, args_<arg_<C>>{std::make_tuple(args)});
         return *this;
     }
 
