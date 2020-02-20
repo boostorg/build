@@ -171,10 +171,6 @@ stages:
           TOOLSET: vc14
           TEST_TOOLSET: msvc
           VM_IMAGE: 'vs2015-win2012r2'
-        VS 2013:
-          TOOLSET: vc12
-          TEST_TOOLSET: msvc
-          VM_IMAGE: 'vs2015-win2012r2'
         MinGW 8.1.0:
           TOOLSET: mingw
           TEST_TOOLSET: gcc

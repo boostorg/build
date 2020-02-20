@@ -18,7 +18,7 @@ Continuously tested on:
 * Linux GCC 4.7, 4.8, 4.9, 5, 6, 7, 8, 9
 * macOS Xcode 8.3.3, 9.0, 9.0.1, 9.1, 9.2, 9.3, 9.3.1, 9.4, 9.4.1, 10.0, 10.1, 10.2, 10.2.1, 11.0, 11.1, 11.2, 11.3, 11.3.1
 * Windows MinGW 8.1.0
-* Windows VS 2013, 2015, 2017, 2019
+* Windows VS 2015, 2017, 2019
 
 image:https://img.shields.io/azure-devops/build/grafikrobot/200cb3a3-3fcf-4a47-85ad-3cc17f2bec9e/3/master.svg?label=master&logo=azuredevops["Linux/Windows/macOS: master", link="https://dev.azure.com/grafikrobot/B2"]
 image:https://img.shields.io/azure-devops/build/grafikrobot/200cb3a3-3fcf-4a47-85ad-3cc17f2bec9e/3/develop.svg?label=develop&logo=azuredevops["Linux/Windows/macOS: develop", link="https://dev.azure.com/grafikrobot/B2"]
