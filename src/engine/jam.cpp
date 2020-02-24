@@ -275,6 +275,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     b2::system_info sys_info;
 
     saved_argv0 = argv[ 0 ];
+    last_update_now_status = 0;
 
     BJAM_MEM_INIT();
 
@@ -650,6 +651,8 @@ int main( int argc, char * * argv, char * * arg_environ )
         }
 
         status = yyanyerrors();
+        if ( status && !last_update_now_status )
+            last_update_now_status = status;
 
         /* Manually touch -t targets. */
         for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
