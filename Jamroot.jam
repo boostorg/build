@@ -16,6 +16,7 @@ import indirect ;
 import "class" : new ;
 import type ;
 import virtual-target ;
+import errors ;
 
 path-constant SELF : . ;
 
@@ -73,11 +74,13 @@ explicit jamgram.y ;
 Define grammar translation with Bison.
 |#
 
+local BISON = [ os.environ BISON ] ;
+BISON ?= bison ;
+local BISON_IN_PATH = [ path.glob [ os.executable-path ] : $(BISON[1]) $(BISON[1]).* ] ;
+
 rule grammar ( target : source : properties * )
 {
     # LOCATE on $(target) = $(source:D) ;
-    local BISON = [ os.environ BISON ] ;
-    BISON ?= bison ;
     BISON on $(target) = $(BISON) ;
 }
 
@@ -86,11 +89,20 @@ actions grammar
     "$(BISON)" --yacc --defines -o "$(<[1])" "$(>)"
 }
 
-make jamgram.cpp
-    :   src/engine/jamgram.y
-    :   @grammar
-    :   <dependency>jamgram.y
-        <location>src/engine ;
+if $(BISON_IN_PATH)
+{
+    make jamgram.cpp
+        :   src/engine/jamgram.y
+        :   @grammar
+        :   <dependency>jamgram.y
+            <location>src/engine ;
+}
+else
+{
+    errors.warning "Bison generator program '$(BISON:J= )' not found. Skipping grammar build." ;
+    alias jamgram.cpp
+        :   src/engine/jamgram.cpp ;
+}
 explicit jamgram.cpp ;
 
 #|
