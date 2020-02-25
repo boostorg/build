@@ -22,6 +22,7 @@ path-constant SELF : . ;
 
 project b2
     : build-dir .build
+    : requirements <cxxstd>11
     ;
 
 #|
@@ -74,7 +75,7 @@ explicit jamgram.y ;
 Define grammar translation with Bison.
 |#
 
-local BISON = [ os.environ BISON ] ;
+BISON = [ os.environ BISON ] ;
 BISON ?= bison ;
 local BISON_IN_PATH = [ path.glob [ os.executable-path ] : $(BISON[1]) $(BISON[1]).* ] ;
 
