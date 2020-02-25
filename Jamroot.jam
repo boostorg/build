@@ -22,7 +22,9 @@ path-constant SELF : . ;
 
 project b2
     : build-dir .build
-    : requirements <cxxstd>11
+    : requirements
+        <cxxstd>11
+        <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS=1
     ;
 
 #|

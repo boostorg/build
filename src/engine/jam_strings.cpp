@@ -191,8 +191,8 @@ void string_unit_test()
 {
     {
         string s[ 1 ];
-        unsigned int i;
-        int const limit = sizeof( s->opt ) * 2 + 2;
+        unsigned long i;
+        unsigned long const limit = sizeof( s->opt ) * 2 + 2;
         string_new( s );
         assert( s->value == s->opt );
         for ( i = 0; i < limit; ++i )
