@@ -152,6 +152,12 @@ stages:
           set -e
           CXX_PATH=`which ${CXX}`
           echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+          ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET}
+      displayName: "No Warnings"
+    - bash: |
+          set -e
+          CXX_PATH=`which ${CXX}`
+          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
           ./bootstrap.sh --with-toolset=${TOOLSET}
           ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
@@ -196,6 +202,12 @@ stages:
           python test_all.py $env:TEST_TOOLSET
           cd ..
       displayName: Test
+    - powershell: |
+          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+          $env:path += ';' + $env:CXX_PATH
+          echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
+          ./src/engine/b2.exe b2 warnings-as-errors=on toolset=${TEST_TOOLSET}
+      displayName: "No Warnings"
     - powershell: |
           $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
           $env:path += ';' + $env:CXX_PATH
@@ -339,6 +351,12 @@ stages:
         python test_all.py ${TEST_TOOLSET}
         cd ..
       displayName: Test
+    - bash: |
+        set -e
+        CXX_PATH=`which ${CXX}`
+        echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET}
+      displayName: "No Warnings"
     - bash: |
         set -e
         CXX_PATH=`which ${CXX}`
