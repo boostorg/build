@@ -1227,13 +1227,15 @@ LIST * builtin_import( FRAME * frame, int flags )
           source_iter = list_next( source_iter ),
           target_iter = list_next( target_iter ) )
     {
-        RULE * r;
-        RULE * imported;
+        RULE * r = nullptr;
+        RULE * imported = nullptr;
 
         if ( !source_module->rules || !(r = (RULE *)hash_find(
             source_module->rules, list_item( source_iter ) ) ) )
+        {
             unknown_rule( frame, "IMPORT", source_module, list_item( source_iter
                 ) );
+        }
 
         imported = import_rule( r, target_module, list_item( target_iter ) );
         if ( !list_empty( localize ) )
@@ -1281,10 +1283,12 @@ LIST * builtin_export( FRAME * frame, int flags )
     LISTITER const end = list_end( rules );
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        RULE * r;
+        RULE * r = nullptr;
         if ( !m->rules || !( r = (RULE *)hash_find( m->rules, list_item( iter )
             ) ) )
+        {
             unknown_rule( frame, "EXPORT", m, list_item( iter ) );
+        }
         r->exported = 1;
     }
     return L0;
@@ -1989,7 +1993,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         {
             break;
         }
-        else if ( len < bufsize )
+        else if ( size_t(len) < bufsize )
         {
             buf[ len ] = '\0';
             result = list_new( object_new( buf ) );

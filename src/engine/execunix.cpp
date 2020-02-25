@@ -184,7 +184,6 @@ void exec_cmd
     int const slot = get_free_cmdtab_slot();
     int out[ 2 ];
     int err[ 2 ];
-    int len;
     char const * argv[ MAXARGC + 1 ];  /* +1 for NULL */
 
     /* Initialize default shell. */
@@ -460,8 +459,6 @@ void exec_wait()
     while ( !finished )
     {
         int i;
-        struct timeval tv;
-        struct timeval * ptv = NULL;
         int select_timeout = globs.timeout;
 
         /* Check for timeouts:
@@ -485,14 +482,6 @@ void exec_wait()
                     else if ( globs.timeout - consumed < select_timeout )
                         select_timeout = globs.timeout - consumed;
                 }
-
-            /* If nothing else causes our select() call to exit, force it after
-             * however long it takes for the next one of our child processes to
-             * crossed its allotted processing time so we can terminate it.
-             */
-            tv.tv_sec = select_timeout;
-            tv.tv_usec = 0;
-            ptv = &tv;
         }
 
         /* select() will wait for I/O on a descriptor, a signal, or timeout. */

@@ -341,7 +341,6 @@ static OBJECT * get_filename( OBJECT * path )
     PATHNAME path1[ 1 ];
     string buf[ 1 ];
     OBJECT * result;
-    const char * root = object_str( cwd() );
     path_parse( object_str( path ), path1 );
     path1->f_dir.ptr = NULL;
     path1->f_dir.len = 0;
@@ -413,35 +412,6 @@ static void debug_print_source( OBJECT * filename, int line )
         }
         fclose( file );
     }
-}
-
-static void debug_print_frame( FRAME * frame )
-{
-    OBJECT * file = frame->file;
-    if ( file == NULL ) file = constant_builtin;
-    printf( "%s ", frame->rulename );
-    if ( strcmp( frame->rulename, "module scope" ) != 0 )
-    {
-        printf( "( " );
-        if ( frame->args->count )
-        {
-            lol_print( frame->args );
-            printf( " " );
-        }
-        printf( ") " );
-    }
-    printf( "at %s:%d", object_str( file ), frame->line );
-}
-
-static void debug_mi_print_frame( FRAME * frame )
-{
-    OBJECT * fullname = make_absolute_path( frame->file );
-    printf( "frame={func=\"%s\",args=[],file=\"%s\",fullname=\"%s\",line=\"%d\"}",
-        frame->rulename,
-        object_str( frame->file ),
-        object_str( fullname ),
-        frame->line );
-    object_free( fullname );
 }
 
 static void debug_print_frame_info( FRAME_INFO * frame )
@@ -768,7 +738,6 @@ static void debug_child_info( int argc, const char * * argv )
     {
         int frame_number = debug_selected_frame_number;
         int i;
-        OBJECT * fullname;
         FRAME base = *debug_frame;
         FRAME * frame = &base;
         base.file = debug_file;
@@ -924,7 +893,7 @@ static void debug_parent_child_exited( int pid, int exit_code )
 
 static void debug_parent_child_signalled( int pid, int sigid )
 {
-    
+
     if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
         printf( "Child %d exited on signal %d\n", child_pid, sigid );
@@ -1071,7 +1040,7 @@ void debug_init_handles( const char * in, const char * out )
     sscanf( in, "%p", &read_handle );
     read_fd = _open_osfhandle( (intptr_t)read_handle, _O_RDONLY );
     command_input = _fdopen( read_fd, "r" );
-    
+
     sscanf( out, "%p", &write_handle );
     write_fd = _open_osfhandle( (intptr_t)write_handle, _O_WRONLY );
     command_output = _fdopen( write_fd, "w" );
@@ -1221,7 +1190,6 @@ static void debug_start_child( int argc, const char * * argv )
     int write_fd;
     int read_fd;
     int pid;
-    int i;
     assert( debug_state == DEBUG_NO_CHILD );
     if (pipe(pipe1) == -1)
     {
@@ -1538,7 +1506,7 @@ static void debug_parent_clear( int argc, const char * * argv )
     {
         printf( "Deleted breakpoint %d\n", id );
     }
-    
+
     sprintf( buf, "%d", id );
     new_args[ 0 ] = "delete";
     new_args[ 1 ] = buf;
@@ -1578,7 +1546,7 @@ static void debug_parent_backtrace( int argc, const char * * argv )
     int depth;
     int i;
     FRAME_INFO frame;
-    
+
     if ( debug_state == DEBUG_NO_CHILD )
     {
         debug_error( "The program is not being run." );
@@ -1622,7 +1590,7 @@ static void debug_parent_quit( int argc, const char * * argv )
 static const char * const help_text[][2] =
 {
     {
-        "run", 
+        "run",
         "run <args>\n"
         "Creates a new b2 child process passing <args> on the command line."
         "  Terminates\nthe current child (if any).\n"
@@ -1834,7 +1802,7 @@ static void debug_mi_format_breakpoint( int id )
     }
     /* fullname */
     /* times */
-    printf( "" );
+    // printf( "" );
     printf( "}" );
 }
 
@@ -1846,58 +1814,32 @@ static int breakpoint_id_parse( const char * name )
     return id;
 }
 
-static void debug_mi_break_after( int argc, const char * * argv )
-{
-    int id;
-    int count;
-    --argc;
-    ++argv;
-    if ( argc > 0 && strcmp( argv[ 0 ], "--" ) == 0 )
-    {
-        ++argv;
-        --argc;
-    }
-    if ( argc < 2 )
-    {
-        debug_mi_error( "not enough arguments for -break-after." );
-        return;
-    }
-    else if ( argc > 2 )
-    {
-        debug_mi_error( "too many arguments for -break-after." );
-        return;
-    }
-    id = atoi( argv[ 0 ] );
-    count = atoi( argv[ 1 ] );
-    /* FIXME: set ignore count */
-}
-
 static void debug_mi_break_insert( int argc, const char * * argv )
 {
     const char * inner_argv[ 2 ];
-    int temporary = 0; /* FIXME: not supported yet */
-    int hardware = 0; /* unsupported */
-    int force = 1; /* We don't have global debug information... */
+    // int temporary = 0; /* FIXME: not supported yet */
+    // int hardware = 0; /* unsupported */
+    // int force = 1; /* We don't have global debug information... */
     int disabled = 0;
-    int tracepoint = 0; /* unsupported */
-    int thread_id = 0;
-    int ignore_count = 0;
-    const char * condition; /* FIXME: not supported yet */
+    // int tracepoint = 0; /* unsupported */
+    // int thread_id = 0;
+    // int ignore_count = 0;
+    // const char * condition; /* FIXME: not supported yet */
     const char * location;
     int id;
     for ( --argc, ++argv; argc; --argc, ++argv )
     {
         if ( strcmp( *argv, "-t" ) == 0 )
         {
-            temporary = 1;
+            // temporary = 1;
         }
         else if ( strcmp( *argv, "-h" ) == 0 )
         {
-            hardware = 1;
+            // hardware = 1;
         }
         else if ( strcmp( *argv, "-f" ) == 0 )
         {
-            force = 1;
+            // force = 1;
         }
         else if ( strcmp( *argv, "-d" ) == 0 )
         {
@@ -1905,7 +1847,7 @@ static void debug_mi_break_insert( int argc, const char * * argv )
         }
         else if ( strcmp( *argv, "-a" ) == 0 )
         {
-            tracepoint = 1;
+            // tracepoint = 1;
         }
         else if ( strcmp( *argv, "-c" ) == 0 )
         {
@@ -1915,7 +1857,7 @@ static void debug_mi_break_insert( int argc, const char * * argv )
                 return;
             }
 
-            condition = argv[ 1 ];
+            // condition = argv[ 1 ];
             --argc;
             ++argv;
         }
@@ -1927,7 +1869,7 @@ static void debug_mi_break_insert( int argc, const char * * argv )
                 return;
             }
 
-            ignore_count = atoi( argv[ 1 ] );
+            // ignore_count = atoi( argv[ 1 ] );
             --argc;
             ++argv;
         }
@@ -1939,7 +1881,7 @@ static void debug_mi_break_insert( int argc, const char * * argv )
                 return;
             }
 
-            thread_id = atoi( argv[ 1 ] );
+            // thread_id = atoi( argv[ 1 ] );
             --argc;
             ++argv;
         }
@@ -2130,7 +2072,7 @@ static void debug_mi_break_list( int argc, const char * * argv )
         debug_mi_error( "Too many arguments for -break-list" );
         return;
     }
-    
+
     number = 0;
     for ( i = 0; i < num_breakpoints; ++i )
         if ( breakpoints[ i ].status != BREAKPOINT_DELETED )
@@ -2295,7 +2237,6 @@ static void debug_mi_stack_info_frame( int argc, const char * * argv )
 
 static void debug_mi_stack_list_variables( int argc, const char * * argv )
 {
-    int print_values = 0;
 #define DEBUG_PRINT_VARIABLES_NO_VALUES     1
 #define DEBUG_PRINT_VARIABLES_ALL_VALUES    2
 #define DEBUG_PRINT_VARIABLES_SIMPLE_VALUES 3
@@ -2317,15 +2258,15 @@ static void debug_mi_stack_list_variables( int argc, const char * * argv )
         }
         else if ( strcmp( *argv, "--no-values" ) == 0 )
         {
-            print_values = DEBUG_PRINT_VARIABLES_NO_VALUES;
+            // print_values = DEBUG_PRINT_VARIABLES_NO_VALUES;
         }
         else if ( strcmp( *argv, "--all-values" ) == 0 )
         {
-            print_values = DEBUG_PRINT_VARIABLES_ALL_VALUES;
+            // print_values = DEBUG_PRINT_VARIABLES_ALL_VALUES;
         }
         else if ( strcmp( *argv, "--simple-values" ) == 0 )
         {
-            print_values = DEBUG_PRINT_VARIABLES_SIMPLE_VALUES;
+            // print_values = DEBUG_PRINT_VARIABLES_SIMPLE_VALUES;
         }
         else if ( strcmp( *argv, "--" ) == 0 )
         {
@@ -2350,7 +2291,7 @@ static void debug_mi_stack_list_variables( int argc, const char * * argv )
         printf( "^error,msg=\"Too many arguments for -stack-list-variables\"\n(gdb) \n" );
         return;
     }
-    
+
     {
         LIST * vars;
         LISTITER iter, end;
@@ -2394,7 +2335,6 @@ static void debug_mi_stack_list_variables( int argc, const char * * argv )
 
 static void debug_mi_stack_list_locals( int argc, const char * * argv )
 {
-    int print_values = 0;
 #define DEBUG_PRINT_VARIABLES_NO_VALUES     1
 #define DEBUG_PRINT_VARIABLES_ALL_VALUES    2
 #define DEBUG_PRINT_VARIABLES_SIMPLE_VALUES 3
@@ -2422,15 +2362,15 @@ static void debug_mi_stack_list_locals( int argc, const char * * argv )
         }
         else if ( strcmp( *argv, "--no-values" ) == 0 )
         {
-            print_values = DEBUG_PRINT_VARIABLES_NO_VALUES;
+            // print_values = DEBUG_PRINT_VARIABLES_NO_VALUES;
         }
         else if ( strcmp( *argv, "--all-values" ) == 0 )
         {
-            print_values = DEBUG_PRINT_VARIABLES_ALL_VALUES;
+            // print_values = DEBUG_PRINT_VARIABLES_ALL_VALUES;
         }
         else if ( strcmp( *argv, "--simple-values" ) == 0 )
         {
-            print_values = DEBUG_PRINT_VARIABLES_SIMPLE_VALUES;
+            // print_values = DEBUG_PRINT_VARIABLES_SIMPLE_VALUES;
         }
         else if ( strcmp( *argv, "--" ) == 0 )
         {
@@ -2455,7 +2395,7 @@ static void debug_mi_stack_list_locals( int argc, const char * * argv )
         printf( "^error,msg=\"Too many arguments for -stack-list-variables\"\n(gdb) \n" );
         return;
     }
-    
+
     {
         LIST * vars;
         LISTITER iter, end;
@@ -2499,19 +2439,15 @@ static void debug_mi_stack_list_locals( int argc, const char * * argv )
 
 static void debug_mi_stack_list_frames( int argc, const char * * argv )
 {
-    const char * new_args[ 3 ];
     int depth;
     int i;
-    
+
     if ( debug_state == DEBUG_NO_CHILD )
     {
         debug_mi_format_token();
         printf( "^error,msg=\"No child\"\n(gdb) \n" );
         return;
     }
-
-    new_args[ 0 ] = "info";
-    new_args[ 1 ] = "frame";
 
     fprintf( command_output, "info depth\n" );
     fflush( command_output );

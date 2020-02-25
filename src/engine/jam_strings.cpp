@@ -74,7 +74,8 @@ static void string_reserve_internal( string * self, size_t capacity )
         self->value = (char *)BJAM_MALLOC_ATOMIC( capacity +
             JAM_STRING_MAGIC_SIZE );
         self->value[ 0 ] = 0;
-        strncat( self->value, self->opt, sizeof(self->opt) );
+        size_t opt_size = sizeof(self->opt); // Workaround sizeof in strncat warning.
+        strncat( self->value, self->opt, opt_size );
         assert( strlen( self->value ) <= self->capacity && "Regression test" );
     }
     else
@@ -98,19 +99,6 @@ void string_reserve( string * self, size_t capacity )
     assert_invariants( self );
 }
 
-
-static void extend_full( string * self, char const * start, char const * finish )
-{
-    size_t new_size = self->capacity + ( finish - start );
-    size_t new_capacity = self->capacity;
-    size_t old_size = self->capacity;
-    while ( new_capacity < new_size + 1)
-        new_capacity <<= 1;
-    string_reserve_internal( self, new_capacity );
-    memcpy( self->value + old_size, start, new_size - old_size );
-    self->value[ new_size ] = 0;
-    self->size = new_size;
-}
 
 static void maybe_reserve( string * self, size_t new_size )
 {
@@ -203,7 +191,7 @@ void string_unit_test()
 {
     {
         string s[ 1 ];
-        int i;
+        unsigned int i;
         int const limit = sizeof( s->opt ) * 2 + 2;
         string_new( s );
         assert( s->value == s->opt );

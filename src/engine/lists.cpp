@@ -64,7 +64,7 @@ LIST * list_append( LIST * l, LIST * nl )
         return nl;
     if ( !list_empty( nl ) )
     {
-        int const l_size = list_length( l );
+        unsigned int const l_size = list_length( l );
         int const nl_size = list_length( nl );
         int const size = l_size + nl_size;
         unsigned const bucket = get_bucket( size );
@@ -112,7 +112,6 @@ LIST * list_new( OBJECT * value )
 LIST * list_push_back( LIST * head, OBJECT * value )
 {
     unsigned int size = list_length( head );
-    unsigned int i;
 
     if ( DEBUG_LISTS )
         out_printf( "list > %s <\n", object_str( value ) );
@@ -199,7 +198,6 @@ static int str_ptr_compare( void const * va, void const * vb )
 LIST * list_sort( LIST * l )
 {
     int len;
-    int ii;
     LIST * result;
 
     if ( !l )
@@ -367,7 +365,7 @@ LIST * list_unique( LIST * sorted_list )
 
 void list_done()
 {
-    int i;
+    unsigned int i;
     for ( i = 0; i < sizeof( freelist ) / sizeof( freelist[ 0 ] ); ++i )
     {
         LIST * l = freelist[ i ];

@@ -19,8 +19,6 @@
  *  timestamp_done()      - free timestamp tables
  *
  * Internal routines:
- *  time_enter()      - internal worker callback for scanning archives &
- *                      directories
  *  free_timestamps() - worker function for freeing timestamp table contents
  */
 
@@ -59,18 +57,6 @@ typedef struct _binding
 } BINDING;
 
 static struct hash * bindhash = 0;
-
-static void time_enter( void *, OBJECT *, int const found,
-    timestamp const * const );
-
-static const char * time_progress[] =
-{
-    "INIT",
-    "NOENTRY",
-    "SPOTTED",
-    "MISSING",
-    "FOUND"
-};
 
 
 #ifdef OS_NT
@@ -162,13 +148,6 @@ void timestamp_from_path( timestamp * const time, OBJECT * const path )
 {
     PROFILE_ENTER( timestamp );
 
-    PATHNAME f1;
-    PATHNAME f2;
-    int found;
-    BINDING * b;
-    string buf[ 1 ];
-
-
     if ( file_time( path, time ) < 0 )
         timestamp_clear( time );
 
@@ -215,37 +194,6 @@ char const * timestamp_str( timestamp const * const time )
 char const * timestamp_timestr( timestamp const * const time )
 {
     return timestamp_formatstr( time, "%H:%M:%S.%%09d" );
-}
-
-
-/*
- * time_enter() - internal worker callback for scanning archives & directories
- */
-
-static void time_enter( void * closure, OBJECT * target, int const found,
-    timestamp const * const time )
-{
-    int item_found;
-    BINDING * b;
-    struct hash * const bindhash = (struct hash *)closure;
-
-    target = path_as_key( target );
-
-    b = (BINDING *)hash_insert( bindhash, target, &item_found );
-    if ( !item_found )
-    {
-        b->name = object_copy( target );
-        b->flags = 0;
-    }
-
-    timestamp_copy( &b->time, time );
-    b->progress = found ? BIND_FOUND : BIND_SPOTTED;
-
-    if ( DEBUG_BINDSCAN )
-        out_printf( "time ( %s ) : %s\n", object_str( target ), time_progress[
-            b->progress ] );
-
-    object_free( target );
 }
 
 

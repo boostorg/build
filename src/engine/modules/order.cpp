@@ -127,7 +127,6 @@ LIST * order( FRAME * frame, int flags )
         {
             int i;
             LISTITER iter = list_begin( arg );
-            LISTITER const end = list_end( arg );
             for ( i = 0; i < order[ index ]; ++i, iter = list_next( iter ) );
             result = list_push_back( result, object_copy( list_item( iter ) ) );
         }

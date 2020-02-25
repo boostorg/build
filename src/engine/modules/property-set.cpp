@@ -267,7 +267,6 @@ LIST * property_set_contains_features( FRAME * frame, int flags )
     OBJECT * varname = object_new( "self.raw" );
     LIST * props = var_get( frame->module, varname );
     LIST * features = lol_get( frame->args, 0 );
-    LIST * result = L0;
     LISTITER features_iter = list_begin( features );
     LISTITER features_end = list_end( features ) ;
     object_free( varname );
