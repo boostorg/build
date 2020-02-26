@@ -184,6 +184,9 @@ exe b2
         <target-os>$(unix_os):<source>$(b2_src_unix)
         <dependency>jamgram.cpp
         <dependency>jambase.cpp
+        <toolset>msvc:<find-static-library>kernel32
+        <toolset>msvc:<find-static-library>advapi32
+        <toolset>msvc:<find-static-library>user32
     ;
 explicit b2 ;
 
