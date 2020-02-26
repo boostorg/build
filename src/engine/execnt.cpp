@@ -55,6 +55,7 @@
 #include <windows.h>
 #include <process.h>
 #include <tlhelp32.h>
+#include <versionhelpers.h>
 
 
 /* get the maximum shell command line length according to the OS */
@@ -568,12 +569,8 @@ static void invoke_cmd( char const * const command, int const slot )
 
 static int raw_maxline()
 {
-    OSVERSIONINFO os_info;
-    os_info.dwOSVersionInfoSize = sizeof( os_info );
-    GetVersionEx( &os_info );
-
-    if ( os_info.dwMajorVersion >= 5 ) return 8191;  /* XP       */
-    if ( os_info.dwMajorVersion == 4 ) return 2047;  /* NT 4.x   */
+    if ( IsWindowsVersionOrGreater(5,0,0) ) return 8191;  /* XP       */
+    if ( IsWindowsVersionOrGreater(4,0,0) ) return 2047;  /* NT 4.x   */
     return 996;                                      /* NT 3.5.1 */
 }
 
@@ -1201,7 +1198,7 @@ static FILE * open_command_file( int const slot )
         string_new( command_file );
         string_reserve( command_file, tmpdir->size + 64 );
         command_file->size = sprintf( command_file->value,
-            "%s\\jam%ul-%02d-##.bat", tmpdir->value, procID, slot );
+            "%s\\jam%lu-%02d-##.bat", tmpdir->value, procID, slot );
     }
 
     /* For some reason opening a command file can fail intermittently. But doing
@@ -1322,7 +1319,7 @@ static void reportWindowsError( char const * const apiName, int slot )
         err_buf = cmdtab[ slot ].buffer_out;
     string_append( err_buf, apiName );
     string_append( err_buf, "() Windows API failed: " );
-    sprintf( buf, "%ul", errorCode );
+    sprintf( buf, "%lu", errorCode );
     string_append( err_buf, buf );
 
     if ( !apiResult )

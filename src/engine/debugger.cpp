@@ -1109,12 +1109,12 @@ static void debug_start_child( int argc, const char * * argv )
     assert( debug_state == DEBUG_NO_CHILD );
     if ( ! CreatePipe( &pipe1[ 0 ], &pipe1[ 1 ], &sa, 0 ) )
     {
-        printf("internal error: CreatePipe:1: 0x%08x\n", GetLastError());
+        printf("internal error: CreatePipe:1: 0x%08lx\n", GetLastError());
         return;
     }
     if ( ! CreatePipe( &pipe2[ 0 ], &pipe2[ 1 ], &sa, 0 ) )
     {
-        printf("internal error: CreatePipe:2: 0x%08x\n", GetLastError());
+        printf("internal error: CreatePipe:2: 0x%08lx\n", GetLastError());
         CloseHandle( pipe1[ 0 ] );
         CloseHandle( pipe1[ 1 ] );
         return;

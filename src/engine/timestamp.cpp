@@ -96,9 +96,10 @@ void timestamp_clear( timestamp * const time )
 
 int timestamp_cmp( timestamp const * const lhs, timestamp const * const rhs )
 {
-    return lhs->secs == rhs->secs
+    return int(
+        lhs->secs == rhs->secs
         ? lhs->nsecs - rhs->nsecs
-        : lhs->secs - rhs->secs;
+        : lhs->secs - rhs->secs );
 }
 
 
