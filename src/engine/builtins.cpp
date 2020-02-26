@@ -1952,7 +1952,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         int length = buf.reparse.SymbolicLinkReparseBuffer.SubstituteNameLength / 2;
         char cbuf[MAX_PATH + 1];
         int numchars = WideCharToMultiByte( CP_ACP, 0, buf.reparse.SymbolicLinkReparseBuffer.PathBuffer + index, length, cbuf, sizeof(cbuf), NULL, NULL );
-        if( numchars >= sizeof(cbuf) )
+        if( numchars >= int(sizeof(cbuf)) )
         {
             return 0;
         }
@@ -1966,7 +1966,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         char cbuf[MAX_PATH + 1];
         const char * result;
         int numchars = WideCharToMultiByte( CP_ACP, 0, buf.reparse.MountPointReparseBuffer.PathBuffer + index, length, cbuf, sizeof(cbuf), NULL, NULL );
-        if( numchars >= sizeof(cbuf) )
+        if( numchars >= int(sizeof(cbuf)) )
         {
             return 0;
         }
@@ -2690,7 +2690,6 @@ LIST * builtin_glob_archive( FRAME * frame, int flags )
 {
     LIST * const l = lol_get( frame->args, 0 );
     LIST * const r1 = lol_get( frame->args, 1 );
-    LIST * const r2 = lol_get( frame->args, 2 );
     LIST * const r3 = lol_get( frame->args, 3 );
 
     LISTITER iter;
@@ -2705,7 +2704,7 @@ LIST * builtin_glob_archive( FRAME * frame, int flags )
 # if defined( OS_NT ) || defined( OS_CYGWIN ) || defined( OS_VMS )
        l;  /* Always case-insensitive. */
 # else
-       r2;
+       lol_get( frame->args, 2 ); // r2
 # endif
 
     if ( globbing.case_insensitive )

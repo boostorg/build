@@ -130,7 +130,7 @@ static int canonicWindowsPath( char const * const path, int const path_length,
 
     /* Special case '\' && 'D:\' - include trailing '\'. */
     if ( p == path ||
-        p == path + 2 && path[ 1 ] == ':' )
+        (p == path + 2 && path[ 1 ] == ':') )
         ++p;
 
     missing_parent = 0;

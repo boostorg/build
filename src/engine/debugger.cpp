@@ -891,18 +891,20 @@ static void debug_parent_child_exited( int pid, int exit_code )
     }
 }
 
-static void debug_parent_child_signalled( int pid, int sigid )
+#if !NT
+
+static void debug_parent_child_signalled( int pid, int id )
 {
 
     if ( debug_interface == DEBUG_INTERFACE_CONSOLE )
     {
-        printf( "Child %d exited on signal %d\n", child_pid, sigid );
+        printf( "Child %d exited on signal %d\n", child_pid, id );
     }
     else if ( debug_interface == DEBUG_INTERFACE_MI )
     {
         const char * name = "unknown";
         const char * meaning = "unknown";
-        switch( sigid )
+        switch( id )
         {
         case SIGINT: name = "SIGINT"; meaning = "Interrupt"; break;
         }
@@ -913,6 +915,8 @@ static void debug_parent_child_signalled( int pid, int sigid )
         assert( !"Wrong value of debug_interface." );
     }
 }
+
+#endif
 
 static void debug_parent_on_breakpoint( void )
 {
@@ -1055,8 +1059,6 @@ void debug_init_handles( const char * in, const char * out )
 
 static void init_parent_handles( HANDLE out, HANDLE in )
 {
-    int read_fd, write_fd;
-
     command_child = _fdopen( _open_osfhandle( (intptr_t)in, _O_RDONLY ), "r" );
     command_output = _fdopen( _open_osfhandle( (intptr_t)out, _O_WRONLY ), "w" );
 }
@@ -1107,12 +1109,12 @@ static void debug_start_child( int argc, const char * * argv )
     assert( debug_state == DEBUG_NO_CHILD );
     if ( ! CreatePipe( &pipe1[ 0 ], &pipe1[ 1 ], &sa, 0 ) )
     {
-        printf("internal error: CreatePipe:1: 0x$08x\n", GetLastError());
+        printf("internal error: CreatePipe:1: 0x%08x\n", GetLastError());
         return;
     }
     if ( ! CreatePipe( &pipe2[ 0 ], &pipe2[ 1 ], &sa, 0 ) )
     {
-        printf("internal error: CreatePipe:2: 0x$08x\n", GetLastError());
+        printf("internal error: CreatePipe:2: 0x%08x\n", GetLastError());
         CloseHandle( pipe1[ 0 ] );
         CloseHandle( pipe1[ 1 ] );
         return;
