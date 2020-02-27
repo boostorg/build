@@ -488,7 +488,7 @@ static void invoke_cmd( char const * const command, int const slot )
 {
     SECURITY_ATTRIBUTES sa = { sizeof( SECURITY_ATTRIBUTES ), 0, 0 };
     SECURITY_DESCRIPTOR sd;
-    STARTUPINFO si = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    STARTUPINFOA si = { sizeof( STARTUPINFOA ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0 };
 
     /* Init the security data. */
@@ -1079,10 +1079,20 @@ static int is_parent_child( DWORD const parent, DWORD const child )
                  * id == 4. This check must be performed before comparing
                  * process creation times.
                  */
+
+#ifdef UNICODE  // no PROCESSENTRY32A
+                if ( !wcsicmp( pinfo.szExeFile, L"csrss.exe" ) &&
+#else
                 if ( !stricmp( pinfo.szExeFile, "csrss.exe" ) &&
+#endif
                     is_parent_child( parent, pinfo.th32ParentProcessID ) == 2 )
                     return 1;
+
+#ifdef UNICODE  // no PROCESSENTRY32A
+                if ( !wcsicmp( pinfo.szExeFile, L"smss.exe" ) &&
+#else
                 if ( !stricmp( pinfo.szExeFile, "smss.exe" ) &&
+#endif
                     ( pinfo.th32ParentProcessID == 4 ) )
                     return 2;
 

@@ -772,7 +772,7 @@ static int get_module_filename( string * out )
     DWORD result;
     string_reserve( out, 256 + 1 );
     string_truncate( out, 256 );
-    while( ( result = GetModuleFileName( NULL, out->value, out->size ) ) == out->size )
+    while( ( result = GetModuleFileNameA( NULL, out->value, out->size ) ) == out->size )
     {
         string_reserve( out, out->size * 2 + 1);
         string_truncate( out, out->size * 2 );
@@ -1104,7 +1104,7 @@ static void debug_start_child( int argc, const char * * argv )
     string command_line[ 1 ];
     SECURITY_ATTRIBUTES sa = { sizeof( SECURITY_ATTRIBUTES ), NULL, TRUE };
     PROCESS_INFORMATION pi = { NULL, NULL, 0, 0 };
-    STARTUPINFO si = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    STARTUPINFOA si = { sizeof( STARTUPINFOA ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0 };
     assert( debug_state == DEBUG_NO_CHILD );
     if ( ! CreatePipe( &pipe1[ 0 ], &pipe1[ 1 ], &sa, 0 ) )
@@ -1149,7 +1149,7 @@ static void debug_start_child( int argc, const char * * argv )
     }
     SetHandleInformation( pipe1[ 1 ], HANDLE_FLAG_INHERIT, 0 );
     SetHandleInformation( pipe2[ 0 ], HANDLE_FLAG_INHERIT, 0 );
-    if ( ! CreateProcess(
+    if ( ! CreateProcessA(
         self->value,
         command_line->value,
         NULL,
