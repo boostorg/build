@@ -727,7 +727,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 char * executable_path( char const * argv0 )
 {
     char buf[ 1024 ];
-    DWORD const ret = GetModuleFileName( NULL, buf, sizeof( buf ) );
+    DWORD const ret = GetModuleFileNameA( NULL, buf, sizeof( buf ) );
     return ( !ret || ret == sizeof( buf ) ) ? NULL : strdup( buf );
 }
 #elif defined(__APPLE__)  /* Not tested */

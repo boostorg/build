@@ -98,7 +98,7 @@ int file_collect_dir_content_( file_info_t * const d )
         /* FIXME: Avoid duplicate FindXXX Windows API calls here and in the code
          * determining a normalized path.
          */
-        WIN32_FIND_DATA finfo;
+        WIN32_FIND_DATAA finfo;
         HANDLE const findHandle = FindFirstFileA( pathspec->value, &finfo );
         if ( findHandle == INVALID_HANDLE_VALUE )
         {
@@ -142,7 +142,7 @@ int file_collect_dir_content_( file_info_t * const d )
                 }
             }
         }
-        while ( FindNextFile( findHandle, &finfo ) );
+        while ( FindNextFileA( findHandle, &finfo ) );
 
         FindClose( findHandle );
     }
