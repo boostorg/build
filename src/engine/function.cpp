@@ -772,6 +772,35 @@ static void var_edit_file( char const * in, string * out, VAR_EDITS * edits )
 }
 
 
+#if defined( OS_CYGWIN ) || defined( OS_VMS )
+
+/*
+ * var_edit_translate_path() - translate path to os native format.
+ */
+
+static void var_edit_translate_path( string * out, size_t pos, VAR_EDITS * edits )
+{
+    if ( edits->to_windows )
+    {
+        string result[ 1 ];
+        int translated;
+
+        /* Translate path to os native format. */
+        translated = path_translate_to_os( out->value + pos, result );
+        if ( translated )
+        {
+            string_truncate( out, pos );
+            string_append( out, result->value );
+            edits->to_slashes = 0;
+        }
+
+        string_free( result );
+    }
+}
+
+#endif
+
+
 /*
  * var_edit_shift() - do upshift/downshift & other mods.
  */
