@@ -649,28 +649,32 @@ int main( int argc, char * * argv, char * * arg_environ )
                 parse_file( constant_plus, frame );
         }
 
+        /* FIXME: What shall we do if builtin_update_now,
+         * the sole place setting last_update_now_status,
+         * failed earlier?
+         */
+
         status = yyanyerrors();
-        if ( status && !last_update_now_status )
-            last_update_now_status = status;
-
-        /* Manually touch -t targets. */
-        for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
+        if ( !status )
         {
-            OBJECT * const target = object_new( s );
-            touch_target( target );
-            object_free( target );
-        }
+            /* Manually touch -t targets. */
+            for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
+            {
+                OBJECT * const target = object_new( s );
+                touch_target( target );
+                object_free( target );
+            }
 
-
-        /* Now make target. */
-        {
-            PROFILE_ENTER( MAIN_MAKE );
-            LIST * const targets = targets_to_update();
-            if ( !list_empty( targets ) )
-                status |= make( targets, anyhow );
-            else
-                status = last_update_now_status;
-            PROFILE_EXIT( MAIN_MAKE );
+            /* Now make target. */
+            {
+                PROFILE_ENTER( MAIN_MAKE );
+                LIST * const targets = targets_to_update();
+                if ( !list_empty( targets ) )
+                    status |= make( targets, anyhow );
+                else
+                    status = last_update_now_status;
+                PROFILE_EXIT( MAIN_MAKE );
+            }
         }
 
         PROFILE_EXIT( MAIN );
