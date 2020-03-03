@@ -437,7 +437,7 @@ stages:
     - bash: |
           set -e
           pushd ${HOME}
-          git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules --shallow-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
+          git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
           cd boost_${BOOST_VERSION_U}
           CXX_PATH=`which ${CXX}`
           echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
@@ -567,7 +567,7 @@ stages:
     - bash: |
         set -e
         pushd ${HOME}
-        git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules --shallow-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
+        git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
         cd boost_${BOOST_VERSION_U}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
@@ -661,7 +661,7 @@ stages:
     - powershell: |
         $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
         cd "${env:HOME}"
-        git clone -b boost-${env:BOOST_VERSION} --single-branch --recurse-submodules --shallow-submodules https://github.com/boostorg/boost.git boost_${env:BOOST_VERSION_U}
+        git clone -b boost-${env:BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${env:BOOST_VERSION_U}
         cd "boost_${env:BOOST_VERSION_U}"
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
         & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
