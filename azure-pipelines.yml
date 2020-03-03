@@ -437,8 +437,7 @@ stages:
     - bash: |
           set -e
           pushd ${HOME}
-          wget -nv https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.bz2
-          tar -jxf boost_${BOOST_VERSION_U}.tar.bz2
+          git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules --shallow-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
           cd boost_${BOOST_VERSION_U}
           CXX_PATH=`which ${CXX}`
           echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
@@ -568,8 +567,7 @@ stages:
     - bash: |
         set -e
         pushd ${HOME}
-        wget -nv https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.bz2
-        tar -jxf boost_${BOOST_VERSION_U}.tar.bz2
+        git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules --shallow-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
         cd boost_${BOOST_VERSION_U}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
@@ -663,8 +661,7 @@ stages:
     - powershell: |
         $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
         cd "${env:HOME}"
-        Invoke-WebRequest "https://dl.bintray.com/boostorg/release/${env:BOOST_VERSION}/source/boost_${env:BOOST_VERSION_U}.zip" -OutFile "boost_${env:BOOST_VERSION_U}.zip"
-        7z x "boost_${env:BOOST_VERSION_U}.zip"
+        git clone -b boost-${env:BOOST_VERSION} --single-branch --recurse-submodules --shallow-submodules https://github.com/boostorg/boost.git boost_${env:BOOST_VERSION_U}
         cd "boost_${env:BOOST_VERSION_U}"
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
         & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
