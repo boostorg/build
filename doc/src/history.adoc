@@ -10,7 +10,7 @@ the bootstrap/build process now clearly communicates C++11 requirement.
   -- _Richard Hodges_
 * Add CI testing for historical Boost versions on Windows MSVC.
   -- _Rene Rivera_
-* Check for C++11 support when building engine. Including aninformative
+* Check for C++11 support when building engine. Including an informative
   error message as to that fact.
   -- _Rene Rivera_
 * Update Jam grammar parser with latest `bison` version.
