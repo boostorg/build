@@ -3,6 +3,29 @@
 
 == Version 4.2.0
 
+This release is solely minor fixes and cleanup of the engine. In particular
+the bootstrap/build process now clearly communicates C++11 requirement.
+
+* Add `saxonhe_dir` action.
+  -- _Richard Hodges_
+* Add CI testing for historical Boost versions on Windows MSVC.
+  -- _Rene Rivera_
+* Check for C++11 support when building engine. Including aninformative
+  error message as to that fact.
+  -- _Rene Rivera_
+* Update Jam grammar parser with latest `bison` version.
+  -- _Rene Rivera_
+* Allow root `b2 b2` engine build to work even if `bison` grammar generator
+  is not available.
+  -- _Rene Rivera_
+* Warning free engine build on at least Windows, macOS, and Linux.
+  -- _Rene Rivera_
+* Sanitize Windows engine build to consistently use ANSI Win32 API.
+  -- _Mateusz Loskot_
+* Fix b2 engine not exiting, with error, early when it detects a Jam language
+  error.
+  -- _Mateusz Loskot_
+
 == Version 4.1.0
 
 Many small bug fixes in this release. But there are some new features also.
