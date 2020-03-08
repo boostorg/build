@@ -104,7 +104,7 @@ rule init ( version ? : command * : options * )
         
     if $(just_bcc32) && ( $(just_bcc32[1]) = bcc32 )
         {
-        flags borland.compile OPTIONS $(condition) : -g255 -Vx- -Ve- ;
+        flags borland.compile OPTIONS $(condition) : -g255 -Vx- -Ve- -b- ;
         }
 }
 
@@ -209,13 +209,13 @@ flags borland NEED_IMPLIB <main-target-type>LIB/<link>shared : "" ;
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -j5 -q -c -P -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -q -c -P -a8 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 # For C, we don't pass -P flag
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -j5 -q -c -a8 -b- $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -j5 -q -c -a8 $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -I"$(STDHDRS)" -o"$(<)" "$(>)"
 }
 
 
