@@ -75,12 +75,6 @@ rule init ( version ? :  command * : options * ) {
         }
     }
     
-  local opt_console = -tC ;
-  local opt_shared = -tD ;
-  local opt_mt = -tM ;
-  local opt_drtl = -tR ;
-  local opt_dapp = -tW ;
-    
   # Determine the version
   if $(command) {
     local command-string = \"$(command)\" ;
@@ -181,54 +175,34 @@ rule init ( version ? :  command * : options * ) {
   else
     {
     
-        local lib_path = $(root)/bin $(root)/bin64 $(root)/Bpl C:/Users/Public/Documents/Embarcadero
-        if $(.debug-configuration)
+    local lib_path = $(root)/bin $(root)/bin64 $(root)/Bpl C:/Users/Public/Documents/Embarcadero
+    if $(.debug-configuration)
+    {
+        ECHO "notice:" using Embarcadero libraries with clang compilation"::" $(condition) "::" $(lib_path) ;
+    }
+    flags embarcadero.link RUN_PATH $(condition) : $(lib_path) ;
+    
+    local system_include_option = "-isystem ";
+    local system_include_directories = ${root}/include/windows/crtl ${root}/include/windows/sdk ${root}/include/windows/rtl ${root}/include/dinkumware64 ;
+    
+    flags embarcadero.compile OPTIONS $(condition) : $(system_include_option)$(system_include_directories) ;
+    
+    local lib_dir_release ;
+    local lib_dir_debug ;
+    
+    if $(compiler) = bcc32c || $(compiler) = bcc32x
         {
-            ECHO "notice:" using Embarcadero libraries with clang compilation"::" $(condition) "::" $(lib_path) ;
+        lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32/release/psdk ;
+        lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug $(root)/lib/win32/debug/psdk ;
         }
-        flags embarcadero.link RUN_PATH $(condition) : $(lib_path) ;
-        
-        local system_include_option = "-isystem ";
-        local system_include_directories = ${root}/include/windows/crtl ${root}/include/windows/sdk ${root}/include/windows/rtl ${root}/include/dinkumware64 ;
-        local lib_dir_release ;
-        local lib_dir_debug ;
-        
-        if $(compiler) = bcc32c || $(compiler) = bcc32x
-            {
-            lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32/release/psdk ;
-            lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug $(root)/lib/win32/debug/psdk ;
-            }
-        else
-            {
-            lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
-            lib_dir_debug = $(root)/lib/win64/debug $(root)/lib/win64/debug/psdk ;
-            }
-        
-        flags embarcadero.link LINKPATH $(condition)/<variant>release : $(lib_dir_release) ;
-        flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
-        
-        local cflags = -c ;
-        local cxxflags = -P ;
-        local lflags = -lS:1048576 -lSc:4098 -lH:1048576 -lHc:8192 ;
-        local lflag_debug = -v ;
-        local compile_flags = -O2 -DNDEBUG ;
-        local compile_flags_debug = -O0 -g ;
-        
-        
-        flags embarcadero OPTIONS $(condition)/<user-interface>console : $(opt_console) ;
-        flags embarcadero OPTIONS $(condition)/<runtime-link>shared : $(opt_drtl) ;
-        flags embarcadero OPTIONS $(condition)/<main-target-type>LIB/<link>shared : $(opt_shared) ;
-        flags embarcadero OPTIONS $(condition)/<threading>multi : $(opt_mt) ;
-        flags embarcadero.link.dll OPTIONS $(condition)/<link>shared : $(opt_shared) ;
-        flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
-        
-        flags embarcadero.compile OPTIONS $(condition) : $(cflags) $(system_include_option)$(system_include_directories) ;
-        flags embarcadero.compile.c++ OPTIONS $(condition) : $(cxxflags) ;
-        
-        flags embarcadero.compile OPTIONS $(condition)/<variant>release : $(compile_flags) ;
-        flags embarcadero.compile OPTIONS $(condition)/<variant>debug : $(compile_flags_debug) ;
-        flags embarcadero.link OPTIONS $(condition) : $(lflags) ;
-        flags embarcadero.link OPTIONS $(condition)/<variant>debug : $(lflag_debug) ;
+    else
+        {
+        lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
+        lib_dir_debug = $(root)/lib/win64/debug $(root)/lib/win64/debug/psdk ;
+        }
+    
+    flags embarcadero.link LINKPATH $(condition)/<variant>release : $(lib_dir_release) ;
+    flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
   
     }
     
@@ -293,12 +267,28 @@ local rule get_bds_version ( sdir )
 ###############################################################################
 # Flags
 
-        flags embarcadero OPTIONS $(condition)/<user-interface>console : $(opt_console) ;
-        flags embarcadero OPTIONS $(condition)/<runtime-link>shared : $(opt_drtl) ;
-        flags embarcadero OPTIONS $(condition)/<main-target-type>LIB/<link>shared : $(opt_shared) ;
-        flags embarcadero OPTIONS $(condition)/<threading>multi : $(opt_mt) ;
-        flags embarcadero.link.dll OPTIONS $(condition)/<link>shared : $(opt_shared) ;
-        flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
+local opt_console = -tC ;
+local opt_shared = -tD ;
+local opt_mt = -tM ;
+local opt_drtl = -tR ;
+local opt_dapp = -tW ;
+local opt_cxxflag = -P ;
+local opt_compile_flags = -O2 -DNDEBUG ;
+local opt_compile_flags_debug = -O0 -g ;
+local opt_lflags = -lS:1048576 -lSc:4098 -lH:1048576 -lHc:8192 ;
+local opt_lflag_debug = -v ;
+    
+flags embarcadero OPTIONS <user-interface>console : $(opt_console) ;
+flags embarcadero OPTIONS <runtime-link>shared : $(opt_drtl) ;
+flags embarcadero OPTIONS <main-target-type>LIB/<link>shared : $(opt_shared) ;
+flags embarcadero OPTIONS <threading>multi : $(opt_mt) ;
+flags embarcadero.link.dll OPTIONS <link>shared : $(opt_shared) ;
+flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
+flags embarcadero.compile.c++ OPTIONS : $(opt_cxxflag) ;
+flags embarcadero.compile OPTIONS <variant>release : $(opt_compile_flags) ;
+flags embarcadero.compile OPTIONS <variant>debug : $(opt_compile_flags_debug) ;
+flags embarcadero.link OPTIONS : $(opt_lflags) ;
+flags embarcadero.link OPTIONS <variant>debug : $(opt_lflag_debug) ;
 
 ###############################################################################
 # C and C++ compilation
