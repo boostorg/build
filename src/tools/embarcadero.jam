@@ -15,7 +15,6 @@ import toolset : flags ;
 
 import clang ;
 import gcc ;
-# import errors ;
 import generators ;
 
 feature.extend toolset : embarcadero ;
@@ -70,11 +69,11 @@ rule init ( version ? :  command * : options * ) {
     
   # Determine the version
   if $(command) {
-    local command-string = \"$(command)\" ;
+    local command-string = "$(command)" ;
     command-string = $(command-string:J=" ") ;
     local soutput = [ SHELL "$(command-string) --version" ] ;
-    version ?= [ MATCH "Embarcadero C++ ([0-9.]+)" : soutput ] ;
-    cl_version = [ MATCH ".+version[ ]+([0-9.]+)" : soutput ] ;
+    version ?= [ MATCH "Embarcadero C[+][+] ([0-9.]+)" : $(soutput) ] ;
+    cl_version = [ MATCH ".+version[ ]+([0-9.]+)" : $(soutput) ] ;
     if ! $(cl_version)
         {
         cl_version = 5.0 ;
@@ -278,6 +277,7 @@ local opt_lflag_debug = -v ;
 flags embarcadero OPTIONS <user-interface>console : $(opt_console) ;
 flags embarcadero OPTIONS <runtime-link>shared : $(opt_drtl) ;
 flags embarcadero OPTIONS <main-target-type>LIB/<link>shared : $(opt_shared) ;
+flags embarcadero OPTIONS <main-target-type>EXE : $(opt_console) ;
 flags embarcadero OPTIONS <threading>multi : $(opt_mt) ;
 flags embarcadero.link.dll OPTIONS <link>shared : $(opt_shared) ;
 flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
