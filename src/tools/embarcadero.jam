@@ -1,0 +1,396 @@
+#  Copyright (c) 2020 Edward Diener
+#
+#  Use, modification and distribution is subject to the Boost Software
+#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
+#  http://www.boost.org/LICENSE_1_0.txt)
+
+import clang-linux ;
+import path ;
+import os ;
+
+#|
+
+import common ;
+import toolset ;
+import feature ;
+import toolset : flags ;
+
+import clang ;
+import gcc ;
+import common ;
+import errors ;
+import generators ;
+import type ;
+import numbers ;
+
+|#
+
+feature.extend-subfeature toolset embarcadero : platform : win ;
+
+toolset.inherit-generators embarcadero : clang-linux ;
+generators.override embarcadero.prebuilt : builtin.lib-generator ;
+generators.override embarcadero.prebuilt : builtin.prebuilt ;
+generators.override embarcadero.searched-lib-generator : searched-lib-generator ;
+
+# Override default do-nothing generators.
+generators.override embarcadero.compile.c.pch   : pch.default-c-pch-generator   ;
+generators.override embarcadero.compile.c++.pch : pch.default-cpp-pch-generator ;
+
+# type.set-generated-target-suffix PCH : embarcadero : pth ;
+
+toolset.inherit-rules embarcadero : clang-linux ;
+toolset.inherit-flags embarcadero 
+    : clang-linux 
+    : <runtime-link>shared
+      <link>shared
+      <threading>multi
+      <stdlib>gnu
+      <stdlib>gnu11
+      <stdlib>libc++
+    ;
+
+if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
+  .debug-configuration = true ;
+}
+
+rule init ( version ? :  command * : options * ) {
+
+  local compiler = bcc64 ;
+  local preprocessor = cpp64 ;
+  
+  command = [ common.get-invocation-command embarcadero : $(compiler)
+    : $(command) ] ;
+    
+  switch $(command[1]:B)
+    {
+    case bcc32c : 
+        {
+        compiler = bcc32c ;
+        preprocessor = cpp32c ;
+        }
+    case bcc32x : 
+        {
+        compiler = bcc32x ;
+        preprocessor = cpp32x ;
+        }
+    }
+    
+  local opt_console = -tC ;
+  local opt_shared = -tD ;
+  local opt_mt = -tM ;
+  local opt_drtl = -tR ;
+  local opt_dapp = -tW ;
+    
+  # Determine the version
+  if $(command) {
+    local command-string = \"$(command)\" ;
+    command-string = $(command-string:J=" ") ;
+    local soutput = [ SHELL "$(command-string) --version" ] ;
+    version ?= [ MATCH "Embarcadero C++ ([0-9.]+)" : soutput ] ;
+    cl_version = [ MATCH "version ([0-9.]+)" : soutput ] ;
+  }
+
+  local condition = [ common.check-init-parameters embarcadero
+    : version $(version) ] ;
+
+  common.handle-options embarcadero : $(condition) : $(command) : $(options) ;
+  clang.init-cxxstd-flags embarcadero : $(condition) : $(cl_version) ;
+
+  # Support for the Embarcadero root directory. If the Embarcadero binary
+  # directory is not in the PATH we need to tell the underlying clang
+  # implementation where to find the Embarcadero header/library files
+  # and set the correct runtime path so that we can execute Embarcadero
+  # programs and find Embarcadero DLLs.
+
+  local root = [ feature.get-values <root> : $(options) ] ;
+  
+  # 1) Look in registry
+
+  if ! $(root)
+    {
+    
+    local sdkdir = [ get_sdk_dir ] ;
+    
+    if $(sdkdir)
+        {
+        
+        local bdsv = [ get_bds_version $(sdksir) ] ;
+        
+        if $(bdsv)
+            {
+            
+            local troot = [ W32_GETREG HKEY_LOCAL_MACHINE\\SOFTWARE\\Embarcadero\\BDS\\${bdsv} : RootDir ] ;
+            
+            if $(troot)
+                {
+                troot = $(troot:T) ;
+                troot = $(troot)name ;
+                root = $(troot:D) ;
+                }
+            else
+                {
+                troot = [ W32_GETREG HKEY_CURRENT_USER\\SOFTWARE\\Embarcadero\\BDS\\${bdsv} : RootDir ] ;
+                if $(troot)
+                    {
+                    troot = $(troot:T) ;
+                    troot = $(troot)name ;
+                    root = $(troot:D) ;
+                    }
+                }
+            }
+        }
+    }
+    
+  # 2) Look for path in the command
+    
+  if ! $(root)
+    {
+    
+    local cpath = $(command[1]:D) ;
+    
+    if $(cpath)
+        {
+        root = $(cpath:P) ;
+        }
+    }
+    
+  # 3) Search for the directory of the command
+    
+  if ! $(root) 
+    {
+    
+    local pdirs = [ path.programs-path ] ;
+    
+    for local dir in $(pdirs)
+        {
+        if [ CHECK_IF_FILE $(dir)/$(command) ]
+            {
+            root = $(dir:P) ;
+            break ;
+            }
+        
+        }
+    }
+    
+  if ! $(root) 
+    {
+    
+    # Some sort of error or message should go here
+    
+    }
+  else
+    {
+    
+        local lib_path = $(root)/bin $(root)/bin64 $(root)/Bpl C:/Users/Public/Documents/Embarcadero
+        if $(.debug-configuration)
+        {
+            ECHO "notice:" using Embarcadero libraries with clang compilation"::" $(condition) "::" $(lib_path) ;
+        }
+        flags embarcadero.link RUN_PATH $(condition) : $(lib_path) ;
+        
+        local system_include_option = "-isystem ";
+        local system_include_directories = ${root}/include/windows/crtl ${root}/include/windows/sdk ${root}/include/windows/rtl ${root}/include/dinkumware64 ;
+        local lib_dir_release ;
+        local lib_dir_debug ;
+        
+        if $(compiler) = bcc32c || $(compiler) = bcc32x
+            {
+            lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32/release/psdk ;
+            lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug $(root)/lib/win32/debug/psdk ;
+            }
+        else
+            {
+            lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
+            lib_dir_debug = $(root)/lib/win64/debug $(root)/lib/win64/debug/psdk ;
+            }
+        
+        flags embarcadero.link LINKPATH $(condition)/<variant>release : $(lib_dir_release) ;
+        flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
+        
+        local cflags = -c ;
+        local cxxflags = -P ;
+        local lflags = -lS:1048576 -lSc:4098 -lH:1048576 -lHc:8192 ;
+        local lflag_debug = -v ;
+        local compile_flags = -O2 -DNDEBUG ;
+        local compile_flags_debug = -O0 -g ;
+        
+        
+        flags embarcadero OPTIONS $(condition)/<user-interface>console : $(opt_console) ;
+        flags embarcadero OPTIONS $(condition)/<runtime-link>shared : $(opt_drtl) ;
+        flags embarcadero OPTIONS $(condition)/<main-target-type>LIB/<link>shared : $(opt_shared) ;
+        flags embarcadero OPTIONS $(condition)/<threading>multi : $(opt_mt) ;
+        flags embarcadero.link.dll OPTIONS $(condition)/<link>shared : $(opt_shared) ;
+        flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
+        
+        flags embarcadero.compile OPTIONS $(condition) : $(cflags) $(system_include_option)$(system_include_directories) ;
+        flags embarcadero.compile.c++ OPTIONS $(condition) : $(cxxflags) ;
+        
+        flags embarcadero.compile OPTIONS $(condition)/<variant>release : $(compile_flags) ;
+        flags embarcadero.compile OPTIONS $(condition)/<variant>debug : $(compile_flags_debug) ;
+        flags embarcadero.link OPTIONS $(condition) : $(lflags) ;
+        flags embarcadero.link OPTIONS $(condition)/<variant>debug : $(lflag_debug) ;
+  
+    }
+    
+
+  # - Archive builder.
+  
+#|  
+
+  local archiver = [ feature.get-values <archiver> : $(options) ] ;
+  if ( ! $(archiver) ) && $(root)
+    {
+    archiver = $(root)/bin/ar ;
+    }
+  toolset.flags clang-linux.archive .AR $(condition) : $(archiver[1]) ;
+  
+|#  
+
+}
+
+local rule get_sdk_dir ( )
+    {
+    
+    local ret ;
+    local appdata = [ os.environ APPDATA ] ;
+    
+    if $(appdata)
+        {
+        ret = $(appdata:T)/Embarcadero/BDS ;
+        }
+    return $(ret) ;
+    }
+    
+local rule get_bds_version ( sdir )
+    {
+    
+    local ret ;
+    local flist = [ GLOB sdir : * ] ;
+    
+    if $(flist)
+        {
+        
+        local dirs ;
+        
+        for local file in $(flist)
+            {
+            if ! [ CHECK_IF_FILE $(file) ]
+                {
+                dirs += $(file) ;
+                }
+            }
+        if $(dirs)
+            {
+            
+            local ldir = $(dirs[-1]) ;
+            
+            ret =  $(ldir:B) ;
+            }
+        }
+    return $(ret) ;
+    }
+
+###############################################################################
+# Flags
+
+        flags embarcadero OPTIONS $(condition)/<user-interface>console : $(opt_console) ;
+        flags embarcadero OPTIONS $(condition)/<runtime-link>shared : $(opt_drtl) ;
+        flags embarcadero OPTIONS $(condition)/<main-target-type>LIB/<link>shared : $(opt_shared) ;
+        flags embarcadero OPTIONS $(condition)/<threading>multi : $(opt_mt) ;
+        flags embarcadero.link.dll OPTIONS $(condition)/<link>shared : $(opt_shared) ;
+        flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
+
+###############################################################################
+# C and C++ compilation
+
+#|
+
+rule compile.c++ ( targets * : sources * : properties * ) {
+  local pch-file = [ on $(<) return $(PCH_FILE) ] ;
+
+  if $(pch-file) {
+    DEPENDS $(<) : $(pch-file) ;
+    clang-linux.compile.c++.with-pch $(targets) : $(sources) ;
+  }
+  else {
+    clang-linux.compile.c++.without-pch $(targets) : $(sources) ;
+  }
+}
+
+actions compile.c++.without-pch {
+  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+}
+
+actions compile.c++.with-pch bind PCH_FILE
+{
+  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pch -Xclang "$(PCH_FILE)" -o "$(<)" "$(>)"
+}
+
+rule compile.c ( targets * : sources * : properties * )
+{
+  local pch-file = [ on $(<) return $(PCH_FILE) ] ;
+
+  if $(pch-file) {
+    DEPENDS $(<) : $(pch-file) ;
+    clang-linux.compile.c.with-pch $(targets) : $(sources) ;
+  }
+  else {
+    clang-linux.compile.c.without-pch $(targets) : $(sources) ;
+  }
+}
+
+actions compile.c.without-pch
+{
+  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+actions compile.c.with-pch bind PCH_FILE
+{
+  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pch -Xclang "$(PCH_FILE)" -c -o "$(<)" "$(>)"
+}
+
+###############################################################################
+# PCH emission
+
+RM = [ common.rm-command ] ;
+
+rule compile.c++.pch ( targets * : sources * : properties * ) {
+}
+
+actions compile.c++.pch {
+  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
+}
+
+rule compile.c.pch ( targets * : sources * : properties * ) {
+}
+
+actions compile.c.pch
+{
+  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
+}
+
+###############################################################################
+# Linking
+
+SPACE = " " ;
+
+rule link ( targets * : sources * : properties * ) {
+  SPACE on $(targets) = " " ;
+  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
+}
+
+actions link bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+}
+
+rule link.dll ( targets * : sources * : properties * ) {
+  SPACE on $(targets) = " " ;
+  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
+}
+
+# Differ from 'link' above only by -shared.
+actions link.dll bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+}
+
+|#
