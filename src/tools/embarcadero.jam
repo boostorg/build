@@ -8,8 +8,6 @@ import clang-linux ;
 import path ;
 import os ;
 
-#|
-
 import common ;
 import toolset ;
 import feature ;
@@ -17,15 +15,10 @@ import toolset : flags ;
 
 import clang ;
 import gcc ;
-import common ;
-import errors ;
+# import errors ;
 import generators ;
-import type ;
-import numbers ;
 
-|#
-
-feature.extend-subfeature toolset embarcadero : platform : win ;
+feature.extend toolset : embarcadero ;
 
 toolset.inherit-generators embarcadero : clang-linux ;
 generators.override embarcadero.prebuilt : builtin.lib-generator ;
@@ -81,7 +74,11 @@ rule init ( version ? :  command * : options * ) {
     command-string = $(command-string:J=" ") ;
     local soutput = [ SHELL "$(command-string) --version" ] ;
     version ?= [ MATCH "Embarcadero C++ ([0-9.]+)" : soutput ] ;
-    cl_version = [ MATCH "version ([0-9.]+)" : soutput ] ;
+    cl_version = [ MATCH ".+version[ ]+([0-9.]+)" : soutput ] ;
+    if ! $(cl_version)
+        {
+        cl_version = 5.0 ;
+        }
   }
 
   local condition = [ common.check-init-parameters embarcadero
@@ -108,12 +105,12 @@ rule init ( version ? :  command * : options * ) {
     if $(sdkdir)
         {
         
-        local bdsv = [ get_bds_version $(sdksir) ] ;
+        local bdsv = [ get_bds_version $(sdkdir) ] ;
         
         if $(bdsv)
             {
             
-            local troot = [ W32_GETREG HKEY_LOCAL_MACHINE\\SOFTWARE\\Embarcadero\\BDS\\${bdsv} : RootDir ] ;
+            local troot = [ W32_GETREG "HKEY_LOCAL_MACHINE\\SOFTWARE\\Embarcadero\\BDS\\${bdsv}" : RootDir ] ;
             
             if $(troot)
                 {
@@ -123,7 +120,7 @@ rule init ( version ? :  command * : options * ) {
                 }
             else
                 {
-                troot = [ W32_GETREG HKEY_CURRENT_USER\\SOFTWARE\\Embarcadero\\BDS\\${bdsv} : RootDir ] ;
+                troot = [ W32_GETREG "HKEY_CURRENT_USER\\SOFTWARE\\Embarcadero\\BDS\\${bdsv)" : RootDir ] ;
                 if $(troot)
                     {
                     troot = $(troot:T) ;
@@ -175,15 +172,15 @@ rule init ( version ? :  command * : options * ) {
   else
     {
     
-    local lib_path = $(root)/bin $(root)/bin64 $(root)/Bpl C:/Users/Public/Documents/Embarcadero
+    local lib_path = $(root)/bin $(root)/bin64 $(root)/Bpl C:/Users/Public/Documents/Embarcadero ;
     if $(.debug-configuration)
     {
         ECHO "notice:" using Embarcadero libraries with clang compilation"::" $(condition) "::" $(lib_path) ;
     }
     flags embarcadero.link RUN_PATH $(condition) : $(lib_path) ;
     
-    local system_include_option = "-isystem ";
-    local system_include_directories = ${root}/include/windows/crtl ${root}/include/windows/sdk ${root}/include/windows/rtl ${root}/include/dinkumware64 ;
+    local system_include_option = "-isystem " ;
+    local system_include_directories = $(root)/include/windows/crtl $(root)/include/windows/sdk $(root)/include/windows/rtl $(root)/include/dinkumware64 ;
     
     flags embarcadero.compile OPTIONS $(condition) : $(system_include_option)$(system_include_directories) ;
     
@@ -275,7 +272,7 @@ local opt_dapp = -tW ;
 local opt_cxxflag = -P ;
 local opt_compile_flags = -O2 -DNDEBUG ;
 local opt_compile_flags_debug = -O0 -g ;
-local opt_lflags = -lS:1048576 -lSc:4098 -lH:1048576 -lHc:8192 ;
+local opt_lflags = "-lS:1048576 -lSc:4098 -lH:1048576 -lHc:8192" ;
 local opt_lflag_debug = -v ;
     
 flags embarcadero OPTIONS <user-interface>console : $(opt_console) ;
