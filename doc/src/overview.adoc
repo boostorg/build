@@ -2,16 +2,16 @@
 = Overview
 
 This section will provide the information necessary to create your own
-projects using Boost.Build. The information provided here is relatively
+projects using B2. The information provided here is relatively
 high-level, and the link:#bbv2.reference[Reference] as well as the on-line
 help system must be used to obtain low-level documentation (see
 link:#bbv2.overview.invocation.options.help[`--help`]).
 
-Boost.Build has two parts — a build engine with its own interpreted
-language, and Boost.Build itself, implemented in that language. The
+B2 has two parts — a build engine with its own interpreted
+language, and B2 itself, implemented in that language. The
 chain of events when you type `b2` on the command line is as follows:
 
-1.  The Boost.Build executable tries to find Boost.Build modules and
+1.  The B2 executable tries to find B2 modules and
 loads the top-level module. The exact process is described in
 link:#bbv2.reference.init[the section called “Initialization”]
 2.  The top-level module loads user-defined configuration files,
@@ -21,14 +21,14 @@ toolsets.
 cause reading of further Jamfiles. As a result, a tree of projects is
 created, with targets inside projects.
 4.  Finally, using the build request specified on the command line,
-Boost.Build decides which targets should be built and how. That
+B2 decides which targets should be built and how. That
 information is passed back to Boost.Jam, which takes care of actually
 running the scheduled build action commands.
 
-So, to be able to successfully use Boost.Build, you need to know only
+So, to be able to successfully use B2, you need to know only
 four things:
 
-* link:#bbv2.overview.configuration[How to configure Boost.Build]
+* link:#bbv2.overview.configuration[How to configure B2]
 * link:#bbv2.overview.targets[How to declare targets in Jamfiles]
 * link:#bbv2.overview.build_process[How the build process works]
 * Some Basics about the Boost.Jam language. See
@@ -37,7 +37,7 @@ link:#bbv2.overview.jam_language[the section called “Boost.Jam Language”].
 [[bbv2.overview.concepts]]
 == Concepts
 
-Boost.Build has a few unique concepts that are introduced in this
+B2 has a few unique concepts that are introduced in this
 section. The best way to explain the concepts is by comparison with more
 classical build tools.
 
@@ -73,7 +73,7 @@ immediately when the build description is parsed, which makes it
 impossible to perform multi-variant builds. Often, change in any build
 property requires a complete reconfiguration of the build tree.
 
-In order to support true multi-variant builds, Boost.Build introduces the
+In order to support true multi-variant builds, B2 introduces the
 concept of a metatarget definition main target metatarget
 _metatarget_ -- an object that is created when the build description is
 parsed and can be called later with specific build properties to
@@ -86,11 +86,11 @@ Consider an example:
 exe a : a.cpp ;
 ----
 
-When this declaration is parsed, Boost.Build creates a metatarget, but
+When this declaration is parsed, B2 creates a metatarget, but
 does not yet decide what files must be created, or what commands must be
-used. After all build files are parsed, Boost.Build considers the
+used. After all build files are parsed, B2 considers the
 properties requested on the command line. Supposed you have invoked
-Boost.Build with:
+B2 with:
 
 [source,shell]
 ----
@@ -105,12 +105,12 @@ different command lines.
 Another key concept is _build property_. A build
 property is a variable that affects the build process. It can be
 specified on the command line, and is passed when calling a metatarget.
-While all build tools have a similar mechanism, Boost.Build differs by
+While all build tools have a similar mechanism, B2 differs by
 requiring that all build properties are declared in advance, and
 providing a large set of properties with portable semantics.
 
 The final concept is _property propagation_.
-Boost.Build does not require that every metatarget is called with the
+B2 does not require that every metatarget is called with the
 same properties. Instead, the "top-level" metatargets are called with
 the properties specified on the command line. Each metatarget can elect
 to augment or override some properties (in particular, using the
@@ -123,7 +123,7 @@ have dependencies of their own.
 
 For a more in-depth treatment of the requirements and concepts, you may
 refer to http://syrcose.ispras.ru/2009/files/04_paper.pdf[SYRCoSE 2009
-Boost.Build article].
+B2 article].
 
 [[bbv2.overview.jam_language]]
 == Boost.Jam Language
@@ -307,11 +307,11 @@ link:#jam.language.rules[the section called “Rules”].
 [[bbv2.overview.configuration]]
 == Configuration
 
-On startup, Boost.Build searches and reads three configuration files:
+On startup, B2 searches and reads three configuration files:
 `site-config.jam`, `user-config.jam`, and `project-config.jam`. The
 first one is usually installed and maintained by a system administrator,
 and the second is for the user to modify. You can edit the one in the
-top-level directory of your Boost.Build installation or create a copy in
+top-level directory of your B2 installation or create a copy in
 your home directory and edit the copy. The third is used for project
 specific configuration. The following table explains where the files are
 searched.
@@ -383,7 +383,7 @@ using tool-name : ... ;
 ----
 
 The `using` rule is given the name of tool, and will make that tool
-available to Boost.Build. For example,
+available to B2. For example,
 
 [source]
 ----
@@ -403,7 +403,7 @@ link:#bbv2.reference.tools[the section called “Builtin tools”], including th
 specific options they take. Some general notes that apply to most {CPP}
 compilers are below.
 
-For all the {CPP} compiler toolsets that Boost.Build supports
+For all the {CPP} compiler toolsets that B2 supports
 out-of-the-box, the list of parameters to `using` is the same:
 `toolset-name`, `version`, `invocation-command`, and `options`.
 
@@ -429,7 +429,7 @@ using gcc : : g++-3.2 ;
 using msvc : : "Z:/Programs/Microsoft Visual Studio/vc98/bin/cl" ;
 ----
 
-Some Boost.Build toolsets will use that path to take additional actions
+Some B2 toolsets will use that path to take additional actions
 required before invoking the compiler, such as calling vendor-supplied
 scripts to set up its required environment variables. When the compiler
 executables for C and {CPP} are different, the path to the {CPP} compiler
@@ -460,7 +460,7 @@ Note that in the first call to `using`, the compiler found in the `PATH`
 will be used, and there is no need to explicitly specify the command.
 
 Many of toolsets have an `options` parameter to fine-tune the
-configuration. All of Boost.Build's standard compiler toolsets accept
+configuration. All of B2's standard compiler toolsets accept
 four options `cflags`, `cxxflags`, `compileflags` and `linkflags` as
 `options` specifying flags that will be always passed to the
 corresponding tools. There must not be a space between the tag for the
@@ -514,7 +514,7 @@ toolset initialization.
 [[bbv2.overview.invocation]]
 == Invocation
 
-To invoke Boost.Build, type `b2` on the command line. Three kinds of
+To invoke B2, type `b2` on the command line. Three kinds of
 command-line tokens are accepted, in any order:
 
 options::
@@ -559,7 +559,7 @@ b2 toolset=gcc variant=debug optimization=space
 [[bbv2.overview.invocation.options]]
 === Options
 
-Boost.Build recognizes the following command line options.
+B2 recognizes the following command line options.
 
 [[bbv2.overview.invocation.options.help]]`--help`::
   Invokes the online help system. This prints general information on how
@@ -594,7 +594,7 @@ Boost.Build recognizes the following command line options.
   link:#bbv2.reference.buildprocess.targetpath[the section called “Target
   Paths”].
 `--version`::
-  Prints information on the Boost.Build and Boost.Jam versions.
+  Prints information on the B2 and Boost.Jam versions.
 `-a`::
   Causes all files to be rebuilt.
 `-n`::
@@ -616,7 +616,7 @@ Boost.Build recognizes the following command line options.
 `--project-config=filename`::
   Override the default link:#bbv2.overview.configuration[project-config.jam]
 `--debug-configuration`::
-  Produces debug information about the loading of Boost.Build and
+  Produces debug information about the loading of B2 and
   toolset files.
 `--debug-building`::
   Prints what targets are being built and with what properties.
@@ -673,7 +673,7 @@ The most common features are summarized below.
 
 |link
 |shared,static
-|Determines if Boost.Build creates shared or static libraries
+|Determines if B2 creates shared or static libraries
 
 |threading
 |single,multi
@@ -783,7 +783,7 @@ also declare custom main target rules as shown in
 link:#bbv2.extending.rules[the section called “Main target rules”].
 
 anchor:bbv2.main-target-rule-syntax[]
-Most main target rules in Boost.Build have the same common signature:
+Most main target rules in B2 have the same common signature:
 
 [source]
 ----
@@ -1130,7 +1130,7 @@ Each subproject inherits attributes, constants and rules from its parent
 project, which is defined by the nearest Jamfile in an ancestor
 directory above the subproject. The top-level project is declared in a
 file called `Jamroot`, or `Jamfile`. When loading a project,
-Boost.Build looks for either `Jamroot` or `Jamfile`. They are handled
+B2 looks for either `Jamroot` or `Jamfile`. They are handled
 identically, except that if the file is called `Jamroot`, the search for
 a parent project is not performed. A `Jamfile` without a parent project
 is also considered the top-level project.
@@ -1143,18 +1143,18 @@ project refers to another via the `use-project` or a target reference,
 no specific order should be assumed.
 
 NOTE: Giving the root project the special name “`Jamroot`” ensures that
-Boost.Build won't misinterpret a directory above it as the project root
+B2 won't misinterpret a directory above it as the project root
 just because the directory contains a Jamfile.
 
 [[bbv2.overview.build_process]]
 == The Build Process
 
-When you've described your targets, you want Boost.Build to run the
+When you've described your targets, you want B2 to run the
 right tools and create the needed targets. This section will describe
 two things: how you specify what to build, and how the main targets are
 actually constructed.
 
-The most important thing to note is that in Boost.Build, unlike other
+The most important thing to note is that in B2, unlike other
 build tools, the targets you declare do not correspond to specific
 files. What you declare in a Jamfile is more like a “metatarget.”
 Depending on the properties you specify on the command line, each
@@ -1163,7 +1163,7 @@ requested properties. It is quite possible that the same metatarget is
 built several times with different properties, producing different
 files.
 
-TIP: This means that for Boost.Build, you cannot directly obtain a build
+TIP: This means that for B2, you cannot directly obtain a build
 variant from a Jamfile. There could be several variants requested by the
 user, and each target can be built with different properties.
 
@@ -1225,10 +1225,10 @@ requirements. The usage requirements are added to the common properties
 and the resulting property set will be used for building the current
 target.
 6.  Building the target using generators. To convert the sources to the
-desired type, Boost.Build uses "generators" -- objects that correspond
+desired type, B2 uses "generators" -- objects that correspond
 to tools like compilers and linkers. Each generator declares what type
 of targets it can produce and what type of sources it requires. Using
-this information, Boost.Build determines which generators must be run to
+this information, B2 determines which generators must be run to
 produce a specific target from specific sources. When generators are
 run, they return the "real" targets.
 7.  Computing the usage requirements to be returned. The conditional

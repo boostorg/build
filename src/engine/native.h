@@ -20,7 +20,7 @@ typedef struct native_rule_t
 
     /* Version of the interface that the native rule provides. It is possible
      * that we want to change the set parameter for existing native rule. In
-     * that case, version number should be incremented so Boost.Build can check
+     * that case, version number should be incremented so B2 can check
      * for the version it relies on.
      *
      * Versions are numbered from 1.

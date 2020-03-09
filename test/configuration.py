@@ -347,7 +347,7 @@ def test_global_config():
     t.run_build_system(["--config=my-config.jam", "--debug-configuration"],
                        match=TestCmd.match_re, stdout=
 r"""notice: found boost-build\.jam at .*
-notice: loading Boost\.Build from .*
+notice: loading B2 from .*
 notice: Searching '.*' for all-config configuration file 'my-config\.jam'\.
 notice: Loading all-config configuration file 'my-config\.jam' from '.*'\.
 Loading my-config
@@ -358,7 +358,7 @@ Done
     t.run_build_system(["--config=", "--debug-configuration"],
                        match=TestCmd.match_re, stdout=
 r"""notice: found boost-build\.jam at .*
-notice: loading Boost\.Build from .*
+notice: loading B2 from .*
 notice: Configuration file loading explicitly disabled.
 Done
 """)

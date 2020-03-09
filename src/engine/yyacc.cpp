@@ -196,13 +196,13 @@ int main(int argc, char ** argv)
     return result;
 }
 
-static char * usage[] = {
+static const char * usage[] = {
     "yyacc <grammar output.y> <token table output.h> <grammar source.yy>",
     0 };
 
 void print_usage()
 {
-    char ** u;
+    const char ** u;
     for (u = usage; *u != 0; ++u)
     {
         fputs(*u,stderr); putc('\n',stderr);
@@ -220,7 +220,7 @@ char * copy_string(char * s, int l)
 char * tokenize_string(char * s)
 {
     char * result;
-    char * literal = s;
+    const char * literal = s;
     int l;
     int c;
 

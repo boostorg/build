@@ -7,8 +7,8 @@
 [[bbv2.util.debugger.overview]]
 === Overview
 
-Boost.Build comes with a debugger for Jamfiles. To run the debugger,
-start Boost.Build with `b2 -dconsole`.
+B2 comes with a debugger for Jamfiles. To run the debugger,
+start B2 with `b2 -dconsole`.
 
 ....
 $ b2 -dconsole

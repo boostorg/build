@@ -634,8 +634,6 @@ int filelist_length( FILELIST * list )
 
 void filelist_free( FILELIST * list )
 {
-    FILELISTITER iter;
-
     if ( filelist_empty( list ) ) return;
 
     while ( filelist_length( list ) ) filelist_pop_front( list );

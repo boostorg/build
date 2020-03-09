@@ -20,7 +20,7 @@ t.run_build_system()
 t.expect_output_lines("foobar gee")
 
 # Regression test: when absolute paths were passed to path-constant rule,
-# Boost.Build failed to recognize path as absolute and prepended the current
+# B2 failed to recognize path as absolute and prepended the current
 # dir.
 t.write("jamroot.jam", """\
 import path ;

@@ -6,7 +6,7 @@
 # or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #
-# Boost.Build V2 toolset for the IBM XL C++ compiler
+# B2 V2 toolset for the IBM XL C++ compiler
 #
 
 import toolset : flags ;
@@ -23,12 +23,12 @@ generators.override xlcpp.searched-lib-generator : searched-lib-generator ;
 # Configure the xlcpp toolset
 rule init ( version ? : command * : options * )
 {
-    local condition = [ 
+    local condition = [
         common.check-init-parameters xlcpp : version $(version) ] ;
-              
+
     command = [ common.get-invocation-command xlcpp : xlC
         : $(command) : "/usr/xlcpp/bin/xlC" ] ;
-        
+
     common.handle-options xlcpp : $(condition) : $(command) : $(options) ;
 }
 
@@ -145,7 +145,7 @@ actions xlcpp.link bind NEEDLIBS
 
 actions xlcpp.link.dll bind NEEDLIBS
 {
-    xlC -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS) 
+    xlC -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions xlcpp.compile.c

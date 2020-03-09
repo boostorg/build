@@ -42,7 +42,7 @@ then with the same value of --build-dir we'd act as if Jamroot contained:
    project foo : build-dir /tmp/build/foo/bin.v2 ;
 
 We can't drop "bin.v2" because it's quite possible that the name of build dir
-have specific meaning. For example, it can be used to separate Boost.Build V1
+have specific meaning. For example, it can be used to separate B2 V1
 and V2 build results.
 
 The --build-dir option has no effect if Jamroot does not define any project id.

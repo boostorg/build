@@ -11,7 +11,7 @@ import feature ;
 *Allowed values:* the name of any feature.
 +
 Indicates which other features are relevant for a given target. It is usually
-not necessary to manage it explicitly, as Boost.Build can deduce it in most
+not necessary to manage it explicitly, as B2 can deduce it in most
 cases. Features which are not relevant will not affect target paths, and will
 not cause conflicts.
 +
@@ -39,7 +39,7 @@ like one. In particular, it does not support multiple comma-separated elements
 in the condition, and it does work correctly even in contexts where conditional
 properties are not allowed
 ** Action rules that read properties. Solution: add toolset.uses-features to
-  tell Boost.Build that the feature is actually used.
+  tell B2 that the feature is actually used.
 ** Generators and targets that manipulate property-sets directly. Solution:
   set <relevant> manually.
 

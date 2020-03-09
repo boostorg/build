@@ -237,7 +237,6 @@ int yypeek()
 #define yyprev() ( incp->string-- )
 
 static int use_new_scanner = 0;
-static int expect_whitespace;
 
 #define yystartkeyword() if(use_new_scanner) break; else token_warning()
 #define yyendkeyword() if(use_new_scanner) break; else if ( 1 ) { expect_whitespace = 1; continue; } else (void)0

@@ -265,7 +265,6 @@ int main( int argc, char * * argv, char * * arg_environ )
     int                     n;
     char                  * s;
     struct bjam_option      optv[ N_OPTS ];
-    char            const * all = "all";
     int                     status;
     int                     arg_c = argc;
     char          *       * arg_v = argv;
@@ -275,6 +274,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     b2::system_info sys_info;
 
     saved_argv0 = argv[ 0 ];
+    last_update_now_status = 0;
 
     BJAM_MEM_INIT();
 
@@ -649,26 +649,32 @@ int main( int argc, char * * argv, char * * arg_environ )
                 parse_file( constant_plus, frame );
         }
 
+        /* FIXME: What shall we do if builtin_update_now,
+         * the sole place setting last_update_now_status,
+         * failed earlier?
+         */
+
         status = yyanyerrors();
-
-        /* Manually touch -t targets. */
-        for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
+        if ( !status )
         {
-            OBJECT * const target = object_new( s );
-            touch_target( target );
-            object_free( target );
-        }
+            /* Manually touch -t targets. */
+            for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
+            {
+                OBJECT * const target = object_new( s );
+                touch_target( target );
+                object_free( target );
+            }
 
-
-        /* Now make target. */
-        {
-            PROFILE_ENTER( MAIN_MAKE );
-            LIST * const targets = targets_to_update();
-            if ( !list_empty( targets ) )
-                status |= make( targets, anyhow );
-            else
-                status = last_update_now_status;
-            PROFILE_EXIT( MAIN_MAKE );
+            /* Now make target. */
+            {
+                PROFILE_ENTER( MAIN_MAKE );
+                LIST * const targets = targets_to_update();
+                if ( !list_empty( targets ) )
+                    status |= make( targets, anyhow );
+                else
+                    status = last_update_now_status;
+                PROFILE_EXIT( MAIN_MAKE );
+            }
         }
 
         PROFILE_EXIT( MAIN );
@@ -725,7 +731,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 char * executable_path( char const * argv0 )
 {
     char buf[ 1024 ];
-    DWORD const ret = GetModuleFileName( NULL, buf, sizeof( buf ) );
+    DWORD const ret = GetModuleFileNameA( NULL, buf, sizeof( buf ) );
     return ( !ret || ret == sizeof( buf ) ) ? NULL : strdup( buf );
 }
 #elif defined(__APPLE__)  /* Not tested */

@@ -166,7 +166,7 @@ has an IA64 machine to test.
 It is believed that AMD64 and EM64T targets are essentially compatible.
 The compiler options `/favor:AMD64` and `/favor:EM64T`, which are
 accepted only by AMD64 targeting compilers, cause the generated code to
-be tuned to a specific flavor of 64-bit x86. Boost.Build will make use
+be tuned to a specific flavor of 64-bit x86. B2 will make use
 of those options depending on the value of the`instruction-set` feature.
 
 [[bbv2.reference.tools.compiler.msvc.winrt]]
@@ -1402,7 +1402,7 @@ local rule configure-really ( version ? : options * )
             {
                 default-global-setup-options-amd64 = amd64 ;
             }
-            # When Boost.Build itself is running as a 32-bit process on 64-bit
+            # When B2 itself is running as a 32-bit process on 64-bit
             # Windows, the above test will fail (since WOW64 simulates a 32-bit
             # environment, including environment values).  So check the WOW64
             # variable PROCESSOR_ARCHITEW6432 as well.

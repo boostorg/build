@@ -5,7 +5,7 @@
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
 # Regression test: when directory of project root contained regex
-# metacharacters, Boost.Build failed to work. Bug reported by Michael Stevens.
+# metacharacters, B2 failed to work. Bug reported by Michael Stevens.
 
 import BoostBuild
 

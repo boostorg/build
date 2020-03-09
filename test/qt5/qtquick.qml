@@ -11,7 +11,7 @@ Rectangle {
     color: "#d6d6d6"
     Text {
         id: helloText
-        text: "Boost.Build built!"
+        text: "B2 built!"
         color: "darkgray"
         anchors.horizontalCenter: page.horizontalCenter
         anchors.verticalCenter: page.verticalCenter

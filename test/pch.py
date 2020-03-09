@@ -44,7 +44,7 @@ t.expect_addition("bin/$toolset/debug*/hello.exe")
 
 
 # Now make the header unusable, without changing timestamp. If everything is OK,
-# Boost.Build will not recreate PCH, and compiler will happily use pre-compiled
+# B2 will not recreate PCH, and compiler will happily use pre-compiled
 # header, not noticing that the real header is bad.
 
 t.copy_preserving_timestamp("pch.hpp.bad", "pch.hpp")

@@ -98,7 +98,7 @@ else:
     t.fail_test(1)
 
 # Test main -> libb -> liba chain in the case where liba is a file and not a
-# Boost.Build target.
+# B2 target.
 t.rm(".")
 
 t.write("jamroot.jam", "")

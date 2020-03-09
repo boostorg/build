@@ -974,7 +974,7 @@ local rule toolset-tag ( name : type ? : property-set )
     }
 
     # From GCC 5, versioning changes and minor becomes patch
-    if $(tag) = gcc && $(version[1]) && [ numbers.less 4 $(version[1]) ]
+    if ( $(tag) = gcc || $(tag) = mgw ) && $(version[1]) && [ numbers.less 4 $(version[1]) ]
     {
         version = $(version[1]) ;
     }
