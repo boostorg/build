@@ -19,7 +19,7 @@ using intel : [version] : [c++-compile-command] : [compiler options] ;
 This statement may be repeated several times, if you want to configure
 several versions of the compiler.
 
-If compiler command is not specified, then Boost.Build will look in PATH
+If compiler command is not specified, then B2 will look in PATH
 for an executable `icpc` (on Linux), or `icl.exe` (on Windows).
 
 The following options can be provided, using
@@ -68,17 +68,17 @@ rule init ( * : * )
 {
     if [ os.name ] = LINUX
     {
-        toolset.using intel-linux : 
+        toolset.using intel-linux :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
     else if [ os.name ] = MACOSX
     {
-        toolset.using intel-darwin : 
+        toolset.using intel-darwin :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
     }
     else
     {
         toolset.using intel-win :
           $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-    }        
+    }
 }

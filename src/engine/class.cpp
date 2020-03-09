@@ -151,7 +151,7 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
 
     {
         /*
-            Initialize variables that Boost.Build inserts in every object.
+            Initialize variables that B2 inserts in every object.
             We want to avoid creating the object's hash if it isn't needed.
          */
         int num = class_module->num_fixed_variables;

@@ -4,9 +4,9 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-#   This file is used to configure your Boost.Build installation. You can modify
+#   This file is used to configure your B2 installation. You can modify
 # this file in place, or you can place it in a permanent location so that it
-# does not get overwritten should you get a new version of Boost.Build. See:
+# does not get overwritten should you get a new version of B2. See:
 #
 #   http://www.boost.org/boost-build2/doc/html/bbv2/overview/configuration.html
 #

@@ -46,7 +46,7 @@ rule find-to-root ( dir : patterns + )
 BOOST_BUILD_PATH.user-value = $(BOOST_BUILD_PATH) ;
 
 # On Unix only, when BOOST_BUILD_PATH is not supplied by the user, set it to a
-# sensible default value. This allows Boost.Build to work without any
+# sensible default value. This allows B2 to work without any
 # environment variables, which is good in itself and also required by the Debian
 # Policy.
 if ! $(BOOST_BUILD_PATH) && $(UNIX)
@@ -84,7 +84,7 @@ rule boost-build ( dir ? )
     BOOST_BUILD_PATH = $(dir:R=$(.boost-build-file:D)) $(BOOST_BUILD_PATH) ;
 
     # We might have just modified the *global* value of BOOST_BUILD_PATH. The
-    # code that loads the rest of Boost.Build, in particular the site-config.jam
+    # code that loads the rest of B2, in particular the site-config.jam
     # and user-config.jam configuration files uses os.environ, so we need to
     # update the value there.
     _poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;
@@ -96,7 +96,7 @@ rule boost-build ( dir ? )
     # There is no bootstrap.jam we can find, exit with an error.
     if ! $(.bootstrap-file)
     {
-        ECHO "Unable to load Boost.Build: could not find build system." ;
+        ECHO "Unable to load B2: could not find build system." ;
         ECHO --------------------------------------------------------- ;
         ECHO "$(.boost-build-file) attempted to load the build system by invoking" ;
         ECHO ;
@@ -110,7 +110,7 @@ rule boost-build ( dir ? )
 
     if [ MATCH .*(--debug-configuration).* : $(ARGV) ]
     {
-        ECHO "notice: loading Boost.Build from"
+        ECHO "notice: loading B2 from"
             [ NORMALIZE_PATH $(.bootstrap-file:D) ] ;
     }
 
@@ -124,7 +124,7 @@ rule boost-build ( dir ? )
     # invocation directory up to the root of the file-system.
     #
     # boost-build.jam is expected to invoke the "boost-build" rule to load the
-    # Boost.Build files.
+    # B2 files.
 
     local search-path = $(BOOST_BUILD_PATH) $(BOOST_ROOT) ;
     local self = [ SELF_PATH ] ;
@@ -134,7 +134,7 @@ rule boost-build ( dir ? )
     local boost-build-files =
         [ find-to-root [ PWD ] : boost-build.jam ]
         [ GLOB $(self-based-path) : boost-build.jam ]
-        # Another temporary measure so Jam works with Boost.Build v1.
+        # Another temporary measure so Jam works with B2 v1.
         [ GLOB $(search-path) : boost-build.jam ] ;
 
     .boost-build-file = $(boost-build-files[1]) ;
@@ -143,7 +143,7 @@ rule boost-build ( dir ? )
     # information.
     if ! $(.boost-build-file)
     {
-        ECHO "Unable to load Boost.Build: could not find \"boost-build.jam\"" ;
+        ECHO "Unable to load B2: could not find \"boost-build.jam\"" ;
         ECHO --------------------------------------------------------------- ;
 
         if ! [ MATCH .*(bjam).* : $(ARGV[1]:BL) ]
@@ -176,7 +176,7 @@ rule boost-build ( dir ? )
     # Check that, at minimum, the bootstrap file was found.
     if ! $(.bootstrap-file)
     {
-        ECHO "Unable to load Boost.Build" ;
+        ECHO "Unable to load B2" ;
         ECHO -------------------------- ;
         ECHO "\"$(.boost-build-file)\" was found by searching from" [ PWD ] "up to the root" ;
         ECHO "and in these directories from BOOST_BUILD_PATH and BOOST_ROOT: "$(search-path:J=", ")"." ;

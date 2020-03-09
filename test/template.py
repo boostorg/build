@@ -5,7 +5,7 @@
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# This file is template for Boost.Build tests. It creates a simple project that
+# This file is template for B2 tests. It creates a simple project that
 # builds one exe from one source, and checks that the exe is really created.
 
 import BoostBuild

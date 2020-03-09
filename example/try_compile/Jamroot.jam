@@ -1,5 +1,5 @@
 
-# This example shows performing configure checks in Boost.Build,
+# This example shows performing configure checks in B2,
 # e.g. to check for some system function or compiler quirk.
 
 # First, declare a metatarget that we'll try to build.
@@ -8,8 +8,8 @@ obj foo : foo.cpp ;
 explicit foo ;
 
 # Declare a target that depends on configure check result.
-exe main 
-    : main.cpp 
+exe main
+    : main.cpp
     # The check-target-builds invocation in requirements section will
     # - build the specified metatarget
     # - if it builds OK, add the properties in the second parameter

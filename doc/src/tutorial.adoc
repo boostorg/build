@@ -2,13 +2,13 @@
 = Tutorial
 
 This section will guide you though the most basic features of
-Boost.Build. We will start with the “Hello, world” example, learn how to
+B2. We will start with the “Hello, world” example, learn how to
 use libraries, and finish with testing and installing features.
 
 [[bbv2.tutorial.hello]]
 == Hello, world
 
-The simplest project that Boost.Build can construct is stored in
+The simplest project that B2 can construct is stored in
 `example/hello/` directory. The project is described by a file called
 `Jamfile` that contains:
 
@@ -70,10 +70,10 @@ b2 --clean hello2
 == Properties
 
 To represent aspects of target configuration such as debug and release
-variants, or single- and multi-threaded builds portably, Boost.Build
+variants, or single- and multi-threaded builds portably, B2
 uses _features_ with associated _values_. For example, the `debug-symbols`
 feature can have a value of `on` or `off`. A _property_ is just a
-(feature, value) pair. When a user initiates a build, Boost.Build
+(feature, value) pair. When a user initiates a build, B2
 automatically translates the requested properties into appropriate
 command-line flags for invoking toolset components like compilers and
 linkers.
@@ -104,7 +104,7 @@ b2 variant=release inlining=off debug-symbols=on
 ----
 
 `variant` is so commonly-used that it has been given special status as
-an _implicit_ feature—Boost.Build will deduce its identity just from the
+an _implicit_ feature—B2 will deduce its identity just from the
 name of one of its values.
 
 A complete description of features can be found in
@@ -265,7 +265,7 @@ reference to another target: a library `bar` declared in the Jamfile at
 `../util/foo`.
 
 TIP: Some other build system have special syntax for listing dependent
-libraries, for example `LIBS` variable. In Boost.Build, you just add the
+libraries, for example `LIBS` variable. In B2, you just add the
 library to the list of sources.
 
 Suppose we build `app` with:
@@ -276,7 +276,7 @@ b2 app optimization=full define=USE_ASM
 ----
 
 Which properties will be used to build `foo`? The answer is that some
-features are _propagated_ — Boost.Build attempts to use dependencies with
+features are _propagated_ — B2 attempts to use dependencies with
 the same value of propagated features. The `<optimization>` feature is
 propagated, so both `app` and `foo` will be compiled with full
 optimization. But `<define>` is not propagated: its value will be added
@@ -352,7 +352,7 @@ project
 Libraries can be either _static_, which means they are included in
 executable files that use them, or _shared_ (a.k.a. _dynamic_), which
 are only referred to from executables, and must be available at run
-time. Boost.Build can create and use both kinds.
+time. B2 can create and use both kinds.
 
 The kind of library produced from a `lib` target is determined by the
 value of the `link` feature. Default value is `shared`, and to build a
@@ -434,7 +434,7 @@ NOTE: (Note for non-UNIX system). Typically, shared libraries must be
 installed to a directory in the dynamic linker's search path. Otherwise,
 applications that use shared libraries can't be started. On Windows, the
 dynamic linker's search path is given by the `PATH` environment variable.
-This restriction is lifted when you use Boost.Build testing
+This restriction is lifted when you use B2 testing
 facilities—the `PATH` variable will be automatically adjusted before
 running the executable.
 
@@ -473,7 +473,7 @@ lib demangler : demangler_gcc.cpp : <toolset>gcc ;   # <2>
 lib demangler : demangler_msvc.cpp : <toolset>msvc ; # <3>
 ----
 
-When building `demangler`, Boost.Build will compare requirements for
+When building `demangler`, B2 will compare requirements for
 each alternative with build properties to find the best match. For
 example, when building with `<toolset>gcc` alternative *(2)*, will be
 selected, and when building with `<toolset>msvc` alternative *(3)* will be

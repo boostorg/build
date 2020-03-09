@@ -8,7 +8,7 @@
     <!--tidy options: -i -wrap 78 -->
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
-    <title>A testing system for Boost.Build</title>
+    <title>A testing system for B2</title>
 <style type="text/css">
         hr { color: black }
         p.revision { text-align: right; font-style: italic }
@@ -27,7 +27,7 @@
     <p><a href="../../../../index.htm"><img class="banner" height="86" width=
     "277" alt="C++ Boost" src="../../../../boost.png"></a></p>
 
-    <h1>A testing system for Boost.Build<br class="clear">
+    <h1>A testing system for B2<br class="clear">
     </h1>
     <hr>
 
@@ -93,7 +93,7 @@
 
     <h2><a name="sec-intro">Introduction for users</a></h2>
 
-    <p>The testing system for Boost.Build is a small set of Python modules and
+    <p>The testing system for B2 is a small set of Python modules and
     scripts for automatically testing user-obversable behaviour. It uses
     components from testing systems of <a href="http://www.scons.org">Scons</a>
     and <a href="http://subversion.tigris.org">Subversion</a>, together with
@@ -102,7 +102,7 @@
     <p>To run the tests you need to:</p>
 
     <ol>
-      <li>Get the source tree of Boost.Build (located at <tt>tools/build</tt>
+      <li>Get the source tree of B2 (located at <tt>tools/build</tt>
       in Boost)</li>
 
       <li>Have <a href="http://www.python.org">Python</a> installed. Version
@@ -117,7 +117,7 @@
       <tt>test-config.jam</tt> in <tt>$boost_build_root/test</tt> directory. In
       this case, <tt>site-config.jam</tt> and <tt>user-config.jam</tt> will be
       ignored for testing.</li>
-      
+
       <li>Make sure that in the configuration jam file(s) that you use you generate
       no console output, ie. with the Boost Build 'ECHO' rule. Such console output
       in the configuration jam file(s) will cause a number of tests to automatically

@@ -118,7 +118,7 @@ def test_run_path():
     hardcode-dll-paths.  Important: The library is in neither the
     current working directory, nor any system path, nor the same
     directory as the executable, so it should never be found without
-    help from Boost.Build."""
+    help from B2."""
     t = BoostBuild.Tester(["hardcode-dll-paths=false"], use_test_config=False)
 
     t.write("l.cpp", """
@@ -402,7 +402,7 @@ run-fail fail-run.cpp ;
     t.expect_addition("bin/fail-compile.test/$toolset/debug*/fail-compile.test")
 
     t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.test")
-    
+
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.output")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.run")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")

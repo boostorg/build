@@ -14,7 +14,7 @@ Specifies for which specific instruction set the code should be generated. The
 code in general might not run on processors with older/different instruction
 sets.
 +
-While Boost.Build allows a large set of possible values for this features,
+While B2 allows a large set of possible values for this features,
 whether a given value works depends on which compiler you use. Please see
 the section <<C++ Compilers>> for details.
 

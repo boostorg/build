@@ -6,6 +6,6 @@ This example shows the 'generate' rule, that allows you to construct target
 using any arbitrary set of transformation and commands.
 
 The rule is similar to 'make' and 'notfile', but unlike those, you can operate
-in terms of Boost.Build 'virtual targets', which is more flexible.
+in terms of B2 'virtual targets', which is more flexible.
 
 Please consult the docs for more explanations.

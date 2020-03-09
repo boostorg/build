@@ -22,7 +22,7 @@ rule tag ( name : type ? : property-set )
 ----
 +
 The rule will be called for each target with the default name computed by
-Boost.Build, the type of the target, and property set. The rule can either
+B2, the type of the target, and property set. The rule can either
 return a string that must be used as the name of the target, or an empty
 string, in which case the default name will be used.
 +

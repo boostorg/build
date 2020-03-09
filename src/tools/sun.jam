@@ -22,7 +22,7 @@ using sun : [version] : [c++-compile-command] : [compiler options] ;
 This statement may be repeated several times, if you want to configure
 several versions of the compiler.
 
-If the command is not specified, Boost.Build will search for a binary
+If the command is not specified, B2 will search for a binary
 named `CC` in `/opt/SUNWspro/bin` and in PATH.
 
 When using this compiler on complex C++ code, such as the
