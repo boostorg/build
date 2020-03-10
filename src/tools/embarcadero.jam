@@ -36,9 +36,12 @@ toolset.inherit-flags embarcadero
     : <runtime-link>shared
       <link>shared
       <threading>multi
+      <threading>multi/<target-os>windows
       <stdlib>gnu
       <stdlib>gnu11
       <stdlib>libc++
+      <target-os>windows/<runtime-link>static
+      <target-os>windows/<runtime-link>shared
     ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
@@ -199,23 +202,20 @@ rule init ( version ? :  command * : options * ) {
     
     flags embarcadero.link LINKPATH $(condition)/<variant>release : $(lib_dir_release) ;
     flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
-  
-    }
     
-
-  # - Archive builder.
+    local archiver = tlib ;
+    local arflags = /P512 ;
+    
+    if $(compiler) = bcc64
+        {
+        archiver = tlib64 ;
+        arflags = /P2048 ;
+        }
+    
+    flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
+    flags embarcadero.archive .ARFLAGS $(condition) : $(arflags) ;
   
-#|  
-
-  local archiver = [ feature.get-values <archiver> : $(options) ] ;
-  if ( ! $(archiver) ) && $(root)
-    {
-    archiver = $(root)/bin/ar ;
     }
-  toolset.flags clang-linux.archive .AR $(condition) : $(archiver[1]) ;
-  
-|#  
-
 }
 
 local rule get_sdk_dir ( )
@@ -261,6 +261,16 @@ local rule get_bds_version ( sdir )
     }
 
 ###############################################################################
+# Declare generators
+
+generators.register-linker embarcadero.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>embarcadero ;
+generators.register-linker embarcadero.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>embarcadero ;
+
+generators.register-archiver embarcadero.archive : OBJ : STATIC_LIB : <toolset>embarcadero ;
+generators.register-c-compiler embarcadero.compile.c++ : CPP : OBJ : <toolset>embarcadero ;
+generators.register-c-compiler embarcadero.compile.c : C : OBJ : <toolset>embarcadero ;
+# generators.register-standard borland.asm : ASM : OBJ : <toolset>borland ;
+
 # Flags
 
 local opt_console = -tC ;
@@ -286,6 +296,7 @@ flags embarcadero.compile OPTIONS <variant>release : $(opt_compile_flags) ;
 flags embarcadero.compile OPTIONS <variant>debug : $(opt_compile_flags_debug) ;
 flags embarcadero.link OPTIONS : $(opt_lflags) ;
 flags embarcadero.link OPTIONS <variant>debug : $(opt_lflag_debug) ;
+flags embarcadero.archive AROPTIONS <archiveflags> ;
 
 ###############################################################################
 # C and C++ compilation
@@ -366,18 +377,26 @@ rule link ( targets * : sources * : properties * ) {
   JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
-actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
-}
-
 rule link.dll ( targets * : sources * : properties * ) {
   SPACE on $(targets) = " " ;
   JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
-# Differ from 'link' above only by -shared.
-actions link.dll bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+|#
+
+rule archive ( targets * : sources * : properties * )
+{
 }
 
-|#
+actions updated together piecemeal archive
+{ 
+    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) /u /a /C "$(<)" +-"$(>)"
+}
+
+actions link bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+}
+
+actions link.dll bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+}
