@@ -7,6 +7,7 @@
 import clang-linux ;
 import path ;
 import os ;
+import type ;
 
 import common ;
 import toolset ;
@@ -48,173 +49,207 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
   .debug-configuration = true ;
 }
 
-rule init ( version ? :  command * : options * ) {
+rule init ( version ? :  command * : options * : requirement * ) 
+{
 
   local compiler = bcc64 ;
-  local preprocessor = cpp64 ;
+  local reqam = [ feature.get-values <address-model> : $(requirement) ] ;
   
-  command = [ common.get-invocation-command embarcadero : $(compiler)
-    : $(command) ] ;
+  if $(reqam) && $(reqam) = 32
+    {
+    compiler = bcc32x ;
+    }
+  
+  command = [ common.get-invocation-command embarcadero : $(compiler) : $(command) ] ;
     
+  local preprocessor ;
+  local amodel ;
+  
   switch $(command[1]:B)
     {
     case bcc32c : 
         {
         compiler = bcc32c ;
         preprocessor = cpp32c ;
+        amodel = 32 ;
         }
     case bcc32x : 
         {
         compiler = bcc32x ;
         preprocessor = cpp32x ;
+        amodel = 32 ;
+        }
+    case bcc64 : 
+        {
+        compiler = bcc64 ;
+        preprocessor = cpp64 ;
+        amodel = 64 ;
         }
     }
     
-  # Determine the version
-  if $(command) {
-    local command-string = "$(command)" ;
-    command-string = $(command-string:J=" ") ;
-    local soutput = [ SHELL "$(command-string) --version" ] ;
-    version ?= [ MATCH "Embarcadero C[+][+] ([0-9.]+)" : $(soutput) ] ;
-    cl_version = [ MATCH ".+version[ ]+([0-9.]+)" : $(soutput) ] ;
-    if ! $(cl_version)
-        {
-        cl_version = 5.0 ;
-        }
-  }
-
-  local condition = [ common.check-init-parameters embarcadero
-    : version $(version) ] ;
-
-  common.handle-options embarcadero : $(condition) : $(command) : $(options) ;
-  clang.init-cxxstd-flags embarcadero : $(condition) : $(cl_version) ;
-
-  # Support for the Embarcadero root directory. If the Embarcadero binary
-  # directory is not in the PATH we need to tell the underlying clang
-  # implementation where to find the Embarcadero header/library files
-  # and set the correct runtime path so that we can execute Embarcadero
-  # programs and find Embarcadero DLLs.
-
-  local root = [ feature.get-values <root> : $(options) ] ;
-  
-  # 1) Look in registry
-
-  if ! $(root)
+  if $(reqam) && $(reqam) != $(amodel)
     {
     
-    local sdkdir = [ get_sdk_dir ] ;
+    # error, mismatch between the compiler and the address model
     
-    if $(sdkdir)
+    }
+  else
+    {
+      # Determine the version
+      if $(command) {
+        local command-string = "$(command)" ;
+        command-string = $(command-string:J=" ") ;
+        local soutput = [ SHELL "$(command-string) --version" ] ;
+        version ?= [ MATCH "Embarcadero C[+][+] ([0-9.]+)" : $(soutput) ] ;
+        cl_version = [ MATCH ".+version[ ]+([0-9.]+)" : $(soutput) ] ;
+        if ! $(cl_version)
+            {
+            cl_version = 5.0 ;
+            }
+      }
+    
+      local condition ;
+      
+      if $(reqam)
+        {
+          condition = [ common.check-init-parameters embarcadero $(requirement) : version $(version) ] ;
+        }
+      else
+        {
+          condition = [ common.check-init-parameters embarcadero $(requirement) <address-model>$(amodel) : version $(version) ] ;
+        }
+      
+    
+      common.handle-options embarcadero : $(condition) : $(command) : $(options) ;
+      clang.init-cxxstd-flags embarcadero : $(condition) : $(cl_version) ;
+    
+      # Support for the Embarcadero root directory. If the Embarcadero binary
+      # directory is not in the PATH we need to tell the underlying clang
+      # implementation where to find the Embarcadero header/library files
+      # and set the correct runtime path so that we can execute Embarcadero
+      # programs and find Embarcadero DLLs.
+    
+      local root = [ feature.get-values <root> : $(options) ] ;
+      
+      # 1) Look in registry
+    
+      if ! $(root)
         {
         
-        local bdsv = [ get_bds_version $(sdkdir) ] ;
+        local sdkdir = [ get_sdk_dir ] ;
         
-        if $(bdsv)
+        if $(sdkdir)
             {
             
-            local troot = [ W32_GETREG "HKEY_LOCAL_MACHINE\\SOFTWARE\\Embarcadero\\BDS\\${bdsv}" : RootDir ] ;
+            local bdsv = [ get_bds_version $(sdkdir) ] ;
             
-            if $(troot)
+            if $(bdsv)
                 {
-                troot = $(troot:T) ;
-                troot = $(troot)name ;
-                root = $(troot:D) ;
-                }
-            else
-                {
-                troot = [ W32_GETREG "HKEY_CURRENT_USER\\SOFTWARE\\Embarcadero\\BDS\\${bdsv)" : RootDir ] ;
+                
+                local troot = [ W32_GETREG "HKEY_LOCAL_MACHINE\\SOFTWARE\\Embarcadero\\BDS\\$(bdsv)" : RootDir ] ;
+                
                 if $(troot)
                     {
                     troot = $(troot:T) ;
                     troot = $(troot)name ;
                     root = $(troot:D) ;
                     }
+                else
+                    {
+                    troot = [ W32_GETREG "HKEY_CURRENT_USER\\SOFTWARE\\Embarcadero\\BDS\\$(bdsv)" : RootDir ] ;
+                    if $(troot)
+                        {
+                        troot = $(troot:T) ;
+                        troot = $(troot)name ;
+                        root = $(troot:D) ;
+                        }
+                    }
                 }
             }
         }
-    }
-    
-  # 2) Look for path in the command
-    
-  if ! $(root)
-    {
-    
-    local cpath = $(command[1]:D) ;
-    
-    if $(cpath)
+        
+        
+      # 2) Look for path in the command
+        
+      if ! $(root)
         {
-        root = $(cpath:P) ;
-        }
-    }
-    
-  # 3) Search for the directory of the command
-    
-  if ! $(root) 
-    {
-    
-    local pdirs = [ path.programs-path ] ;
-    
-    for local dir in $(pdirs)
-        {
-        if [ CHECK_IF_FILE $(dir)/$(command) ]
+        
+        local cpath = $(command[1]:D) ;
+        
+        if $(cpath)
             {
-            root = $(dir:P) ;
-            break ;
+            root = $(cpath:P) ;
             }
+        }
+        
+      # 3) Search for the directory of the command
+        
+      if ! $(root) 
+        {
+        
+        local pdirs = [ path.programs-path ] ;
+        
+        for local dir in $(pdirs)
+            {
+            if [ CHECK_IF_FILE $(dir)/$(command) ]
+                {
+                root = $(dir:P) ;
+                break ;
+                }
+            
+            }
+        }
+        
+      if ! $(root) 
+        {
+        
+        # Some sort of error or message should go here
         
         }
-    }
-    
-  if ! $(root) 
-    {
-    
-    # Some sort of error or message should go here
-    
-    }
-  else
-    {
-    
-    local lib_path = $(root)/bin $(root)/bin64 $(root)/Bpl C:/Users/Public/Documents/Embarcadero ;
-    if $(.debug-configuration)
-    {
-        ECHO "notice:" using Embarcadero libraries with clang compilation"::" $(condition) "::" $(lib_path) ;
-    }
-    flags embarcadero.link RUN_PATH $(condition) : $(lib_path) ;
-    
-    local system_include_option = "-isystem " ;
-    local system_include_directories = $(root)/include/windows/crtl $(root)/include/windows/sdk $(root)/include/windows/rtl $(root)/include/dinkumware64 ;
-    
-    flags embarcadero.compile OPTIONS $(condition) : $(system_include_option)$(system_include_directories) ;
-    
-    local lib_dir_release ;
-    local lib_dir_debug ;
-    
-    if $(compiler) = bcc32c || $(compiler) = bcc32x
+      else
         {
-        lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32/release/psdk ;
-        lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug $(root)/lib/win32/debug/psdk ;
-        }
-    else
+        
+        local lib_path = $(root)/bin $(root)/bin64 $(root)/Bpl C:/Users/Public/Documents/Embarcadero ;
+        if $(.debug-configuration)
         {
-        lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
-        lib_dir_debug = $(root)/lib/win64/debug $(root)/lib/win64/debug/psdk ;
+            ECHO "notice:" using Embarcadero libraries with clang compilation"::" $(condition) "::" $(lib_path) ;
         }
-    
-    flags embarcadero.link LINKPATH $(condition)/<variant>release : $(lib_dir_release) ;
-    flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
-    
-    local archiver = tlib ;
-    local arflags = /P512 ;
-    
-    if $(compiler) = bcc64
-        {
-        archiver = tlib64 ;
-        arflags = /P2048 ;
+        flags embarcadero.link RUN_PATH $(condition) : $(lib_path) ;
+        
+        local system_include_option = "-isystem " ;
+        local system_include_directories = $(root)/include/windows/crtl $(root)/include/windows/sdk $(root)/include/windows/rtl $(root)/include/dinkumware64 ;
+        
+        local lib_dir_release ;
+        local lib_dir_debug ;
+        
+        if $(compiler) = bcc32c || $(compiler) = bcc32x
+            {
+            lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32/release/psdk ;
+            lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug $(root)/lib/win32/debug/psdk ;
+            }
+        else
+            {
+            lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
+            lib_dir_debug = $(root)/lib/win64/debug $(root)/lib/win64/debug/psdk ;
+            }
+        
+        flags embarcadero.compile OPTIONS $(condition) : $(system_include_option)$(system_include_directories) ;
+        flags embarcadero.link LINKPATH $(condition)/<variant>release : $(lib_dir_release) ;
+        flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
+        
+        local archiver = tlib ;
+        local arflags = /P512 ;
+        
+        if $(compiler) = bcc64
+            {
+            archiver = tlib64 ;
+            arflags = /P2048 ;
+            }
+        
+        flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
+        flags embarcadero.archive .ARFLAGS $(condition) : $(arflags) ;
+        flags embarcadero.asm .TASM $(condition) : $(root)/bin/tasm32 ;
         }
-    
-    flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
-    flags embarcadero.archive .ARFLAGS $(condition) : $(arflags) ;
-  
     }
 }
 
@@ -263,13 +298,16 @@ local rule get_bds_version ( sdir )
 ###############################################################################
 # Declare generators
 
+type.set-generated-target-suffix STATIC_LIB : <toolset>embarcadero <target-os>windows <address-model>64 : a ;
+type.set-generated-target-suffix STATIC_LIB : <toolset>embarcadero <target-os>windows <address-model>32 : lib ;
+
 generators.register-linker embarcadero.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>embarcadero ;
 generators.register-linker embarcadero.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>embarcadero ;
 
 generators.register-archiver embarcadero.archive : OBJ : STATIC_LIB : <toolset>embarcadero ;
 generators.register-c-compiler embarcadero.compile.c++ : CPP : OBJ : <toolset>embarcadero ;
 generators.register-c-compiler embarcadero.compile.c : C : OBJ : <toolset>embarcadero ;
-# generators.register-standard borland.asm : ASM : OBJ : <toolset>borland ;
+generators.register-standard embarcadero.asm : ASM : OBJ : <toolset>embarcadero ;
 
 # Flags
 
@@ -279,24 +317,20 @@ local opt_mt = -tM ;
 local opt_drtl = -tR ;
 local opt_dapp = -tW ;
 local opt_cxxflag = -P ;
-local opt_compile_flags = -O2 -DNDEBUG ;
-local opt_compile_flags_debug = -O0 -g ;
+local opt_compile_flags = -DNDEBUG ;
 local opt_lflags = "-lS:1048576 -lSc:4098 -lH:1048576 -lHc:8192" ;
-local opt_lflag_debug = -v ;
     
 flags embarcadero OPTIONS <user-interface>console : $(opt_console) ;
+flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
 flags embarcadero OPTIONS <runtime-link>shared : $(opt_drtl) ;
 flags embarcadero OPTIONS <main-target-type>LIB/<link>shared : $(opt_shared) ;
 flags embarcadero OPTIONS <main-target-type>EXE : $(opt_console) ;
 flags embarcadero OPTIONS <threading>multi : $(opt_mt) ;
-flags embarcadero.link.dll OPTIONS <link>shared : $(opt_shared) ;
-flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
 flags embarcadero.compile.c++ OPTIONS : $(opt_cxxflag) ;
 flags embarcadero.compile OPTIONS <variant>release : $(opt_compile_flags) ;
-flags embarcadero.compile OPTIONS <variant>debug : $(opt_compile_flags_debug) ;
 flags embarcadero.link OPTIONS : $(opt_lflags) ;
-flags embarcadero.link OPTIONS <variant>debug : $(opt_lflag_debug) ;
 flags embarcadero.archive AROPTIONS <archiveflags> ;
+flags embarcadero.asm USER_OPTIONS <asmflags> ;
 
 ###############################################################################
 # C and C++ compilation
@@ -394,9 +428,19 @@ actions updated together piecemeal archive
 }
 
 actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions link.dll bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" $(opt_shared) "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+}
+
+rule asm ( targets * : sources * : properties * )
+{
+}
+
+# /ml makes all symbol names case-sensitive
+actions asm
+{
+    $(.TASM) /ml $(USER_OPTIONS) "$(>)" "$(<)"
 }
