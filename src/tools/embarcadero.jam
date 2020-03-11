@@ -8,12 +8,10 @@ import clang-linux ;
 import path ;
 import os ;
 import type ;
-
 import common ;
 import toolset ;
 import feature ;
 import toolset : flags ;
-
 import clang ;
 import gcc ;
 import generators ;
@@ -49,49 +47,40 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
   .debug-configuration = true ;
 }
 
-rule init ( version ? :  command * : options * : requirement * ) 
+rule init ( version ? :  command * : options * ) 
 {
 
   local compiler = bcc64 ;
-  local reqam = [ feature.get-values <address-model> : $(requirement) ] ;
+  local preprocessor = cpp64 ;
+  local amodel = 64 ;
   
-  if $(reqam) && $(reqam) = 32
+  local optam = [ feature.get-values <address-model> : $(options) ] ;
+  
+  if $(optam) && $(optam) = 32
     {
     compiler = bcc32x ;
+    preprocessor = cpp32x ;
+    amodel = 32 ;
     }
   
   command = [ common.get-invocation-command embarcadero : $(compiler) : $(command) ] ;
-    
-  local preprocessor ;
-  local amodel ;
   
   switch $(command[1]:B)
     {
-    case bcc32c : 
-        {
-        compiler = bcc32c ;
-        preprocessor = cpp32c ;
-        amodel = 32 ;
-        }
     case bcc32x : 
-        {
         compiler = bcc32x ;
         preprocessor = cpp32x ;
         amodel = 32 ;
-        }
     case bcc64 : 
-        {
         compiler = bcc64 ;
         preprocessor = cpp64 ;
         amodel = 64 ;
-        }
     }
-    
-  if $(reqam) && $(reqam) != $(amodel)
+  
+  if $(optam) && $(optam) != $(amodel)
     {
-    
-    # error, mismatch between the compiler and the address model
-    
+    error.user-error "embarcadero initialization: command and address model" :
+                     "the compiler '$(compiler)' does not match the address-model of '$(optam)'" ;
     }
   else
     {
@@ -108,18 +97,7 @@ rule init ( version ? :  command * : options * : requirement * )
             }
       }
     
-      local condition ;
-      
-      if $(reqam)
-        {
-          condition = [ common.check-init-parameters embarcadero $(requirement) : version $(version) ] ;
-        }
-      else
-        {
-          condition = [ common.check-init-parameters embarcadero $(requirement) : version $(version) ] ;
-        }
-      
-    
+      local condition = [ common.check-init-parameters embarcadero : version $(version) ] ;
       common.handle-options embarcadero : $(condition) : $(command) : $(options) ;
       clang.init-cxxstd-flags embarcadero : $(condition) : $(cl_version) ;
     
@@ -202,9 +180,7 @@ rule init ( version ? :  command * : options * : requirement * )
         
       if ! $(root) 
         {
-        
-        # Some sort of error or message should go here
-        
+        error.user-error "Embarcadero toolset initialization: the root directory for the Embarcadero installation can not be found" ;
         }
       else
         {
