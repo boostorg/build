@@ -116,7 +116,7 @@ rule init ( version ? :  command * : options * : requirement * )
         }
       else
         {
-          condition = [ common.check-init-parameters embarcadero $(requirement) <address-model>$(amodel) : version $(version) ] ;
+          condition = [ common.check-init-parameters embarcadero $(requirement) : version $(version) ] ;
         }
       
     
