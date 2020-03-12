@@ -27,7 +27,7 @@ generators.override embarcadero.searched-lib-generator : searched-lib-generator 
 generators.override embarcadero.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override embarcadero.compile.c++.pch : pch.default-cpp-pch-generator ;
 
-# type.set-generated-target-suffix PCH : embarcadero : pth ;
+type.set-generated-target-suffix PCH : embarcadero : pch ;
 
 toolset.inherit-rules embarcadero : clang-linux ;
 toolset.inherit-flags embarcadero 
@@ -225,6 +225,19 @@ rule init ( version ? :  command * : options * )
         flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
         flags embarcadero.archive .ARFLAGS $(condition) : $(arflags) ;
         flags embarcadero.asm .TASM $(condition) : $(root)/bin/tasm32 ;
+        flags embarcadero.asm USER_OPTIONS $(condition) : [ feature.get-values <asmflags> : $(options) ] : unchecked ;
+        flags embarcadero.archive AROPTIONS $(condition) : [ feature.get-values <archiveflags> : $(options) ] : unchecked ;
+        
+        local mte = [ feature.get-values <user-interface> : $(options) ] ;
+        
+        if $(mte)
+            {
+            flags embarcadero OPTIONS <main-target-type>EXE/$(condition) : <user-interface>$(mte) ;
+            }
+        else
+            {
+            flags embarcadero OPTIONS <main-target-type>EXE/$(condition) : <user-interface>console ;
+            }
         }
     }
 }
@@ -300,7 +313,6 @@ flags embarcadero OPTIONS <user-interface>console : $(opt_console) ;
 flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
 flags embarcadero OPTIONS <runtime-link>shared : $(opt_drtl) ;
 flags embarcadero OPTIONS <main-target-type>LIB/<link>shared : $(opt_shared) ;
-flags embarcadero OPTIONS <main-target-type>EXE : $(opt_console) ;
 flags embarcadero OPTIONS <threading>multi : $(opt_mt) ;
 flags embarcadero.compile.c++ OPTIONS : $(opt_cxxflag) ;
 flags embarcadero.compile OPTIONS <variant>release : $(opt_compile_flags) ;
