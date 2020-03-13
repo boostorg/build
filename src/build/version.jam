@@ -99,12 +99,6 @@ rule version-less ( lhs + : rhs + )
     return $(result) ;
 }
 
-# Splits a version in its form of n[.n][.n] into n n n etc.
-#
-rule version-split ( v )
-{
-return [ SPLIT_BY_CHARACTERS $(v) : . ] ;
-}
 
 # Returns "true" if the current JAM version version is at least the given
 # version.
@@ -148,8 +142,6 @@ rule __test__ ( )
     assert.true  check-jam-version $(jam-version)    ;
     assert.false check-jam-version $(future-version) ;
 
-    assert.result  8 4 2 : version-split 8.4.2          ;
-    
     assert.true  version-less  0          :  1          ;
     assert.false version-less  0          :  0          ;
     assert.true  version-less  1          :  2          ;

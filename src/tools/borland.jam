@@ -93,7 +93,7 @@ rule init ( version ? : command * : options * )
         {
         jv = [ MATCH "^([0-9.]+)" : $(version) ] ;
         }
-    if ! $(jv) || [ version.version-less [ version.version-split $(jv) ] : 6 30 ]
+    if ! $(jv) || [ version.version-less [ version-split $(jv) ] : 6 30 ]
         {
         init-earlier-releases $(condition) ;
         }
@@ -106,6 +106,13 @@ rule init ( version ? : command * : options * )
         {
         flags borland.compile OPTIONS $(condition) : -g255 -Vx- -Ve- -b- ;
         }
+}
+
+# Splits a version in its form of n[.n][.n] into n n n etc.
+#
+local rule version-split ( v )
+{
+return [ SPLIT_BY_CHARACTERS $(v) : . ] ;
 }
 
 local rule init-earlier-releases ( condition )
