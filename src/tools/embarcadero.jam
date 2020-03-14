@@ -28,26 +28,26 @@ several versions of the compiler.
 The version should be the compiler version if specified. if the 
 version is not specified Boost Build will find the latest installed
 version of Embarcadero C++ and use that for the version. If the version
-is specified Boost Build does not check if this matches any version
-of Embarcadero C++, so you may use the version as a mnemonic to
+is specified Boost Build does not check if this matches any particular
+version of Embarcadero C++, so you may use the version as a mnemonic to
 configure separate 'versions'.
 
 `c++-compile-command`:
 
 If the c++-compile-command is not specified, Boost.Build will default to the
 bcc64 compiler. If you specify a compiler option of <address-model>32 the
-default compiler will be bcc32x. In either case if the command is not given
-Boost Build will look for the complete path for the compiler chosen.
-So it is not necessary to specify a command if you accept the default
-compiler.
+default compiler will be bcc32x. In either case when the command is not given
+Boost Build will assume the compiler is in the PATH. So it is not necessary
+to specify a command if you accept the default compiler and the Embarcadero
+C++ binary directory is in the PATH.
 
-if the command is specified and is an absolute path it will be used as is
-to invoke compilation/linking. If the command is not an absolute path
-but does have either 'bcc32x' or 'bcc64' in it, Boost Build will
-use the appropriate compiler specified and will look for the complete path.
-If the command is not an absolute path and does not have
-either 'bcc32x' or 'bcc64' in it, Boost Build will use the default
-compiler and will look for the complete path.
+If the command is specified it will be used as is to invoke the compiler.
+If the command has either 'bcc32x(.exe)' or 'bcc64(.exe)' in it Boost Build
+will use the appropriate compiler to configure the toolset. If the command
+does not have either 'bcc32x(.exe)' or 'bcc64(.exe)' in it, Boost Build
+will use the default compiler to configure the toolset. If you have your
+own command, which does not have 'bcc32x(.exe)' in it but invokes the
+'bcc32x(.exe)' compiler, specify the <address-model>32 compiler option.
 
 `compiler options`:
 
@@ -85,31 +85,42 @@ Normallly Boost Build will automatically be able to determine the root of
 the Embarcadero C++ installation. It does this in various ways, but primarily
 by checking a registry entry. If you specify the root it will use that
 path, and the root you specify should be the full path to the Embarcadero
-C++ installation on your machine ( without a trailing \ ).
+C++ installation on your machine ( without a trailing \ or / ). You should
+not need to specify this option unless Boost Build can not find the
+Embarcadero C++ root directory.
 
 Examples::
 
 using embarcadero ;
 
-Configures the toolset to use the latest version, with bcc64 as the compiler
+Configures the toolset to use the latest version, with bcc64 as the compiler.
+The bcc64 compiler must be in the PATH.
 
 using embarcadero : 7.40 ;
 
-Configures the toolset to use the 7.40 version, with bcc64 as the compiler
+Configures the toolset to use the 7.40 version, with bcc64 as the compiler.
+The bcc64 compiler must be in the PATH.
 
 using embarcadero : 7.40 : bcc32x ;
 using embarcadero : 7.40 : : <address-model>32 ;
 
-Configures the toolset to use the 7.40 version, with bcc32x as the compiler
+Configures the toolset to use the 7.40 version, with bcc32x as the compiler.
+The bcc32x compiler must be in the PATH.
 
 using embarcadero : : c:/some_path/bcc64 ;
 
+Configures the toolset to use the latest version, with full command specified.
+
+using embarcadero : : full_command : <address-model>32 ;
+
 Configures the toolset to use the latest version, with full command specified
+and bcc32x as the compiler.
 
 using embarcadero : : : <root>c:/root_path ;
 
 Configures the toolset to use the latest version, with bcc64 as the compiler
-and the root directory of the installation specified
+and the root directory of the installation specified. The bcc64 compiler must
+be in the PATH.
 
 |# # end::doc[]
 
@@ -124,6 +135,7 @@ import toolset : flags ;
 import clang ;
 import gcc ;
 import generators ;
+import errors ;
 
 feature.extend toolset : embarcadero ;
 
@@ -150,7 +162,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
   .debug-configuration = true ;
 }
 
-rule init ( version ? :  command * : options * ) 
+rule init ( version ? :  command * : options * )
 {
 
   local compiler = bcc64 ;
@@ -159,11 +171,18 @@ rule init ( version ? :  command * : options * )
   
   local optam = [ feature.get-values <address-model> : $(options) ] ;
   
-  if $(optam) && $(optam) = 32
+  if $(optam)
     {
-    compiler = bcc32x ;
-    preprocessor = cpp32x ;
-    amodel = 32 ;
+    if $(optam) = 32
+        {
+        compiler = bcc32x ;
+        preprocessor = cpp32x ;
+        amodel = 32 ;
+        }
+    else if ! ( $(optam) = 64 )
+        {
+        $(optam) = "" ;
+        }
     }
   
   command = [ common.get-invocation-command embarcadero : $(compiler) : $(command) ] ;
@@ -190,7 +209,7 @@ rule init ( version ? :  command * : options * )
   
   if $(optam) && $(optam) != $(amodel)
     {
-    error.user-error "embarcadero initialization: command and address model" :
+    errors.user-error "embarcadero initialization: compiler and address model" :
                      "the compiler '$(compiler)' does not match the address-model of '$(optam)'" ;
     }
   else
@@ -209,7 +228,13 @@ rule init ( version ? :  command * : options * )
       }
     
       local condition = [ common.check-init-parameters embarcadero : version $(version) ] ;
-      common.handle-options embarcadero : $(condition) : $(command) : $(options) ;
+      
+      if $(optam)
+        {
+        condition = $(condition)/<address-model>$(optam) ;
+        }
+      
+      handle-options $(condition) : $(command) : $(options) ;
       clang.init-cxxstd-flags embarcadero : $(condition) : $(cl_version) ;
     
       # Support for the Embarcadero root directory. If the Embarcadero binary
@@ -235,12 +260,20 @@ rule init ( version ? :  command * : options * )
             if $(bdsv)
                 {
                 
+                local has_dec = [ MATCH "(.+[.])" : $(bdsv) ] ;
+                local bdsv_full ;
+                
+                if ! $(has_dec)
+                    {
+                    bdsv_full = $(bdsv).0 ;
+                    }
+                
                 local troot = [ W32_GETREG "HKEY_LOCAL_MACHINE\\SOFTWARE\\Embarcadero\\BDS\\$(bdsv)" : RootDir ] ;
                 
                 if $(troot)
                     {
                     troot = $(troot:T) ;
-                    troot = $(troot)name ;
+                    troot = [ concatenate $(troot) : name ] ;
                     root = $(troot:D) ;
                     }
                 else
@@ -249,8 +282,28 @@ rule init ( version ? :  command * : options * )
                     if $(troot)
                         {
                         troot = $(troot:T) ;
-                        troot = $(troot)name ;
+                        troot = [ concatenate $(troot) : name ] ;
                         root = $(troot:D) ;
+                        }
+                    else if $(bdsv_full)
+                        {
+                        troot = [ W32_GETREG "HKEY_LOCAL_MACHINE\\SOFTWARE\\Embarcadero\\BDS\\$(bdsv_full)" : RootDir ] ;
+                        if $(troot)
+                            {
+                            troot = $(troot:T) ;
+                            troot = [ concatenate $(troot) : name ] ;
+                            root = $(troot:D) ;
+                            }
+                        else
+                            {
+                            troot = [ W32_GETREG "HKEY_CURRENT_USER\\SOFTWARE\\Embarcadero\\BDS\\$(bdsv_full)" : RootDir ] ;
+                            if $(troot)
+                                {
+                                troot = $(troot:T) ;
+                                troot = [ concatenate $(troot) : name ] ;
+                                root = $(troot:D) ;
+                                }
+                            }   
                         }
                     }
                 }
@@ -280,18 +333,30 @@ rule init ( version ? :  command * : options * )
         
         for local dir in $(pdirs)
             {
+            
+            local match = [ MATCH "/(.:.+)" : $(dir) ] ;
+            
+            if $(match)
+                {
+                dir = "$(match)" ;
+                }
+            
             if [ CHECK_IF_FILE $(dir)/$(command) ]
                 {
                 root = $(dir:P) ;
                 break ;
                 }
-            
+            if [ CHECK_IF_FILE $(dir)/$(command).exe ]
+                {
+                root = $(dir:P) ;
+                break ;
+                }
             }
         }
         
       if ! $(root) 
         {
-        error.user-error "Embarcadero toolset initialization: the root directory for the Embarcadero installation can not be found" ;
+        errors.user-error "Embarcadero toolset initialization: the root directory for the Embarcadero installation can not be found" ;
         }
       else
         {
@@ -336,8 +401,8 @@ rule init ( version ? :  command * : options * )
         flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
         flags embarcadero.archive .ARFLAGS $(condition) : $(arflags) ;
         flags embarcadero.asm .TASM $(condition) : $(root)/bin/tasm32 ;
-        flags embarcadero.asm USER_OPTIONS $(condition) : [ feature.get-values <asmflags> : $(options) ] : unchecked ;
-        flags embarcadero.archive AROPTIONS $(condition) : [ feature.get-values <archiveflags> : $(options) ] : unchecked ;
+        flags embarcadero.asm USER_OPTIONS $(condition) : [ feature.get-values <asmflags> : $(options) ] ;
+        flags embarcadero.archive AROPTIONS $(condition) : [ feature.get-values <archiveflags> : $(options) ] ;
         
         local mte = [ feature.get-values <user-interface> : $(options) ] ;
         
@@ -352,6 +417,28 @@ rule init ( version ? :  command * : options * )
         }
     }
 }
+
+local rule concatenate ( path : name )
+    {
+
+    local result ;
+    local has_ending_slash = [ MATCH ".*[/\\]$" : $(path) ] ;
+    local has_backward_slash = [ MATCH ".*[\\]" : $(path) ] ;
+    
+    if $(has_ending_slash)
+        {
+        result = $(path)$(name) ;
+        }
+    else if $(has_backward_slash)
+        {
+        result = $(path)"\\"$(name) ;
+        }
+    else
+        {
+        result = $(path)"/"$(name) ;
+        }
+    return $(result) ;
+    }
 
 local rule get_sdk_dir ( )
     {
@@ -370,7 +457,7 @@ local rule get_bds_version ( sdir )
     {
     
     local ret ;
-    local flist = [ GLOB sdir : * ] ;
+    local flist = [ GLOB $(sdir) : * ] ;
     
     if $(flist)
         {
@@ -394,6 +481,26 @@ local rule get_bds_version ( sdir )
         }
     return $(ret) ;
     }
+
+local rule handle-options ( condition * : command * : options * )
+{
+    if $(.debug-configuration)
+    {
+        ECHO "notice:" will use '$(command)' for embarcadero, condition
+            $(condition:E=(empty)) ;
+    }
+
+    toolset.flags embarcadero CONFIG_COMMAND $(condition) : $(command) ;
+
+    toolset.flags embarcadero.compile         OPTIONS $(condition) :
+        [ feature.get-values <cflags>       : $(options) ] ;
+
+    toolset.flags embarcadero.compile.c++     OPTIONS $(condition) :
+        [ feature.get-values <cxxflags>     : $(options) ] ;
+
+    toolset.flags embarcadero.link            OPTIONS $(condition) :
+        [ feature.get-values <linkflags>    : $(options) ] ;
+}
 
 ###############################################################################
 # Declare generators
