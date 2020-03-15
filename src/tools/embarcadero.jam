@@ -74,7 +74,8 @@ which creates a static library.
 
 `address-model`::
 This option can be used to specify the default compiler as specified in the
-dicsussion above of the c++-compile-command. Otherwise it is not used.
+dicsussion above of the c++-compile-command. Otherwise the address model
+is not used to initialize the toolset.
 
 `user-interface`::
 Specifies the user interface for applications. Valid choices are `console`
@@ -228,12 +229,6 @@ rule init ( version ? :  command * : options * )
       }
     
       local condition = [ common.check-init-parameters embarcadero : version $(version) ] ;
-      
-      if $(optam)
-        {
-        condition = $(condition)/<address-model>$(optam) ;
-        }
-      
       handle-options $(condition) : $(command) : $(options) ;
       clang.init-cxxstd-flags embarcadero : $(condition) : $(cl_version) ;
     
@@ -536,6 +531,10 @@ flags embarcadero.compile OPTIONS <variant>release : $(opt_compile_flags) ;
 flags embarcadero.link OPTIONS : $(opt_lflags) ;
 flags embarcadero.archive AROPTIONS <archiveflags> ;
 flags embarcadero.asm USER_OPTIONS <asmflags> ;
+flags embarcadero.compile OPTIONS <address-model>32 : -m32 ;
+flags embarcadero.compile OPTIONS <address-model>64 : -m64 ;
+flags embarcadero.link OPTIONS <address-model>32 : -m32 ;
+flags embarcadero.link OPTIONS <address-model>64 : -m64 ;
 
 rule compile.c++ ( targets * : sources * : properties * ) {
 }
