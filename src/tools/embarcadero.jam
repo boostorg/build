@@ -502,6 +502,8 @@ local rule handle-options ( condition * : command * : options * )
 
 type.set-generated-target-suffix STATIC_LIB : <toolset>embarcadero <target-os>windows <address-model>64 : a ;
 type.set-generated-target-suffix STATIC_LIB : <toolset>embarcadero <target-os>windows <address-model>32 : lib ;
+type.set-generated-target-suffix OBJ : <toolset>embarcadero <target-os>windows <address-model>64 : o ;
+type.set-generated-target-suffix OBJ : <toolset>embarcadero <target-os>windows <address-model>32 : obj ;
 
 generators.register-linker embarcadero.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>embarcadero ;
 generators.register-linker embarcadero.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>embarcadero ;
@@ -520,12 +522,12 @@ local opt_drtl = -tR ;
 local opt_dapp = -tW ;
 local opt_compile_flags = -DNDEBUG ;
 local opt_lflags = "-lS:1048576 -lSc:4098 -lH:1048576 -lHc:8192" ;
-local opt_implib = -Gi ;
+local opt_implib = -Xlinker -Gi ;
     
 flags embarcadero OPTIONS <user-interface>console : $(opt_console) ;
 flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
 flags embarcadero OPTIONS <runtime-link>shared : $(opt_drtl) ;
-flags embarcadero OPTIONS <main-target-type>LIB/<link>shared : $(opt_shared) ;
+flags embarcadero OPTIONS <main-target-type>LIB/<link>shared : $(opt_shared) $(opt_implib) ;
 flags embarcadero OPTIONS <threading>multi : $(opt_mt) ;
 flags embarcadero.compile OPTIONS <variant>release : $(opt_compile_flags) ;
 flags embarcadero.link OPTIONS : $(opt_lflags) ;
@@ -540,7 +542,7 @@ rule compile.c++ ( targets * : sources * : properties * ) {
 }
 
 actions compile.c++ {
-  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<:T)" "$(>:T)"
 }
 
 rule compile.c ( targets * : sources * : properties * )
@@ -549,7 +551,7 @@ rule compile.c ( targets * : sources * : properties * )
 
 actions compile.c
 {
-  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<:T)" "$(>:T)"
 }
 
 rule archive ( targets * : sources * : properties * )
@@ -558,7 +560,7 @@ rule archive ( targets * : sources * : properties * )
 
 actions updated together piecemeal archive
 { 
-    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) /u /a /C "$(<)" +-"$(>)"
+    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) /u /a /C "$(<:T)" +-"$(>:T)"
 }
 
 rule link ( targets * : sources * : properties * ) {
@@ -570,11 +572,11 @@ rule link.dll ( targets * : sources * : properties * ) {
 }
 
 actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<:T)" "$(>:T)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions link.dll bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" $(opt_implib) $(opt_shared) "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<[1]:T)" "$(>:T)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
 }
 
 rule asm ( targets * : sources * : properties * )
@@ -584,5 +586,5 @@ rule asm ( targets * : sources * : properties * )
 # /ml makes all symbol names case-sensitive
 actions asm
 {
-    $(.TASM) /ml $(USER_OPTIONS) "$(>)" "$(<)"
+    $(.TASM) /ml $(USER_OPTIONS) "$(>:T)" "$(<:T)"
 }
