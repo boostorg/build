@@ -33,11 +33,6 @@ REM Let vswhere tell us where msvc is at, if available.
 call :Clear_Error
 call vswhere_usability_wrapper.cmd
 call :Clear_Error
-REM VSUNKCOMNTOOLS represents unknown but detected version from vswhere
-if NOT "_%VSUNKCOMNTOOLS%_" == "__" (
-    set "B2_TOOLSET=vcunk"
-    set "B2_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
-    goto :eof)
 if NOT "_%VS160COMNTOOLS%_" == "__" (
     set "B2_TOOLSET=vc142"
     set "B2_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
@@ -45,6 +40,11 @@ if NOT "_%VS160COMNTOOLS%_" == "__" (
 if NOT "_%VS150COMNTOOLS%_" == "__" (
     set "B2_TOOLSET=vc141"
     set "B2_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
+    goto :eof)
+REM VSUNKCOMNTOOLS represents unknown but detected version from vswhere
+if NOT "_%VSUNKCOMNTOOLS%_" == "__" (
+    set "B2_TOOLSET=vcunk"
+    set "B2_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
     goto :eof)
 if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat"  (
     set "B2_TOOLSET=vc141"
