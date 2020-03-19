@@ -1503,7 +1503,7 @@ platform:
 `JAMUNAME`::
   Output of uname(1) command (Unix only)
 `JAMVERSION`::
-  `b2` version, currently "3.1.19"
+  `b2` version, as a sematic triplet "X.Y.Z".
 `JAM_VERSION`::
   A predefined global variable with two elements indicates the version
   number of Boost Jam. Boost Jam versions start at `03` `00`.

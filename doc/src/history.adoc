@@ -1,6 +1,8 @@
 [[b2.history]]
 = History
 
+== Version 4.3.0
+
 == Version 4.2.0
 
 This release is predominantly minor fixes and cleanup of the engine. In
