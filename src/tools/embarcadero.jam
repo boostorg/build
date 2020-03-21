@@ -417,8 +417,8 @@ local rule concatenate ( path : name )
     {
 
     local result ;
-    local has_ending_slash = [ MATCH ".*[/\\]$" : $(path) ] ;
-    local has_backward_slash = [ MATCH ".*[\\]" : $(path) ] ;
+    local has_ending_slash = [ MATCH ".*([/\\])$" : $(path) ] ;
+    local has_backward_slash = [ MATCH ".*([\\])" : $(path) ] ;
     
     if $(has_ending_slash)
         {
