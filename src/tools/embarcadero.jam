@@ -368,36 +368,36 @@ rule init ( version ? :  command * : options * )
         
         local lib_dir_release ;
         local lib_dir_debug ;
+        local archiver ;
+        local arflags ;
+        local implib ;
         
-        if $(compiler) = bcc32c || $(compiler) = bcc32x
+        if $(compiler) = bcc32x
             {
             lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32/release/psdk ;
             lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug $(root)/lib/win32/debug/psdk ;
+            archiver = tlib ;
+            arflags = /P512 ;
+            implib = implib ;
             }
-        else
+        else if $(compiler) = bcc64
             {
             lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
             lib_dir_debug = $(root)/lib/win64/debug $(root)/lib/win64/debug/psdk ;
+            archiver = tlib64 ;
+            arflags = /P2048 ;
+            implib = mkexp ;
             }
         
         flags embarcadero.compile OPTIONS $(condition) : $(system_include_option)$(system_include_directories) ;
         flags embarcadero.link LINKPATH $(condition)/<variant>release : $(lib_dir_release) ;
         flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
-        
-        local archiver = tlib ;
-        local arflags = /P512 ;
-        
-        if $(compiler) = bcc64
-            {
-            archiver = tlib64 ;
-            arflags = /P2048 ;
-            }
-        
         flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
         flags embarcadero.archive .ARFLAGS $(condition) : $(arflags) ;
         flags embarcadero.asm .TASM $(condition) : $(root)/bin/tasm32 ;
         flags embarcadero.asm USER_OPTIONS $(condition) : [ feature.get-values <asmflags> : $(options) ] ;
         flags embarcadero.archive AROPTIONS $(condition) : [ feature.get-values <archiveflags> : $(options) ] ;
+        flags embarcadero.link.dll .IMPLIB_COMMAND $(condition) : $(root)/bin/$(implib) ;
         
         local mte = [ feature.get-values <user-interface> : $(options) ] ;
         
@@ -500,10 +500,12 @@ local rule handle-options ( condition * : command * : options * )
 ###############################################################################
 # Declare generators
 
-type.set-generated-target-suffix STATIC_LIB : <toolset>embarcadero <target-os>windows <address-model>64 : a ;
-type.set-generated-target-suffix STATIC_LIB : <toolset>embarcadero <target-os>windows <address-model>32 : lib ;
 type.set-generated-target-suffix OBJ : <toolset>embarcadero <target-os>windows <address-model>64 : o ;
 type.set-generated-target-suffix OBJ : <toolset>embarcadero <target-os>windows <address-model>32 : obj ;
+type.set-generated-target-suffix STATIC_LIB : <toolset>embarcadero <target-os>windows <address-model>64 : a ;
+type.set-generated-target-suffix STATIC_LIB : <toolset>embarcadero <target-os>windows <address-model>32 : lib ;
+type.set-generated-target-suffix IMPORT_LIB : <toolset>embarcadero <target-os>windows <address-model>64 : a ;
+type.set-generated-target-suffix IMPORT_LIB : <toolset>embarcadero <target-os>windows <address-model>32 : lib ;
 
 generators.register-linker embarcadero.link : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : EXE : <toolset>embarcadero ;
 generators.register-linker embarcadero.link.dll : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB : SHARED_LIB IMPORT_LIB : <toolset>embarcadero ;
@@ -522,13 +524,11 @@ local opt_drtl = -tR ;
 local opt_dapp = -tW ;
 local opt_compile_flags = -DNDEBUG ;
 local opt_lflags = "-lS:1048576 -lSc:4098 -lH:1048576 -lHc:8192" ;
-local opt_implib = -Xlinker -Gi ;
     
 flags embarcadero OPTIONS <user-interface>console : $(opt_console) ;
 flags embarcadero OPTIONS <user-interface>gui : $(opt_dapp) ;
 flags embarcadero OPTIONS <runtime-link>shared : $(opt_drtl) ;
 flags embarcadero OPTIONS <main-target-type>LIB/<link>shared : $(opt_shared) ;
-flags embarcadero.link.dll OPTIONS <main-target-type>LIB/<link>shared : $(opt_implib) ;
 flags embarcadero OPTIONS <threading>multi : $(opt_mt) ;
 flags embarcadero.compile OPTIONS <variant>release : $(opt_compile_flags) ;
 flags embarcadero.link OPTIONS : $(opt_lflags) ;
@@ -543,7 +543,7 @@ rule compile.c++ ( targets * : sources * : properties * ) {
 }
 
 actions compile.c++ {
-  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<:T)" "$(>:T)"
+  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
 rule compile.c ( targets * : sources * : properties * )
@@ -552,7 +552,7 @@ rule compile.c ( targets * : sources * : properties * )
 
 actions compile.c
 {
-  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<:T)" "$(>:T)"
+  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
 rule archive ( targets * : sources * : properties * )
@@ -561,7 +561,7 @@ rule archive ( targets * : sources * : properties * )
 
 actions updated together piecemeal archive
 { 
-    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) /u /a /C "$(<:T)" +-"$(>:T)"
+    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) /u /a /C "$(<)" +-"$(>)"
 }
 
 rule link ( targets * : sources * : properties * ) {
@@ -573,11 +573,11 @@ rule link.dll ( targets * : sources * : properties * ) {
 }
 
 actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<:T)" "$(>:T)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions link.dll bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<[1]:T)" "$(>:T)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<[1])" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS) && "$(.IMPLIB_COMMAND)" "$(<[2])" "$(<[1])"
 }
 
 rule asm ( targets * : sources * : properties * )
@@ -587,5 +587,5 @@ rule asm ( targets * : sources * : properties * )
 # /ml makes all symbol names case-sensitive
 actions asm
 {
-    $(.TASM) /ml $(USER_OPTIONS) "$(>:T)" "$(<:T)"
+    $(.TASM) /ml $(USER_OPTIONS) "$(>)" "$(<)"
 }
