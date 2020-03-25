@@ -157,6 +157,7 @@ toolset.inherit-flags embarcadero
       <stdlib>libc++
       <target-os>windows/<runtime-link>static
       <target-os>windows/<runtime-link>shared
+      <rtti>off
     ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
