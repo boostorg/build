@@ -29,16 +29,16 @@ environment:
 
 build_script:
   - ps: |
-    cd src/engine
-    $env:path += ';' + $env:CXX_PATH
-    cmd /c build.bat $env:TOOLSET
-    ./b2.exe -v
-    cd ../..
+      cd src/engine
+      $env:path += ';' + $env:CXX_PATH
+      cmd /c build.bat $env:TOOLSET
+      ./b2.exe -v
+      cd ../..
 
 before_test:
   -ps: |
-    $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
-    echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
+      $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+      echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
 
 for:
   - matrix:
@@ -47,18 +47,18 @@ for:
 
   test_script:
     - ps: |
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TEST"
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      cd test
-      python test_all.py $env:TEST_TOOLSET
-      cd ..
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> NO WARNINGS"
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on toolset=$env:TEST_TOOLSET
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BOOTSTRAP"
-      echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-      ./bootstrap.bat
-      ./b2.exe --debug-configuration --prefix=./.b2 install toolset=$env:TEST_TOOLSET
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TEST"
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        cd test
+        python test_all.py $env:TEST_TOOLSET
+        cd ..
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> NO WARNINGS"
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on toolset=$env:TEST_TOOLSET
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BOOTSTRAP"
+        echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+        ./bootstrap.bat
+        ./b2.exe --debug-configuration --prefix=./.b2 install toolset=$env:TEST_TOOLSET
