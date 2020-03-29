@@ -65,6 +65,12 @@ stages:
           TEST_TOOLSET: gcc
           CXX: g++-4.7
           PACKAGES: g++-4.7
+        Clang 9:
+          TOOLSET: clang
+          TEST_TOOLSET: clang
+          CXX: clang++-9
+          PACKAGES: clang-9
+          LLVM_REPO: llvm-toolchain-xenial-9
         Clang 8:
           TOOLSET: clang
           TEST_TOOLSET: clang
@@ -173,14 +179,6 @@ stages:
           TOOLSET: vc141
           TEST_TOOLSET: msvc
           VM_IMAGE: 'vs2017-win2016'
-        VS 2015:
-          TOOLSET: vc14
-          TEST_TOOLSET: msvc
-          VM_IMAGE: 'vs2015-win2012r2'
-        VS 2013:
-          TOOLSET: vc12
-          TEST_TOOLSET: msvc
-          VM_IMAGE: 'vs2015-win2012r2'
         MinGW 8.1.0:
           TOOLSET: mingw
           TEST_TOOLSET: gcc
@@ -219,6 +217,12 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
+        Xcode 11.4:
+          TOOLSET: clang
+          TEST_TOOLSET: clang
+          CXX: clang++
+          XCODE_APP: /Applications/Xcode_11.4_beta.app
+          VM_IMAGE: 'macOS-10.15'
         Xcode 11.3.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
