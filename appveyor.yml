@@ -42,8 +42,8 @@ before_test:
 
 for:
   - matrix:
-    only:
-      - job_group: 'Test'
+      only:
+        - job_group: 'Test'
 
     test_script:
       - ps: |
