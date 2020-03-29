@@ -10,10 +10,16 @@ trigger:
     - develop
     - master
     - feature/*
+  paths:
+    exclude:
+    - appveyor.yml
 pr:
   branches:
     include:
     - develop
+  paths:
+    exclude:
+    - appveyor.yml
 
 stages:
 
