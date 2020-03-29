@@ -158,6 +158,26 @@ toolset.inherit-flags embarcadero
       <target-os>windows/<runtime-link>static
       <target-os>windows/<runtime-link>shared
       <rtti>off
+      <cxxstd>98
+      <cxxstd>03
+      <cxxstd>0x
+      <cxxstd>11
+      <cxxstd>1y
+      <cxxstd>14
+      <cxxstd>1z
+      <cxxstd>17
+      <cxxstd>2a
+      <cxxstd>latest
+      <cxxstd>98/<cxxstd-dialect>iso
+      <cxxstd>03/<cxxstd-dialect>iso
+      <cxxstd>0x/<cxxstd-dialect>iso
+      <cxxstd>11/<cxxstd-dialect>iso
+      <cxxstd>1y/<cxxstd-dialect>iso
+      <cxxstd>14/<cxxstd-dialect>iso
+      <cxxstd>1z/<cxxstd-dialect>iso
+      <cxxstd>17/<cxxstd-dialect>iso
+      <cxxstd>2a/<cxxstd-dialect>iso
+      <cxxstd>latest/<cxxstd-dialect>iso
     ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
@@ -231,7 +251,6 @@ rule init ( version ? :  command * : options * )
     
       local condition = [ common.check-init-parameters embarcadero : version $(version) ] ;
       handle-options $(condition) : $(command) : $(options) ;
-      clang.init-cxxstd-flags embarcadero : $(condition) : $(cl_version) ;
     
       # Support for the Embarcadero root directory. If the Embarcadero binary
       # directory is not in the PATH we need to tell the underlying clang
