@@ -10,10 +10,6 @@ branches:
     - /develop.*/
     - /feature\/.*/
 
-configuration:
-  - Test
-  - Boost
-
 environment:
   matrix:
   - job_name: 'Visual Studio 2015, Test'
