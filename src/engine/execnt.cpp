@@ -65,7 +65,6 @@
 #if defined(__GNUC__) || defined(__clang__)
 #else
 #pragma warning( pop )
-#pragma GCC diagnostic pop
 #endif
 
 
