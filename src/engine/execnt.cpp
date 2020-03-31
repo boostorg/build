@@ -55,10 +55,18 @@
 #include <windows.h>
 #include <process.h>
 #include <tlhelp32.h>
+
+#if defined(__GNUC__) defined(__clang__)
+#else
 #pragma warning( push )
 #pragma warning(disable: 4800) // 'BOOL' forced to 'true' or 'false'
+#endif
 #include <versionhelpers.h>
+#if defined(__GNUC__) defined(__clang__)
+#else
 #pragma warning( pop )
+#pragma GCC diagnostic pop
+#endif
 
 
 /* get the maximum shell command line length according to the OS */
