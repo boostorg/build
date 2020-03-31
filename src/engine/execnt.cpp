@@ -55,7 +55,10 @@
 #include <windows.h>
 #include <process.h>
 #include <tlhelp32.h>
+#pragma warning( push )
+#pragma warning(disable: 4800) // 'BOOL' forced to 'true' or 'false'
 #include <versionhelpers.h>
+#pragma warning( pop )
 
 
 /* get the maximum shell command line length according to the OS */
