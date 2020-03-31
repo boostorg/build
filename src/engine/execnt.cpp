@@ -569,8 +569,8 @@ static void invoke_cmd( char const * const command, int const slot )
 
 static int raw_maxline()
 {
-    if ( IsWindowsVersionOrGreater(5,0,0) ) return 8191;  /* XP       */
-    if ( IsWindowsVersionOrGreater(4,0,0) ) return 2047;  /* NT 4.x   */
+    if ( IsWindowsVersionOrGreater(5,0,0) == TRUE ) return 8191;  /* XP       */
+    if ( IsWindowsVersionOrGreater(4,0,0) == TRUE ) return 2047;  /* NT 4.x   */
     return 996;                                      /* NT 3.5.1 */
 }
 
