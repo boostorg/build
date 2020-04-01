@@ -36,7 +36,7 @@ build_script:
 
 before_test:
   -cmd: |
-      %HOME% = %HOMEDRIVE% + %HOMEPATH%
+      %HOME%=%HOMEDRIVE%%HOMEPATH%
       echo "using" %TEST_TOOLSET% ":" ":" %CXX% ";" > %HOME%/user-config.jam
 
 for:
