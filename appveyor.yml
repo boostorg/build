@@ -60,5 +60,5 @@ for:
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BOOTSTRAP"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-          bootstrap.bat
+          bootstrap.bat %TOOLSET%
           b2.exe --debug-configuration --prefix=./.b2 install toolset=%TEST_TOOLSET%
