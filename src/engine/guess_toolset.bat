@@ -74,14 +74,6 @@ if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\VCVARSALL.BAT" (
     set "B2_TOOLSET=vc12"
     set "B2_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 12.0\VC\"
     exit /b 0)
-if NOT "_%VS110COMNTOOLS%_" == "__" (
-    set "B2_TOOLSET=vc11"
-    set "B2_TOOLSET_ROOT=%VS110COMNTOOLS%..\..\VC\"
-    exit /b 0)
-if EXIST "%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\VCVARSALL.BAT" (
-    set "B2_TOOLSET=vc11"
-    set "B2_TOOLSET_ROOT=%VS_ProgramFiles%\Microsoft Visual Studio 11.0\VC\"
-    exit /b 0)
 call :Test_Path cl.exe
 if not errorlevel 1 (
     set "B2_TOOLSET=msvc"

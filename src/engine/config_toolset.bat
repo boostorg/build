@@ -7,7 +7,6 @@ REM ~ (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0
 :Start
 REM Setup the toolset command and options.
 if "_%B2_TOOLSET%_" == "_msvc_" call :Config_MSVC
-if "_%B2_TOOLSET%_" == "_vc11_" call :Config_VC11
 if "_%B2_TOOLSET%_" == "_vc12_" call :Config_VC12
 if "_%B2_TOOLSET%_" == "_vc14_" call :Config_VC14
 if "_%B2_TOOLSET%_" == "_vc141_" call :Config_VC141
