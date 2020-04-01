@@ -1,4 +1,4 @@
-REM @ECHO OFF
+@ECHO OFF
 
 REM ~ Copyright 2002-2018 Rene Rivera.
 REM ~ Distributed under the Boost Software License, Version 1.0.
