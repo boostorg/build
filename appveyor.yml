@@ -27,8 +27,11 @@ build_script:
   - ps: |
       cd src/engine
       $env:path += ';' + $env:CXX_PATH
+  - ps: |
       cmd /c build.bat $env:TOOLSET
+  - ps: |
       ./b2.exe -v
+  - ps: |
       cd ../..
 
 before_test:
