@@ -31,7 +31,7 @@ build_script:
       ./build.bat %TOOLSET%
   - cmd: |
       cd ../..
-      src/engine/b2.exe -v
+      src\engine\b2.exe -v
 
 before_test:
   -cmd: |
@@ -55,10 +55,10 @@ for:
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> NO WARNINGS"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-          ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on toolset=%TEST_TOOLSET%
+          src\engine\b2.exe --debug-configuration b2 warnings-as-errors=on toolset=%TEST_TOOLSET%
       - cmd: |
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> BOOTSTRAP"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
-          ./bootstrap.bat
-          ./b2.exe --debug-configuration --prefix=./.b2 install toolset=%TEST_TOOLSET%
+          bootstrap.bat
+          b2.exe --debug-configuration --prefix=./.b2 install toolset=%TEST_TOOLSET%
