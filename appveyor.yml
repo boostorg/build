@@ -30,9 +30,8 @@ build_script:
   - cmd: |
       ./build.bat %TOOLSET%
   - cmd: |
-      ./b2.exe -v
-  - cmd: |
       cd ../..
+      src/engine/b2.exe -v
 
 before_test:
   -cmd: |
