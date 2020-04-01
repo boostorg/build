@@ -26,9 +26,9 @@ environment:
 build_script:
   - cmd: |
       cd src/engine
-      %PATH%=%PATH%;%CXX_PATH%
+      PATH=%PATH%;%CXX_PATH%
   - cmd: |
-      cmd /c build.bat %TOOLSET%
+      ./build.bat %TOOLSET%
   - cmd: |
       ./b2.exe -v
   - cmd: |
@@ -36,8 +36,8 @@ build_script:
 
 before_test:
   -cmd: |
-      %HOME%=%HOMEDRIVE%%HOMEPATH%
-      echo "using" %TEST_TOOLSET% ":" ":" %CXX% ";" > %HOME%/user-config.jam
+      HOME=%HOMEDRIVE%%HOMEPATH%
+      echo "using" %TEST_TOOLSET% ":" ":" %CXX% ";" > "%HOME%/user-config.jam"
 
 for:
   - matrix:
