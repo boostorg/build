@@ -1690,7 +1690,7 @@ rule get-rspline ( target : lang-opt )
 {
     CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS)
         $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(.nl)-D$(DEFINES)
-        $(.nl)\"-I$(INCLUDES:W)\" ] ;
+        $(.nl)\"-I$(INCLUDES:W)\" $(.nl)\"-FI$(FORCE_INCLUDES:W)\" ] ;
 }
 
 class msvc-linking-generator : linking-generator
@@ -1873,6 +1873,7 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile DEFINES <define> ;
     toolset.flags msvc.compile UNDEFS <undef> ;
     toolset.flags msvc.compile INCLUDES <include> ;
+    toolset.flags msvc.compile FORCE_INCLUDES <force-include> ;
 
     # Declare flags for the assembler.
     toolset.flags msvc.compile.asm USER_ASMFLAGS <asmflags> ;

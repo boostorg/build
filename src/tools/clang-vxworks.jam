@@ -85,12 +85,12 @@ toolset.flags clang-vxworks.compile OPTIONS <flags> ;
 
 actions compile.c
 {
-    "$(CONFIG_COMMAND)" -x c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c++
 {
-    "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 
