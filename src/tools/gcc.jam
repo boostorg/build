@@ -638,6 +638,12 @@ class gcc-pch-generator : pch-generator
             }
         }
 
+        local path-prefix = [ path.join $(name)
+                                        [ feature.get-values location-prefix
+                                          : $(property-set).raw ] ] ;
+        property-set = [ $(property-set).add-raw
+                         <location-prefix>$(path-prefix) ] ;
+
         local pch-file = [ generator.run $(project) $(name) : $(property-set)
             : $(header) ] ;
 
