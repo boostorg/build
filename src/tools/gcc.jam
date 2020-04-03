@@ -638,18 +638,6 @@ class gcc-pch-generator : pch-generator
             }
         }
 
-        # Error handling: base header file name should be the same as the base
-        # precompiled header name.
-        local header-name = [ $(header).name ] ;
-        local header-basename = $(header-name:B) ;
-        if $(header-basename) != $(name)
-        {
-            local location = [ $(project).project-module ] ;
-            import errors : user-error : errors.user-error ;
-            errors.user-error "in" "$(location):" pch target name '$(name)' should
-                be the same as the base name of header file '$(header-name)' ;
-        }
-
         local pch-file = [ generator.run $(project) $(name) : $(property-set)
             : $(header) ] ;
 
