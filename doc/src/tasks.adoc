@@ -588,8 +588,6 @@ source file needs to include some header, explicitly include it in the
 source file, even if the same header is included from the precompiled
 header. This makes sure that your project will build even if precompiled
 headers are not supported.
-* On the gcc compiler, the name of the header being precompiled must be
-equal to the name of the `cpp-pch` target. This is a gcc requirement.
 * Prior to version 4.2, the gcc compiler did not allow anonymous
 namespaces in precompiled headers, which limits their utility. See the
 http://gcc.gnu.org/bugzilla/show_bug.cgi?id=29085[bug report] for
