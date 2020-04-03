@@ -13,8 +13,8 @@ t = BoostBuild.Tester()
 
 t.write("jamroot.jam", """
 import pch ;
-cpp-pch pch : pch.hpp : <toolset>msvc:<source>pch.cpp <include>. ;
-exe hello : hello.cpp pch : <include>. ;
+cpp-pch pch-afx : pch.hpp : <toolset>msvc:<source>pch.cpp <include>. ;
+exe hello : hello.cpp pch-afx : <include>. ;
 """)
 
 t.write("pch.hpp.bad", """
