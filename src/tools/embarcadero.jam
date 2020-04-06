@@ -394,8 +394,8 @@ rule init ( version ? :  command * : options * )
         
         if $(compiler) = bcc32x
             {
-            lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32/release/psdk ;
-            lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug $(root)/lib/win32/debug/psdk ;
+            lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32c/release/psdk ;
+            lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug ;
             archiver = tlib ;
             arflags = /P512 ;
             implib = implib ;
@@ -403,7 +403,7 @@ rule init ( version ? :  command * : options * )
         else if $(compiler) = bcc64
             {
             lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
-            lib_dir_debug = $(root)/lib/win64/debug $(root)/lib/win64/debug/psdk ;
+            lib_dir_debug = $(root)/lib/win64/debug ;
             archiver = tlib64 ;
             arflags = /P2048 ;
             implib = mkexp ;
@@ -592,12 +592,15 @@ rule link.dll ( targets * : sources * : properties * ) {
   JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
+nl = "
+" ;
+
 actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)")" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions link.dll bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<[1])" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS) && "$(.IMPLIB_COMMAND)" "$(<[2])" "$(<[1])"
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)")" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS) && "$(.IMPLIB_COMMAND)" "$(<[2])" "$(<[1])"
 }
 
 rule asm ( targets * : sources * : properties * )
