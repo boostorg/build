@@ -394,8 +394,8 @@ rule init ( version ? :  command * : options * )
         
         if $(compiler) = bcc32x
             {
-            lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32/release $(root)/lib/win32/release/psdk ;
-            lib_dir_debug = $(root)/lib/win32c/debug $(root)/lib/win32/debug $(root)/lib/win32/debug/psdk ;
+            lib_dir_release = $(root)/lib/win32c/release $(root)/lib/win32c/release/psdk ;
+            lib_dir_debug = $(root)/lib/win32c/debug ;
             archiver = tlib ;
             arflags = /P512 ;
             implib = implib ;
@@ -403,13 +403,13 @@ rule init ( version ? :  command * : options * )
         else if $(compiler) = bcc64
             {
             lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
-            lib_dir_debug = $(root)/lib/win64/debug $(root)/lib/win64/debug/psdk ;
+            lib_dir_debug = $(root)/lib/win64/debug ;
             archiver = tlib64 ;
             arflags = /P2048 ;
             implib = mkexp ;
             }
         
-        flags embarcadero.compile OPTIONS $(condition) : $(system_include_option)$(system_include_directories) ;
+        flags embarcadero.compile .EMB_SYSINC $(condition) : $(system_include_option)$(system_include_directories) ;
         flags embarcadero.link LINKPATH $(condition)/<variant>release : $(lib_dir_release) ;
         flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
         flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
@@ -558,12 +558,19 @@ flags embarcadero.compile OPTIONS <address-model>32 : -m32 ;
 flags embarcadero.compile OPTIONS <address-model>64 : -m64 ;
 flags embarcadero.link OPTIONS <address-model>32 : -m32 ;
 flags embarcadero.link OPTIONS <address-model>64 : -m64 ;
+flags embarcadero.link .EMBLRSP <variant>release : _emb_lpr ;
+flags embarcadero.link .EMBLRSP <variant>debug : _emb_lpd ;
+flags embarcadero.compile .EMBCRSP <variant>release : _emb_sir ;
+flags embarcadero.compile .EMBCRSP <variant>debug : _emb_sid ;
+
+nl = "
+" ;
 
 rule compile.c++ ( targets * : sources * : properties * ) {
 }
 
 actions compile.c++ {
-  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c++ @"@($(<[1]:DBW)$(.EMBCRSP)$(<[1]:S).rsp:E=$(nl)"$(.EMB_SYSINC)")" $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
 rule compile.c ( targets * : sources * : properties * )
@@ -572,7 +579,7 @@ rule compile.c ( targets * : sources * : properties * )
 
 actions compile.c
 {
-  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c @"@($(<[1]:DBW)$(.EMBCRSP)$(<[1]:S).rsp:E=$(nl)"$(.EMB_SYSINC)")" $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
 }
 
 rule archive ( targets * : sources * : properties * )
@@ -593,11 +600,11 @@ rule link.dll ( targets * : sources * : properties * ) {
 }
 
 actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" @"@($(<[1]:DBW)$(.EMBLRSP)$(<[1]:S).rsp:E=$(nl)-L"$(LINKPATH)")" -o "$(<)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)")" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions link.dll bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<[1])" "$(>)" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS) && "$(.IMPLIB_COMMAND)" "$(<[2])" "$(<[1])"
+    "$(CONFIG_COMMAND)" @"@($(<[1]:DBW)$(.EMBLRSP)$(<[1]:S).rsp:E=$(nl)-L"$(LINKPATH)")" -o "$(<[1])" @"@($(<[1]:W).rsp:E=$(nl)"$(>)")" "$(LIBRARIES)" -l$(FINDLIBS-ST) -l$(FINDLIBS-SA) $(OPTIONS) $(USER_OPTIONS) && "$(.IMPLIB_COMMAND)" "$(<[2])" "$(<[1])"
 }
 
 rule asm ( targets * : sources * : properties * )
