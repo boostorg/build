@@ -59,7 +59,7 @@ if NOT "_%VS120COMNTOOLS%_" == "__" (
     set "B2_TOOLSET_ROOT=%VS120COMNTOOLS%..\..\VC\"
     )
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 if "_%VCINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%VCVARSALL.BAT" %B2_BUILD_ARGS%
@@ -79,7 +79,7 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
         set "B2_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
     ))
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 if "_%VCINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%VCVARSALL.BAT" %B2_BUILD_ARGS%
@@ -102,7 +102,7 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
         set "B2_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     ))
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
@@ -124,7 +124,7 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
         set "B2_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
     ))
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
@@ -146,7 +146,7 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
         set "B2_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
     ))
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
