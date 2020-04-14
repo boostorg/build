@@ -1100,9 +1100,29 @@ rule link ( targets * : sources * : properties * )
     quote-rpath $(targets) ;
 }
 
+if [ os.name ] in NT
+{
+.nl = "
+" ;
+}
+
+if [ os.name ] in NT
+{
+
+actions link bind LIBRARIES
+{
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<:WT)" @"@($(<[1]:WT).rsp:E=$(.nl)$(START-GROUP) $(.nl)"$(>:WT)" $(.nl)"$(LIBRARIES)" $(.nl)$(FINDLIBS-ST-PFX) $(.nl)-l$(FINDLIBS-ST) $(.nl)$(FINDLIBS-SA-PFX) $(.nl)-l$(FINDLIBS-SA) $(.nl)$(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+}
+
+}
+else
+{
+
 actions link bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+}
+
 }
 
 rule link.dll ( targets * : sources * : properties * )
@@ -1112,11 +1132,27 @@ rule link.dll ( targets * : sources * : properties * )
     quote-rpath $(targets) ;
 }
 
+if [ os.name ] in NT
+{
+
+# Differs from 'link' above only by -shared.
+actions link.dll bind LIBRARIES
+{
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1]:WT)" -o "$(<[-1]:WT)" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared @"@($(<[1]:WT).rsp:E=$(.nl)$(START-GROUP) $(.nl)"$(>:WT)" $(.nl)"$(LIBRARIES)" $(.nl)$(FINDLIBS-ST-PFX) $(.nl)-l$(FINDLIBS-ST) $(.nl)$(FINDLIBS-SA-PFX) $(.nl)-l$(FINDLIBS-SA) $(.nl)$(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+}
+
+}
+else
+{
+
 # Differs from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
+
+}
+
 
 ###
 ### Archive library generation.
