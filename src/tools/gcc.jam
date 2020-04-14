@@ -1100,10 +1100,11 @@ rule link ( targets * : sources * : properties * )
     quote-rpath $(targets) ;
 }
 
-if [ os.name ] in NT
+rule link.dll ( targets * : sources * : properties * )
 {
-.nl = "
-" ;
+    SPACE on $(targets) = " " ;
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+    quote-rpath $(targets) ;
 }
 
 if [ os.name ] in NT
@@ -1111,7 +1112,12 @@ if [ os.name ] in NT
 
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<:WT)" @"@($(<[1]:WT).rsp:E=$(.nl)$(START-GROUP) $(.nl)"$(>:WT)" $(.nl)"$(LIBRARIES)" $(.nl)$(FINDLIBS-ST-PFX) $(.nl)-l$(FINDLIBS-ST) $(.nl)$(FINDLIBS-SA-PFX) $(.nl)-l$(FINDLIBS-SA) $(.nl)$(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+}
+
+actions link.dll bind LIBRARIES
+{
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" -shared @"@($(<[-1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
 }
 
 }
@@ -1123,36 +1129,12 @@ actions link bind LIBRARIES
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
-}
-
-rule link.dll ( targets * : sources * : properties * )
-{
-    SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
-    quote-rpath $(targets) ;
-}
-
-if [ os.name ] in NT
-{
-
-# Differs from 'link' above only by -shared.
-actions link.dll bind LIBRARIES
-{
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1]:WT)" -o "$(<[-1]:WT)" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared @"@($(<[1]:WT).rsp:E=$(.nl)$(START-GROUP) $(.nl)"$(>:WT)" $(.nl)"$(LIBRARIES)" $(.nl)$(FINDLIBS-ST-PFX) $(.nl)-l$(FINDLIBS-ST) $(.nl)$(FINDLIBS-SA-PFX) $(.nl)-l$(FINDLIBS-SA) $(.nl)$(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-}
-
-}
-else
-{
-
-# Differs from 'link' above only by -shared.
 actions link.dll bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
 }
-
 
 ###
 ### Archive library generation.

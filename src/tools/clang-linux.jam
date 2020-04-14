@@ -17,6 +17,7 @@ import errors ;
 import generators ;
 import type ;
 import numbers ;
+import os ;
 
 feature.extend-subfeature toolset clang : platform : linux ;
 
@@ -207,17 +208,32 @@ rule link ( targets * : sources * : properties * ) {
   JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
-actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
-}
-
 rule link.dll ( targets * : sources * : properties * ) {
   SPACE on $(targets) = " " ;
   JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
-# Differ from 'link' above only by -shared.
+if [ os.name ] in NT
+{
+
+actions link bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+}
+
+actions link.dll bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" -shared @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+}
+
+}
+else
+{
+
+actions link bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+}
+
 actions link.dll bind LIBRARIES {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
 }
 
+}
