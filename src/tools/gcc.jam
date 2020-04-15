@@ -831,14 +831,14 @@ g = [ new gcc-linking-generator gcc.mingw.link
       : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
       : EXE
       : <toolset>gcc <target-os>windows ] ;
-$(g).set-rule-name gcc.link ;
+$(g).set-rule-name gcc.link.mingw ;
 generators.register $(g) ;
 
 g = [ new gcc-linking-generator gcc.mingw.link.dll
       : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
       : IMPORT_LIB SHARED_LIB
       : <toolset>gcc <target-os>windows ] ;
-$(g).set-rule-name gcc.link.dll ;
+$(g).set-rule-name gcc.link.dll.mingw ;
 generators.register $(g) ;
 
 generators.register
@@ -1107,22 +1107,30 @@ rule link.dll ( targets * : sources * : properties * )
     quote-rpath $(targets) ;
 }
 
-if [ os.name ] in NT
+rule link.mingw ( targets * : sources * : properties * )
 {
+    SPACE on $(targets) = " " ;
+    # Serialize execution of the 'link' action, since running N links in
+    # parallel is just slower. For now, serialize only gcc links, it might be a
+    # good idea to serialize all links.
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+}
 
-actions link bind LIBRARIES
+rule link.dll.mingw ( targets * : sources * : properties * )
+{
+    SPACE on $(targets) = " " ;
+    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
+}
+
+actions link.mingw bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
 }
 
-actions link.dll bind LIBRARIES
+actions link.dll.mingw bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" -shared @"@($(<[-1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
 }
-
-}
-else
-{
 
 actions link bind LIBRARIES
 {
@@ -1132,8 +1140,6 @@ actions link bind LIBRARIES
 actions link.dll bind LIBRARIES
 {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
-}
-
 }
 
 ###
