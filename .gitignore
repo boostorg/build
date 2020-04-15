@@ -1,5 +1,7 @@
 *.code-workspace
 *.py[co]
+/.idea
+/.vs
 /.vscode
 /doc/bin
 /doc/html
@@ -8,7 +10,9 @@
 /b2.exe
 /bjam.exe
 /.build
+/_build*
 /bootstrap.log
+/cmake-build-*
 /test/test_results.txt
 /project-config.jam
 /src/engine/b2
