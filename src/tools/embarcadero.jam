@@ -592,11 +592,11 @@ actions updated together piecemeal archive
 }
 
 rule link ( targets * : sources * : properties * ) {
-  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
+  JAM_SEMAPHORE on $(targets) = <s>embarcadero-link-semaphore ;
 }
 
 rule link.dll ( targets * : sources * : properties * ) {
-  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
+  JAM_SEMAPHORE on $(targets) = <s>embarcadero-link-semaphore ;
 }
 
 actions link bind LIBRARIES {
