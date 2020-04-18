@@ -271,10 +271,16 @@ if [ os.name ] = NT
 #
 # Use qcc driver to create archive, see
 #     http://www.qnx.com/developers/docs/6.3.2/neutrino/utilities/q/qcc.html
+
+rule archive
+{
+    check-target-platform $(1) ;
+}
+
 actions piecemeal archive
 {
     $(RM) "$(<)"
-    "$(CONFIG_COMMAND)" -A "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(QCC-TARGET-PLATFORM) -A "$(<)" "$(>)"
 }
 
 
