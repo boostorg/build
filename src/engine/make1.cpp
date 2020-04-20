@@ -50,6 +50,7 @@
 #include "search.h"
 #include "variable.h"
 #include "output.h"
+#include "color.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -244,11 +245,19 @@ int32_t make1( LIST * targets )
 
     /* Talk about it. */
     if ( counts->failed )
+    {
+        set_color( bjam_out, TC_ERROR );
         out_printf( "...failed updating %d target%s...\n", counts->failed,
             counts->failed > 1 ? "s" : "" );
+        set_color_default( bjam_out );
+    }
     if ( DEBUG_MAKE && counts->skipped )
+    {
+        set_color( bjam_out, TC_WARNING );
         out_printf( "...skipped %d target%s...\n", counts->skipped,
             counts->skipped > 1 ? "s" : "" );
+        set_color_default( bjam_out );
+    }
     if ( DEBUG_MAKE && counts->made )
         out_printf( "...updated %d target%s...\n", counts->made,
             counts->made > 1 ? "s" : "" );
@@ -614,7 +623,9 @@ static void make1c( state const * const pState )
                  */
                 if ( t->status == EXEC_CMD_FAIL )
                 {
+                    set_color( bjam_out, TC_ERROR );
                     out_printf( "...failed %s ", object_str( t->actions->action->rule->name ) );
+                    set_color_default( bjam_out );
                     out_printf( "%s", object_str( t->boundname ) );
                     out_printf( "...\n" );
                 }
@@ -936,7 +947,9 @@ static void make1c_closure
         if ( !DEBUG_EXEC )
             out_printf( "%s\n", cmd->buf->value );
 
+        set_color( bjam_out, TC_ERROR );
         out_printf( "...failed %s ", object_str( cmd->rule->name ) );
+        set_color_default( bjam_out );
         list_print( lol_get( (LOL *)&cmd->args, 0 ) );
         out_printf( "...\n" );
     }

@@ -15,6 +15,9 @@
 #define EXIT_FAIL 1
 #define EXIT_TIMEOUT 2
 
+#define bjam_out (stdout)
+#define bjam_err (stderr)
+
 void out_action(
     char const * const action,
     char const * const target,

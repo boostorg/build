@@ -437,6 +437,7 @@ echo "
     B2_SOURCES="\
 builtins.cpp \
 class.cpp \
+color.cpp \
 command.cpp \
 compile.cpp \
 constants.cpp \

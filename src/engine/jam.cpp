@@ -164,7 +164,8 @@ struct globs globs =
 #endif
     0,          /* output commands, not run them */
     0,          /* action timeout */
-    0           /* maximum buffer size zero is all output */
+    0,          /* maximum buffer size zero is all output */
+    0           /* output in colors */
 };
 
 /* Symbols to be defined as true for use in Jambase. */
@@ -236,6 +237,7 @@ static void usage( const char * progname )
 	err_printf("-q      Quit quickly as soon as a target fails.\n");
 	err_printf("-sx=y   Set variable x=y, overriding environment.\n");
 	err_printf("-tx     Rebuild x, even if it is up-to-date.\n");
+	err_printf("-c      Enable colors in console output.\n");
 	err_printf("-v      Print the version of jam and exit.\n");
 #ifdef HAVE_PYTHON
 	err_printf("-z      Disable Python Optimization and enable asserts\n");
@@ -274,7 +276,7 @@ int main( int argc, char * * argv )
 
     is_debugger = 0;
 
-    if ( getoptions( argc - 1, argv + 1, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
+    if ( getoptions( argc - 1, argv + 1, "-:l:m:d:j:p:f:gs:t:ano:qcv", optv ) < 0 )
         usage( progname );
 
     if ( ( s = getoptval( optv, 'd', 0 ) ) )
@@ -338,9 +340,9 @@ int main( int argc, char * * argv )
     ++argv;
 
     #ifdef HAVE_PYTHON
-    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qvz"
+    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qcvz"
     #else
-    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qv"
+    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qcv"
     #endif
 
     if ( getoptions( argc, argv, OPTSTRING, optv ) < 0 )
@@ -453,6 +455,15 @@ int main( int argc, char * * argv )
         }
         /* ++globs.noexec; */
     }
+
+
+    /* Only allow colors if requested and no file mirror is used. */
+    if ( ( s = getoptval( optv, 'c', 0 ) ) )
+    {
+        if ( ! globs.out )
+            globs.colors = 1;
+    }
+
 
     {
         PROFILE_ENTER( MAIN );

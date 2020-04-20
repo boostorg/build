@@ -6,13 +6,10 @@
 
 #include "jam.h"
 #include "output.h"
+#include "color.h"
 
 #include <stdio.h>
 #include <stdarg.h>
-
-
-#define bjam_out (stdout)
-#define bjam_err (stderr)
 
 static void out_( char const * data, FILE * const io )
 {
@@ -62,8 +59,10 @@ void out_data(char const * const s)
 }
 void err_data(char const * const s)
 {
+    set_color( bjam_err, TC_ERROR );
     out_( s, bjam_err );
     if ( globs.out ) out_( s, globs.out );
+    set_color_default( bjam_err );
 }
 void out_printf(char const * const f, ...)
 {
@@ -113,12 +112,20 @@ void out_action
      * should be null.
      */
     if ( action )
-        out_printf( "%s %s\n", action, target );
+    {
+        set_color( bjam_out, TC_ACTION_NAME );
+        out_printf( "%s", action );
+        set_color( bjam_out, TC_ACTION_TARGET );
+        out_printf( " %s\n", target );
+        set_color_default( bjam_out );
+    }
 
     /* Print out the command executed if given -d+2. */
     if ( DEBUG_EXEC )
     {
+        set_color( bjam_out, TC_ACTION_COMMAND );
         out_puts( command );
+        set_color_default( bjam_out );
         out_putc( '\n' );
     }
 
@@ -130,7 +137,11 @@ void out_action
         if ( out_d &&
            ( ( globs.pipe_action & 1 /* STDOUT_FILENO */ ) ||
              ( globs.pipe_action == 0 ) ) )
+        {
+            set_color( bjam_out, TC_ERROR );
             out_data( out_d );
+            set_color_default( bjam_out );
+        }
         if ( err_d && ( globs.pipe_action & 2 /* STDERR_FILENO */ ) )
             err_data( err_d );
     }

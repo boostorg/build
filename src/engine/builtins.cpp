@@ -28,6 +28,7 @@
 #include "timestamp.h"
 #include "variable.h"
 #include "output.h"
+#include "color.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -169,10 +170,13 @@ void load_builtins()
       bind_builtin( "DEPENDS",
                     builtin_depends, 0, 0 ) );
 
-    duplicate_rule( "echo",
-    duplicate_rule( "Echo",
-      bind_builtin( "ECHO",
-                    builtin_echo, 0, 0 ) ) );
+    {
+        char const * args[] = { "args", "*", ":", "color-names", "*", 0 };
+        duplicate_rule( "echo",
+        duplicate_rule( "Echo",
+          bind_builtin( "ECHO",
+                        builtin_echo, 0, args ) ) );
+    }
 
     {
         char const * args[] = { "message", "*", ":", "result-value", "?", 0 };
@@ -618,7 +622,15 @@ LIST * builtin_rebuilds( FRAME * frame, int flags )
 
 LIST * builtin_echo( FRAME * frame, int flags )
 {
+    LIST * const colors = lol_get( frame->args, 1 );
+    if ( !list_empty( colors ) )
+        set_color( bjam_out, colors );
+
     list_print( lol_get( frame->args, 0 ) );
+
+    if ( !list_empty( colors ) )
+        set_color_default( bjam_out );
+
     out_printf( "\n" );
     out_flush();
     return L0;

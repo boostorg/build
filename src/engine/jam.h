@@ -491,6 +491,7 @@ struct globs
     int    max_buf;             /* maximum amount of output saved from target
                                  * (kb)
                                  */
+    int    colors;              /* output in colors, default 0 for no colors*/
 };
 
 extern struct globs globs;
