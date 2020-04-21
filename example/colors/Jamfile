@@ -1,0 +1,36 @@
+import sequence ;
+import testing ;
+
+colors = black red green yellow blue magenta cyan white ;
+styles = bright ;
+
+for local f in $(colors)
+{
+    ECHO "ECHO foreground : $(f)" : $(f) ;
+    ECHO "ECHO background : default $(f)" : default $(f) ;
+}
+
+for local f in $(colors)-$(styles)
+{
+    ECHO "ECHO foreground : $(f)" : $(f) ;
+    ECHO "ECHO background : default $(f)" : default $(f) ;
+}
+
+semantic_colors = error warning info ;
+for local f in $(semantic_colors)
+{
+    ECHO "ECHO message : $(f)" : $(f) ;
+}
+
+project
+    : requirements
+    <implicit-dependency>/boost//headers
+    <include>$(BOOST_ROOT)
+    ;
+
+compile test_compile.cpp ;
+compile test_compile_error.cpp ;
+compile-fail test_compile_fail.cpp ;
+run test_run.cpp ;
+run test_run_error.cpp ;
+run-fail test_run_fail.cpp ;
