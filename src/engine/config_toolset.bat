@@ -33,7 +33,7 @@ call :Call_If_Exists "%B2_TOOLSET_ROOT%bin\VCVARS32.BAT"
 if not "_%B2_TOOLSET_ROOT%_" == "__" (
     set "PATH=%B2_TOOLSET_ROOT%bin;%PATH%"
     )
-set "B2_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "B2_CXX=%CXX% /nologo /MT /TP /Feb2 /wd4996 /O2 /GL"
 set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
 goto :eof
@@ -48,7 +48,7 @@ if NOT "_%B2_TOOLSET_ROOT%_" == "__" (
     if "_%VCINSTALLDIR%_" == "__" (
         set "PATH=%B2_TOOLSET_ROOT%bin;%PATH%"
         ) )
-set "B2_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "B2_CXX=%CXX% /nologo /MT /TP /Feb2 /wd4996 /O2 /GL"
 set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
 goto :eof
@@ -59,7 +59,7 @@ if NOT "_%VS120COMNTOOLS%_" == "__" (
     set "B2_TOOLSET_ROOT=%VS120COMNTOOLS%..\..\VC\"
     )
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 if "_%VCINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%VCVARSALL.BAT" %B2_BUILD_ARGS%
@@ -67,7 +67,7 @@ if NOT "_%B2_TOOLSET_ROOT%_" == "__" (
     if "_%VCINSTALLDIR%_" == "__" (
         set "PATH=%B2_TOOLSET_ROOT%bin;%PATH%"
         ) )
-set "B2_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "B2_CXX=%CXX% /nologo /MT /TP /Feb2 /wd4996 /O2 /GL"
 set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
 goto :eof
@@ -79,7 +79,7 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
         set "B2_TOOLSET_ROOT=%VS140COMNTOOLS%..\..\VC\"
     ))
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 if "_%VCINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%VCVARSALL.BAT" %B2_BUILD_ARGS%
@@ -102,14 +102,14 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
         set "B2_TOOLSET_ROOT=%VS150COMNTOOLS%..\..\VC\"
     ))
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
 pushd %CD%
 if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %B2_BUILD_ARGS%
 popd
-set "B2_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "B2_CXX=%CXX% /nologo /MT /TP /Feb2 /wd4996 /O2 /GL"
 set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
 goto :eof
@@ -124,14 +124,14 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
         set "B2_TOOLSET_ROOT=%VS160COMNTOOLS%..\..\VC\"
     ))
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
 pushd %CD%
 if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %B2_BUILD_ARGS%
 popd
-set "B2_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "B2_CXX=%CXX% /nologo /MT /TP /Feb2 /wd4996 /O2 /GL"
 set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
 goto :eof
@@ -146,14 +146,14 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
         set "B2_TOOLSET_ROOT=%VSUNKCOMNTOOLS%..\..\VC\"
     ))
 
-if "_%B2_ARCH%_" == "__" set B2_ARCH=x86
+if "_%B2_ARCH%_" == "__" set B2_ARCH=%PROCESSOR_ARCHITECTURE%
 set B2_BUILD_ARGS=%B2_BUILD_ARGS% %B2_ARCH%
 
 REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\Source if it exists.
 pushd %CD%
 if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %B2_BUILD_ARGS%
 popd
-set "B2_CXX=%CXX% /nologo /Zi /MT /TP /Feb2 /wd4996 /Ox /GL"
+set "B2_CXX=%CXX% /nologo /MT /TP /Feb2 /wd4996 /O2 /GL"
 set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
 goto :eof
