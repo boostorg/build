@@ -454,6 +454,14 @@ rule configure-version-specific ( toolset : version : conditions )
         }
     }
 
+    # 12.0 (VS2013 Update 2) introduced /Zc:inline opt-in standard conformance
+    # compiler flag that also similar to linker /opt:ref removes unreferenced
+    # variables and functions that have internal linkage
+    if ! [ MATCH "^(1[01]|\d)\\." : $(version) ]
+    {
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:inline" ;
+    }
+
     #
     # Processor-specific optimization.
     #
