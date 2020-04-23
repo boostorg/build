@@ -99,6 +99,8 @@ toolset.flags qcc.compile OPTIONS <inlining>full : -Wc,-finline-functions -Wc,-W
 
 toolset.flags qcc.compile OPTIONS <warnings>off : -w ;
 toolset.flags qcc.compile OPTIONS <warnings>all : -Wc,-Wall ;
+toolset.flags qcc.compile OPTIONS <warnings>extra : -Wc,-Wall -Wc,-Wextra ;
+toolset.flags qcc.compile OPTIONS <warnings>pedantic : -Wc,-Wall -Wc,-Wextra -Wc,-pedantic ;
 toolset.flags qcc.compile OPTIONS <warnings-as-errors>on : -Wc,-Werror ;
 
 toolset.flags qcc.compile OPTIONS <profiling>on : -p ;
