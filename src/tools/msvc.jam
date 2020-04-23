@@ -462,6 +462,13 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:inline" ;
     }
 
+    # 14.0 introduced /Zc:throwingNew opt-in flag that disables a workaround
+    # for not throwing operator new in VC up to 6.0
+    if ! [ MATCH "^(1[0-3]|\d)\\." : $(version) ]
+    {
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:throwingNew" ;
+    }
+
     #
     # Processor-specific optimization.
     #
