@@ -169,7 +169,8 @@ void exec_cmd
         /* Open tempfile. */
         if ( !( f = fopen( commandbuf + 1, "w" ) ) )
         {
-            printf( "can't open cmd_string file\n" );
+            err_printf( "[errno %d] failed to wite cmd_string file '%s': %s",
+                errno, commandbuf + 1, strerror(errno) );
             rstat = EXEC_CMD_FAIL;
             exit_reason = EXIT_FAIL;
 
