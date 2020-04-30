@@ -36,7 +36,7 @@ command line tools are listed below:
 
 The user would then call the boost build executable with the toolset set
 equal to `msvc-[version number]` for example to build with Visual Studio
-2017 one could run:
+2019 one could run:
 
 ----
 .\b2 toolset=msvc-14.2 target
