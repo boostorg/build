@@ -67,8 +67,8 @@ struct _PARSE {
     int      line;
 };
 
-void parse_file( OBJECT *, FRAME * );
-void parse_string( OBJECT * name, const char * * lines, FRAME * frame );
+int parse_file( OBJECT *, FRAME * );
+int parse_string( OBJECT * name, const char * * lines, FRAME * frame );
 void parse_save( PARSE * );
 
 PARSE * parse_make( int type, PARSE * left, PARSE * right, PARSE * third,

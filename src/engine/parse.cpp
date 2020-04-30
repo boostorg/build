@@ -30,12 +30,14 @@
 
 static PARSE * yypsave;
 
-static void parse_impl( FRAME * frame )
+static int parse_impl( FRAME * frame )
 {
 
     /* Now parse each block of rules and execute it. Execute it outside of the
      * parser so that recursive calls to yyrun() work (no recursive yyparse's).
      */
+
+    int status = 0;
 
     for ( ; ; )
     {
@@ -47,32 +49,43 @@ static void parse_impl( FRAME * frame )
 
         /* If parse error or empty parse, outta here. */
         if ( yyparse() || !( p = yypsave ) )
+        {
+            status = 1;
             break;
+        }
 
         /* Run the parse tree. */
         func = function_compile( p );
         parse_free( p );
-        list_free( function_run( func, frame, stack_global() ) );
+        LIST* result = function_run( func, frame, stack_global() );
+        if ( !result )
+            status = 1;
+        list_free( result );
         function_free( func );
+
+        if ( status )
+            break;
     }
 
     yyfdone();
+
+    return status;
 }
 
 
-void parse_file( OBJECT * f, FRAME * frame )
+int parse_file( OBJECT * f, FRAME * frame )
 {
     /* Suspend scan of current file and push this new file in the stream. */
     yyfparse( f );
 
-    parse_impl( frame );
+    return parse_impl( frame );
 }
 
 
-void parse_string( OBJECT * name, const char * * lines, FRAME * frame )
+int parse_string( OBJECT * name, const char * * lines, FRAME * frame )
 {
     yysparse( name, lines );
-    parse_impl( frame );
+    return parse_impl( frame );
 }
 
 

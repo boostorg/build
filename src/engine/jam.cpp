@@ -646,7 +646,7 @@ int main( int argc, char * * argv, char * * arg_environ )
             }
 
             if ( !n )
-                parse_file( constant_plus, frame );
+                status = parse_file( constant_plus, frame );
         }
 
         /* FIXME: What shall we do if builtin_update_now,
@@ -654,26 +654,32 @@ int main( int argc, char * * argv, char * * arg_environ )
          * failed earlier?
          */
 
-        status = yyanyerrors();
+        if ( ! status )
+            status = last_update_now_status;
+
         if ( !status )
         {
-            /* Manually touch -t targets. */
-            for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
+            status = yyanyerrors();
+            if ( !status )
             {
-                OBJECT * const target = object_new( s );
-                touch_target( target );
-                object_free( target );
-            }
+                /* Manually touch -t targets. */
+                for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
+                {
+                    OBJECT * const target = object_new( s );
+                    touch_target( target );
+                    object_free( target );
+                }
 
-            /* Now make target. */
-            {
-                PROFILE_ENTER( MAIN_MAKE );
-                LIST * const targets = targets_to_update();
-                if ( !list_empty( targets ) )
-                    status |= make( targets, anyhow );
-                else
-                    status = last_update_now_status;
-                PROFILE_EXIT( MAIN_MAKE );
+                /* Now make target. */
+                {
+                    PROFILE_ENTER( MAIN_MAKE );
+                    LIST * const targets = targets_to_update();
+                    if ( !list_empty( targets ) )
+                        status |= make( targets, anyhow );
+                    else
+                        status = last_update_now_status;
+                    PROFILE_EXIT( MAIN_MAKE );
+                }
             }
         }
 

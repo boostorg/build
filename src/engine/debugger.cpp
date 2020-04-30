@@ -700,7 +700,8 @@ static void debug_child_print( int argc, const char * * argv )
     string_append( buf, " ;\n" );
     lines[ 0 ] = buf->value;
     lines[ 1 ] = NULL;
-    parse_string( constant_builtin, lines, &new_frame );
+    int status = 0; /* discarded */
+    status = parse_string( constant_builtin, lines, &new_frame );
     string_free( buf );
     debug_list_write( command_output, debug_print_result );
     fflush( command_output );
