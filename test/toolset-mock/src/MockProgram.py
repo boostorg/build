@@ -81,6 +81,17 @@ class output_file:
         outputs.append((command_line[pos], self.id))
         return pos + 1
 
+class arg_file:
+    def __init__(self, id):
+        self.id = id
+    def match(self, command_line, pos, outputs):
+        if command_line[pos].startswith("-"):
+            return
+        if command_line[pos] == self.id:
+            return pos + 1
+        else:
+            return
+
 # Matches the directory containing an input_file
 class target_path(object):
     def __init__(self, id):

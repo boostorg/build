@@ -111,10 +111,12 @@ def test_toolset(toolset, version, property_sets):
         t.expect_addition("bin/%s/lib.obj" % (path("obj")))
         if "link=static" not in properties:
             t.expect_addition("bin/%s/l1.dll" % (path("dll")))
+            t.ignore_addition("bin/%s/*l1.*.rsp" % (path("dll")))
         else:
             t.expect_addition("bin/%s/l1.lib" % (path("lib")))
         t.expect_addition("bin/%s/main.obj" % (path("obj2")))
         t.expect_addition("bin/%s/test.exe" % (path("exe")))
+        t.ignore_addition("bin/%s/test.rsp" % (path("exe")))
         t.expect_nothing_more()
         t.rm("bin")
 
