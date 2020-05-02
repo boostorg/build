@@ -38,6 +38,10 @@ run fail-run.cpp ;
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.exe")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.output")
 
+    t.ignore_addition("bin/pass.test/*/pass.rsp")
+    t.ignore_addition("bin/fail-link.test/*/fail-link.rsp")
+    t.ignore_addition("bin/fail-run.test/*/fail-run.rsp")
+
     t.expect_nothing_more()
 
     t.cleanup()
@@ -69,6 +73,10 @@ run-fail fail-run.cpp ;
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.output")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.run")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")
+
+    t.ignore_addition("bin/pass.test/*/pass.rsp")
+    t.ignore_addition("bin/fail-link.test/*/fail-link.rsp")
+    t.ignore_addition("bin/fail-run.test/*/fail-run.rsp")
 
     t.expect_nothing_more()
 
@@ -219,6 +227,10 @@ link fail-run.cpp ;
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.exe")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")
 
+    t.ignore_addition("bin/pass.test/*/pass.rsp")
+    t.ignore_addition("bin/fail-link.test/*/fail-link.rsp")
+    t.ignore_addition("bin/fail-run.test/*/fail-run.rsp")
+
     t.expect_nothing_more()
 
     t.cleanup()
@@ -246,6 +258,10 @@ link-fail fail-run.cpp ;
     t.expect_addition("bin/fail-link.test/$toolset/debug*/fail-link.test")
 
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.obj")
+
+    t.ignore_addition("bin/pass.test/*/pass.rsp")
+    t.ignore_addition("bin/fail-link.test/*/fail-link.rsp")
+    t.ignore_addition("bin/fail-run.test/*/fail-run.rsp")
 
     t.expect_nothing_more()
 
@@ -406,6 +422,11 @@ run-fail fail-run.cpp ;
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.output")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.run")
     t.expect_addition("bin/fail-run.test/$toolset/debug*/fail-run.test")
+
+    t.ignore_addition("bin/pass-link.test/*/pass-link.rsp")
+    t.ignore_addition("bin/pass-run.test/*/pass-run.rsp")
+    t.ignore_addition("bin/fail-link.test/*/fail-link.rsp")
+    t.ignore_addition("bin/fail-run.test/*/fail-run.rsp")
 
     t.expect_nothing_more()
 

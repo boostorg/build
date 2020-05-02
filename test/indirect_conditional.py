@@ -99,8 +99,10 @@ exe main : srcs ;
     t.run_build_system()
     t.expect_addition("bin/$toolset/debug*/d1.obj")
     t.expect_addition("bin/$toolset/debug*/d1.exe")
+    t.ignore_addition("bin/*/d1.rsp")
     t.expect_addition("subdir/bin/$toolset/debug*/main.obj")
     t.expect_addition("subdir/bin/$toolset/debug*/main.exe")
+    t.ignore_addition("subdir/bin/*/main.rsp")
     t.expect_nothing_more()
     t.cleanup()
 
