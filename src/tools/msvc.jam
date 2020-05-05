@@ -229,6 +229,7 @@ import set ;
 import toolset ;
 import type ;
 import virtual-target ;
+import version ;
 
 
 type.register MANIFEST : manifest ;
@@ -452,6 +453,21 @@ rule configure-version-specific ( toolset : version : conditions )
             # http://msdn.microsoft.com/en-us/library/yt4xw8fh.aspx
             toolset.flags $(toolset).compile CFLAGS $(conditions)/<warnings>all : /Wp64 ;
         }
+    }
+
+    # 12.0 (VS2013 Update 2) introduced /Zc:inline opt-in standard conformance
+    # compiler flag that also similar to linker /opt:ref removes unreferenced
+    # variables and functions that have internal linkage
+    if ! [ version.version-less [ SPLIT_BY_CHARACTERS $(version) : . ] : 12 ]
+    {
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:inline" ;
+    }
+
+    # 14.0 introduced /Zc:throwingNew opt-in flag that disables a workaround
+    # for not throwing operator new in VC up to 6.0
+    if ! [ version.version-less [ SPLIT_BY_CHARACTERS $(version) : . ] : 14 ]
+    {
+        toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:throwingNew" ;
     }
 
     #
