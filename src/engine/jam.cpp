@@ -136,6 +136,9 @@
 #include "execcmd.h"
 #include "sysinfo.h"
 
+#include <errno.h>
+#include <string.h>
+
 /* Macintosh is "special" */
 #ifdef OS_MAC
 # include <QuickDraw.h>
@@ -462,7 +465,8 @@ int main( int argc, char * * argv, char * * arg_environ )
     {
         if ( !( globs.out = fopen( s, "w" ) ) )
         {
-            err_printf( "Failed to write to '%s'\n", s );
+            err_printf( "[errno %d] failed to write output file '%s': %s",
+                errno, s, strerror(errno) );
             exit( EXITBAD );
         }
         /* ++globs.noexec; */
