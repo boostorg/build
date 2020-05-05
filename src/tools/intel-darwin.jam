@@ -32,6 +32,8 @@ toolset.inherit-rules intel-darwin : gcc ;
 toolset.inherit-flags intel-darwin : gcc 
         : <inlining>off <inlining>on <inlining>full <optimization>space 
           <warnings>off <warnings>all <warnings>on
+          <warnings>extra <warnings>pedantic
+          <warnings-as-errors>off <warnings-as-errors>on
           <architecture>x86/<address-model>32
           <architecture>x86/<address-model>64
         ;
@@ -151,10 +153,16 @@ flags intel-darwin.compile OPTIONS <instruction-set>$(.cpu-type-x86-64)/<address
 flags intel-darwin.compile.c OPTIONS <warnings>off : -w0 ;
 flags intel-darwin.compile.c OPTIONS <warnings>on : -w1 ;
 flags intel-darwin.compile.c OPTIONS <warnings>all : -w2 ;
+flags intel-darwin.compile.c OPTIONS <warnings>extra : -w3 ;
+flags intel-darwin.compile.c OPTIONS <warnings>pedantic : -w3 -Wcheck ;
+flags intel-darwin.compile.c OPTIONS <warnings-as-errors>on : -Werror-all ;
 
 flags intel-darwin.compile.c++ OPTIONS <warnings>off : -w0 ;
 flags intel-darwin.compile.c++ OPTIONS <warnings>on : -w1 ;
 flags intel-darwin.compile.c++ OPTIONS <warnings>all : -w2 ;
+flags intel-darwin.compile.c++ OPTIONS <warnings>extra : -w3 ;
+flags intel-darwin.compile.c++ OPTIONS <warnings>pedantic : -w3 -Wcheck ;
+flags intel-darwin.compile.c++ OPTIONS <warnings-as-errors>on : -Werror-all ;
 
 actions compile.c
 {
