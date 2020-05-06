@@ -167,6 +167,7 @@ toolset.inherit-flags embarcadero
       <cxxstd>1z
       <cxxstd>17
       <cxxstd>2a
+      <cxxstd>20
       <cxxstd>latest
       <cxxstd>98/<cxxstd-dialect>iso
       <cxxstd>03/<cxxstd-dialect>iso
@@ -177,6 +178,7 @@ toolset.inherit-flags embarcadero
       <cxxstd>1z/<cxxstd-dialect>iso
       <cxxstd>17/<cxxstd-dialect>iso
       <cxxstd>2a/<cxxstd-dialect>iso
+      <cxxstd>20/<cxxstd-dialect>iso
       <cxxstd>latest/<cxxstd-dialect>iso
     ;
 
