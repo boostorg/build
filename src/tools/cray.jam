@@ -707,7 +707,7 @@ rule set-cxxstd-procedure ( targets * : sources * : properties * )
     local cxxstd = [ feature.get-values cxxstd : $(properties) ] ;
     local cray-cxxstd = ;
 
-    local unsupported-values = 2a ; # I don't know what '2a' means.
+    local unsupported-values = 2a 20 ; # I don't know what '2a' means.
     if $(cxxstd) && $(cxxstd) in $(unsupported-values)
     {
 

@@ -57,6 +57,7 @@ flags pgi.compile.c++ OPTIONS <cxxstd>14 : -std=c++14 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>1z : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>17 : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>2a : -std=c++17 ;
+flags pgi.compile.c++ OPTIONS <cxxstd>20 : -std=c++17 ;
 flags pgi.compile.c++ OPTIONS <cxxstd>latest : -std=c++17 ;
 
 flags pgi.compile OPTIONS <link>shared : -fpic ;
