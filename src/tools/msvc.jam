@@ -7,6 +7,7 @@
 # Copyright (c) 2008 Jurko Gospodnetic
 # Copyright (c) 2014 Microsoft Corporation
 # Copyright (c) 2019 Michał Janiszewski
+# Copyright (c) 2020 Nikita Kniazev
 #
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
@@ -822,7 +823,6 @@ if [ os.name ] in NT
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-        if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
 
     actions manifest
@@ -840,7 +840,6 @@ if [ os.name ] in NT
     actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
         $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-        if %ERRORLEVEL% NEQ 0 EXIT %ERRORLEVEL%
     }
 
     actions manifest.dll
