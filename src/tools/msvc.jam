@@ -2036,15 +2036,16 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 # detailed information.
 .cpu-type-g5       = i586 pentium pentium-mmx ;
 .cpu-type-g6       = i686 pentiumpro pentium2 pentium3 pentium3m pentium-m k6
-                     k6-2 k6-3 winchip-c6 winchip2 c3 c3-2 ;
+                     k6-2 k6-3 winchip-c6 winchip2 c3 c3-2 c7 ;
 .cpu-type-em64t    = prescott nocona core2 corei7 corei7-avx core-avx-i
                      conroe conroe-xe conroe-l allendale merom
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
                      yorksfield nehalem sandy-bridge ivy-bridge haswell
-                     broadwell skylake skylake-avx512 cannonlake icelake ;
+                     broadwell skylake skylake-avx512 cannonlake icelake-client
+                     icelake-server cascadelake cooperlake tigerlake ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
                      athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3
-                     bdver4 btver1 btver2 znver1 ;
+                     bdver4 btver1 btver2 znver1 znver2 ;
 .cpu-type-g7       = pentium4 pentium4m athlon athlon-tbird athlon-4 athlon-xp
                      athlon-mp $(.cpu-type-em64t) $(.cpu-type-amd64) ;
 .cpu-type-itanium  = itanium itanium1 merced ;
