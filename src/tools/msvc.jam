@@ -818,7 +818,6 @@ rule link.dll ( targets + : sources * : properties * )
 # assemblies and Windows native DLLs. The manifests are embedded as resources
 # and are useful in any PE target (both DLL and EXE).
 
-if [ os.name ] in NT
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
     {
@@ -843,32 +842,6 @@ if [ os.name ] in NT
     actions manifest.dll
     {
         $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
-    }
-    actions manifest.dll.user bind EMBED_MANIFEST_FILE
-    {
-        $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);2"
-    }
-}
-else
-{
-    actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
-    {
-        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-    }
-
-    actions manifest
-    {
-        $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
-    }
-
-    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
-    {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
-    }
-
-    actions manifest.dll
-    {
-        $(.SETUP) $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
     }
 
     actions manifest.dll.user bind EMBED_MANIFEST_FILE
