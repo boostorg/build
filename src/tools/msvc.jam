@@ -827,9 +827,7 @@ if [ os.name ] in NT
 
     actions manifest
     {
-        if exist "$(<[1]).manifest" (
-            $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
-        )
+        $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);1"
     }
 
     actions manifest.user bind EMBED_MANIFEST_FILE
@@ -844,9 +842,7 @@ if [ os.name ] in NT
 
     actions manifest.dll
     {
-        if exist "$(<[1]).manifest" (
-            $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
-        )
+        $(.SETUP) $(.MT) -manifest "$(<[1]).manifest" "-outputresource:$(<[1]);2"
     }
     actions manifest.dll.user bind EMBED_MANIFEST_FILE
     {
@@ -862,9 +858,7 @@ else
 
     actions manifest
     {
-        if test -e "$(<[1]).manifest"; then
-            $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
-        fi
+        $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);1"
     }
 
     actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
@@ -874,9 +868,7 @@ else
 
     actions manifest.dll
     {
-        if test -e "$(<[1]).manifest"; then
-            $(.SETUP) $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
-        fi
+        $(.SETUP) $(.MT) -manifest "$(<[1]:W).manifest" "-outputresource:$(<[1]:W);2"
     }
 
     actions manifest.dll.user bind EMBED_MANIFEST_FILE
