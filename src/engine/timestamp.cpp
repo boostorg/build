@@ -6,6 +6,7 @@
 
 /* This file is ALSO:
  * Copyright 2001-2004 David Abrahams.
+ * Copyright 2020 Nikita Kniazev.
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE_1_0.txt or
  * http://www.boost.org/LICENSE_1_0.txt)
@@ -226,5 +227,5 @@ void timestamp_done()
  */
 double timestamp_delta_seconds( timestamp const * const a , timestamp const * const b )
 {
-	return ((b->secs*1000000.0+b->nsecs)-(a->secs*1000000.0+a->nsecs))/1000000.0;
+    return difftime(b->secs, a->secs) + (b->nsecs - a->nsecs) * 1.0E-9;
 }
