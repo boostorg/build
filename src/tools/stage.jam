@@ -47,14 +47,71 @@ used for default installation prefix on certain platforms.
 
 feature.feature install-package : : free ;
 
+
+local rule add-install-dir ( name : suffix : parent ? : options * )
+{
+    feature.feature install-$(name) : : free ;
+    .dir.$(name) = $(suffix) $(parent) ;
+    .dir.$(name).options = $(options) ;
+}
+
+
 #| tag::features-doc[]
 
-[[bbv2.builtin.features.install-prefix]]`install-prefix`::
+[[bbv2.builtin.features.install-prefix]]`install-<name>`::
 Specifies installation prefix for <<bbv2.tasks.installing,`install`>> targets.
+These named installation prefixes are supported:
++
+* `prefix`: `C:\<package name>` if `<target-os>windows` is in the property set,
+  `/usr/local` otherwise
+* `exec-prefix`: `(prefix)`
+* `bindir`: `(exec-prefix)/bin`
+* `sbindir`: `(exec-prefix)/sbin`
+* `libexecdir`: `(exec-prefix)/libexec`
+* `libdir`: `(exec-prefix)/lib`
+* `datarootdir`: `(prefix)/share`
+* `datadir`: `(datarootdir)`
+* `sysconfdir`: `(prefix)/etc`
+* `sharedstatedir`: `(prefix)/com`
+* `localstatedir`: `(prefix)/var`
+* `runstatedir`: `(localstatedir)/run`
+* `includedir`: `(prefix)/include`
+* `oldincludedir`: `/usr/include`
+* `docdir`: `(datarootdir)/doc/<package name>`
+* `infodir`: `(datarootdir)/info`
+* `htmldir`: `(docdir)`
+* `dvidir` : `(docdir)`
+* `pdfdir` : `(docdir)`
+* `psdir` : `(docdir)`
+* `lispdir`: `(datarootdir)/emacs/site-lisp`
+* `localedir`: `(datarootdir)/locale`
+* `mandir`: `(datarootdir)/man`
 
 |# # end::features-doc[]
 
 feature.feature install-prefix : : free path ;
+add-install-dir exec-prefix : "" : prefix ;
+add-install-dir bindir : bin : exec-prefix ;
+add-install-dir sbindir : sbin : exec-prefix ;
+add-install-dir libexecdir : libexec : exec-prefix ;
+add-install-dir libdir : lib : exec-prefix ;
+add-install-dir datarootdir : share : prefix ;
+add-install-dir datadir : "" : datarootdir ;
+add-install-dir sysconfdir : etc : prefix ;
+add-install-dir sharedstatedir : com : prefix ;
+add-install-dir localstatedir : var : prefix ;
+add-install-dir runstatedir : run : localstatedir ;
+add-install-dir includedir : "include" : prefix ;
+add-install-dir oldincludedir : /usr/include ;
+add-install-dir docdir : doc : datarootdir : package-suffix ;
+add-install-dir infodir : info : datarootdir ;
+add-install-dir htmldir : "" : docdir ;
+add-install-dir dvidir : "" : docdir ;
+add-install-dir pdfdir : "" : docdir ;
+add-install-dir psdir : "" : docdir ;
+add-install-dir lispdir : emacs/site-lisp : datarootdir ;
+add-install-dir localedir : locale : datarootdir ;
+add-install-dir mandir : man : datarootdir ;
 
 
 class install-target-class : basic-target
@@ -96,8 +153,11 @@ class install-target-class : basic-target
         if $(matches)
         {
             suffix = $(matches[3]) ;
-            prefix = [ stage.get-install-prefix $(matches[1])
-                : $(property-set) : [ $(self.project).project-module ] ] ;
+            suffix ?= "" ;
+            local package-name = [ stage.get-package-name $(property-set)
+                : [ $(self.project).project-module ] ] ;
+            prefix = [ stage.get-dir $(matches[1]) : $(property-set)
+                : $(package-name) ] ;
         }
         # prefix location with the project's path
         else if ! $(location)
@@ -542,7 +602,58 @@ generators.register [ new installed-shared-lib-generator ] ;
 
 
 # Returns the path to the requested named installation directory
-rule get-install-prefix ( name : property-set : project-module )
+rule get-dir ( name : property-set : package-name )
+{
+    local result ;
+    # We treat the 'prefix' directory in a special way, because it's default
+    # is based on the value of <target-os> property.
+    if $(name) = prefix
+    {
+        result = [ get-install-prefix $(property-set) : $(package-name) ] ;
+    }
+    else
+    {
+        # First, try getting the path for requested directory from properties.
+        result = [ $(property-set).get <install-$(name)> ] ;
+        local info = [ get-dir-info $(name) : $(package-name) ] ;
+        result ?= $(info[1]) ;
+        if $(result)
+        {
+            result = [ path.make $(result) ] ;
+        }
+
+        # If there is a base directory, we need to prepend it to the result.
+        if $(info[2])
+        {
+            local base = [ get-dir $(info[2]) : $(property-set)
+                : $(package-name) ] ;
+            result = [ path.root $(result) $(base) ] ;
+        }
+    }
+
+    return $(result) ;
+}
+
+
+# For a given named directory returns its parent directory and relative path
+local rule get-dir-info ( name : package-name ) {
+    local path = $(.dir.$(name)[1]) ;
+    if ! x$(path)
+    {
+        import errors ;
+        errors.error $(name) is not an installation directory name. ;
+    }
+
+    if package-suffix in $(.dir.$(name).options)
+    {
+        path = [ path.join $(path) $(package-name) ] ;
+    }
+
+    return $(path) $(.dir.$(name)[2]) ;
+}
+
+
+local rule get-install-prefix ( property-set : package-name )
 {
     local prefix = [ $(property-set).get <install-prefix> ] ;
     prefix = $(prefix[0]) ;
@@ -551,8 +662,6 @@ rule get-install-prefix ( name : property-set : project-module )
     {
         if windows = [ $(property-set).get <target-os> ]
         {
-          local package-name = [ get-package-name $(property-set)
-              : $(project-module) ] ;
           prefix = C:\\$(package-name) ;
         }
         else
@@ -564,7 +673,7 @@ rule get-install-prefix ( name : property-set : project-module )
 }
 
 
-local rule get-package-name ( property-set : project-module )
+rule get-package-name ( property-set : project-module )
 {
     local package = [ $(property-set).get <install-package> ] ;
     if ! $(package)
