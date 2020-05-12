@@ -39,6 +39,16 @@ feature.feature <install-no-version-symlinks> : on : optional incidental ;
 
 #| tag::features-doc[]
 
+[[bbv2.builtin.features.install-package]]`install-package`::
+Specifies the name of the package to which installed files belong.  This is
+used for default installation prefix on certain platforms.
+
+|# # end::features-doc[]
+
+feature.feature install-package : : free ;
+
+#| tag::features-doc[]
+
 [[bbv2.builtin.features.install-prefix]]`install-prefix`::
 Specifies installation prefix for <<bbv2.tasks.installing,`install`>> targets.
 
@@ -87,7 +97,7 @@ class install-target-class : basic-target
         {
             suffix = $(matches[3]) ;
             prefix = [ stage.get-install-prefix $(matches[1])
-                : $(property-set) ] ;
+                : $(property-set) : [ $(self.project).project-module ] ] ;
         }
         # prefix location with the project's path
         else if ! $(location)
@@ -532,13 +542,53 @@ generators.register [ new installed-shared-lib-generator ] ;
 
 
 # Returns the path to the requested named installation directory
-rule get-install-prefix ( name : property-set )
+rule get-install-prefix ( name : property-set : project-module )
 {
     local prefix = [ $(property-set).get <install-prefix> ] ;
     prefix = $(prefix[0]) ;
     prefix ?= [ option.get prefix ] ;
-    prefix ?= /usr/local ;
+    if ! $(prefix)
+    {
+        if windows = [ $(property-set).get <target-os> ]
+        {
+          local package-name = [ get-package-name $(property-set)
+              : $(project-module) ] ;
+          prefix = C:\\$(package-name) ;
+        }
+        else
+        {
+            prefix = /usr/local ;
+        }
+    }
     return [ path.make $(prefix) ] ;
+}
+
+
+local rule get-package-name ( property-set : project-module )
+{
+    local package = [ $(property-set).get <install-package> ] ;
+    if ! $(package)
+    {
+        local m = $(project-module) ;
+        package = [ project.attribute $(m) id ] ;
+        while ! $(package)
+        {
+            m = [ project.attribute $(m) parent-module ] ;
+            if ! $(m) { break ; }
+
+            package = [ project.attribute $(m) id ] ;
+        }
+
+        if ! $(package)
+        {
+            package = NOTFOUND ;
+            local root = [ project.attribute $(project-module) project-root ] ;
+            package = [ path.root $(root) [ path.pwd ] ] ;
+        }
+
+        package = $(package:B) ;
+    }
+    return $(package) ;
 }
 
 
