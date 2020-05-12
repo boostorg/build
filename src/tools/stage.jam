@@ -9,7 +9,7 @@
 
 [[bbv2.reference.modules.stage]]
 = stage
-This module defines the 'install' rule, used to copy a set of targets to a
+This module defines the `install` rule, used to copy a set of targets to a
 single location.
 
 |# # end::doc[]
@@ -48,11 +48,64 @@ used for default installation prefix on certain platforms.
 feature.feature install-package : : free ;
 
 
-local rule add-install-dir ( name : suffix : parent ? : options * )
+#| tag::doc[]
+
+[[bbv2.reference.modules.stage.add-install-dir]]
+. `rule add-install-dir ( name : suffix : parent ? : options * )`
++
+Defines a named installation directory.
++
+For example, `add-install-dir foo : bar : baz ;` creates feature
+<<bbv2.builtin.features.install-prefix,`<install-foo>`>> and adds support for
+named directory `(foo)` to `install` rule. The rule will try to use the value
+of `<install-foo>` property if present, otherwise will fallback to `(baz)/bar`.
++
+Arguments:
++
+* `name`: the name of the directory.
+* `suffix`: the path suffix appended to the parent named directory.
+* `parent`: the optional name of parent named directory.
+* `options`: special options that modify treatment of the directory.
+  Allowed options:
++
+** `package-suffix`: append the package name to the default value. For example:
++
+[source]
+----
+add-install-dir foo : bar : baz : package-suffix ;
+install (foo) : a : <install-package>xyz ;
+----
++
+installs `a` into `(baz)/bar/xyz`.
+
+|# # end::doc[]
+
+.dirs = ;
+rule add-install-dir ( name : suffix : parent ? : options * )
 {
+    if $(name) in $(.dirs)
+    {
+        import errors ;
+        errors.error Directory name $(name) is already registered. ;
+    }
     feature.feature install-$(name) : : free ;
+    .dirs += $(name) ;
     .dir.$(name) = $(suffix) $(parent) ;
     .dir.$(name).options = $(options) ;
+}
+
+
+#| tag::doc[]
+
+. `rule install-dir-names ( )`
++
+Returns names of all registered installation directories.
+
+|# # end::doc[]
+
+rule install-dir-names ( )
+{
+    return $(.dirs) ;
 }
 
 
@@ -60,7 +113,7 @@ local rule add-install-dir ( name : suffix : parent ? : options * )
 
 [[bbv2.builtin.features.install-prefix]]`install-<name>`::
 Specifies installation prefix for <<bbv2.tasks.installing,`install`>> targets.
-These named installation prefixes are supported:
+These named installation prefixes are registered by default:
 +
 * `prefix`: `C:\<package name>` if `<target-os>windows` is in the property set,
   `/usr/local` otherwise
@@ -86,6 +139,9 @@ These named installation prefixes are supported:
 * `lispdir`: `(datarootdir)/emacs/site-lisp`
 * `localedir`: `(datarootdir)/locale`
 * `mandir`: `(datarootdir)/man`
+
+If more are necessary, they could be added with
+<<bbv2.reference.modules.stage.add-install-dir,`stage.add-install-dir`>>.
 
 |# # end::features-doc[]
 

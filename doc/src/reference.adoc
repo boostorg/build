@@ -891,6 +891,8 @@ include::regex.adoc[]
 
 include::sequence.adoc[]
 
+include::../../src/tools/stage.jam[tag=doc]
+
 include::type.adoc[]
 
 :leveloffset: -2
