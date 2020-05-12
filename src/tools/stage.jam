@@ -5,12 +5,20 @@
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
-# This module defines the 'install' rule, used to copy a set of targets to a
-# single location.
+#| tag::doc[]
+
+[[bbv2.reference.modules.stage]]
+= stage
+This module defines the 'install' rule, used to copy a set of targets to a
+single location.
+
+|# # end::doc[]
+
 
 import "class" : new ;
 import feature ;
 import generators ;
+import option ;
 import path ;
 import project ;
 import targets ;
@@ -27,6 +35,16 @@ feature.feature <so-version>           :        : free incidental ;
 # If 'on', version symlinks for shared libraries will not be created. Affects
 # Unix builds only.
 feature.feature <install-no-version-symlinks> : on : optional incidental ;
+
+
+#| tag::features-doc[]
+
+[[bbv2.builtin.features.install-prefix]]`install-prefix`::
+Specifies installation prefix for <<bbv2.tasks.installing,`install`>> targets.
+
+|# # end::features-doc[]
+
+feature.feature install-prefix : : free path ;
 
 
 class install-target-class : basic-target
@@ -53,14 +71,37 @@ class install-target-class : basic-target
     }
 
     # If <location> is not set, sets it based on the project data.
-    #
+    # Either way, expands installation prefixes.
     rule update-location ( property-set )
     {
-        local loc = [ $(property-set).get <location> ] ;
-        if ! $(loc)
+        local location = [ $(property-set).get <location> ] ;
+
+        local prefix ;
+        local suffix = $(location) ;
+        suffix ?= $(self.name) ;
+        local matches = [ MATCH "^\\((.+)\\)(/(.*))?$" : $(suffix) ] ;
+
+        # if location can be split into named directory and optional trailing
+        # path, do the split and expand the name into path
+        if $(matches)
         {
-            loc = [ path.root $(self.name) [ $(self.project).get location ] ] ;
-            property-set = [ $(property-set).add-raw $(loc:G=<location>) ] ;
+            suffix = $(matches[3]) ;
+            prefix = [ stage.get-install-prefix $(matches[1])
+                : $(property-set) ] ;
+        }
+        # prefix location with the project's path
+        else if ! $(location)
+        {
+            prefix = [ $(self.project).get location ] ;
+        }
+
+        # only modify location if it's necessary
+        if $(prefix)
+        {
+            suffix = [ path.root $(suffix) $(prefix) ] ;
+            local properties = [ $(property-set).raw ] ;
+            properties = [ property.change $(properties) : <location> ] ;
+            property-set = [ property-set.create $(properties) <location>$(suffix) ] ;
         }
 
         return $(property-set) ;
@@ -488,6 +529,17 @@ class installed-shared-lib-generator : generator
 }
 
 generators.register [ new installed-shared-lib-generator ] ;
+
+
+# Returns the path to the requested named installation directory
+rule get-install-prefix ( name : property-set )
+{
+    local prefix = [ $(property-set).get <install-prefix> ] ;
+    prefix = $(prefix[0]) ;
+    prefix ?= [ option.get prefix ] ;
+    prefix ?= /usr/local ;
+    return [ path.make $(prefix) ] ;
+}
 
 
 # Main target rule for 'install'.
