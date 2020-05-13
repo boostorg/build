@@ -499,8 +499,11 @@ local rule compile-link-flags ( * )
     local rule init-cxxstd-flags ( condition * : version )
     {
         local std ;
-        if [ version-ge $(version) : 8 ] { std = 2a ; }
+        if [ version-ge $(version) : 10 ] { std = 20 ; }
+        else if [ version-ge $(version) : 8 ] { std = 2a ; }
+        else if [ version-ge $(version) : 6 ] { std = 17 ; }
         else if [ version-ge $(version) : 5 ] { std = 1z ; }
+        else if [ version-ge $(version) : 4.9 ] { std = 14 ; }
         else if [ version-ge $(version) : 4.8 ] { std = 1y ; }
         else if [ version-ge $(version) : 4.7 ] { std = 11 ; }
         else if [ version-ge $(version) : 3.3 ] { std = 98 ; }
@@ -1260,7 +1263,11 @@ cpu-flags gcc OPTIONS : x86 : broadwell : -march=broadwell ;
 cpu-flags gcc OPTIONS : x86 : skylake : -march=skylake ;
 cpu-flags gcc OPTIONS : x86 : skylake-avx512 : -march=skylake-avx512 ;
 cpu-flags gcc OPTIONS : x86 : cannonlake : -march=skylake-avx512 -mavx512vbmi -mavx512ifma -msha ;
-cpu-flags gcc OPTIONS : x86 : icelake : -march=icelake ;
+cpu-flags gcc OPTIONS : x86 : icelake-client : -march=icelake-client ;
+cpu-flags gcc OPTIONS : x86 : icelake-server : -march=icelake-server ;
+cpu-flags gcc OPTIONS : x86 : cascadelake : -march=skylake-avx512 -mavx512vnni ;
+cpu-flags gcc OPTIONS : x86 : cooperlake : -march=cooperlake ;
+cpu-flags gcc OPTIONS : x86 : tigerlake : -march=tigerlake ;
 cpu-flags gcc OPTIONS : x86 : k6 : -march=k6 ;
 cpu-flags gcc OPTIONS : x86 : k6-2 : -march=k6-2 ;
 cpu-flags gcc OPTIONS : x86 : k6-3 : -march=k6-3 ;
@@ -1286,10 +1293,12 @@ cpu-flags gcc OPTIONS : x86 : bdver4 : -march=bdver4 ;
 cpu-flags gcc OPTIONS : x86 : btver1 : -march=btver1 ;
 cpu-flags gcc OPTIONS : x86 : btver2 : -march=btver2 ;
 cpu-flags gcc OPTIONS : x86 : znver1 : -march=znver1 ;
+cpu-flags gcc OPTIONS : x86 : znver2 : -march=znver2 ;
 cpu-flags gcc OPTIONS : x86 : winchip-c6 : -march=winchip-c6 ;
 cpu-flags gcc OPTIONS : x86 : winchip2 : -march=winchip2 ;
 cpu-flags gcc OPTIONS : x86 : c3 : -march=c3 ;
 cpu-flags gcc OPTIONS : x86 : c3-2 : -march=c3-2 ;
+cpu-flags gcc OPTIONS : x86 : c7 : -march=c7 ;
 ##
 cpu-flags gcc OPTIONS : x86 : atom : -march=atom ;
 # Sparc

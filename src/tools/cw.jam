@@ -225,6 +225,8 @@ flags cw.compile CFLAGS <rtti>off : -RTTI off ;
 flags cw.compile CFLAGS <warnings>on : -w on ;
 flags cw.compile CFLAGS <warnings>off : -w off ;
 flags cw.compile CFLAGS <warnings>all : -w all ;
+flags cw.compile CFLAGS <warnings>extra : -w all ;
+flags cw.compile CFLAGS <warnings>pedantic : -w all ;
 flags cw.compile CFLAGS <warnings-as-errors>on : -w error ;
 
 flags cw.compile USER_CFLAGS <cflags> : ;

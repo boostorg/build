@@ -190,6 +190,8 @@ else
 
 flags borland.compile OPTIONS <warnings>off : -w- ;
 flags borland.compile OPTIONS <warnings>all : -w ;
+flags borland.compile OPTIONS <warnings>extra : -w ;
+flags borland.compile OPTIONS <warnings>pedantic : -w ;
 flags borland.compile OPTIONS <warnings-as-errors>on : -w! ;
 
 flags borland OPTIONS <user-interface>gui : -tW ;

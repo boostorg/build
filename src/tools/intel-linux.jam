@@ -36,6 +36,8 @@ toolset.inherit-flags intel-linux : gcc
         : <inlining>off <inlining>on <inlining>full
           <optimization>space <optimization>speed
           <warnings>off <warnings>all <warnings>on
+          <warnings>extra <warnings>pedantic
+          <warnings-as-errors>off <warnings-as-errors>on
         ;
         
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
@@ -157,6 +159,9 @@ SPACE = " " ;
 flags intel-linux.compile OPTIONS <warnings>off : -w0 ;
 flags intel-linux.compile OPTIONS <warnings>on : -w1 ;
 flags intel-linux.compile OPTIONS <warnings>all : -w2 ;
+flags intel-linux.compile OPTIONS <warnings>extra : -w3 ;
+flags intel-linux.compile OPTIONS <warnings>pedantic : -w3 -Wcheck ;
+flags intel-linux.compile OPTIONS <warnings-as-errors>on : -Werror-all ;
 
 rule compile.c++ ( targets * : sources * : properties * )
 {

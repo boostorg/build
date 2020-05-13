@@ -24,6 +24,7 @@
 #include "output.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -5017,8 +5018,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 if ( !out_file )
                 {
-                    err_printf( "failed to write output file '%s'!\n",
-                        out_name->value );
+                    err_printf( "[errno %d] failed to write output file '%s': %s",
+                        errno, out_name->value, strerror(errno) );
                     exit( EXITBAD );
                 }
                 string_free( out_name );
