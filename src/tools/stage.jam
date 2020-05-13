@@ -186,7 +186,7 @@ install a2 : a : <location>(bindir) <staging-prefix>q ; # installs into q/bin
 The feature is useful when you cannot (or don't want to) put build artfiacts
 into their intented locations during the build (such as when cross-compiling),
 but still need to communicate those intended locations to the build system,
-e.g.to generate configuration files.
+e.g. to generate configuration files.
 
 |# # end::features2-doc[]
 
@@ -719,6 +719,7 @@ Available `flags`:
 +
 * `staged`: take <<bbv2.builtin.features.staging-prefix,`staging-prefix`>> into
   account.
+* `relative`: return the path to `name` relative to its base directory.
 
 |# # end::doc[]
 
@@ -738,19 +739,31 @@ rule get-dir ( name : property-set : package-name : flags * )
         # First, try getting the path for requested directory from properties.
         result = [ $(property-set).get <install-$(name)> ] ;
         local info = [ get-dir-info $(name) : $(package-name) ] ;
-        # Otherwise, use the default path.
+        # Otherwise, use the default path. In both cases, it could be a
+        # relative path.
         result ?= $(info[1]) ;
         if $(result)
         {
             result = [ path.make $(result) ] ;
         }
 
-        # If there is a base directory, we need to prepend it to the result.
+        # If there is a base directory, we may need to modify result further.
         if $(info[2])
         {
             local base = [ get-dir $(info[2]) : $(property-set)
                 : $(package-name) : $(flags) ] ;
-            result = [ path.root $(result) $(base) ] ;
+            if relative in $(flags)
+            {
+                local rel = [ path.relative $(result) $(base) : no-error ] ;
+                if not-a-child != $(rel)
+                {
+                    result = $(rel) ;
+                }
+            }
+            else
+            {
+                result = [ path.root $(result) $(base) ] ;
+            }
         }
     }
 
