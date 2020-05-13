@@ -22,4 +22,18 @@ install (foodir)/a6 : a ;
 stage.add-install-dir privatedir : "" : libdir : package-suffix ;
 install (privatedir)/a7 : a ;
 
+# using stage.get-package-name
+make a8 : a : @write-docdir ;
+
+rule write-docdir ( target : sources * : properties *  )
+{
+    import property-set ;
+    import print ;
+    local ps = [ property-set.create $(properties) ] ;
+    local pn = [ stage.get-package-name $(ps) ] ;
+    local docdir = [ stage.get-dir docdir : $(ps) : $(pn) ] ;
+    print.output $(target) ;
+    print.text $(docdir) : overwrite ;
+}
+
 build-project x ;
