@@ -81,6 +81,15 @@ is not used to initialize the toolset.
 Specifies the user interface for applications. Valid choices are `console`
 for a console applicatiuon and `gui` for a Windows application.
 
+`asm64`::
+Specifies the full file spec of the `nasm` assembler to be used in 64-bit builds.
+The `nasm` assembler is not distributed by Embarcadero but may be downloaded
+from `https://www.nasm.us/`. If this option is not specified it is assumed that
+the `nasm` assembler can be invoked directly without a full filespec, so most
+probably in that case it will be in the Windows PATH. For the 32-bit assembler
+the `tasm32` assembler distributed by Embarcadero as part of their compiler will
+be used, and does not have to be specified.
+
 `root`::
 Normallly Boost Build will automatically be able to determine the root of
 the Embarcadero C++ installation. It does this in various ways, but primarily
@@ -391,6 +400,9 @@ rule init ( version ? :  command * : options * )
         local archiver ;
         local arflags ;
         local implib ;
+        local assembler ;
+        local asmflags ;
+        local asmoutput ;
         
         if $(compiler) = bcc32x
             {
@@ -399,14 +411,38 @@ rule init ( version ? :  command * : options * )
             archiver = tlib ;
             arflags = /P512 ;
             implib = implib ;
+            assembler = $(root)/bin/tasm32 ;
+            
+            # /ml makes all symbol names case-sensitive
+
+            asmflags = /ml ;
+            asmoutput = "," ;
             }
         else if $(compiler) = bcc64
             {
+            
             lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
             lib_dir_debug = $(root)/lib/win64/debug ;
             archiver = tlib64 ;
             arflags = /P2048 ;
             implib = mkexp ;
+            
+            local asm64 = [ feature.get-values <asm64> : $(options) ] ;
+            
+            if $(asm64)
+                {
+                assembler = $(asm64) ;
+                }
+            else
+                {
+                assembler = nasm ;
+                }
+                
+            # -t is tasm compatibility
+            # -f elf64 is ELF 64-bit format
+
+            asmflags = -t -f elf64 ;
+            asmoutput = "-o" ;
             }
         
         flags embarcadero.compile .EMB_SYSINC $(condition) : $(system_include_option)$(system_include_directories) ;
@@ -414,7 +450,9 @@ rule init ( version ? :  command * : options * )
         flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
         flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
         flags embarcadero.archive .ARFLAGS $(condition) : $(arflags) ;
-        flags embarcadero.asm .TASM $(condition) : $(root)/bin/tasm32 ;
+        flags embarcadero.asm .ASM $(condition) : $(assembler) ;
+        flags embarcadero.asm .ASMFLAGS $(condition) : $(asmflags) ;
+        flags embarcadero.asm .ASMOUTPUT $(condition) : $(asmoutput) ;
         flags embarcadero.asm USER_OPTIONS $(condition) : [ feature.get-values <asmflags> : $(options) ] ;
         flags embarcadero.archive AROPTIONS $(condition) : [ feature.get-values <archiveflags> : $(options) ] ;
         flags embarcadero.link.dll .IMPLIB_COMMAND $(condition) : $(root)/bin/$(implib) ;
@@ -505,15 +543,15 @@ local rule handle-options ( condition * : command * : options * )
             $(condition:E=(empty)) ;
     }
 
-    toolset.flags embarcadero CONFIG_COMMAND $(condition) : $(command) ;
+    flags embarcadero CONFIG_COMMAND $(condition) : $(command) ;
 
-    toolset.flags embarcadero.compile         OPTIONS $(condition) :
+    flags embarcadero.compile         OPTIONS $(condition) :
         [ feature.get-values <cflags>       : $(options) ] ;
 
-    toolset.flags embarcadero.compile.c++     OPTIONS $(condition) :
+    flags embarcadero.compile.c++     OPTIONS $(condition) :
         [ feature.get-values <cxxflags>     : $(options) ] ;
 
-    toolset.flags embarcadero.link            OPTIONS $(condition) :
+    flags embarcadero.link            OPTIONS $(condition) :
         [ feature.get-values <linkflags>    : $(options) ] ;
 }
 
@@ -611,8 +649,7 @@ rule asm ( targets * : sources * : properties * )
 {
 }
 
-# /ml makes all symbol names case-sensitive
 actions asm
 {
-    $(.TASM) /ml $(USER_OPTIONS) "$(>)" "$(<)"
+    $(.ASM) $(.ASMFLAGS) $(USER_OPTIONS) "$(>)" $(.ASMOUTPUT) "$(<)"
 }
