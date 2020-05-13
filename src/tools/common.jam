@@ -1028,7 +1028,8 @@ local rule runtime-tag ( name : type ? : property-set )
     # known to care about runtime debugging.
     if ( <toolset>msvc in $(properties) ) ||
         ( <stdlib>stlport in $(properties) ) ||
-        ( <toolset-intel:platform>win in $(properties) )
+        ( <toolset-intel:platform>win in $(properties) ) ||
+        ( <toolset-clang:platform>win in $(properties) )
     {
         if <runtime-debugging>on in $(properties) { tag += g ; }
     }
