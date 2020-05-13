@@ -170,6 +170,29 @@ add-install-dir localedir : locale : datarootdir ;
 add-install-dir mandir : man : datarootdir ;
 
 
+#| tag::features2-doc[]
+
+[[bbv2.builtin.features.staging-prefix]]`staging-prefix`::
+Specifies staging prefix for <<bbv2.tasks.installing,`install`>> targets.
+If present, it will be used instead of the path to named directory `prefix`.
+Example:
++
+[source]
+----
+project : requirements <install-prefix>x/y/z ;
+install a1 : a : <location>(bindir) ; # installs into x/y/z/bin
+install a2 : a : <location>(bindir) <staging-prefix>q ; # installs into q/bin
+----
+The feature is useful when you cannot (or don't want to) put build artfiacts
+into their intented locations during the build (such as when cross-compiling),
+but still need to communicate those intended locations to the build system,
+e.g.to generate configuration files.
+
+|# # end::features2-doc[]
+
+feature.feature staging-prefix : : free path ;
+
+
 class install-target-class : basic-target
 {
     import "class" : new ;
@@ -223,7 +246,7 @@ class install-target-class : basic-target
             local package-name = [ stage.get-package-name $(property-set)
                 : [ $(self.project).project-module ] ] ;
             prefix = [ stage.get-dir $(matches[1]) : $(property-set)
-                : $(package-name) ] ;
+                : $(package-name) : staged ] ;
         }
         # prefix location with the project's path
         else if ! $(location)
@@ -669,7 +692,7 @@ generators.register [ new installed-shared-lib-generator ] ;
 
 #| tag::doc[]
 
-. `rule get-dir ( name : property-set : package-name )`
+. `rule get-dir ( name : property-set : package-name : flags * )`
 +
 Returns the path to a named installation directory. For a given `name=xyz` the
 rule uses the value of `<install-xyz>` property if it is present in
@@ -691,23 +714,31 @@ echo [ stage.get-dir foo : $(ps) : $(__name__) ] ; # outputs a/b/c/d/bar
 The argument `package-name` is used to construct the path for named directories
 that were registered with `package-suffix` option and also to construct
 `install-prefix` when targeting Windows.
++
+Available `flags`:
++
+* `staged`: take <<bbv2.builtin.features.staging-prefix,`staging-prefix`>> into
+  account.
 
 |# # end::doc[]
 
-rule get-dir ( name : property-set : package-name )
+rule get-dir ( name : property-set : package-name : flags * )
 {
     local result ;
+
     # We treat the 'prefix' directory in a special way, because it's default
     # is based on the value of <target-os> property.
     if $(name) = prefix
     {
-        result = [ get-install-prefix $(property-set) : $(package-name) ] ;
+        result = [ get-install-prefix $(property-set) : $(package-name)
+            : $(flags) ] ;
     }
     else
     {
         # First, try getting the path for requested directory from properties.
         result = [ $(property-set).get <install-$(name)> ] ;
         local info = [ get-dir-info $(name) : $(package-name) ] ;
+        # Otherwise, use the default path.
         result ?= $(info[1]) ;
         if $(result)
         {
@@ -718,7 +749,7 @@ rule get-dir ( name : property-set : package-name )
         if $(info[2])
         {
             local base = [ get-dir $(info[2]) : $(property-set)
-                : $(package-name) ] ;
+                : $(package-name) : $(flags) ] ;
             result = [ path.root $(result) $(base) ] ;
         }
     }
@@ -745,9 +776,14 @@ local rule get-dir-info ( name : package-name ) {
 }
 
 
-local rule get-install-prefix ( property-set : package-name )
+local rule get-install-prefix ( property-set : package-name : flags * )
 {
-    local prefix = [ $(property-set).get <install-prefix> ] ;
+    local prefix ;
+    if staged in $(flags)
+    {
+        prefix = [ $(property-set).get <staging-prefix> ] ;
+    }
+    prefix ?= [ $(property-set).get <install-prefix> ] ;
     prefix = $(prefix[0]) ;
     prefix ?= [ option.get prefix ] ;
     if ! $(prefix)

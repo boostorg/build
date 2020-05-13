@@ -36,4 +36,8 @@ rule write-docdir ( target : sources * : properties *  )
     print.text $(docdir) : overwrite ;
 }
 
+# using staging prefix; on Linux installs into q/r/s/share/a9
+install (datarootdir)/a9 : a : <staging-prefix>q/r/s ;
+
+
 build-project x ;
