@@ -81,15 +81,6 @@ is not used to initialize the toolset.
 Specifies the user interface for applications. Valid choices are `console`
 for a console applicatiuon and `gui` for a Windows application.
 
-`asm64`::
-Specifies the full file spec of the `nasm` assembler to be used in 64-bit builds.
-The `nasm` assembler is not distributed by Embarcadero but may be downloaded
-from `https://www.nasm.us/`. If this option is not specified it is assumed that
-the `nasm` assembler can be invoked directly without a full filespec, so most
-probably in that case it will be in the Windows PATH. For the 32-bit assembler
-the `tasm32` assembler distributed by Embarcadero as part of their compiler will
-be used, and does not have to be specified.
-
 `root`::
 Normallly Boost Build will automatically be able to determine the root of
 the Embarcadero C++ installation. It does this in various ways, but primarily
@@ -428,23 +419,6 @@ rule init ( version ? :  command * : options * )
             archiver = tlib64 ;
             arflags = /P2048 ;
             implib = mkexp ;
-            
-            local asm64 = [ feature.get-values <asm64> : $(options) ] ;
-            
-            if $(asm64)
-                {
-                assembler = $(asm64) ;
-                }
-            else
-                {
-                assembler = nasm ;
-                }
-                
-            # -t is tasm compatibility
-            # -f elf64 is ELF 64-bit format
-
-            asmflags = -t -f elf64 ;
-            asmoutput = "-o" ;
             }
         
         flags embarcadero.compile .EMB_SYSINC $(condition) : $(system_include_option)$(system_include_directories) ;
@@ -573,7 +547,8 @@ generators.register-linker embarcadero.link.dll : OBJ SEARCHED_LIB STATIC_LIB IM
 generators.register-archiver embarcadero.archive : OBJ : STATIC_LIB : <toolset>embarcadero ;
 generators.register-c-compiler embarcadero.compile.c++ : CPP : OBJ : <toolset>embarcadero ;
 generators.register-c-compiler embarcadero.compile.c : C : OBJ : <toolset>embarcadero ;
-generators.register-standard embarcadero.asm : ASM : OBJ : <toolset>embarcadero ;
+generators.register-c-compiler embarcadero.compile.asm : ASM : OBJ : <toolset>embarcadero <address-model>64 ;
+generators.register-standard embarcadero.asm : ASM : OBJ : <toolset>embarcadero <address-model>32 ;
 
 # Flags
 
@@ -654,4 +629,14 @@ rule asm ( targets * : sources * : properties * )
 actions asm
 {
     $(.ASM) $(.ASMFLAGS) $(USER_OPTIONS) "$(>)" $(.ASMOUTPUT) "$(<)"
+}
+
+rule compile.asm ( targets * : sources * : properties * )
+{
+    LANG on $(<) = "-x assembler-with-cpp" ;
+}
+
+actions compile.asm
+{
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
