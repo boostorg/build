@@ -1257,12 +1257,12 @@ Select elements number _n_ through the last. _n_ can be negative in
 which case it refers to the element counting from the last leftward.
 
 `:B`::
- +
- Select filename base.
++
+Select filename base -- a basename without extension.
 
 `:S`::
 +
-Select (last) filename suffix.
+Select file extension -- a (last) filename suffix.
 
 `:M`::
 +
@@ -1327,6 +1327,8 @@ On other platforms, the string is unchanged.
 
 `:chars`::
 Select the components listed in _chars_.
++
+For example, `:BS` selects filename (basename and extension).
 
 `:G=grist`::
 Replace grist with _grist_.
