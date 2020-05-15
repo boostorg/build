@@ -9,6 +9,7 @@ from __future__ import print_function
 import sys
 import os
 import re
+import fnmatch
 
 # Represents a sequence of arguments that must appear
 # in a fixed order.
@@ -87,7 +88,7 @@ class arg_file:
     def match(self, command_line, pos, outputs):
         if command_line[pos].startswith("-"):
             return
-        if command_line[pos] == self.id:
+        if fnmatch.fnmatch(command_line[pos], self.id):
             return pos + 1
         else:
             return
@@ -197,7 +198,7 @@ def main():
                 f.write(make_file_contents(id))
         exit(0)
     else:
-        print(command_line)
+        print("ERROR on command: %s"%(" ".join(command_line)))
         exit(1)
 
 # file should be the name of a file in the same directory
