@@ -589,3 +589,12 @@ else
         return $(path) ;
     }
 }
+
+rule __test__ ( )
+{
+    import errors : try catch ;
+
+    try ;
+        create invalid-property ;
+    catch "Invalid property: 'invalid-property'" ;
+}
