@@ -179,11 +179,15 @@ LIST * property_set_create( FRAME * frame, int flags )
                 string_append( message, "Invalid property: '" );
                 string_append( message, str );
                 string_append( message, "'" );
+                LIST * imports = list_new( object_new( "errors" ) );
+                import_module( imports, frame->module );
                 rulename = object_new( "errors.error" );
                 call_rule( rulename, frame,
                     list_new( object_new( message->value ) ), 0 );
                 /* unreachable */
                 string_free( message );
+                object_free( list_front( imports ) );
+                list_free( imports );
                 object_free( rulename );
             }
         }
