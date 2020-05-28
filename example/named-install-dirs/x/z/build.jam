@@ -1,0 +1,6 @@
+# this subproject does have a name, so its name is used as its default package
+# name
+
+project subz ;
+
+install (docdir)/z1 : ../../a ;
