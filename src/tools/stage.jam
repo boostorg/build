@@ -1,6 +1,7 @@
 # Copyright 2003 Dave Abrahams
 # Copyright 2005, 2006 Rene Rivera
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
+# Copyright 2020 Dmitry Arkhipov
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -37,13 +38,13 @@ feature.feature <so-version>           :        : free incidental ;
 feature.feature <install-no-version-symlinks> : on : optional incidental ;
 
 
-#| tag::features-doc[]
+#| tag::features-install-package-doc[]
 
 [[bbv2.builtin.features.install-package]]`install-package`::
 Specifies the name of the package to which installed files belong.  This is
 used for default installation prefix on certain platforms.
 
-|# # end::features-doc[]
+|# # end::features-install-package-doc[]
 
 feature.feature install-package : : free ;
 
@@ -109,7 +110,7 @@ rule install-dir-names ( )
 }
 
 
-#| tag::features-doc[]
+#| tag::features-install-prefix-doc[]
 
 [[bbv2.builtin.features.install-prefix]]`install-<name>`::
 Specifies installation prefix for <<bbv2.tasks.installing,`install`>> targets.
@@ -143,7 +144,7 @@ These named installation prefixes are registered by default:
 If more are necessary, they could be added with
 <<bbv2.reference.modules.stage.add-install-dir,`stage.add-install-dir`>>.
 
-|# # end::features-doc[]
+|# # end::features-install-prefix-doc[]
 
 feature.feature install-prefix : : free path ;
 add-install-dir exec-prefix : "" : prefix ;
@@ -170,7 +171,7 @@ add-install-dir localedir : locale : datarootdir ;
 add-install-dir mandir : man : datarootdir ;
 
 
-#| tag::features2-doc[]
+#| tag::features-staging-prefix-doc[]
 
 [[bbv2.builtin.features.staging-prefix]]`staging-prefix`::
 Specifies staging prefix for <<bbv2.tasks.installing,`install`>> targets.
@@ -188,7 +189,7 @@ into their intented locations during the build (such as when cross-compiling),
 but still need to communicate those intended locations to the build system,
 e.g. to generate configuration files.
 
-|# # end::features2-doc[]
+|# # end::features-staging-prefix-doc[]
 
 feature.feature staging-prefix : : free path ;
 
