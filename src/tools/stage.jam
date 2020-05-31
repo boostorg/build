@@ -52,7 +52,7 @@ feature.feature install-package : : free ;
 #| tag::doc[]
 
 [[bbv2.reference.modules.stage.add-install-dir]]
-. `rule add-install-dir ( name : suffix : parent ? : options * )`
+. `rule add-install-dir ( name : suffix ? : parent ? : options * )`
 +
 Defines a named installation directory.
 +
@@ -82,8 +82,9 @@ installs `a` into `(baz)/bar/xyz`.
 |# # end::doc[]
 
 .dirs = ;
-rule add-install-dir ( name : suffix : parent ? : options * )
+rule add-install-dir ( name : suffix ? : parent ? : options * )
 {
+    suffix ?= "" ;
     if $(name) in $(.dirs)
     {
         import errors ;
