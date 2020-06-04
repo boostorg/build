@@ -263,6 +263,16 @@ Input and Output -> Additional Manifest Files.
 
 feature.feature embed-manifest-file : : free dependency ;
 
+#| tag::embed-doc[]
+
+[[bbv2.builtin.features.embed-manifest-via]]`embed-manifest-via`::
+This feature is specific to the `msvc` toolset (see <<Microsoft Visual C++>>),
+and controls whether a manifest should be embedded via linker or manifest tool.
+
+|# # end::embed-doc[]
+
+feature.feature embed-manifest-via : mt linker : incidental propagated ;
+
 type.register PDB : pdb ;
 
 
@@ -514,9 +524,21 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : "/MACHINE:ARM" ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm64) : "/MACHINE:ARM64" ;
 
-        # Make sure that manifest will be generated even if there is no
-        # dependencies to put there.
-        toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
+        if [ version.version-less [ SPLIT_BY_CHARACTERS $(version) : . ] : 11 ]
+        {
+            # Make sure that manifest will be generated even if there is no
+            # dependencies to put there.
+            toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
+        }
+        else
+        {
+            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>mt : /MANIFEST ;
+            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>linker/<embed-manifest>off : /MANIFEST ;
+            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>linker/<embed-manifest>on : "/MANIFEST:EMBED" ;
+
+            local conditionx = [ feature.split $(conditions) ] ;
+            toolset.add-defaults $(conditionx:J=,)\:<embed-manifest-via>linker ;
+        }
     }
 
     toolset.pop-checking-for-flags-module ;
@@ -760,7 +782,7 @@ toolset.uses-features msvc.link : <embed-manifest> <embed-manifest-file> ;
 rule link ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    if <embed-manifest>on in $(properties)
+    if <embed-manifest>on in $(properties) && <embed-manifest-via>mt in $(properties)
     {
         if [ feature.get-values <embed-manifest-file> : $(properties) ]
         {
@@ -794,7 +816,7 @@ rule link.dll ( targets + : sources * : properties * )
     # on it depends on the dll as well.
     NOUPDATE $(import-lib) ;
     INCLUDES $(import-lib) : $(targets[1]) ;
-    if <embed-manifest>on in $(properties)
+    if <embed-manifest>on in $(properties) && <embed-manifest-via>mt in $(properties)
     {
         if [ feature.get-values <embed-manifest-file> : $(properties) ]
         {
@@ -819,9 +841,9 @@ rule link.dll ( targets + : sources * : properties * )
 # and are useful in any PE target (both DLL and EXE).
 
 {
-    actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+    actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 
     actions manifest
@@ -834,9 +856,9 @@ rule link.dll ( targets + : sources * : properties * )
         $(.SETUP) $(.MT) -manifest "$(EMBED_MANIFEST_FILE)" "-outputresource:$(<[1]);1"
     }
 
-    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE
+    actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
     }
 
     actions manifest.dll
@@ -1872,6 +1894,7 @@ local rule register-toolset-really ( )
         toolset.flags msvc.link PDB_LINKFLAG <debug-symbols>on/<debug-store>database : "/PDB:" ;  # not used yet
         toolset.flags msvc.link LINKFLAGS <debug-symbols>on : /DEBUG ;
         toolset.flags msvc.link DEF_FILE <def-file> ;
+        toolset.flags msvc.link MANIFEST_FILE <embed-manifest-via>linker : <embed-manifest-file> ;
 
         # The linker disables the default optimizations when using /DEBUG so we
         # have to enable them manually for release builds with debug symbols.
