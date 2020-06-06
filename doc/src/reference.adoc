@@ -275,7 +275,7 @@ include::../../src/tools/features/optimization-feature.jam[tag=vector-doc]
 include::../../src/tools/features/version-feature.jam[tag=doc]
 include::../../src/tools/features/visibility-feature.jam[tag=doc]
 include::../../src/tools/features/warnings-feature.jam[tag=doc]
-
+include::../../src/tools/features/translate-path-feature.jam[tag=doc]
 include::../../src/tools/features/lto-feature.jam[tag=doc]
 
 [[bbv2.reference.tools]]
