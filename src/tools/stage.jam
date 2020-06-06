@@ -22,6 +22,7 @@ import generators ;
 import option ;
 import path ;
 import project ;
+import property ;
 import targets ;
 import type ;
 import types/register ;
@@ -861,6 +862,15 @@ rule get-package-name ( property-set : project-module ? )
 }
 
 
+rule stage-translate-path ( feature value : properties * : project-id : project-location )
+{
+    if $(feature) = <location> && [ MATCH "^\\((.+)\\)(/(.*))?$" : $(value) ]
+    {
+        return $(value) ;
+    }
+}
+
+
 # Main target rule for 'install'.
 #
 rule install ( name : sources * : requirements * : default-build * )
@@ -882,9 +892,10 @@ rule install ( name : sources * : requirements * : default-build * )
     }
 
     targets.create-metatarget install-target-class : $(project) : $(name) :
-        $(sources) : $(requirements) : $(default-build) ;
+        $(sources) : $(requirements) <translate-path>@stage-translate-path : $(default-build) ;
 }
 
 
 IMPORT $(__name__) : install : : install ;
 IMPORT $(__name__) : install : : stage ;
+IMPORT $(__name__) : stage-translate-path : : stage-translate-path ;
