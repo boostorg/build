@@ -621,9 +621,9 @@ engine.register_action(
     '"$(CONFIG_COMMAND)" -L"$(LINKPATH)" ' +
         '-Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" ' +
         '-Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" ' +
+        '$(OPTIONS) $(USER_OPTIONS) ' +
         '$(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) ' +
-        '-l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) ' +
-        '$(OPTIONS) $(USER_OPTIONS)',
+        '-l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP)',
     function=gcc_link,
     bound_list=['LIBRARIES'])
 
@@ -687,10 +687,10 @@ engine.register_action(
     '"$(CONFIG_COMMAND)" -L"$(LINKPATH)" ' +
         '-Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,"$(RPATH)" ' +
         '"$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" ' +
-        '$(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) ' +
-        '-shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) ' +
-        '-l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) ' +
-        '$(OPTIONS) $(USER_OPTIONS)',
+        '$(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared ' +
+        '$(OPTIONS) $(USER_OPTIONS) ' +
+        '$(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) ' +
+        '-l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP)',
     function = gcc_link_dll,
     bound_list=['LIBRARIES'])
 
