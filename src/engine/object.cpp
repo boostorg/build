@@ -248,7 +248,7 @@ static void object_validate( OBJECT * obj )
  * object_new_range() - create an object from a string of given length
  */
 
-OBJECT * object_new_range( char const * const string, int const size )
+OBJECT * object_new_range( char const * const string, size_t size )
 {
     ++strcount_in;
 

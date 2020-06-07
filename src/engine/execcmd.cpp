@@ -75,7 +75,7 @@ void argv_from_shell( char const * * argv, LIST * shell, char const * command,
  * maximum.
  */
 int check_cmd_for_too_long_lines( char const * command, size_t max,
-    int * const error_length, int * const error_max_length )
+    size_t * const error_length, size_t * const error_max_length )
 {
     while ( *command )
     {

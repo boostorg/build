@@ -43,7 +43,7 @@ static HKEY get_key(char const** path)
 
     for (p = dlRootKeys; p->name; ++p)
     {
-        int n = strlen(p->name);
+        size_t n = strlen(p->name);
         if (!strncmp(*path,p->name,n))
         {
             if ((*path)[n] == '\\' || (*path)[n] == 0)
@@ -87,7 +87,7 @@ LIST * builtin_system_registry( FRAME * frame, int flags )
 
                      while (
                          (len = ExpandEnvironmentStringsA(
-                             (LPCSTR)data, expanded->value, expanded->capacity))
+                             (LPCSTR)data, expanded->value, (DWORD)expanded->capacity))
                          > expanded->capacity
                      )
                          string_reserve(expanded, len);

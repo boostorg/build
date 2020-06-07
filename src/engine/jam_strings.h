@@ -14,8 +14,8 @@
 typedef struct string
 {
     char * value;
-    unsigned long size;
-    unsigned long capacity;
+    size_t size;
+    size_t capacity;
     char opt[ 32 ];
 #ifndef NDEBUG
     char magic[ 4 ];

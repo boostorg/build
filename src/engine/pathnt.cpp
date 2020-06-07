@@ -94,11 +94,11 @@ void path_get_temp_path_( string * buffer )
  *  - path_key_cache path/key mapping cache object already initialized
  */
 
-static int canonicWindowsPath( char const * const path, int const path_length,
+static int canonicWindowsPath( char const * const path, size_t path_length,
     string * const out )
 {
     char const * last_element;
-    unsigned long saved_size;
+    size_t saved_size;
     char const * p;
     int missing_parent;
 
@@ -138,7 +138,7 @@ static int canonicWindowsPath( char const * const path, int const path_length,
     if ( p >= path )
     {
         char const * const dir = path;
-        int const dir_length = p - path;
+        const size_t dir_length = p - path;
         OBJECT * const dir_obj = object_new_range( dir, dir_length );
         int found;
         path_key_entry * const result = (path_key_entry *)hash_insert(
@@ -170,7 +170,7 @@ static int canonicWindowsPath( char const * const path, int const path_length,
     if ( !missing_parent )
     {
         char const * const n = last_element;
-        int const n_length = path + path_length - n;
+        size_t n_length = path + path_length - n;
         if ( !( n_length == 1 && n[ 0 ] == '.' )
             && !( n_length == 2 && n[ 0 ] == '.' && n[ 1 ] == '.' ) )
         {
@@ -239,7 +239,7 @@ static path_key_entry * path_key( OBJECT * const path,
     if ( !found )
     {
         OBJECT * normalized;
-        int normalized_size;
+        size_t normalized_size;
         path_key_entry * nresult;
         result->path = path;
         {
