@@ -472,6 +472,9 @@ rule configure-version-specific ( toolset : version : conditions )
     if ! [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 12 ]
     {
         toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:inline" ;
+
+        # /Gy analog for variables: https://devblogs.microsoft.com/cppblog/introducing-gw-compiler-switch/
+        toolset.flags $(toolset).compile CFLAGS $(conditions)/<optimization>speed $(conditions)/<optimization>space : /Gw ;
     }
 
     # 14.0 introduced /Zc:throwingNew opt-in flag that disables a workaround
