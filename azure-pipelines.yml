@@ -170,6 +170,12 @@ stages:
           set -e
           CXX_PATH=`which ${CXX}`
           echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+          ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET} address-model=64
+      displayName: "No-Warn 64bit"
+    - bash: |
+          set -e
+          CXX_PATH=`which ${CXX}`
+          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
           ./bootstrap.sh ${TOOLSET}
           ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
@@ -212,6 +218,12 @@ stages:
           echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
           ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on toolset=$env:TEST_TOOLSET
       displayName: "No Warnings"
+    - powershell: |
+          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+          $env:path += ';' + $env:CXX_PATH
+          echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
+          ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on toolset=$env:TEST_TOOLSET address-model=64
+      displayName: "No-Warn 64bit"
     - powershell: |
           $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
           $env:path += ';' + $env:CXX_PATH
@@ -313,6 +325,12 @@ stages:
         echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET}
       displayName: "No Warnings"
+    - bash: |
+          set -e
+          CXX_PATH=`which ${CXX}`
+          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+          ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET} address-model=64
+      displayName: "No-Warn 64bit"
     - bash: |
         set -e
         CXX_PATH=`which ${CXX}`
