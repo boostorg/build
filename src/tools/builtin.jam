@@ -46,9 +46,9 @@ import generate ;
 
 
 variant debug   : <optimization>off <debug-symbols>on <inlining>off
-                  <runtime-debugging>on ;
+                  <runtime-debugging>on <assertions>on ;
 variant release : <optimization>speed <debug-symbols>off <inlining>full
-                  <runtime-debugging>off <define>NDEBUG ;
+                  <runtime-debugging>off <assertions>off ;
 variant profile : release : <profiling>on <debug-symbols>on ;
 
 

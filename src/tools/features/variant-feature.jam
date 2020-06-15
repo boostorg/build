@@ -19,12 +19,14 @@ The value `debug` expands to
 +
 ----
 <optimization>off <debug-symbols>on <inlining>off <runtime-debugging>on
+<assertions>on
 ----
 +
 The value `release` expands to
 +
 ----
 <optimization>speed <debug-symbols>off <inlining>full <runtime-debugging>off
+<assertions>off
 ----
 +
 The value `profile` expands to the same as `release`, plus:
