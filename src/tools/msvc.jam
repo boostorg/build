@@ -469,7 +469,7 @@ rule configure-version-specific ( toolset : version : conditions )
     # 12.0 (VS2013 Update 2) introduced /Zc:inline opt-in standard conformance
     # compiler flag that also similar to linker /opt:ref removes unreferenced
     # variables and functions that have internal linkage
-    if ! [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 12 ]
+    if ! [ version.version-less [ SPLIT_BY_CHARACTERS $(version) : . ] : 12 ]
     {
         toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:inline" ;
 
@@ -479,7 +479,7 @@ rule configure-version-specific ( toolset : version : conditions )
 
     # 14.0 introduced /Zc:throwingNew opt-in flag that disables a workaround
     # for not throwing operator new in VC up to 6.0
-    if ! [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 14 ]
+    if ! [ version.version-less [ SPLIT_BY_CHARACTERS $(version) : . ] : 14 ]
     {
         toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:throwingNew" ;
     }
@@ -527,7 +527,7 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : "/MACHINE:ARM" ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm64) : "/MACHINE:ARM64" ;
 
-        if [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 11 ]
+        if [ version.version-less [ SPLIT_BY_CHARACTERS $(version) : . ] : 11 ]
         {
             # Make sure that manifest will be generated even if there is no
             # dependencies to put there.

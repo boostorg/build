@@ -393,9 +393,6 @@ rule init ( version ? :  command * : options * )
         local archiver ;
         local arflags ;
         local implib ;
-        local assembler ;
-        local asmflags ;
-        local asmoutput ;
         
         if $(compiler) = bcc32x
             {
@@ -404,16 +401,9 @@ rule init ( version ? :  command * : options * )
             archiver = tlib ;
             arflags = /P512 ;
             implib = implib ;
-            assembler = $(root)/bin/tasm32 ;
-            
-            # /ml makes all symbol names case-sensitive
-
-            asmflags = /ml ;
-            asmoutput = "," ;
             }
         else if $(compiler) = bcc64
             {
-            
             lib_dir_release = $(root)/lib/win64/release $(root)/lib/win64/release/psdk ;
             lib_dir_debug = $(root)/lib/win64/debug ;
             archiver = tlib64 ;
@@ -426,9 +416,7 @@ rule init ( version ? :  command * : options * )
         flags embarcadero.link LINKPATH $(condition)/<variant>debug : $(lib_dir_debug) $(lib_dir_release) ;
         flags embarcadero.archive .AR $(condition) : $(root)/bin/$(archiver) ;
         flags embarcadero.archive .ARFLAGS $(condition) : $(arflags) ;
-        flags embarcadero.asm .ASM $(condition) : $(assembler) ;
-        flags embarcadero.asm .ASMFLAGS $(condition) : $(asmflags) ;
-        flags embarcadero.asm .ASMOUTPUT $(condition) : $(asmoutput) ;
+        flags embarcadero.asm .TASM $(condition) : $(root)/bin/tasm32 ;
         flags embarcadero.asm USER_OPTIONS $(condition) : [ feature.get-values <asmflags> : $(options) ] ;
         flags embarcadero.archive AROPTIONS $(condition) : [ feature.get-values <archiveflags> : $(options) ] ;
         flags embarcadero.link.dll .IMPLIB_COMMAND $(condition) : $(root)/bin/$(implib) ;
@@ -519,15 +507,15 @@ local rule handle-options ( condition * : command * : options * )
             $(condition:E=(empty)) ;
     }
 
-    flags embarcadero CONFIG_COMMAND $(condition) : $(command) ;
+    toolset.flags embarcadero CONFIG_COMMAND $(condition) : $(command) ;
 
-    flags embarcadero.compile         OPTIONS $(condition) :
+    toolset.flags embarcadero.compile         OPTIONS $(condition) :
         [ feature.get-values <cflags>       : $(options) ] ;
 
-    flags embarcadero.compile.c++     OPTIONS $(condition) :
+    toolset.flags embarcadero.compile.c++     OPTIONS $(condition) :
         [ feature.get-values <cxxflags>     : $(options) ] ;
 
-    flags embarcadero.link            OPTIONS $(condition) :
+    toolset.flags embarcadero.link            OPTIONS $(condition) :
         [ feature.get-values <linkflags>    : $(options) ] ;
 }
 
@@ -547,8 +535,7 @@ generators.register-linker embarcadero.link.dll : OBJ SEARCHED_LIB STATIC_LIB IM
 generators.register-archiver embarcadero.archive : OBJ : STATIC_LIB : <toolset>embarcadero ;
 generators.register-c-compiler embarcadero.compile.c++ : CPP : OBJ : <toolset>embarcadero ;
 generators.register-c-compiler embarcadero.compile.c : C : OBJ : <toolset>embarcadero ;
-generators.register-c-compiler embarcadero.compile.asm : ASM : OBJ : <toolset>embarcadero <address-model>64 ;
-generators.register-standard embarcadero.asm : ASM : OBJ : <toolset>embarcadero <address-model>32 ;
+generators.register-standard embarcadero.asm : ASM : OBJ : <toolset>embarcadero ;
 
 # Flags
 
@@ -607,11 +594,11 @@ actions updated together piecemeal archive
 }
 
 rule link ( targets * : sources * : properties * ) {
-  JAM_SEMAPHORE on $(targets) = <s>embarcadero-link-semaphore ;
+  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
 rule link.dll ( targets * : sources * : properties * ) {
-  JAM_SEMAPHORE on $(targets) = <s>embarcadero-link-semaphore ;
+  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
 }
 
 actions link bind LIBRARIES {
@@ -626,17 +613,8 @@ rule asm ( targets * : sources * : properties * )
 {
 }
 
+# /ml makes all symbol names case-sensitive
 actions asm
 {
-    $(.ASM) $(.ASMFLAGS) $(USER_OPTIONS) "$(>)" $(.ASMOUTPUT) "$(<)"
-}
-
-rule compile.asm ( targets * : sources * : properties * )
-{
-    LANG on $(<) = "-x assembler-with-cpp" ;
-}
-
-actions compile.asm
-{
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    $(.TASM) /ml $(USER_OPTIONS) "$(>)" "$(<)"
 }
