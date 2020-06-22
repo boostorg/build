@@ -62,7 +62,7 @@ LIST *b2::startup::builtin_boost_build(FRAME *frame, int flags)
     // # Add the given directory to the path so we can find the build system. If
     // # dir is empty, has no effect.
     b2::jam::variable dot_boost_build_file{".boost-build-file"};
-    b2::jam::list dot_boost_build_file_val{dot_boost_build_file};
+    b2::jam::list dot_boost_build_file_val{static_cast<b2::jam::list>(dot_boost_build_file)};
     std::string boost_build_jam = b2::jam::object{*dot_boost_build_file_val.begin()};
     std::string boost_build_dir;
     if (b2::paths::is_rooted(dir))
