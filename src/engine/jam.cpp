@@ -79,7 +79,6 @@
  *  hash.c - simple in-memory hashing routines
  *  hdrmacro.c - handle header file parsing for filename macro definitions
  *  headers.c - handle #includes in source files
- *  jambase.c - compilable copy of Jambase
  *  jamgram.y - jam grammar
  *  lists.c - maintain lists of strings
  *  make.c - bring a target up to date, once rules are in place
@@ -130,6 +129,7 @@
 #include "rules.h"
 #include "scan.h"
 #include "search.h"
+#include "startup.h"
 #include "jam_strings.h"
 #include "timestamp.h"
 #include "variable.h"
@@ -243,7 +243,7 @@ static void usage( const char * progname )
 
 	err_printf("-a      Build all targets, even if they are current.\n");
 	err_printf("-dx     Set the debug level to x (0-13,console,mi).\n");
-	err_printf("-fx     Read x instead of Jambase.\n");
+	err_printf("-fx     Read x instead of bootstrap.\n");
 	/* err_printf( "-g      Build from newest sources first.\n" ); */
 	err_printf("-jx     Run up to x shell commands concurrently.\n");
 	err_printf("-lx     Limit actions to x number of seconds after which they are stopped.\n");
@@ -268,7 +268,7 @@ int main( int argc, char * * argv, char * * arg_environ )
     int                     n;
     char                  * s;
     struct bjam_option      optv[ N_OPTS ];
-    int                     status;
+    int                     status = 0;
     int                     arg_c = argc;
     char          *       * arg_v = argv;
     char            const * progname = argv[ 0 ];
@@ -593,6 +593,7 @@ int main( int argc, char * * argv, char * * arg_environ )
 
         /* Initialize built-in rules. */
         load_builtins();
+        b2::startup::load_builtins();
 
         /* Add the targets in the command line to the update list. */
         for ( n = 1; n < arg_c; ++n )
@@ -649,8 +650,8 @@ int main( int argc, char * * argv, char * * arg_environ )
                 object_free( filename );
             }
 
-            if ( !n )
-                parse_file( constant_plus, frame );
+            if ( !n  )
+                status = b2::startup::bootstrap(frame) ? 0 : 13;
         }
 
         /* FIXME: What shall we do if builtin_update_now,
@@ -658,8 +659,9 @@ int main( int argc, char * * argv, char * * arg_environ )
          * failed earlier?
          */
 
-        status = yyanyerrors();
-        if ( !status )
+        if ( status == 0 )
+            status = yyanyerrors();
+        if ( status == 0 )
         {
             /* Manually touch -t targets. */
             for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )

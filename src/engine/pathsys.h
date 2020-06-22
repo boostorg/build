@@ -5,6 +5,13 @@
  */
 
 /*
+Copyright 2020 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+*/
+
+
+/*
  * pathsys.h - PATHNAME struct
  */
 
@@ -15,7 +22,7 @@
  * same name - it never appears in the bound name of a target.
  *
  * (member) - archive member name: the syntax is arbitrary, but must agree in
- * path_parse(), path_build() and the Jambase.
+ * path_parse(), path_build().
  */
 
 #ifndef PATHSYS_VP_20020211_H
@@ -24,6 +31,8 @@
 #include "config.h"
 #include "object.h"
 #include "jam_strings.h"
+
+#include <string>
 
 
 typedef struct _pathpart
@@ -83,5 +92,17 @@ OBJECT * path_tmpfile( void );
 char * executable_path( char const * argv0 );
 
 void path_done( void );
+
+namespace b2
+{
+    namespace paths
+    {
+        inline bool is_rooted(const std::string &p)
+        {
+            return p[0] == '/' || p[0] == '\\';
+        }
+        std::string normalize(const std::string &p);
+    }
+}
 
 #endif

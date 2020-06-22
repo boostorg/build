@@ -14,7 +14,6 @@
 #include "output.h"
 
 #include "constants.h"
-#include "jambase.h"
 #include "jamgram.hpp"
 
 
@@ -101,10 +100,6 @@ void yyfparse( OBJECT * s )
     i->line = 0;
     i->next = incp;
     incp = i;
-
-    /* If the filename is "+", it means use the internal jambase. */
-    if ( !strcmp( object_str( s ), "+" ) )
-        i->strings = (char**)jambase;
 }
 
 

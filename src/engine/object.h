@@ -12,6 +12,8 @@
 #define BOOST_JAM_OBJECT_H
 
 #include "config.h"
+#include <string>
+#include <cstring>
 
 typedef struct _object OBJECT;
 
@@ -42,5 +44,34 @@ int          object_equal( OBJECT *, OBJECT * );
 unsigned int object_hash ( OBJECT * );
 
 #endif
+
+namespace b2 { namespace jam {
+
+    struct object
+    {
+        inline object(const object &o)
+            : obj(object_copy(o.obj)) {}
+
+        inline explicit object(OBJECT *o)
+            : obj(object_copy(o)) {}
+        inline explicit object(const char * val)
+            : obj(object_new(val)) {}
+        inline explicit object(const std::string &val)
+            : obj(object_new(val.c_str())) {}
+
+        inline ~object() { if (obj) object_free(obj); }
+        inline OBJECT * release() { OBJECT *r = obj; obj = nullptr; return r; }
+
+        inline operator OBJECT*() const { return obj; }
+        inline operator std::string() const { return object_str(obj); }
+
+        inline bool operator==(OBJECT *o) const { return std::strcmp(object_str(obj), object_str(o)) == 0; }
+
+        private:
+
+        OBJECT * obj = nullptr;
+    };
+
+}}
 
 #endif

@@ -110,30 +110,6 @@ else
 explicit jamgram.cpp ;
 
 #|
-Generate the embedded jambase.
-|#
-
-feature.feature mkjambase : : dependency free ;
-toolset.flags mkjambase TOOL <mkjambase> ;
-
-exe mkjambase
-    :   src/engine/mkjambase.cpp
-    ;
-explicit mkjambase ;
-
-actions mkjambase bind TOOL
-{
-    "$(TOOL)" "$(<)" "$(>)"
-}
-
-make jambase.cpp
-    :   src/engine/Jambase
-    :   @mkjambase
-    :   <location>src/engine
-        <mkjambase>mkjambase <dependency>mkjambase ;
-explicit jambase.cpp ;
-
-#|
 Define the b2 executable. Sources are based on platform.
 TODO: Make platform specific source be no-ops when not needed.
 |#
@@ -183,7 +159,6 @@ exe b2
         <target-os>vms:<source>$(b2_src_vms)
         <target-os>$(unix_os):<source>$(b2_src_unix)
         <dependency>jamgram.cpp
-        <dependency>jambase.cpp
         <toolset>msvc:<find-static-library>kernel32
         <toolset>msvc:<find-static-library>advapi32
         <toolset>msvc:<find-static-library>user32
