@@ -1142,7 +1142,15 @@ actions link bind LIBRARIES
 
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+    (
+    FILE=$(<[-1]);
+    if [ "$FILE" == "${FILE%%.a*}" ]; then
+      "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<[-1])" -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS) ;
+    else
+      "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "${FILE%%.a*}.so${FILE##*.a}" -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS) ;
+      ar -X32_64 -qc "$(<[-1])" "${FILE%%.a*}.so${FILE##*.a}"
+    fi
+    )
 }
 
 ###
