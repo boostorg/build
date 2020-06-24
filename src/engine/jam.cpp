@@ -171,24 +171,6 @@ struct globs globs =
 static const char * othersyms[] = { OSMAJOR, OSMINOR, OSPLAT, JAMVERSYM, 0 };
 
 
-/* Known for sure:
- *  mac needs arg_enviro
- *  OS2 needs extern environ
- */
-
-#ifdef OS_MAC
-# define use_environ arg_environ
-# ifdef MPW
-    QDGlobals qd;
-# endif
-#endif
-
-
-#ifdef OS_VMS
-# define use_environ arg_environ
-#endif
-
-
 /* on Win32-LCC */
 #if defined( OS_NT ) && defined( __LCC__ )
 # define use_environ _environ
@@ -263,7 +245,7 @@ static void usage( const char * progname )
     exit( EXITBAD );
 }
 
-int main( int argc, char * * argv, char * * arg_environ )
+int main( int argc, char * * argv )
 {
     int                     n;
     char                  * s;

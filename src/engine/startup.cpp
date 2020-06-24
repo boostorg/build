@@ -57,6 +57,7 @@ LIST *b2::startup::builtin_boost_build(FRAME *frame, int flags)
             "Please consult the documentation at "
             "'https://boostorg.github.io/build/'.\n\n",
            dir.c_str());
+        return L0;
     }
 
     // # Add the given directory to the path so we can find the build system. If
@@ -115,9 +116,10 @@ LIST *b2::startup::builtin_boost_build(FRAME *frame, int flags)
             std::string file = b2::jam::object{path};
             err_printf("    %s\n", file.c_str());
         }
-        err_printf(
+        err_puts(
             "Please consult the documentation at "
             "'https://boostorg.github.io/build/'.\n\n");
+        return L0;
     }
 
     // Set the bootstrap=file var as it's used by the build system to refer to
@@ -132,7 +134,7 @@ LIST *b2::startup::builtin_boost_build(FRAME *frame, int flags)
     }
 
     // # Load the build system, now that we know where to start from.
-    parse_file(b2::jam::object(bootstrap_file), frame);
+    parse_file(b2::jam::object{bootstrap_file}, frame);
 
     return L0;
 }
