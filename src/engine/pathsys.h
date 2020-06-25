@@ -99,7 +99,14 @@ namespace b2
     {
         inline bool is_rooted(const std::string &p)
         {
-            return p[0] == '/' || p[0] == '\\';
+            #if NT
+            return
+                (p.size() >= 1 && (p[0] == '/' || p[0] == '\\')) ||
+                (p.size() >= 3 && p[1] == ':' && (p[2] == '/' || p[2] == '\\'));
+            #else
+            return
+                (p.size() >= 1 && (p[0] == '/' || p[0] == '\\'));
+            #endif
         }
         std::string normalize(const std::string &p);
     }
