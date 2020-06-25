@@ -183,8 +183,11 @@ bool b2::startup::bootstrap(FRAME *frame)
     // Check relative to the executable for portable install location.
     if (b2_file_path.empty())
     {
-        if (b2::filesys::is_file(b2_exe_path + "/kernel/" + boost_build_jam))
-            b2_file_path = b2_exe_path + "/kernel/" + boost_build_jam;
+        const std::string path{
+            b2::paths::normalize(
+                b2_exe_path + "/../.b2/kernel/" + boost_build_jam)};
+        if (b2::filesys::is_file(path))
+            b2_file_path = path;
     }
 
     // Check relative to the executable for portable install location.
