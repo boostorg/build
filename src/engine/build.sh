@@ -448,7 +448,6 @@ B2_SOURCES="\
  hdrmacro.cpp \
  headers.cpp \
  jam.cpp \
- jambase.cpp \
  jamgram.cpp \
  lists.cpp \
  make.cpp \
@@ -467,6 +466,7 @@ B2_SOURCES="\
  scan.cpp \
  search.cpp \
  jam_strings.cpp \
+ startup.cpp \
  subst.cpp \
  sysinfo.cpp \
  timestamp.cpp \

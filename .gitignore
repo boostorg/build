@@ -1,3 +1,4 @@
+*.code-workspace
 *.py[co]
 /.vscode
 /doc/bin

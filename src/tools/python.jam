@@ -51,7 +51,10 @@ lib dl ;
 # pass this to linker explicitly.
 lib util ;
 # Python uses pthread symbols.
-lib pthread ;
+lib pthread :
+    : <target-os>linux:<link>shared
+    ;
+
 # Extra library needed by phtread on some platforms.
 lib rt ;
 

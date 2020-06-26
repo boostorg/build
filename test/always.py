@@ -19,12 +19,16 @@ always test ;
 
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug*/main.obj")
+t.ignore_addition('bin/*/main.*.rsp')
 t.expect_addition("bin/$toolset/debug*/test.exe")
+t.ignore_addition('bin/*/test.rsp')
 t.expect_nothing_more()
 
 t.run_build_system()
 t.expect_touch("bin/$toolset/debug*/main.obj")
+t.ignore_touch('bin/*/main.*.rsp')
 t.expect_touch("bin/$toolset/debug*/test.exe")
+t.ignore_touch('bin/*/test.rsp')
 t.expect_nothing_more()
 
 t.cleanup()

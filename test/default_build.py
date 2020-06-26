@@ -23,6 +23,7 @@ t.expect_addition("bin/$toolset/release*/a.exe")
 t.rm("bin")
 t.run_build_system(["release"])
 t.expect_addition(BoostBuild.List("bin/$toolset/release*/") * "a.exe a.obj")
+t.ignore_addition('bin/*/a.rsp')
 t.expect_nothing_more()
 
 # Now check that we can specify explicit build request and default-build will be
