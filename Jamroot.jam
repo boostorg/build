@@ -5,18 +5,19 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-import path ;
-import package ;
-import os ;
-import feature ;
-import set ;
-import toolset ;
-import bison ;
-import indirect ;
 import "class" : new ;
+import bison ;
+import errors ;
+import feature ;
+import indirect ;
+import os ;
+# import package ;
+import path ;
+import set ;
+import stage : add-install-dir ;
+import toolset ;
 import type ;
 import virtual-target ;
-import errors ;
 
 path-constant SELF : . ;
 
@@ -110,30 +111,6 @@ else
 explicit jamgram.cpp ;
 
 #|
-Generate the embedded jambase.
-|#
-
-feature.feature mkjambase : : dependency free ;
-toolset.flags mkjambase TOOL <mkjambase> ;
-
-exe mkjambase
-    :   src/engine/mkjambase.cpp
-    ;
-explicit mkjambase ;
-
-actions mkjambase bind TOOL
-{
-    "$(TOOL)" "$(<)" "$(>)"
-}
-
-make jambase.cpp
-    :   src/engine/Jambase
-    :   @mkjambase
-    :   <location>src/engine
-        <mkjambase>mkjambase <dependency>mkjambase ;
-explicit jambase.cpp ;
-
-#|
 Define the b2 executable. Sources are based on platform.
 TODO: Make platform specific source be no-ops when not needed.
 |#
@@ -183,7 +160,6 @@ exe b2
         <target-os>vms:<source>$(b2_src_vms)
         <target-os>$(unix_os):<source>$(b2_src_unix)
         <dependency>jamgram.cpp
-        <dependency>jambase.cpp
         <toolset>msvc:<find-static-library>kernel32
         <toolset>msvc:<find-static-library>advapi32
         <toolset>msvc:<find-static-library>user32
@@ -194,18 +170,30 @@ explicit b2 ;
 Installation of the engine, build, and example files.
 |#
 
+feature.feature b2-install-layout : standard portable : incidental propagated ;
+
+add-install-dir b2prefix-standard : : prefix ;
+add-install-dir b2bindir-standard : : bindir ;
+add-install-dir b2coredir-standard : boost-build/src : datarootdir ;
+add-install-dir b2examplesdir-standard : boost-build/examples : datarootdir ;
+
+add-install-dir b2prefix-portable : : prefix ;
+add-install-dir b2bindir-portable : : b2prefix-portable ;
+add-install-dir b2coredir-portable : .b2 : b2prefix-portable ;
+add-install-dir b2examplesdir-portable : .b2/examples : b2prefix-portable ;
+
 local ext = "" ;
 if [ os.on-windows ] || [ os.on-vms ]
 {
     ext = ".exe" ;
 }
 
-package.install boost-build-engine boost-build
-    : # properties
-    : # binaries
-        $(SELF)/src/engine/b2$(ext)
+install b2-engine
+    :   $(SELF)/src/engine/b2$(ext)
+    :   <b2-install-layout>standard:<location>(b2bindir-standard)
+        <b2-install-layout>portable:<location>(b2bindir-portable)
     ;
-explicit boost-build-engine ;
+explicit b2-engine ;
 
 local examples ;
 for local e in [ glob-tree-ex $(SELF)/example : * : . .svn ]
@@ -215,18 +203,18 @@ for local e in [ glob-tree-ex $(SELF)/example : * : . .svn ]
         examples += $(e) ;
     }
 }
-package.install-data boost-build-examples
-    : # Which subdir of $prefix/share
-        boost-build
+install b2-examples
     : # What to install
         $(examples)
-    : # What is the root of the directory
-        <install-source-root>.
+    :   # What is the root of the directory
+        <install-source-root>example
+        # Which subdir of $prefix/share
+        <b2-install-layout>standard:<location>(b2examplesdir-standard)
+        <b2-install-layout>portable:<location>(b2examplesdir-portable)
     ;
-explicit boost-build-examples ;
+explicit b2-examples ;
 
 local .core-sources =
-    $(SELF)/boost-build.jam
     $(SELF)/src/build-system.jam
     [ path.glob-tree $(SELF)/src/build : *.jam ]
     [ path.glob-tree $(SELF)/src/contrib : *.jam ]
@@ -247,25 +235,26 @@ if $(python-exe)
         ;
 }
 
-package.install-data boost-build-core
-    : # Which subdir of $prefix/share
-        boost-build
-    : # What to install
+install b2-core
+    :   # What to install
         $(.core-sources)
-    : # What is the root of the directory
-        <install-source-root>.
+    :   # What is the root of the directory
+        <install-source-root>src
+        # Which subdir of $prefix/share
+        <b2-install-layout>standard:<location>(b2coredir-standard)
+        <b2-install-layout>portable:<location>(b2coredir-portable)
     ;
-explicit boost-build-core ;
+explicit b2-core ;
 
 #|
 Only install example files when requested to avoid bloating install footprint.
 |#
 if --with-examples in [ modules.peek : ARGV ]
 {
-    alias install : boost-build-engine boost-build-core boost-build-examples ;
+    alias install : b2-engine b2-core b2-examples ;
 }
 else
 {
-    alias install : boost-build-engine boost-build-core ;
+    alias install : b2-engine b2-core ;
 }
 explicit install ;

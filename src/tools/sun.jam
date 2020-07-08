@@ -106,6 +106,8 @@ flags sun.compile OPTIONS <threading>multi : -mt ;
 flags sun.compile OPTIONS <warnings>off : -erroff ;
 flags sun.compile OPTIONS <warnings>on : -erroff=%none ;
 flags sun.compile OPTIONS <warnings>all  : -erroff=%none ;
+flags sun.compile OPTIONS <warnings>extra : -erroff=%none ;
+flags sun.compile OPTIONS <warnings>pedantic : -erroff=%none ;
 flags sun.compile OPTIONS <warnings-as-errors>on : -errwarn ;
 
 flags sun.compile OPTIONS <local-visibility>hidden : -xldscope=hidden ;

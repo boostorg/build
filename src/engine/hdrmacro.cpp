@@ -41,6 +41,8 @@
 #include "variable.h"
 #include "output.h"
 
+#include <errno.h>
+#include <string.h>
 
 /* this type is used to store a dictionary of file header macros */
 typedef struct header_macro
@@ -81,7 +83,11 @@ void macro_headers( TARGET * t )
     }
 
     if ( !( f = fopen( object_str( t->boundname ), "r" ) ) )
+    {
+        err_printf( "[errno %d] failed to scan include file '%s': %s",
+            errno, object_str( t->boundname ), strerror(errno) );
         return;
+    }
 
     while ( fgets( buf, sizeof( buf ), f ) )
     {

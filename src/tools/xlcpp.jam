@@ -112,6 +112,10 @@ flags xlcpp.compile.c++ OPTIONS <cxxstd>0x : -std=c++11 ;
 flags xlcpp.compile.c++ OPTIONS <cxxstd>11 : -std=c++11 ;
 flags xlcpp.compile.c++ OPTIONS <cxxstd>1y : -std=c++1y ;
 flags xlcpp.compile.c++ OPTIONS <cxxstd>14 : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>1z : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>17 : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>2a : -std=c++1y ;
+flags xlcpp.compile.c++ OPTIONS <cxxstd>20 : -std=c++1y ;
 flags xlcpp.compile.c++ OPTIONS <cxxstd>latest : -std=c++1y ;
 
 flags xlcpp.compile OPTIONS <cflags> ;

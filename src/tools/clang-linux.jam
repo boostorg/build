@@ -1,3 +1,4 @@
+#  Copyright 2020 Rene Rivera
 #  Copyright (c) 2003      Michael Stevens
 #  Copyright (c) 2010-2011 Bryce Lelbach (blelbach@cct.lsu.edu, maintainer)
 #
@@ -17,6 +18,8 @@ import errors ;
 import generators ;
 import type ;
 import numbers ;
+import os ;
+import property ;
 
 feature.extend-subfeature toolset clang : platform : linux ;
 
@@ -146,12 +149,12 @@ rule compile.c++ ( targets * : sources * : properties * ) {
 }
 
 actions compile.c++.without-pch {
-  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -o "$(<)" "$(>)"
 }
 
 actions compile.c++.with-pch bind PCH_FILE
 {
-  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pch -Xclang "$(PCH_FILE)" -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pch -Xclang "$(PCH_FILE)" -include"$(FORCE_INCLUDES)" -o "$(<)" "$(>)"
 }
 
 rule compile.c ( targets * : sources * : properties * )
@@ -169,12 +172,12 @@ rule compile.c ( targets * : sources * : properties * )
 
 actions compile.c.without-pch
 {
-  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c.with-pch bind PCH_FILE
 {
-  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pch -Xclang "$(PCH_FILE)" -c -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pch -Xclang "$(PCH_FILE)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 ###############################################################################
@@ -186,7 +189,7 @@ rule compile.c++.pch ( targets * : sources * : properties * ) {
 }
 
 actions compile.c++.pch {
-  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
+  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
 }
 
 rule compile.c.pch ( targets * : sources * : properties * ) {
@@ -194,7 +197,7 @@ rule compile.c.pch ( targets * : sources * : properties * ) {
 
 actions compile.c.pch
 {
-  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
+  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
 }
 
 ###############################################################################
@@ -205,19 +208,82 @@ SPACE = " " ;
 rule link ( targets * : sources * : properties * ) {
   SPACE on $(targets) = " " ;
   JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
-}
-
-actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+  
+  local tosw ;
+  local pselect = [ property.select <target-os> : $(properties) ] ;
+  
+  if $(pselect)
+    {
+    
+    local tosv = [ feature.get-values <target-os> : $(pselect) ] ;
+    
+    if $(tosv) = windows
+        {
+        tosw = 1 ;
+        }
+    }
+  else if [ os.name ] in NT
+    {
+    tosw = 1 ;
+    }
+  if $(tosw)
+    {
+    link-w $(targets) : $(sources) ;
+    }
+  else
+    {
+    link-o $(targets) : $(sources) ;
+    }
 }
 
 rule link.dll ( targets * : sources * : properties * ) {
   SPACE on $(targets) = " " ;
   JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
+  
+  local tosw ;
+  local pselect = [ property.select <target-os> : $(properties) ] ;
+  
+  if $(pselect)
+    {
+    
+    local tosv = [ feature.get-values <target-os> : $(pselect) ] ;
+    
+    if $(tosv) = windows
+        {
+        tosw = 1 ;
+        }
+    }
+  else if [ os.name ] in NT
+    {
+    tosw = 1 ;
+    }
+  if $(tosw)
+    {
+    link.dll-w $(targets) : $(sources) ;
+    }
+  else
+    {
+    link.dll-o $(targets) : $(sources) ;
+    }
 }
 
-# Differ from 'link' above only by -shared.
-actions link.dll bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(SPACE)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+# Target OS is not Windows, needs the RPATH stuff
+actions link-o bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=-Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
 }
 
+# Target OS is not Windows, needs the RPATH and SONAME stuff
+actions link.dll-o bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=-Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+}
+
+# Target OS is Windows, does not need the RPATH stuff
+actions link-w bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+}
+
+# Target OS is Windows, does not need the RPATH and SONAME stuff
+actions link.dll-w bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" -shared @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+    
+}

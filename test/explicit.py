@@ -20,6 +20,7 @@ t.run_build_system()
 t.ignore("*.tds")
 t.expect_addition(BoostBuild.List("bin/$toolset/debug*/hello") * \
     [".exe", ".obj"])
+t.ignore_addition("bin/*/hello.rsp")
 t.expect_nothing_more()
 
 t.run_build_system(["hello2"])

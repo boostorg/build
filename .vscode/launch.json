@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/src/engine/b2",
-            "args": ["-sBOOST_BUILD_PATH=${workspaceFolder}" "toolset=clang"],
+            "args": ["-sBOOST_BUILD_PATH=${workspaceFolder}", "toolset=clang"],
             "stopAtEntry": true,
             "cwd": "${workspaceFolder}/test",
             "environment": [],
