@@ -81,7 +81,7 @@ test_cxx11 ()
         case $1 in
             gcc) ( ${CXX:=g++} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             intel-darwin) ( ${CXX:=icc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            intel-linux) ( ${CXX:=icc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            intel-linux) ( ${CXX:=icc} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             vacpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             xlcpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             como) ( ${CXX:=como} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
@@ -283,7 +283,7 @@ case $B2_TOOLSET in
             export LD_RUN_PATH
             . ${B2_TOOLSET_ROOT}bin/iccvars.sh $ARCH
         fi
-        B2_CXX="${CXX} -xc++"
+        B2_CXX="${CXX} -std=c++11"
         B2_CXXFLAGS_RELEASE="-O3 -s"
         B2_CXXFLAGS_DEBUG="-O0 -g -p"
     ;;
