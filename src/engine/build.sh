@@ -273,7 +273,9 @@ case $B2_TOOLSET in
                 B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
             fi
         fi
-        if test -r ${B2_TOOLSET_ROOT}bin/iccvars.sh ; then
+        if test -r ${B2_TOOLSET_ROOT}/setvars.sh ; then
+            . ${B2_TOOLSET_ROOT}/setvars.sh
+        elif test -r ${B2_TOOLSET_ROOT}bin/iccvars.sh ; then
             # iccvars does not change LD_RUN_PATH. We adjust LD_RUN_PATH here in
             # order not to have to rely on ld.so.conf knowing the icpc library
             # directory. We do this before running iccvars.sh in order to allow a
