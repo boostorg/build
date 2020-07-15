@@ -81,7 +81,7 @@ test_cxx11 ()
         case $1 in
             gcc) ( ${CXX:=g++} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             intel-darwin) ( ${CXX:=icc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            intel-linux) ( ${CXX:=icpc} -x c++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            intel-linux) ( ${CXX:=icpc} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             vacpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             xlcpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             como) ( ${CXX:=como} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
@@ -125,6 +125,9 @@ guess_toolset ()
     elif test_path g++ && test_cxx11 gcc ; then B2_TOOLSET=gcc
     elif test_path clang++ && test_cxx11 clang ; then B2_TOOLSET=clang
     elif test_path icpc && test_cxx11 intel-linux ; then B2_TOOLSET=intel-linux
+    elif test -r /opt/intel/inteloneapi/setvars.sh && test_cxx11 intel-linux ; then
+        B2_TOOLSET=intel-linux
+        B2_TOOLSET_ROOT=/opt/intel/inteloneapi
     elif test -r /opt/intel/cc/9.0/bin/iccvars.sh && test_cxx11 intel-linux ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel/cc/9.0
@@ -283,7 +286,7 @@ case $B2_TOOLSET in
             export LD_RUN_PATH
             . ${B2_TOOLSET_ROOT}bin/iccvars.sh $ARCH
         fi
-        B2_CXX="${CXX} -x c++"
+        B2_CXX="${CXX} -x c++ -std=c++11"
         B2_CXXFLAGS_RELEASE="-O3 -s"
         B2_CXXFLAGS_DEBUG="-O0 -g -p"
     ;;
