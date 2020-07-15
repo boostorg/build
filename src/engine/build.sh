@@ -252,8 +252,7 @@ case $B2_TOOLSET in
     intel-linux)
         CXX=${CXX:=icpc}
         CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
-        test_path ${CXX} >/dev/null 2>&1
-        if test $? ; then
+        if test_path ${CXX} ; then
             echo "Found ${CXX} in environment"
             B2_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icpc//'`
             # probably the most widespread
