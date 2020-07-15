@@ -81,7 +81,7 @@ test_cxx11 ()
         case $1 in
             gcc) ( ${CXX:=g++} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             intel-darwin) ( ${CXX:=icc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            intel-linux) ( ${CXX:=icc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            intel-linux) ( ${CXX:=icpc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             vacpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             xlcpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             como) ( ${CXX:=como} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
@@ -124,7 +124,7 @@ guess_toolset ()
     elif test_uname FreeBSD && test_path freebsd-version && test_path clang++ && test_cxx11 clang ; then B2_TOOLSET=clang
     elif test_path g++ && test_cxx11 gcc ; then B2_TOOLSET=gcc
     elif test_path clang++ && test_cxx11 clang ; then B2_TOOLSET=clang
-    elif test_path icc && test_cxx11 intel-linux ; then B2_TOOLSET=intel-linux
+    elif test_path icpc && test_cxx11 intel-linux ; then B2_TOOLSET=intel-linux
     elif test -r /opt/intel/cc/9.0/bin/iccvars.sh && test_cxx11 intel-linux ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel/cc/9.0
@@ -247,12 +247,12 @@ case $B2_TOOLSET in
     ;;
 
     intel-linux)
-        CXX=${CXX:=icc}
+        CXX=${CXX:=icpc}
         CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
         test_path ${CXX} >/dev/null 2>&1
         if test $? ; then
             echo "Found ${CXX} in environment"
-            B2_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icc//'`
+            B2_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icpc//'`
             # probably the most widespread
             ARCH=intel64
         else
@@ -272,7 +272,7 @@ case $B2_TOOLSET in
         fi
         if test -r ${B2_TOOLSET_ROOT}bin/iccvars.sh ; then
             # iccvars does not change LD_RUN_PATH. We adjust LD_RUN_PATH here in
-            # order not to have to rely on ld.so.conf knowing the icc library
+            # order not to have to rely on ld.so.conf knowing the icpc library
             # directory. We do this before running iccvars.sh in order to allow a
             # user to add modifications to LD_RUN_PATH in iccvars.sh.
             if test -z "${LD_RUN_PATH}"; then
