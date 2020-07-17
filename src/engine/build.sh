@@ -259,7 +259,7 @@ case $B2_TOOLSET in
             ARCH=intel64
         else
             echo "No intel compiler in current path"
-            echo "Look in a few old place for legacy reason"
+            echo "Look in a few common places just in case"
 	    if test -r /opt/intel/inteloneapi/setvars.sh ; then
                 B2_TOOLSET_ROOT=/opt/intel/inteloneapi
             elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
