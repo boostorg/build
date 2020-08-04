@@ -502,6 +502,8 @@ rule setup-address-model ( targets * : sources * : properties * )
         {
             if $(instruction-set) {
                 options = -arch$(_)$(instruction-set) ;
+            } else if $(address-model) = 64 {
+                options = -arch arm64 ;
             } else {
                 options = -arch arm ;
             }
