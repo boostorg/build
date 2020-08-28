@@ -207,16 +207,15 @@ SPACE = " " ;
 
 rule link ( targets * : sources * : properties * ) {
   SPACE on $(targets) = " " ;
-  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
-  
+
   local tosw ;
   local pselect = [ property.select <target-os> : $(properties) ] ;
-  
+
   if $(pselect)
     {
-    
+
     local tosv = [ feature.get-values <target-os> : $(pselect) ] ;
-    
+
     if $(tosv) = windows
         {
         tosw = 1 ;
@@ -238,16 +237,15 @@ rule link ( targets * : sources * : properties * ) {
 
 rule link.dll ( targets * : sources * : properties * ) {
   SPACE on $(targets) = " " ;
-  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
-  
+
   local tosw ;
   local pselect = [ property.select <target-os> : $(properties) ] ;
-  
+
   if $(pselect)
     {
-    
+
     local tosv = [ feature.get-values <target-os> : $(pselect) ] ;
-    
+
     if $(tosv) = windows
         {
         tosw = 1 ;
@@ -285,5 +283,5 @@ actions link-w bind LIBRARIES {
 # Target OS is Windows, does not need the RPATH and SONAME stuff
 actions link.dll-w bind LIBRARIES {
     "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" -shared @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-    
+
 }

@@ -156,7 +156,7 @@ flags intel-vxworks ARFLAGS <archiveflags> ;
 
 rule archive ( targets * : sources * : properties * )
 {
-  # Always remove archive and start again. 
+  # Always remove archive and start again.
   # of the archive.
   #
   local clean.a = $(targets[1])(clean) ;
@@ -179,9 +179,6 @@ flags intel-vxworks.link USER_OPTIONS <linkflags> ;
 rule link ( targets * : sources * : properties * )
 {
   SPACE on $(targets) = " " ;
-  # Serialize execution of the 'link' action, since
-  # running N links in parallel is just slower.
-  JAM_SEMAPHORE on $(targets) = <s>intel-vxworks-link-semaphore ;
 }
 
 actions link bind LIBRARIES
