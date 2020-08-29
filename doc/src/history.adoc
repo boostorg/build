@@ -1,6 +1,15 @@
 [[b2.history]]
 = History
 
+== Version 4.4.0
+
+* Remove one at time linking limit. Once upon a time this was a performance
+  tweak as hardware and software was not up to doing multiple links at once.
+  Common setups are better equipped.
+  -- _René Ferdinand Rivera Morell_
+* Fix building engine with GCC on AIX.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.3.0
 
 There are many invidual fixes in this release. Many thanks for the
