@@ -10,10 +10,16 @@ trigger:
     - develop
     - master
     - feature/*
+  paths:
+    exclude:
+    - appveyor.yml
 pr:
   branches:
     include:
     - develop
+  paths:
+    exclude:
+    - appveyor.yml
 
 stages:
 
@@ -65,6 +71,12 @@ stages:
           TEST_TOOLSET: gcc
           CXX: g++-4.7
           PACKAGES: g++-4.7
+        Clang 9:
+          TOOLSET: clang
+          TEST_TOOLSET: clang
+          CXX: clang++-9
+          PACKAGES: clang-9
+          LLVM_REPO: llvm-toolchain-xenial-9
         Clang 8:
           TOOLSET: clang
           TEST_TOOLSET: clang
@@ -129,8 +141,8 @@ stages:
             wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
             sudo -E apt-add-repository "deb http://apt.llvm.org/xenial/ ${LLVM_REPO} main"
           fi
-          sudo -E apt-get update
-          sudo -E apt-get -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
+          sudo -E apt-get -o Acquire::Retries=3 update
+          sudo -E apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
       displayName: Install
     - bash: |
           set -e
@@ -152,7 +164,13 @@ stages:
           set -e
           CXX_PATH=`which ${CXX}`
           echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          ./bootstrap.sh --with-toolset=${TOOLSET}
+          ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET}
+      displayName: "No Warnings"
+    - bash: |
+          set -e
+          CXX_PATH=`which ${CXX}`
+          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+          ./bootstrap.sh ${TOOLSET}
           ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
 
@@ -167,10 +185,6 @@ stages:
           TOOLSET: vc141
           TEST_TOOLSET: msvc
           VM_IMAGE: 'vs2017-win2016'
-        VS 2015:
-          TOOLSET: vc14
-          TEST_TOOLSET: msvc
-          VM_IMAGE: 'vs2015-win2012r2'
         MinGW 8.1.0:
           TOOLSET: mingw
           TEST_TOOLSET: gcc
@@ -196,13 +210,25 @@ stages:
           $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
           $env:path += ';' + $env:CXX_PATH
           echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
-          ./bootstrap.bat
-          ./b2.exe --prefix=./.b2 install ${TEST_TOOLSET}
+          ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on toolset=$env:TEST_TOOLSET
+      displayName: "No Warnings"
+    - powershell: |
+          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+          $env:path += ';' + $env:CXX_PATH
+          echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
+          ./bootstrap.bat $env:TOOLSET
+          ./b2.exe --debug-configuration --prefix=./.b2 install toolset=$env:TEST_TOOLSET
       displayName: Bootstrap
 
   - job: 'macOS'
     strategy:
       matrix:
+        Xcode 11.4:
+          TOOLSET: clang
+          TEST_TOOLSET: clang
+          CXX: clang++
+          XCODE_APP: /Applications/Xcode_11.4_beta.app
+          VM_IMAGE: 'macOS-10.15'
         Xcode 11.3.1:
           TOOLSET: clang
           TEST_TOOLSET: clang
@@ -257,60 +283,6 @@ stages:
           CXX: clang++
           XCODE_APP: /Applications/Xcode_10.app
           VM_IMAGE: 'macOS-10.14'
-        Xcode 9.4.1:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_9.4.1.app
-          VM_IMAGE: 'macOS-10.13'
-        Xcode 9.4:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_9.4.app
-          VM_IMAGE: 'macOS-10.13'
-        Xcode 9.3.1:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_9.3.1.app
-          VM_IMAGE: 'macOS-10.13'
-        Xcode 9.3:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_9.3.app
-          VM_IMAGE: 'macOS-10.13'
-        Xcode 9.2:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_9.2.app
-          VM_IMAGE: 'macOS-10.13'
-        Xcode 9.1:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_9.1.app
-          VM_IMAGE: 'macOS-10.13'
-        Xcode 9.0.1:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_9.0.1.app
-          VM_IMAGE: 'macOS-10.13'
-        Xcode 9.0:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_9.app
-          VM_IMAGE: 'macOS-10.13'
-        Xcode 8.3.3:
-          TOOLSET: clang
-          TEST_TOOLSET: clang
-          CXX: clang++
-          XCODE_APP: /Applications/Xcode_8.3.3.app
-          VM_IMAGE: 'macOS-10.13'
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -339,7 +311,13 @@ stages:
         set -e
         CXX_PATH=`which ${CXX}`
         echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        ./bootstrap.sh --with-toolset=${TOOLSET}
+        ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET}
+      displayName: "No Warnings"
+    - bash: |
+        set -e
+        CXX_PATH=`which ${CXX}`
+        echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        ./bootstrap.sh ${TOOLSET}
         ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
 
@@ -403,8 +381,8 @@ stages:
             wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
             sudo -E apt-add-repository "deb http://apt.llvm.org/xenial/ ${LLVM_REPO} main"
           fi
-          sudo -E apt-get update
-          sudo -E apt-get -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
+          sudo -E apt-get -o Acquire::Retries=3 update
+          sudo -E apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
       displayName: Install
     - bash: |
           set -e
@@ -415,8 +393,7 @@ stages:
     - bash: |
           set -e
           pushd ${HOME}
-          wget -nv https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.bz2
-          tar -jxf boost_${BOOST_VERSION_U}.tar.bz2
+          git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
           cd boost_${BOOST_VERSION_U}
           CXX_PATH=`which ${CXX}`
           echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
@@ -461,8 +438,8 @@ stages:
             wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
             sudo -E apt-add-repository "deb http://apt.llvm.org/xenial/ ${LLVM_REPO} main"
           fi
-          sudo -E apt-get update
-          sudo -E apt-get -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
+          sudo -E apt-get -o Acquire::Retries=3 update
+          sudo -E apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
       displayName: Install
     - bash: |
           set -e
@@ -546,8 +523,7 @@ stages:
     - bash: |
         set -e
         pushd ${HOME}
-        wget -nv https://dl.bintray.com/boostorg/release/${BOOST_VERSION}/source/boost_${BOOST_VERSION_U}.tar.bz2
-        tar -jxf boost_${BOOST_VERSION_U}.tar.bz2
+        git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
         cd boost_${BOOST_VERSION_U}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
@@ -602,6 +578,10 @@ stages:
       vmImage: 'windows-latest'
     strategy:
       matrix:
+        1.73.0 .. VS 2019:
+          BOOST_VERSION: 1.73.0
+          BOOST_VERSION_U: 1_73_0
+          TOOLSET: vc142
         1.72.0 .. VS 2019:
           BOOST_VERSION: 1.72.0
           BOOST_VERSION_U: 1_72_0
@@ -641,8 +621,7 @@ stages:
     - powershell: |
         $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
         cd "${env:HOME}"
-        Invoke-WebRequest "https://dl.bintray.com/boostorg/release/${env:BOOST_VERSION}/source/boost_${env:BOOST_VERSION_U}.zip" -OutFile "boost_${env:BOOST_VERSION_U}.zip"
-        7z x "boost_${env:BOOST_VERSION_U}.zip"
+        git clone -b boost-${env:BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${env:BOOST_VERSION_U}
         cd "boost_${env:BOOST_VERSION_U}"
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
         & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install

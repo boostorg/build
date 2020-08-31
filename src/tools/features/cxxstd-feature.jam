@@ -8,7 +8,7 @@ import feature ;
 #| tag::doc[]
 
 [[bbv2.builtin.features.cxxstd]]`cxxstd`::
-*Allowed values*: `98`, `03`, `0x`, `11`, `1y`, `14`, `1z`, `17`, `2a`,
+*Allowed values*: `98`, `03`, `0x`, `11`, `1y`, `14`, `1z`, `17`, `2a`, `20`,
 `latest`.
 +
 Specifies the version of the C++ Standard Language to build with. All the
@@ -28,7 +28,7 @@ is supported.
 |# # end::doc[]
 
 feature.feature cxxstd
-    : 98 03 0x 11 1y 14 1z 17 2a latest
+    : 98 03 0x 11 1y 14 1z 17 2a 20 latest
     : optional composite propagated ;
 
 #| tag::doc[]

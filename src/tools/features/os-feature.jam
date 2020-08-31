@@ -83,7 +83,7 @@ feature.set-default host-os : [ default-host-os ] ;
 +
 Specifies the operating system for which the code is to be generated. The
 compiler you used should be the compiler for that operating system. This option
-causes Boost.Build to use naming conventions suitable for that operating
+causes B2 to use naming conventions suitable for that operating
 system, and adjust build process accordingly. For example, with gcc, it
 controls if import libraries are produced for shared libraries or not.
 +

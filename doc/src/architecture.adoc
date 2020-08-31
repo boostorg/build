@@ -1,5 +1,5 @@
 [[bbv2.arch]]
-Boost.Build v2 architecture
+B2 v2 architecture
 ---------------------------
 
 This document is work-in progress. Do not expect much from it yet.
@@ -8,7 +8,7 @@ This document is work-in progress. Do not expect much from it yet.
 Overview
 --------
 
-Boost.Build implementation is structured in four different components:
+B2 implementation is structured in four different components:
 "kernel", "util", "build" and "tools". The first two are relatively
 uninteresting, so we will focus on the remaining pair. The "build"
 component provides classes necessary to declare targets, determining
@@ -52,7 +52,7 @@ to the `generators.construct` function.
 `run` method is called. The method returns a list of virtual targets.
 4.  The virtual targets are returned to the top level code, and for each
 instance, the `actualize` method is called to setup nodes and updating
-actions in the dependency graph kept inside Boost.Build engine. This
+actions in the dependency graph kept inside B2 engine. This
 dependency graph is then updated, which runs necessary commands.
 
 [[bbv2.arch.build.metatargets]]
@@ -125,14 +125,14 @@ When all virtual targets are produced, they are "actualized". This means
 that the real file names are computed, and the commands that should be
 run are generated. This is done by the `virtual-target.actualize` and
 `action.actualize` methods. The first is conceptually simple, while the
-second needs additional explanation. Commands in Boost.Build are
+second needs additional explanation. Commands in B2 are
 generated in a two-stage process. First, a rule with an appropriate name
 (for example "gcc.compile") is called and is given a list of target
 names. The rule sets some variables, like "OPTIONS". After that, the
 command string is taken, and variable are substitutes, so use of OPTIONS
 inside the command string gets transformed into actual compile options.
 
-Boost.Build added a third stage to simplify things. It is now possible
+B2 added a third stage to simplify things. It is now possible
 to automatically convert properties to appropriate variable assignments.
 For example, <debug-symbols>on would add "-g" to the OPTIONS variable,
 without requiring to manually add this logic to gcc.compile. This
@@ -165,7 +165,7 @@ Targets
 -------
 
 NOTE: THIS SECTION IS NOT EXPECTED TO BE READ! There are two
-user-visible kinds of targets in Boost.Build. First are "abstract" —
+user-visible kinds of targets in B2. First are "abstract" —
 they correspond to things declared by the user, e.g. projects and
 executable files. The primary thing about abstract targets is that it is
 possible to request them to be built with a particular set of
@@ -219,7 +219,7 @@ Ability to scan the same file several times
 
 As stated above, it is possible to compile a {CPP} file multiple times,
 using different include paths. Therefore, include dependencies for those
-compilations can be different. The problem is that Boost.Build engine
+compilations can be different. The problem is that B2 engine
 does not allow multiple scans of the same target. To solve that, we pass
 the scanner object when calling `virtual-target.actualize` and it
 creates different engine targets for different scanners.
@@ -251,9 +251,9 @@ This requirement breaks down to the following ones.
 
 1.  If when compiling "a.cpp" there is an include of "a.h", the "dir"
 directory is on the include path, and a target called "a.h" will be
-generated in "dir", then Boost.Build should discover the include, and
+generated in "dir", then B2 should discover the include, and
 create "a.h" before compiling "a.cpp".
-2.  Since Boost.Build almost always generates targets under the "bin"
+2.  Since B2 almost always generates targets under the "bin"
 directory, this should be supported as well. I.e. in the scenario above,
 Jamfile in "dir" might create a main target, which generates "a.h". The
 file will be generated to "dir/bin" directory, but we still have to
@@ -326,7 +326,7 @@ first alternative's problem is avoided, so the second alternative is
 implemented now.
 
 The second sub-requirements is that targets generated under the "bin"
-directory are handled as well. Boost.Build implements a semi-automatic
+directory are handled as well. B2 implements a semi-automatic
 approach. When compiling {CPP} files the process is:
 
 1.  The main target to which the compiled file belongs to is found.
@@ -427,7 +427,7 @@ ________________________________________________________________________________
 File targets
 ------------
 
-As described above, file targets correspond to files that Boost.Build
+As described above, file targets correspond to files that B2
 manages. Users may be concerned about file targets in three ways: when
 declaring file target types, when declaring transformations between
 types and when determining where a file target is to be placed. File

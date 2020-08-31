@@ -48,8 +48,8 @@ specify the toolset as the first argument, this assumes that the toolset
 is readily available in the `PATH`.
 
 NOTE: The toolset used to build Boost.Jam is independent of the toolsets used
-for Boost.Build. Only one version of Boost.Jam is needed to use
-Boost.Build.
+for B2. Only one version of Boost.Jam is needed to use
+B2.
 
 The supported toolsets, and whether they are auto-detected, are:
 
@@ -200,7 +200,7 @@ a|
 The built executables are placed in a subdirectory specific to your
 platform. For example, in Linux running on an Intel x86 compatible chip,
 the executables are placed in: `bin.linuxx86`. The `b2[.exe]`
-executable can be used to invoke Boost.Build.
+executable can be used to invoke B2.
 
 The build scripts support additional invocation arguments for use by
 developers of Boost.Jam and for additional setup of the toolset. The
@@ -1257,12 +1257,12 @@ Select elements number _n_ through the last. _n_ can be negative in
 which case it refers to the element counting from the last leftward.
 
 `:B`::
- +
- Select filename base.
++
+Select filename base -- a basename without extension.
 
 `:S`::
 +
-Select (last) filename suffix.
+Select file extension -- a (last) filename suffix.
 
 `:M`::
 +
@@ -1327,6 +1327,8 @@ On other platforms, the string is unchanged.
 
 `:chars`::
 Select the components listed in _chars_.
++
+For example, `:BS` selects filename (basename and extension).
 
 `:G=grist`::
 Replace grist with _grist_.
@@ -1503,7 +1505,7 @@ platform:
 `JAMUNAME`::
   Output of uname(1) command (Unix only)
 `JAMVERSION`::
-  `b2` version, currently "3.1.19"
+  `b2` version, as a sematic triplet "X.Y.Z".
 `JAM_VERSION`::
   A predefined global variable with two elements indicates the version
   number of Boost Jam. Boost Jam versions start at `03` `00`.

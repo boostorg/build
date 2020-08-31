@@ -7,7 +7,7 @@
 [[bbv2.reference.init]]
 === Initialization
 
-Immediately upon starting, the Boost.Build engine (*`b2`*) loads the Jam
+Immediately upon starting, the B2 engine (*`b2`*) loads the Jam
 code that implements the build system. To do this, it searches for a
 file called `boost-build.jam`, first in the invocation directory, then
 in its parent and so forth up to the filesystem root, and finally in the
@@ -202,7 +202,7 @@ This rule is deprecated and equivalent to `alias`.
 [[bbv2.overview.builtins.features]]
 == Builtin features
 
-This section documents the features that are built-in into Boost.Build.
+This section documents the features that are built-in into B2.
 For features with a fixed set of values, that set is provided, with the
 default value listed first.
 
@@ -234,8 +234,11 @@ include::../../src/tools/features/find-lib-feature.jam[tag=doc]
 include::../../src/tools/features/flags-feature.jam[tag=doc]
 include::../../src/tools/features/dll-feature.jam[tag=hardcode-doc]
 include::../../src/tools/features/dependency-feature.jam[tag=impl-doc]
+include::../../src/tools/features/force-include-feature.jam[tag=doc]
 include::../../src/tools/features/include-feature.jam[tag=doc]
 include::../../src/tools/features/optimization-feature.jam[tag=inline-doc]
+include::../../src/tools/stage.jam[tag=features-install-package-doc]
+include::../../src/tools/stage.jam[tag=features-install-prefix-doc]
 include::../../src/tools/features/instruction-set-feature.jam[tag=doc]
 include::../../src/tools/features/library-feature.jam[tag=doc]
 include::../../src/tools/features/find-lib-feature.jam[tag=path-doc]
@@ -254,6 +257,7 @@ include::../../src/tools/features/rtti-feature.jam[tag=doc]
 include::../../src/tools/features/runtime-feature.jam[tag=doc]
 include::../../src/tools/features/search-feature.jam[tag=doc]
 include::../../src/tools/features/source-feature.jam[tag=doc]
+include::../../src/tools/stage.jam[tag=features-staging-prefix-doc]
 include::../../src/tools/features/stdlib-feature.jam[tag=doc]
 include::../../src/tools/features/strip-feature.jam[tag=doc]
 include::../../src/tools/features/dll-feature.jam[tag=suppress-doc]
@@ -271,13 +275,13 @@ include::../../src/tools/features/optimization-feature.jam[tag=vector-doc]
 include::../../src/tools/features/version-feature.jam[tag=doc]
 include::../../src/tools/features/visibility-feature.jam[tag=doc]
 include::../../src/tools/features/warnings-feature.jam[tag=doc]
-
+include::../../src/tools/features/translate-path-feature.jam[tag=doc]
 include::../../src/tools/features/lto-feature.jam[tag=doc]
 
 [[bbv2.reference.tools]]
 == Builtin tools
 
-Boost.Build comes with support for a large number of {CPP} compilers, and
+B2 comes with support for a large number of {CPP} compilers, and
 other tools. This section documents how to use those tools.
 
 Before using any tool, you must declare your intention, and possibly
@@ -304,7 +308,7 @@ subsequent sections.
 [[bbv2.reference.tools.compilers]]
 === {CPP} Compilers
 
-This section lists all Boost.Build modules that support {CPP} compilers
+This section lists all B2 modules that support {CPP} compilers
 and documents how each one can be initialized. The name of support
 module for compiler is also the value for the `toolset` feature that can
 be used to explicitly request that compiler.
@@ -325,14 +329,14 @@ include::../../src/tools/vacpp.jam[tag=doc]
 
 === Third-party libraries
 
-Boost.Build provides special support for some third-party {CPP} libraries,
+B2 provides special support for some third-party {CPP} libraries,
 documented below.
 
 [[bbv2.reference.tools.libraries.stlport]]
 ==== STLport library
 
 The http://stlport.org[STLport] library is an alternative implementation
-of {CPP} runtime library. Boost.Build supports using that library on
+of {CPP} runtime library. B2 supports using that library on
 Windows platform. Linux is hampered by different naming of libraries in
 each STLport version and is not officially supported.
 
@@ -496,7 +500,7 @@ MacOS/Darwin, you can also pass the path of the Python framework.
 
 `conditions`::
 if specified, should be a set of properties that are matched against the
-build configuration when Boost.Build selects a Python configuration to use.
+build configuration when B2 selects a Python configuration to use.
 
 `extension-suffix`::
 A string to append to the name of extension modules before the true filename
@@ -556,7 +560,7 @@ using python
 
 === Documentation tools
 
-Boost.Build support for the Boost documentation tools is documented
+B2 support for the Boost documentation tools is documented
 below.
 
 [[bbv2.reference.tools.doc.xsltproc]]
@@ -723,7 +727,7 @@ syntax:
 using quickbook : command ;
 ----
 
-`command` is the quickbook executable. If it is not specified, Boost.Build
+`command` is the quickbook executable. If it is not specified, B2
 will compile it from source. If it is unable to find the source it will
 search for a quickbook executable in PATH.
 
@@ -741,14 +745,14 @@ using fop : fop-command : java-home : java ;
 ----
 
 `fop-command` is the command to run fop. If it is not specified,
-Boost.Build will search for it in PATH and FOP_HOME.
+B2 will search for it in PATH and FOP_HOME.
 
 Either `java-home` or `java` can be used to specify where to find java.
 
 [[bbv2.reference.modules]]
 == Builtin modules
 
-This section describes the modules that are provided by Boost.Build. The
+This section describes the modules that are provided by B2. The
 import rule allows rules from one module to be used in another module or
 Jamfile.
 
@@ -889,6 +893,8 @@ include::regex.adoc[]
 
 include::sequence.adoc[]
 
+include::../../src/tools/stage.jam[tag=doc]
+
 include::type.adoc[]
 
 :leveloffset: -2
@@ -1014,7 +1020,7 @@ example, given a property set containing: `<toolset>gcc`
 `gcc-4.6.1/debug/link-static`. `<warnings>` is an incidental feature and
 `<define>` and `<include>` are free features, so they do not affect the path.
 
-Sometimes the paths produced by Boost.Build can become excessively long.
+Sometimes the paths produced by B2 can become excessively long.
 There are a couple of command line options that can help with this.
 `--abbreviate-paths` reduces each element to no more than five characters.
 For example, `link-static` becomes `lnk-sttc`. The `--hash` option reduces the

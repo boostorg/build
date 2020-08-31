@@ -8,8 +8,20 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-9.2.0/debug/b2",
-            "args": ["-n" "-a" "toolset=gcc"],
+            "program": "${workspaceFolder}/src/engine/b2",
+            "args": ["-sBOOST_BUILD_PATH=${workspaceFolder}", "toolset=clang"],
+            "stopAtEntry": true,
+            "cwd": "${workspaceFolder}/test",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb"
+        },
+        {
+            "name": "(gdb) Launch: example/hello",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.build/clang-linux-10.0.0/debug/cxxstd-11-iso/b2",
+            "args": ["-n", "toolset=clang"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/example/hello",
             "environment": [],
@@ -24,16 +36,23 @@
             ]
         },
         {
-            "name": "(lldb) Launch, ASAN",
+            "name": "(gdb) Launch: home/tmp/prebuild",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/clang-darwin-10.0/debug/address-sanitizer-on/cxxstd-11-iso/b2",
-            "args": ["-n" "-a" "toolset=clang"],
+            "program": "${workspaceFolder}/.build/gcc-10.1.0/debug/cxxstd-11-iso/b2",
+            "args": ["-n","-sBOOST_BUILD_PATH=/home/grafik/Sync/DevRoots/B2/mainline/test/..","debug","release","-j1","-d2","toolset=gcc"],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/example/hello",
+            "cwd": "/home/grafik/tmp/prebuilt-1",
             "environment": [],
-            "externalConsole": true,
-            "MIMode": "lldb"
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
         },
     ]
 }

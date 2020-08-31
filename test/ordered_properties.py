@@ -4,7 +4,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-# This checks that Boost.Build does not reorder <include> properties
+# This checks that B2 does not reorder <include> properties
 # lexicographically.
 
 import BoostBuild

@@ -7,7 +7,7 @@ local here = [ modules.binding $(__name__) ] ;
 here = $(here:D) ;
 modules.poke : EXTRA_PYTHONPATH : $(here) ;
 
-# Import the Python rules to Boost.Build
+# Import the Python rules to B2
 PYTHON_IMPORT_RULE python_helpers : test1 : python_helpers : test1 ;
 PYTHON_IMPORT_RULE python_helpers : test2 : python_helpers : test2 ;
 

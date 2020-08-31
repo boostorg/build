@@ -56,6 +56,17 @@
 #include <process.h>
 #include <tlhelp32.h>
 
+#if defined(__GNUC__) || defined(__clang__)
+#else
+#pragma warning( push )
+#pragma warning(disable: 4800) // 'BOOL' forced to 'true' or 'false'
+#endif
+#include <versionhelpers.h>
+#if defined(__GNUC__) || defined(__clang__)
+#else
+#pragma warning( pop )
+#endif
+
 
 /* get the maximum shell command line length according to the OS */
 static int maxline();
@@ -174,7 +185,7 @@ void execnt_unit_test()
      * Use a table instead.
      */
     {
-        typedef struct test { char * command; int result; } test;
+        typedef struct test { const char * command; int result; } test;
         test tests[] = {
             { "", 0 },
             { "  ", 0 },
@@ -279,7 +290,7 @@ int exec_check
     /* Check prerequisites for executing raw commands. */
     if ( is_raw_command_request( *pShell ) )
     {
-        int const raw_cmd_length = raw_command_length( command->value );
+        long const raw_cmd_length = raw_command_length( command->value );
         if ( raw_cmd_length < 0 )
         {
             /* Invalid characters detected - fallback to default shell. */
@@ -342,6 +353,7 @@ void exec_cmd
         shell = default_shell;
 
     if ( DEBUG_EXECCMD )
+    {
         if ( is_raw_cmd )
             out_printf( "Executing raw command directly\n" );
         else
@@ -350,6 +362,7 @@ void exec_cmd
             list_print( shell );
             out_printf( "\n" );
         }
+    }
 
     /* If we are running a raw command directly - trim its leading whitespaces
      * as well as any trailing all-whitespace lines but keep any trailing
@@ -367,7 +380,7 @@ void exec_cmd
                 end = p;
         string_new( cmd_local );
         string_append_range( cmd_local, start, end );
-        assert( cmd_local->size == raw_command_length( cmd_orig->value ) );
+        assert( long(cmd_local->size) == raw_command_length( cmd_orig->value ) );
     }
     /* If we are not running a raw command directly, prepare a command file to
      * be executed using an external shell and the actual command string using
@@ -485,7 +498,7 @@ static void invoke_cmd( char const * const command, int const slot )
 {
     SECURITY_ATTRIBUTES sa = { sizeof( SECURITY_ATTRIBUTES ), 0, 0 };
     SECURITY_DESCRIPTOR sd;
-    STARTUPINFO si = { sizeof( STARTUPINFO ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    STARTUPINFOA si = { sizeof( STARTUPINFOA ), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0 };
 
     /* Init the security data. */
@@ -566,12 +579,8 @@ static void invoke_cmd( char const * const command, int const slot )
 
 static int raw_maxline()
 {
-    OSVERSIONINFO os_info;
-    os_info.dwOSVersionInfoSize = sizeof( os_info );
-    GetVersionEx( &os_info );
-
-    if ( os_info.dwMajorVersion >= 5 ) return 8191;  /* XP       */
-    if ( os_info.dwMajorVersion == 4 ) return 2047;  /* NT 4.x   */
+    if ( IsWindowsVersionOrGreater(5,0,0) == TRUE ) return 8191;  /* XP       */
+    if ( IsWindowsVersionOrGreater(4,0,0) == TRUE ) return 2047;  /* NT 4.x   */
     return 996;                                      /* NT 3.5.1 */
 }
 
@@ -767,7 +776,7 @@ static void read_pipe
 {
     DWORD bytesInBuffer = 0;
     DWORD bytesAvailable = 0;
-    int i;
+    DWORD i;
 
     for (;;)
     {
@@ -840,7 +849,6 @@ static void CALLBACK try_wait_callback( void * data, BOOLEAN is_timeout )
 static int try_wait_impl( DWORD timeout )
 {
     int job_index;
-    int timed_out;
     int res = WaitForSingleObject( process_queue.read_okay, timeout );
     if ( res != WAIT_OBJECT_0 )
         return -1;
@@ -853,7 +861,6 @@ static void register_wait( int job_id )
 {
     if ( globs.jobs > MAXIMUM_WAIT_OBJECTS )
     {
-        HANDLE ignore;
         RegisterWaitForSingleObject( &cmdtab[ job_id ].wait_handle,
             cmdtab[ job_id ].pi.hProcess,
             &try_wait_callback, &cmdtab[ job_id ], INFINITE,
@@ -1082,10 +1089,20 @@ static int is_parent_child( DWORD const parent, DWORD const child )
                  * id == 4. This check must be performed before comparing
                  * process creation times.
                  */
+
+#ifdef UNICODE  // no PROCESSENTRY32A
+                if ( !wcsicmp( pinfo.szExeFile, L"csrss.exe" ) &&
+#else
                 if ( !stricmp( pinfo.szExeFile, "csrss.exe" ) &&
+#endif
                     is_parent_child( parent, pinfo.th32ParentProcessID ) == 2 )
                     return 1;
+
+#ifdef UNICODE  // no PROCESSENTRY32A
+                if ( !wcsicmp( pinfo.szExeFile, L"smss.exe" ) &&
+#else
                 if ( !stricmp( pinfo.szExeFile, "smss.exe" ) &&
+#endif
                     ( pinfo.th32ParentProcessID == 4 ) )
                     return 2;
 
@@ -1201,7 +1218,7 @@ static FILE * open_command_file( int const slot )
         string_new( command_file );
         string_reserve( command_file, tmpdir->size + 64 );
         command_file->size = sprintf( command_file->value,
-            "%s\\jam%d-%02d-##.bat", tmpdir->value, procID, slot );
+            "%s\\jam%lu-%02d-##.bat", tmpdir->value, procID, slot );
     }
 
     /* For some reason opening a command file can fail intermittently. But doing
@@ -1314,7 +1331,7 @@ static void reportWindowsError( char const * const apiName, int slot )
         (LPSTR)&errorMessage,             /* __out     LPTSTR lpBuffer     */
         0,                                /* __in      DWORD nSize         */
         0 );                              /* __in_opt  va_list * Arguments */
-    
+
     /* Build a message as if the process had written to stderr. */
     if ( globs.pipe_action )
         err_buf = cmdtab[ slot ].buffer_err;
@@ -1322,7 +1339,7 @@ static void reportWindowsError( char const * const apiName, int slot )
         err_buf = cmdtab[ slot ].buffer_out;
     string_append( err_buf, apiName );
     string_append( err_buf, "() Windows API failed: " );
-    sprintf( buf, "%d", errorCode );
+    sprintf( buf, "%lu", errorCode );
     string_append( err_buf, buf );
 
     if ( !apiResult )
@@ -1347,7 +1364,7 @@ static void reportWindowsError( char const * const apiName, int slot )
     (*cmdtab[ slot ].func)( cmdtab[ slot ].closure, EXEC_CMD_FAIL, &time,
         cmdtab[ slot ].buffer_out->value, cmdtab[ slot ].buffer_err->value,
         EXIT_OK );
-    
+
     /* Clean up any handles that were opened. */
     closeWinHandle( &cmdtab[ slot ].pi.hProcess );
     closeWinHandle( &cmdtab[ slot ].pi.hThread );

@@ -4,7 +4,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 
 This example shows how it is possible to use GNU gettext utilities with
-Boost.Build.
+B2.
 
 A simple translation file is compiled and installed as message catalog for
 russian. The main application explicitly switches to russian locale and outputs

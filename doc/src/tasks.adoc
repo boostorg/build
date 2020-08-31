@@ -1,7 +1,7 @@
 [[bbv2.tasks]]
 = Common tasks
 
-This section describes main targets types that Boost.Build supports
+This section describes main targets types that B2 supports
 out-of-the-box. Unless otherwise noted, all mentioned main target rules
 have the common signature, described in
 link:#bbv2.overview.targets[the section called “Declaring Targets”].
@@ -22,12 +22,12 @@ exe hello
 
 This will create an executable file from the sources--in this case,
 one {CPP} file, one library file present in the same directory, and
-another library that is created by Boost.Build. Generally, sources can
-include C and {CPP} files, object files and libraries. Boost.Build will
+another library that is created by B2. Generally, sources can
+include C and {CPP} files, object files and libraries. B2 will
 automatically try to convert targets of other types.
 
 TIP: On Windows, if an application uses shared libraries, and both the
-application and the libraries are built using Boost.Build, it is not
+application and the libraries are built using B2, it is not
 possible to immediately run the application, because the `PATH` environment
 variable should include the path to the libraries. It means you have to either
 add the paths manually, or have the build place the application and the
@@ -328,16 +328,16 @@ that matter are
 link:#bbv2.builtin.features.dependency[`dependency`] and, on Unix,
 link:#bbv2.builtin.features.dll-path[`dll-path`].
 
-NOTE: (Unix specific) On Unix, executables built using Boost.Build typically
+NOTE: (Unix specific) On Unix, executables built using B2 typically
 contain the list of paths to all used shared libraries. For installing,
-this is not desired, so Boost.Build relinks the executable with an empty
+this is not desired, so B2 relinks the executable with an empty
 list of paths. You can also specify additional paths for installed
 executables using the `dll-path` feature.
 
 [[bbv2.builtins.testing]]
 == Testing
 
-Boost.Build has convenient support for running unit tests. The simplest
+B2 has convenient support for running unit tests. The simplest
 way is the `unit-test` rule, which follows the
 link:#bbv2.main-target-rule-syntax[common syntax]. For example:
 
@@ -410,10 +410,10 @@ command-line option. The output will consist of lines of the form:
 boost-test(test-type) path : sources
 ----
 
-It is possible to process the list of tests, Boost.Build output and the
+It is possible to process the list of tests, B2 output and the
 presence/absence of the `*.test` files created when test passes into
 human-readable status table of tests. Such processing utilities are not
-included in Boost.Build.
+included in B2.
 
 The following features adjust behavior of the testing metatargets.
 
@@ -466,9 +466,9 @@ A description of the test. This is displayed as part of the
 [[bbv2.builtins.raw]]
 == Custom commands
 
-For most main target rules, Boost.Build automatically figures out the
+For most main target rules, B2 automatically figures out the
 commands to run. When you want to use new file types or support new
-tools, one approach is to extend Boost.Build to support them smoothly,
+tools, one approach is to extend B2 to support them smoothly,
 as documented in link:#bbv2.extender[Extender Manual]. However, if the new
 tool is only used in a single place, it might be easier just to specify the
 commands to run explicitly.
@@ -477,7 +477,7 @@ Three main target rules can be used for that. The `make` rule allows you to
 construct a single file from any number of source file, by running a command
 you specify. The `notfile` rule allows you to run an arbitrary command,
 without creating any files. And finally, the `generate` rule allows you to
-describe a transformation using Boost.Build's virtual targets. This is
+describe a transformation using B2's virtual targets. This is
 higher-level than the file names that the `make` rule operates with and
 allows you to create more than one target, create differently named targets
 depending on properties, or use more than one tool.
@@ -487,7 +487,7 @@ of sources using some specific command. The `notfile` is used to
 unconditionally run a command.
 
 Suppose you want to create the file `file.out` from the file `file.in`
-by running the command `in2out`. Here is how you would do this in Boost.Build:
+by running the command `in2out`. Here is how you would do this in B2:
 
 [source]
 ----
@@ -498,7 +498,7 @@ actions in2out
 }
 ----
 
-If you run `b2` and `file.out` does not exist, Boost.Build will run the
+If you run `b2` and `file.out` does not exist, B2 will run the
 `in2out` command to create that file. For more details on specifying
 actions, see
 link:#bbv2.overview.jam_language.actions[the section called “Boost.Jam Language”].
@@ -517,11 +517,11 @@ actions echo
 ----
 
 The only difference from the `make` rule is that the name of the target
-is not considered a name of a file, so Boost.Build will unconditionally
+is not considered a name of a file, so B2 will unconditionally
 run the action.
 
 The `generate` rule is used when you want to express transformations
-using Boost.Build's virtual targets, as opposed to just filenames. The
+using B2's virtual targets, as opposed to just filenames. The
 `generate` rule has the standard main target rule signature, but you are
 required to specify the `generating-rule` property. The value of the
 property should be in the form `@_rule-name_`, the named rule should have the
@@ -539,7 +539,7 @@ containing build properties, and the list of instances of the
 list of `virtual-target` instances. The interface of the
 `virtual-target` class can be learned by looking at the
 `build/virtual-target.jam` file. The `generate` example contained in the
-Boost.Build distribution illustrates how the `generate` rule can be
+B2 distribution illustrates how the `generate` rule can be
 used.
 
 [[bbv2.reference.precompiled_headers]]
@@ -548,7 +548,7 @@ used.
 Precompiled headers is a mechanism to speed up compilation by creating a
 partially processed version of some header files, and then using that
 version during compilations rather then repeatedly parsing the original
-headers. Boost.Build supports precompiled headers with gcc and msvc
+headers. B2 supports precompiled headers with gcc and msvc
 toolsets.
 
 To use precompiled headers, follow the following steps:
@@ -560,7 +560,7 @@ libraries. Please wrap the header in `#ifdef BOOST_BUILD_PCH_ENABLED`, so
 that the potentially expensive inclusion of headers is not done when PCH is
 not enabled. Include the new header at the top of your source files.
 
-2. Declare a new Boost.Build target for the precompiled header and add
+2. Declare a new B2 target for the precompiled header and add
 that precompiled header to the sources of the target whose compilation
 you want to speed up:
 +
@@ -573,7 +573,7 @@ exe main : main.cpp pch ;
 You can use the `c-pch` rule if you want to use the precompiled header
 in C programs.
 
-The `pch` example in Boost.Build distribution can be used as reference.
+The `pch` example in B2 distribution can be used as reference.
 
 Please note the following:
 
@@ -588,8 +588,6 @@ source file needs to include some header, explicitly include it in the
 source file, even if the same header is included from the precompiled
 header. This makes sure that your project will build even if precompiled
 headers are not supported.
-* On the gcc compiler, the name of the header being precompiled must be
-equal to the name of the `cpp-pch` target. This is a gcc requirement.
 * Prior to version 4.2, the gcc compiler did not allow anonymous
 namespaces in precompiled headers, which limits their utility. See the
 http://gcc.gnu.org/bugzilla/show_bug.cgi?id=29085[bug report] for
@@ -598,15 +596,15 @@ details.
 [[bbv2.reference.generated_headers]]
 == Generated headers
 
-Usually, Boost.Build handles implicit dependencies completely
+Usually, B2 handles implicit dependencies completely
 automatically. For example, for {CPP} files, all `#include` statements are
 found and handled. The only aspect where user help might be needed is
 implicit dependency on generated files.
 
-By default, Boost.Build handles such dependencies within one main
+By default, B2 handles such dependencies within one main
 target. For example, assume that main target "app" has two sources,
 "app.cpp" and "parser.y". The latter source is converted into "parser.c"
-and "parser.h". Then, if "app.cpp" includes "parser.h", Boost.Build will
+and "parser.h". Then, if "app.cpp" includes "parser.h", B2 will
 detect this dependency. Moreover, since "parser.h" will be generated
 into a build directory, the path to that directory will automatically be
 added to the include path.
@@ -629,7 +627,7 @@ of "app" for implicit-dependencies, it should consider targets from
 [[bbv2.tasks.crosscompile]]
 == Cross-compilation
 
-Boost.Build supports cross compilation with the gcc and msvc toolsets.
+B2 supports cross compilation with the gcc and msvc toolsets.
 
 When using gcc, you first need to specify your cross compiler in
 `user-config.jam` (see
@@ -673,7 +671,7 @@ for details.
 [[bbv2.tasks.packagemanagers]]
 == Package Managers
 
-Boost.Build support automatic, or manual, loading of generated build files
+B2 support automatic, or manual, loading of generated build files
 from package managers. For example using the Conan package manager which
 generates `conanbuildinfo.jam` files B2 will load that files automatically
 when it loads the project at the same location. The included file can

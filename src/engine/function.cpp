@@ -24,6 +24,7 @@
 #include "output.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -34,7 +35,7 @@
 
 #ifndef FUNCTION_DEBUG_PROFILE
 #undef PROFILE_ENTER_LOCAL
-#define PROFILE_ENTER_LOCAL(x) static int unused_LOCAL_##x = 0
+#define PROFILE_ENTER_LOCAL(x) while (false)
 #undef PROFILE_EXIT_LOCAL
 #define PROFILE_EXIT_LOCAL(x)
 #endif
@@ -502,7 +503,6 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
     int i;
     LIST * first = stack_pop( s );
     LIST * result = L0;
-    LIST * trailing;
     RULE * rule;
     module_t * module;
     OBJECT * real_rulename = 0;
@@ -773,6 +773,8 @@ static void var_edit_file( char const * in, string * out, VAR_EDITS * edits )
 }
 
 
+#if defined( OS_CYGWIN ) || defined( OS_VMS )
+
 /*
  * var_edit_translate_path() - translate path to os native format.
  */
@@ -796,6 +798,8 @@ static void var_edit_translate_path( string * out, size_t pos, VAR_EDITS * edits
         string_free( result );
     }
 }
+
+#endif
 
 
 /*
@@ -2422,17 +2426,6 @@ static void adjust_result( compiler * c, int actual_location,
         assert( !"invalid result location" );
 }
 
-static char const * parse_type( PARSE * parse )
-{
-    switch ( parse->type )
-    {
-        case PARSE_APPEND: return "append";
-        case PARSE_EVAL: return "eval";
-        case PARSE_RULES: return "rules";
-        default: return "unknown";
-    }
-}
-
 static void compile_append_chain( PARSE * parse, compiler * c )
 {
     assert( parse->type == PARSE_APPEND );
@@ -3136,7 +3129,6 @@ void argument_list_check( struct arg_list * formal, int formal_count,
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
-            LIST * value;
 
             switch ( formal_arg->flags )
             {
@@ -3150,9 +3142,7 @@ void argument_list_check( struct arg_list * formal, int formal_count,
                 actual_iter = list_next( actual_iter );
                 break;
             case ARG_OPTIONAL:
-                if ( actual_iter == actual_end )
-                    value = L0;
-                else
+                if ( actual_iter != actual_end )
                 {
                     type_check_range( formal_arg->type_name, actual_iter,
                         list_next( actual_iter ), frame, function,
@@ -3854,11 +3844,15 @@ struct align_expansion_item
     expansion_item e;
 };
 
-static char check_align_var_edits[ sizeof(struct align_var_edits) <= sizeof(VAR_EDITS) + sizeof(void *) ? 1 : -1 ];
-static char check_align_expansion_item[ sizeof(struct align_expansion_item) <= sizeof(expansion_item) + sizeof(void *) ? 1 : -1 ];
+static_assert(
+    sizeof(struct align_var_edits) <= sizeof(VAR_EDITS) + sizeof(void *),
+    "sizeof(struct align_var_edits) <= sizeof(VAR_EDITS) + sizeof(void *)" );
+static_assert(
+    sizeof(struct align_expansion_item) <= sizeof(expansion_item) + sizeof(void *),
+    "sizeof(struct align_expansion_item) <= sizeof(expansion_item) + sizeof(void *)" );
 
-static char check_ptr_size1[ sizeof(LIST *) <= sizeof(void *) ? 1 : -1 ];
-static char check_ptr_size2[ sizeof(char *) <= sizeof(void *) ? 1 : -1 ];
+static_assert( sizeof(LIST *) <= sizeof(void *), "sizeof(LIST *) <= sizeof(void *)" );
+static_assert( sizeof(char *) <= sizeof(void *), "sizeof(char *) <= sizeof(void *)" );
 
 void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s,
     string * out )
@@ -5027,8 +5021,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 
                 if ( !out_file )
                 {
-                    err_printf( "failed to write output file '%s'!\n",
-                        out_name->value );
+                    err_printf( "[errno %d] failed to write output file '%s': %s",
+                        errno, out_name->value, strerror(errno) );
                     exit( EXITBAD );
                 }
                 string_free( out_name );

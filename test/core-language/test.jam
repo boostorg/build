@@ -11,7 +11,7 @@ rule show-result ( id : test-result )
 {
     if ! ( --quiet in $(ARGV) )
     {
-        ECHO $(test-result): $(id) ;
+        ECHO "$(test-result):" $(id) ;
     }
     $(test-result) = [ CALC $($(test-result)) + 1 ] ;
 }
@@ -19,16 +19,19 @@ rule show-result ( id : test-result )
 rule check-equal ( id : values * : expected * )
 {
     local test-result ;
+    local location = [ BACKTRACE ] ;
+    location = $(location[5-6]) ;
+    location = "$(location[1]):$(location[2])" ;
     if x$(values) = x$(expected)
     {
         test-result = passed ;
     }
     else
     {
-        ECHO error: "[" $(values) "] != [" $(expected) "]" ;
+        ECHO "error:" "[" $(values) "] != [" $(expected) "]" ;
         test-result = failed ;
     }
-    show-result $(id) : $(test-result) ;
+    show-result "$(location):$(id)" : $(test-result) ;
 }
 
 rule mark-order ( id : result * )
@@ -1445,6 +1448,11 @@ check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../../.." ] ;
 check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/foo/bar/../baz/../../.." ] ;
 check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../for/././../././bar/././../././.." ] ;
 check-equal normalize-path-invalid : : [ NORMALIZE_PATH "/../foo/bar" ] ;
+
+check-equal normalize-path : "../d" : [ NORMALIZE_PATH "../d" ] ;
+check-equal normalize-path : "../d" : [ NORMALIZE_PATH ".." "d" ] ;
+check-equal normalize-path : "../../d" : [ NORMALIZE_PATH ".." ".." "d" ] ;
+check-equal normalize-path : "../d" : [ NORMALIZE_PATH "" ".." "d" ] ;
 
 }
 

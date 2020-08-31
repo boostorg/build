@@ -171,11 +171,12 @@ rule init ( version ? : command * : options * )
 
         toolset.flags clang-win.compile .CC $(cond) : $(compiler) -m$(addr) ;
         toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) /link "/incremental:no" "/manifest" ;
-        toolset.flags clang-win.compile .ASM $(cond) : $(assembler) -nologo ;
+        toolset.flags clang-win.compile .ASM $(cond) : $(assembler) -nologo -c -Zp4 -Cp -Cx ;
+        toolset.flags clang-win.compile .ASM_OUTPUT $(cond) : -Fo ;
         toolset.flags clang-win.archive .LD $(cond) : $(archiver) /nologo ;
         toolset.flags clang-win.link .MT $(cond) : $(manifest-tool) -nologo ;
         toolset.flags clang-win.compile .MC $(cond) : $(mc-compiler) ;
-        toolset.flags clang-win.compile .RC $(cond) : $(resource-compiler) /nologo ;
+        toolset.flags clang-win.compile .RC $(cond) : $(resource-compiler) ;
         toolset.flags clang-win.compile .IDL $(cond) : $(idl-compiler) ;
     }
 

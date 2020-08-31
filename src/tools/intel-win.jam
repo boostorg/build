@@ -52,7 +52,7 @@ rule init ( version ? :     # the compiler version
             errors.error "Autodetect of version from command not implemented!" ;
         }
         local intel_versions = [ get-autodetect-versions () ] ;
-        if ! $(intel_versions) 
+        if ! $(intel_versions)
         {
             errors.error "No intel compiler version found!" ;
         }
@@ -85,7 +85,7 @@ local rule configure ( version ? : command * : options * )
             errors.error "feature compatibility and vc version in toolset present!" ;
         }
     }
-    
+
     if $(vc_in_version) && ! $(compatibility)
     {
         # vc Version must be stripped before check-init-parameters is called!
@@ -107,11 +107,11 @@ local rule configure ( version ? : command * : options * )
             toolset.using msvc : all ;
             msvc_versions = [ feature.values <toolset-msvc:version> ] ;
         }
-        if ! $(.iclvars-$(version)-supported-vcs) 
+        if ! $(.iclvars-$(version)-supported-vcs)
         {
             errors.error "Supported msvc versions not known for intel $(version)" ;
         }
-        
+
         for local v in $(msvc_versions)
         {
             if [ MATCH "($(v))" : $(.iclvars-$(version)-supported-vcs) ]
@@ -132,7 +132,7 @@ local rule configure ( version ? : command * : options * )
                 configure-really $(version) : $(command) : $(options) : $(v) ;
             }
         }
-        if ! [ feature.values <toolset-intel:version> ] 
+        if ! [ feature.values <toolset-intel:version> ]
         {
             errors.error "Failed to register an intel toolset!" ;
         }
@@ -144,7 +144,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     local rewrite-setupscript = [ feature.get-values <rewrite-setup-scripts> : $(options) ] ;
     local condition = [  common.check-init-parameters intel-win
         : version $(version) : compatibility $(compatibility) ] ;
-        
+
     local m = [ MATCH "([0-9]+).*" : $(version) ] ;
     local major = $(m[1]) ;
     if ! $(major)
@@ -158,11 +158,11 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         errors.user-error "Invalid value for compatibility option:"
             $(compatibility) ;
     }
-    
-    command = [ get-compiler-invocation-cmd $(major) : $(command) ] ; 
-    
+
+    command = [ get-compiler-invocation-cmd $(major) : $(command) ] ;
+
     common.handle-options intel-win : $(condition) : $(command) : $(options) ;
-    
+
     local root = [ feature.get-values <root> : $(options) ] ;
     if $(command) || $(root)
     {
@@ -183,7 +183,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
        setup = [ path.join $(root) "iclvars.bat" ] ;
        setup = [ path.native $(setup) ] ;
     }
-    
+
     local target_types ;
     local iclvars_vs_arg ;
     if $(major) >= 12
@@ -218,17 +218,17 @@ local rule configure-really ( version ? : command * : options * : compatibility 
             target_types = ia32 ia32_intel64 ;
         }
     }
-    else 
+    else
     {
         target_types = default ;
         iclvars_vs_arg = $(compatibility) ;
     }
-    
+
     local default-assembler-intel64 = ml64 ;
     local default-assembler-ia32_intel64 = ml64 ;
     local default-assembler-ia32  = "ml -coff" ;
     assembler = [ feature.get-values <assembler> : $(options) ] ;
-    
+
     for local c in $(target_types)
     {
         local cpu-conditions ;
@@ -281,10 +281,10 @@ local rule configure-really ( version ? : command * : options * : compatibility 
                 ECHO "notice: [intel-cfg] condition: '$(cond)', setup: '$(setup-call)'" ;
             }
         }
-        
+
         local cpu-assembler = $(assembler) ;
         cpu-assembler ?= $(default-assembler-$(c)) ;
-        
+
         toolset.flags intel-win.compile .CC $(cpu-conditions) : icl ;
         toolset.flags intel-win.link .LD $(cpu-conditions) : xilink /nologo ;
         toolset.flags intel-win.archive .LD $(cpu-conditions) : xilink /lib /nologo ;
@@ -296,7 +296,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
 
     # Depending on the settings, running of tests require some runtime DLLs.
     toolset.flags intel-win RUN_PATH $(condition) : $(root) ;
-    
+
 
     local C++FLAGS ;
 
@@ -371,7 +371,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
 
     toolset.flags intel-win CFLAGS $(condition) : $(C++FLAGS) ;
     # By default, when creating PCH, intel adds 'i' to the explicitly
-    # specified name of the PCH file. Of course, Boost.Build is not
+    # specified name of the PCH file. Of course, B2 is not
     # happy when compiler produces not the file it was asked for.
     # The option below stops this behaviour.
     toolset.flags intel-win CFLAGS $(condition) : -Qpchi- ;
@@ -403,7 +403,7 @@ local rule get-autodetect-versions
 local rule get-icl-path-from-environment (  major_version )
 {
     local path = [ os.environ ICPP_COMPILER$(major_version) ] ;
-    if $(path) 
+    if $(path)
     {
         path = [ path.make $(path) ] ;
         local cmdpath ;
@@ -446,16 +446,16 @@ local rule is-msvc-supported ( intel-version : msvc-version )
     }
     else
     {
-        if $(.iclvars-$(intel-version)-supported-vcs) 
+        if $(.iclvars-$(intel-version)-supported-vcs)
         {
             if [ MATCH "($(msvc-version))" : $(.iclvars-$(intel-version)-supported-vcs) ]
             {
-               return true ; 
+               return true ;
             }
         }
         else
         {
-            return true ; 
+            return true ;
         }
     }
 }

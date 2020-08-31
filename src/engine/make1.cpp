@@ -62,8 +62,6 @@ static CMD      * make1cmds      ( TARGET * );
 static LIST     * make1list      ( LIST *, TARGETS *, int flags );
 static SETTINGS * make1settings  ( struct module_t *, LIST * vars );
 static void       make1bind      ( TARGET * );
-static TARGET   * make1findcycle ( TARGET * );
-static void       make1breakcycle( TARGET *, TARGET * cycle_root );
 static void       push_cmds( CMDLIST * cmds, int status );
 static int        cmd_sem_lock( TARGET * t );
 static void       cmd_sem_unlock( TARGET * t );
@@ -205,7 +203,7 @@ int make1( LIST * targets )
     int status = 0;
 
     memset( (char *)counts, 0, sizeof( *counts ) );
-    
+
     {
         LISTITER iter, end;
         stack temp_stack = { NULL };
@@ -598,8 +596,6 @@ static void make1c( state const * const pState )
     }
     else
     {
-        ACTIONS * actions;
-
         /* Tally success/failure for those we tried to update. */
         if ( t->progress == T_MAKE_RUNNING )
         {
@@ -884,7 +880,6 @@ static void make1c_closure
     CMD * const cmd = (CMD *)t->cmds;
     char const * rule_name = 0;
     char const * target_name = 0;
-    int print_buffer = 0;
 
     assert( cmd );
 
@@ -1287,7 +1282,6 @@ static CMD * make1cmds( TARGET * t )
                 TARGET * sem = targets_iter->target->semaphore;
                 if ( sem )
                 {
-                    TARGETS * semiter;
                     if ( ! targets_contains( semaphores, sem ) )
                         semaphores = targetentry( semaphores, sem );
                 }

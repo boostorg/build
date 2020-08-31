@@ -4,13 +4,13 @@
 [[bbv2.extender.intro]]
 == Introduction
 
-This section explains how to extend Boost.Build to accommodate your local
+This section explains how to extend B2 to accommodate your local
 requirements -- primarily to add support for non-standard tools you
 have. Before we start, be sure you have read and understood the concept
 of metatarget, <<bbv2.overview.concepts>>, which is critical to
 understanding the remaining material.
 
-The current version of Boost.Build has three levels of targets, listed
+The current version of B2 has three levels of targets, listed
 below.
 
 metatarget::
@@ -98,7 +98,7 @@ It it permissible to create a custom class derived from
 link:#bbv2.reference.class.basic-target[basic-target] and create new
 metatarget rule that creates instance of such target. However, in the
 majority of cases, a specific subclass of
-link:#bbv2.reference.class.basic-target[basic-target] -- 
+link:#bbv2.reference.class.basic-target[basic-target] --
 link:#bbv2.reference.class.typed-target[typed-target] is used. That
 class is associated with a type and relays to generators to construct
 concrete targets of that type. This process will be explained below.
@@ -137,7 +137,7 @@ In some cases, code that creates concrete targets may be invoked more
 than once with the same properties. Returning two different instances of
 `file-target` that correspond to the same file clearly will result in
 problems. Therefore, whenever returning targets you should pass them via
-the `virtual-target.register` function, besides allowing Boost.Build to
+the `virtual-target.register` function, besides allowing B2 to
 track which virtual targets got created for each metatarget, this will
 also replace targets with previously created identical ones, as
 necessary.footnote:[This create-then-register pattern is caused by
@@ -153,7 +153,7 @@ return [ sequence.transform virtual-target.register : $(targets) ] ;
 [[bbv2.extender.overview.generators]]
 === Generators
 
-In theory, every kind of metatarget in Boost.Build (like `exe`, `lib` or
+In theory, every kind of metatarget in B2 (like `exe`, `lib` or
 `obj`) could be implemented by writing a new metatarget class that,
 independently of the other code, figures what files to produce and what
 commands to use. However, that would be rather inflexible. For example,
@@ -162,7 +162,7 @@ metatargets.
 
 In practice, most files have specific types, and most tools consume and
 produce files of specific type. To take advantage of this fact,
-Boost.Build defines concept of target type and generators generators,
+B2 defines concept of target type and generators generators,
 and has special metatarget class
 link:#bbv2.reference.class.typed-target[typed-target]. Target type is
 merely an identifier. It is associated with a set of file extensions
@@ -197,9 +197,9 @@ takes a verbatim file and creates a cpp file with a single `char*`
 variable whose name is taken from the first line of the verbatim file
 and whose value is the file's properly quoted content.
 
-Let's see what Boost.Build can do.
+Let's see what B2 can do.
 
-First off, Boost.Build has no idea about "verbatim files". So, you must
+First off, B2 has no idea about "verbatim files". So, you must
 register a new target type. The following code does it:
 
 [source,jam]
@@ -211,11 +211,11 @@ type.register VERBATIM : verbatim ;
 The first parameter to
 link:#bbv2.reference.modules.type.register[type.register] gives the name
 of the declared type. By convention, it's uppercase. The second
-parameter is the suffix for files of this type. So, if Boost.Build sees
+parameter is the suffix for files of this type. So, if B2 sees
 `code.verbatim` in a list of sources, it knows that it's of type
 `VERBATIM`.
 
-Next, you tell Boost.Build that the verbatim files can be transformed
+Next, you tell B2 that the verbatim files can be transformed
 into {CPP} files in one build step. A generator is a template for a build
 step that transforms targets of one type (or set of types) into another.
 Our generator will be called `verbatim.inline-file`; it transforms
@@ -227,7 +227,7 @@ import generators ;
 generators.register-standard verbatim.inline-file : VERBATIM : CPP ;
 ----
 
-Lastly, you have to inform Boost.Build about the shell commands used to
+Lastly, you have to inform B2 about the shell commands used to
 make that transformation. That's done with an `actions` declaration.
 
 [source,jam]
@@ -266,10 +266,10 @@ import type ;
 type.register VERBATIM : verbatim ;
 ----
 
-The type is the most important property of a target. Boost.Build can
+The type is the most important property of a target. B2 can
 automatically generate necessary build actions only because you specify
 the desired type (using the different main target rules), and because
-Boost.Build can guess the type of sources from their extensions.
+B2 can guess the type of sources from their extensions.
 
 The first two parameters for the `type.register` rule are the name of
 new type and the list of extensions associated with it. A file with an
@@ -304,7 +304,7 @@ meta-information for the plugin. In either way, the `PLUGIN` type can be
 used whenever `SHARED_LIB` can. For example, you can directly link
 plugins to an application.
 
-A type can be defined as "main", in which case Boost.Build will
+A type can be defined as "main", in which case B2 will
 automatically declare a main target rule for building targets of that
 type. More details can be found
 link:#bbv2.extending.rules.main-type[later].
@@ -313,7 +313,7 @@ link:#bbv2.extending.rules.main-type[later].
 == Scanners
 
 Sometimes, a file can refer to other files via some include system. To
-make Boost.Build track dependencies between included files, you need to
+make B2 track dependencies between included files, you need to
 provide a scanner. The primary limitation is that only one scanner can
 be assigned to a target type.
 
@@ -362,16 +362,16 @@ That's enough for scanning include dependencies.
 [[bbv2.extending.tools]]
 == Tools and generators
 
-This section will describe how Boost.Build can be extended to support
+This section will describe how B2 can be extended to support
 new tools.
 
-For each additional tool, a Boost.Build object called generator must be
+For each additional tool, a B2 object called generator must be
 created. That object has specific types of targets that it accepts and
-produces. Using that information, Boost.Build is able to automatically
+produces. Using that information, B2 is able to automatically
 invoke the generator. For example, if you declare a generator that takes
 a target of the type `D` and produces a target of the type `OBJ`, when
 placing a file with extension `.d` in a list of sources will cause
-Boost.Build to invoke your generator, and then to link the resulting
+B2 to invoke your generator, and then to link the resulting
 object file into an application. (Of course, this requires that you
 specify that the `.d` extension corresponds to the `D` type.)
 
@@ -395,7 +395,7 @@ We declare a standard generator, specifying its id, the source type and
 the target type. When invoked, the generator will create a target of
 type `CPP` with a source target of type `VERBATIM` as the only source.
 But what command will be used to actually generate the file? In
-Boost.Build, actions are specified using named "actions" blocks and the
+B2, actions are specified using named "actions" blocks and the
 name of the action block should be specified when creating targets. By
 convention, generators use the same name of the action block as their
 own id. So, in above example, the "inline-file" actions block will be
@@ -519,7 +519,7 @@ rule run ( project name ? : property-set : sources * )
             python = $(s) ;
         }
     }
-    
+
     local libs ;
     for local s in $(sources)
     {
@@ -586,7 +586,7 @@ can be used inside the action body. You'd need to consult online help
 (--help) to find all the features of the `toolset.flags` rule.
 
 Although you can define any set of features and interpret their values
-in any way, Boost.Build suggests the following coding standard for
+in any way, B2 suggests the following coding standard for
 designing features.
 
 Most features should have a fixed set of values that is portable (tool
@@ -604,15 +604,15 @@ allows you to pass any command line options to a {CPP} compiler. The
 the interpretation is tool-specific. (See <<bbv2.faq.external>>
 for an example of very smart usage of that feature). Of course one
 should always strive to use portable features, but these are still be
-provided as a backdoor just to make sure Boost.Build does not take away
+provided as a backdoor just to make sure B2 does not take away
 any control from the user.
 
 Using portable features is a good idea because:
 
 * When a portable feature is given a fixed set of values, you can build
-your project with two different settings of the feature and Boost.Build
+your project with two different settings of the feature and B2
 will automatically use two different directories for generated files.
-Boost.Build does not try to separate targets built with different raw
+B2 does not try to separate targets built with different raw
 options.
 
 * Unlike with “raw” features, you don't need to use specific
@@ -632,7 +632,7 @@ propagate to its dependent targets then make it “propagated”.
 For example, the `include` feature is a free feature.
 * if a feature is used to refer to a path relative to the Jamfile, it
 must be a “path” feature. Such features will also get their values
-automatically converted to Boost.Build's internal path representation.
+automatically converted to B2's internal path representation.
 For example, `include` is a path feature.
 * if feature is used to refer to some target, it must be a “dependency”
 feature.
@@ -680,7 +680,7 @@ actions link bind DEF_FILE
 }
 ----
 +
-Note the `bind DEF_FILE` part. It tells Boost.Build to translate the
+Note the `bind DEF_FILE` part. It tells B2 to translate the
 internal target name in `DEF_FILE` to a corresponding filename in the
 `link` action. Without it the expansion of `$(DEF_FILE)` would be a
 strange symbol that is not likely to make sense for the linker.
@@ -694,7 +694,7 @@ rule link
 }
 ----
 +
-This is a workaround for a bug in Boost.Build engine, which will
+This is a workaround for a bug in B2 engine, which will
 hopefully be fixed one day.
 
 *Variants and composite features.*
@@ -746,7 +746,7 @@ to do that.
 [[bbv2.extending.rules.main-type]]The first way applies when your target rule
 should just produce a target
 of specific type. In that case, a rule is already defined for you! When
-you define a new type, Boost.Build automatically defines a corresponding
+you define a new type, B2 automatically defines a corresponding
 rule. The name of the rule is obtained from the name of the type, by
 down-casing all letters and replacing underscores with dashes. For
 example, if you create a module `obfuscate.jam` containing:
@@ -812,7 +812,7 @@ passed to the `using` rule. The set of allowed parameters is determined
 by you. For example, you can allow the user to specify paths, tool
 versions, and other options.
 
-Here are some guidelines that help to make Boost.Build more consistent:
+Here are some guidelines that help to make B2 more consistent:
 
 * The `init` rule should never fail. Even if the user provided an
 incorrect path, you should emit a warning and go on. Configuration may

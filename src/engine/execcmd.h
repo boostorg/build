@@ -109,7 +109,7 @@ int is_raw_command_request( LIST * shell );
 /* Utility worker for exec_check() checking whether all the given command lines
  * are under the specified length limit.
  */
-int check_cmd_for_too_long_lines( char const * command, int const max,
+int check_cmd_for_too_long_lines( char const * command, size_t max,
     int * const error_length, int * const error_max_length );
 
 #endif

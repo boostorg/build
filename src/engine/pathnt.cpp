@@ -130,7 +130,7 @@ static int canonicWindowsPath( char const * const path, int const path_length,
 
     /* Special case '\' && 'D:\' - include trailing '\'. */
     if ( p == path ||
-        p == path + 2 && path[ 1 ] == ':' )
+        (p == path + 2 && path[ 1 ] == ':') )
         ++p;
 
     missing_parent = 0;
@@ -174,7 +174,7 @@ static int canonicWindowsPath( char const * const path, int const path_length,
         if ( !( n_length == 1 && n[ 0 ] == '.' )
             && !( n_length == 2 && n[ 0 ] == '.' && n[ 1 ] == '.' ) )
         {
-            WIN32_FIND_DATA fd;
+            WIN32_FIND_DATAA fd;
             HANDLE const hf = FindFirstFileA( out->value, &fd );
             if ( hf != INVALID_HANDLE_VALUE )
             {

@@ -155,7 +155,7 @@ if --reconfigure in [ modules.peek : ARGV ]
 
 # Handle the --reconfigure option
 rule maybe-force-rebuild ( targets * )
-{    
+{
     if $(.reconfigure)
     {
         local all-targets ;
@@ -176,7 +176,7 @@ rule try-build ( targets * : ps : what : retry ? )
    local cache-name = $(what) [ $(ps).raw ] ;
    cache-name = $(cache-name:J=-) ;
    local value = [ config-cache.get $(cache-name) ] ;
-        
+
     local result ;
     local jam-targets ;
 
@@ -186,10 +186,10 @@ rule try-build ( targets * : ps : what : retry ? )
     {
         jam-targets += [ $(t).actualize ] ;
     }
-         
+
     if $(value)
     {
-        local x = [ PAD "    - $(what)" : $(.width) ] ; 
+        local x = [ PAD "    - $(what)" : $(.width) ] ;
         if $(value) = true
         {
             .$(what)-supported.$(ps) = yes ;
@@ -200,7 +200,7 @@ rule try-build ( targets * : ps : what : retry ? )
         {
             log-check-result "$(x) : no  (cached)" ;
         }
-    }       
+    }
     else if ! UPDATE_NOW in [ RULENAMES ]
     {
         # Cannot determine. Assume existence.
@@ -230,7 +230,7 @@ rule try-build ( targets * : ps : what : retry ? )
         {
             config-cache.set $(cache-name) : false ;
         }
-    }        
+    }
     return $(result) ;
 }
 
@@ -245,7 +245,7 @@ rule try-find-build ( ps : what : * )
     local cache-name = $(what) $($(args)[1]) [ $(ps).raw ] ;
     cache-name = $(cache-name:J=-) ;
     local value = [ config-cache.get $(cache-name) ] ;
-        
+
     local result ;
     local jam-targets ;
 
@@ -329,7 +329,7 @@ rule builds-raw ( metatarget-reference : project : ps : what : retry ? )
     {
         .$(what)-tested.$(ps) = true ;
 
-        local targets = [ targets.generate-from-reference 
+        local targets = [ targets.generate-from-reference
             $(metatarget-reference) : $(project) : $(ps) ] ;
 
         result = [ try-build $(targets[2-]) : $(ps) : $(what) : $(retry) ] ;
@@ -458,7 +458,7 @@ rule find-builds ( what : properties * : * )
 }
 
 
-# Called by Boost.Build startup code to specify the file to receive the
+# Called by B2 startup code to specify the file to receive the
 # configuration check results. Should never be called by user code.
 #
 rule set-log-file ( log-file )

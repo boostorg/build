@@ -20,7 +20,7 @@ import option ;
 # rule should be used to create new instances. Instances are immutable.
 #
 #   Each property is classified with regard to its effect on build results.
-# Incidental properties have no effect on build results, from Boost.Build's
+# Incidental properties have no effect on build results, from B2's
 # point of view. Others are either free, or non-free and we refer to non-free
 # ones as 'base'. Each property belongs to exactly one of those categories.
 #
@@ -399,7 +399,7 @@ class property-set
             if $(ignore-relevance) || $(p:G) in $(relevant-features)
             {
                 local att = [ feature.attributes $(p:G) ] ;
-                if ! ( incidental in $(att) ) 
+                if ! ( incidental in $(att) )
                 {
                     self.relevant += $(p) ;
                     if ! ( free in $(att) )
@@ -588,4 +588,13 @@ else
     {
         return $(path) ;
     }
+}
+
+rule __test__ ( )
+{
+    import errors : try catch ;
+
+    try ;
+        create invalid-property ;
+    catch "Invalid property: 'invalid-property'" ;
 }

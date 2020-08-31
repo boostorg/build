@@ -2,7 +2,7 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
 
-# Declare a couple of functions called from Boost.Build
+# Declare a couple of functions called from B2
 #
 # Each function will receive as many arguments as there ":"-separated
 # arguments in bjam call. Each argument is a list of strings.

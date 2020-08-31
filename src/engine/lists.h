@@ -111,4 +111,65 @@ PyObject * list_to_python( LIST * );
 LIST * list_from_python( PyObject * );
 #endif
 
+namespace b2 { namespace jam {
+    struct list
+    {
+        struct iterator
+        {
+            inline explicit iterator(LISTITER i) : list_i(i) {}
+
+            inline iterator operator++()
+            {
+                list_i = list_next(list_i);
+                return *this;
+            }
+            inline iterator operator++(int)
+            {
+                iterator result{*this};
+                list_i = list_next(list_i);
+                return result;
+            }
+            inline bool operator==(iterator other) const { return list_i == other.list_i; }
+            inline bool operator!=(iterator other) const { return list_i != other.list_i; }
+            inline OBJECT *& operator*() const { return list_item(list_i); }
+            inline OBJECT ** operator->() const { return &list_item(list_i); }
+
+            private:
+
+            LISTITER list_i;
+        };
+
+        friend struct iterator;
+
+        inline list(const list &other)
+            : list_obj(list_copy(other.list_obj)) {}
+        inline explicit list(const object &o)
+            : list_obj(list_new(object_copy(o))) {}
+        inline explicit list(LIST *l)
+            : list_obj(list_copy(l)) {}
+
+        inline ~list() { if (list_obj) list_free(list_obj); }
+        inline LIST* release()
+        {
+            LIST* r = list_obj;
+            list_obj = nullptr;
+            return r;
+        }
+
+        inline iterator begin() { return iterator(list_begin(list_obj)); }
+        inline iterator end() { return iterator(list_end(list_obj)); }
+        inline bool empty() const { return list_empty(list_obj) || length() == 0; }
+        inline int length() const { return list_length(list_obj); }
+        inline list &append(const list &other)
+        {
+            list_obj = list_append(list_obj, list_copy(other.list_obj));
+            return *this;
+        }
+
+        private:
+
+        LIST *list_obj = nullptr;
+    };
+}}
+
 #endif
