@@ -77,8 +77,8 @@ test_exec ()
 # Check that the compiler can do C++11.
 test_cxx11 ()
 {
-    local CXX=${CXX}
-    local CXXFLAGS=${CXXFLAGS}
+    local CXX="${CXX}"
+    local CXXFLAGS="${CXXFLAGS}"
     if test ${NO_CXX_VARS} ; then
         CXX=
         CXXFLAGS=
