@@ -169,7 +169,6 @@ struct converter_<jam_binder, std::tuple<ValueTypes...>, LIST *>
     {
         TupleType result;
         LISTITER jam_value_i = list_begin(jam_value);
-        LISTITER jam_value_e = list_end(jam_value);
         using K = int[];
         (void)K{0, ((void)(std::get<I>(result) = from_jam<typename std::tuple_element<I, TupleType>::type>(jam_value_i[I])), 0)...};
         return result;
@@ -207,7 +206,7 @@ struct jam_cxx_self
     {
         char cxx_self_value[sizeof(void *) * 2 + 1];
         std::intptr_t self_int = reinterpret_cast<std::intptr_t>(self);
-        for (int i = 0; i < sizeof(void *); ++i)
+        for (size_t i = 0; i < sizeof(void *); ++i)
         {
             cxx_self_value[i * 2 + 0] = char(self_int & 0xf) + 'a';
             cxx_self_value[i * 2 + 1] = char((self_int & 0xf0) >> 4) + 'a';
@@ -449,9 +448,11 @@ struct jam_arg_spec
     {
         count = 0;
         using std::get;
+        #if 0
         bool _[]{
             false,
             append_arg_list_to_spec(get<I>(args.arg))... };
+        #endif
         if (count == 0) spec[count++] = "*";
         spec[count] = nullptr;
     }
