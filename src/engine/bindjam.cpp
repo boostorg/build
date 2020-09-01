@@ -206,7 +206,7 @@ struct jam_cxx_self
     {
         char cxx_self_value[sizeof(void *) * 2 + 1];
         std::intptr_t self_int = reinterpret_cast<std::intptr_t>(self);
-        for (size_t i = 0; i < sizeof(void *); ++i)
+        for (std::size_t i = 0; i < sizeof(void *); ++i)
         {
             cxx_self_value[i * 2 + 0] = char(self_int & 0xf) + 'a';
             cxx_self_value[i * 2 + 1] = char((self_int & 0xf0) >> 4) + 'a';
