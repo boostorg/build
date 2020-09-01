@@ -102,7 +102,7 @@ end::binder_arg[] */
 template <int C>
 struct arg_
 {
-    static constexpr int count = C;
+    enum { count = C };
     param_ args[C];
 };
 
@@ -135,7 +135,7 @@ end::binder_args[] */
 template <class... A>
 struct args_
 {
-    static constexpr int count = sizeof...(A);
+    enum { count = sizeof...(A) };
     std::tuple<A...> arg;
 };
 
