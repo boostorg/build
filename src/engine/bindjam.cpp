@@ -274,7 +274,7 @@ static LIST *jam_call_init(
         // Nothing to return from an init.
         return L0;
     }
-    catch (const std::exception &e)
+    catch (const std::exception &)
     {
         return L0;
     }
@@ -306,7 +306,7 @@ static LIST *jam_call_method(
                     args),
                 make_index_sequence<1 + std::tuple_size<ArgsTuple>::value>{}));
     }
-    catch (const std::exception &e)
+    catch (const std::exception &)
     {
         return L0;
     }
@@ -337,7 +337,7 @@ static LIST *jam_call_method(
             make_index_sequence<1 + std::tuple_size<ArgsTuple>::value>{});
         return L0;
     }
-    catch (const std::exception &e)
+    catch (const std::exception &)
     {
         return L0;
     }
@@ -365,7 +365,7 @@ static LIST *jam_call_function(
                 cxx_call, args,
                 make_index_sequence<std::tuple_size<ArgsTuple>::value>{}));
     }
-    catch (const std::exception &e)
+    catch (const std::exception &)
     {
         return L0;
     }
@@ -391,7 +391,7 @@ static LIST *jam_call_function(
             make_index_sequence<std::tuple_size<ArgsTuple>::value>{});
         return L0;
     }
-    catch (const std::exception &e)
+    catch (const std::exception &)
     {
         return L0;
     }

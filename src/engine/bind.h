@@ -143,14 +143,14 @@ template <class... A, int BC>
 auto operator| (const args_<A...> &a, const arg_<BC> &b)
     -> args_<A..., arg_<BC>>
 {
-    return {std::tuple_cat(a.arg, std::make_tuple(b))};
+    return {{std::tuple_cat(a.arg, std::make_tuple(b))}};
 }
 
 template <int AC, int BC>
 auto operator| (const arg_<AC> &a, const arg_<BC> &b)
     -> args_<arg_<AC>, arg_<BC>>
 {
-    return {std::make_tuple(a,b)};
+    return {{std::make_tuple(a,b)}};
 }
 
 inline auto operator| (const param_ &a, const param_ &b)
@@ -170,7 +170,7 @@ template <class... A>
 auto operator| (const args_<A...> &a, const param_ &b)
     -> args_<A..., arg_<1>>
 {
-    return a | arg_<1>{b};
+    return a | arg_<1>{{b}};
 }
 
 
@@ -290,12 +290,12 @@ struct class_
     template <class F, int C>
     class_ &def(F function, const char *name, arg_<C> args)
     {
-        return this->def(function, name, args_<arg_<C>>{std::make_tuple(args)});
+        return this->def(function, name, args_<arg_<C>>{{std::make_tuple(args)}});
     }
     template <class F>
     class_ &def(F function, const char *name, param_ args)
     {
-        return this->def(function, name, args_<arg_<1>>{std::make_tuple(arg_<1>{args})});
+        return this->def(function, name, args_<arg_<1>>{{std::make_tuple(arg_<1>{args})}});
     }
     template <class F>
     class_ &def(F function, const char *name)
@@ -373,12 +373,12 @@ struct binder_
     template <class F, int C>
     binder_ &def(F function, const char *name, arg_<C> args)
     {
-        return this->def(function, name, args_<arg_<C>>{std::make_tuple(args)});
+        return this->def(function, name, args_<arg_<C>>{{std::make_tuple(args)}});
     }
     template <class F>
     binder_ &def(F function, const char *name, param_ args)
     {
-        return this->def(function, name, args_<arg_<1>>{std::make_tuple(arg_<1>{args})});
+        return this->def(function, name, args_<arg_<1>>{{std::make_tuple(arg_<1>{{args}})}});
     }
     template <class F>
     binder_ &def(F function, const char *name)
