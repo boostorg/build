@@ -295,7 +295,7 @@ struct class_
     template <class F>
     class_ &def(F function, const char *name, param_ args)
     {
-        return this->def(function, name, args_<arg_<1>>{{std::make_tuple(arg_<1>{args})}});
+        return this->def(function, name, args_<arg_<1>>{{std::make_tuple(arg_<1>{{args}})}});
     }
     template <class F>
     class_ &def(F function, const char *name)
