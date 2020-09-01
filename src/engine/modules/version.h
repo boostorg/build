@@ -40,7 +40,7 @@ struct version_module
     void def(Binder& binder)
     {
         binder
-            .def(&b2::version_less, "version-less", "lhs"_1n | "rhs"_1n);
+            .def(&b2::version_less, "version-less", "lhs"*_1n | "rhs"*_1n);
     }
 };
 }

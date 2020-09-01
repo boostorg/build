@@ -451,22 +451,27 @@ protected:
 
 }; // namespace bind
 
-inline bind::param_ operator"" _1(const char * name, std::size_t)
+enum bind_param_count_one : bool { _1 = true };
+enum bind_param_count_any : bool { _n = true };
+enum bind_param_count_many : bool { _1n = true };
+enum bind_param_count_optional : bool { _01 = true };
+
+inline bind::param_ operator * (const char * name, bind_param_count_one)
 {
     return bind::param_{name, bind::param_::one};
 }
 
-inline bind::param_ operator"" _n(const char * name, std::size_t)
+inline bind::param_ operator * (const char * name, bind_param_count_any)
 {
     return bind::param_{name, bind::param_::any};
 }
 
-inline bind::param_ operator"" _1n(const char * name, std::size_t)
+inline bind::param_ operator * (const char * name, bind_param_count_many)
 {
     return bind::param_{name, bind::param_::many};
 }
 
-inline bind::param_ operator"" _01(const char * name, std::size_t)
+inline bind::param_ operator * (const char * name, bind_param_count_optional)
 {
     return bind::param_{name, bind::param_::optional};
 }

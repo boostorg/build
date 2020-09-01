@@ -105,11 +105,11 @@ struct string_module
     {
         binder
             .def(&b2::string_whitespace, "whitespace")
-            .def(&b2::string_chars, "chars", "string"_1)
-            .def(&b2::string_abbreviate, "abbreviate", "string"_1)
-            .def(&b2::string_join, "join", "strings"_n | "separator"_01)
-            .def(&b2::string_words, "words", "string"_1 | "whitespace"_n)
-            .def(&b2::string_is_whitespace, "is-whitespace", "string"_01);
+            .def(&b2::string_chars, "chars", "string"*_1)
+            .def(&b2::string_abbreviate, "abbreviate", "string"*_1)
+            .def(&b2::string_join, "join", "strings"*_n | "separator"*_01)
+            .def(&b2::string_words, "words", "string"*_1 | "whitespace"*_n)
+            .def(&b2::string_is_whitespace, "is-whitespace", "string"*_01);
     }
 };
 } // namespace b2
