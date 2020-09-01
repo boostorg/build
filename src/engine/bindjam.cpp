@@ -404,22 +404,31 @@ struct jam_arg_spec_count_sum
 template <>
 struct jam_arg_spec_count_sum<>
 {
-    static constexpr std::size_t value = 0;
+    // static constexpr std::size_t value = 0;
+    enum : std::size_t { value = 0 };
 };
 template <class X, class... A>
 struct jam_arg_spec_count_sum<X, A...>
 {
-    static constexpr std::size_t value
-        = X::count + jam_arg_spec_count_sum<A...>::value;
+    // static constexpr std::size_t value
+    //     = X::count + jam_arg_spec_count_sum<A...>::value;
+    enum : std::size_t { value
+        = X::count + jam_arg_spec_count_sum<A...>::value
+    };
 };
 
 template <class... A>
 struct jam_arg_spec_max_size
 {
-    static constexpr std::size_t value
+    // static constexpr std::size_t value
+    //     = ::b2::bind::args_<A...>::count
+    //     + jam_arg_spec_count_sum<A...>::value*2
+    //     + 2;
+    enum : std::size_t { value
         = ::b2::bind::args_<A...>::count
         + jam_arg_spec_count_sum<A...>::value*2
-        + 2;
+        + 2
+    };
 };
 
 // Builds the jam argument specifier for a rule from the bind arguments
