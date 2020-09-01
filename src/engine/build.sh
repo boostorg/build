@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#~ Copyright 2002-2019 Rene Rivera.
+#~ Copyright 2002-2020 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.
 #~ (See accompanying file LICENSE_1_0.txt or copy at
 #~ http://www.boost.org/LICENSE_1_0.txt)
@@ -77,26 +77,32 @@ test_exec ()
 # Check that the compiler can do C++11.
 test_cxx11 ()
 {
+    local CXX=${CXX}
+    local CXXFLAGS=${CXXFLAGS}
+    if test ${NO_CXX_VARS} ; then
+        CXX=
+        CXXFLAGS=
+    fi
     if ! test $NO_CXX11_CHECK ; then
         case $1 in
-            gcc) ( ${CXX:=g++} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            intel-darwin) ( ${CXX:=icc} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            intel-linux) ( ${CXX:=icpc} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            vacpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            xlcpp) ( ${CXX:=xlC_r} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            como) ( ${CXX:=como} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            kcc) ( ${CXX:=KCC} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            kylix) ( ${CXX:=bc++} -tC -q check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            mipspro) ( ${CXX:=CC} -FE:template_in_elf_section -ptused check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            pathscale) ( ${CXX:=pathCC} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            pgi) ( ${CXX:=pgc++} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            sun*) ( ${CXX:=CC} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            clang*) ( ${CXX:=clang++} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            tru64cxx) ( ${CXX:=cc} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            acc) ( ${CXX:=aCC} -AA check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            qcc) ( ${CXX:=QCC} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            cxx) ( ${CXX:=cxx} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            cross-cxx) ( ${CXX:=cxx} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            gcc) ( ${CXX:=g++} ${CXXFLAGS} -x c++ -std=c++11 -c check_cxx11.cpp && rm -f check_cxx11.o* ) 1>/dev/null 2>/dev/null ;;
+            intel-darwin) ( ${CXX:=icc} ${CXXFLAGS} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            intel-linux) ( ${CXX:=icpc} ${CXXFLAGS} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            vacpp) ( ${CXX:=xlC_r} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            xlcpp) ( ${CXX:=xlC_r} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            como) ( ${CXX:=como} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            kcc) ( ${CXX:=KCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            kylix) ( ${CXX:=bc++} ${CXXFLAGS} -tC -q check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            mipspro) ( ${CXX:=CC} ${CXXFLAGS} -FE:template_in_elf_section -ptused check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            pathscale) ( ${CXX:=pathCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            pgi) ( ${CXX:=pgc++} ${CXXFLAGS} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            sun*) ( ${CXX:=CC} ${CXXFLAGS} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            clang*) ( ${CXX:=clang++} ${CXXFLAGS} -x c++ -std=c++11 -c check_cxx11.cpp && rm -f check_cxx11.o* ) 1>/dev/null 2>/dev/null ;;
+            tru64cxx) ( ${CXX:=cc} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            acc) ( ${CXX:=aCC} ${CXXFLAGS} -AA check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            qcc) ( ${CXX:=QCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            cxx) ( ${CXX:=cxx} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            cross-cxx) ( ${BUILD_CXX:=cxx} ${BUILD_CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             *) test "0" = "1" ;;
         esac
     else
@@ -107,6 +113,7 @@ test_cxx11 ()
 # Try and guess the toolset to bootstrap the build with...
 guess_toolset ()
 {
+    local NO_CXX_VARS=1
     if test_uname Darwin && test_cxx11 clang ; then B2_TOOLSET=clang
     elif test_uname IRIX && test_cxx11 mipspro ; then B2_TOOLSET=mipspro
     elif test_uname IRIX64 && test_cxx11 mipspro ; then B2_TOOLSET=mipspro
@@ -192,7 +199,7 @@ case "$1" in
     *) guess_toolset ;;
 esac
 
-# We need a C++11 compiler. Check here and given some feedback about it.
+# We need a C++11 compiler. Check here and give some feedback about it.
 if ! test_cxx11 $B2_TOOLSET ; then
     error_exit "
 A C++11 capable compiler is required for building the B2 engine.
@@ -230,6 +237,13 @@ case $B2_TOOLSET in
 
         *cygwin*)
         B2_CXX="${CXX} -x c++ -std=gnu++11"
+        B2_CXXFLAGS_RELEASE="-O2 -s"
+        B2_CXXFLAGS_DEBUG="-O0 -g"
+        ;;
+
+        *ibm-aix*)
+        # AIX needs threading option to use std::thread, it seems.
+        B2_CXX="${CXX} -x c++ -std=c++11 -pthread"
         B2_CXXFLAGS_RELEASE="-O2 -s"
         B2_CXXFLAGS_DEBUG="-O0 -g"
         ;;

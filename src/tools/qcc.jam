@@ -240,10 +240,6 @@ toolset.flags qcc.link RPATH_LINK : <xdll-path> : unchecked ;
 rule link ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    # Serialize execution of the 'link' action, since running N links in
-    # parallel is just slower. For now, serialize only qcc links while it might
-    # be a good idea to serialize all links.
-    JAM_SEMAPHORE on $(targets) = <s>qcc-link-semaphore ;
     check-target-platform $(1) ;
 }
 
@@ -289,7 +285,6 @@ actions piecemeal archive
 rule link.dll ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>qcc-link-semaphore ;
     check-target-platform $(1) ;
 }
 
