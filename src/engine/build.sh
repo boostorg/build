@@ -77,8 +77,8 @@ test_exec ()
 # Check that the compiler can do C++11.
 test_cxx11 ()
 {
-    local CXX=${CXX}
-    local CXXFLAGS=${CXXFLAGS}
+    local CXX="${CXX}"
+    local CXXFLAGS="${CXXFLAGS}"
     if test ${NO_CXX_VARS} ; then
         CXX=
         CXXFLAGS=
@@ -87,7 +87,7 @@ test_cxx11 ()
         case $1 in
             gcc) ( ${CXX:=g++} ${CXXFLAGS} -x c++ -std=c++11 -c check_cxx11.cpp && rm -f check_cxx11.o* ) 1>/dev/null 2>/dev/null ;;
             intel-darwin) ( ${CXX:=icc} ${CXXFLAGS} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            intel-linux) ( ${CXX:=icc} ${CXXFLAGS} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            intel-linux) ( ${CXX:=icpc} ${CXXFLAGS} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             vacpp) ( ${CXX:=xlC_r} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             xlcpp) ( ${CXX:=xlC_r} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
             como) ( ${CXX:=como} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
@@ -131,7 +131,10 @@ guess_toolset ()
     elif test_uname FreeBSD && test_path freebsd-version && test_path clang++ && test_cxx11 clang ; then B2_TOOLSET=clang
     elif test_path g++ && test_cxx11 gcc ; then B2_TOOLSET=gcc
     elif test_path clang++ && test_cxx11 clang ; then B2_TOOLSET=clang
-    elif test_path icc && test_cxx11 intel-linux ; then B2_TOOLSET=intel-linux
+    elif test_path icpc && test_cxx11 intel-linux ; then B2_TOOLSET=intel-linux
+    elif test -r /opt/intel/inteloneapi/setvars.sh && test_cxx11 intel-linux ; then
+        B2_TOOLSET=intel-linux
+        B2_TOOLSET_ROOT=/opt/intel/inteloneapi
     elif test -r /opt/intel/cc/9.0/bin/iccvars.sh && test_cxx11 intel-linux ; then
         B2_TOOLSET=intel-linux
         B2_TOOLSET_ROOT=/opt/intel/cc/9.0
@@ -261,18 +264,19 @@ case $B2_TOOLSET in
     ;;
 
     intel-linux)
-        CXX=${CXX:=icc}
+        CXX=${CXX:=icpc}
         CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
-        test_path ${CXX} >/dev/null 2>&1
-        if test $? ; then
+        if test_path ${CXX} ; then
             echo "Found ${CXX} in environment"
-            B2_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icc//'`
+            B2_TOOLSET_ROOT=`echo ${CXX}| sed -e 's/bin.*\/icpc//'`
             # probably the most widespread
             ARCH=intel64
         else
             echo "No intel compiler in current path"
-            echo "Look in a few old place for legacy reason"
-            if test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
+            echo "Look in a few common places just in case"
+            if test -r /opt/intel/inteloneapi/setvars.sh ; then
+                B2_TOOLSET_ROOT=/opt/intel/inteloneapi
+            elif test -r /opt/intel/cc/9.0/bin/iccvars.sh ; then
                 B2_TOOLSET_ROOT=/opt/intel/cc/9.0/
             elif test -r /opt/intel_cc_80/bin/iccvars.sh ; then
                 B2_TOOLSET_ROOT=/opt/intel_cc_80/
@@ -284,9 +288,11 @@ case $B2_TOOLSET in
                 B2_TOOLSET_ROOT=/opt/intel/compiler50/ia32/
             fi
         fi
-        if test -r ${B2_TOOLSET_ROOT}bin/iccvars.sh ; then
+        if test -r ${B2_TOOLSET_ROOT}/setvars.sh ; then
+            . ${B2_TOOLSET_ROOT}/setvars.sh
+        elif test -r ${B2_TOOLSET_ROOT}bin/iccvars.sh ; then
             # iccvars does not change LD_RUN_PATH. We adjust LD_RUN_PATH here in
-            # order not to have to rely on ld.so.conf knowing the icc library
+            # order not to have to rely on ld.so.conf knowing the icpc library
             # directory. We do this before running iccvars.sh in order to allow a
             # user to add modifications to LD_RUN_PATH in iccvars.sh.
             if test -z "${LD_RUN_PATH}"; then
@@ -297,7 +303,7 @@ case $B2_TOOLSET in
             export LD_RUN_PATH
             . ${B2_TOOLSET_ROOT}bin/iccvars.sh $ARCH
         fi
-        B2_CXX="${CXX} -xc++"
+        B2_CXX="${CXX} -x c++ -std=c++11"
         B2_CXXFLAGS_RELEASE="-O3 -s"
         B2_CXXFLAGS_DEBUG="-O0 -g -p"
     ;;

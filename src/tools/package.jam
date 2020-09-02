@@ -253,9 +253,9 @@ rule install ( name package-name ? : requirements * : binaries * : libraries * :
         $(name)-lib-shared-universe $(name)-lib-shared-cygwin ;
 }
 
-rule install-data ( target-name : package-name : data * : requirements * )
+rule install-data ( target-name : package-name ? : data * : requirements * )
 {
-    package-name ?= target-name ;
+    package-name ?= $(target-name) ;
 
     local paths = [ paths $(package-name) : $(requirements) ] ;
     local datadir = [ $(paths).datarootdir ] ;
