@@ -163,6 +163,22 @@ lib l : : <name>l_f ;
 t.run_build_system(["-n"])
 
 
+# A regression test. Virtual targets distinguished by their search paths were
+# not differentiated when registered, which caused search paths to be selected
+# incorrectly for build requests with multiple feature values.
+t.write("jamroot.jam", "")
+t.write("a.cpp", "")
+t.write("jamfile.jam", """\
+exe a : a.cpp l ;
+lib l : : <name>l <search>lib32 <address-model>32 ;
+lib l : : <name>l <search>lib64 <address-model>64 ;
+""")
+
+t.run_build_system(["-n","address-model=32,64"])
+t.fail_test(t.stdout().find("lib32") == -1)
+t.fail_test(t.stdout().find("lib64") == -1)
+
+
 # Make sure plain "lib foobar ; " works.
 t.write("jamfile.jam", """\
 exe a : a.cpp foobar ;
