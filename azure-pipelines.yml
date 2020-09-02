@@ -596,6 +596,10 @@ stages:
       vmImage: 'windows-latest'
     strategy:
       matrix:
+        1.73.0 .. VS 2019:
+          BOOST_VERSION: 1.73.0
+          BOOST_VERSION_U: 1_73_0
+          TOOLSET: vc142
         1.72.0 .. VS 2019:
           BOOST_VERSION: 1.72.0
           BOOST_VERSION_U: 1_72_0

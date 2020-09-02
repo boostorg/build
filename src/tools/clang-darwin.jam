@@ -173,9 +173,6 @@ actions piecemeal archive
 rule link ( targets * : sources * : properties * )
 {
   SPACE on $(targets) = " " ;
-  # Serialize execution of the 'link' action, since
-  # running N links in parallel is just slower.
-  JAM_SEMAPHORE on $(targets) = <s>clang-darwin-link-semaphore ;
 }
 
 actions link bind LIBRARIES

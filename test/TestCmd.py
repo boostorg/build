@@ -421,7 +421,7 @@ class TestCmd:
         if arguments:
             cmd += arguments.split(" ")
         if self.verbose:
-            sys.stderr.write(" ".join(cmd) + "\n")
+            sys.stderr.write("run(" + " ".join(cmd) + ")\n")
         p = subprocess.Popen(cmd, stdin=subprocess.PIPE,
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=chdir,
             universal_newlines=universal_newlines)
