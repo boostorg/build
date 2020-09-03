@@ -62,7 +62,7 @@ int file_collect_dir_content_( file_info_t * const d )
     string pathspec[ 1 ];
     string pathname[ 1 ];
     LIST * files = L0;
-    int d_length;
+    size_t d_length;
 
     assert( d );
     assert( d->is_dir );
