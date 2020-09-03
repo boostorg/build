@@ -1179,8 +1179,8 @@ static CMD * make1cmds( TARGET * t )
             {
                 CMD * cmd;
                 int cmd_check_result;
-                int cmd_error_length;
-                int cmd_error_max_length;
+                size_t cmd_error_length;
+                size_t cmd_error_max_length;
                 int retry = 0;
                 int accept_command = 0;
 
@@ -1219,7 +1219,7 @@ static CMD * make1cmds( TARGET * t )
                             : "contains a line that is too long";
                     assert( cmd_check_result == EXEC_CHECK_TOO_LONG ||
                         cmd_check_result == EXEC_CHECK_LINE_TOO_LONG );
-                    out_printf( "%s action %s (%d, max %d):\n", object_str(
+                    out_printf( "%s action %s (%zd, max %zd):\n", object_str(
                         rule->name ), error_message, cmd_error_length,
                         cmd_error_max_length );
 
