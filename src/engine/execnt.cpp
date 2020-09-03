@@ -71,7 +71,7 @@
 /* get the maximum shell command line length according to the OS */
 static int maxline();
 /* valid raw command string length */
-static long raw_command_length( char const * command );
+static size_t raw_command_length( char const * command );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
 static FILETIME add_64(
     unsigned long h1, unsigned long l1,
@@ -185,7 +185,7 @@ void execnt_unit_test()
      * Use a table instead.
      */
     {
-        typedef struct test { const char * command; int result; } test;
+        typedef struct test { const char * command; size_t result; } test;
         test tests[] = {
             { "", 0 },
             { "  ", 0 },
@@ -218,7 +218,7 @@ void execnt_unit_test()
     }
 
     {
-        int const length = maxline() + 9;
+        size_t const length = maxline() + 9;
         char * const cmd = (char *)BJAM_MALLOC_ATOMIC( length + 1 );
         memset( cmd, 'x', length );
         cmd[ length ] = 0;
@@ -290,7 +290,7 @@ int exec_check
     /* Check prerequisites for executing raw commands. */
     if ( is_raw_command_request( *pShell ) )
     {
-        long const raw_cmd_length = raw_command_length( command->value );
+        size_t const raw_cmd_length = raw_command_length( command->value );
         if ( raw_cmd_length < 0 )
         {
             /* Invalid characters detected - fallback to default shell. */
@@ -380,7 +380,7 @@ void exec_cmd
                 end = p;
         string_new( cmd_local );
         string_append_range( cmd_local, start, end );
-        assert( long(cmd_local->size) == raw_command_length( cmd_orig->value ) );
+        assert( size_t(cmd_local->size) == raw_command_length( cmd_orig->value ) );
     }
     /* If we are not running a raw command directly, prepare a command file to
      * be executed using an external shell and the actual command string using
@@ -632,7 +632,7 @@ static void string_renew( string * const s )
  *     affect the executed command).
  */
 
-static long raw_command_length( char const * command )
+static size_t raw_command_length( char const * command )
 {
     char const * p;
     char const * escape = 0;
