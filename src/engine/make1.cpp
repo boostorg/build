@@ -1219,7 +1219,12 @@ static CMD * make1cmds( TARGET * t )
                             : "contains a line that is too long";
                     assert( cmd_check_result == EXEC_CHECK_TOO_LONG ||
                         cmd_check_result == EXEC_CHECK_LINE_TOO_LONG );
-                    if (sizeof(size_t) == (sizeof(long int)))
+                    if (sizeof(size_t) == (sizeof(long long int)))
+                        out_printf(
+                            "%s action %s (%lld, max %lld):\n",
+                            object_str( rule->name ), error_message,
+                            cmd_error_length, cmd_error_max_length );
+                    else if (sizeof(size_t) == (sizeof(long int)))
                         out_printf(
                             "%s action %s (%ld, max %ld):\n",
                             object_str( rule->name ), error_message,
