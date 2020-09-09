@@ -54,8 +54,8 @@ int exec_check
 (
     string const * command,
     LIST * * pShell,
-    size_t * error_length,
-    size_t * error_max_length
+    int32_t * error_length,
+    int32_t * error_max_length
 );
 
 /* exec_check() return codes. */
@@ -109,7 +109,7 @@ int is_raw_command_request( LIST * shell );
 /* Utility worker for exec_check() checking whether all the given command lines
  * are under the specified length limit.
  */
-int check_cmd_for_too_long_lines( char const * command, size_t max,
-    size_t * const error_length, size_t * const error_max_length );
+int check_cmd_for_too_long_lines( char const * command, int32_t max,
+    int32_t * const error_length, int32_t * const error_max_length );
 
 #endif

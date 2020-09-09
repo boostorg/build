@@ -81,14 +81,14 @@ LIST * builtin_system_registry( FRAME * frame, int flags )
 
              case REG_EXPAND_SZ:
                  {
-                     unsigned long len;
+                     DWORD len;
                      string expanded[1];
                      string_new(expanded);
 
                      while (
                          (len = ExpandEnvironmentStringsA(
                              (LPCSTR)data, expanded->value, (DWORD)expanded->capacity))
-                         > expanded->capacity
+                         > DWORD(expanded->capacity)
                      )
                          string_reserve(expanded, len);
 

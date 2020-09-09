@@ -64,7 +64,7 @@ void path_parse( char const * file, PATHNAME * f )
     if ( ( file[ 0 ] == '<' ) && ( p = strchr( file, '>' ) ) )
     {
         f->f_grist.ptr = file;
-        f->f_grist.len = p - file;
+        f->f_grist.len = int32_t(p - file);
         file = p + 1;
     }
 
@@ -83,7 +83,7 @@ void path_parse( char const * file, PATHNAME * f )
     if ( p )
     {
         f->f_dir.ptr = file;
-        f->f_dir.len = p - file;
+        f->f_dir.len = int32_t(p - file);
 
         /* Special case for / - dirname is /, not "" */
         if ( !f->f_dir.len )
@@ -104,7 +104,7 @@ void path_parse( char const * file, PATHNAME * f )
     if ( ( p = strchr( file, '(' ) ) && ( end[ -1 ] == ')' ) )
     {
         f->f_member.ptr = p + 1;
-        f->f_member.len = end - p - 2;
+        f->f_member.len = int32_t(end - p - 2);
         end = p;
     }
 
@@ -115,13 +115,13 @@ void path_parse( char const * file, PATHNAME * f )
     if ( p )
     {
         f->f_suffix.ptr = p;
-        f->f_suffix.len = end - p;
+        f->f_suffix.len = int32_t(end - p);
         end = p;
     }
 
     /* Leaves base. */
     f->f_base.ptr = file;
-    f->f_base.len = end - file;
+    f->f_base.len = int32_t(end - file);
 }
 
 
@@ -316,7 +316,7 @@ std::string b2::paths::normalize(const std::string &p)
     // want this function to obtain a canonic representation.
     std::replace(result.begin(), result.end(), '\\', '/');
 
-    size_t ellipsis = 0;
+    int32_t ellipsis = 0;
     for (auto end_pos = result.length(); end_pos > 0; )
     {
         auto path_pos = result.rfind('/', end_pos-1);

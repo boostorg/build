@@ -140,8 +140,8 @@ int exec_check
 (
     string const * command,
     LIST * * pShell,
-    size_t * error_length,
-    size_t * error_max_length
+    int32_t * error_length,
+    int32_t * error_max_length
 )
 {
     int const is_raw_cmd = is_raw_command_request( *pShell );

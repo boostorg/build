@@ -26,8 +26,8 @@ struct ps_map_entry
 struct ps_map
 {
     struct ps_map_entry * * table;
-    size_t table_size;
-    size_t num_elems;
+    int32_t table_size;
+    int32_t num_elems;
 };
 
 static unsigned list_hash(LIST * key)
@@ -63,10 +63,10 @@ static int list_equal( LIST * lhs, LIST * rhs )
 
 static void ps_map_init( struct ps_map * map )
 {
-    size_t i;
+    int32_t i;
     map->table_size = 2;
     map->num_elems = 0;
-    map->table = (struct ps_map_entry * *)BJAM_MALLOC( map->table_size * sizeof( struct ps_map_entry * ) );
+    map->table = (struct ps_map_entry * *)BJAM_MALLOC( size_t(map->table_size) * sizeof( struct ps_map_entry * ) );
     for ( i = 0; i < map->table_size; ++i )
     {
         map->table[ i ] = NULL;
@@ -75,7 +75,7 @@ static void ps_map_init( struct ps_map * map )
 
 static void ps_map_destroy( struct ps_map * map )
 {
-    size_t i;
+    int32_t i;
     for ( i = 0; i < map->table_size; ++i )
     {
         struct ps_map_entry * pos;
@@ -93,8 +93,8 @@ static void ps_map_destroy( struct ps_map * map )
 static void ps_map_rehash( struct ps_map * map )
 {
     struct ps_map old = *map;
-    size_t i;
-    map->table = (struct ps_map_entry * *)BJAM_MALLOC( map->table_size * 2 * sizeof( struct ps_map_entry * ) );
+    int32_t i;
+    map->table = (struct ps_map_entry * *)BJAM_MALLOC( size_t(map->table_size) * 2 * sizeof( struct ps_map_entry * ) );
     map->table_size *= 2;
     for ( i = 0; i < map->table_size; ++i )
     {

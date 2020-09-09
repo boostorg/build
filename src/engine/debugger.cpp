@@ -328,7 +328,7 @@ static OBJECT * make_absolute_path( OBJECT * filename )
     const char * root = object_str( cwd() );
     path_parse( object_str( filename ), path1 );
     path1->f_root.ptr = root;
-    path1->f_root.len = strlen( root );
+    path1->f_root.len = int32_t(strlen( root ));
     string_new( buf );
     path_build( path1, buf );
     result = object_new( buf->value );
@@ -580,7 +580,7 @@ static int debug_add_breakpoint( const char * name )
         long line = strtoul( ptr + 1, &end, 10 );
         if ( line > 0 && line <= INT_MAX && end != ptr + 1 && *end == 0 )
         {
-            OBJECT * file = object_new_range( file_ptr,  ptr - file_ptr );
+            OBJECT * file = object_new_range( file_ptr, int32_t(ptr - file_ptr) );
             return add_line_breakpoint( file, line );
         }
         else
@@ -615,7 +615,7 @@ static int get_breakpoint_by_name( const char * name )
         long line = strtoul( ptr + 1, &end, 10 );
         if ( line > 0 && line <= INT_MAX && end != ptr + 1 && *end == 0 )
         {
-            OBJECT * file = object_new_range( file_ptr,  ptr - file_ptr );
+            OBJECT * file = object_new_range( file_ptr, int32_t(ptr - file_ptr) );
             result = handle_line_breakpoint( file, line );
             object_free( file );
         }
@@ -772,7 +772,7 @@ static int get_module_filename( string * out )
     DWORD result;
     string_reserve( out, 256 + 1 );
     string_truncate( out, 256 );
-    while( ( result = GetModuleFileNameA( NULL, out->value, out->size ) ) == out->size )
+    while( ( result = GetModuleFileNameA( NULL, out->value, DWORD(out->size) ) ) == out->size )
     {
         string_reserve( out, out->size * 2 + 1);
         string_truncate( out, out->size * 2 );
@@ -2690,7 +2690,7 @@ static int process_command( char * line )
             *iter++ = '\0';
         }
     }
-    result = run_command( current - buffer, (const char **)buffer );
+    result = run_command( int(current - buffer), (const char **)buffer );
     free( (void *)buffer );
     return result;
 }
