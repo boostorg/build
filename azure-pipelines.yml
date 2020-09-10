@@ -311,7 +311,7 @@ stages:
         set -e
         CXX_PATH=`which ${CXX}`
         echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        ./src/engine/b2 b2 warnings-as-errors=on variant=debug,release address-model,32,64 toolset=${TEST_TOOLSET}
+        ./src/engine/b2 b2 warnings-as-errors=on variant=debug,release address-model=32,64 toolset=${TEST_TOOLSET}
       displayName: "No Warnings"
     - bash: |
         set -e
