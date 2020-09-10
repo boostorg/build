@@ -38,7 +38,7 @@ namespace
     {
         #if defined(OS_MACOSX)
         int out_hw_ncpu = 0;
-        int32_t len_hw_ncpu = sizeof(out_hw_ncpu);
+        size_t len_hw_ncpu = sizeof(out_hw_ncpu);
         int result = ::sysctlbyname(
             "hw.physicalcpu", &out_hw_ncpu, &len_hw_ncpu, nullptr, 0);
         if (result == 0) return out_hw_ncpu;
@@ -50,7 +50,7 @@ namespace
     {
         #if defined(OS_MACOSX)
         int out_hw_ncpu = 0;
-        int32_t len_hw_ncpu = sizeof(out_hw_ncpu);
+        size_t len_hw_ncpu = sizeof(out_hw_ncpu);
         int result = ::sysctlbyname(
             "hw.logicalcpu", &out_hw_ncpu, &len_hw_ncpu, nullptr, 0);
         if (result == 0) return out_hw_ncpu;
