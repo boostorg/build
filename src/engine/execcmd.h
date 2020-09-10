@@ -91,7 +91,7 @@ void exec_wait();
  * given shell list.
  */
 void argv_from_shell( char const * * argv, LIST * shell, char const * command,
-    int const slot );
+    int32_t const slot );
 
 /* Interrupt routine bumping the internal interrupt counter. Needs to be
  * registered by platform specific exec*.c modules.

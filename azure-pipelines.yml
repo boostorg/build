@@ -164,14 +164,8 @@ stages:
           set -e
           CXX_PATH=`which ${CXX}`
           echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET}
+          ./src/engine/b2 b2 warnings-as-errors=on variant=debug,release address-model=32,64 toolset=${TEST_TOOLSET}
       displayName: "No Warnings"
-    - bash: |
-          set -e
-          CXX_PATH=`which ${CXX}`
-          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET} address-model=64
-      displayName: "No-Warn 64bit"
     - bash: |
           set -e
           CXX_PATH=`which ${CXX}`
@@ -216,14 +210,8 @@ stages:
           $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
           $env:path += ';' + $env:CXX_PATH
           echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
-          ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on toolset=$env:TEST_TOOLSET
+          ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on variant=debug,release toolset=$env:TEST_TOOLSET
       displayName: "No Warnings"
-    - powershell: |
-          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
-          $env:path += ';' + $env:CXX_PATH
-          echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
-          ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on toolset=$env:TEST_TOOLSET address-model=64
-      displayName: "No-Warn 64bit"
     - powershell: |
           $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
           $env:path += ';' + $env:CXX_PATH
@@ -323,14 +311,8 @@ stages:
         set -e
         CXX_PATH=`which ${CXX}`
         echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET}
+        ./src/engine/b2 b2 warnings-as-errors=on variant=debug,release address-model,32,64 toolset=${TEST_TOOLSET}
       displayName: "No Warnings"
-    - bash: |
-          set -e
-          CXX_PATH=`which ${CXX}`
-          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          ./src/engine/b2 b2 warnings-as-errors=on toolset=${TEST_TOOLSET} address-model=64
-      displayName: "No-Warn 64bit"
     - bash: |
         set -e
         CXX_PATH=`which ${CXX}`

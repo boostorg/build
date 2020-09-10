@@ -41,9 +41,9 @@ static int intr;
  */
 
 void argv_from_shell( char const * * argv, LIST * shell, char const * command,
-    int const slot )
+    int32_t const slot )
 {
-    static char jobno[ 4 ];
+    static char jobno[ 12 ];
 
     int i;
     int gotpercent = 0;

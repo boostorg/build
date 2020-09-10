@@ -365,7 +365,7 @@ LIST * list_unique( LIST * sorted_list )
 
 void list_done()
 {
-    for ( int32_t i = 0; i < sizeof( freelist ) / sizeof( freelist[ 0 ] ); ++i )
+    for ( int32_t i = 0; i < int32_t(sizeof( freelist ) / sizeof( freelist[ 0 ] )); ++i )
     {
         LIST * l = freelist[ i ];
         while ( l )

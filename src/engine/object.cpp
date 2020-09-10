@@ -229,20 +229,6 @@ static char const * string_set_insert( string_set * set, char const * string,
 }
 
 
-static struct hash_item * object_get_item( OBJECT * obj )
-{
-    return (struct hash_item *)( (char *)obj - offsetof( struct hash_item, data
-        ) );
-}
-
-
-static void object_validate( OBJECT * obj )
-{
-    assert( obj );
-    assert( object_get_item( obj )->header.magic == OBJECT_MAGIC );
-}
-
-
 /*
  * object_new_range() - create an object from a string of given length
  */
@@ -282,6 +268,20 @@ OBJECT * object_new( char const * const string )
 
 
 #ifndef object_copy
+
+static struct hash_item * object_get_item( OBJECT * obj )
+{
+    return (struct hash_item *)( (char *)obj - offsetof( struct hash_item, data
+        ) );
+}
+
+
+static void object_validate( OBJECT * obj )
+{
+    assert( obj );
+    assert( object_get_item( obj )->header.magic == OBJECT_MAGIC );
+}
+
 
 /*
  * object_copy() - return a copy of an object

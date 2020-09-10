@@ -3193,7 +3193,7 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
-            LIST * value;
+            LIST * value = L0;
 
             switch ( formal_arg->flags )
             {
@@ -3871,7 +3871,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
     LIST * l;
     LIST * r;
     LIST * result = L0;
+#ifndef NDEBUG
     void * saved_stack = s->data;
+#endif
 
     PROFILE_ENTER_LOCAL(function_run);
 
@@ -4250,8 +4252,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 backtrace( frame );
                 assert( saved_stack == s->data );
             }
-#endif
             assert( saved_stack == s->data );
+#endif
             debug_on_exit_function( function->base.rulename );
             PROFILE_EXIT_LOCAL(function_run_INSTR_RETURN);
             PROFILE_EXIT_LOCAL(function_run);

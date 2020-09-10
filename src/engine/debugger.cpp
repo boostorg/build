@@ -160,11 +160,10 @@ static LIST * debug_list_read( FILE * in )
 {
     int len;
     int i;
-    int ch;
     LIST * result = L0;
     fscanf( in, "%d", &len );
-    ch = fgetc( in );
-    assert( ch == '\n' );
+    int ch = fgetc( in );
+    if (ch > 0) assert( ch == '\n' );
     for ( i = 0; i < len; ++i )
     {
         result = list_push_back( result, debug_object_read( in ) );

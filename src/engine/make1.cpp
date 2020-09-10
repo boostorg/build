@@ -1065,11 +1065,11 @@ static void swap_settings
 static CMD * make1cmds( TARGET * t )
 {
     CMD * cmds = 0;
-    CMD * last_cmd;
+    CMD * last_cmd = 0;
     LIST * shell = L0;
     module_t * settings_module = 0;
     TARGET * settings_target = 0;
-    ACTIONS * a0;
+    ACTIONS * a0 = 0;
     int32_t const running_flag = globs.noexec ? A_RUNNING_NOEXEC : A_RUNNING;
 
     /* Step through actions.

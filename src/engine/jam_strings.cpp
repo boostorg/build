@@ -26,7 +26,7 @@ static void assert_invariants( string * self )
     }
 
     assert( self->size < self->capacity );
-    assert( ( self->capacity <= sizeof( self->opt ) ) == ( self->value == self->opt ) );
+    assert( ( self->capacity <= int32_t(sizeof( self->opt )) ) == ( self->value == self->opt ) );
     assert( self->value[ self->size ] == 0 );
     /* String objects modified manually after construction to contain embedded
      * '\0' characters are considered structurally valid.
@@ -198,7 +198,7 @@ void string_unit_test()
         for ( i = 0; i < limit; ++i )
         {
             string_push_back( s, (char)( i + 1 ) );
-            assert( s->size == i + 1 );
+            assert( s->size == int32_t(i + 1) );
         }
         assert( s->size == limit );
         assert( s->value != s->opt );
