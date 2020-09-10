@@ -774,7 +774,7 @@ static int get_module_filename( string * out )
     DWORD result;
     string_reserve( out, 256 + 1 );
     string_truncate( out, 256 );
-    while( ( result = GetModuleFileNameA( NULL, out->value, DWORD(out->size) ) ) == out->size )
+    while( ( result = GetModuleFileNameA( NULL, out->value, DWORD(out->size) ) ) == DWORD(out->size) )
     {
         string_reserve( out, out->size * 2 + 1);
         string_truncate( out, out->size * 2 );

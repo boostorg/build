@@ -394,8 +394,8 @@ OBJECT * path_as_key( OBJECT * path )
 static void free_path_key_entry( void * xentry, void * const data )
 {
     path_key_entry * const entry = (path_key_entry *)xentry;
-    object_free( entry->path );
-    object_free( entry->key );
+    if (entry->path) object_free( entry->path );
+    if (entry->key) object_free( entry->key );
 }
 
 

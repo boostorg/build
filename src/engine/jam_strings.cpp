@@ -200,7 +200,7 @@ void string_unit_test()
             string_push_back( s, (char)( i + 1 ) );
             assert( s->size == int32_t(i + 1) );
         }
-        assert( s->size == limit );
+        assert( s->size == int32_t(limit) );
         assert( s->value != s->opt );
         for ( i = 0; i < limit; ++i )
             assert( s->value[ i ] == (char)( i + 1 ) );
@@ -212,7 +212,7 @@ void string_unit_test()
         string copy[ 1 ];
         string_copy( copy, original );
         assert( !strcmp( copy->value, original ) );
-        assert( copy->size == strlen( original ) );
+        assert( copy->size == int32_t(strlen( original )) );
         string_free( copy );
     }
 
