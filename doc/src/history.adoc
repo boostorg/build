@@ -9,6 +9,8 @@
   -- _René Ferdinand Rivera Morell_
 * Fix building engine with GCC on AIX.
   -- _René Ferdinand Rivera Morell_
+* Support building engine as either 32 or 64 bit addressing model.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 4.3.0
 
