@@ -229,7 +229,7 @@ file_cvttime(
     unsigned int *curtime,
     time_t *unixtime )
 {
-    static const size_t divisor = 10000000;
+    static const int32_t divisor = 10000000;
     static unsigned int bastim[2] = { 0x4BEB4000, 0x007C9567 }; /* 1/1/1970 */
     int delta[2], remainder;
 

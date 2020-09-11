@@ -90,7 +90,7 @@ void var_defines( struct module_t * module, const char * const * e, int preproce
         )
         {
             LIST * l = L0;
-            size_t const len = strlen( val + 1 );
+            int32_t const len = int32_t(strlen( val + 1 ));
             int const quoted = ( val[ 1 ] == '"' ) && ( val[ len ] == '"' ) &&
                 ( len > 1 );
 

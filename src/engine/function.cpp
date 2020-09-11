@@ -40,7 +40,7 @@
 #define PROFILE_EXIT_LOCAL(x)
 #endif
 
-int glob( char const * s, char const * c );
+int32_t glob( char const * s, char const * c );
 void backtrace( FRAME * );
 void backtrace_line( FRAME * );
 
@@ -130,22 +130,22 @@ void backtrace_line( FRAME * );
 
 typedef struct instruction
 {
-    unsigned int op_code;
-    int arg;
+    uint32_t op_code;
+    int32_t arg;
 } instruction;
 
 typedef struct _subfunction
 {
     OBJECT * name;
     FUNCTION * code;
-    int local;
+    int32_t local;
 } SUBFUNCTION;
 
 typedef struct _subaction
 {
     OBJECT * name;
     FUNCTION * command;
-    int flags;
+    int32_t flags;
 } SUBACTION;
 
 #define FUNCTION_BUILTIN    0
@@ -153,7 +153,7 @@ typedef struct _subaction
 
 struct argument
 {
-    int flags;
+    int32_t flags;
 #define ARG_ONE 0
 #define ARG_OPTIONAL 1
 #define ARG_PLUS 2
@@ -161,45 +161,45 @@ struct argument
 #define ARG_VARIADIC 4
     OBJECT * type_name;
     OBJECT * arg_name;
-    int index;
+    int32_t index;
 };
 
 struct arg_list
 {
-    int size;
+    int32_t size;
     struct argument * args;
 };
 
 struct _function
 {
-    int type;
-    int reference_count;
+    int32_t type;
+    int32_t reference_count;
     OBJECT * rulename;
     struct arg_list * formal_arguments;
-    int num_formal_arguments;
+    int32_t num_formal_arguments;
 };
 
 typedef struct _builtin_function
 {
     FUNCTION base;
-    LIST * ( * func )( FRAME *, int flags );
-    int flags;
+    LIST * ( * func )( FRAME *, int32_t flags );
+    int32_t flags;
 } BUILTIN_FUNCTION;
 
 typedef struct _jam_function
 {
     FUNCTION base;
-    int code_size;
+    int32_t code_size;
     instruction * code;
-    int num_constants;
+    int32_t num_constants;
     OBJECT * * constants;
-    int num_subfunctions;
+    int32_t num_subfunctions;
     SUBFUNCTION * functions;
-    int num_subactions;
+    int32_t num_subactions;
     SUBACTION * actions;
     FUNCTION * generic;
     OBJECT * file;
-    int line;
+    int32_t line;
 } JAM_FUNCTION;
 
 
@@ -230,7 +230,7 @@ STACK * stack_global()
     static STACK result;
     if ( !stack )
     {
-        int const size = 1 << 21;
+        int32_t const size = 1 << 21;
         stack = BJAM_MALLOC( size );
         result.data = (char *)stack + size;
     }
@@ -251,7 +251,7 @@ static void check_alignment( STACK * s )
     assert( (size_t)s->data % LISTPTR_ALIGN == 0 );
 }
 
-void * stack_allocate( STACK * s, int size )
+void * stack_allocate( STACK * s, int32_t size )
 {
     check_alignment( s );
     s->data = (char *)s->data - size;
@@ -259,7 +259,7 @@ void * stack_allocate( STACK * s, int size )
     return s->data;
 }
 
-void stack_deallocate( STACK * s, int size )
+void stack_deallocate( STACK * s, int32_t size )
 {
     check_alignment( s );
     s->data = (char *)s->data + size;
@@ -284,13 +284,13 @@ LIST * stack_top( STACK * s )
     return *(LIST * *)s->data;
 }
 
-LIST * stack_at( STACK * s, int n )
+LIST * stack_at( STACK * s, int32_t n )
 {
     check_alignment( s );
     return *( (LIST * *)s->data + n );
 }
 
-void stack_set( STACK * s, int n, LIST * value )
+void stack_set( STACK * s, int32_t n, LIST * value )
 {
     check_alignment( s );
     *((LIST * *)s->data + n) = value;
@@ -302,56 +302,56 @@ void * stack_get( STACK * s )
     return s->data;
 }
 
-LIST * frame_get_local( FRAME * frame, int idx )
+LIST * frame_get_local( FRAME * frame, int32_t idx )
 {
     /* The only local variables are the arguments. */
     return list_copy( lol_get( frame->args, idx ) );
 }
 
-static OBJECT * function_get_constant( JAM_FUNCTION * function, int idx )
+static OBJECT * function_get_constant( JAM_FUNCTION * function, int32_t idx )
 {
     return function->constants[ idx ];
 }
 
 static LIST * function_get_variable( JAM_FUNCTION * function, FRAME * frame,
-    int idx )
+    int32_t idx )
 {
     return list_copy( var_get( frame->module, function->constants[ idx ] ) );
 }
 
 static void function_set_variable( JAM_FUNCTION * function, FRAME * frame,
-    int idx, LIST * value )
+    int32_t idx, LIST * value )
 {
     var_set( frame->module, function->constants[ idx ], value, VAR_SET );
 }
 
 static LIST * function_swap_variable( JAM_FUNCTION * function, FRAME * frame,
-    int idx, LIST * value )
+    int32_t idx, LIST * value )
 {
     return var_swap( frame->module, function->constants[ idx ], value );
 }
 
 static void function_append_variable( JAM_FUNCTION * function, FRAME * frame,
-    int idx, LIST * value )
+    int32_t idx, LIST * value )
 {
     var_set( frame->module, function->constants[ idx ], value, VAR_APPEND );
 }
 
 static void function_default_variable( JAM_FUNCTION * function, FRAME * frame,
-    int idx, LIST * value )
+    int32_t idx, LIST * value )
 {
     var_set( frame->module, function->constants[ idx ], value, VAR_DEFAULT );
 }
 
 static void function_set_rule( JAM_FUNCTION * function, FRAME * frame,
-    STACK * s, int idx )
+    STACK * s, int32_t idx )
 {
     SUBFUNCTION * sub = function->functions + idx;
     new_rule_body( frame->module, sub->name, sub->code, !sub->local );
 }
 
 static void function_set_actions( JAM_FUNCTION * function, FRAME * frame,
-    STACK * s, int idx )
+    STACK * s, int32_t idx )
 {
     SUBACTION * sub = function->actions + idx;
     LIST * bindlist = stack_pop( s );
@@ -365,7 +365,7 @@ static void function_set_actions( JAM_FUNCTION * function, FRAME * frame,
  * returns -1.
  */
 
-static int get_argument_index( char const * s )
+static int32_t get_argument_index( char const * s )
 {
     if ( s[ 0 ] != '\0')
     {
@@ -412,7 +412,7 @@ static int get_argument_index( char const * s )
 static LIST * function_get_named_variable( JAM_FUNCTION * function,
     FRAME * frame, OBJECT * name )
 {
-    int const idx = get_argument_index( object_str( name ) );
+    int32_t const idx = get_argument_index( object_str( name ) );
     return idx == -1
         ? list_copy( var_get( frame->module, name ) )
         : list_copy( lol_get( frame->args, idx ) );
@@ -443,10 +443,10 @@ static void function_default_named_variable( JAM_FUNCTION * function,
 }
 
 static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
-    STACK * s, int n_args, char const * unexpanded, OBJECT * file, int line )
+    STACK * s, int32_t n_args, char const * unexpanded, OBJECT * file, int32_t line )
 {
     FRAME inner[ 1 ];
-    int i;
+    int32_t i;
     LIST * first = stack_pop( s );
     LIST * result = L0;
     OBJECT * rulename;
@@ -497,10 +497,10 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     return result;
 }
 
-static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame, STACK * s, int n_args, OBJECT * rulename, OBJECT * file, int line )
+static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame, STACK * s, int32_t n_args, OBJECT * rulename, OBJECT * file, int32_t line )
 {
     FRAME   inner[ 1 ];
-    int i;
+    int32_t i;
     LIST * first = stack_pop( s );
     LIST * result = L0;
     RULE * rule;
@@ -613,8 +613,8 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 
 typedef struct
 {
-    int sub1;
-    int sub2;
+    int32_t sub1;
+    int32_t sub2;
 } subscript_t;
 
 typedef struct
@@ -631,9 +631,9 @@ typedef struct
 } VAR_EDITS;
 
 static LIST * apply_modifiers_impl( LIST * result, string * buf,
-    VAR_EDITS * edits, int n, LISTITER iter, LISTITER end );
+    VAR_EDITS * edits, int32_t n, LISTITER iter, LISTITER end );
 static void get_iters( subscript_t const subscript, LISTITER * const first,
-    LISTITER * const last, int const length );
+    LISTITER * const last, int32_t const length );
 
 
 /*
@@ -671,7 +671,7 @@ static void get_iters( subscript_t const subscript, LISTITER * const first,
  * var_edit_file() below and path_build() obligingly follow this convention.
  */
 
-static int var_edit_parse( char const * mods, VAR_EDITS * edits, int havezeroed
+static int32_t var_edit_parse( char const * mods, VAR_EDITS * edits, int32_t havezeroed
     )
 {
     while ( *mods )
@@ -709,7 +709,7 @@ static int var_edit_parse( char const * mods, VAR_EDITS * edits, int havezeroed
         {
             if ( !havezeroed++ )
             {
-                int i;
+                int32_t i;
                 for ( i = 0; i < 6; ++i )
                 {
                     edits->f.part[ i ].len = 0;
@@ -731,7 +731,7 @@ static int var_edit_parse( char const * mods, VAR_EDITS * edits, int havezeroed
         else
         {
             fp->ptr = ++mods;
-            fp->len = strlen( mods );
+            fp->len = int32_t(strlen( mods ));
             mods += fp->len;
         }
     }
@@ -779,12 +779,12 @@ static void var_edit_file( char const * in, string * out, VAR_EDITS * edits )
  * var_edit_translate_path() - translate path to os native format.
  */
 
-static void var_edit_translate_path( string * out, size_t pos, VAR_EDITS * edits )
+static void var_edit_translate_path( string * out, int32_t pos, VAR_EDITS * edits )
 {
     if ( edits->to_windows )
     {
         string result[ 1 ];
-        int translated;
+        int32_t translated;
 
         /* Translate path to os native format. */
         translated = path_translate_to_os( out->value + pos, result );
@@ -806,7 +806,7 @@ static void var_edit_translate_path( string * out, size_t pos, VAR_EDITS * edits
  * var_edit_shift() - do upshift/downshift & other mods.
  */
 
-static void var_edit_shift( string * out, size_t pos, VAR_EDITS * edits )
+static void var_edit_shift( string * out, int32_t pos, VAR_EDITS * edits )
 {
 #if defined( OS_CYGWIN ) || defined( OS_VMS )
     var_edit_translate_path( out, pos, edits );
@@ -834,10 +834,10 @@ static void var_edit_shift( string * out, size_t pos, VAR_EDITS * edits )
  * Returns the number of VAR_EDITS pushed onto the STACK.
  */
 
-static int expand_modifiers( STACK * s, int n )
+static int32_t expand_modifiers( STACK * s, int32_t n )
 {
-    int i;
-    int total = 1;
+    int32_t i;
+    int32_t total = 1;
     LIST * * args = (LIST**)stack_get( s );
     for ( i = 0; i < n; ++i )
         total *= list_length( args[ i ] );
@@ -850,7 +850,7 @@ static int expand_modifiers( STACK * s, int n )
             iter[ i ] = list_begin( args[ i ] );
         i = 0;
         {
-            int havezeroed;
+            int32_t havezeroed;
         loop:
             memset( out, 0, sizeof( *out ) );
             havezeroed = 0;
@@ -873,7 +873,7 @@ static int expand_modifiers( STACK * s, int n )
     return total;
 }
 
-static LIST * apply_modifiers( STACK * s, int n )
+static LIST * apply_modifiers( STACK * s, int32_t n )
 {
     LIST * value = stack_top( s );
     LIST * result = L0;
@@ -953,7 +953,7 @@ static LIST * apply_subscript( STACK * s )
     LIST * value = stack_top( s );
     LIST * indices = stack_at( s, 1 );
     LIST * result = L0;
-    int length = list_length( value );
+    int32_t length = list_length( value );
     string buf[ 1 ];
     LISTITER indices_iter = list_begin( indices );
     LISTITER const indices_end = list_end( indices );
@@ -980,10 +980,10 @@ static LIST * apply_subscript( STACK * s )
  */
 
 static void get_iters( subscript_t const subscript, LISTITER * const first,
-    LISTITER * const last, int const length )
+    LISTITER * const last, int32_t const length )
 {
-    int start;
-    int size;
+    int32_t start;
+    int32_t size;
     LISTITER iter;
     LISTITER end;
     {
@@ -1028,9 +1028,9 @@ static void get_iters( subscript_t const subscript, LISTITER * const first,
 }
 
 static LIST * apply_modifiers_empty( LIST * result, string * buf,
-    VAR_EDITS * edits, int n )
+    VAR_EDITS * edits, int32_t n )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < n; ++i )
     {
         if ( edits[ i ].empty.ptr )
@@ -1046,9 +1046,9 @@ static LIST * apply_modifiers_empty( LIST * result, string * buf,
 }
 
 static LIST * apply_modifiers_non_empty( LIST * result, string * buf,
-    VAR_EDITS * edits, int n, LISTITER begin, LISTITER end )
+    VAR_EDITS * edits, int32_t n, LISTITER begin, LISTITER end )
 {
-    int i;
+    int32_t i;
     LISTITER iter;
     for ( i = 0; i < n; ++i )
     {
@@ -1059,7 +1059,7 @@ static LIST * apply_modifiers_non_empty( LIST * result, string * buf,
             for ( iter = list_next( begin ); iter != end; iter = list_next( iter
                 ) )
             {
-                size_t size;
+                int32_t size;
                 string_append( buf, edits[ i ].join.ptr );
                 size = buf->size;
                 var_edit_file( object_str( list_item( iter ) ), buf, edits + i
@@ -1084,20 +1084,20 @@ static LIST * apply_modifiers_non_empty( LIST * result, string * buf,
 }
 
 static LIST * apply_modifiers_impl( LIST * result, string * buf,
-    VAR_EDITS * edits, int n, LISTITER iter, LISTITER end )
+    VAR_EDITS * edits, int32_t n, LISTITER iter, LISTITER end )
 {
     return iter == end
         ? apply_modifiers_empty( result, buf, edits, n )
         : apply_modifiers_non_empty( result, buf, edits, n, iter, end );
 }
 
-static LIST * apply_subscript_and_modifiers( STACK * s, int n )
+static LIST * apply_subscript_and_modifiers( STACK * s, int32_t n )
 {
     LIST * const value = stack_top( s );
     LIST * const indices = stack_at( s, 1 );
     LIST * result = L0;
     VAR_EDITS * const edits = (VAR_EDITS *)((LIST * *)stack_get( s ) + 2);
-    int const length = list_length( value );
+    int32_t const length = list_length( value );
     string buf[ 1 ];
     LISTITER indices_iter = list_begin( indices );
     LISTITER const indices_end = list_end( indices );
@@ -1158,17 +1158,17 @@ typedef struct expansion_item
 
     /* Internal data initialized and used inside expand(). */
     LISTITER current;  /* Currently used value. */
-    int size;          /* Concatenated string length prior to concatenating the
+    int32_t size;     /* Concatenated string length prior to concatenating the
                         * item's current value.
                         */
 } expansion_item;
 
-static LIST * expand( expansion_item * items, int const length )
+static LIST * expand( expansion_item * items, int32_t const length )
 {
     LIST * result = L0;
     string buf[ 1 ];
-    int size = 0;
-    int i;
+    int32_t size = 0;
+    int32_t i;
 
     assert( length > 0 );
     for ( i = 0; i < length; ++i )
@@ -1190,10 +1190,10 @@ static LIST * expand( expansion_item * items, int const length )
          * strings.
          */
         {
-            int max = 0;
+            int32_t max = 0;
             for ( ; iter != end; iter = list_next( iter ) )
             {
-                int const len = strlen( object_str( list_item( iter ) ) );
+                int32_t const len = int32_t(strlen( object_str( list_item( iter ) ) ));
                 if ( len > max ) max = len;
             }
             size += max;
@@ -1230,9 +1230,9 @@ static LIST * expand( expansion_item * items, int const length )
     return result;
 }
 
-static void combine_strings( STACK * s, int n, string * out )
+static void combine_strings( STACK * s, int32_t n, string * out )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < n; ++i )
     {
         LIST * const values = stack_pop( s );
@@ -1254,8 +1254,8 @@ static void combine_strings( STACK * s, int n, string * out )
 
 struct dynamic_array
 {
-    int size;
-    int capacity;
+    int32_t size;
+    int32_t capacity;
     void * data;
 };
 
@@ -1272,7 +1272,7 @@ static void dynamic_array_free( struct dynamic_array * array )
 }
 
 static void dynamic_array_push_impl( struct dynamic_array * const array,
-    void const * const value, int const unit_size )
+    void const * const value, int32_t const unit_size )
 {
     if ( array->capacity == 0 )
     {
@@ -1302,7 +1302,7 @@ static void dynamic_array_push_impl( struct dynamic_array * const array,
 
 struct label_info
 {
-    int absolute_position;
+    int32_t absolute_position;
     struct dynamic_array uses[ 1 ];
 };
 
@@ -1311,18 +1311,18 @@ struct label_info
 
 struct loop_info
 {
-    int type;
-    int label;
-    int cleanup_depth;
+    int32_t type;
+    int32_t label;
+    int32_t cleanup_depth;
 };
 
 struct stored_rule
 {
     OBJECT * name;
     PARSE * parse;
-    int num_arguments;
+    int32_t num_arguments;
     struct arg_list * arguments;
-    int local;
+    int32_t local;
 };
 
 typedef struct compiler
@@ -1349,7 +1349,7 @@ static void compiler_init( compiler * c )
 
 static void compiler_free( compiler * c )
 {
-    int i;
+    int32_t i;
     dynamic_array_free( c->actions );
     dynamic_array_free( c->rules );
     for ( i = 0; i < c->labels->size; ++i )
@@ -1367,9 +1367,9 @@ static void compile_emit_instruction( compiler * c, instruction instr )
     dynamic_array_push( c->code, instr );
 }
 
-static int compile_new_label( compiler * c )
+static int32_t compile_new_label( compiler * c )
 {
-    int result = c->labels->size;
+    int32_t result = c->labels->size;
     struct label_info info;
     info.absolute_position = -1;
     dynamic_array_init( info.uses );
@@ -1377,23 +1377,23 @@ static int compile_new_label( compiler * c )
     return result;
 }
 
-static void compile_set_label( compiler * c, int label )
+static void compile_set_label( compiler * c, int32_t label )
 {
     struct label_info * const l = &dynamic_array_at( struct label_info,
         c->labels, label );
-    int const pos = c->code->size;
-    int i;
+    int32_t const pos = c->code->size;
+    int32_t i;
     assert( l->absolute_position == -1 );
     l->absolute_position = pos;
     for ( i = 0; i < l->uses->size; ++i )
     {
-        int id = dynamic_array_at( int, l->uses, i );
-        int offset = (int)( pos - id - 1 );
+        int32_t id = dynamic_array_at( int32_t, l->uses, i );
+        int32_t offset = (int32_t)( pos - id - 1 );
         dynamic_array_at( instruction, c->code, id ).arg = offset;
     }
 }
 
-static void compile_emit( compiler * c, unsigned int op_code, int arg )
+static void compile_emit( compiler * c, uint32_t op_code, int32_t arg )
 {
     instruction instr;
     instr.op_code = op_code;
@@ -1401,11 +1401,11 @@ static void compile_emit( compiler * c, unsigned int op_code, int arg )
     compile_emit_instruction( c, instr );
 }
 
-static void compile_emit_branch( compiler * c, unsigned int op_code, int label )
+static void compile_emit_branch( compiler * c, uint32_t op_code, int32_t label )
 {
     struct label_info * const l = &dynamic_array_at( struct label_info,
         c->labels, label );
-    int const pos = c->code->size;
+    int32_t const pos = c->code->size;
     instruction instr;
     instr.op_code = op_code;
     if ( l->absolute_position == -1 )
@@ -1414,18 +1414,18 @@ static void compile_emit_branch( compiler * c, unsigned int op_code, int label )
         dynamic_array_push( l->uses, pos );
     }
     else
-        instr.arg = (int)( l->absolute_position - pos - 1 );
+        instr.arg = (int32_t)( l->absolute_position - pos - 1 );
     compile_emit_instruction( c, instr );
 }
 
-static int compile_emit_constant( compiler * c, OBJECT * value )
+static int32_t compile_emit_constant( compiler * c, OBJECT * value )
 {
     OBJECT * copy = object_copy( value );
     dynamic_array_push( c->constants, copy );
     return c->constants->size - 1;
 }
 
-static void compile_push_cleanup( compiler * c, unsigned int op_code, int arg )
+static void compile_push_cleanup( compiler * c, uint32_t op_code, int32_t arg )
 {
     instruction instr;
     instr.op_code = op_code;
@@ -1438,19 +1438,19 @@ static void compile_pop_cleanup( compiler * c )
     dynamic_array_pop( c->cleanups );
 }
 
-static void compile_emit_cleanups( compiler * c, int end )
+static void compile_emit_cleanups( compiler * c, int32_t end )
 {
-    int i;
+    int32_t i;
     for ( i = c->cleanups->size; --i >= end; )
     {
         compile_emit_instruction( c, dynamic_array_at( instruction, c->cleanups, i ) );
     }
 }
 
-static void compile_emit_loop_jump( compiler * c, int type )
+static void compile_emit_loop_jump( compiler * c, int32_t type )
 {
     struct loop_info * info = NULL;
-    int i;
+    int32_t i;
     for ( i = c->loop_scopes->size; --i >= 0; )
     {
         struct loop_info * elem = &dynamic_array_at( struct loop_info, c->loop_scopes, i );
@@ -1469,7 +1469,7 @@ static void compile_emit_loop_jump( compiler * c, int type )
     compile_emit_branch( c, INSTR_JUMP, info->label );
 }
 
-static void compile_push_break_scope( compiler * c, int label )
+static void compile_push_break_scope( compiler * c, int32_t label )
 {
     struct loop_info info;
     info.type = LOOP_INFO_BREAK;
@@ -1478,7 +1478,7 @@ static void compile_push_break_scope( compiler * c, int label )
     dynamic_array_push( c->loop_scopes, info );
 }
 
-static void compile_push_continue_scope( compiler * c, int label )
+static void compile_push_continue_scope( compiler * c, int32_t label )
 {
     struct loop_info info;
     info.type = LOOP_INFO_CONTINUE;
@@ -1501,8 +1501,8 @@ static void compile_pop_continue_scope( compiler * c )
     dynamic_array_pop( c->loop_scopes );
 }
 
-static int compile_emit_rule( compiler * c, OBJECT * name, PARSE * parse,
-    int num_arguments, struct arg_list * arguments, int local )
+static int32_t compile_emit_rule( compiler * c, OBJECT * name, PARSE * parse,
+    int32_t num_arguments, struct arg_list * arguments, int32_t local )
 {
     struct stored_rule rule;
     rule.name = object_copy( name );
@@ -1511,10 +1511,10 @@ static int compile_emit_rule( compiler * c, OBJECT * name, PARSE * parse,
     rule.arguments = arguments;
     rule.local = local;
     dynamic_array_push( c->rules, rule );
-    return (int)( c->rules->size - 1 );
+    return (int32_t)( c->rules->size - 1 );
 }
 
-static int compile_emit_actions( compiler * c, PARSE * parse )
+static int32_t compile_emit_actions( compiler * c, PARSE * parse )
 {
     SUBACTION a;
     a.name = object_copy( parse->string );
@@ -1522,13 +1522,13 @@ static int compile_emit_actions( compiler * c, PARSE * parse )
         parse->file, parse->line );
     a.flags = parse->num;
     dynamic_array_push( c->actions, a );
-    return (int)( c->actions->size - 1 );
+    return (int32_t)( c->actions->size - 1 );
 }
 
 static JAM_FUNCTION * compile_to_function( compiler * c )
 {
     JAM_FUNCTION * const result = (JAM_FUNCTION*)BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
-    int i;
+    int32_t i;
     result->base.type = FUNCTION_JAM;
     result->base.reference_count = 1;
     result->base.formal_arguments = 0;
@@ -1594,7 +1594,7 @@ typedef struct VAR_PARSE_ACTIONS
 
 typedef struct _var_parse
 {
-    int type;  /* string, variable or file */
+    int32_t type;  /* string, variable or file */
 } VAR_PARSE;
 
 typedef struct
@@ -1634,7 +1634,7 @@ static VAR_PARSE_GROUP * var_parse_group_new()
 
 static void var_parse_group_free( VAR_PARSE_GROUP * group )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < group->elems->size; ++i )
         var_parse_free( dynamic_array_at( VAR_PARSE *, group->elems, i ) );
     dynamic_array_free( group->elems );
@@ -1689,7 +1689,7 @@ static VAR_PARSE_ACTIONS * var_parse_actions_new()
 
 static void var_parse_actions_free( VAR_PARSE_ACTIONS * actions )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < actions->elems->size; ++i )
         var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *,
             actions->elems, i ) );
@@ -1714,7 +1714,7 @@ static VAR_PARSE_VAR * var_parse_var_new()
 
 static void var_parse_var_free( VAR_PARSE_VAR * var )
 {
-    int i;
+    int32_t i;
     var_parse_group_free( var->name );
     if ( var->subscript )
         var_parse_group_free( var->subscript );
@@ -1760,7 +1760,7 @@ static VAR_PARSE_FILE * var_parse_file_new( void )
 
 static void var_parse_file_free( VAR_PARSE_FILE * file )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < file->filename->size; ++i )
         var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *,
             file->filename, i ) );
@@ -1808,9 +1808,9 @@ static void var_parse_group_compile( VAR_PARSE_GROUP const * parse,
 
 static void var_parse_var_compile( VAR_PARSE_VAR const * parse, compiler * c )
 {
-    int expand_name = 0;
-    int is_get_grist = 0;
-    int has_modifiers = 0;
+    int32_t expand_name = 0;
+    int32_t is_get_grist = 0;
+    int32_t has_modifiers = 0;
     /* Special case common modifiers */
     if ( parse->modifiers->size == 1 )
     {
@@ -1831,7 +1831,7 @@ static void var_parse_var_compile( VAR_PARSE_VAR const * parse, compiler * c )
     /* If there are modifiers, emit them in reverse order. */
     if ( parse->modifiers->size > 0 && !is_get_grist )
     {
-        int i;
+        int32_t i;
         has_modifiers = 1;
         for ( i = 0; i < parse->modifiers->size; ++i )
             var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *,
@@ -1852,7 +1852,7 @@ static void var_parse_var_compile( VAR_PARSE_VAR const * parse, compiler * c )
     {
         OBJECT * const name = ( (VAR_PARSE_STRING *)dynamic_array_at(
             VAR_PARSE *, parse->name->elems, 0 ) )->s;
-        int const idx = get_argument_index( object_str( name ) );
+        int32_t const idx = get_argument_index( object_str( name ) );
         if ( idx != -1 )
             compile_emit( c, INSTR_PUSH_ARG, idx );
         else
@@ -1900,7 +1900,7 @@ static void var_parse_string_compile( VAR_PARSE_STRING const * parse,
 
 static void var_parse_file_compile( VAR_PARSE_FILE const * parse, compiler * c )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < parse->filename->size; ++i )
         var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *,
             parse->filename, parse->filename->size - i - 1 ), c );
@@ -1936,7 +1936,7 @@ static void var_parse_group_compile( VAR_PARSE_GROUP const * parse, compiler * c
     )
 {
     /* Emit the elements in reverse order. */
-    int i;
+    int32_t i;
     for ( i = 0; i < parse->elems->size; ++i )
         var_parse_compile( dynamic_array_at( VAR_PARSE *, parse->elems,
             parse->elems->size - i - 1 ), c );
@@ -1952,7 +1952,7 @@ static void var_parse_group_compile( VAR_PARSE_GROUP const * parse, compiler * c
 static void var_parse_actions_compile( VAR_PARSE_ACTIONS const * actions,
     compiler * c )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < actions->elems->size; ++i )
         var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *,
             actions->elems, actions->elems->size - i - 1 ), c );
@@ -1967,7 +1967,7 @@ static void var_parse_actions_compile( VAR_PARSE_ACTIONS const * actions,
 static VAR_PARSE * parse_at_file( char const * start, char const * mid,
     char const * end );
 static VAR_PARSE * parse_variable( char const * * string );
-static int try_parse_variable( char const * * s_, char const * * string,
+static int32_t try_parse_variable( char const * * s_, char const * * string,
     VAR_PARSE_GROUP * out );
 static void balance_parentheses( char const * * s_, char const * * string,
     VAR_PARSE_GROUP * out );
@@ -2011,7 +2011,7 @@ static VAR_PARSE_ACTIONS * parse_actions( char const * string )
  * starts with a variable, 0 otherwise.
  */
 
-static int try_parse_variable( char const * * s_, char const * * string,
+static int32_t try_parse_variable( char const * * s_, char const * * string,
     VAR_PARSE_GROUP * out )
 {
     char const * s = *s_;
@@ -2026,7 +2026,7 @@ static int try_parse_variable( char const * * s_, char const * * string,
     }
     if ( s[ 0 ] == '@' && s[ 1 ] == '(' )
     {
-        int depth = 1;
+        int32_t depth = 1;
         char const * ine;
         char const * split = 0;
         var_parse_group_maybe_add_constant( out, *string, s );
@@ -2062,7 +2062,7 @@ static int try_parse_variable( char const * * s_, char const * * string,
 
 
 static char const * current_file = "";
-static int current_line;
+static int32_t current_line;
 
 static void parse_error( char const * message )
 {
@@ -2247,7 +2247,7 @@ static VAR_PARSE * parse_at_file( char const * start, char const * mid,
 void balance_parentheses( char const * * s_, char const * * string,
     VAR_PARSE_GROUP * out)
 {
-    int depth = 1;
+    int32_t depth = 1;
     char const * s = *s_;
     for ( ; ; )
     {
@@ -2287,10 +2287,10 @@ void balance_parentheses( char const * * s_, char const * * string,
 #define RESULT_RETURN 1
 #define RESULT_NONE 2
 
-static void compile_parse( PARSE * parse, compiler * c, int result_location );
-static struct arg_list * arg_list_compile( PARSE * parse, int * num_arguments );
+static void compile_parse( PARSE * parse, compiler * c, int32_t result_location );
+static struct arg_list * arg_list_compile( PARSE * parse, int32_t * num_arguments );
 
-static void compile_condition( PARSE * parse, compiler * c, int branch_true, int label )
+static void compile_condition( PARSE * parse, compiler * c, int32_t branch_true, int32_t label )
 {
     assert( parse->type == PARSE_EVAL );
     switch ( parse->num )
@@ -2369,7 +2369,7 @@ static void compile_condition( PARSE * parse, compiler * c, int branch_true, int
         case EXPR_AND:
             if ( branch_true )
             {
-                int f = compile_new_label( c );
+                int32_t f = compile_new_label( c );
                 compile_condition( parse->left, c, 0, f );
                 compile_condition( parse->right, c, 1, label );
                 compile_set_label( c, f );
@@ -2389,7 +2389,7 @@ static void compile_condition( PARSE * parse, compiler * c, int branch_true, int
             }
             else
             {
-                int t = compile_new_label( c );
+                int32_t t = compile_new_label( c );
                 compile_condition( parse->left, c, 1, t );
                 compile_condition( parse->right, c, 0, label );
                 compile_set_label( c, t );
@@ -2402,8 +2402,8 @@ static void compile_condition( PARSE * parse, compiler * c, int branch_true, int
     }
 }
 
-static void adjust_result( compiler * c, int actual_location,
-    int desired_location )
+static void adjust_result( compiler * c, int32_t actual_location,
+    int32_t desired_location )
 {
     if ( actual_location == desired_location )
         ;
@@ -2442,7 +2442,7 @@ static void compile_append_chain( PARSE * parse, compiler * c )
     }
 }
 
-static void compile_emit_debug(compiler * c, int line)
+static void compile_emit_debug(compiler * c, int32_t line)
 {
 #ifdef JAM_DEBUGGER
     if ( debug_is_debugging() )
@@ -2450,7 +2450,7 @@ static void compile_emit_debug(compiler * c, int line)
 #endif
 }
 
-static void compile_parse( PARSE * parse, compiler * c, int result_location )
+static void compile_parse( PARSE * parse, compiler * c, int32_t result_location )
 {
     compile_emit_debug(c, parse->line);
     if ( parse->type == PARSE_APPEND )
@@ -2467,8 +2467,8 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             compile_parse( parse->left, c, result_location );
         else
         {
-            int f = compile_new_label( c );
-            int end = compile_new_label( c );
+            int32_t f = compile_new_label( c );
+            int32_t end = compile_new_label( c );
 
             out_printf( "%s:%d: Conditional used as list (check operator "
                 "precedence).\n", object_str( parse->file ), parse->line );
@@ -2486,10 +2486,10 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_FOREACH )
     {
-        int var = compile_emit_constant( c, parse->string );
-        int top = compile_new_label( c );
-        int end = compile_new_label( c );
-        int continue_ = compile_new_label( c );
+        int32_t var = compile_emit_constant( c, parse->string );
+        int32_t top = compile_new_label( c );
+        int32_t end = compile_new_label( c );
+        int32_t continue_ = compile_new_label( c );
 
         /*
          * Evaluate the list.
@@ -2536,7 +2536,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_IF )
     {
-        int f = compile_new_label( c );
+        int32_t f = compile_new_label( c );
         /* Emit the condition */
         compile_condition( parse->left, c, 0, f );
         /* Emit the if block */
@@ -2544,7 +2544,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         if ( parse->third->type != PARSE_NULL || result_location != RESULT_NONE )
         {
             /* Emit the else block */
-            int end = compile_new_label( c );
+            int32_t end = compile_new_label( c );
             compile_emit_branch( c, INSTR_JUMP, end );
             compile_set_label( c, f );
             compile_parse( parse->third, c, result_location );
@@ -2556,12 +2556,12 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_WHILE )
     {
-        int nested_result = result_location == RESULT_NONE
+        int32_t nested_result = result_location == RESULT_NONE
             ? RESULT_NONE
             : RESULT_RETURN;
-        int test = compile_new_label( c );
-        int top = compile_new_label( c );
-        int end = compile_new_label( c );
+        int32_t test = compile_new_label( c );
+        int32_t top = compile_new_label( c );
+        int32_t end = compile_new_label( c );
         /* Make sure that we return an empty list if the loop runs zero times.
          */
         adjust_result( c, RESULT_NONE, nested_result );
@@ -2590,7 +2590,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_MODULE )
     {
-        int const nested_result = result_location == RESULT_NONE
+        int32_t const nested_result = result_location == RESULT_NONE
             ? RESULT_NONE
             : RESULT_RETURN;
         compile_parse( parse->left, c, RESULT_STACK );
@@ -2633,7 +2633,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_LOCAL )
     {
-        int nested_result = result_location == RESULT_NONE
+        int32_t nested_result = result_location == RESULT_NONE
             ? RESULT_NONE
             : RESULT_RETURN;
         /* This should be left recursive group of compile_appends. */
@@ -2658,7 +2658,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             if ( group->elems->size == 1 && dynamic_array_at( VAR_PARSE *,
                 group->elems, 0 )->type == VAR_PARSE_TYPE_STRING )
             {
-                int const name = compile_emit_constant( c, (
+                int32_t const name = compile_emit_constant( c, (
                     (VAR_PARSE_STRING *)dynamic_array_at( VAR_PARSE *,
                     group->elems, 0 ) )->s );
                 var_parse_group_free( group );
@@ -2736,7 +2736,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             else
             {
                 /* Too complex.  Fall back on push/pop. */
-                int end = compile_new_label( c );
+                int32_t end = compile_new_label( c );
                 compile_parse( parse->left, c, RESULT_STACK );
                 compile_emit_branch( c, INSTR_PUSH_ON, end );
                 compile_push_cleanup( c, INSTR_POP_ON, 0 );
@@ -2749,7 +2749,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
         }
         else
         {
-            int end = compile_new_label( c );
+            int32_t end = compile_new_label( c );
             compile_parse( parse->left, c, RESULT_STACK );
             compile_emit_branch( c, INSTR_PUSH_ON, end );
             compile_push_cleanup( c, INSTR_POP_ON, 0 );
@@ -2763,7 +2763,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     else if ( parse->type == PARSE_RULE )
     {
         PARSE * p;
-        int n = 0;
+        int32_t n = 0;
         VAR_PARSE_GROUP * group;
         char const * s = object_str( parse->string );
 
@@ -2811,8 +2811,8 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     else if ( parse->type == PARSE_SET )
     {
         PARSE * vars = parse->left;
-        unsigned int op_code;
-        unsigned int op_code_group;
+        uint32_t op_code;
+        uint32_t op_code_group;
 
         switch ( parse->num )
         {
@@ -2832,7 +2832,7 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
             if ( group->elems->size == 1 && dynamic_array_at( VAR_PARSE *,
                 group->elems, 0 )->type == VAR_PARSE_TYPE_STRING )
             {
-                int const name = compile_emit_constant( c, (
+                int32_t const name = compile_emit_constant( c, (
                     (VAR_PARSE_STRING *)dynamic_array_at( VAR_PARSE *,
                     group->elems, 0 ) )->s );
                 var_parse_group_free( group );
@@ -2875,16 +2875,16 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_SETCOMP )
     {
-        int n_args;
+        int32_t n_args;
         struct arg_list * args = arg_list_compile( parse->right, &n_args );
-        int const rule_id = compile_emit_rule( c, parse->string, parse->left,
+        int32_t const rule_id = compile_emit_rule( c, parse->string, parse->left,
             n_args, args, parse->num );
         compile_emit( c, INSTR_RULE, rule_id );
         adjust_result( c, RESULT_NONE, result_location );
     }
     else if ( parse->type == PARSE_SETEXEC )
     {
-        int const actions_id = compile_emit_actions( c, parse );
+        int32_t const actions_id = compile_emit_actions( c, parse );
         compile_parse( parse->left, c, RESULT_STACK );
         compile_emit( c, INSTR_ACTIONS, actions_id );
         adjust_result( c, RESULT_NONE, result_location );
@@ -2907,13 +2907,13 @@ static void compile_parse( PARSE * parse, compiler * c, int result_location )
     }
     else if ( parse->type == PARSE_SWITCH )
     {
-        int const switch_end = compile_new_label( c );
+        int32_t const switch_end = compile_new_label( c );
         compile_parse( parse->left, c, RESULT_STACK );
 
         for ( parse = parse->right; parse; parse = parse->right )
         {
-            int const id = compile_emit_constant( c, parse->left->string );
-            int const next_case = compile_new_label( c );
+            int32_t const id = compile_emit_constant( c, parse->left->string );
+            int32_t const next_case = compile_new_label( c );
             compile_emit( c, INSTR_PUSH_CONSTANT, id );
             compile_emit_branch( c, INSTR_JUMP_NOT_GLOB, next_case );
             compile_parse( parse->left->left, c, result_location );
@@ -2954,7 +2954,7 @@ void function_set_rulename( FUNCTION * function, OBJECT * rulename )
     function->rulename = rulename;
 }
 
-void function_location( FUNCTION * function_, OBJECT * * file, int * line )
+void function_location( FUNCTION * function_, OBJECT * * file, int32_t * line )
 {
     if ( function_->type == FUNCTION_BUILTIN )
     {
@@ -2978,10 +2978,10 @@ void function_location( FUNCTION * function_, OBJECT * * file, int * line )
 }
 
 static struct arg_list * arg_list_compile_builtin( char const * * args,
-    int * num_arguments );
+    int32_t * num_arguments );
 
-FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int flags ),
-    int flags, char const * * args )
+FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int32_t flags ),
+    int32_t flags, char const * * args )
 {
     BUILTIN_FUNCTION * result = (BUILTIN_FUNCTION*)BJAM_MALLOC( sizeof( BUILTIN_FUNCTION ) );
     result->base.type = FUNCTION_BUILTIN;
@@ -3009,7 +3009,7 @@ FUNCTION * function_compile( PARSE * parse )
 }
 
 FUNCTION * function_compile_actions( char const * actions, OBJECT * file,
-    int line )
+    int32_t line )
 {
     compiler c[ 1 ];
     JAM_FUNCTION * result;
@@ -3028,7 +3028,7 @@ FUNCTION * function_compile_actions( char const * actions, OBJECT * file,
     return (FUNCTION *)result;
 }
 
-static void argument_list_print( struct arg_list * args, int num_args );
+static void argument_list_print( struct arg_list * args, int32_t num_args );
 
 
 /* Define delimiters for type check elements in argument lists (and return type
@@ -3042,7 +3042,7 @@ static void argument_list_print( struct arg_list * args, int num_args );
  * specification.
  */
 
-int is_type_name( char const * s )
+int32_t is_type_name( char const * s )
 {
     return s[ 0 ] == TYPE_OPEN_DELIM && s[ strlen( s ) - 1 ] ==
         TYPE_CLOSE_DELIM;
@@ -3113,18 +3113,18 @@ static void type_check( OBJECT * type_name, LIST * values, FRAME * caller,
         caller, called, arg_name );
 }
 
-void argument_list_check( struct arg_list * formal, int formal_count,
+void argument_list_check( struct arg_list * formal, int32_t formal_count,
     FUNCTION * function, FRAME * frame )
 {
     LOL * all_actual = frame->args;
-    int i;
+    int32_t i;
 
     for ( i = 0; i < formal_count; ++i )
     {
         LIST * actual = lol_get( all_actual, i );
         LISTITER actual_iter = list_begin( actual );
         LISTITER const actual_end = list_end( actual );
-        int j;
+        int32_t j;
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
@@ -3178,22 +3178,22 @@ void argument_list_check( struct arg_list * formal, int formal_count,
     }
 }
 
-void argument_list_push( struct arg_list * formal, int formal_count,
+void argument_list_push( struct arg_list * formal, int32_t formal_count,
     FUNCTION * function, FRAME * frame, STACK * s )
 {
     LOL * all_actual = frame->args;
-    int i;
+    int32_t i;
 
     for ( i = 0; i < formal_count; ++i )
     {
         LIST * actual = lol_get( all_actual, i );
         LISTITER actual_iter = list_begin( actual );
         LISTITER const actual_end = list_end( actual );
-        int j;
+        int32_t j;
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
-            LIST * value;
+            LIST * value = L0;
 
             switch ( formal_arg->flags )
             {
@@ -3255,13 +3255,13 @@ void argument_list_push( struct arg_list * formal, int formal_count,
     }
 }
 
-void argument_list_pop( struct arg_list * formal, int formal_count,
+void argument_list_pop( struct arg_list * formal, int32_t formal_count,
     FRAME * frame, STACK * s )
 {
-    int i;
+    int32_t i;
     for ( i = formal_count - 1; i >= 0; --i )
     {
-        int j;
+        int32_t j;
         for ( j = formal[ i ].size - 1; j >= 0 ; --j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
@@ -3288,7 +3288,7 @@ struct argument_compiler
 {
     struct dynamic_array args[ 1 ];
     struct argument arg;
-    int state;
+    int32_t state;
 #define ARGUMENT_COMPILER_START         0
 #define ARGUMENT_COMPILER_FOUND_TYPE    1
 #define ARGUMENT_COMPILER_FOUND_OBJECT  2
@@ -3308,7 +3308,7 @@ static void argument_compiler_free( struct argument_compiler * c )
 }
 
 static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg,
-    OBJECT * file, int line )
+    OBJECT * file, int32_t line )
 {
     switch ( c->state )
     {
@@ -3391,7 +3391,7 @@ static void argument_compiler_recurse( struct argument_compiler * c,
 }
 
 static struct arg_list arg_compile_impl( struct argument_compiler * c,
-    OBJECT * file, int line )
+    OBJECT * file, int32_t line )
 {
     struct arg_list result;
     switch ( c->state )
@@ -3458,7 +3458,7 @@ static void argument_list_compiler_recurse( struct argument_list_compiler * c,
     }
 }
 
-static struct arg_list * arg_list_compile( PARSE * parse, int * num_arguments )
+static struct arg_list * arg_list_compile( PARSE * parse, int32_t * num_arguments )
 {
     if ( parse )
     {
@@ -3478,7 +3478,7 @@ static struct arg_list * arg_list_compile( PARSE * parse, int * num_arguments )
 }
 
 static struct arg_list * arg_list_compile_builtin( char const * * args,
-    int * num_arguments )
+    int32_t * num_arguments )
 {
     if ( args )
     {
@@ -3518,14 +3518,14 @@ static struct arg_list * arg_list_compile_builtin( char const * * args,
     return 0;
 }
 
-static void argument_list_print( struct arg_list * args, int num_args )
+static void argument_list_print( struct arg_list * args, int32_t num_args )
 {
     if ( args )
     {
-        int i;
+        int32_t i;
         for ( i = 0; i < num_args; ++i )
         {
-            int j;
+            int32_t j;
             if ( i ) out_printf( " : " );
             for ( j = 0; j < args[ i ].size; ++j )
             {
@@ -3547,17 +3547,17 @@ static void argument_list_print( struct arg_list * args, int num_args )
 
 
 struct arg_list * argument_list_bind_variables( struct arg_list * formal,
-    int formal_count, module_t * module, int * counter )
+    int32_t formal_count, module_t * module, int32_t * counter )
 {
     if ( formal )
     {
         struct arg_list * result = (struct arg_list *)BJAM_MALLOC( sizeof(
             struct arg_list ) * formal_count );
-        int i;
+        int32_t i;
 
         for ( i = 0; i < formal_count; ++i )
         {
-            int j;
+            int32_t j;
             struct argument * args = (struct argument *)BJAM_MALLOC( sizeof(
                 struct argument ) * formal[ i ].size );
             for ( j = 0; j < formal[ i ].size; ++j )
@@ -3580,12 +3580,12 @@ struct arg_list * argument_list_bind_variables( struct arg_list * formal,
 }
 
 
-void argument_list_free( struct arg_list * args, int args_count )
+void argument_list_free( struct arg_list * args, int32_t args_count )
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < args_count; ++i )
     {
-        int j;
+        int32_t j;
         for ( j = 0; j < args[ i ].size; ++j )
         {
             if ( args[ i ].args[ j ].type_name  )
@@ -3614,7 +3614,7 @@ FUNCTION * function_unbind_variables( FUNCTION * f )
 }
 
 FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
-    int * counter )
+    int32_t * counter )
 {
     if ( f->type == FUNCTION_BUILTIN )
         return f;
@@ -3626,7 +3626,7 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
         JAM_FUNCTION * func = (JAM_FUNCTION *)f;
         JAM_FUNCTION * new_func = (JAM_FUNCTION *)BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
         instruction * code;
-        int i;
+        int32_t i;
         assert( f->type == FUNCTION_JAM );
         memcpy( new_func, func, sizeof( JAM_FUNCTION ) );
         new_func->base.reference_count = 1;
@@ -3640,7 +3640,7 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
         for ( i = 0; ; ++i )
         {
             OBJECT * key;
-            int op_code;
+            int32_t op_code;
             code = func->code + i;
             switch ( code->op_code )
             {
@@ -3657,7 +3657,7 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
             case INSTR_CALL_RULE: ++i; continue;
             case INSTR_PUSH_MODULE:
                 {
-                    int depth = 1;
+                    int32_t depth = 1;
                     ++i;
                     while ( depth > 0 )
                     {
@@ -3707,7 +3707,7 @@ LIST * function_get_variables( FUNCTION * f )
         JAM_FUNCTION * func = (JAM_FUNCTION *)f;
         LIST * result = L0;
         instruction * code;
-        int i;
+        int32_t i;
         assert( f->type == FUNCTION_JAM );
         if ( func->generic ) func = ( JAM_FUNCTION * )func->generic;
 
@@ -3723,7 +3723,7 @@ LIST * function_get_variables( FUNCTION * f )
             case INSTR_CALL_RULE: ++i; continue;
             case INSTR_PUSH_MODULE:
                 {
-                    int depth = 1;
+                    int32_t depth = 1;
                     ++i;
                     while ( depth > 0 )
                     {
@@ -3767,7 +3767,7 @@ void function_refer( FUNCTION * func )
 
 void function_free( FUNCTION * function_ )
 {
-    int i;
+    int32_t i;
 
     if ( --function_->reference_count != 0 )
         return;
@@ -3871,7 +3871,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
     LIST * l;
     LIST * r;
     LIST * result = L0;
+#ifndef NDEBUG
     void * saved_stack = s->data;
+#endif
 
     PROFILE_ENTER_LOCAL(function_run);
 
@@ -4250,8 +4252,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 backtrace( frame );
                 assert( saved_stack == s->data );
             }
-#endif
             assert( saved_stack == s->data );
+#endif
             debug_on_exit_function( function->base.rulename );
             PROFILE_EXIT_LOCAL(function_run_INSTR_RETURN);
             PROFILE_EXIT_LOCAL(function_run);
@@ -4467,7 +4469,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 OBJECT * varname = function->constants[ code->arg ];
                 TARGET * t = bindtarget( list_front( targets ) );
                 SETTINGS * s = t->settings;
-                int found = 0;
+                int32_t found = 0;
                 for ( ; s != 0; s = s->next )
                 {
                     if ( object_equal( s->symbol, varname ) )
@@ -4653,8 +4655,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_APPLY_MODIFIERS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_MODIFIERS);
-            int n;
-            int i;
+            int32_t n;
+            int32_t i;
             l = stack_pop( s );
             n = expand_modifiers( s, code->arg );
             stack_push( s, l );
@@ -4682,8 +4684,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_APPLY_INDEX_MODIFIERS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS);
-            int i;
-            int n;
+            int32_t i;
+            int32_t n;
             l = stack_pop( s );
             r = stack_pop( s );
             n = expand_modifiers( s, code->arg );
@@ -4703,9 +4705,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_APPLY_MODIFIERS_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_MODIFIERS_GROUP);
-            int i;
+            int32_t i;
             LIST * const vars = stack_pop( s );
-            int const n = expand_modifiers( s, code->arg );
+            int32_t const n = expand_modifiers( s, code->arg );
             LIST * result = L0;
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
@@ -4749,10 +4751,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_APPLY_INDEX_MODIFIERS_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS_GROUP);
-            int i;
+            int32_t i;
             LIST * const vars = stack_pop( s );
             LIST * const r = stack_pop( s );
-            int const n = expand_modifiers( s, code->arg );
+            int32_t const n = expand_modifiers( s, code->arg );
             LIST * result = L0;
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
@@ -4778,11 +4780,11 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_COMBINE_STRINGS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_COMBINE_STRINGS);
-            size_t const buffer_size = code->arg * sizeof( expansion_item );
+            int32_t const buffer_size = code->arg * sizeof( expansion_item );
             LIST * * const stack_pos = (LIST * * const)stack_get( s );
             expansion_item * items = (expansion_item *)stack_allocate( s, buffer_size );
             LIST * result;
-            int i;
+            int32_t i;
             for ( i = 0; i < code->arg; ++i )
                 items[ i ].values = stack_pos[ i ];
             result = expand( items, code->arg );
@@ -4809,7 +4811,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 if ( value[ 0 ] == '<' && ( p = strchr( value, '>' ) ) )
                 {
                     if( p[ 1 ] )
-                        new_object = object_new_range( value, p - value + 1 );
+                        new_object = object_new_range( value, int32_t(p - value + 1) );
                     else
                         new_object = object_copy( list_item( iter ) );
                 }
@@ -4936,7 +4938,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             string buf[ 1 ];
             char const * out;
             OBJECT * tmp_filename = 0;
-            int out_debug = DEBUG_EXEC ? 1 : 0;
+            int32_t out_debug = DEBUG_EXEC ? 1 : 0;
             FILE * out_file = 0;
             string_new( buf );
             combine_strings( s, code->arg, buf );
@@ -4948,7 +4950,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             if ( ( strcmp( "STDOUT", out ) == 0 ) ||
                 ( strcmp( "STDERR", out ) == 0 ) )
             {
-                int err_redir = strcmp( "STDERR", out ) == 0;
+                int32_t err_redir = strcmp( "STDERR", out ) == 0;
                 string result[ 1 ];
 
                 tmp_filename = path_tmpfile();
@@ -5069,7 +5071,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 #ifdef HAVE_PYTHON
 
 static struct arg_list * arg_list_compile_python( PyObject * bjam_signature,
-    int * num_arguments )
+    int32_t * num_arguments )
 {
     if ( bjam_signature )
     {
@@ -5127,18 +5129,18 @@ FUNCTION * function_python( PyObject * function, PyObject * bjam_signature )
 }
 
 
-static void argument_list_to_python( struct arg_list * formal, int formal_count,
+static void argument_list_to_python( struct arg_list * formal, int32_t formal_count,
     FUNCTION * function, FRAME * frame, PyObject * kw )
 {
     LOL * all_actual = frame->args;
-    int i;
+    int32_t i;
 
     for ( i = 0; i < formal_count; ++i )
     {
         LIST * actual = lol_get( all_actual, i );
         LISTITER actual_iter = list_begin( actual );
         LISTITER const actual_end = list_end( actual );
-        int j;
+        int32_t j;
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
@@ -5259,7 +5261,7 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
     LIST * result = 0;
     PyObject * arguments = 0;
     PyObject * kw = NULL;
-    int i;
+    int32_t i;
     PyObject * py_result;
     FRAME * prev_frame_before_python_call;
 
@@ -5290,8 +5292,8 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
     {
         if ( PyList_Check( py_result ) )
         {
-            int size = PyList_Size( py_result );
-            int i;
+            int32_t size = PyList_Size( py_result );
+            int32_t i;
             for ( i = 0; i < size; ++i )
             {
                 OBJECT * s = python_to_string( PyList_GetItem( py_result, i ) );
