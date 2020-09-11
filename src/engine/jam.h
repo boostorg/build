@@ -436,23 +436,6 @@
     #define OSPLAT ""
 #endif
 
-/*
- * Correct missing types in some earlier compilers.
- */
-#include <stdint.h>
-#ifndef INT32_MIN
-// VS 2013 is barely C++11/C99. And opts to not provide specific sized int types.
-// Provide a generic implementation of the sizes we use.
-#if UINT_MAX == 0xffffffff
-typedef int int32_t;
-#elif (USHRT_MAX == 0xffffffff)
-typedef short int32_t;
-#elif ULONG_MAX == 0xffffffff
-typedef long int32_t;
-# endif
-
-#endif
-
 
 /*
  * Jam implementation misc.
