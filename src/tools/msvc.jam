@@ -1998,27 +1998,47 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .versions = [ new configurations ] ;
 
 # Supported CPU architectures.
-.cpu-arch-i386 =
-    <architecture>/<address-model>
-    <architecture>/<address-model>32
-    <architecture>x86/<address-model>
-    <architecture>x86/<address-model>32 ;
+.cpu-arch-info-i386  = x86  32 ;
+.cpu-arch-info-amd64 = x86  64 ;
+.cpu-arch-info-ia64  = ia64 64 ;
+.cpu-arch-info-arm   = arm  32 ;
+.cpu-arch-info-arm64 = arm  64 ;
 
-.cpu-arch-amd64 =
-    <architecture>/<address-model>64
-    <architecture>x86/<address-model>64 ;
+# Fill explicit architecture and address model values
+for local cpu in [ MATCH "^\\.cpu-arch-info-(.*)" : [ VARNAMES $(__name__) ] ]
+{
+    local arch = $(.cpu-arch-info-$(cpu)[1]) ;
+    .cpus-on-$(arch) += $(cpu) ;
+    .cpu-arch-$(cpu) = <architecture>$(arch)/<address-model>$(.cpu-arch-info-$(cpu)[2]) ;
+}
 
-.cpu-arch-ia64 =
-    <architecture>ia64/<address-model>
-    <architecture>ia64/<address-model>64 ;
+# Match implicit architecture and address model based on the current platform
+.default-cpu-arch = [ os.environ PROCESSOR_ARCHITEW6432 ] ;
+.default-cpu-arch ?= [ os.environ PROCESSOR_ARCHITECTURE ] ;
+.default-cpu-arch = $(.default-cpu-arch:L) ;
+switch $(.default-cpu-arch)
+{
+    case x86   : .default-cpu-arch = i386 ;
+    case em64t : .default-cpu-arch = amd64 ;
+}
 
-.cpu-arch-arm =
-    <architecture>arm/<address-model>
-    <architecture>arm/<address-model>32 ;
+for local cpu in $(.cpus-on-$(.cpu-arch-info-$(.default-cpu-arch)[1]))
+{
+    .cpu-arch-$(cpu) += <architecture>/<address-model>$(.cpu-arch-info-$(cpu)[2]) ;
+}
 
-.cpu-arch-arm64 =
-    <architecture>arm/<address-model>
-    <architecture>arm/<address-model>64 ;
+.cpu-arch-$(.default-cpu-arch) += <architecture>$(.cpu-arch-info-$(.default-cpu-arch)[1])/<address-model> ;
+.cpu-arch-$(.default-cpu-arch) += <architecture>/<address-model> ;
+
+# If there is only one address model for an architecture we allow to ommit it
+for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
+{
+    if ! $(.cpus-on-$(arch)[2-]) && $(.cpus-on-$(arch)[1]) != $(.default-cpu-arch)
+    {
+        .cpu-arch-$(.cpus-on-$(arch)) += <architecture>$(arch)/<address-model> ;
+    }
+}
+
 
 # Supported CPU types (only Itanium optimization options are supported from
 # VC++ 2005 on). See
