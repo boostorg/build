@@ -38,7 +38,7 @@ Distributed under the Boost Software License, Version 1.0.
 typedef struct _pathpart
 {
     char const * ptr;
-    int len;
+    int32_t len;
 } PATHPART;
 
 typedef struct _pathname

@@ -25,11 +25,11 @@ typedef struct native_rule_t
      *
      * Versions are numbered from 1.
     */
-    int version;
+    int32_t version;
 } native_rule_t;
 /* MSVC debugger gets confused unless the native_rule_t typedef is provided. */
 
 void declare_native_rule( char const * module, char const * rule,
-    char const * * args, function_builtin_t f, int version );
+    char const * * args, function_builtin_t f, int32_t version );
 
 #endif

@@ -14,6 +14,7 @@ if "_%B2_TOOLSET%_" == "_vc142_" call :Config_VC142
 if "_%B2_TOOLSET%_" == "_borland_" call :Config_BORLAND
 if "_%B2_TOOLSET%_" == "_como_" call :Config_COMO
 if "_%B2_TOOLSET%_" == "_gcc_" call :Config_GCC
+if "_%B2_TOOLSET%_" == "_clang_" call :Config_CLANG
 if "_%B2_TOOLSET%_" == "_gcc-nocygwin_" call :Config_GCC_NOCYGWIN
 if "_%B2_TOOLSET%_" == "_intel-win32_" call :Config_INTEL_WIN32
 if "_%B2_TOOLSET%_" == "_mingw_" call :Config_MINGW
@@ -181,6 +182,12 @@ goto :eof
 
 :Config_GCC
 if not defined CXX ( set "CXX=g++" )
+set "B2_CXX=%CXX% -x c++ -std=c++11 -s -O3 -o b2.exe"
+set "_known_=1"
+goto :eof
+
+:Config_CLANG
+if not defined CXX ( set "CXX=clang++" )
 set "B2_CXX=%CXX% -x c++ -std=c++11 -s -O3 -o b2.exe"
 set "_known_=1"
 goto :eof

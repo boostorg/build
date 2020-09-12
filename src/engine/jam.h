@@ -412,9 +412,9 @@
 #endif
 
 #ifdef __mips__
-  #if defined(_ABI64)
+  #if _MIPS_SIM == _MIPS_SIM_ABI64
     #define OSPLAT "OSPLAT=MIPS64"
-  #elif defined(_ABIO32)
+  #elif _MIPS_SIM == _MIPS_SIM_ABI32
     #define OSPLAT "OSPLAT=MIPS32"
   #endif
 #endif

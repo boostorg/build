@@ -747,7 +747,7 @@ char * executable_path( char const * argv0 )
 {
     int mib[ 4 ] = { CTL_KERN, KERN_PROC, KERN_PROC_PATHNAME, -1 };
     char buf[ 1024 ];
-    size_t size = sizeof( buf );
+    int32_t size = sizeof( buf );
     sysctl( mib, 4, buf, &size, NULL, 0 );
     return ( !size || size == sizeof( buf ) ) ? NULL : strndup( buf, size );
 }

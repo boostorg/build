@@ -54,7 +54,7 @@
 
 typedef struct _list {
     union {
-        int size;
+        int32_t size;
         struct _list * next;
         OBJECT * align;
     } impl;
@@ -68,7 +68,7 @@ typedef OBJECT * * LISTITER;
 
 #define LOL_MAX 19
 typedef struct _lol {
-    int count;
+    int32_t count;
     LIST * list[ LOL_MAX ];
 } LOL;
 
@@ -79,15 +79,15 @@ LIST * list_copy_range( LIST * destination, LISTITER first, LISTITER last );
 void   list_free( LIST * head );
 LIST * list_push_back( LIST * head, OBJECT * value );
 void   list_print( LIST * );
-int    list_length( LIST * );
-LIST * list_sublist( LIST *, int start, int count );
+int32_t list_length( LIST * );
+LIST * list_sublist( LIST *, int32_t start, int32_t count );
 LIST * list_pop_front( LIST * );
 LIST * list_sort( LIST * );
 LIST * list_unique( LIST * sorted_list );
-int    list_in( LIST *, OBJECT * value );
+int32_t list_in( LIST *, OBJECT * value );
 LIST * list_reverse( LIST * );
-int    list_cmp( LIST * lhs, LIST * rhs );
-int    list_is_sublist( LIST * sub, LIST * l );
+int32_t list_cmp( LIST * lhs, LIST * rhs );
+int32_t list_is_sublist( LIST * sub, LIST * l );
 void   list_done();
 
 LISTITER list_begin( LIST * );
@@ -159,7 +159,7 @@ namespace b2 { namespace jam {
         inline iterator begin() { return iterator(list_begin(list_obj)); }
         inline iterator end() { return iterator(list_end(list_obj)); }
         inline bool empty() const { return list_empty(list_obj) || length() == 0; }
-        inline int length() const { return list_length(list_obj); }
+        inline int32_t length() const { return list_length(list_obj); }
         inline list &append(const list &other)
         {
             list_obj = list_append(list_obj, list_copy(other.list_obj));
