@@ -54,44 +54,38 @@ stages:
       vmImage: $(VM_IMAGE)
     steps:
     - bash: |
-          set -e
-          uname -a
-          sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
-          if test -n "${LLVM_REPO}" ; then
-            wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-            sudo -E apt-add-repository "deb http://apt.llvm.org/xenial/ ${LLVM_REPO} main"
-          fi
-          sudo -E apt-get -o Acquire::Retries=3 update
-          sudo -E apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
+        set -e
+        uname -a
+        ./.ci/linux-cxx-install.sh
       displayName: Install
     - bash: |
-          set -e
-          cd src/engine
-          set PATH=${PATH};${CXX_PATH}
-          ./build.sh ${TOOLSET}
-          ./b2 -v
-          cd ../..
+        set -e
+        cd src/engine
+        set PATH=${PATH};${CXX_PATH}
+        ./build.sh ${TOOLSET}
+        ./b2 -v
+        cd ../..
       displayName: Build
     - bash: |
-          set -e
-          CXX_PATH=`which ${CXX}`
-          cd test
-          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          python test_all.py ${TEST_TOOLSET}
-          cd ..
+        set -e
+        CXX_PATH=`which ${CXX}`
+        cd test
+        echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        python test_all.py ${TEST_TOOLSET}
+        cd ..
       displayName: Test
     - bash: |
-          set -e
-          CXX_PATH=`which ${CXX}`
-          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          ./src/engine/b2 b2 warnings-as-errors=on variant=debug,release address-model=32,64 toolset=${TEST_TOOLSET}
+        set -e
+        CXX_PATH=`which ${CXX}`
+        echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        ./src/engine/b2 b2 warnings-as-errors=on variant=debug,release address-model=32,64 toolset=${TEST_TOOLSET}
       displayName: "No Warnings"
     - bash: |
-          set -e
-          CXX_PATH=`which ${CXX}`
-          echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          ./bootstrap.sh ${TOOLSET}
-          ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
+        set -e
+        CXX_PATH=`which ${CXX}`
+        echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        ./bootstrap.sh ${TOOLSET}
+        ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
       displayName: Bootstrap
 
   - job: 'Windows'
@@ -104,31 +98,31 @@ stages:
       vmImage: $(VM_IMAGE)
     steps:
     - powershell: |
-          cd src/engine
-          $env:path += ';' + $env:CXX_PATH
-          cmd /c build.bat $env:TOOLSET
-          ./b2.exe -v
-          cd ../..
+        cd src/engine
+        $env:path += ';' + $env:CXX_PATH
+        cmd /c build.bat $env:TOOLSET
+        ./b2.exe -v
+        cd ../..
       displayName: Build
     - powershell: |
-          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
-          cd test
-          echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
-          python test_all.py $env:TEST_TOOLSET
-          cd ..
+        $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+        cd test
+        echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
+        python test_all.py $env:TEST_TOOLSET
+        cd ..
       displayName: Test
     - powershell: |
-          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
-          $env:path += ';' + $env:CXX_PATH
-          echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
-          ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on variant=debug,release toolset=$env:TEST_TOOLSET
+        $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+        $env:path += ';' + $env:CXX_PATH
+        echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
+        ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on variant=debug,release toolset=$env:TEST_TOOLSET
       displayName: "No Warnings"
     - powershell: |
-          $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
-          $env:path += ';' + $env:CXX_PATH
-          echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
-          ./bootstrap.bat $env:TOOLSET
-          ./b2.exe --debug-configuration --prefix=./.b2 install toolset=$env:TEST_TOOLSET
+        $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+        $env:path += ';' + $env:CXX_PATH
+        echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
+        ./bootstrap.bat $env:TOOLSET
+        ./b2.exe --debug-configuration --prefix=./.b2 install toolset=$env:TEST_TOOLSET
       displayName: Bootstrap
 
   - job: 'macOS'
@@ -205,31 +199,25 @@ stages:
         1.66.0 .. GCC 10: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
     steps:
     - bash: |
-          set -e
-          uname -a
-          sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
-          if test -n "${LLVM_REPO}" ; then
-            wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-            sudo -E apt-add-repository "deb http://apt.llvm.org/xenial/ ${LLVM_REPO} main"
-          fi
-          sudo -E apt-get -o Acquire::Retries=3 update
-          sudo -E apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
+        set -e
+        uname -a
+        ./.ci/linux-cxx-install.sh
       displayName: Install
     - bash: |
-          set -e
-          cd src/engine
-          ./build.sh ${TOOLSET}
-          ./b2 -v
+        set -e
+        cd src/engine
+        ./build.sh ${TOOLSET}
+        ./b2 -v
       displayName: Build
     - bash: |
-          set -e
-          pushd ${HOME}
-          git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
-          cd boost_${BOOST_VERSION_U}
-          CXX_PATH=`which ${CXX}`
-          echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
-          popd
+        set -e
+        pushd ${HOME}
+        git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
+        cd boost_${BOOST_VERSION_U}
+        CXX_PATH=`which ${CXX}`
+        echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        popd
       displayName: Test
 
   - job: 'Dev_Linux'
@@ -239,26 +227,20 @@ stages:
     strategy:
       matrix:
         Master .. GCC 10: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Master .. Clang 10: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10 ,LLVM_REPO: llvm-toolchain-bionic-10}
+        Master .. Clang 10: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10}
         Develop .. GCC 10: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Develop .. Clang 10: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_REPO: llvm-toolchain-bionic-10}
+        Develop .. Clang 10: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10}
     steps:
     - bash: |
-          set -e
-          uname -a
-          sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
-          if test -n "${LLVM_REPO}" ; then
-            wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-            sudo -E apt-add-repository "deb http://apt.llvm.org/xenial/ ${LLVM_REPO} main"
-          fi
-          sudo -E apt-get -o Acquire::Retries=3 update
-          sudo -E apt-get -o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends install ${PACKAGES}
+        set -e
+        uname -a
+        ./.ci/linux-cxx-install.sh
       displayName: Install
     - bash: |
-          set -e
-          cd src/engine
-          ./build.sh ${TOOLSET}
-          ./b2 -v
+        set -e
+        cd src/engine
+        ./build.sh ${TOOLSET}
+        ./b2 -v
       displayName: Build
     - bash: |
         set -e
