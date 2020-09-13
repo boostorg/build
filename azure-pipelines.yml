@@ -38,13 +38,13 @@ stages:
         GCC 4.9: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-4.9, PACKAGES: g++-4.9, VM_IMAGE: 'ubuntu-16.04'}
         GCC 4.8: {TOOLSET: gcc, TEST_TOOLSET: gcc,  CXX: g++-4.8, PACKAGES: g++-4.8, VM_IMAGE: 'ubuntu-16.04'}
         GCC 4.7: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-4.7, PACKAGES: g++-4.7, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 10: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_REPO: llvm-toolchain-bionic-10, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 9: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-9, PACKAGES: clang-9, LLVM_REPO: llvm-toolchain-bionic-9, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 8: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-8, PACKAGES: clang-8, LLVM_REPO: llvm-toolchain-bionic-8, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-7, PACKAGES: clang-7, LLVM_REPO: llvm-toolchain-bionic-7, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-6.0, PACKAGES: clang-6.0, LLVM_REPO: llvm-toolchain-bionic-6.0, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-5.0, PACKAGES: clang-5.0, LLVM_REPO: llvm-toolchain-bionic-5.0, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 4: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-4.0, PACKAGES: clang-4.0, LLVM_REPO: llvm-toolchain-xenial-4.0, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 10: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 9: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-9, PACKAGES: clang-9, LLVM_OS: bionic, LLVM_VER: 9, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 8: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-8, PACKAGES: clang-8, LLVM_OS: bionic, LLVM_VER: 8, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-7, PACKAGES: clang-7, LLVM_OS: bionic, LLVM_VER: 7, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-6.0, PACKAGES: clang-6.0, LLVM_OS: bionic, LLVM_VER: 6.0, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-5.0, PACKAGES: clang-5.0, LLVM_OS: bionic, LLVM_VER: 5.0: 'ubuntu-18.04'}
+        Clang 4: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-4.0, PACKAGES: clang-4.0, LLVM_OS: xenial, LLVM_VER: 4.0, VM_IMAGE: 'ubuntu-16.04'}
         Clang 3.9: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.9, PACKAGES: clang-3.9, VM_IMAGE: 'ubuntu-16.04'}
         Clang 3.8: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.8, PACKAGES: clang-3.8, VM_IMAGE: 'ubuntu-16.04'}
         Clang 3.7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.7, PACKAGES: clang-3.7, VM_IMAGE: 'ubuntu-16.04'}
