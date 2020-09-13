@@ -27,8 +27,6 @@ stages:
   jobs:
 
   - job: 'Linux'
-    pool:
-      vmImage: 'ubuntu-16.04'
     strategy:
       matrix:
         GCC 10: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-18.04'}
