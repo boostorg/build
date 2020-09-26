@@ -86,7 +86,11 @@ stages:
         CXX_PATH=`which ${CXX}`
         echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         ./bootstrap.sh ${TOOLSET}
-        ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
+        ./b2 --prefix=$HOME/temp/.b2 install ${TEST_TOOLSET}
+        rm ./b2
+        export PATH=$HOME/temp/.b2/bin:$PATH
+        b2 -b
+        b2 --help
       displayName: Bootstrap
 
   - job: 'Windows'
@@ -123,7 +127,11 @@ stages:
         $env:path += ';' + $env:CXX_PATH
         echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > $env:HOME/user-config.jam
         ./bootstrap.bat $env:TOOLSET
-        ./b2.exe --debug-configuration --prefix=./.b2 install toolset=$env:TEST_TOOLSET
+        ./b2.exe --debug-configuration --prefix=$env:HOME/temp/.b2 install toolset=$env:TEST_TOOLSET
+        Remove-Item ./b2.exe
+        $env:path += $env:HOME/temp/.b2/bin ';' + $env:PATH
+        b2 -v
+        b2 --help
       displayName: Bootstrap
 
   - job: 'macOS'
@@ -177,7 +185,11 @@ stages:
         CXX_PATH=`which ${CXX}`
         echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         ./bootstrap.sh ${TOOLSET}
-        ./b2 --prefix=./.b2 install ${TEST_TOOLSET}
+        ./b2 --prefix=$HOME/temp/.b2 install ${TEST_TOOLSET}
+        rm ./b2
+        export PATH=$HOME/temp/.b2/bin:$PATH
+        b2 -b
+        b2 --help
       displayName: Bootstrap
 
 - stage: Boost
