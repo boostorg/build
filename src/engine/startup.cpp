@@ -195,7 +195,7 @@ bool b2::startup::bootstrap(FRAME *frame)
     {
         const std::string path{
             b2::paths::normalize(
-                b2_exe_path + "/../../share/boost-build/" + boost_build_jam)};
+                b2_exe_path + "/../../share/boost-build/src/kernel/" + boost_build_jam)};
         if (b2::filesys::is_file(path))
             b2_file_path = path;
     }

@@ -89,6 +89,7 @@ stages:
         ./b2 --prefix=$HOME/temp/.b2 install ${TEST_TOOLSET}
         rm ./b2
         export PATH=$HOME/temp/.b2/bin:$PATH
+        cd $HOME
         b2 -v
         b2 -n --debug-configuration
       displayName: Bootstrap
@@ -130,6 +131,7 @@ stages:
         ./b2.exe --debug-configuration --prefix=${env:HOME}/temp/.b2 install toolset=$env:TEST_TOOLSET
         Remove-Item ./b2.exe
         $env:path += $env:HOME + '/temp/.b2/bin' + ';' + $env:PATH
+        cd $env:HOME
         b2 -v
         b2 -n --debug-configuration
       displayName: Bootstrap
@@ -188,6 +190,7 @@ stages:
         ./b2 --prefix=$HOME/temp/.b2 install ${TEST_TOOLSET}
         rm ./b2
         export PATH=$HOME/temp/.b2/bin:$PATH
+        cd $HOME
         b2 -v
         b2 -n --debug-configuration
       displayName: Bootstrap
