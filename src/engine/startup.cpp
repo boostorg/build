@@ -200,10 +200,12 @@ bool b2::startup::bootstrap(FRAME *frame)
             b2_file_path = path;
     }
 
-    // Check the BOOST_BUILD_PATH paths.
+    // Check the BOOST_BUILD_PATH (and BOOST_ROOT) paths.
     if (b2_file_path.empty())
     {
         b2::jam::list BOOST_BUILD_PATH = b2::jam::variable{"BOOST_BUILD_PATH"};
+        // For back-compat with Boost we also search in the BOOST_ROOT location.
+        BOOST_BUILD_PATH.append(b2::jam::list(b2::jam::variable{"BOOST_ROOT"}));
         for (auto search_path: BOOST_BUILD_PATH)
         {
             std::string path = b2::jam::object{search_path};
