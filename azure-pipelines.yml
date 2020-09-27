@@ -90,6 +90,7 @@ stages:
         rm ./b2
         export PATH=$HOME/temp/.b2/bin:$PATH
         cd $HOME
+        touch build.jam
         b2 -v
         b2 -n --debug-configuration
       displayName: Bootstrap
@@ -132,6 +133,7 @@ stages:
         Remove-Item ./b2.exe
         $env:path += $env:HOME + '/temp/.b2/bin' + ';' + $env:PATH
         cd $env:HOME
+        echo $null >> build.jam
         b2 -v
         b2 -n --debug-configuration
       displayName: Bootstrap
@@ -191,6 +193,7 @@ stages:
         rm ./b2
         export PATH=$HOME/temp/.b2/bin:$PATH
         cd $HOME
+        touch build.jam
         b2 -v
         b2 -n --debug-configuration
       displayName: Bootstrap
