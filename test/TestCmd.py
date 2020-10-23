@@ -362,7 +362,7 @@ class TestCmd:
         directories to be preserved for all conditions.
 
         """
-        if conditions is ():
+        if conditions == ():
             conditions = ('pass_test', 'fail_test', 'no_result')
         for cond in conditions:
             self._preserve[cond] = 1
