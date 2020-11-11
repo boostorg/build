@@ -85,24 +85,24 @@ test_cxx11 ()
     fi
     if ! test $NO_CXX11_CHECK ; then
         case $1 in
-            gcc) ( ${CXX:=g++} ${CXXFLAGS} -x c++ -std=c++11 -c check_cxx11.cpp && rm -f check_cxx11.o* ) 1>/dev/null 2>/dev/null ;;
-            intel-darwin) ( ${CXX:=icc} ${CXXFLAGS} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            intel-linux) ( ${CXX:=icpc} ${CXXFLAGS} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            vacpp) ( ${CXX:=xlC_r} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            xlcpp) ( ${CXX:=xlC_r} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            como) ( ${CXX:=como} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            kcc) ( ${CXX:=KCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            kylix) ( ${CXX:=bc++} ${CXXFLAGS} -tC -q check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            mipspro) ( ${CXX:=CC} ${CXXFLAGS} -FE:template_in_elf_section -ptused check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            pathscale) ( ${CXX:=pathCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            pgi) ( ${CXX:=pgc++} ${CXXFLAGS} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            sun*) ( ${CXX:=CC} ${CXXFLAGS} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            clang*) ( ${CXX:=clang++} ${CXXFLAGS} -x c++ -std=c++11 -c check_cxx11.cpp && rm -f check_cxx11.o* ) 1>/dev/null 2>/dev/null ;;
-            tru64cxx) ( ${CXX:=cc} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            acc) ( ${CXX:=aCC} ${CXXFLAGS} -AA check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            qcc) ( ${CXX:=QCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            cxx) ( ${CXX:=cxx} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
-            cross-cxx) ( ${BUILD_CXX:=cxx} ${BUILD_CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null 2>/dev/null ;;
+            gcc) ( ${CXX:=g++} ${CXXFLAGS} -x c++ -std=c++11 -c check_cxx11.cpp && rm -f check_cxx11.o* ) 1>/dev/null ;;
+            intel-darwin) ( ${CXX:=icc} ${CXXFLAGS} -xc++ check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            intel-linux) ( ${CXX:=icpc} ${CXXFLAGS} -x c++ -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            vacpp) ( ${CXX:=xlC_r} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            xlcpp) ( ${CXX:=xlC_r} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            como) ( ${CXX:=como} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            kcc) ( ${CXX:=KCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            kylix) ( ${CXX:=bc++} ${CXXFLAGS} -tC -q check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            mipspro) ( ${CXX:=CC} ${CXXFLAGS} -FE:template_in_elf_section -ptused check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            pathscale) ( ${CXX:=pathCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            pgi) ( ${CXX:=pgc++} ${CXXFLAGS} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            sun*) ( ${CXX:=CC} ${CXXFLAGS} -std=c++11 check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            clang*) ( ${CXX:=clang++} ${CXXFLAGS} -x c++ -std=c++11 -c check_cxx11.cpp && rm -f check_cxx11.o* ) 1>/dev/null ;;
+            tru64cxx) ( ${CXX:=cc} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            acc) ( ${CXX:=aCC} ${CXXFLAGS} -AA check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            qcc) ( ${CXX:=QCC} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            cxx) ( ${CXX:=cxx} ${CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
+            cross-cxx) ( ${BUILD_CXX:=cxx} ${BUILD_CXXFLAGS} check_cxx11.cpp && rm -f a.out ) 1>/dev/null ;;
             *) test "0" = "1" ;;
         esac
     else
