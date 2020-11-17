@@ -485,6 +485,29 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).compile CFLAGS $(conditions) : "/Zc:throwingNew" ;
     }
 
+    # 14.27 (VS2019 Version 16.7) introduced support for ASAN on x86 and x64 CPUs
+    # This check however now only tests for 14.2 (which is 16.0) as msvc.jam doesn't distinguish between minor versions (e.g. 14.21..14.28 etc)
+    if ! [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 14 2 ]
+    {
+        # Declare flags for the address sanitizer.
+        toolset.flags msvc.compile.c OPTIONS <address-sanitizer>on : /fsanitize=address /FS ;
+        toolset.flags msvc.compile.c++ OPTIONS <address-sanitizer>on : /fsanitize=address /FS ;
+
+        # Declare flags for the address sanitizer.
+        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>shared/<main-target-type>EXE : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-x86_64.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-x86_64.lib" ;
+        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>static/<main-target-type>EXE : -incremental\:no /wholearchive\:"clang_rt.asan-x86_64.lib" /wholearchive\:"clang_rt.asan_cxx-x86_64.lib" ;
+        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>shared/<main-target-type>EXE : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-i386.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-i386.lib" ;
+        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>EXE : -incremental\:no /wholearchive\:"clang_rt.asan-i386.lib" /wholearchive\:"clang_rt.asan_cxx-i386.lib" ;
+        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>shared/<main-target-type>UNIT_TEST : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-x86_64.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-x86_64.lib" ;
+        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>static/<main-target-type>UNIT_TEST : -incremental\:no /wholearchive\:"clang_rt.asan-x86_64.lib" /wholearchive\:"clang_rt.asan_cxx-x86_64.lib" ;
+        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>shared/<main-target-type>UNIT_TEST : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-i386.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-i386.lib" ;
+        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>UNIT_TEST : -incremental\:no /wholearchive\:"clang_rt.asan-i386.lib" /wholearchive\:"clang_rt.asan_cxx-i386.lib" ;
+        toolset.flags msvc.link.dll OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>shared : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-x86_64.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-x86_64.lib" ;
+        toolset.flags msvc.link.dll OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>static : -incremental\:no /wholearchive\:"clang_rt.asan_dll_thunk-x86_64.lib" ;
+        toolset.flags msvc.link.dll OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>shared : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-i386.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-i386.lib" ;
+        toolset.flags msvc.link.dll OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>static : -incremental\:no /wholearchive\:"clang_rt.asan_dll_thunk-i386.lib" ;
+    }
+
     #
     # Processor-specific optimization.
     #
@@ -1881,10 +1904,6 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile INCLUDES <include> ;
     toolset.flags msvc.compile FORCE_INCLUDES <force-include> ;
 
-    # Declare flags for the address sanitizer.
-    toolset.flags msvc.compile.c OPTIONS <address-sanitizer>on : -fsanitize=address /FS ;
-    toolset.flags msvc.compile.c++ OPTIONS <address-sanitizer>on : -fsanitize=address /FS ;
-
     # Declare flags for the assembler.
     toolset.flags msvc.compile.asm USER_ASMFLAGS <asmflags> ;
 
@@ -1923,20 +1942,6 @@ local rule register-toolset-really ( )
         toolset.flags msvc.link LIBRARIES_MENTIONED_BY_FILE : <library-file> ;
 
         toolset.flags msvc.link.dll LINKFLAGS <suppress-import-lib>true : /NOENTRY ;
-
-        # Declare flags for the address sanitizer.
-        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>shared/<main-target-type>EXE : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-x86_64.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-x86_64.lib" ;
-        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>static/<main-target-type>EXE : -incremental\:no /wholearchive\:"clang_rt.asan-x86_64.lib" /wholearchive\:"clang_rt.asan_cxx-x86_64.lib" ;
-        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>shared/<main-target-type>EXE : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-i386.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-i386.lib" ;
-        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>EXE : -incremental\:no /wholearchive\:"clang_rt.asan-i386.lib" /wholearchive\:"clang_rt.asan_cxx-i386.lib" ;
-        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>shared/<main-target-type>UNIT_TEST : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-x86_64.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-x86_64.lib" ;
-        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>static/<main-target-type>UNIT_TEST : -incremental\:no /wholearchive\:"clang_rt.asan-x86_64.lib" /wholearchive\:"clang_rt.asan_cxx-x86_64.lib" ;
-        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>shared/<main-target-type>UNIT_TEST : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-i386.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-i386.lib" ;
-        toolset.flags msvc.link OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>static/<main-target-type>UNIT_TEST : -incremental\:no /wholearchive\:"clang_rt.asan-i386.lib" /wholearchive\:"clang_rt.asan_cxx-i386.lib" ;
-        toolset.flags msvc.link.dll OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>shared : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-x86_64.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-x86_64.lib" ;
-        toolset.flags msvc.link.dll OPTIONS <address-sanitizer>on/<address-model>64/<runtime-link>static : -incremental\:no /wholearchive\:"clang_rt.asan_dll_thunk-x86_64.lib" ;
-        toolset.flags msvc.link.dll OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>shared : -incremental\:no /wholearchive\:"clang_rt.asan_dynamic-i386.lib" /wholearchive\:"clang_rt.asan_dynamic_runtime_thunk-i386.lib" ;
-        toolset.flags msvc.link.dll OPTIONS <address-sanitizer>on/<address-model>32/<runtime-link>static : -incremental\:no /wholearchive\:"clang_rt.asan_dll_thunk-i386.lib" ;
     }
 
     toolset.flags msvc.archive AROPTIONS <archiveflags> ;
