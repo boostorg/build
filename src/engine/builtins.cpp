@@ -30,6 +30,7 @@
 #include "output.h"
 
 #include <ctype.h>
+#include <stdlib.h>
 
 #ifdef OS_NT
 #include <windows.h>
