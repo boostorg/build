@@ -94,7 +94,7 @@ actions compile.c++
 
 actions archive
 {
-    "$(CONFIG_COMMAND)" $(AROPTIONS) -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(AROPTIONS) -r -o "$(<)" "$(>)"
 }
 
 toolset.flags emscripten.link USER_OPTIONS <linkflags> ;
