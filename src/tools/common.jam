@@ -929,6 +929,7 @@ local rule toolset-tag ( name : type ? : property-set )
         case cw : tag += cw ;
         case darwin* : tag += xgcc ;
         case edg* : tag += edg ;
+        case embarcadero* : tag += bcb ;
         case gcc* :
         {
             switch [ $(property-set).get <target-os> ]
