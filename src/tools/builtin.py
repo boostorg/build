@@ -82,9 +82,9 @@ def variant (name, parents_or_properties, explicit_properties = []):
     feature.compose ("<variant>" + name, explicit_properties.all())
 
 __os_names = """
-    amiga aix appletv bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
-    openbsd osf qnx qnxnto sgi solaris sun sunos svr4 sysv ultrix unix unixware
-    vms windows
+    amiga aix appletv bsd cygwin darwin dos emx freebsd hpux hurd iphone linux
+    netbsd openbsd osf qnx qnxnto sgi solaris sun sunos svr4 sysv ultrix unix
+    unixware vms windows
 """.split()
 
 # Translates from bjam current OS to the os tags used in host-os and target-os,
