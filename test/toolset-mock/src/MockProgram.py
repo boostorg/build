@@ -1,3 +1,4 @@
+# coding: utf-8
 # Copyright 2017 Steven Watanabe
 # Copyright 2020 René Ferdinand Rivera Morell
 #

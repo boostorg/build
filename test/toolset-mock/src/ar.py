@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# coding: utf-8
 #
 # Copyright 2017-2018 Steven Watanabe
 # Copyright 2020 René Ferdinand Rivera Morell
