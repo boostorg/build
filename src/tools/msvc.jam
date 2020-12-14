@@ -587,7 +587,7 @@ if [ os.name ] in NT
     actions archive
     {
         if exist "$(<[1])" DEL "$(<[1])"
-        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @($(<[1]:W).rsp:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")
     }
 }
 else
@@ -595,7 +595,7 @@ else
     actions archive
     {
         $(.RM) "$(<[1])"
-        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(AROPTIONS) /out:"$(<[1])" @($(<[1]:W).rsp:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")
     }
 }
 
@@ -668,12 +668,12 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #
 actions compile-c-c++ bind PDB_NAME
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:<=@":>=":E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
 }
 
 actions preprocess-c-c++ bind PDB_NAME
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:<=@":>=":E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -700,7 +700,7 @@ rule preprocess-c-c++ ( targets + : sources * )
 # syntax highlighting in the messy N-quoted code below.
 actions compile-c-c++-pch
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" "@($(<[1]:W).cpp:E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:<=@":>=":E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) @($(<[1]:W).cpp:<=":>=":E=#include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl)) $(.CC.FILTER)
 }
 
 
@@ -709,7 +709,7 @@ actions compile-c-c++-pch
 # given as one of the source parameters.
 actions compile-c-c++-pch-s
 {
-    $(.SETUP) $(.CC) @"@($(<[1]:W).rsp:E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:<=@":>=":E="$(>[2]:W)" -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
 }
 
 
@@ -754,7 +754,7 @@ rule compile.idl ( targets + : sources * : properties * )
 #
 actions compile.idl
 {
-    $(.SETUP) $(.IDL) /nologo @"@($(<[1]:W).rsp:E=$(.nl)"$(>:W)" $(.nl)-D$(DEFINES) $(.nl)"-I$(INCLUDES:W)" $(.nl)-U$(UNDEFS) $(.nl)$(MIDLFLAGS) $(.nl)/tlb "$(<[1]:W)" $(.nl)/h "$(<[2]:W)" $(.nl)/iid "$(<[3]:W)" $(.nl)/proxy "$(<[4]:W)" $(.nl)/dlldata "$(<[5]:W)")"
+    $(.SETUP) $(.IDL) /nologo @($(<[1]:W).rsp:<=@":>=":E="$(>:W)" -D$(DEFINES) "-I$(INCLUDES:W)" -U$(UNDEFS) $(MIDLFLAGS) /tlb "$(<[1]:W)" /h "$(<[2]:W)" /iid "$(<[3]:W)" /proxy "$(<[4]:W)" /dlldata "$(<[5]:W)")
     $(.TOUCH_FILE) "$(<[4]:W)"
     $(.TOUCH_FILE) "$(<[5]:W)"
 }
@@ -846,7 +846,7 @@ rule link.dll ( targets + : sources * : properties * )
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @($(<[1]:W).rsp:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")
     }
 
     actions manifest
@@ -861,7 +861,7 @@ rule link.dll ( targets + : sources * : properties * )
 
     actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @"@($(<[1]:W).rsp:E=$(.nl)"$(>)" $(.nl)$(LIBRARIES_MENTIONED_BY_FILE) $(.nl)$(LIBRARIES) $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" $(.nl)"$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")"
+        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @($(<[1]:W).rsp:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")
     }
 
     actions manifest.dll
@@ -1694,8 +1694,8 @@ local rule default-path ( version )
 rule get-rspline ( target : lang-opt )
 {
     CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS)
-        $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c $(.nl)-D$(DEFINES)
-        $(.nl)\"-I$(INCLUDES:W)\" $(.nl)\"-FI$(FORCE_INCLUDES:W)\" ] ;
+        $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c -D$(DEFINES)
+        \"-I$(INCLUDES:W)\" \"-FI$(FORCE_INCLUDES:W)\" ] ;
 }
 
 class msvc-linking-generator : linking-generator
@@ -1922,6 +1922,11 @@ local rule register-toolset-really ( )
 
     toolset.flags msvc.archive AROPTIONS <archiveflags> ;
 
+    # Enable response file control
+    toolset.flags msvc RESPONSE_FILE_SUB <response-file>auto : a ;
+    toolset.flags msvc RESPONSE_FILE_SUB <response-file>file : f ;
+    toolset.flags msvc RESPONSE_FILE_SUB <response-file>contents : c ;
+
     # Create a project to allow building the setup scripts
     project.initialize $(__name__) ;
     .project = [ project.current ] ;
@@ -1990,6 +1995,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .RM = [ common.rm-command ] ;
 .nl = "
 " ;
+_ = " " ;
 .ProgramFiles = [ path.make [ common.get-program-files-dir ] ] ;
 .escaped-double-quote = "\"" ;
 .TOUCH_FILE = [ common.file-touch-command ] ;
