@@ -14,6 +14,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "output.h"
 #include "variable.h"
 
+#include <stdlib.h>
 #include <string>
 #include <algorithm>
 

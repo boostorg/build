@@ -160,9 +160,9 @@ set "_known_=1"
 goto :eof
 
 :Config_BORLAND
-if not defined CXX ( set "CXX=bcc32" )
+if not defined CXX ( set "CXX=bcc32c" )
 if "_%B2_TOOLSET_ROOT%_" == "__" (
-    call guess_toolset.bat test_path bcc32.exe )
+    call guess_toolset.bat test_path bcc32c.exe )
 if "_%B2_TOOLSET_ROOT%_" == "__" (
     if not errorlevel 1 (
         set "B2_TOOLSET_ROOT=%FOUND_PATH%..\"
@@ -170,7 +170,7 @@ if "_%B2_TOOLSET_ROOT%_" == "__" (
 if not "_%B2_TOOLSET_ROOT%_" == "__" (
     set "PATH=%B2_TOOLSET_ROOT%Bin;%PATH%"
     )
-set "B2_CXX=%CXX% -tC -P -O2 -w- -I"%B2_TOOLSET_ROOT%Include" -L"%B2_TOOLSET_ROOT%Lib" -Nd -eb2"
+set "B2_CXX=%CXX% -tC -P -O2 -w- -I"%B2_TOOLSET_ROOT%Include" -L"%B2_TOOLSET_ROOT%Lib" -eb2"
 set "_known_=1"
 goto :eof
 
