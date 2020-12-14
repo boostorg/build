@@ -112,4 +112,8 @@ int is_raw_command_request( LIST * shell );
 int check_cmd_for_too_long_lines( char const * command, int32_t max,
     int32_t * const error_length, int32_t * const error_max_length );
 
+/* Maximum shell command line length.
+ */
+int32_t shell_maxline();
+
 #endif

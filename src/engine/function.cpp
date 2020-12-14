@@ -13,6 +13,7 @@
 #include "compile.h"
 #include "constants.h"
 #include "debugger.h"
+#include "execcmd.h"
 #include "filesys.h"
 #include "frames.h"
 #include "lists.h"
@@ -28,6 +29,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <string>
 
 /*
 #define FUNCTION_DEBUG_PROFILE
@@ -628,9 +631,17 @@ typedef struct
     char     to_windows;  /* :W -- convert cygwin to native paths */
     PATHPART empty;       /* :E -- default for empties */
     PATHPART join;        /* :J -- join list with char */
+    PATHPART prefix;      /* :< */
+    PATHPART postfix;     /* :> */
 } VAR_EDITS;
 
-static LIST * apply_modifiers_impl( LIST * result, string * buf,
+struct VAR_EXPANDED
+{
+    LIST * value = L0;
+    LIST * inner = L0;
+};
+
+static VAR_EXPANDED apply_modifiers_impl( LIST * result, string * buf,
     VAR_EDITS * edits, int32_t n, LISTITER iter, LISTITER end );
 static void get_iters( subscript_t const subscript, LISTITER * const first,
     LISTITER * const last, int32_t const length );
@@ -693,6 +704,8 @@ static int32_t var_edit_parse( char const * mods, VAR_EDITS * edits, int32_t hav
             case 'M': fp = &edits->f.f_member; goto fileval;
             case 'T': edits->to_slashes = 1; continue;
             case 'W': edits->to_windows = 1; continue;
+            case '<': fp = &edits->prefix; goto strval;
+            case '>': fp = &edits->postfix; goto strval;
             default:
                 continue;  /* Should complain, but so what... */
         }
@@ -873,16 +886,34 @@ static int32_t expand_modifiers( STACK * s, int32_t n )
     return total;
 }
 
-static LIST * apply_modifiers( STACK * s, int32_t n )
+static VAR_EXPANDED apply_modifiers( STACK * s, int32_t n )
 {
     LIST * value = stack_top( s );
-    LIST * result = L0;
+    VAR_EXPANDED result;
     VAR_EDITS * const edits = (VAR_EDITS *)( (LIST * *)stack_get( s ) + 1 );
     string buf[ 1 ];
     string_new( buf );
-    result = apply_modifiers_impl( result, buf, edits, n, list_begin( value ),
+    result = apply_modifiers_impl( L0, buf, edits, n, list_begin( value ),
         list_end( value ) );
     string_free( buf );
+    return result;
+}
+
+// STACK: LIST * modifiers[modifier_count]
+static VAR_EXPANDED eval_modifiers( STACK * s, LIST * value, int32_t modifier_count )
+{
+    // Convert modifiers to value edits.
+    int32_t edits = expand_modifiers( s, modifier_count );
+    // Edit the value on the stack.
+    stack_push( s, value );
+    VAR_EXPANDED result = apply_modifiers( s, edits );
+    list_free( stack_pop( s ) );
+    // Clean up the value edits on the stack.
+    stack_deallocate( s, edits * sizeof( VAR_EDITS ) );
+    // Clean up the filename modifiers.
+    for ( int32_t i = 0; i < modifier_count; ++i )
+        list_free( stack_pop( s ) );
+    // Done.
     return result;
 }
 
@@ -1027,6 +1058,32 @@ static void get_iters( subscript_t const subscript, LISTITER * const first,
     *last = end;
 }
 
+static LIST * apply_modifiers_prepost( LIST * result, string * buf,
+    VAR_EDITS * edits, int32_t n, LISTITER begin, LISTITER end )
+{
+    for ( LISTITER iter = begin; iter != end; iter = list_next( iter ) )
+    {
+        for ( int32_t i = 0; i < n; ++i )
+        {
+            if ( edits[ i ].prefix.ptr )
+            {
+                string_append( buf, edits[ i ].prefix.ptr );
+            }
+        }
+        string_append( buf, object_str( list_item( iter ) ) );
+        for ( int32_t i = 0; i < n; ++i )
+        {
+            if ( edits[ i ].postfix.ptr )
+            {
+                string_append( buf, edits[ i ].postfix.ptr );
+            }
+        }
+        result = list_push_back( result, object_new( buf->value ) );
+        string_truncate( buf, 0 );
+    }
+    return result;
+}
+
 static LIST * apply_modifiers_empty( LIST * result, string * buf,
     VAR_EDITS * edits, int32_t n )
 {
@@ -1083,12 +1140,17 @@ static LIST * apply_modifiers_non_empty( LIST * result, string * buf,
     return result;
 }
 
-static LIST * apply_modifiers_impl( LIST * result, string * buf,
+static VAR_EXPANDED apply_modifiers_impl( LIST * result, string * buf,
     VAR_EDITS * edits, int32_t n, LISTITER iter, LISTITER end )
 {
-    return iter == end
+    LIST * modified = iter == end
         ? apply_modifiers_empty( result, buf, edits, n )
         : apply_modifiers_non_empty( result, buf, edits, n, iter, end );
+    VAR_EXPANDED expanded;
+    expanded.value = apply_modifiers_prepost(
+        L0, buf, edits, n, list_begin( modified ), list_end( modified ) );
+    expanded.inner = modified;
+    return expanded;
 }
 
 static LIST * apply_subscript_and_modifiers( STACK * s, int32_t n )
@@ -1110,7 +1172,10 @@ static LIST * apply_subscript_and_modifiers( STACK * s, int32_t n )
         subscript_t const sub = parse_subscript( object_str( list_item(
             indices_iter ) ) );
         get_iters( sub, &iter, &end, length );
-        result = apply_modifiers_impl( result, buf, edits, n, iter, end );
+        VAR_EXPANDED modified
+            = apply_modifiers_impl( result, buf, edits, n, iter, end );
+        result = modified.value;
+        list_free( modified.inner );
     }
     string_free( buf );
     return result;
@@ -1256,6 +1321,7 @@ struct dynamic_array
 {
     int32_t size;
     int32_t capacity;
+    int32_t unit_size;
     void * data;
 };
 
@@ -1263,6 +1329,7 @@ static void dynamic_array_init( struct dynamic_array * array )
 {
     array->size = 0;
     array->capacity = 0;
+    array->unit_size = 0;
     array->data = 0;
 }
 
@@ -1274,6 +1341,14 @@ static void dynamic_array_free( struct dynamic_array * array )
 static void dynamic_array_push_impl( struct dynamic_array * const array,
     void const * const value, int32_t const unit_size )
 {
+    if ( array->unit_size == 0 )
+    {
+        array->unit_size = unit_size;
+    }
+    else
+    {
+        assert( array->unit_size == unit_size );
+    }
     if ( array->capacity == 0 )
     {
         array->capacity = 2;
@@ -1293,7 +1368,7 @@ static void dynamic_array_push_impl( struct dynamic_array * const array,
 }
 
 #define dynamic_array_push( array, value ) (dynamic_array_push_impl(array, &value, sizeof(value)))
-#define dynamic_array_at( type, array, idx ) (((type *)(array)->data)[idx])
+#define dynamic_array_at( type, array, idx ) ( (assert( array->unit_size == sizeof(type) )) , (((type *)(array)->data)[idx]) )
 #define dynamic_array_pop( array ) (--(array)->size)
 
 /*
@@ -1611,14 +1686,50 @@ typedef struct
     OBJECT * s;
 } VAR_PARSE_STRING;
 
-typedef struct
-{
-    VAR_PARSE base;
-    struct dynamic_array filename[ 1 ];
-    struct dynamic_array contents[ 1 ];
-} VAR_PARSE_FILE;
-
 static void var_parse_free( VAR_PARSE * );
+
+static std::string var_parse_to_string( VAR_PARSE_STRING * string, bool debug = false );
+static std::string var_parse_to_string( VAR_PARSE_GROUP * group, bool debug = false );
+static std::string var_parse_to_string( VAR_PARSE_VAR const * parse, bool debug = false );
+
+static std::string var_parse_to_string( VAR_PARSE_STRING * string, bool debug )
+{
+    std::string result;
+    if ( debug ) result += "'";
+    result += object_str( string->s ) ?  object_str( string->s ) : "";
+    if ( debug ) result += "'";
+    return result;
+}
+static std::string var_parse_to_string( VAR_PARSE_GROUP * group, bool debug )
+{
+    std::string result;
+    if ( debug ) result += "[";
+    for ( int32_t i = 0; i < group->elems->size; ++i )
+    {
+        switch ( dynamic_array_at( VAR_PARSE *, group->elems, i )->type )
+        {
+            case VAR_PARSE_TYPE_VAR:
+            result += var_parse_to_string( dynamic_array_at( VAR_PARSE_VAR *, group->elems, i ), debug );
+            break;
+
+            case VAR_PARSE_TYPE_STRING:
+            result += var_parse_to_string( dynamic_array_at( VAR_PARSE_STRING *, group->elems, i ), debug );
+            break;
+        }
+    }
+    if ( debug ) result += "[";
+    return result;
+}
+static std::string var_parse_to_string( VAR_PARSE_VAR const * parse, bool debug )
+{
+    std::string result = "$(";
+    result += var_parse_to_string( parse->name, debug );
+    for ( int32_t i = 0; i < parse->modifiers->size; ++i )
+    {
+        result += ":" + var_parse_to_string( dynamic_array_at( VAR_PARSE_GROUP *, parse->modifiers, i ), debug );
+    }
+    return result + ")";
+}
 
 
 /*
@@ -1732,6 +1843,21 @@ static VAR_PARSE_GROUP * var_parse_var_new_modifier( VAR_PARSE_VAR * var )
     return result;
 }
 
+static int32_t var_parse_var_mod_index( VAR_PARSE_VAR const * var , char m)
+{
+    for ( int32_t i = 0; i < var->modifiers->size; ++i )
+    {
+        VAR_PARSE_GROUP * mod = dynamic_array_at( VAR_PARSE_GROUP *, var->modifiers, i );
+        VAR_PARSE_STRING * mod_val = dynamic_array_at( VAR_PARSE_STRING *, mod->elems, 0 );
+        const char * mod_str = object_str(mod_val->s);
+        if (mod_str && mod_str[0] == m)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 
 /*
  * VAR_PARSE_STRING
@@ -1745,35 +1871,6 @@ static void var_parse_string_free( VAR_PARSE_STRING * string )
 
 
 /*
- * VAR_PARSE_FILE
- */
-
-static VAR_PARSE_FILE * var_parse_file_new( void )
-{
-    VAR_PARSE_FILE * const result = (VAR_PARSE_FILE *)BJAM_MALLOC( sizeof(
-        VAR_PARSE_FILE ) );
-    result->base.type = VAR_PARSE_TYPE_FILE;
-    dynamic_array_init( result->filename );
-    dynamic_array_init( result->contents );
-    return result;
-}
-
-static void var_parse_file_free( VAR_PARSE_FILE * file )
-{
-    int32_t i;
-    for ( i = 0; i < file->filename->size; ++i )
-        var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *,
-            file->filename, i ) );
-    dynamic_array_free( file->filename );
-    for ( i = 0; i < file->contents->size; ++i )
-        var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *,
-            file->contents, i ) );
-    dynamic_array_free( file->contents );
-    BJAM_FREE( file );
-}
-
-
-/*
  * VAR_PARSE
  */
 
@@ -1782,15 +1879,12 @@ static void var_parse_free( VAR_PARSE * parse )
     switch ( parse->type )
     {
         case VAR_PARSE_TYPE_VAR:
+        case VAR_PARSE_TYPE_FILE:
             var_parse_var_free( (VAR_PARSE_VAR *)parse );
             break;
 
         case VAR_PARSE_TYPE_STRING:
             var_parse_string_free( (VAR_PARSE_STRING *)parse );
-            break;
-
-        case VAR_PARSE_TYPE_FILE:
-            var_parse_file_free( (VAR_PARSE_FILE *)parse );
             break;
 
         default:
@@ -1898,17 +1992,53 @@ static void var_parse_string_compile( VAR_PARSE_STRING const * parse,
         );
 }
 
-static void var_parse_file_compile( VAR_PARSE_FILE const * parse, compiler * c )
+static void parse_var_string( char const * first, char const * last,
+    struct dynamic_array * out );
+
+static void var_parse_file_compile( VAR_PARSE_VAR const * parse, compiler * c )
 {
-    int32_t i;
-    for ( i = 0; i < parse->filename->size; ++i )
-        var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *,
-            parse->filename, parse->filename->size - i - 1 ), c );
-    compile_emit( c, INSTR_APPEND_STRINGS, parse->filename->size );
-    for ( i = 0; i < parse->contents->size; ++i )
-        var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *,
-            parse->contents, parse->contents->size - i - 1 ), c );
-    compile_emit( c, INSTR_WRITE_FILE, parse->contents->size );
+    std::string var = var_parse_to_string( parse, true );
+    int32_t empty_mod_index = var_parse_var_mod_index( parse, 'E' );
+    int32_t grist_mod_index = var_parse_var_mod_index( parse, 'G' );
+    int32_t modifier_count = 0;
+    // Push the contents, aka the edit modifier value.
+    {
+        assert( empty_mod_index >= 0 );
+        // We reparse the edit modifier as we do teh expansion differently than
+        // regular var expansion.
+        std::string contents_val = var_parse_to_string(
+            dynamic_array_at(
+                VAR_PARSE_GROUP *, parse->modifiers, empty_mod_index ), false );
+        dynamic_array contents_dyn_array;
+        dynamic_array_init( &contents_dyn_array );
+        parse_var_string(
+            contents_val.c_str() + 2, contents_val.c_str() + contents_val.size(),
+            &contents_dyn_array );
+        for ( int32_t i = contents_dyn_array.size - 1; i >= 0; --i )
+        {
+            var_parse_group_compile( dynamic_array_at(
+                VAR_PARSE_GROUP *, ( &contents_dyn_array ), i ), c );
+        }
+        dynamic_array_free( &contents_dyn_array );
+        compile_emit( c, INSTR_APPEND_STRINGS, contents_dyn_array.size );
+    }
+    // If there are modifiers, emit them in reverse order.
+    if ( parse->modifiers->size > 0 )
+    {
+        for ( int32_t i = parse->modifiers->size - 1; i >= 0; --i )
+        {
+            // Skip special modifiers.
+            if ( i == empty_mod_index || i == grist_mod_index ) continue;
+            modifier_count += 1;
+            var_parse_group_compile(
+                dynamic_array_at( VAR_PARSE_GROUP *, parse->modifiers, i ), c );
+        }
+    }
+    // Push the filename, aka var name.
+    var_parse_group_compile( parse->name, c );
+    // This instruction applies the modifiers and writes out the file and fills
+    // in the file name.
+    compile_emit( c, INSTR_WRITE_FILE, modifier_count );
 }
 
 static void var_parse_compile( VAR_PARSE const * parse, compiler * c )
@@ -1924,7 +2054,7 @@ static void var_parse_compile( VAR_PARSE const * parse, compiler * c )
             break;
 
         case VAR_PARSE_TYPE_FILE:
-            var_parse_file_compile( (VAR_PARSE_FILE const *)parse, c );
+            var_parse_file_compile( (VAR_PARSE_VAR const *)parse, c );
             break;
 
         default:
@@ -1964,8 +2094,6 @@ static void var_parse_actions_compile( VAR_PARSE_ACTIONS const * actions,
  * Parse VAR_PARSE_VAR
  */
 
-static VAR_PARSE * parse_at_file( char const * start, char const * mid,
-    char const * end );
 static VAR_PARSE * parse_variable( char const * * string );
 static int32_t try_parse_variable( char const * * s_, char const * * string,
     VAR_PARSE_GROUP * out );
@@ -2026,36 +2154,18 @@ static int32_t try_parse_variable( char const * * s_, char const * * string,
     }
     if ( s[ 0 ] == '@' && s[ 1 ] == '(' )
     {
-        int32_t depth = 1;
-        char const * ine;
-        char const * split = 0;
         var_parse_group_maybe_add_constant( out, *string, s );
         s += 2;
-        ine = s;
-
-        /* Scan the content of the response file @() section. */
-        while ( *ine && ( depth > 0 ) )
+        VAR_PARSE_VAR *vp = (VAR_PARSE_VAR*)parse_variable( &s );
+        /* We at least need the empty (:E) modifier. */
+        if (var_parse_var_mod_index(vp, 'E') >= 0)
         {
-            switch ( *ine )
-            {
-            case '(': ++depth; break;
-            case ')': --depth; break;
-            case ':':
-                if ( ( depth == 1 ) && ( ine[ 1 ] == 'E' ) && ( ine[ 2 ] == '='
-                    ) )
-                    split = ine;
-                break;
-            }
-            ++ine;
+            vp->base.type = VAR_PARSE_TYPE_FILE;
+            var_parse_group_add( out, (VAR_PARSE*)vp );
+            *string = s;
+            *s_ = s;
+            return 1;
         }
-
-        if ( !split || depth )
-            return 0;
-
-        var_parse_group_add( out, parse_at_file( s, split, ine - 1 ) );
-        *string = ine;
-        *s_ = ine;
-        return 1;
     }
     return 0;
 }
@@ -2219,20 +2329,6 @@ static void parse_var_string( char const * first, char const * last,
             dynamic_array_push( out, group );
         }
     }
-}
-
-/*
- * start should point to the character immediately following the opening "@(",
- * mid should point to the ":E=", and end should point to the closing ")".
- */
-
-static VAR_PARSE * parse_at_file( char const * start, char const * mid,
-    char const * end )
-{
-    VAR_PARSE_FILE * result = var_parse_file_new();
-    parse_var_string( start, mid, result->filename );
-    parse_var_string( mid + 3, end, result->contents );
-    return (VAR_PARSE *)result;
 }
 
 /*
@@ -3859,6 +3955,146 @@ void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s,
     stack_deallocate( s, sizeof( string * ) );
 }
 
+// Result is either the filename or contents depending on:
+// 1. If the RESPONSE_FILE_SUB == f or not set (it's filename)
+// 2. If the RESPONSE_FILE_SUB == c (it's contents)
+// 3. If the RESPONSE_FILE_SUB == a (depends on the length of contents)
+// Note, returns a *copy* of the filename or contents.
+LIST * function_execute_write_file(
+    JAM_FUNCTION * function, FRAME * frame, STACK * s,
+    VAR_EXPANDED filename, LIST * contents )
+{
+    LIST * filename_or_contents_result = nullptr;
+
+    LIST * response_file_sub = function_get_named_variable(
+        function, frame, constant_RESPONSE_FILE_SUB );
+    char response_file_sub_c
+        = response_file_sub && list_front( response_file_sub )
+        ? object_str( list_front( response_file_sub ) )[0]
+        : 'f';
+    list_free( response_file_sub );
+    const char * contents_str = object_str( list_front( contents ) );
+    if ( response_file_sub_c == 'a' )
+    {
+        if ( int32_t( strlen( contents_str ) + 256 ) > shell_maxline() )
+            response_file_sub_c = 'f';
+        else
+            response_file_sub_c = 'c';
+    }
+    if ( response_file_sub_c == 'c' )
+    {
+        filename_or_contents_result = list_copy( contents );
+    }
+    else
+    {
+        char const * out = object_str( list_front( filename.inner ) );
+        OBJECT * tmp_filename = nullptr;
+        FILE * out_file = nullptr;
+        bool out_debug = DEBUG_EXEC;
+
+        /* For stdout/stderr we will create a temp file and generate a
+        * command that outputs the content as needed.
+        */
+        if ( ( strcmp( "STDOUT", out ) == 0 ) ||
+            ( strcmp( "STDERR", out ) == 0 ) )
+        {
+            int32_t err_redir = strcmp( "STDERR", out ) == 0;
+            string result[ 1 ];
+
+            tmp_filename = path_tmpfile();
+
+            /* Construct os-specific cat command. */
+            {
+                const char * command = "cat";
+                const char * quote = "\"";
+                const char * redirect = "1>&2";
+
+                #ifdef OS_NT
+                command = "type";
+                quote = "\"";
+                #elif defined( OS_VMS )
+                command = "pipe type";
+                quote = "";
+
+                /* Get tmp file name in os-format. */
+                {
+                    string os_filename[ 1 ];
+
+                    string_new( os_filename );
+                    path_translate_to_os( object_str( tmp_filename ), os_filename );
+                    object_free( tmp_filename );
+                    tmp_filename = object_new( os_filename->value );
+                    string_free( os_filename );
+                }
+                #endif
+
+                string_new( result );
+                string_append( result, command );
+                string_append( result, " " );
+                string_append( result, quote );
+                string_append( result, object_str( tmp_filename ) );
+                string_append( result, quote );
+                if ( err_redir )
+                {
+                    string_append( result, " " );
+                    string_append( result, redirect );
+                }
+            }
+
+            /* Replace STDXXX with the temporary file. */
+            filename_or_contents_result = list_new( object_new( result->value ) );
+            out = object_str( tmp_filename );
+
+            string_free( result );
+
+            /* Make sure temp files created by this get nuked eventually. */
+            file_remove_atexit( tmp_filename );
+        }
+        else
+        {
+            filename_or_contents_result = list_copy( filename.value );
+        }
+
+        if ( !globs.noexec )
+        {
+            string out_name[ 1 ];
+            /* Handle "path to file" filenames. */
+            if ( ( out[ 0 ] == '"' ) && ( out[ strlen( out ) - 1 ] == '"' )
+                )
+            {
+                string_copy( out_name, out + 1 );
+                string_truncate( out_name, out_name->size - 1 );
+            }
+            else
+                string_copy( out_name, out );
+            out_file = fopen( out_name->value, "w" );
+
+            if ( !out_file )
+            {
+                err_printf( "[errno %d] failed to write output file '%s': %s",
+                    errno, out_name->value, strerror(errno) );
+                exit( EXITBAD );
+            }
+            string_free( out_name );
+        }
+
+        if ( out_debug ) out_printf( "\nfile %s\n", out );
+        if ( out_file ) fputs( object_str( list_front( contents ) ), out_file );
+        if ( out_debug ) out_puts( object_str( list_front( contents ) ) );
+        if ( out_file )
+        {
+            fflush( out_file );
+            fclose( out_file );
+        }
+        if ( tmp_filename )
+            object_free( tmp_filename );
+
+        if ( out_debug ) out_putc( '\n' );
+    }
+
+    return filename_or_contents_result;
+}
+
 /*
  * WARNING: The instruction set is tuned for Jam and is not really generic. Be
  * especially careful about stack push/pop.
@@ -4660,7 +4896,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             l = stack_pop( s );
             n = expand_modifiers( s, code->arg );
             stack_push( s, l );
-            l = apply_modifiers( s, n );
+            VAR_EXPANDED m = apply_modifiers( s, n );
+            l = m.value;
+            list_free( m.inner );
             list_free( stack_pop( s ) );
             stack_deallocate( s, n * sizeof( VAR_EDITS ) );
             for ( i = 0; i < code->arg; ++i )
@@ -4715,7 +4953,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             {
                 stack_push( s, function_get_named_variable( function, frame,
                     list_item( iter ) ) );
-                result = list_append( result, apply_modifiers( s, n ) );
+                VAR_EXPANDED m = apply_modifiers( s, n );
+                result = m.value;
+                list_free( m.inner );
                 list_free( stack_pop( s ) );
             }
             list_free( vars );
@@ -4932,114 +5172,27 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             break;
         }
 
+        // WRITE_FILE( LIST*1 filename,  LIST*1 modifiers[N], LIST*1 contents )
         case INSTR_WRITE_FILE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_WRITE_FILE);
-            string buf[ 1 ];
-            char const * out;
-            OBJECT * tmp_filename = 0;
-            int32_t out_debug = DEBUG_EXEC ? 1 : 0;
-            FILE * out_file = 0;
-            string_new( buf );
-            combine_strings( s, code->arg, buf );
-            out = object_str( list_front( stack_top( s ) ) );
-
-            /* For stdout/stderr we will create a temp file and generate a
-             * command that outputs the content as needed.
-             */
-            if ( ( strcmp( "STDOUT", out ) == 0 ) ||
-                ( strcmp( "STDERR", out ) == 0 ) )
+            // Get expanded filename.
+            LIST * filename = nullptr;
             {
-                int32_t err_redir = strcmp( "STDERR", out ) == 0;
-                string result[ 1 ];
-
-                tmp_filename = path_tmpfile();
-
-                /* Construct os-specific cat command. */
-                {
-                    const char * command = "cat";
-                    const char * quote = "\"";
-                    const char * redirect = "1>&2";
-
-                #ifdef OS_NT
-                    command = "type";
-                    quote = "\"";
-                #elif defined( OS_VMS )
-                    command = "pipe type";
-                    quote = "";
-
-                    /* Get tmp file name is os-format. */
-                    {
-                        string os_filename[ 1 ];
-
-                        string_new( os_filename );
-                        path_translate_to_os( object_str( tmp_filename ), os_filename );
-                        object_free( tmp_filename );
-                        tmp_filename = object_new( os_filename->value );
-                        string_free( os_filename );
-                    }
-                #endif
-
-                    string_new( result );
-                    string_append( result, command );
-                    string_append( result, " " );
-                    string_append( result, quote );
-                    string_append( result, object_str( tmp_filename ) );
-                    string_append( result, quote );
-                    if ( err_redir )
-                    {
-                        string_append( result, " " );
-                        string_append( result, redirect );
-                    }
-                }
-
-                /* Replace STDXXX with the temporary file. */
-                list_free( stack_pop( s ) );
-                stack_push( s, list_new( object_new( result->value ) ) );
-                out = object_str( tmp_filename );
-
-                string_free( result );
-
-                /* Make sure temp files created by this get nuked eventually. */
-                file_remove_atexit( tmp_filename );
+                expansion_item ei = { stack_pop( s ) };
+                filename = expand( &ei, 1 );
             }
-
-            if ( !globs.noexec )
-            {
-                string out_name[ 1 ];
-                /* Handle "path to file" filenames. */
-                if ( ( out[ 0 ] == '"' ) && ( out[ strlen( out ) - 1 ] == '"' )
-                    )
-                {
-                    string_copy( out_name, out + 1 );
-                    string_truncate( out_name, out_name->size - 1 );
-                }
-                else
-                    string_copy( out_name, out );
-                out_file = fopen( out_name->value, "w" );
-
-                if ( !out_file )
-                {
-                    err_printf( "[errno %d] failed to write output file '%s': %s",
-                        errno, out_name->value, strerror(errno) );
-                    exit( EXITBAD );
-                }
-                string_free( out_name );
-            }
-
-            if ( out_debug ) out_printf( "\nfile %s\n", out );
-            if ( out_file ) fputs( buf->value, out_file );
-            if ( out_debug ) out_puts( buf->value );
-            if ( out_file )
-            {
-                fflush( out_file );
-                fclose( out_file );
-            }
-            string_free( buf );
-            if ( tmp_filename )
-                object_free( tmp_filename );
-
-            if ( out_debug ) out_putc( '\n' );
+            // Apply modifiers to "raw" filename.
+            VAR_EXPANDED filename_mod = eval_modifiers( s, filename, code->arg );
+            // Get contents.
+            LIST * contents = stack_pop( s );
+            // Write out the contents file, or expand the contents, as needed.
+            LIST * filename_or_contents = function_execute_write_file( function, frame, s, filename_mod, contents );
+            // The result that gets replaced into the @() space.
+            stack_push( s, filename_or_contents );
+            list_free( filename_mod.value );
+            list_free( filename_mod.inner );
+            list_free( contents );
             PROFILE_EXIT_LOCAL(function_run_INSTR_WRITE_FILE);
             break;
         }

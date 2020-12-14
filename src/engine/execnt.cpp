@@ -318,7 +318,7 @@ int32_t exec_check
      */
 
     /* Check for too long command lines. */
-    return check_cmd_for_too_long_lines( command->value, maxline(),
+    return check_cmd_for_too_long_lines( command->value, shell_maxline(),
         error_length, error_max_length );
 }
 
@@ -1374,6 +1374,11 @@ static void reportWindowsError( char const * const apiName, int32_t slot )
     closeWinHandle( &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ] );
     string_renew( cmdtab[ slot ].buffer_out );
     string_renew( cmdtab[ slot ].buffer_err );
+}
+
+int32_t shell_maxline()
+{
+    return maxline();
 }
 
 

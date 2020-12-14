@@ -968,12 +968,14 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     # support -s.
     toolset.flags gcc.link OPTIONS <target-os>$(generic-os)/<strip>on :
         -Wl,--strip-all ;
-    toolset.flags gcc.link RPATH <target-os>$(generic-os) : <dll-path> ;
-    toolset.flags gcc.link RPATH_OPTION <target-os>$(generic-os) : -rpath ;
-    toolset.flags gcc.link RPATH_LINK <target-os>$(generic-os) : <xdll-path> ;
     toolset.flags gcc.link START-GROUP <target-os>$(generic-os) :
         -Wl,--start-group ;
     toolset.flags gcc.link END-GROUP <target-os>$(generic-os) : -Wl,--end-group ;
+
+    local rpath-os = [ set.difference $(all-os) : aix darwin vxworks solaris osf hpux windows ] ;
+    toolset.flags gcc.link RPATH <target-os>$(rpath-os) : <dll-path> ;
+    toolset.flags gcc.link RPATH_OPTION <target-os>$(rpath-os) : -rpath ;
+    toolset.flags gcc.link RPATH_LINK <target-os>$(rpath-os) : <xdll-path> ;
 
     # gnu ld has the ability to change the search behaviour for libraries
     # referenced by the -l switch. These modifiers are -Bstatic and
