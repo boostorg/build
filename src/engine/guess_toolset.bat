@@ -85,11 +85,7 @@ if not errorlevel 1 (
     call "%FOUND_PATH%VCVARS32.BAT"
     set "B2_TOOLSET_ROOT=%MSVCDir%\"
     exit /b 0)
-if EXIST "C:\Borland\BCC55\Bin\bcc32.exe" (
-    set "B2_TOOLSET=borland"
-    set "B2_TOOLSET_ROOT=C:\Borland\BCC55\"
-    exit /b 0)
-call :Test_Path bcc32.exe
+call :Test_Path bcc32c.exe
 if not errorlevel 1 (
     set "B2_TOOLSET=borland"
     set "B2_TOOLSET_ROOT=%FOUND_PATH%..\"
