@@ -1724,6 +1724,10 @@ static std::string var_parse_to_string( VAR_PARSE_VAR const * parse, bool debug 
 {
     std::string result = "$(";
     result += var_parse_to_string( parse->name, debug );
+    if ( parse->subscript )
+    {
+        result += "[" + var_parse_to_string( parse->subscript, debug ) + "]";
+    }
     for ( int32_t i = 0; i < parse->modifiers->size; ++i )
     {
         result += ":" + var_parse_to_string( dynamic_array_at( VAR_PARSE_GROUP *, parse->modifiers, i ), debug );
