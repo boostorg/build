@@ -189,6 +189,10 @@
     #define OSMINOR "OS=DGUX"
     #define OS_DGUX
 #endif
+#ifdef __GNU__
+    #define OSMINOR "OS=HURD"
+    #define OS_HURD
+#endif
 #ifdef __hpux
     #define OSMINOR "OS=HPUX"
     #define OS_HPUX
