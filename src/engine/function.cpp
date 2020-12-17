@@ -622,23 +622,27 @@ typedef struct
 
 typedef struct
 {
-    PATHNAME f;           /* :GDBSMR -- pieces */
-    char     parent;      /* :P -- go to parent directory */
-    char     filemods;    /* one of the above applied */
-    char     downshift;   /* :L -- downshift result */
-    char     upshift;     /* :U -- upshift result */
-    char     to_slashes;  /* :T -- convert "\" to "/" */
-    char     to_windows;  /* :W -- convert cygwin to native paths */
-    PATHPART empty;       /* :E -- default for empties */
-    PATHPART join;        /* :J -- join list with char */
-    PATHPART prefix;      /* :< */
-    PATHPART postfix;     /* :> */
+    PATHNAME f;             /* :GDBSMR -- pieces */
+    PATHPART empty;         /* :E -- default for empties */
+    PATHPART join;          /* :J -- join list with char */
+    PATHPART prefix;        /* :< */
+    PATHPART postfix;       /* :> */
+    bool     parent:1;      /* :P -- go to parent directory */
+    bool     filemods:1;    /* one of the above applied */
+    bool     downshift:1;   /* :L -- downshift result */
+    bool     upshift:1;     /* :U -- upshift result */
+    bool     to_slashes:1;  /* :T -- convert "\" to "/" */
+    bool     to_windows:1;  /* :W -- convert cygwin to native paths */
+    bool     opt_file:1;    /* :O=F -- replace @() with the file part */
+    bool     opt_content:1; /* :O=C -- repalce @() with the content (E) part */
 } VAR_EDITS;
 
 struct VAR_EXPANDED
 {
     LIST * value = L0;
     LIST * inner = L0;
+    bool opt_file:1; 
+    bool  opt_content:1;
 };
 
 static VAR_EXPANDED apply_modifiers_impl( LIST * result, string * buf,
@@ -688,6 +692,7 @@ static int32_t var_edit_parse( char const * mods, VAR_EDITS * edits, int32_t hav
     while ( *mods )
     {
         PATHPART * fp;
+        bool opt = false;
 
         switch ( *mods++ )
         {
@@ -706,6 +711,7 @@ static int32_t var_edit_parse( char const * mods, VAR_EDITS * edits, int32_t hav
             case 'W': edits->to_windows = 1; continue;
             case '<': fp = &edits->prefix; goto strval;
             case '>': fp = &edits->postfix; goto strval;
+            case 'O': opt = true; goto strval;
             default:
                 continue;  /* Should complain, but so what... */
         }
@@ -735,17 +741,35 @@ static int32_t var_edit_parse( char const * mods, VAR_EDITS * edits, int32_t hav
         }
 
     strval:
-        /* Handle :X=value, or :X */
-        if ( *mods != '=' )
+        /* Handle :O=??? */
+        if ( opt )
         {
-            fp->ptr = "";
-            fp->len = 0;
+            if ( *mods == '=' )
+            {
+                for (++mods; *mods; ++mods)
+                {
+                    switch ( *mods )
+                    {
+                        case 'F': edits->opt_file = true; break;
+                        case 'C': edits->opt_content = true; break;
+                    }
+                }
+            }
         }
         else
         {
-            fp->ptr = ++mods;
-            fp->len = int32_t(strlen( mods ));
-            mods += fp->len;
+            /* Handle :X=value, or :X */
+            if ( *mods != '=' )
+            {
+                fp->ptr = "";
+                fp->len = 0;
+            }
+            else
+            {
+                fp->ptr = ++mods;
+                fp->len = int32_t(strlen( mods ));
+                mods += fp->len;
+            }
         }
     }
 
@@ -1150,6 +1174,13 @@ static VAR_EXPANDED apply_modifiers_impl( LIST * result, string * buf,
     expanded.value = apply_modifiers_prepost(
         L0, buf, edits, n, list_begin( modified ), list_end( modified ) );
     expanded.inner = modified;
+    expanded.opt_file = false;
+    expanded.opt_content = false;
+    for ( int32_t i = 0; i < n; ++i )
+    {
+        expanded.opt_file |= edits[i].opt_file;
+        expanded.opt_content |= edits[i].opt_content;
+    }
     return expanded;
 }
 
@@ -3970,21 +4001,27 @@ LIST * function_execute_write_file(
 {
     LIST * filename_or_contents_result = nullptr;
 
-    LIST * response_file_sub = function_get_named_variable(
-        function, frame, constant_RESPONSE_FILE_SUB );
-    char response_file_sub_c
-        = response_file_sub && list_front( response_file_sub )
-        ? object_str( list_front( response_file_sub ) )[0]
-        : 'f';
-    list_free( response_file_sub );
-    const char * contents_str = object_str( list_front( contents ) );
-    if ( response_file_sub_c == 'a' )
+    char response_file_sub_c = 'f';
+    if ( filename.opt_file && filename.opt_content )
     {
-        if ( int32_t( strlen( contents_str ) + 256 ) > shell_maxline() )
-            response_file_sub_c = 'f';
-        else
-            response_file_sub_c = 'c';
+        LIST * response_file_sub = function_get_named_variable(
+            function, frame, constant_RESPONSE_FILE_SUB );
+        if ( response_file_sub && list_front( response_file_sub ) )
+            response_file_sub_c =  object_str( list_front( response_file_sub ) )[0];
+        list_free( response_file_sub );
+        const char * contents_str = object_str( list_front( contents ) );
+        if ( response_file_sub_c == 'a' )
+        {
+            if ( int32_t( strlen( contents_str ) + 256 ) > shell_maxline() )
+                response_file_sub_c = 'f';
+            else
+                response_file_sub_c = 'c';
+        }
     }
+    else if ( filename.opt_file )
+        response_file_sub_c = 'f';
+    else if ( filename.opt_content )
+        response_file_sub_c = 'c';
     if ( response_file_sub_c == 'c' )
     {
         filename_or_contents_result = list_copy( contents );
