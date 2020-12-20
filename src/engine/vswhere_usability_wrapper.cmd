@@ -32,7 +32,7 @@ for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
 
 REM Visual Studio 2019 (16.X, toolset 14.2)
 set VSWHERE_LMT=-version "[16.0,17.0)"
-SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT%
+SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT% %VSWHERE_PRERELEASE%
 for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
     endlocal
 	echo Found with vswhere %%i
