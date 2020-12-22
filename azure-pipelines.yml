@@ -205,6 +205,7 @@ stages:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
+        1.75.0 .. GCC 10: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
         1.74.0 .. GCC 10: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
         1.73.0 .. GCC 10: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
         1.72.0 .. GCC 10: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
@@ -277,6 +278,7 @@ stages:
       vmImage: 'macOS-latest'
     strategy:
       matrix:
+        1.75.0 .. Xcode 11.7: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
         1.74.0 .. Xcode 11.7: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
         1.73.0 .. Xcode 11.7: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
         1.72.0 .. Xcode 11.7: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
@@ -349,6 +351,7 @@ stages:
       vmImage: 'windows-latest'
     strategy:
       matrix:
+        1.75.0 .. VS 2019: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: vc142}
         1.74.0 .. VS 2019: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: vc142}
         1.73.0 .. VS 2019: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: vc142}
         1.72.0 .. VS 2019: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: vc142}
@@ -415,7 +418,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: '2.x'
+        versionSpec: '3.x'
     - task: UseRubyVersion@0
     - bash: |
         pip install --user Pygments
