@@ -8,6 +8,14 @@ support for some toolsets. This means that under most circumtances, if
 supported by the toolset, response files are not generated. Instead the
 command is expanded to include the options directly.
 
+* *New:* Add `response-file` feature to control the kind of response file usage in
+  toolset action.
+  -- _René Ferdinand Rivera Morell_
+* *New:* Add `:O=value` variable modifier for `@()` expansion.
+  -- _René Ferdinand Rivera Morell_
+* *New:* Add `:<=value` and `:>=value` variable modifiers for prefix and postfix
+  values *after* the complete expansion of variable references.
+  -- _René Ferdinand Rivera Morell_
 * Remove one at time linking limit. Once upon a time this was a performance
   tweak as hardware and software was not up to doing multiple links at once.
   Common setups are better equipped.
@@ -16,14 +24,29 @@ command is expanded to include the options directly.
   -- _René Ferdinand Rivera Morell_
 * Support building engine as either 32 or 64 bit addressing model.
   -- _René Ferdinand Rivera Morell_
-* Add `response-file` feature to control the kind of response file usage in
-  toolset action.
+* Basic support for building b2 engine on GNU/Hurd.
+  -- _Pino Toscano_
+* Update "borland" toolset to bcc32c for building B2.
+  -- _Tanzinul Islam_
+* Ensure Embarcadero toolset name is only "embtc".
+  -- _Tanzinul Islam_
+* Adapt for Emscripten 2.0 change of default behaviour for archives.
+  -- _Basil Fierz_
+* Fix path to bootstrap for back compat.
   -- _René Ferdinand Rivera Morell_
-* Add `:O=value` variable modifier for `@()` expansion.
+* Add missing BOOST_ROOT to boot strap search.
   -- _René Ferdinand Rivera Morell_
-* Add `:<=value` and `:>=value` variable modifiers for prefix and postfix
-  values *after* the complete expansion of variable references.
+* Fix for engine compile on FreeBSD.
   -- _René Ferdinand Rivera Morell_
+* Default MSVC to a native platform, and remove ambiguous implicit
+  address-model ARM/ARM64 values.
+  -- _Nikita Kniazev_
+* Fix detection of MIPS32 for b2 engine build.
+  -- _Ivan Melnikov_
+* Enable building b2 engine with clang on Windows.
+  -- _Gei0r_
+* Fix building b2 engine with Intel Linux icpc.
+  -- _Alain Miniussi_
 
 == Version 4.3.0
 
