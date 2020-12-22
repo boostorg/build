@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 # Copyright 2011 Steven Watanabe
-# Copyright 2020 René Ferdinand Rivera Morell
+# Copyright 2020 Rene Ferdinand Rivera Morell
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
