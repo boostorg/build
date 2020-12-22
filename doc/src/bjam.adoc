@@ -1355,7 +1355,19 @@ Assign _value_ to the variable if it is unset.
 Concatenate list elements into single element, separated by
 _joinval_.
 
+`:O=value`::
+Sets semantic options for the evaluation of the variable. The format of the
+_value_ is specific to either variable or generated file expansion.
+
 On VMS, `$(var:P)` is the parent directory of `$(var:D)`.
+
+`:<=value`::
+After evaluating the expansion of the variable prefixes the given _value_
+to the elements of the expanded expression values.
+
+`:>=value`::
+After evaluating the expansion of the variable postfixes the given _value_
+to the elements of the expanded expression values.
 
 [[jam.language.variables.local_for_loop_variables]]
 ==== Local For Loop Variables
@@ -1383,7 +1395,22 @@ the form `@(filename:E=filecontents)` and replaces the expression with
 `filecontents`. This is useful for creating compiler response files, and
 other "internal" files. The expansion works both during parsing and
 action execution. Hence it is possible to create files during any of the
-three build phases.
+three build phases. This expansion follows the same modifiers as variable
+expansion. The generated file expansion accepts these (`:O=`) expansion
+option values:
+
+`F`::
+Always replace the `@()` reference with the name of the file generated.
+
+`C`::
+Always replace the `@()` reference with the contents, i.e. the _value_
+in the `:E=value` expression.
+
+`FC` or `CF`::
+Replace with either the file or contents depending on the length of the
+contents (`:E=value`). It will replace with the contents in an action
+if the length of the command is shorter than the allowed command length
+limit. Otherwise the reference is replaced with the filename.
 
 [[jam.language.variables.builtins]]
 ==== Built-in Variables

@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 # Copyright 2011 Steven Watanabe
+# Copyright 2020 René Ferdinand Rivera Morell
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +18,7 @@ EXIT "file:" "@(o$(name:J=) .txt:E= test -D$(contents))" : 0 ;
 """)
 
 t.run_build_system()
-t.expect_output_lines("file: on1n2 .txt");
+t.expect_output_lines("file: on1n2 .txt")
 t.expect_addition("on1n2 .txt")
 t.expect_content("on1n2 .txt", " test -DM1 -DM2", True)
 
@@ -31,7 +32,7 @@ run all ;
 """)
 
 t.run_build_system(["-d2"])
-t.expect_output_lines(' echo file: "on1n2 .txt" ');
+t.expect_output_lines(' echo file: "on1n2 .txt" ')
 t.expect_addition("on1n2 .txt")
 t.expect_content("on1n2 .txt", " test -DM1 -DM2", True)
 

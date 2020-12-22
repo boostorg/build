@@ -3,6 +3,11 @@
 
 == Version 4.4.0
 
+Along with a variety of fixes this version introduces "dynamic" response file
+support for some toolsets. This means that under most circumtances, if
+supported by the toolset, response files are not generated. Instead the
+command is expanded to include the options directly.
+
 * Remove one at time linking limit. Once upon a time this was a performance
   tweak as hardware and software was not up to doing multiple links at once.
   Common setups are better equipped.
@@ -10,6 +15,14 @@
 * Fix building engine with GCC on AIX.
   -- _René Ferdinand Rivera Morell_
 * Support building engine as either 32 or 64 bit addressing model.
+  -- _René Ferdinand Rivera Morell_
+* Add `response-file` feature to control the kind of response file usage in
+  toolset action.
+  -- _René Ferdinand Rivera Morell_
+* Add `:O=value` variable modifier for `@()` expansion.
+  -- _René Ferdinand Rivera Morell_
+* Add `:<=value` and `:>=value` variable modifiers for prefix and postfix
+  values *after* the complete expansion of variable references.
   -- _René Ferdinand Rivera Morell_
 
 == Version 4.3.0

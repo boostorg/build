@@ -8,7 +8,7 @@ import feature ;
 #| tag::doc[]
 
 [[bbv2.builtin.features.response-file]]`response-file`::
-*Allowed values:* `file`, `contents`, `auto`.
+*Allowed values:* `auto`, `file`, `contents`.
 +
 Controls whether a response file is used, or not, during the build of the
 applicable target. For `file` a response file is created and the filename
@@ -18,6 +18,8 @@ file is created, or the contents replaced, based on the length of the
 contents such that if the contents fits within the limits of the command
 execution line length limits the contents is replaced. Otherwise a
 response file is created and the filename is replaced in the actions.
++
+Supported for `clang-linux` and `msvc` toolsets.
 
 |# # end::doc[]
 
