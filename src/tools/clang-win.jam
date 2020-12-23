@@ -181,4 +181,9 @@ rule init ( version ? : command * : options * )
     }
 
     toolset.flags clang-win.link LIBRARY_OPTION <toolset>clang-win : "" : unchecked ;
+
+    # Enable response file control
+    toolset.flags clang-win RESPONSE_FILE_SUB <response-file>auto : a ;
+    toolset.flags clang-win RESPONSE_FILE_SUB <response-file>file : f ;
+    toolset.flags clang-win RESPONSE_FILE_SUB <response-file>contents : c ;
 }
