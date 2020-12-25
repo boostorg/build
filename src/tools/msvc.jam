@@ -613,8 +613,7 @@ actions compile.asm
 rule compile.c ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    C++FLAGS on $(targets[1]) = ;
-    get-rspline $(targets) : -TC ;
+    get-rspline $(targets) : -TC CFLAGS  ;
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
@@ -622,8 +621,7 @@ rule compile.c ( targets + : sources * : properties * )
 rule compile.c.preprocess ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    C++FLAGS on $(targets[1]) = ;
-    get-rspline $(targets) : -TC ;
+    get-rspline $(targets) : -TC CFLAGS ;
     preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
@@ -631,9 +629,8 @@ rule compile.c.preprocess ( targets + : sources * : properties * )
 rule compile.c.pch ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    C++FLAGS on $(targets[1]) = ;
-    get-rspline $(targets[1]) : -TC ;
-    get-rspline $(targets[2]) : -TC ;
+    get-rspline $(targets[1]) : -TC CFLAGS ;
+    get-rspline $(targets[2]) : -TC CFLAGS ;
     local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
     if $(pch-source)
     {
@@ -716,14 +713,14 @@ actions compile-c-c++-pch-s
 rule compile.c++ ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    get-rspline $(targets) : -TP ;
+    get-rspline $(targets) : -TP C++FLAGS ;
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
 rule compile.c++.preprocess ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    get-rspline $(targets) : -TP ;
+    get-rspline $(targets) : -TP C++FLAGS ;
     preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
@@ -731,8 +728,8 @@ rule compile.c++.preprocess ( targets + : sources * : properties * )
 rule compile.c++.pch ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
-    get-rspline $(targets[1]) : -TP ;
-    get-rspline $(targets[2]) : -TP ;
+    get-rspline $(targets[1]) : -TP C++FLAGS ;
+    get-rspline $(targets[2]) : -TP C++FLAGS ;
     local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
     if $(pch-source)
     {
@@ -1691,10 +1688,10 @@ local rule default-path ( version )
 
 
 
-rule get-rspline ( target : lang-opt )
+rule get-rspline ( target : lang-opt lang-flags )
 {
     CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS)
-        $(CFLAGS) $(C++FLAGS) $(OPTIONS) -c -D$(DEFINES)
+        $($(lang-flags)) $(OPTIONS) -c -D$(DEFINES)
         \"-I$(INCLUDES:W)\" \"-FI$(FORCE_INCLUDES:W)\" ] ;
 }
 
@@ -1870,8 +1867,8 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile CFLAGS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
     toolset.flags msvc.compile CFLAGS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
-    toolset.flags msvc.compile OPTIONS <cflags> : ;
-    toolset.flags msvc.compile.c++ OPTIONS <cxxflags> : ;
+    toolset.flags msvc.compile CFLAGS <cflags> : ;
+    toolset.flags msvc.compile.c++ C++FLAGS <cxxflags> : ;
 
     toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
 
