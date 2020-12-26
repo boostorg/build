@@ -843,7 +843,7 @@ rule link.dll ( targets + : sources * : properties * )
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")
+        $(.SETUP) $(.LD) /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKFLAGS) /out:"$(<[1]:W)"
     }
 
     actions manifest
@@ -858,7 +858,7 @@ rule link.dll ( targets + : sources * : properties * )
 
     actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) /DLL $(LINKFLAGS) /out:"$(<[1]:W)" /IMPLIB:"$(IMPORT_LIB:W)" /LIBPATH:"$(LINKPATH:W)" /def:"$(DEF_FILE)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib")
+        $(.SETUP) $(.LD) /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKFLAGS) /out:"$(<[1]:W)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)"
     }
 
     actions manifest.dll

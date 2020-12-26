@@ -170,7 +170,8 @@ rule init ( version ? : command * : options * )
         if $(addr) = 32 { cond += "$(condition)/<architecture>/<address-model>" ; }
 
         toolset.flags clang-win.compile .CC $(cond) : $(compiler) -m$(addr) ;
-        toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) /link "/incremental:no" "/manifest" ;
+        toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) ;
+        toolset.flags clang-win.link LINKFLAGS $(cond) : /link "/incremental:no" "/manifest" ;
         toolset.flags clang-win.compile .ASM $(cond) : $(assembler) -nologo -c -Zp4 -Cp -Cx ;
         toolset.flags clang-win.compile .ASM_OUTPUT $(cond) : -Fo ;
         toolset.flags clang-win.archive .LD $(cond) : $(archiver) /nologo ;
