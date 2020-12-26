@@ -843,7 +843,7 @@ rule link.dll ( targets + : sources * : properties * )
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKFLAGS) /out:"$(<[1]:W)"
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)"
     }
 
     actions manifest
@@ -858,7 +858,7 @@ rule link.dll ( targets + : sources * : properties * )
 
     actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" $(OPTIONS) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKFLAGS) /out:"$(<[1]:W)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)"
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)"
     }
 
     actions manifest.dll
@@ -1589,7 +1589,7 @@ local rule configure-really ( version ? : options * )
 
         # LTO
         toolset.flags msvc.compile OPTIONS $(conditions)/<lto>on : /GL ;
-        toolset.flags msvc.link OPTIONS $(conditions)/<lto>on : /LTCG ;
+        toolset.flags msvc.link LINKFLAGS $(conditions)/<lto>on : /LTCG ;
 
         # Set version-specific flags.
         configure-version-specific msvc : $(version) : $(conditions) ;
@@ -1906,7 +1906,7 @@ local rule register-toolset-really ( )
         toolset.flags msvc LINKFLAGS <user-interface>native : "/subsystem:native" ;
         toolset.flags msvc LINKFLAGS <user-interface>auto : "/subsystem:posix" ;
 
-        toolset.flags msvc.link OPTIONS <linkflags> ;
+        toolset.flags msvc.link LINKFLAGS <linkflags> ;
         toolset.flags msvc.link LINKPATH <library-path> ;
 
         toolset.flags msvc.link FINDLIBS_ST <find-static-library> ;
