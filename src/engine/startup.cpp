@@ -14,7 +14,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "output.h"
 #include "variable.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <string>
 #include <algorithm>
 
@@ -160,7 +160,7 @@ bool b2::startup::bootstrap(FRAME *frame)
     const std::string b2_exe_path{b2_exe_path_pchar};
     if (b2_exe_path_pchar)
     {
-        free(b2_exe_path_pchar);
+        std::free(b2_exe_path_pchar);
     }
     const std::string boost_build_jam{"boost-build.jam"};
     std::string b2_file_path;
