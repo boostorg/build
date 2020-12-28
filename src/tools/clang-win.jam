@@ -167,7 +167,7 @@ rule init ( version ? : command * : options * )
         .notice "$(addr):" "using idl-compiler '$(idl-compiler)'" ;
 
         local cond = "$(condition)/<architecture>/<address-model>$(addr)" "$(condition)/<architecture>x86/<address-model>$(addr)" ;
-        if $(addr) = 32 { cond += "$(condition)/<architecture>/<address-model>" ; }
+        if $(addr) = 32 { cond += "$(condition)/<architecture>/<address-model>" "$(condition)/<architecture>x86/<address-model>" ; }
 
         toolset.flags clang-win.compile .CC $(cond) : $(compiler) -m$(addr) ;
         toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) ;
