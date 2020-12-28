@@ -74,11 +74,17 @@ rule init ( version ? : command * : options * )
     local compiler = "\"$(command)\"" ;
     compiler = "$(compiler:J= )" ;
 
-    version ?= [ MATCH "version ([0-9.]+)" : [ SHELL "$(compiler) -v 2>&1" ] ] ;
+    local version-output = [ SHELL "$(compiler) -v 2>&1" ] ;
 
-    .notice "using compiler '$(compiler)', version '$(version)'" ;
+    version ?= [ MATCH "version ([0-9.]+)" : $(version-output) ] ;
+    local target = [ MATCH "Target: ([A-Za-z0-9_]+)" : $(version-output) ] ;
 
-    local condition = [  common.check-init-parameters clang-win : version $(version) ] ;
+    local default-addr = 32 ;
+    if $(target) = x86_64 { default-addr = 64 ; }
+
+    .notice "using compiler '$(compiler)', version '$(version)', target '$(target)', default address-model=$(default-addr)" ;
+
+    local condition = [ common.check-init-parameters clang-win : version $(version) ] ;
 
     common.handle-options clang-win : $(condition) : $(command) : $(options) ;
     
@@ -167,7 +173,7 @@ rule init ( version ? : command * : options * )
         .notice "$(addr):" "using idl-compiler '$(idl-compiler)'" ;
 
         local cond = "$(condition)/<architecture>/<address-model>$(addr)" "$(condition)/<architecture>x86/<address-model>$(addr)" ;
-        if $(addr) = 32 { cond += "$(condition)/<architecture>/<address-model>" "$(condition)/<architecture>x86/<address-model>" ; }
+        if $(addr) = $(default-addr) { cond += "$(condition)/<architecture>/<address-model>" "$(condition)/<architecture>x86/<address-model>" ; }
 
         toolset.flags clang-win.compile .CC $(cond) : $(compiler) -m$(addr) ;
         toolset.flags clang-win.link .LD $(cond) : $(compiler) -m$(addr) ;
