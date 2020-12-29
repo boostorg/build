@@ -641,7 +641,7 @@ struct VAR_EXPANDED
 {
     LIST * value = L0;
     LIST * inner = L0;
-    bool opt_file:1; 
+    bool opt_file:1;
     bool  opt_content:1;
 };
 
@@ -2051,8 +2051,10 @@ static void var_parse_file_compile( VAR_PARSE_VAR const * parse, compiler * c )
             &contents_dyn_array );
         for ( int32_t i = contents_dyn_array.size - 1; i >= 0; --i )
         {
-            var_parse_group_compile( dynamic_array_at(
-                VAR_PARSE_GROUP *, ( &contents_dyn_array ), i ), c );
+            auto group = dynamic_array_at(
+                VAR_PARSE_GROUP *, ( &contents_dyn_array ), i );
+            var_parse_group_compile( group, c );
+            var_parse_group_free( group );
         }
         dynamic_array_free( &contents_dyn_array );
         compile_emit( c, INSTR_APPEND_STRINGS, contents_dyn_array.size );
@@ -2200,6 +2202,10 @@ static int32_t try_parse_variable( char const * * s_, char const * * string,
             *string = s;
             *s_ = s;
             return 1;
+        }
+        else
+        {
+            var_parse_var_free( vp );
         }
     }
     return 0;
