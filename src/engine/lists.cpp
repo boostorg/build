@@ -70,7 +70,7 @@ LIST * list_append( LIST * l, LIST * nl )
         int32_t l_size = list_length( l );
         int32_t nl_size = list_length( nl );
         int32_t size = l_size + nl_size;
-        int32_t bucket = get_bucket( size );
+        size_t bucket = get_bucket( size );
 
         /* Do we need to reallocate? */
         if ( l_size <= get_bucket_size( bucket ) )
