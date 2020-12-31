@@ -923,6 +923,13 @@ static VAR_EXPANDED apply_modifiers( STACK * s, int32_t n )
     return result;
 }
 
+static LIST * apply_modifiers_value( STACK * s, int32_t n )
+{
+    auto mod = apply_modifiers( s, n );
+    list_free( mod.inner );
+    return mod.value;
+}
+
 // STACK: LIST * modifiers[modifier_count]
 static VAR_EXPANDED eval_modifiers( STACK * s, LIST * value, int32_t modifier_count )
 {
@@ -4943,9 +4950,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             l = stack_pop( s );
             n = expand_modifiers( s, code->arg );
             stack_push( s, l );
-            VAR_EXPANDED m = apply_modifiers( s, n );
-            l = m.value;
-            list_free( m.inner );
+            l = apply_modifiers_value( s, n );
             list_free( stack_pop( s ) );
             stack_deallocate( s, n * sizeof( VAR_EDITS ) );
             for ( i = 0; i < code->arg; ++i )
@@ -5000,9 +5005,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             {
                 stack_push( s, function_get_named_variable( function, frame,
                     list_item( iter ) ) );
-                VAR_EXPANDED m = apply_modifiers( s, n );
-                result = m.value;
-                list_free( m.inner );
+                result = apply_modifiers_value( s, n );
                 list_free( stack_pop( s ) );
             }
             list_free( vars );
