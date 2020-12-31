@@ -14,44 +14,47 @@
 
 #include <assert.h>
 
-static LIST * freelist[ 32 ];  /* junkpile for list_dealloc() */
+static const size_t freelist_size = 16;
 
-static int32_t get_bucket( int32_t size )
+static LIST * freelist[ freelist_size ];  /* junkpile for list_dealloc() */
+
+static int32_t get_bucket_size( size_t bucket )
 {
-    int32_t bucket = 0;
-    while ( size > ( int32_t(1) << bucket ) ) ++bucket;
+    return int32_t(1) << ( bucket < freelist_size ? bucket : ( freelist_size - 1 ) );
+}
+
+static size_t get_bucket( int32_t size )
+{
+    size_t bucket = 0;
+    while ( ( bucket < freelist_size ) && ( size > get_bucket_size( bucket ) ) ) ++bucket;
     return bucket;
 }
 
 static LIST * list_alloc( int32_t size )
 {
-    int32_t bucket = get_bucket( size );
+    size_t bucket = get_bucket( size );
     if ( freelist[ bucket ] )
     {
         LIST * result = freelist[ bucket ];
         freelist[ bucket ] = result->impl.next;
         return result;
     }
-    return (LIST *)BJAM_MALLOC( sizeof( LIST ) + ( size_t( 1 ) << bucket ) *
+    return (LIST *)BJAM_MALLOC( sizeof( LIST ) + get_bucket_size( bucket ) *
         sizeof( OBJECT * ) );
 }
 
 static void list_dealloc( LIST * l )
 {
     int32_t size = list_length( l );
-    int32_t bucket;
+    size_t bucket;
     LIST * node = l;
 
     if ( size == 0 ) return;
 
     bucket = get_bucket( size );;
 
-#ifdef BJAM_NO_MEM_CACHE
-    BJAM_FREE( node );
-#else
     node->impl.next = freelist[ bucket ];
     freelist[ bucket ] = node;
-#endif
 }
 
 /*
@@ -70,7 +73,7 @@ LIST * list_append( LIST * l, LIST * nl )
         int32_t bucket = get_bucket( size );
 
         /* Do we need to reallocate? */
-        if ( l_size <= ( int32_t(1) << ( bucket - 1 ) ) )
+        if ( l_size <= get_bucket_size( bucket ) )
         {
             LIST * result = list_alloc( size );
             memcpy( list_begin( result ), list_begin( l ), l_size * sizeof(
