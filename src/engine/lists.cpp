@@ -14,20 +14,44 @@
 
 #include <assert.h>
 
+static LIST * freelist[ 32 ];  /* junkpile for list_dealloc() */
+
+static int32_t get_bucket( int32_t size )
+{
+    int32_t bucket = 0;
+    while ( size > ( int32_t(1) << bucket ) ) ++bucket;
+    return bucket;
+}
+
 static LIST * list_alloc( int32_t size )
 {
-    if ( size == 0 ) return L0;
-    return (LIST *)BJAM_MALLOC( sizeof( LIST ) + size * sizeof( OBJECT * ) );
+    int32_t bucket = get_bucket( size );
+    if ( freelist[ bucket ] )
+    {
+        LIST * result = freelist[ bucket ];
+        freelist[ bucket ] = result->impl.next;
+        return result;
+    }
+    return (LIST *)BJAM_MALLOC( sizeof( LIST ) + ( size_t( 1 ) << bucket ) *
+        sizeof( OBJECT * ) );
 }
 
 static void list_dealloc( LIST * l )
 {
-    if ( l ) BJAM_FREE( l );
-}
+    int32_t size = list_length( l );
+    int32_t bucket;
+    LIST * node = l;
 
-static LIST * list_realloc( LIST * l, int32_t size )
-{
-    return (LIST *)BJAM_REALLOC( l, sizeof( LIST ) + size * sizeof( OBJECT * ) );
+    if ( size == 0 ) return;
+
+    bucket = get_bucket( size );;
+
+#ifdef BJAM_NO_MEM_CACHE
+    BJAM_FREE( node );
+#else
+    node->impl.next = freelist[ bucket ];
+    freelist[ bucket ] = node;
+#endif
 }
 
 /*
@@ -38,13 +62,23 @@ LIST * list_append( LIST * l, LIST * nl )
 {
     if ( list_empty( l ) )
         return nl;
-    if ( list_empty( nl ) )
-        return l;
+    if ( !list_empty( nl ) )
     {
         int32_t l_size = list_length( l );
         int32_t nl_size = list_length( nl );
         int32_t size = l_size + nl_size;
-        l = list_realloc( l, size );
+        int32_t bucket = get_bucket( size );
+
+        /* Do we need to reallocate? */
+        if ( l_size <= ( int32_t(1) << ( bucket - 1 ) ) )
+        {
+            LIST * result = list_alloc( size );
+            memcpy( list_begin( result ), list_begin( l ), l_size * sizeof(
+                OBJECT * ) );
+            list_dealloc( l );
+            l = result;
+        }
+
         l->impl.size = size;
         memcpy( list_begin( l ) + l_size, list_begin( nl ), nl_size * sizeof(
             OBJECT * ) );
@@ -82,13 +116,17 @@ LIST * list_push_back( LIST * head, OBJECT * value )
     if ( DEBUG_LISTS )
         out_printf( "list > %s <\n", object_str( value ) );
 
+    /* If the size is a power of 2, reallocate. */
     if ( size == 0 )
     {
         head = list_alloc( 1 );
     }
-    else
+    else if ( ( ( size - 1 ) & size ) == 0 )
     {
-        head = list_realloc( head, size + 1 );
+        LIST * l = list_alloc( size + 1 );
+        memcpy( l, head, sizeof( LIST ) + size * sizeof( OBJECT * ) );
+        list_dealloc( head );
+        head = l;
     }
 
     list_begin( head )[ size ] = value;
@@ -210,7 +248,12 @@ LIST * list_pop_front( LIST * l )
 
     if ( ( ( size - 1 ) & size ) == 0 )
     {
-        l = list_realloc( l, size );
+        LIST * const nl = list_alloc( size );
+        nl->impl.size = size;
+        memcpy( list_begin( nl ), list_begin( l ) + 1, size * sizeof( OBJECT * )
+            );
+        list_dealloc( l );
+        return nl;
     }
 
     l->impl.size = size;
@@ -322,6 +365,16 @@ LIST * list_unique( LIST * sorted_list )
 
 void list_done()
 {
+    for ( int32_t i = 0; i < int32_t(sizeof( freelist ) / sizeof( freelist[ 0 ] )); ++i )
+    {
+        LIST * l = freelist[ i ];
+        while ( l )
+        {
+            LIST * const tmp = l;
+            l = l->impl.next;
+            BJAM_FREE( tmp );
+        }
+    }
 }
 
 
