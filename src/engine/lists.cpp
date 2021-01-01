@@ -22,7 +22,7 @@ static LIST * list_alloc( int32_t size )
 
 static void list_dealloc( LIST * l )
 {
-    // if ( l ) BJAM_FREE( l );
+    if ( l ) BJAM_FREE( l );
 }
 
 /*
