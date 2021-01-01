@@ -25,6 +25,11 @@ static void list_dealloc( LIST * l )
     if ( l ) BJAM_FREE( l );
 }
 
+static LIST * list_realloc( LIST * l, int32_t size )
+{
+    return (LIST *)BJAM_REALLOC( l, sizeof( LIST ) + size * sizeof( OBJECT * ) );
+}
+
 /*
  * list_append() - append a list onto another one, returning total
  */
@@ -33,16 +38,13 @@ LIST * list_append( LIST * l, LIST * nl )
 {
     if ( list_empty( l ) )
         return nl;
-    if ( !list_empty( nl ) )
+    if ( list_empty( nl ) )
+        return l;
     {
         int32_t l_size = list_length( l );
         int32_t nl_size = list_length( nl );
         int32_t size = l_size + nl_size;
-        LIST * result = list_alloc( size );
-        memcpy( list_begin( result ), list_begin( l ), l_size * sizeof(
-            OBJECT * ) );
-        list_dealloc( l );
-        l = result;
+        l = list_realloc( l, size );
         l->impl.size = size;
         memcpy( list_begin( l ) + l_size, list_begin( nl ), nl_size * sizeof(
             OBJECT * ) );
@@ -80,17 +82,13 @@ LIST * list_push_back( LIST * head, OBJECT * value )
     if ( DEBUG_LISTS )
         out_printf( "list > %s <\n", object_str( value ) );
 
-    /* If the size is a power of 2, reallocate. */
     if ( size == 0 )
     {
         head = list_alloc( 1 );
     }
     else
     {
-        LIST * l = list_alloc( size + 1 );
-        memcpy( l, head, sizeof( LIST ) + size * sizeof( OBJECT * ) );
-        list_dealloc( head );
-        head = l;
+        head = list_realloc( head, size + 1 );
     }
 
     list_begin( head )[ size ] = value;
@@ -212,12 +210,7 @@ LIST * list_pop_front( LIST * l )
 
     if ( ( ( size - 1 ) & size ) == 0 )
     {
-        LIST * const nl = list_alloc( size );
-        nl->impl.size = size;
-        memcpy( list_begin( nl ), list_begin( l ) + 1, size * sizeof( OBJECT * )
-            );
-        list_dealloc( l );
-        return nl;
+        l = list_realloc( l, size );
     }
 
     l->impl.size = size;
