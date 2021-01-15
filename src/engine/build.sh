@@ -85,15 +85,18 @@ test_uname ()
 
 test_compiler ()
 {
-    local ARGS="${CXX:=$@}"
+    local exe="${CXX:=$1}"
+    shift
+    local args="$@"
+    local command="${exe} ${args} ${CXXFLAGS}"
     if test_true ${B2_VERBOSE} ; then
-        echo_run ${ARGS} ${CXXFLAGS} check_cxx11.cpp
+        echo_run ${command} check_cxx11.cpp
     else
-        ${ARGS} ${CXXFLAGS} check_cxx11.cpp 1>/dev/null 2>/dev/null
+        ${command} check_cxx11.cpp 1>/dev/null 2>/dev/null
     fi
     local CHECK_RESULT=$?
     if test_true ${CHECK_RESULT} ; then
-        B2_CXX=${ARGS} ${CXXFLAGS}
+        B2_CXX=${command}
     fi
     rm -rf check_cxx11.o* a.out 1>/dev/null 2>/dev/null
     return ${CHECK_RESULT}
@@ -115,119 +118,108 @@ test_toolset ()
 #   first working command sets B2_TOOLSET to the toolset and B2_CXX to the
 #   compile command with any base options.
 #
-# B2_TOOLSET set, only:
+# B2_TOOLSET set:
 #   Checks that toolset for possible compile commands and sets B2_CXX to the
 #   command that works for the toolset.
 #
-# CXX set:
-#   Checks if the indicated CXX command works for building the engine. Sets
-#   B2_CXX to CXX if successful.
-#
 check_toolset ()
 {
-    # If we have CXX, and hence also B2_TOOLSET, we check only that and use it.
-    if test "${CXX}" != "" ; then
-        if test_compiler "${CXX}" ; then
-            B2_CXX="${CXX}"
-            return ${TRUE}
-        else
-            return ${FALSE}
-        fi
-    fi
     # GCC (gcc)..
-    if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 ; then B2_TOOLSET=gcc ; fi
+    if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
     # Clang (clang)..
-    if test_toolset clang && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; fi
+    if test_toolset clang && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
     # Intel macOS (intel-darwin)
     if test_toolset intel-darwin && test -r "${HOME}/intel/oneapi/setvars.sh" && test_uname Darwin ; then
         . "${HOME}/intel/oneapi/setvars.sh" 1>/dev/null 2>/dev/null
-        if test_toolset intel-darwin && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; fi
-        if test_toolset intel-darwin && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; fi
+        if test_toolset intel-darwin && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; return ${TRUE} ; fi
+        if test_toolset intel-darwin && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; return ${TRUE} ; fi
     fi
     if test_toolset intel-darwin && test -r "/opt/intel/oneapi/setvars.sh" && test_uname Darwin ; then
         . "/opt/intel/oneapi/setvars.sh" 1>/dev/null 2>/dev/null
-        if test_toolset intel-darwin && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; fi
-        if test_toolset intel-darwin && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; fi
+        if test_toolset intel-darwin && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; return ${TRUE} ; fi
+        if test_toolset intel-darwin && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; return ${TRUE} ; fi
     fi
     # Intel oneAPI (intel-linux)
     if test_toolset intel-linux && test_path icpx ; then
-        if test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
+        if test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset xyz && test_path icc ; then
-        if test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
+        if test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "${HOME}/intel/oneapi/setvars.sh" ; then
         . "${HOME}/intel/oneapi/setvars.sh" 1>/dev/null 2>/dev/null
-        if test_toolset intel-linux && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
-        if test_toolset intel-linux && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
+        if test_toolset intel-linux && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
+        if test_toolset intel-linux && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "/opt/intel/oneapi/setvars.sh" ; then
         . "/opt/intel/oneapi/setvars.sh" 1>/dev/null 2>/dev/null
-        if test_toolset intel-linux && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
-        if test_toolset intel-linux && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
+        if test_toolset intel-linux && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
+        if test_toolset intel-linux && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     # Intel Pro (intel-linux)
     if test_toolset intel-linux && test_path icpc ; then
-        if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
+        if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "/opt/intel/inteloneapi/setvars.sh" ; then
         . "/opt/intel/inteloneapi/setvars.sh" 1>/dev/null 2>/dev/null
-        if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
+        if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "/opt/intel/cc/9.0/bin/iccvars.sh" ; then
         . "/opt/intel/cc/9.0/bin/iccvars.sh" 1>/dev/null 2>/dev/null
-        if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
+        if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "/opt/intel_cc_80/bin/iccvars.sh" ; then
         . "/opt/intel_cc_80/bin/iccvars.sh" 1>/dev/null 2>/dev/null
-        if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; fi
+        if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     # Mips Pro (mipspro)
-    if test_toolset mipspro && test_uname IRIX && test_compiler CC -FE:template_in_elf_section -ptused ; then B2_TOOLSET=mipspro ; fi
-    if test_toolset mipspro && test_uname IRIX64 && test_compiler CC -FE:template_in_elf_section -ptused ; then B2_TOOLSET=mipspro ; fi
+    if test_toolset mipspro && test_uname IRIX && test_compiler CC -FE:template_in_elf_section -ptused ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
+    if test_toolset mipspro && test_uname IRIX64 && test_compiler CC -FE:template_in_elf_section -ptused ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
     # OSF Tru64 C++ (tru64cxx)
-    if test_toolset tru64cxx && test_uname OSF1 && test_compiler cc ; then B2_TOOLSET=mipspro ; fi
+    if test_toolset tru64cxx && test_uname OSF1 && test_compiler cc ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
     # QNX (qcc)
-    if test_toolset qcc && test_uname QNX && test_compiler QCC ; then B2_TOOLSET=mipspro ; fi
+    if test_toolset qcc && test_uname QNX && test_compiler QCC ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
     # Linux XL/VA C++ (xlcpp, vacpp)
     if test_toolset xlcpp vacpp && test_uname Linux && test_compiler xlC_r ; then
         if /usr/bin/lscpu | grep Byte | grep Little > /dev/null 2>&1 ; then
             # Little endian linux
             B2_TOOLSET=xlcpp
+            return ${TRUE}
         else
             # Big endian linux
             B2_TOOLSET=vacpp
+            return ${TRUE}
         fi
     fi
     # AIX VA C++ (vacpp)
-    if test_toolset vacpp && test_uname AIX && test_compiler xlC_r ; then B2_TOOLSET=vacpp ; fi
+    if test_toolset vacpp && test_uname AIX && test_compiler xlC_r ; then B2_TOOLSET=vacpp ; return ${TRUE} ; fi
     # PGI (pgi)
-    if test_toolset pgi && test_compiler pgc++ -std=c++11 ; then B2_TOOLSET=pgi ; fi
+    if test_toolset pgi && test_compiler pgc++ -std=c++11 ; then B2_TOOLSET=pgi ; return ${TRUE} ; fi
     # Pathscale C++ (pathscale)
-    if test_toolset pathscale && test_compiler pathCC ; then B2_TOOLSET=pathscale ; fi
+    if test_toolset pathscale && test_compiler pathCC ; then B2_TOOLSET=pathscale ; return ${TRUE} ; fi
     # Como (como)
-    if test_toolset como && test_compiler como ; then B2_TOOLSET=como ; fi
+    if test_toolset como && test_compiler como ; then B2_TOOLSET=como ; return ${TRUE} ; fi
     # Borland C++ (kcc, kylix)
-    if test_toolset kcc && test_compiler KCC ; then B2_TOOLSET=kcc ; fi
-    if test_toolset kylix && test_compiler bc++ -tC -q ; then B2_TOOLSET=kylix ; fi
+    if test_toolset kcc && test_compiler KCC ; then B2_TOOLSET=kcc ; return ${TRUE} ; fi
+    if test_toolset kylix && test_compiler bc++ -tC -q ; then B2_TOOLSET=kylix ; return ${TRUE} ; fi
     # aCC (acc)
-    if test_toolset acc && test_compiler aCC -AA ; then B2_TOOLSET=acc ; fi
+    if test_toolset acc && test_compiler aCC -AA ; then B2_TOOLSET=acc ; return ${TRUE} ; fi
     # Sun Pro C++ (sunpro)
-    if test_toolset sunpro && test_compiler /opt/SUNWspro/bin/CC -std=c++11 ; then B2_TOOLSET=sunpro ; fi
+    if test_toolset sunpro && test_compiler /opt/SUNWspro/bin/CC -std=c++11 ; then B2_TOOLSET=sunpro ; return ${TRUE} ; fi
     # Generic (cxx)
-    if test_toolset cxx && test_compiler cxx ; then B2_TOOLSET=cxx ; fi
-    if test_toolset cxx && test_compiler cpp ; then B2_TOOLSET=cxx ; fi
-    if test_toolset cxx && test_compiler CC ; then B2_TOOLSET=cxx ; fi
+    if test_toolset cxx && test_compiler cxx ; then B2_TOOLSET=cxx ; return ${TRUE} ; fi
+    if test_toolset cxx && test_compiler cpp ; then B2_TOOLSET=cxx ; return ${TRUE} ; fi
+    if test_toolset cxx && test_compiler CC ; then B2_TOOLSET=cxx ; return ${TRUE} ; fi
     # Generic cross compile (cross-cxx)
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=cxx} ; then B2_TOOLSET=cross-cxx ; fi
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=cpp} ; then B2_TOOLSET=cross-cxx ; fi
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=CC} ; then B2_TOOLSET=cross-cxx ; fi
+    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=cxx} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
+    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=cpp} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
+    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=CC} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
 
     # Nothing found.
     if test "${B2_TOOLSET}" = "" ; then
         error_exit "Could not find a suitable toolset."
     fi
-    return ${TRUE}
+    return ${FALSE}
 }
 
 # Handle command options and args.
