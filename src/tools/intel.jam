@@ -48,7 +48,7 @@ a user script. For the Windows version, specifies the directory of the
 `iclvars.bat` file, for versions prior to 21 ( or 2021 ), or of the `setvars.bat`,
 for versions from 21 ( or 2021 ) on up, for configuring the compiler. 
 Specifying the `root` option without specifying the compiler command allows the
-end-user not to have to worry about whether he is compiling 32-bit or 64-bit code,
+end-user not to have to worry about whether they are compiling 32-bit or 64-bit code,
 as the toolset will automatically configure the compiler for the appropriate address
 model and compiler command using the `iclvars.bat` or `setvars.bat` batch file.
 
