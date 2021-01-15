@@ -85,17 +85,18 @@ test_uname ()
 
 test_compiler ()
 {
-    local exe="${CXX:=$1}"
+    local EXE="${CXX:=$1}"
+    local COMAND
     shift
-    local command="${exe} $@ ${CXXFLAGS}"
+    COMAND="${EXE} $@ ${CXXFLAGS:=}"
     if test_true ${B2_VERBOSE} ; then
-        echo_run ${command} check_cxx11.cpp
+        echo_run ${COMAND} check_cxx11.cpp
     else
-        ${command} check_cxx11.cpp 1>/dev/null 2>/dev/null
+        ${COMAND} check_cxx11.cpp 1>/dev/null 2>/dev/null
     fi
     local CHECK_RESULT=$?
     if test_true ${CHECK_RESULT} ; then
-        B2_CXX=${command}
+        B2_CXX=${COMAND}
     fi
     rm -rf check_cxx11.o* a.out 1>/dev/null 2>/dev/null
     return ${CHECK_RESULT}
