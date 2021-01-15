@@ -87,8 +87,7 @@ test_compiler ()
 {
     local exe="${CXX:=$1}"
     shift
-    local args="$@"
-    local command="${exe} ${args} ${CXXFLAGS}"
+    local command="${exe} $@ ${CXXFLAGS}"
     if test_true ${B2_VERBOSE} ; then
         echo_run ${command} check_cxx11.cpp
     else
