@@ -63,13 +63,15 @@ install html : index : <location>$(doc-dir) <dependency>website-html ;
 explicit html ;
 
 make index.html : : @make_redir_html : <location>.. ;
+REDIR_HTML = "
+<html><head><meta http-equiv=\"refresh\" content=\"0; URL=doc/html/index.html\"></head><body>
+Automatic redirection failed, please go to <a href=\"doc/html/index.html\">doc/html/index.html</a>.
+<!-- Distributed under the Boost Software License, Version 1.0. \(See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt\) -->
+</body></html>
+" ;
 actions make_redir_html
 {
-    echo @($(<):E=<html><head><meta http-equiv="refresh" content="0; URL=doc/html/index.html"></head><body>
-Automatic redirection failed, please go to
-<a href="doc/html/index.html">doc/html/index.html</a>.
-<!-- Distributed under the Boost Software License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt) -->
-</body></html>)
+    echo @($(<):O=F:E=$(REDIR_HTML))
 }
 explicit index.html ;
 
