@@ -16,6 +16,18 @@ B2_VERBOSE=${FALSE}
 B2_DEBUG=${FALSE}
 B2_GUESS_TOOLSET=${FALSE}
 
+# We need to calculate and set SCRIPT_PATH and SCRIPT_DIR to reference this
+# script so that we can refer to file relative to it.
+SCRIPT_PATH=${BASH_SOURCE[0]}
+if test "${SCRIPT_PATH}" == "" ; then
+    SCRIPT_PATH=$0
+fi
+SCRIPT_DIR="$( cd "$( dirname "${SCRIPT_PATH}" )" && pwd )"
+
+# This script needs to operate at engine source directory.
+SAVED_PWD="${PWD}"
+cd "${SCRIPT_DIR}"
+
 test_true ()
 {
     if test $1 -eq ${TRUE} ; then
