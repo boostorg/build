@@ -18,10 +18,11 @@ B2_GUESS_TOOLSET=${FALSE}
 
 # We need to calculate and set SCRIPT_PATH and SCRIPT_DIR to reference this
 # script so that we can refer to file relative to it.
-if test -v BASH_SOURCE ; then
+SCRIPT_PATH=""
+if test "${BASH_SOURCE}" ; then
     SCRIPT_PATH=${BASH_SOURCE[0]}
 fi
-if test "${SCRIPT_PATH}" == "" ; then
+if test "${SCRIPT_PATH}" = "" ; then
     SCRIPT_PATH=$0
 fi
 SCRIPT_DIR="$( cd "$( dirname "${SCRIPT_PATH}" )" && pwd )"
