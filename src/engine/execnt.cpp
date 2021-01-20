@@ -37,8 +37,10 @@
  */
 
 #include "jam.h"
-#include "output.h"
+
 #ifdef USE_EXECNT
+
+#include "output.h"
 #include "execcmd.h"
 
 #include "lists.h"

@@ -113,7 +113,7 @@ test_compiler ()
     if test_true ${CHECK_RESULT} ; then
         B2_CXX=${COMAND}
     fi
-    rm -rf check_cxx11.o* a.out 1>/dev/null 2>/dev/null
+    rm -rf check_cxx11.o* a.out a.exe 1>/dev/null 2>/dev/null
     return ${CHECK_RESULT}
 }
 
@@ -423,8 +423,10 @@ B2_SOURCES="\
  debug.cpp \
  debugger.cpp \
  execcmd.cpp \
+ execnt.cpp \
  execunix.cpp \
  filesys.cpp \
+ filent.cpp \
  fileunix.cpp \
  frames.cpp \
  function.cpp \

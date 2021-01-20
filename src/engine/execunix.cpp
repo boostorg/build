@@ -6,6 +6,9 @@
  */
 
 #include "jam.h"
+
+#ifdef USE_EXECUNIX
+
 #include "execcmd.h"
 
 #include "lists.h"
@@ -25,8 +28,6 @@
 #if defined(sun) || defined(__sun)
     #include <wait.h>
 #endif
-
-#ifdef USE_EXECUNIX
 
 #include <sys/times.h>
 
