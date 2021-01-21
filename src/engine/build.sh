@@ -12,8 +12,8 @@ TRUE=0
 B2_TOOLSET=
 
 # Internal options.
-B2_VERBOSE=${FALSE}
-B2_DEBUG=${FALSE}
+B2_VERBOSE=${B2_VERBOSE:=${FALSE}}
+B2_DEBUG=${B2_DEBUG:=${FALSE}}
 B2_GUESS_TOOLSET=${FALSE}
 
 # We need to calculate and set SCRIPT_PATH and SCRIPT_DIR to reference this
