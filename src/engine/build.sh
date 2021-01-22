@@ -305,8 +305,8 @@ case "${B2_TOOLSET}" in
 
     intel-*)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
-        B2_CXXFLAGS_RELEASE="-O3 -s"
-        B2_CXXFLAGS_DEBUG="-O0 -g -p"
+        B2_CXXFLAGS_RELEASE="-O3 -s -static"
+        B2_CXXFLAGS_DEBUG="-O0 -g -p -static"
     ;;
 
     vacpp)
