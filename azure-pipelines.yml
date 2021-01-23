@@ -24,7 +24,7 @@ pr:
 
 stages:
 
-- stage: Test
+- stage: Base
   jobs:
 
   - job: 'Linux_Default_Build'
@@ -61,6 +61,9 @@ stages:
         set -e
         ./src/engine/build.sh --verbose
       displayName: Build
+
+- stage: Test
+  jobs:
 
   - job: 'Linux'
     strategy:
