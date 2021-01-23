@@ -5,6 +5,10 @@
 #~ (See accompanying file LICENSE_1_0.txt or copy at
 #~ http://www.boost.org/LICENSE_1_0.txt)
 
+# POSIX shells will inherit the error exit flag. Particularly the Bash POSIX mode.
+# Hence we force it off explicitly so that we can query command results.
+set +e
+
 FALSE=1
 TRUE=0
 
