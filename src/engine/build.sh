@@ -5,15 +5,12 @@
 #~ (See accompanying file LICENSE_1_0.txt or copy at
 #~ http://www.boost.org/LICENSE_1_0.txt)
 
-# POSIX shells will inherit the error exit flag. Particularly the Bash POSIX mode.
-# Hence we force it off explicitly so that we can query command results.
-set +e
-
 FALSE=1
 TRUE=0
 
 # Reset the toolset.
 B2_TOOLSET=
+B2_SETUP=
 
 # Internal options.
 B2_VERBOSE=${B2_VERBOSE:=${FALSE}}
@@ -104,18 +101,21 @@ test_uname ()
 
 test_compiler ()
 {
-    local EXE="${CXX:=$1}"
-    local COMAND
+    local EXE="${CXX:-$1}"
+    local CMD
+    local SETUP
     shift
-    COMAND="${EXE} $@ ${CXXFLAGS:=}"
+    CMD="${EXE} $@ ${CXXFLAGS:-}"
+    SETUP=${B2_SETUP:-true}
     if test_true ${B2_VERBOSE} ; then
-        echo_run ${COMAND} check_cxx11.cpp
+        echo "> ${CMD} check_cxx11.cpp"
+        ( ${SETUP} ; ${CMD} check_cxx11.cpp )
     else
-        ${COMAND} check_cxx11.cpp 1>/dev/null 2>/dev/null
+        ( ${SETUP} ; ${CMD} check_cxx11.cpp ) 1>/dev/null 2>/dev/null
     fi
     local CHECK_RESULT=$?
     if test_true ${CHECK_RESULT} ; then
-        B2_CXX=${COMAND}
+        B2_CXX=${CMD}
     fi
     rm -rf check_cxx11.o* a.out a.exe 1>/dev/null 2>/dev/null
     return ${CHECK_RESULT}
@@ -149,14 +149,16 @@ check_toolset ()
     if test_toolset clang && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
     # Intel macOS (intel-darwin)
     if test_toolset intel-darwin && test -r "${HOME}/intel/oneapi/setvars.sh" && test_uname Darwin ; then
-        . "${HOME}/intel/oneapi/setvars.sh" 1>/dev/null 2>/dev/null
+        B2_SETUP="source ${HOME}/intel/oneapi/setvars.sh"
         if test_toolset intel-darwin && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; return ${TRUE} ; fi
         if test_toolset intel-darwin && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; return ${TRUE} ; fi
+        B2_SETUP=
     fi
     if test_toolset intel-darwin && test -r "/opt/intel/oneapi/setvars.sh" && test_uname Darwin ; then
-        . "/opt/intel/oneapi/setvars.sh" 1>/dev/null 2>/dev/null
+        B2_SETUP="source /opt/intel/oneapi/setvars.sh"
         if test_toolset intel-darwin && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; return ${TRUE} ; fi
         if test_toolset intel-darwin && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-darwin ; return ${TRUE} ; fi
+        B2_SETUP=
     fi
     # Intel oneAPI (intel-linux)
     if test_toolset intel-linux && test_path icpx ; then
@@ -166,30 +168,35 @@ check_toolset ()
         if test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "${HOME}/intel/oneapi/setvars.sh" ; then
-        . "${HOME}/intel/oneapi/setvars.sh" 1>/dev/null 2>/dev/null
+        B2_SETUP="source ${HOME}/intel/oneapi/setvars.sh"
         if test_toolset intel-linux && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
         if test_toolset intel-linux && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
+        B2_SETUP=
     fi
     if test_toolset intel-linux && test -r "/opt/intel/oneapi/setvars.sh" ; then
-        . "/opt/intel/oneapi/setvars.sh" 1>/dev/null 2>/dev/null
+        B2_SETUP="source /opt/intel/oneapi/setvars.sh"
         if test_toolset intel-linux && test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
         if test_toolset intel-linux && test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
+        B2_SETUP=
     fi
     # Intel Pro (intel-linux)
     if test_toolset intel-linux && test_path icpc ; then
         if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "/opt/intel/inteloneapi/setvars.sh" ; then
-        . "/opt/intel/inteloneapi/setvars.sh" 1>/dev/null 2>/dev/null
+        B2_SETUP="source /opt/intel/inteloneapi/setvars.sh"
         if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
+        B2_SETUP=
     fi
     if test_toolset intel-linux && test -r "/opt/intel/cc/9.0/bin/iccvars.sh" ; then
-        . "/opt/intel/cc/9.0/bin/iccvars.sh" 1>/dev/null 2>/dev/null
+        B2_SETUP="source /opt/intel/cc/9.0/bin/iccvars.sh"
         if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
+        B2_SETUP=
     fi
     if test_toolset intel-linux && test -r "/opt/intel_cc_80/bin/iccvars.sh" ; then
-        . "/opt/intel_cc_80/bin/iccvars.sh" 1>/dev/null 2>/dev/null
+        B2_SETUP="source /opt/intel_cc_80/bin/iccvars.sh"
         if test_compiler icpc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
+        B2_SETUP=
     fi
     # Mips Pro (mipspro)
     if test_toolset mipspro && test_uname IRIX && test_compiler CC -FE:template_in_elf_section -ptused ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
@@ -230,9 +237,9 @@ check_toolset ()
     if test_toolset cxx && test_compiler cpp ; then B2_TOOLSET=cxx ; return ${TRUE} ; fi
     if test_toolset cxx && test_compiler CC ; then B2_TOOLSET=cxx ; return ${TRUE} ; fi
     # Generic cross compile (cross-cxx)
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=cxx} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=cpp} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:=CC} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
+    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:-cxx} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
+    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:-cpp} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
+    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:-CC} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
 
     # Nothing found.
     if test "${B2_TOOLSET}" = "" ; then
@@ -289,7 +296,7 @@ fi
 case "${B2_TOOLSET}" in
 
     gcc)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         # Check for machine specific options.
         machine=$(${B2_CXX} -dumpmachine 2>/dev/null)
         if test $? -ne 0 ; then
@@ -308,96 +315,96 @@ case "${B2_TOOLSET}" in
     ;;
 
     intel-*)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O3 -s -static"
         B2_CXXFLAGS_DEBUG="-O0 -g -p -static"
     ;;
 
     vacpp)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=-qversion}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:--qversion}
         B2_CXXFLAGS_RELEASE="-O3 -s -qstrict -qinline"
         B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     xlcpp)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=-qversion}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:--qversion}
         B2_CXXFLAGS_RELEASE="-s -O3 -qstrict -qinline"
         B2_CXXFLAGS_DEBUG="-g -qNOOPTimize -qnoinline -pg"
     ;;
 
     como)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O3 --inlining"
         B2_CXXFLAGS_DEBUG="-O0 -g --no_inlining --long_long"
     ;;
 
     kcc)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="+K2 -s"
         B2_CXXFLAGS_DEBUG="+K0 -g"
     ;;
 
     kylix)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O2 -vi -w-inl -s"
         B2_CXXFLAGS_DEBUG="-Od -v -vi-"
     ;;
 
     mipspro)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-Ofast -g0 \"-INLINE:none\" -s"
         B2_CXXFLAGS_DEBUG="-O0 -INLINE -g"
     ;;
 
     pathscale)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O3 -inline -s"
         B2_CXXFLAGS_DEBUG="-O0 -noinline -ggdb"
     ;;
 
     pgi)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-fast -s"
         B2_CXXFLAGS_DEBUG="-O0 -gopt"
     ;;
 
     sun*)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=-V}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:--V}
         B2_CXXFLAGS_RELEASE="-xO4 -s"
         B2_CXXFLAGS_DEBUG="-g"
     ;;
 
     clang*)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O3 -s"
         B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g"
     ;;
 
     tru64cxx)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O5 -inline speed -s"
         B2_CXXFLAGS_DEBUG="-O0 -pg -g"
     ;;
 
     acc)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O3 -s"
         B2_CXXFLAGS_DEBUG="+d -g"
     ;;
 
     qcc)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O3 -Wc,-finline-functions"
         B2_CXXFLAGS_DEBUG="O0 -Wc,-fno-inline -gstabs+"
     ;;
 
     cxx)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
     ;;
 
     cross-cxx)
         CXXFLAGS=${BUILD_CXXFLAGS}
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:=--version}
+        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
     ;;
 
     *)
@@ -405,76 +412,91 @@ case "${B2_TOOLSET}" in
     ;;
 esac
 
-echo "
+build_b2 ()
+{
+    echo "
 ###
 ###
 ### Using '${B2_TOOLSET}' toolset.
 ###
 ###
 "
-echo_run ${CXX} ${CXX_VERSION_OPT}
+    echo_run ${B2_CXX} ${CXX_VERSION_OPT}
 echo "
 ###
 ###
 "
-B2_SOURCES="\
- builtins.cpp \
- class.cpp \
- command.cpp \
- compile.cpp \
- constants.cpp \
- cwd.cpp \
- debug.cpp \
- debugger.cpp \
- execcmd.cpp \
- execnt.cpp \
- execunix.cpp \
- filesys.cpp \
- filent.cpp \
- fileunix.cpp \
- frames.cpp \
- function.cpp \
- glob.cpp\
- hash.cpp \
- hcache.cpp \
- hdrmacro.cpp \
- headers.cpp \
- jam_strings.cpp \
- jam.cpp \
- jamgram.cpp \
- lists.cpp \
- make.cpp \
- make1.cpp \
- md5.cpp \
- mem.cpp \
- modules.cpp \
- native.cpp \
- object.cpp \
- option.cpp \
- output.cpp \
- parse.cpp \
- pathsys.cpp \
- pathunix.cpp \
- regexp.cpp \
- rules.cpp \
- scan.cpp \
- search.cpp \
- startup.cpp \
- subst.cpp \
- sysinfo.cpp \
- timestamp.cpp \
- variable.cpp \
- w32_getreg.cpp \
- modules/order.cpp \
- modules/path.cpp \
- modules/property-set.cpp \
- modules/regex.cpp \
- modules/sequence.cpp \
- modules/set.cpp \
- "
+    B2_SOURCES="\
+builtins.cpp \
+class.cpp \
+command.cpp \
+compile.cpp \
+constants.cpp \
+cwd.cpp \
+debug.cpp \
+debugger.cpp \
+execcmd.cpp \
+execnt.cpp \
+execunix.cpp \
+filesys.cpp \
+filent.cpp \
+fileunix.cpp \
+frames.cpp \
+function.cpp \
+glob.cpp \
+hash.cpp \
+hcache.cpp \
+hdrmacro.cpp \
+headers.cpp \
+jam_strings.cpp \
+jam.cpp \
+jamgram.cpp \
+lists.cpp \
+make.cpp \
+make1.cpp \
+md5.cpp \
+mem.cpp \
+modules.cpp \
+native.cpp \
+object.cpp \
+option.cpp \
+output.cpp \
+parse.cpp \
+pathsys.cpp \
+pathunix.cpp \
+regexp.cpp \
+rules.cpp \
+scan.cpp \
+search.cpp \
+startup.cpp \
+subst.cpp \
+sysinfo.cpp \
+timestamp.cpp \
+variable.cpp \
+w32_getreg.cpp \
+modules/order.cpp \
+modules/path.cpp \
+modules/property-set.cpp \
+modules/regex.cpp \
+modules/sequence.cpp \
+modules/set.cpp \
+"
 
-if test_true ${B2_DEBUG} ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"
-else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} -DNDEBUG"
+    if test_true ${B2_DEBUG} ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"
+    else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} -DNDEBUG"
+    fi
+    ( B2_VERBOSE=${TRUE} echo_run ${B2_CXX} ${CXXFLAGS} ${B2_CXXFLAGS} ${B2_SOURCES} -o b2 )
+    ( B2_VERBOSE=${TRUE} echo_run cp b2 bjam )
+}
+
+if test_true ${B2_VERBOSE} ; then
+    (
+        ${B2_SETUP}
+        build_b2
+    )
+else
+    (
+        ${B2_SETUP} 1>/dev/null 2>/dev/null
+        build_b2
+    )
 fi
-B2_VERBOSE=${TRUE} echo_run ${B2_CXX} ${CXXFLAGS} ${B2_CXXFLAGS} ${B2_SOURCES} -o b2
-B2_VERBOSE=${TRUE} echo_run cp b2 bjam
