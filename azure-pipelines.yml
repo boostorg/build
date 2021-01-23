@@ -27,6 +27,23 @@ stages:
 - stage: Test
   jobs:
 
+  - job: 'Linux Default Build'
+    strategy:
+      matrix:
+        Clang 10: {PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
+    - bash: |
+        set -e
+        uname -a
+        ./.ci/linux-cxx-install.sh
+      displayName: Install
+    - bash: |
+        set -e
+        ./src/engine/build.sh
+      displayName: Default Build
+
   - job: 'Linux'
     strategy:
       matrix:
