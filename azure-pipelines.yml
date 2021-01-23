@@ -27,7 +27,7 @@ stages:
 - stage: Test
   jobs:
 
-  - job: 'Linux Default Build'
+  - job: 'Linux_Default_Build'
     strategy:
       matrix:
         Clang 10: {PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
