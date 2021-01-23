@@ -24,7 +24,7 @@ pr:
 
 stages:
 
-- stage: Base
+- stage: Core
   jobs:
 
   - job: 'Linux_Default_Build'
@@ -33,7 +33,7 @@ stages:
         Clang 10: {PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
     pool:
       vmImage: $(VM_IMAGE)
-    steps:
+    steps: &linux_default_build_steps
     - bash: |
         set -e
         uname -a
@@ -50,7 +50,7 @@ stages:
         Clang 10: {PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
     pool:
       vmImage: $(VM_IMAGE)
-    steps:
+    steps: &linux_clang_only_build_steps
     - bash: |
         set -e
         uname -a
@@ -62,36 +62,13 @@ stages:
         ./src/engine/build.sh --verbose
       displayName: Build
 
-- stage: Test
-  jobs:
-
-  - job: 'Linux'
+  - job: 'Linux_Latest'
     strategy:
       matrix:
         GCC 10: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-18.04'}
-        GCC 9: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-9, PACKAGES: g++-9, VM_IMAGE: 'ubuntu-18.04'}
-        GCC 8: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-8, PACKAGES: g++-8, VM_IMAGE: 'ubuntu-18.04'}
-        GCC 7: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-7, PACKAGES: g++-7, VM_IMAGE: 'ubuntu-18.04'}
-        GCC 6: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-6, PACKAGES: g++-6, VM_IMAGE: 'ubuntu-18.04'}
-        GCC 5: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-5,  PACKAGES: g++-5, VM_IMAGE: 'ubuntu-18.04'}
-        GCC 4.9: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-4.9, PACKAGES: g++-4.9, VM_IMAGE: 'ubuntu-16.04'}
-        GCC 4.8: {TOOLSET: gcc, TEST_TOOLSET: gcc,  CXX: g++-4.8, PACKAGES: g++-4.8, VM_IMAGE: 'ubuntu-16.04'}
-        GCC 4.7: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-4.7, PACKAGES: g++-4.7, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 10: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 9: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-9, PACKAGES: clang-9, LLVM_OS: bionic, LLVM_VER: 9, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 8: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-8, PACKAGES: clang-8, LLVM_OS: bionic, LLVM_VER: 8, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-7, PACKAGES: clang-7, LLVM_OS: bionic, LLVM_VER: 7, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-6.0, PACKAGES: clang-6.0, LLVM_OS: bionic, LLVM_VER: 6.0, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-5.0, PACKAGES: clang-5.0, LLVM_OS: bionic, LLVM_VER: 5.0, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 4: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-4.0, PACKAGES: clang-4.0, LLVM_OS: xenial, LLVM_VER: 4.0, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.9: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.9, PACKAGES: clang-3.9, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.8: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.8, PACKAGES: clang-3.8, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.7, PACKAGES: clang-3.7, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.6, PACKAGES: clang-3.6, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.5, PACKAGES: clang-3.5, VM_IMAGE: 'ubuntu-16.04'}
     pool:
       vmImage: $(VM_IMAGE)
-    steps:
+    steps: &linux_test_steps
     - bash: |
         set -e
         uname -a
@@ -133,15 +110,13 @@ stages:
         b2 -n --debug-configuration
       displayName: Bootstrap
 
-  - job: 'Windows'
+  - job: 'Windows_Latest'
     strategy:
       matrix:
         VS 2019: {TOOLSET: vc142, TEST_TOOLSET: msvc, VM_IMAGE: 'windows-2019'}
-        VS 2017: {TOOLSET: vc141, TEST_TOOLSET: msvc, VM_IMAGE: 'vs2017-win2016'}
-        MinGW 8.1.0: {TOOLSET: mingw, TEST_TOOLSET: gcc, VM_IMAGE: 'vs2017-win2016'}
     pool:
       vmImage: $(VM_IMAGE)
-    steps:
+    steps: &windows_test_steps
     - powershell: |
         cd src/engine
         $env:path += ';' + $env:CXX_PATH
@@ -179,20 +154,10 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
-        Xcode 11.7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.6.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.5.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.4.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.4.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.3.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.2.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 10.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.2.1.app, VM_IMAGE: 'macOS-10.14'}
-        Xcode 10.2: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.2.app, VM_IMAGE: 'macOS-10.14'}
-        Xcode 10.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.1.app, VM_IMAGE: 'macOS-10.14'}
-        Xcode 10.0: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.app, VM_IMAGE: 'macOS-10.14'}
+        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-10.15'}
     pool:
       vmImage: $(VM_IMAGE)
-    steps:
+    steps: &macos_test_steps
     - bash: |
         set -e
         uname -a
@@ -234,7 +199,169 @@ stages:
         b2 -n --debug-configuration
       displayName: Bootstrap
 
-- stage: Boost
+- stage: Compilers
+  dependsOn: [Core]
+  jobs:
+
+  - job: 'Linux'
+    strategy:
+      matrix:
+        GCC 9: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-9, PACKAGES: g++-9, VM_IMAGE: 'ubuntu-18.04'}
+        GCC 8: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-8, PACKAGES: g++-8, VM_IMAGE: 'ubuntu-18.04'}
+        GCC 7: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-7, PACKAGES: g++-7, VM_IMAGE: 'ubuntu-18.04'}
+        GCC 6: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-6, PACKAGES: g++-6, VM_IMAGE: 'ubuntu-18.04'}
+        GCC 5: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-5,  PACKAGES: g++-5, VM_IMAGE: 'ubuntu-18.04'}
+        GCC 4.9: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-4.9, PACKAGES: g++-4.9, VM_IMAGE: 'ubuntu-16.04'}
+        GCC 4.8: {TOOLSET: gcc, TEST_TOOLSET: gcc,  CXX: g++-4.8, PACKAGES: g++-4.8, VM_IMAGE: 'ubuntu-16.04'}
+        GCC 4.7: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-4.7, PACKAGES: g++-4.7, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 10: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 9: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-9, PACKAGES: clang-9, LLVM_OS: bionic, LLVM_VER: 9, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 8: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-8, PACKAGES: clang-8, LLVM_OS: bionic, LLVM_VER: 8, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-7, PACKAGES: clang-7, LLVM_OS: bionic, LLVM_VER: 7, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-6.0, PACKAGES: clang-6.0, LLVM_OS: bionic, LLVM_VER: 6.0, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-5.0, PACKAGES: clang-5.0, LLVM_OS: bionic, LLVM_VER: 5.0, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 4: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-4.0, PACKAGES: clang-4.0, LLVM_OS: xenial, LLVM_VER: 4.0, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 3.9: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.9, PACKAGES: clang-3.9, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 3.8: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.8, PACKAGES: clang-3.8, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 3.7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.7, PACKAGES: clang-3.7, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 3.6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.6, PACKAGES: clang-3.6, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 3.5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-3.5, PACKAGES: clang-3.5, VM_IMAGE: 'ubuntu-16.04'}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps: *linux_test_steps
+
+  - job: 'Windows'
+    strategy:
+      matrix:
+        VS 2017: {TOOLSET: vc141, TEST_TOOLSET: msvc, VM_IMAGE: 'vs2017-win2016'}
+        MinGW 8.1.0: {TOOLSET: mingw, TEST_TOOLSET: gcc, VM_IMAGE: 'vs2017-win2016'}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps: *windows_test_steps
+
+  - job: 'macOS'
+    strategy:
+      matrix:
+        Xcode 12.2: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.2.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 12.1.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.1.1.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 12.0.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.0.1.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 11.7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 11.6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.6.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 11.5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.5.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 11.4.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.4.1.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 11.3.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.1.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 11.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 11.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.2.1.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 10.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.2.1.app, VM_IMAGE: 'macOS-10.14'}
+        Xcode 10.2: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.2.app, VM_IMAGE: 'macOS-10.14'}
+        Xcode 10.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.1.app, VM_IMAGE: 'macOS-10.14'}
+        Xcode 10.0: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.app, VM_IMAGE: 'macOS-10.14'}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps: *macos_test_steps
+
+- stage: Boost_Dev
+  dependsOn: [Core]
+  jobs:
+
+  - job: 'Dev_Linux'
+    displayName: 'Dev Linux'
+    pool:
+      vmImage: 'ubuntu-latest'
+    strategy:
+      matrix:
+        Master .. GCC 10: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
+        Master .. Clang 10: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10}
+        Develop .. GCC 10: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
+        Develop .. Clang 10: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10}
+    steps:
+    - bash: |
+        set -e
+        uname -a
+        ./.ci/linux-cxx-install.sh
+      displayName: Install
+    - bash: |
+        set -e
+        cd src/engine
+        ./build.sh ${TOOLSET}
+        ./b2 -v
+      displayName: Build
+    - bash: |
+        set -e
+        pushd ${HOME}
+        git clone --recursive https://github.com/boostorg/boost.git
+        cd boost
+        git checkout ${BOOST_BRANCH}
+        CXX_PATH=`which ${CXX}`
+        echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        popd
+      displayName: Test
+
+  - job: 'Dev_macOS'
+    displayName: 'Dev macOS'
+    pool:
+      vmImage: 'macOS-latest'
+    strategy:
+      matrix:
+        Master .. Xcode 11.7: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
+        Develop .. Xcode 11.7: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
+    steps:
+    - bash: |
+        set -e
+        uname -a
+        sudo xcode-select -switch ${XCODE_APP}
+        which clang++
+      displayName: Install
+    - bash: |
+        set -e
+        cd src/engine
+        ./build.sh ${TOOLSET}
+        ./b2 -v
+      displayName: Build
+    - bash: |
+        set -e
+        pushd ${HOME}
+        git clone --recursive https://github.com/boostorg/boost.git
+        cd boost
+        git checkout ${BOOST_BRANCH}
+        CXX_PATH=`which ${CXX}`
+        echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        popd
+      displayName: Test
+
+  - job: 'Dev_Windows'
+    displayName: 'Dev Windows'
+    pool:
+      vmImage: 'windows-latest'
+    strategy:
+      matrix:
+        Master .. VS 2019: {BOOST_BRANCH: master, TOOLSET: vc142}
+        Develop .. VS 2019: {BOOST_BRANCH: develop, TOOLSET: vc142}
+    steps:
+    - powershell: |
+        cd src/engine
+        $env:path += ';' + ${env:CXX_PATH}
+        cmd /c build.bat ${env:TOOLSET}
+        ./b2.exe -v
+        cd ../..
+      displayName: Build
+    - powershell: |
+        $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
+        cd "${env:HOME}"
+        git clone --recursive https://github.com/boostorg/boost.git
+        cd boost
+        $OriginalErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference= 'silentlycontinue'
+        git checkout "${env:BOOST_BRANCH}"
+        $ErrorActionPreference = $OriginalErrorActionPreference
+        echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
+        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
+      displayName: Test
+
+- stage: Boost_Release
+  dependsOn: [Boost_Dev]
   jobs:
 
   - job: 'Release_Linux'
@@ -270,40 +397,6 @@ stages:
         pushd ${HOME}
         git clone -b boost-${BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${BOOST_VERSION_U}
         cd boost_${BOOST_VERSION_U}
-        CXX_PATH=`which ${CXX}`
-        echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
-        popd
-      displayName: Test
-
-  - job: 'Dev_Linux'
-    displayName: 'Dev Linux'
-    pool:
-      vmImage: 'ubuntu-latest'
-    strategy:
-      matrix:
-        Master .. GCC 10: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Master .. Clang 10: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10}
-        Develop .. GCC 10: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Develop .. Clang 10: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10}
-    steps:
-    - bash: |
-        set -e
-        uname -a
-        ./.ci/linux-cxx-install.sh
-      displayName: Install
-    - bash: |
-        set -e
-        cd src/engine
-        ./build.sh ${TOOLSET}
-        ./b2 -v
-      displayName: Build
-    - bash: |
-        set -e
-        pushd ${HOME}
-        git clone --recursive https://github.com/boostorg/boost.git
-        cd boost
-        git checkout ${BOOST_BRANCH}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
         "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
@@ -350,39 +443,6 @@ stages:
         popd
       displayName: Test
 
-  - job: 'Dev_macOS'
-    displayName: 'Dev macOS'
-    pool:
-      vmImage: 'macOS-latest'
-    strategy:
-      matrix:
-        Master .. Xcode 11.7: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        Develop .. Xcode 11.7: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-    steps:
-    - bash: |
-        set -e
-        uname -a
-        sudo xcode-select -switch ${XCODE_APP}
-        which clang++
-      displayName: Install
-    - bash: |
-        set -e
-        cd src/engine
-        ./build.sh ${TOOLSET}
-        ./b2 -v
-      displayName: Build
-    - bash: |
-        set -e
-        pushd ${HOME}
-        git clone --recursive https://github.com/boostorg/boost.git
-        cd boost
-        git checkout ${BOOST_BRANCH}
-        CXX_PATH=`which ${CXX}`
-        echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
-        popd
-      displayName: Test
-
   - job: 'Release_Windows'
     displayName: 'Release Windows'
     pool:
@@ -416,36 +476,8 @@ stages:
         & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
 
-  - job: 'Dev_Windows'
-    displayName: 'Dev Windows'
-    pool:
-      vmImage: 'windows-latest'
-    strategy:
-      matrix:
-        Master .. VS 2019: {BOOST_BRANCH: master, TOOLSET: vc142}
-        Develop .. VS 2019: {BOOST_BRANCH: develop, TOOLSET: vc142}
-    steps:
-    - powershell: |
-        cd src/engine
-        $env:path += ';' + ${env:CXX_PATH}
-        cmd /c build.bat ${env:TOOLSET}
-        ./b2.exe -v
-        cd ../..
-      displayName: Build
-    - powershell: |
-        $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
-        cd "${env:HOME}"
-        git clone --recursive https://github.com/boostorg/boost.git
-        cd boost
-        $OriginalErrorActionPreference = $ErrorActionPreference
-        $ErrorActionPreference= 'silentlycontinue'
-        git checkout "${env:BOOST_BRANCH}"
-        $ErrorActionPreference = $OriginalErrorActionPreference
-        echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
-        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
-      displayName: Test
-
-- stage: WebsiteUpdate
+- stage: Website_Update
+  dependsOn: [Core]
   displayName: 'Website Update'
   condition: in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/develop')
   jobs:
