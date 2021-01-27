@@ -88,6 +88,7 @@
 #define SPLITPATH ';'
 #define MAXLINE (undefined__see_execnt_c)  /* max chars per command line */
 #define USE_EXECNT
+#define USE_PATHNT
 #define PATH_DELIM '\\'
 
 /* AS400 cross-compile from NT. */
@@ -131,6 +132,7 @@
 #define SPLITPATH ';'
 #define MAXLINE 996  /* max chars per command line */
 #define USE_EXECUNIX
+#define USE_PATHNT
 #define PATH_DELIM '\\'
 
 #endif  /* #ifdef MINGW */
@@ -145,6 +147,7 @@
 #define OSMAJOR "UNIX=true"
 #define USE_EXECUNIX
 #define USE_FILEUNIX
+#define USE_PATHUNIX
 #define PATH_DELIM '/'
 
 #ifdef _AIX

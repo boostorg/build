@@ -17,6 +17,8 @@
  */
 
 #include "jam.h"
+#ifdef USE_PATHNT
+
 #include "pathsys.h"
 #include "hash.h"
 
@@ -407,3 +409,5 @@ void path_done( void )
         hashdone( path_key_cache );
     }
 }
+
+#endif // USE_PATHNT
