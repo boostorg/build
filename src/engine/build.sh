@@ -13,9 +13,12 @@ B2_TOOLSET=
 B2_SETUP=
 
 # Internal options.
-B2_VERBOSE=${B2_VERBOSE:=${FALSE}}
-B2_DEBUG=${B2_DEBUG:=${FALSE}}
-B2_GUESS_TOOLSET=${FALSE}
+B2_VERBOSE_OPT=${B2_VERBOSE_OPT:=${FALSE}}
+B2_DEBUG_OPT=${B2_DEBUG_OPT:=${FALSE}}
+B2_GUESS_TOOLSET_OPT=${FALSE}
+B2_HELP_OPT=${FALSE}
+B2_CXX_OPT=
+B2_CXXFLAGS_OPT=
 
 # We need to calculate and set SCRIPT_PATH and SCRIPT_DIR to reference this
 # script so that we can refer to file relative to it.
@@ -44,7 +47,7 @@ test_true ()
 # if there was an error.
 echo_run ()
 {
-    if test_true ${B2_VERBOSE} ; then echo "> $@" ; fi
+    if test_true ${B2_VERBOSE_OPT} ; then echo "> $@" ; fi
     $@
     r=$?
     if test $r -ne ${TRUE} ; then
@@ -59,24 +62,31 @@ error_exit ()
 ${@}
 
 You can specify the toolset as the argument, i.e.:
-    ./build.sh gcc
+    ./build.sh [options] gcc
 
 Toolsets supported by this script are:
     acc, clang, como, gcc, intel-darwin, intel-linux, kcc, kylix, mipspro,
     pathscale, pgi, qcc, sun, sunpro, tru64cxx, vacpp
 
-For any toolset you can override the path to the compiler with the CXX
-environment variable. You can also use additional flags for the compiler
-with the CXXFLAGS environment variable.
+For any toolset you can override the path to the compiler with the '--cxx'
+option. You can also use additional flags for the compiler with the
+'--cxxflags' option.
 
 A special toolset; cxx, is available which is used as a fallback when a more
 specific toolset is not found and the cxx command is detected. The 'cxx'
-toolset will use the CXX, CXXFLAGS, and LIBS environment variables, if present.
+toolset will use the '--cxx' and '--cxxflags' options, if present.
 
-Similarly, the cross-cxx toolset is available for cross-compiling by using the
-BUILD_CXX, BUILD_CXXFLAGS, and BUILD_LDFLAGS environment variables to compile
-binaries that will be executed on the build system. This allows CXX etc. to be
-set for cross-compilers to be propagated to subprocesses.
+Options:
+    --help                  Show this help message.
+    --verbose               Show messages about what this script is doing.
+    --debug                 Build b2 with debug information, and no
+                            optimizations.
+    --guess-toolset         Print the toolset we can detect for building.
+    --cxx=CXX               The compiler exec to use instead of the detected
+                            compiler exec.
+    --cxxflags=CXXFLAGS     The compiler flags to use in addition to the
+                            flags for the detected compiler.
+
 " 1>&2
     exit 1
 }
@@ -101,13 +111,13 @@ test_uname ()
 
 test_compiler ()
 {
-    local EXE="${CXX:-$1}"
+    local EXE="${B2_CXX_OPT:-$1}"
     local CMD
     local SETUP
     shift
-    CMD="${EXE} $@ ${CXXFLAGS:-}"
+    CMD="${EXE} $@ ${B2_CXXFLAGS_OPT:-}"
     SETUP=${B2_SETUP:-true}
-    if test_true ${B2_VERBOSE} ; then
+    if test_true ${B2_VERBOSE_OPT} ; then
         echo "> ${CMD} check_cxx11.cpp"
         ( ${SETUP} ; ${CMD} check_cxx11.cpp )
     else
@@ -236,10 +246,6 @@ check_toolset ()
     if test_toolset cxx && test_compiler cxx ; then B2_TOOLSET=cxx ; return ${TRUE} ; fi
     if test_toolset cxx && test_compiler cpp ; then B2_TOOLSET=cxx ; return ${TRUE} ; fi
     if test_toolset cxx && test_compiler CC ; then B2_TOOLSET=cxx ; return ${TRUE} ; fi
-    # Generic cross compile (cross-cxx)
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:-cxx} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:-cpp} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
-    if test_toolset cross-cxx && test_compiler ${BUILD_CXX:-CC} ; then B2_TOOLSET=cross-cxx ; return ${TRUE} ; fi
 
     # Nothing found.
     if test "${B2_TOOLSET}" = "" ; then
@@ -252,18 +258,26 @@ check_toolset ()
 while test $# -gt 0
 do
     case "$1" in
-        --verbose) B2_VERBOSE=${TRUE} ;;
-        --debug) B2_DEBUG=${TRUE} ;;
-        --guess-toolset) B2_GUESS_TOOLSET=${TRUE} ;;
+        --verbose) B2_VERBOSE_OPT=${TRUE} ;;
+        --debug) B2_DEBUG_OPT=${TRUE} ;;
+        --guess-toolset) B2_GUESS_TOOLSET_OPT=${TRUE} ;;
+        --help) B2_HELP_OPT=${TRUE} ;;
+        --cxx=*) B2_CXX_OPT=`expr "x$1" : "x--cxx=\(.*\)"` ;;
+        --cxxflags=*) B2_CXXFLAGS_OPT=`expr "x$1" : "x--cxxflags=\(.*\)"` ;;
         -*) ;;
         ?*) B2_TOOLSET=$1 ;;
     esac
     shift
 done
 
+# Show some help, if requested.
+if test_true ${B2_HELP_OPT} ; then
+    error_exit
+fi
+
 # If we have a CXX but no B2_TOLSET specified by the user we assume they meant
 # "cxx" as the toolset.
-if test "${CXX}" != "" -a "${B2_TOOLSET}" = "" ; then
+if test "${B2_CXX_OPT}" != "" -a "${B2_TOOLSET}" = "" ; then
     B2_TOOLSET=cxx
 fi
 
@@ -273,7 +287,7 @@ TOOLSET_CHECK=$?
 
 # We can bail from the rest of the checks and build if we are just guessing
 # the toolset.
-if test_true ${B2_GUESS_TOOLSET} ; then
+if test_true ${B2_GUESS_TOOLSET_OPT} ; then
     echo "${B2_TOOLSET}"
     exit 0
 fi
@@ -284,7 +298,7 @@ if ! test_true ${TOOLSET_CHECK} ; then
 A C++11 capable compiler is required for building the B2 engine.
 Toolset '${B2_TOOLSET}' does not appear to support C++11.
 "
-    (B2_VERBOSE=${TRUE} check_toolset)
+    (B2_VERBOSE_OPT=${TRUE} check_toolset)
     error_exit "
 ** Note, the C++11 capable compiler is _only_ required for building the B2
 ** engine. The B2 build system allows for using any C++ level and any other
@@ -402,11 +416,6 @@ case "${B2_TOOLSET}" in
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
     ;;
 
-    cross-cxx)
-        CXXFLAGS=${BUILD_CXXFLAGS}
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
-    ;;
-
     *)
         error_exit "Unknown toolset: ${B2_TOOLSET}"
     ;;
@@ -483,14 +492,14 @@ modules/sequence.cpp \
 modules/set.cpp \
 "
 
-    if test_true ${B2_DEBUG} ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"
+    if test_true ${B2_DEBUG_OPT} ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"
     else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} -DNDEBUG"
     fi
-    ( B2_VERBOSE=${TRUE} echo_run ${B2_CXX} ${CXXFLAGS} ${B2_CXXFLAGS} ${B2_SOURCES} -o b2 )
-    ( B2_VERBOSE=${TRUE} echo_run cp b2 bjam )
+    ( B2_VERBOSE_OPT=${TRUE} echo_run ${B2_CXX} ${B2_CXXFLAGS} ${B2_SOURCES} -o b2 )
+    ( B2_VERBOSE_OPT=${TRUE} echo_run cp b2 bjam )
 }
 
-if test_true ${B2_VERBOSE} ; then
+if test_true ${B2_VERBOSE_OPT} ; then
     (
         ${B2_SETUP}
         build_b2

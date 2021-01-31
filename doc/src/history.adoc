@@ -47,6 +47,8 @@ command is expanded to include the options directly.
   -- _Gei0r_
 * Fix building b2 engine with Intel Linux icpc.
   -- _Alain Miniussi_
+* Reword `build.sh` to fix many bugs and to avoid use of common env vars.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 4.3.0
 
