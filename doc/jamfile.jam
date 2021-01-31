@@ -35,6 +35,7 @@ project b2doc
     ;
 
 path-constant PYGMENTS_DIR : src/pygments ;
+path-constant STYLES_DIR : src/styles ;
 
 doc-dir = [ MATCH "--doc-dir=(.*)" : [ modules.peek : ARGV ] ] ;
 doc-dir ?= html ;
@@ -56,6 +57,9 @@ html index : src/standalone.adoc :
         <flags>--trace
         <flags>--verbose
         <dependency>$(PYGMENTS_DIR)/pygments_init.rb
+        # <flags>"-a stylesheet=amber.css"
+        # <flags>"-a stylesdir=$(STYLES_DIR)"
+        # <asciidoctor-attribute>linkcss
     ;
 explicit index ;
 
