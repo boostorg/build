@@ -8,7 +8,7 @@ steps:
     set -e
     cd src/engine
     set PATH=${PATH};${CXX_PATH}
-    ./build.sh ${TOOLSET}
+    ./build.sh ${TOOLSET} --cxx=${CXX}
     ./b2 -v
     cd ../..
   displayName: Build

@@ -8,7 +8,7 @@ steps:
 - bash: |
     set -e
     cd src/engine
-    ./build.sh ${TOOLSET}
+    ./build.sh ${TOOLSET} --cxx=${CXX}
     ./b2 -v
     cd ../..
   displayName: Build
