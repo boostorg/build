@@ -41,7 +41,7 @@ stages:
       displayName: Install
     - bash: |
         set -e
-        ./src/engine/build.sh --verbose --cxx=${CXX}
+        ./src/engine/build.sh --verbose
       displayName: Build
 
   - job: 'Linux_Clang_Only_Build'
@@ -59,7 +59,7 @@ stages:
       displayName: Install
     - bash: |
         set -e
-        ./src/engine/build.sh --verbose --cxx=${CXX}
+        ./src/engine/build.sh --verbose
       displayName: Build
 
   - job: 'Linux_Latest'
