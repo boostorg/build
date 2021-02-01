@@ -235,8 +235,7 @@ check_toolset ()
     if test_toolset pathscale && test_compiler pathCC ; then B2_TOOLSET=pathscale ; return ${TRUE} ; fi
     # Como (como)
     if test_toolset como && test_compiler como ; then B2_TOOLSET=como ; return ${TRUE} ; fi
-    # Borland C++ (kcc, kylix)
-    if test_toolset kcc && test_compiler KCC ; then B2_TOOLSET=kcc ; return ${TRUE} ; fi
+    # Borland C++ (kylix)
     if test_toolset kylix && test_compiler bc++ -tC -q ; then B2_TOOLSET=kylix ; return ${TRUE} ; fi
     # aCC (acc)
     if test_toolset acc && test_compiler aCC -AA ; then B2_TOOLSET=acc ; return ${TRUE} ; fi
