@@ -361,6 +361,12 @@ class Tester(TestCmd.TestCmd):
         except:
             self.fail_test(1)
 
+    def copy_timestamp(self, src, dst):
+        src_name = self.native_file_name(src)
+        dst_name = self.native_file_name(dst)
+        stats = os.stat(src_name)
+        os.utime(dst_name, (stats.st_atime, stats.st_mtime))
+
     def copy_preserving_timestamp(self, src, dst):
         src_name = self.native_file_name(src)
         dst_name = self.native_file_name(dst)
