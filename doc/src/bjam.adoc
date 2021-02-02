@@ -59,91 +59,82 @@ The supported toolsets, and whether they are auto-detected, are:
 |===
 |Script |Platform |Toolset |Detection and Notes
 
-|`build.bat`
+h|`build.bat` 3+h|Windows
 
-|Windows
-
-|http://www.codegear.com/downloads/free/cppbuilder[`borland`],
-http://www.borland.com/[Borland] {CPP}Builder (BCC 5.5)
+| | |`vc142`
 a|
-* Common install location: `C:\Borland\BCC55`
-* `BCC32.EXE` in `PATH`
+Microsoft Visual Studio {CPP} 2019
 
-| | |http://www.comeaucomputing.com/[`como`], Comeau Computing C/{CPP} |
+* Uses `vswhere` utility.
 
-| | |http://gcc.gnu.org/[`gcc`], GNU GCC |
+| | |`vc141`
+a|
+Microsoft Visual Studio {CPP} 2017
 
-| | |http://gcc.gnu.org/[`gcc-nocygwin`], GNU GCC |
+* Uses `vswhere` utility.
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\`
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\`
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\`
+
+| | |`vc14`
+a|
+Microsoft Visual Studio {CPP} 2015
+
+* Env var `%VS140COMNTOOLS%`
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio 14.0\VC\`
+
+| | |`vc12`
+a|
+Microsoft Visual Studio {CPP} 2013
+
+* Env var `%VS120COMNTOOLS%`
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio 12.0\VC\`
+
+| | |`borland`
+a|
+Embarcadero {CPP}Builder
+
+* `bcc32c.exe` in `PATH`
 
 | |
-|http://www.intel.com/software/products/compilers/c60[`intel-win32`],
+|`intel-win32`
+a|
 Intel {CPP} Compiler for Windows
-a|
-* `ICL.EXE` in `PATH`
 
-| | |http://www.metrowerks.com/[`metrowerks`], MetroWerks CodeWarrior
-C/{CPP} 7.x, 8.x, 9.x
-a|
-* `CWFolder` variable configured
-* `MWCC.EXE` in PATH
+* `icl.exe` in `PATH`
 
-| | |http://www.mingw.org/[`mingw`], GNU http://gcc.gnu.org/[GCC] as the
-http://www.mingw.org/[MinGW] configuration
+| | |`mingw`
 a|
+GNU GCC as the MinGW configuration
+
 * Common install location: `C:\MinGW`
 
-| | |http://msdn.microsoft.com/visualc/[`msvc`], Microsoft Visual {CPP}
-6.x
+| | |`como` | Comeau Computing C/{CPP}
+
+| | |`gcc`, | GNU GCC
+
+| | |`clang` | Clang LLVM
+
+| | |`gcc-nocygwin` | GNU GCC
+
+h|`build.sh` 3+h|Unix, Linux, Cygwin, Windows Bash, etc.
+
+| | |`gcc`
 a|
-* `VCVARS32.BAT` already configured
-* `%MSVCDir%` is present in environment
-* Common install locations: `%ProgramFiles%\Microsoft Visual Studio`,
-`%ProgramFiles%\Microsoft Visual {CPP}`
-* `CL.EXE` in `PATH`
+GNU GCC
 
-| | |http://msdn.microsoft.com/visualc/[`vc7`], Microsoft Visual {CPP} 7.x
-a|
-* `VCVARS32.BAT` or `VSVARS32.BAT` already configured
-* `%VS71COMNTOOLS%` is present in environment
-* `%VCINSTALLDIR%` is present in environment
-* Common install locations: `%ProgramFiles%\Microsoft Visual Studio .NET`,
-  `%ProgramFiles%\Microsoft Visual Studio .NET 2003`
-* `CL.EXE` in `PATH`
-
-| | |http://msdn.microsoft.com/visualc/[`vc8` and `vc9`], Microsoft
-Visual {CPP} 8.x and 9.x
-a|
-Detection:
-
-* `VCVARSALL.BAT` already configured
-* `%VS90COMNTOOLS%` is present in environment
-* Common install location: `%ProgramFiles%\Microsoft Visual Studio 9`
-* `%VS80COMNTOOLS%` is present in environment
-* Common install location: `%ProgramFiles%\Microsoft Visual Studio 8`
-* `CL.EXE` in `PATH`
-
-Notes:
-
-* If `VCVARSALL.BAT`
-is called to set up the toolset, it is passed all the extra arguments,
-see below for what those arguments are. This can be used to build, for
-example, a Win64 specific version of `b2`. Consult the VisualStudio
-documentation for what the possible argument values to the `VCVARSALL.BAT`
-are.
-
-|`build.sh`
-|Unix, Linux, Cygwin, Windows Bash, etc.
-
-|`gcc`, GNU GCC
-a|
 * `g++` in `PATH`
 
-| | |`clang`, Clang LLVM
+| | |`clang`
 a|
+Clang LLVM
+
 * `clang++` in `PATH`
 
-| | |`intel-linux`, Intel {CPP} (oneAPI) for Linux
+| | |`intel-linux`
 a|
+Intel {CPP} (oneAPI) for Linux
+
 * `icpx` in `PATH`
 * `icc` in `PATH`
 * `icpc` in `PATH`
@@ -153,46 +144,66 @@ a|
   `/opt/intel_cc_80/bin`
 
 | |
-|`mipspro`, SGI MIPSpro {CPP}
+|`mipspro`
 a|
+SGI MIPSpro {CPP}
+
 * `uname` is "IRIX" or "IRIX64" and `CC` in `PATH`
 
-| | |`true64cxx`, Compaq {CPP} Compiler for True64 UNIX
+| | |`true64cxx`
 a|
+Compaq {CPP} Compiler for True64 UNIX
+
 * `uname` is "OSF1" and `cc` in `PATH`
 
-| | |`qcc`, QNX Neutrino
+| | |`qcc`
 a|
+QNX Neutrino
+
 * `uname` is "QNX" and `QCC` in `PATH`
 
-| | |`xlcpp` and `vacpp`, IBM VisualAge {CPP}
+| | |`xlcpp` and `vacpp`
 a|
+IBM VisualAge {CPP}
+
 * `uname` is "Linux" and `xlC_r` in `PATH` (`xlcpp` or `vacpp` depending on
   machine endian)
 * `uname` is "AIX" and `xlC_r` in `PATH` (`vacpp`)
 
-| | |`pgi`, PGI Compilers
+| | |`pgi`
 a|
+PGI Compilers
+
 * `pgc++` in `PATH`
 
-| | |`pathscale`, Pathscale {CPP}
+| | |`pathscale`
 a|
+Pathscale {CPP}
+
 * `pathCC` in `PATH`
 
-| | |`como`, Comeau Computing C/{CPP}
+| | |`como`
 a|
+Comeau Computing C/{CPP}
+
 * `como` in `PATH`
 
-| | |`kylix`, Borland {CPP}
+| | |`kylix`
 a|
+Borland {CPP}
+
 * `bc++` in `PATH` (`kylix`)
 
-| | |`acc`, HP-UX aCC
+| | |`acc`
 a|
+HP-UX aCC
+
 * `aCC` in `PATH`
 
-| | |`sunpro`, Sun Workshop 6 {CPP}
+| | |`sunpro`
 a|
+Sun Workshop 6 {CPP}
+
 * Standard install location: `/opt/SUNWspro/bin/CC`
 
 |===
