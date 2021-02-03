@@ -1,5 +1,5 @@
 # Copyright (c) 2010 Vladimir Prus.
-# Copyright 2017 Rene Rivera.
+# Copyright 2017-2021 Rene Rivera.
 #
 # Use, modification and distribution is subject to the Boost Software
 # License Version 1.0. (See accompanying file LICENSE_1_0.txt or
@@ -25,23 +25,6 @@ import modules ;
 import sequence ;
 import utility ;
 import virtual-target ;
-
-
-# The configure feature allows external definition of what features are
-# relevant for doing configuration builds. One can add additional relevant
-# features by using:
-#
-#   import feature ;
-#   import configure ;
-#   feature.compose <configure> : <threading> ;
-#
-feature.feature configure : : composite optional ;
-
-# This is the initial set of relevant features. Note that subfeature of all
-# relevant features are also considered relevant.
-#
-feature.compose <configure> :
-    <target-os> <toolset> <address-model> <architecture> <cxxstd> ;
 
 
 rule log-summary ( )
@@ -173,9 +156,11 @@ rule maybe-force-rebuild ( targets * )
 # Attempts to build a set of virtual targets
 rule try-build ( targets * : ps : what : retry ? )
 {
-   local cache-name = $(what) [ $(ps).raw ] ;
+   local cache-props = [ $(ps).raw ] ;
+   local cache-name = $(what) $(cache-props) ;
    cache-name = $(cache-name:J=-) ;
    local value = [ config-cache.get $(cache-name) ] ;
+   local cache-min = [ SORT [ feature.minimize $(cache-props) ] ] ;
 
     local result ;
     local jam-targets ;
@@ -194,11 +179,11 @@ rule try-build ( targets * : ps : what : retry ? )
         {
             .$(what)-supported.$(ps) = yes ;
             result = true ;
-            log-check-result "$(x) : yes (cached)" ;
+            log-check-result "$(x) : yes (cached) : $(cache-min:E=:J= )" ;
         }
         else
         {
-            log-check-result "$(x) : no  (cached)" ;
+            log-check-result "$(x) : no  (cached) : $(cache-min:E=:J= )" ;
         }
     }
     else if ! UPDATE_NOW in [ RULENAMES ]
@@ -213,11 +198,11 @@ rule try-build ( targets * : ps : what : retry ? )
         {
             .$(what)-supported.$(ps) = yes ;
             result = true ;
-            log-check-result "$(x) : yes" ;
+            log-check-result "$(x) : yes          : $(cache-min:E=:J= )" ;
         }
         else
         {
-            log-check-result "$(x) : no" ;
+            log-check-result "$(x) : no           : $(cache-min:E=:J= )" ;
         }
     }
     if ! $(value)
@@ -406,29 +391,19 @@ rule find-builds-raw ( project : ps : what : * )
     }
 }
 
-rule get-relevant-features ( )
+rule get-relevant-features ( properties * )
 {
-    local relevant = [ feature.expand <configure> ] ;
-    local result = ;
-    for local f in $(relevant)
-    {
-        if $(f) != <configure>
-        {
-            local sub = [ modules.peek feature : $(f).subfeatures ] ;
-            local name = [ utility.ungrist $(f) ] ;
-            result += $(f) <$(name)-$(sub)> ;
-        }
-    }
-    return $(result) ;
+    local ps-full = [ property-set.create $(properties) ] ;
+    local ps-base = [ property-set.create [ $(ps-full).base ] ] ;
+    local ps-relevant = [ property-set.create
+        [ feature.expand-subfeatures [ feature.minimize [ $(ps-base).raw ] ] ] ] ;
+
+    return [ $(ps-relevant).raw ] ;
 }
 
 rule builds ( metatarget-reference : properties * : what ? : retry ? )
 {
-    local toolset-subfeatures = [ modules.peek feature : <toolset>.subfeatures ] ;
-    toolset-subfeatures = <toolset-$(toolset-subfeatures)> ;
-    # FIXME: This should not be hardcoded. Other checks might want to consider a
-    # different set of features as relevant.
-    local relevant = [ property.select [ get-relevant-features ] : $(properties) ] ;
+    local relevant = [ get-relevant-features $(properties) ] ;
     local ps = [ property-set.create $(relevant) ] ;
     local t = [ targets.current ] ;
     local p = [ $(t).project ] ;
@@ -446,7 +421,7 @@ rule builds ( metatarget-reference : properties * : what ? : retry ? )
 
 rule find-builds ( what : properties * : * )
 {
-    local relevant = [ property.select [ get-relevant-features ] : $(properties) ] ;
+    local relevant = [ get-relevant-features $(properties) ] ;
     local ps = [ property-set.create $(relevant) ] ;
     local t = [ targets.current ] ;
     local p = [ $(t).project ] ;
@@ -594,8 +569,7 @@ rule check-target-builds ( target message ? : true-properties * :
     local rulename = [ indirect.make check : $(instance) ] ;
     return <conditional>@$(rulename)
         [ property.evaluate-conditional-relevance
-            $(true-properties) $(false-properties)
-          : [ configure.get-relevant-features ] ] ;
+            $(true-properties) $(false-properties) ] ;
 }
 
 # Usage:
@@ -612,8 +586,7 @@ rule choose ( message : * )
     local rulename = [ indirect.make check : $(instance) ] ;
     return <conditional>@$(rulename)
         [ property.evaluate-conditional-relevance
-            [ $(instance).all-properties ]
-          : [ configure.get-relevant-features ]  ] ;
+            [ $(instance).all-properties ] ] ;
 }
 
 
