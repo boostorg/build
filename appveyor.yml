@@ -22,12 +22,12 @@ environment:
     TOOLSET: vc12
     TEST_TOOLSET: msvc
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - job_name: 'Cygwin 3.1.7, Test'
-    job_group: 'Test'
-    TOOLSET:
-    TEST_TOOLSET: gcc
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-    CXX_PATH: C:/cygwin/bin
+  # - job_name: 'Cygwin 3.1.7, Test'
+  #   job_group: 'Test'
+  #   TOOLSET:
+  #   TEST_TOOLSET: gcc
+  #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+  #   CXX_PATH: C:/cygwin/bin
 
 build_script:
   - cmd: |
