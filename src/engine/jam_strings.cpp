@@ -26,12 +26,12 @@ static void assert_invariants( string * self )
     }
 
     assert( self->size < self->capacity );
-    assert( ( self->capacity <= sizeof( self->opt ) ) == ( self->value == self->opt ) );
+    assert( ( self->capacity <= int32_t(sizeof( self->opt )) ) == ( self->value == self->opt ) );
     assert( self->value[ self->size ] == 0 );
     /* String objects modified manually after construction to contain embedded
      * '\0' characters are considered structurally valid.
      */
-    assert( strlen( self->value ) <= self->size );
+    assert( strlen( self->value ) <= size_t(self->size) );
 
     for ( i = 0; i < 4; ++i )
     {
@@ -67,20 +67,20 @@ void string_free( string * s )
 }
 
 
-static void string_reserve_internal( string * self, size_t capacity )
+static void string_reserve_internal( string * self, int32_t capacity )
 {
     if ( self->value == self->opt )
     {
-        self->value = (char *)BJAM_MALLOC_ATOMIC( capacity +
+        self->value = (char *)BJAM_MALLOC_ATOMIC( size_t(capacity) +
             JAM_STRING_MAGIC_SIZE );
         self->value[ 0 ] = 0;
         size_t opt_size = sizeof(self->opt); // Workaround sizeof in strncat warning.
         strncat( self->value, self->opt, opt_size );
-        assert( strlen( self->value ) <= self->capacity && "Regression test" );
+        assert( strlen( self->value ) <= size_t(self->capacity) && "Regression test" );
     }
     else
     {
-        self->value = (char *)BJAM_REALLOC( self->value, capacity +
+        self->value = (char *)BJAM_REALLOC( self->value, size_t(capacity) +
             JAM_STRING_MAGIC_SIZE );
     }
 #ifndef NDEBUG
@@ -90,7 +90,7 @@ static void string_reserve_internal( string * self, size_t capacity )
 }
 
 
-void string_reserve( string * self, size_t capacity )
+void string_reserve( string * self, int32_t capacity )
 {
     assert_invariants( self );
     if ( capacity <= self->capacity )
@@ -100,12 +100,12 @@ void string_reserve( string * self, size_t capacity )
 }
 
 
-static void maybe_reserve( string * self, size_t new_size )
+static void maybe_reserve( string * self, int32_t new_size )
 {
-    size_t capacity = self->capacity;
+    int32_t capacity = self->capacity;
     if ( capacity <= new_size )
     {
-        size_t new_capacity = capacity;
+        int32_t new_capacity = capacity;
         while ( new_capacity <= new_size )
             new_capacity <<= 1;
         string_reserve_internal( self, new_capacity );
@@ -115,13 +115,13 @@ static void maybe_reserve( string * self, size_t new_size )
 
 void string_append( string * self, char const * rhs )
 {
-    size_t rhs_size = strlen( rhs );
-    size_t new_size = self->size + rhs_size;
+    int32_t rhs_size = int32_t(strlen( rhs ));
+    int32_t new_size = self->size + rhs_size;
     assert_invariants( self );
 
     maybe_reserve( self, new_size );
 
-    memcpy( self->value + self->size, rhs, rhs_size + 1 );
+    memcpy( self->value + self->size, rhs, size_t(rhs_size) + 1 );
     self->size = new_size;
 
     assert_invariants( self );
@@ -130,14 +130,14 @@ void string_append( string * self, char const * rhs )
 
 void string_append_range( string * self, char const * start, char const * finish )
 {
-    size_t rhs_size = finish - start;
-    size_t new_size = self->size + rhs_size;
+    int32_t rhs_size = int32_t(finish - start);
+    int32_t new_size = self->size + rhs_size;
     assert_invariants( self );
 
     maybe_reserve( self, new_size );
 
     if ( start != finish )
-        memcpy( self->value + self->size, start, rhs_size );
+        memcpy( self->value + self->size, start, size_t(rhs_size) );
     self->size = new_size;
     self->value[ new_size ] = 0;
 
@@ -151,7 +151,7 @@ void string_copy( string * s, char const * rhs )
     string_append( s, rhs );
 }
 
-void string_truncate( string * self, size_t n )
+void string_truncate( string * self, int32_t n )
 {
     assert_invariants( self );
     assert( n <= self->capacity );
@@ -198,9 +198,9 @@ void string_unit_test()
         for ( i = 0; i < limit; ++i )
         {
             string_push_back( s, (char)( i + 1 ) );
-            assert( s->size == i + 1 );
+            assert( s->size == int32_t(i + 1) );
         }
-        assert( s->size == limit );
+        assert( s->size == int32_t(limit) );
         assert( s->value != s->opt );
         for ( i = 0; i < limit; ++i )
             assert( s->value[ i ] == (char)( i + 1 ) );
@@ -212,7 +212,7 @@ void string_unit_test()
         string copy[ 1 ];
         string_copy( copy, original );
         assert( !strcmp( copy->value, original ) );
-        assert( copy->size == strlen( original ) );
+        assert( copy->size == int32_t(strlen( original )) );
         string_free( copy );
     }
 

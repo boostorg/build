@@ -59,209 +59,179 @@ The supported toolsets, and whether they are auto-detected, are:
 |===
 |Script |Platform |Toolset |Detection and Notes
 
-|`build.bat`
-|Windows NT, 2000, and XP
-|http://www.codegear.com/downloads/free/cppbuilder[`borland`],
-http://www.borland.com/[Borland] {CPP}Builder (BCC 5.5)
+h|`build.bat` 3+h|Windows
+
+| | |`vc142`
 a|
-* Common install location: `C:\Borland\BCC55`
-* `BCC32.EXE` in `PATH`
+Microsoft Visual Studio {CPP} 2019
 
-| | |http://www.comeaucomputing.com/[`como`], Comeau Computing C/{CPP} |
+* Uses `vswhere` utility.
 
-| | |http://gcc.gnu.org/[`gcc`], GNU GCC |
+| | |`vc141`
+a|
+Microsoft Visual Studio {CPP} 2017
 
-| | |http://gcc.gnu.org/[`gcc-nocygwin`], GNU GCC |
+* Uses `vswhere` utility.
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio\2017\Enterprise\VC\`
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio\2017\Professional\VC\`
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio\2017\Community\VC\`
+
+| | |`vc14`
+a|
+Microsoft Visual Studio {CPP} 2015
+
+* Env var `%VS140COMNTOOLS%`
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio 14.0\VC\`
+
+| | |`vc12`
+a|
+Microsoft Visual Studio {CPP} 2013
+
+* Env var `%VS120COMNTOOLS%`
+* Common install location: `%ProgramFiles%\Microsoft Visual Studio 12.0\VC\`
+
+| | |`borland`
+a|
+Embarcadero {CPP}Builder
+
+* `bcc32c.exe` in `PATH`
 
 | |
-|http://www.intel.com/software/products/compilers/c60[`intel-win32`],
+|`intel-win32`
+a|
 Intel {CPP} Compiler for Windows
-a|
-* `ICL.EXE` in `PATH`
 
-| | |http://www.metrowerks.com/[`metrowerks`], MetroWerks CodeWarrior
-C/{CPP} 7.x, 8.x, 9.x
-a|
-* `CWFolder` variable configured
-* `MWCC.EXE` in PATH
+* `icl.exe` in `PATH`
 
-| | |http://www.mingw.org/[`mingw`], GNU http://gcc.gnu.org/[GCC] as the
-http://www.mingw.org/[MinGW] configuration
+| | |`mingw`
 a|
+GNU GCC as the MinGW configuration
+
 * Common install location: `C:\MinGW`
 
-| | |http://msdn.microsoft.com/visualc/[`msvc`], Microsoft Visual {CPP}
-6.x
+| | |`como` | Comeau Computing C/{CPP}
+
+| | |`gcc`, | GNU GCC
+
+| | |`clang` | Clang LLVM
+
+| | |`gcc-nocygwin` | GNU GCC
+
+h|`build.sh` 3+h|Unix, Linux, Cygwin, Windows Bash, etc.
+
+| | |`gcc`
 a|
-* `VCVARS32.BAT` already configured
-* `%MSVCDir%` is present in environment
-* Common install locations: `%ProgramFiles%\Microsoft Visual Studio`,
-`%ProgramFiles%\Microsoft Visual {CPP}`
-* `CL.EXE` in `PATH`
+GNU GCC
 
-| | |http://msdn.microsoft.com/visualc/[`vc7`], Microsoft Visual {CPP} 7.x
+* `g++` in `PATH`
+
+| | |`clang`
 a|
-* `VCVARS32.BAT` or `VSVARS32.BAT` already configured
-* `%VS71COMNTOOLS%` is present in environment
-* `%VCINSTALLDIR%` is present in environment
-* Common install locations: `%ProgramFiles%\Microsoft Visual Studio .NET`,
-  `%ProgramFiles%\Microsoft Visual Studio .NET 2003`
-* `CL.EXE` in `PATH`
+Clang LLVM
 
-| | |http://msdn.microsoft.com/visualc/[`vc8` and `vc9`], Microsoft
-Visual {CPP} 8.x and 9.x
+* `clang++` in `PATH`
+
+| | |`intel-linux`
 a|
-Detection:
+Intel {CPP} (oneAPI) for Linux
 
-* `VCVARSALL.BAT` already configured
-* `%VS90COMNTOOLS%` is present in environment
-* Common install location: `%ProgramFiles%\Microsoft Visual Studio 9`
-* `%VS80COMNTOOLS%` is present in environment
-* Common install location: `%ProgramFiles%\Microsoft Visual Studio 8`
-* `CL.EXE` in `PATH`
+* `icpx` in `PATH`
+* `icc` in `PATH`
+* `icpc` in `PATH`
+* `setvars.sh` in common install locations: `$HOME/intel/oneapi`,
+  `/opt/intel/oneapi`, `/opt/intel/inteloneapi`
+* `iccvars.sh` in common install locations: `/opt/intel/cc/9.0/bin`,
+  `/opt/intel_cc_80/bin`
 
-Notes:
-
-* If `VCVARSALL.BAT`
-is called to set up the toolset, it is passed all the extra arguments,
-see below for what those arguments are. This can be used to build, for
-example, a Win64 specific version of `b2`. Consult the VisualStudio
-documentation for what the possible argument values to the `VCVARSALL.BAT`
-are.
-
-|`build.sh` |Unix, Linux, Cygwin, etc. |http://www.hp.com/go/c++[`acc`],
-HP-UX aCC
+| |
+|`mipspro`
 a|
-* `aCC` in `PATH`
-* `uname` is "HP-UX"
+SGI MIPSpro {CPP}
 
-| | |http://www.comeaucomputing.com/[`como`], Comeau Computing C/{CPP}
+* `uname` is "IRIX" or "IRIX64" and `CC` in `PATH`
+
+| | |`true64cxx`
 a|
+Compaq {CPP} Compiler for True64 UNIX
+
+* `uname` is "OSF1" and `cc` in `PATH`
+
+| | |`qcc`
+a|
+QNX Neutrino
+
+* `uname` is "QNX" and `QCC` in `PATH`
+
+| | |`xlcpp` and `vacpp`
+a|
+IBM VisualAge {CPP}
+
+* `uname` is "Linux" and `xlC_r` in `PATH` (`xlcpp` or `vacpp` depending on
+  machine endian)
+* `uname` is "AIX" and `xlC_r` in `PATH` (`vacpp`)
+
+| | |`pgi`
+a|
+PGI Compilers
+
+* `pgc++` in `PATH`
+
+| | |`pathscale`
+a|
+Pathscale {CPP}
+
+* `pathCC` in `PATH`
+
+| | |`como`
+a|
+Comeau Computing C/{CPP}
+
 * `como` in `PATH`
 
-| | |http://gcc.gnu.org/[`gcc`], GNU GCC
+| | |`kylix`
 a|
-* `gcc` in `PATH`
+Borland {CPP}
 
-| |
-|http://www.intel.com/software/products/compilers/c60l/[`intel-linux`],
-Intel {CPP} for Linux
-a|
-* `icc` in `PATH`
-* Common install locations: `/opt/intel/cc/9.0`, `/opt/intel_cc_80`,
-  `/opt/intel/compiler70`, `/opt/intel/compiler60`, `/opt/intel/compiler50`
+* `bc++` in `PATH` (`kylix`)
 
-| | |`kcc`, Intel KAI {CPP}
+| | |`acc`
 a|
-* `KCC` in `PATH`
+HP-UX aCC
 
-| | |http://www.codegear.com/downloads/free/cppbuilder[`kylix`],
-http://www.borland.com/[Borland] {CPP}Builder
-a|
-* `bc++` in `PATH`
+* `aCC` in `PATH`
 
-| |
-|http://www.sgi.com/developers/devtools/languages/mipspro.html[`mipspro`],
-SGI MIPSpro C
+| | |`sunpro`
 a|
-* `uname` is "IRIX" or "IRIX64"
+Sun Workshop 6 {CPP}
 
-| | |`sunpro`, Sun Workshop 6 {CPP}
-a|
-* Standard install location: `/opt/SUNWspro`
-
-| | |`qcc`, http://www.qnx.com/[QNX Neutrino]
-a|
-* `uname` is "QNX" and `qcc` in `PATH`
-
-| | |http://www.tru64unix.compaq.com/cplus/[`true64cxx`], Compaq {CPP}
-Compiler for True64 UNIX
-a|
-* `uname` is "OSF1"
-
-| | |http://www.ibm.com/software/awdtools/vacpp/[`vacpp`], IBM VisualAge
-{CPP}
-a|
-* `xlc` in `PATH`
-
-| |MacOS X |http://developer.apple.com/tools/compilers.html[`darwin`],
-Apple MacOS X GCC
-a|
-* `uname` is "Darwin"
-
-| |Windows NT, 2000, and XP |http://www.mingw.org/[`mingw`], GNU
-http://gcc.gnu.org/[GCC] as the http://www.mingw.org/[MinGW]
-configuration with the MSYS shell
-a|
-* Common install location: `/mingw`
+* Standard install location: `/opt/SUNWspro/bin/CC`
 
 |===
 
-The built executables are placed in a subdirectory specific to your
-platform. For example, in Linux running on an Intel x86 compatible chip,
-the executables are placed in: `bin.linuxx86`. The `b2[.exe]`
-executable can be used to invoke B2.
+The built executables are placed in the `src/engine` directory.
 
-The build scripts support additional invocation arguments for use by
-developers of Boost.Jam and for additional setup of the toolset. The
-extra arguments come after the toolset:
-
-* Arguments not in the form of an option, before option arguments, are
-used for extra setup to toolset configuration scripts.
-* Arguments of the form `--option`, which are passed to the
-`build.jam` build script.
-* Arguments not in the form of an option, after the options, which are
-targets for the `build.jam` script.
+The `build.sh` script supports additional invocation options used to
+control the the build and custom compilers:
 
 ----
-build [toolset] [setup*] [--option+ target*]
+build.sh [--option|--option=x] [toolset]
 ----
 
-The arguments immediately after the toolset are passed directly to the
-setup script of the toolset, if available and if it needs to be invoked.
-This allows one to configure the toolset ass needed to do non-default
-builds of `b2`. For example to build a Win64 version with `vc8`. See the
-toolset description above for when particular toolsets support this.
-
-The arguments starting with the `--option` forms are passed to the
-`build.jam` script and are used to further customize what gets built.
-Options and targets supported by the `build.jam` script:
-
-`---`::
-  Empty option when one wants to only specify a target.
-`--release`::
-  The default, builds the optimized executable.
+`--help`::
+  Shows some help information, including these options.
+`--verbose`::
+  Show messages about what this script is doing.
 `--debug`::
-  Builds debugging versions of the executable. When built they are
-  placed in their own directory `bin./platform/.debug`.
-`--grammar`::
-  Normally the Jam language grammar parsing files are not regenerated.
-  This forces building of the grammar, although it may not force the
-  regeneration of the grammar parser. If the parser is out of date it
-  will be regenerated and subsequently built.
-`--with-python=path`::
-  Enables Python integration, given a path to the Python libraries.
-`--gc`::
-  Enables use of the Boehm Garbage Collector. The build will look for
-  the Boehm-GC source in a "boehm_gc" subdirectory from the `b2`
-  sources.
-`--duma`::
-  Enables use of the DUMA (Detect Unintended Memory Access) debugging
-  memory allocator. The build expects to find the DUMA source files in a
-  "duma" subdirectory from the `b2` sources.
-`--toolset-root=path`::
-  Indicates where the toolset used to build is located. This option is
-  passed in by the bootstrap (`build.bat` or `build.sh`) script.
-`--show-locate-target`::
-  For information, prints out where it will put the built executable.
-`--noassert`::
-  Disable debug assertions, even if building the debug version of the
-  executable.
-`dist`::
-  Generate packages (compressed archives) as appropriate for
-  distribution in the platform, if possible.
-`clean`::
-  Remove all the built executables and objects.
+  Builds debugging versions of the executable. The default is to build an
+  optimized executable.
+`--guess-toolset`::
+  Print the toolset we can detect for building. This is used by external
+  scripts, like the Boost Libraries main bootstrap script.
+`--cxx=CXX`::
+  The compiler exec to use instead of the detected compiler exec.
+`--cxxflags=CXXFLAGS`::
+  The compiler flags to use in addition to the flags for the detected
+  compiler.
 
 [[jam.language]]
 == Language
@@ -1355,7 +1325,19 @@ Assign _value_ to the variable if it is unset.
 Concatenate list elements into single element, separated by
 _joinval_.
 
+`:O=value`::
+Sets semantic options for the evaluation of the variable. The format of the
+_value_ is specific to either variable or generated file expansion.
+
 On VMS, `$(var:P)` is the parent directory of `$(var:D)`.
+
+`:<=value`::
+After evaluating the expansion of the variable prefixes the given _value_
+to the elements of the expanded expression values.
+
+`:>=value`::
+After evaluating the expansion of the variable postfixes the given _value_
+to the elements of the expanded expression values.
 
 [[jam.language.variables.local_for_loop_variables]]
 ==== Local For Loop Variables
@@ -1383,7 +1365,22 @@ the form `@(filename:E=filecontents)` and replaces the expression with
 `filecontents`. This is useful for creating compiler response files, and
 other "internal" files. The expansion works both during parsing and
 action execution. Hence it is possible to create files during any of the
-three build phases.
+three build phases. This expansion follows the same modifiers as variable
+expansion. The generated file expansion accepts these (`:O=`) expansion
+option values:
+
+`F`::
+Always replace the `@()` reference with the name of the file generated.
+
+`C`::
+Always replace the `@()` reference with the contents, i.e. the _value_
+in the `:E=value` expression.
+
+`FC` or `CF`::
+Replace with either the file or contents depending on the length of the
+contents (`:E=value`). It will replace with the contents in an action
+if the length of the command is shorter than the allowed command length
+limit. Otherwise the reference is replaced with the filename.
 
 [[jam.language.variables.builtins]]
 ==== Built-in Variables

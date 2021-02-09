@@ -43,7 +43,7 @@ static HKEY get_key(char const** path)
 
     for (p = dlRootKeys; p->name; ++p)
     {
-        int n = strlen(p->name);
+        size_t n = strlen(p->name);
         if (!strncmp(*path,p->name,n))
         {
             if ((*path)[n] == '\\' || (*path)[n] == 0)
@@ -81,14 +81,14 @@ LIST * builtin_system_registry( FRAME * frame, int flags )
 
              case REG_EXPAND_SZ:
                  {
-                     unsigned long len;
+                     DWORD len;
                      string expanded[1];
                      string_new(expanded);
 
                      while (
                          (len = ExpandEnvironmentStringsA(
-                             (LPCSTR)data, expanded->value, expanded->capacity))
-                         > expanded->capacity
+                             (LPCSTR)data, expanded->value, (DWORD)expanded->capacity))
+                         > DWORD(expanded->capacity)
                      )
                          string_reserve(expanded, len);
 

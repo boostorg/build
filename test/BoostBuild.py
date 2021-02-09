@@ -1,6 +1,6 @@
 # Copyright 2002-2005 Vladimir Prus.
 # Copyright 2002-2003 Dave Abrahams.
-# Copyright 2006 Rene Rivera.
+# Copyright 2006 Rene Ferdinand Rivera Morell.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -236,11 +236,16 @@ class Tester(TestCmd.TestCmd):
                                     system output like the --verbose command
                                     line option does.
     """
-    def __init__(self, arguments=None, executable="b2",
+    def __init__(self, arguments=None, executable=None,
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
         ignore_toolset_requirements=False, workdir="", pass_d0=False,
         **keywords):
+
+        if not executable:
+            executable = os.getenv('B2')
+        if not executable:
+            executable = 'b2'
 
         assert arguments.__class__ is not str
         self.original_workdir = os.path.dirname(__file__)
@@ -355,6 +360,12 @@ class Tester(TestCmd.TestCmd):
             self.write(dst, self.read(src, binary=True))
         except:
             self.fail_test(1)
+
+    def copy_timestamp(self, src, dst):
+        src_name = self.native_file_name(src)
+        dst_name = self.native_file_name(dst)
+        stats = os.stat(src_name)
+        os.utime(dst_name, (stats.st_atime, stats.st_mtime))
 
     def copy_preserving_timestamp(self, src, dst):
         src_name = self.native_file_name(src)

@@ -284,8 +284,8 @@ as-is to the compiler flags for `a.cpp`, but won't affect `foo`.
 
 Let's improve this project further. The library probably has some
 headers that must be used when compiling `app.cpp`. We could manually
-add the necessary `#include` paths to `app`'s requirements as values of
-the `<include>  ` feature, but then this work will be repeated for all
+add the necessary `#include` paths to the `app` requirements as values of
+the `<include>` feature, but then this work will be repeated for all
 programs that use `foo`. A better solution is to modify
 `util/foo/Jamfile` in this way:
 

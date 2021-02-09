@@ -644,10 +644,6 @@ rule gcc-link-procedure ( targets * : sources * : properties * )
     # Copied from 'gcc.jam'.
 
     SPACE on $(targets) = " " ;
-    # Serialize execution of the 'link' action, since running N links in
-    # parallel is just slower. For now, serialize only gcc links, it might be a
-    # good idea to serialize all links.
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
     gcc.quote-rpath $(targets) ;
 }
 
@@ -657,7 +653,6 @@ rule gcc-link-dll-procedure ( targets * : sources * : properties * )
     # Copied from 'gcc.jam'.
 
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
     gcc.quote-rpath $(targets) ;
 }
 

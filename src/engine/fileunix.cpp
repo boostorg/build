@@ -307,7 +307,7 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
         char * src;
         char * dest;
 
-        size_t ar_hdr_name_size = sizeof( ar_hdr.ar_name ); // Workaround for sizeof strncpy warning.
+        int32_t ar_hdr_name_size = sizeof( ar_hdr.ar_name ); // Workaround for sizeof strncpy warning.
         strncpy( lar_name, ar_hdr.ar_name, ar_hdr_name_size );
 
         sscanf( ar_hdr.ar_date, "%ld", &lar_date );

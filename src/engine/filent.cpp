@@ -62,13 +62,13 @@ int file_collect_dir_content_( file_info_t * const d )
     string pathspec[ 1 ];
     string pathname[ 1 ];
     LIST * files = L0;
-    int d_length;
+    int32_t d_length;
 
     assert( d );
     assert( d->is_dir );
     assert( list_empty( d->files ) );
 
-    d_length = strlen( object_str( d->name ) );
+    d_length = int32_t(strlen( object_str( d->name ) ));
 
     memset( (char *)&f, '\0', sizeof( f ) );
     f.f_dir.ptr = object_str( d->name );
@@ -112,7 +112,7 @@ int file_collect_dir_content_( file_info_t * const d )
             OBJECT * pathname_obj;
 
             f.f_base.ptr = finfo.cFileName;
-            f.f_base.len = strlen( finfo.cFileName );
+            f.f_base.len = int32_t(strlen( finfo.cFileName ));
 
             string_truncate( pathname, 0 );
             path_build( &f, pathname );
@@ -276,7 +276,7 @@ void file_query_( file_info_t * const info )
 
     if ( ( dir = strrchr( pathstr, '\\' ) ) )
     {
-        parent = object_new_range( pathstr, dir - pathstr );
+        parent = object_new_range( pathstr, int32_t(dir - pathstr) );
     }
     else
     {

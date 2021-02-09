@@ -6,6 +6,9 @@
  */
 
 #include "jam.h"
+
+#ifdef USE_EXECUNIX
+
 #include "execcmd.h"
 
 #include "lists.h"
@@ -25,8 +28,6 @@
 #if defined(sun) || defined(__sun)
     #include <wait.h>
 #endif
-
-#ifdef USE_EXECUNIX
 
 #include <sys/times.h>
 
@@ -140,8 +141,8 @@ int exec_check
 (
     string const * command,
     LIST * * pShell,
-    int * error_length,
-    int * error_max_length
+    int32_t * error_length,
+    int32_t * error_max_length
 )
 {
     int const is_raw_cmd = is_raw_command_request( *pShell );
@@ -154,7 +155,7 @@ int exec_check
 
     return is_raw_cmd
         ? EXEC_CHECK_OK
-        : check_cmd_for_too_long_lines( command->value, MAXLINE, error_length,
+        : check_cmd_for_too_long_lines( command->value, shell_maxline(), error_length,
             error_max_length );
 }
 
@@ -601,6 +602,11 @@ static int get_free_cmdtab_slot()
             return slot;
     err_printf( "no slots for child!\n" );
     exit( EXITBAD );
+}
+
+int32_t shell_maxline()
+{
+    return MAXLINE;
 }
 
 # endif /* USE_EXECUNIX */

@@ -1,4 +1,6 @@
+# coding: utf-8
 # Copyright 2017 Steven Watanabe
+# Copyright 2020 René Ferdinand Rivera Morell
 #
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
@@ -119,6 +121,17 @@ class arg(object):
         s = command_line[pos]
         if s.startswith(self.prefix) and try_match([s[len(self.prefix):]], 0, self.a, outputs) == 1:
             return pos + 1
+
+#
+class opt(object):
+    def __init__(self, *args):
+        self.args = args
+    def match(self, command_line, pos, outputs):
+        for p in self.args:
+            res = try_match_one(command_line, pos, p, outputs)
+            if res is not None:
+                pos = res
+        return pos
 
 # Given a file id, returns a string that will be
 # written to the file to allow it to be recognized.

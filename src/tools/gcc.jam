@@ -916,12 +916,6 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
 
     # On AIX we *have* to use the native linker.
     #
-    # Using -brtl, the AIX linker will look for libraries with both the .a
-    # and .so extensions, such as libfoo.a and libfoo.so. Without -brtl, the
-    # AIX linker looks only for libfoo.a. Note that libfoo.a is an archived
-    # file that may contain shared objects and is different from static libs
-    # as on Linux.
-    #
     # The -bnoipath strips the prepending (relative) path of libraries from
     # the loader section in the target library or executable. Hence, during
     # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
@@ -939,7 +933,7 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     # AIX 4.x and AIX 6.x. For details about the AIX linker see:
     # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
     #
-    toolset.flags gcc.link OPTIONS <target-os>aix : -Wl,-brtl -Wl,-bnoipath -Wl,-bbigtoc ;
+    toolset.flags gcc.link OPTIONS <target-os>aix : -Wl,-bnoipath -Wl,-bbigtoc ;
 
     # See note [1]
     toolset.flags gcc.link OPTIONS <target-os>aix/<runtime-link>static : -static ;
@@ -974,12 +968,14 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     # support -s.
     toolset.flags gcc.link OPTIONS <target-os>$(generic-os)/<strip>on :
         -Wl,--strip-all ;
-    toolset.flags gcc.link RPATH <target-os>$(generic-os) : <dll-path> ;
-    toolset.flags gcc.link RPATH_OPTION <target-os>$(generic-os) : -rpath ;
-    toolset.flags gcc.link RPATH_LINK <target-os>$(generic-os) : <xdll-path> ;
     toolset.flags gcc.link START-GROUP <target-os>$(generic-os) :
         -Wl,--start-group ;
     toolset.flags gcc.link END-GROUP <target-os>$(generic-os) : -Wl,--end-group ;
+
+    local rpath-os = [ set.difference $(all-os) : aix darwin vxworks solaris osf hpux windows ] ;
+    toolset.flags gcc.link RPATH <target-os>$(rpath-os) : <dll-path> ;
+    toolset.flags gcc.link RPATH_OPTION <target-os>$(rpath-os) : -rpath ;
+    toolset.flags gcc.link RPATH_LINK <target-os>$(rpath-os) : <xdll-path> ;
 
     # gnu ld has the ability to change the search behaviour for libraries
     # referenced by the -l switch. These modifiers are -Bstatic and
@@ -1096,33 +1092,23 @@ rule quote-rpath ( targets * )
 rule link ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    # Serialize execution of the 'link' action, since running N links in
-    # parallel is just slower. For now, serialize only gcc links, it might be a
-    # good idea to serialize all links.
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
     quote-rpath $(targets) ;
 }
 
 rule link.dll ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
     quote-rpath $(targets) ;
 }
 
 rule link.mingw ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    # Serialize execution of the 'link' action, since running N links in
-    # parallel is just slower. For now, serialize only gcc links, it might be a
-    # good idea to serialize all links.
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
 
 rule link.dll.mingw ( targets * : sources * : properties * )
 {
     SPACE on $(targets) = " " ;
-    JAM_SEMAPHORE on $(targets) = <s>gcc-link-semaphore ;
 }
 
 actions link.mingw bind LIBRARIES

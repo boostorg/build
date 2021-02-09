@@ -20,6 +20,7 @@ import type ;
 import numbers ;
 import os ;
 import property ;
+import set ;
 
 feature.extend-subfeature toolset clang : platform : linux ;
 
@@ -112,6 +113,8 @@ rule init ( version ? :  command * : options * ) {
 ###############################################################################
 # Flags
 
+local all-os = [ feature.values <target-os> ] ;
+
 # note: clang silently ignores some of these inlining options
 # For clang, 'on' and 'full' are identical.
 toolset.flags clang-linux.compile OPTIONS <inlining>full : -Wno-inline ;
@@ -132,6 +135,11 @@ toolset.flags clang-linux.link OPTIONS <stdlib>gnu <stdlib>gnu11 : -stdlib=libst
 
 toolset.flags clang-linux.compile OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
 toolset.flags clang-linux.link OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
+
+# Enable response file control
+toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>auto : a ;
+toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>file : f ;
+toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>contents : c ;
 
 ###############################################################################
 # C and C++ compilation
@@ -203,87 +211,21 @@ actions compile.c.pch
 ###############################################################################
 # Linking
 
-SPACE = " " ;
+local soname-os = [ set.difference $(all-os) : windows ] ;
+toolset.flags clang-linux.link SONAME_OPT <target-os>$(soname-os) : "-Wl,-soname -Wl," ;
 
 rule link ( targets * : sources * : properties * ) {
-  SPACE on $(targets) = " " ;
-  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
-  
-  local tosw ;
-  local pselect = [ property.select <target-os> : $(properties) ] ;
-  
-  if $(pselect)
-    {
-    
-    local tosv = [ feature.get-values <target-os> : $(pselect) ] ;
-    
-    if $(tosv) = windows
-        {
-        tosw = 1 ;
-        }
-    }
-  else if [ os.name ] in NT
-    {
-    tosw = 1 ;
-    }
-  if $(tosw)
-    {
-    link-w $(targets) : $(sources) ;
-    }
-  else
-    {
-    link-o $(targets) : $(sources) ;
-    }
+  _ on $(targets) = " " ;
 }
 
 rule link.dll ( targets * : sources * : properties * ) {
-  SPACE on $(targets) = " " ;
-  JAM_SEMAPHORE on $(targets) = <s>clang-linux-link-semaphore ;
-  
-  local tosw ;
-  local pselect = [ property.select <target-os> : $(properties) ] ;
-  
-  if $(pselect)
-    {
-    
-    local tosv = [ feature.get-values <target-os> : $(pselect) ] ;
-    
-    if $(tosv) = windows
-        {
-        tosw = 1 ;
-        }
-    }
-  else if [ os.name ] in NT
-    {
-    tosw = 1 ;
-    }
-  if $(tosw)
-    {
-    link.dll-w $(targets) : $(sources) ;
-    }
-  else
-    {
-    link.dll-o $(targets) : $(sources) ;
-    }
+  _ on $(targets) = " " ;
 }
 
-# Target OS is not Windows, needs the RPATH stuff
-actions link-o bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=-Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+actions link bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @($(<[1]:T).rsp:O=FC:<=@":>=":E=-Wl,-R$(_)-Wl,"$(RPATH)" -Wl,-rpath-link$(_)-Wl,"$(RPATH_LINK)" $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
 }
 
-# Target OS is not Windows, needs the RPATH and SONAME stuff
-actions link.dll-o bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=-Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-}
-
-# Target OS is Windows, does not need the RPATH stuff
-actions link-w bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-}
-
-# Target OS is Windows, does not need the RPATH and SONAME stuff
-actions link.dll-w bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" -shared @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-    
+actions link.dll bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @($(<[1]:T).rsp:O=FC:<=@":>=":E=-Wl,-R$(_)-Wl,"$(RPATH)" $(SONAME_OPT)$(<[1]:D=) -shared $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
 }

@@ -1,6 +1,8 @@
 #!/usr/bin/python
+# coding: utf-8
 #
 # Copyright 2017 Steven Watanabe
+# Copyright 2020 René Ferdinand Rivera Morell
 #
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at
@@ -17,3 +19,11 @@ test_toolset("clang-linux", "3.9.0", [
     ["target-os=linux", "link=static"],
     ["target-os=linux", "link=static", "runtime-link=static"],
     ["target-os=linux", "architecture=x86", "address-model=32"]])
+
+test_toolset("clang-linux", "3.9.0", [
+    ["target-os=windows"],
+    ["target-os=windows", "release", "strip=on"],
+    ["target-os=windows", "threading=multi"],
+    ["target-os=windows", "link=static"],
+    ["target-os=windows", "architecture=x86", "address-model=32"]
+    ])

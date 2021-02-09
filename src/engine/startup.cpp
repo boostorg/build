@@ -14,6 +14,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "output.h"
 #include "variable.h"
 
+#include <cstdlib>
 #include <string>
 #include <algorithm>
 
@@ -155,7 +156,12 @@ bool b2::startup::bootstrap(FRAME *frame)
         }
     }
 
-    const std::string b2_exe_path{executable_path(saved_argv0)};
+    char *b2_exe_path_pchar = executable_path(saved_argv0);
+    const std::string b2_exe_path{b2_exe_path_pchar};
+    if (b2_exe_path_pchar)
+    {
+        std::free(b2_exe_path_pchar);
+    }
     const std::string boost_build_jam{"boost-build.jam"};
     std::string b2_file_path;
 
@@ -195,15 +201,17 @@ bool b2::startup::bootstrap(FRAME *frame)
     {
         const std::string path{
             b2::paths::normalize(
-                b2_exe_path + "/../../share/boost-build/" + boost_build_jam)};
+                b2_exe_path + "/../../share/boost-build/src/kernel/" + boost_build_jam)};
         if (b2::filesys::is_file(path))
             b2_file_path = path;
     }
 
-    // Check the BOOST_BUILD_PATH paths.
+    // Check the BOOST_BUILD_PATH (and BOOST_ROOT) paths.
     if (b2_file_path.empty())
     {
         b2::jam::list BOOST_BUILD_PATH = b2::jam::variable{"BOOST_BUILD_PATH"};
+        // For back-compat with Boost we also search in the BOOST_ROOT location.
+        BOOST_BUILD_PATH.append(b2::jam::list(b2::jam::variable{"BOOST_ROOT"}));
         for (auto search_path: BOOST_BUILD_PATH)
         {
             std::string path = b2::jam::object{search_path};

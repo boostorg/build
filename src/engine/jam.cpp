@@ -747,7 +747,7 @@ char * executable_path( char const * argv0 )
     sysctl( mib, 4, buf, &size, NULL, 0 );
     return ( !size || size == sizeof( buf ) ) ? NULL : strndup( buf, size );
 }
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__CYGWIN__) || defined(__GNU__)
 # include <unistd.h>
 char * executable_path( char const * argv0 )
 {

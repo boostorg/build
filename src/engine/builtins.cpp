@@ -30,6 +30,7 @@
 #include "output.h"
 
 #include <ctype.h>
+#include <stdlib.h>
 
 #ifdef OS_NT
 #include <windows.h>
@@ -911,7 +912,7 @@ LIST * glob_recursive( char const * pattern )
                 {
                     OBJECT * p;
                     path->f_dir.ptr = object_str( list_item( iter ) );
-                    path->f_dir.len = strlen( object_str( list_item( iter ) ) );
+                    path->f_dir.len = int32_t(strlen( object_str( list_item( iter ) ) ));
                     path_build( path, file_string );
 
                     p = object_new( file_string->value );
@@ -1749,14 +1750,14 @@ LIST * builtin_pad( FRAME * frame, int flags )
     OBJECT * string = list_front( lol_get( frame->args, 0 ) );
     char const * width_s = object_str( list_front( lol_get( frame->args, 1 ) ) );
 
-    int current = strlen( object_str( string ) );
-    int desired = atoi( width_s );
+    int32_t current = int32_t(strlen( object_str( string ) ));
+    int32_t desired = atoi( width_s );
     if ( current >= desired )
         return list_new( object_copy( string ) );
     else
     {
         char * buffer = (char *)BJAM_MALLOC( desired + 1 );
-        int i;
+        int32_t i;
         LIST * result;
 
         strcpy( buffer, object_str( string ) );
@@ -1886,7 +1887,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
 #else
     char static_buf[256];
     char * buf = static_buf;
-    size_t bufsize = 256;
+    int32_t bufsize = 256;
     LIST * result = 0;
     while (1) {
         ssize_t len = readlink( path, buf, bufsize );
@@ -1894,7 +1895,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
         {
             break;
         }
-        else if ( size_t(len) < bufsize )
+        else if ( int32_t(len) < bufsize )
         {
             buf[ len ] = '\0';
             result = list_new( object_new( buf ) );
@@ -2400,7 +2401,7 @@ LIST * builtin_shell( FRAME * frame, int flags )
     LIST   * command = lol_get( frame->args, 0 );
     LIST   * result = L0;
     string   s;
-    int      ret;
+    int32_t ret;
     char     buffer[ 1024 ];
     FILE   * p = NULL;
     int      exit_status = -1;
@@ -2435,7 +2436,7 @@ LIST * builtin_shell( FRAME * frame, int flags )
 
     string_new( &s );
 
-    while ( ( ret = fread( buffer, sizeof( char ), sizeof( buffer ) - 1, p ) ) >
+    while ( ( ret = int32_t(fread( buffer, sizeof( char ), sizeof( buffer ) - 1, p )) ) >
         0 )
     {
         buffer[ ret ] = 0;

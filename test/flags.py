@@ -58,12 +58,12 @@ if t.status != 0:
     BoostBuild.annotation("config.log", log_file)
     t.fail_test(True)
 
-t.expect_output_lines(['    - has --illegal-flag-cpp   : no',
-                       '    - has -DMACRO_CPP          : yes',
-                       '    - has --illegal-flag-c     : no',
-                       '    - has -DMACRO_C            : yes',
-                       '    - has --illegal-flag-link  : no',
-                       '    - has *bin*/input.* : yes'])
+t.expect_output_lines(['    - has --illegal-flag-cpp   : no*',
+                       '    - has -DMACRO_CPP          : yes*',
+                       '    - has --illegal-flag-c     : no*',
+                       '    - has -DMACRO_C            : yes*',
+                       '    - has --illegal-flag-link  : no*',
+                       '    - has *bin*/input.* : yes*'])
 t.expect_addition('bin/$toolset/debug*/fail_cpp.obj')
 t.expect_addition('bin/$toolset/debug*/pass_cpp.obj')
 t.expect_addition('bin/$toolset/debug*/fail_c.obj')

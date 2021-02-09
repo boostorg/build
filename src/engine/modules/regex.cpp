@@ -48,7 +48,7 @@ LIST * regex_split( FRAME * frame, int flags )
     prev = pos = object_str( s );
     while ( regexec( re, pos ) )
     {
-        result = list_push_back( result, object_new_range( prev, re->startp[ 0 ] - prev ) );
+        result = list_push_back( result, object_new_range( prev, int32_t(re->startp[ 0 ] - prev) ) );
         prev = re->endp[ 0 ];
         /* Handle empty matches */
         if ( *pos == '\0' )

@@ -28,7 +28,7 @@ ECHO ### You can specify the toolset as the argument, i.e.:
 ECHO ###     .\build.bat msvc
 ECHO ###
 ECHO ### Toolsets supported by this script are: borland, como, gcc,
-ECHO ###     gcc-nocygwin, intel-win32, metrowerks, mingw,
+ECHO ###     gcc-nocygwin, intel-win32, mingw,
 ECHO ###     vc12, vc14, vc141, vc142
 ECHO ###
 ECHO ### If you have Visual Studio 2017 installed you will need to either update

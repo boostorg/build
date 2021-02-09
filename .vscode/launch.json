@@ -16,5 +16,43 @@
             "externalConsole": true,
             "MIMode": "lldb"
         },
+        {
+            "name": "(gdb) Launch: example/hello",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.build/clang-linux-10.0.0/debug/cxxstd-11-iso/b2",
+            "args": ["-n", "toolset=clang"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/example/hello",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "(gdb) Launch: home/tmp/prebuild",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.build/gcc-10.1.0/debug/cxxstd-11-iso/b2",
+            "args": ["-n","-sBOOST_BUILD_PATH=/home/grafik/Sync/DevRoots/B2/mainline/test/..","debug","release","-j1","-d2","toolset=gcc"],
+            "stopAtEntry": false,
+            "cwd": "/home/grafik/tmp/prebuilt-1",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
     ]
 }

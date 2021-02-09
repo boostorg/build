@@ -16,6 +16,7 @@ import toolset ;
 import generators ;
 import type ;
 import path ;
+import numbers ;
 
 feature.extend-subfeature toolset intel : platform : win ;
 
@@ -166,27 +167,44 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     local root = [ feature.get-values <root> : $(options) ] ;
     if $(command) || $(root)
     {
-        local bin = [ common.get-absolute-tool-path $(command[-1]) ] ;
-        if $(major) >= 12
+        local bin ;
+        if $(command)
         {
-            bin = [ path.make $(bin) ] ;
-            bin = [ path.parent $(bin) ] ;
+            bin = [ common.get-absolute-tool-path $(command[-1]) ] ;
+            if $(bin) && ( $(major) = 12 || [ numbers.less 12 $(major) ] )
+            {
+                bin = [ path.make $(bin) ] ;
+                bin = [ path.parent $(bin) ] ;
+            }
         }
         root ?= $(bin) ;
         root = $(root)/ ;
     }
 
     local setup ;
-    setup = [ path.glob $(root) : iclvars_*.bat ] ;
+    local setup_astk_bat ;
+    local setup_bat ;
+    if $(major) = 21 || [ numbers.less 21 $(major) ]
+    {
+        setup_astk_bat = "setvars_*.bat" ;
+        setup_bat = "setvars.bat" ;
+    }
+    else
+    {
+        setup_astk_bat = "iclvars_*.bat" ;
+        setup_bat = "iclvars.bat" ;
+    }
+    
+    setup = [ path.glob $(root) : $(setup_astk_bat) ] ;
     if ! $(setup)
     {
-       setup = [ path.join $(root) "iclvars.bat" ] ;
+       setup = [ path.join $(root) $(setup_bat) ] ;
        setup = [ path.native $(setup) ] ;
     }
 
     local target_types ;
     local iclvars_vs_arg ;
-    if $(major) >= 12
+    if $(major) = 12 || [ numbers.less 12 $(major) ]
     {
         # if we have a known intel toolset check for visual studio compatibility
         # if not trust parameters
@@ -208,7 +226,17 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         # and don't rely on whether the OS reports whether we're 64 or 32 bit
         # as that really only tells us which subsystem bjam is running in:
         #
-        local intel64_path = [ path.join $(root) intel64 ] ;
+        local root_start ;
+        if $(major) = 21 || [ numbers.less 21 $(major) ]
+        {
+            root_start = [ path.join $(root) "compiler/latest/windows/bin" ] ;
+            root_start = [ path.native $(root_start) ] ;
+        }
+        else
+        {
+            root_start = $(root) ;
+        }
+        local intel64_path = [ path.join $(root_start) intel64 ] ;
         if [ path.glob $(intel64_path) : icl.exe ]
         {
             target_types = ia32 intel64 ;
@@ -233,7 +261,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     {
         local cpu-conditions ;
         local setup-call ;
-        if $(major) >= 12
+        if $(major) = 12 || [ numbers.less 12 $(major) ]
         {
             cpu-conditions = $(condition)/$(.cpu-arch-$(c)) ;
 
@@ -310,18 +338,18 @@ local rule configure-really ( version ? : command * : options * : compatibility 
 
     # Disable Microsoft "secure" overloads in Dinkumware libraries since they
     # cause compile errors with Intel versions 9 and 10.
-    if $(major) < 12
+    if [ numbers.less $(major) 12 ]
     {
         C++FLAGS += -D_SECURE_SCL=0 ;
     }
 
-    if $(major) > 5
+    if [ numbers.less 5 $(major) ]
     {
         C++FLAGS += "/Zc:forScope" ; # Add support for correct for loop scoping.
     }
 
     # Add options recognized only by intel7 and above.
-    if $(major) >= 7
+    if $(major) = 7 || [ numbers.less 7 $(major) ]
     {
         C++FLAGS += /Qansi_alias ;
     }
@@ -340,7 +368,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     }
     else
     {
-        if $(major) > 5
+        if [ numbers.less 5 $(major) ]
         {
             # Add support for wchar_t
             C++FLAGS += "/Zc:wchar_t"
@@ -498,6 +526,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .iclvars-18.0-supported-vcs = "14.1 14.0 12.0 11.0 10.0" ;
 .iclvars-19.0-supported-vcs = "14.2 14.1 14.0 12.0" ;
 .iclvars-19.1-supported-vcs = "14.2 14.1 14.0 12.0" ;
+.iclvars-21.1-supported-vcs = "14.2 14.1" ;
+.iclvars-2021.1-supported-vcs = "14.2 14.1" ;
 .iclvars-version-alias-vc14.2 = vs2019 ;
 .iclvars-version-alias-vc14.1 = vs2017 ;
 .iclvars-version-alias-vc14 = vs2015 ;

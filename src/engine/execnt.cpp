@@ -37,8 +37,10 @@
  */
 
 #include "jam.h"
-#include "output.h"
+
 #ifdef USE_EXECNT
+
+#include "output.h"
 #include "execcmd.h"
 
 #include "lists.h"
@@ -69,9 +71,9 @@
 
 
 /* get the maximum shell command line length according to the OS */
-static int maxline();
+static int32_t maxline();
 /* valid raw command string length */
-static long raw_command_length( char const * command );
+static int32_t raw_command_length( char const * command );
 /* add two 64-bit unsigned numbers, h1l1 and h2l2 */
 static FILETIME add_64(
     unsigned long h1, unsigned long l1,
@@ -87,33 +89,33 @@ static double running_time( HANDLE const );
 /* terminate the given process, after terminating all its children first */
 static void kill_process_tree( DWORD const procesdId, HANDLE const );
 /* waits for a command to complete or time out */
-static int try_wait( int const timeoutMillis );
+static int32_t try_wait( int32_t const timeoutMillis );
 /* reads any pending output for running commands */
 static void read_output();
 /* checks if a command ran out of time, and kills it */
-static int try_kill_one();
+static int32_t try_kill_one();
 /* is the first process a parent (direct or indirect) to the second one */
-static int is_parent_child( DWORD const parent, DWORD const child );
+static int32_t is_parent_child( DWORD const parent, DWORD const child );
 /* */
 static void close_alert( PROCESS_INFORMATION const * const );
 /* close any alerts hanging around */
 static void close_alerts();
 /* prepare a command file to be executed using an external shell */
-static char const * prepare_command_file( string const * command, int slot );
+static char const * prepare_command_file( string const * command, int32_t slot );
 /* invoke the actual external process using the given command line */
-static void invoke_cmd( char const * const command, int const slot );
+static void invoke_cmd( char const * const command, int32_t const slot );
 /* find a free slot in the running commands table */
-static int get_free_cmdtab_slot();
+static int32_t get_free_cmdtab_slot();
 /* put together the final command string we are to run */
 static void string_new_from_argv( string * result, char const * const * argv );
 /* frees and renews the given string */
 static void string_renew( string * const );
 /* reports the last failed Windows API related error message */
-static void reportWindowsError( char const * const apiName, int slot );
+static void reportWindowsError( char const * const apiName, int32_t slot );
 /* closes a Windows HANDLE and resets its variable to 0. */
 static void closeWinHandle( HANDLE * const handle );
 /* Adds the job index to the list of currently active jobs. */
-static void register_wait( int job_id );
+static void register_wait( int32_t job_id );
 
 /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
 
@@ -132,7 +134,7 @@ static void register_wait( int job_id );
 #define EXECCMD_PIPE_READ 0
 #define EXECCMD_PIPE_WRITE 1
 
-static int intr_installed;
+static int32_t intr_installed;
 
 
 /* The list of commands we run. */
@@ -154,7 +156,7 @@ static struct _cmdtab_t
 
     HANDLE wait_handle;
 
-    int flags;
+    int32_t flags;
 
     /* Function called when the command completes. */
     ExecCmdCallback func;
@@ -162,14 +164,14 @@ static struct _cmdtab_t
     /* Opaque data passed back to the 'func' callback. */
     void * closure;
 } * cmdtab = NULL;
-static int cmdtab_size = 0;
+static int32_t cmdtab_size = 0;
 
 /* A thread-safe single element queue.  Used by the worker threads
  * to signal the main thread that a process is completed.
  */
 struct
 {
-    int job_index;
+    int32_t job_index;
     HANDLE read_okay;
     HANDLE write_okay;
 } process_queue;
@@ -185,7 +187,7 @@ void execnt_unit_test()
      * Use a table instead.
      */
     {
-        typedef struct test { const char * command; int result; } test;
+        typedef struct test { const char * command; int32_t result; } test;
         test tests[] = {
             { "", 0 },
             { "  ", 0 },
@@ -218,9 +220,9 @@ void execnt_unit_test()
     }
 
     {
-        int const length = maxline() + 9;
-        char * const cmd = (char *)BJAM_MALLOC_ATOMIC( length + 1 );
-        memset( cmd, 'x', length );
+        int32_t const length = maxline() + 9;
+        char * const cmd = (char *)BJAM_MALLOC_ATOMIC( size_t(length) + 1 );
+        memset( cmd, 'x', size_t(length) );
         cmd[ length ] = 0;
         assert( raw_command_length( cmd ) == length );
         BJAM_FREE( cmd );
@@ -266,12 +268,12 @@ void exec_done( void )
  * exec_check() - preprocess and validate the command
  */
 
-int exec_check
+int32_t exec_check
 (
     string const * command,
     LIST * * pShell,
-    int * error_length,
-    int * error_max_length
+    int32_t * error_length,
+    int32_t * error_max_length
 )
 {
     /* Default shell does nothing when triggered with an empty or a
@@ -290,7 +292,7 @@ int exec_check
     /* Check prerequisites for executing raw commands. */
     if ( is_raw_command_request( *pShell ) )
     {
-        long const raw_cmd_length = raw_command_length( command->value );
+        int32_t const raw_cmd_length = raw_command_length( command->value );
         if ( raw_cmd_length < 0 )
         {
             /* Invalid characters detected - fallback to default shell. */
@@ -318,7 +320,7 @@ int exec_check
      */
 
     /* Check for too long command lines. */
-    return check_cmd_for_too_long_lines( command->value, maxline(),
+    return check_cmd_for_too_long_lines( command->value, shell_maxline(),
         error_length, error_max_length );
 }
 
@@ -333,14 +335,14 @@ int exec_check
 void exec_cmd
 (
     string const * cmd_orig,
-    int flags,
+    int32_t flags,
     ExecCmdCallback func,
     void * closure,
     LIST * shell
 )
 {
-    int const slot = get_free_cmdtab_slot();
-    int const is_raw_cmd = is_raw_command_request( shell );
+    int32_t const slot = get_free_cmdtab_slot();
+    int32_t const is_raw_cmd = is_raw_command_request( shell );
     string cmd_local[ 1 ];
 
     /* Initialize default shell - anything more than /Q/C is non-portable. */
@@ -380,7 +382,7 @@ void exec_cmd
                 end = p;
         string_new( cmd_local );
         string_append_range( cmd_local, start, end );
-        assert( long(cmd_local->size) == raw_command_length( cmd_orig->value ) );
+        assert( int32_t(cmd_local->size) == raw_command_length( cmd_orig->value ) );
     }
     /* If we are not running a raw command directly, prepare a command file to
      * be executed using an external shell and the actual command string using
@@ -424,8 +426,8 @@ void exec_cmd
 
 void exec_wait()
 {
-    int i = -1;
-    int exit_reason;  /* reason why a command completed */
+    int32_t i = -1;
+    int32_t exit_reason;  /* reason why a command completed */
 
     /* Wait for a command to complete, while snarfing up any output. */
     while ( 1 )
@@ -447,7 +449,7 @@ void exec_wait()
     {
         DWORD exit_code;
         timing_info time;
-        int rstat;
+        int32_t rstat;
 
         /* The time data for the command. */
         record_times( cmdtab[ i ].pi.hProcess, &time );
@@ -494,7 +496,7 @@ void exec_wait()
  * process in our running commands table.
  */
 
-static void invoke_cmd( char const * const command, int const slot )
+static void invoke_cmd( char const * const command, int32_t const slot )
 {
     SECURITY_ATTRIBUTES sa = { sizeof( SECURITY_ATTRIBUTES ), 0, 0 };
     SECURITY_DESCRIPTOR sd;
@@ -577,16 +579,16 @@ static void invoke_cmd( char const * const command, int const slot )
  *     http://support.microsoft.com/default.aspx?scid=kb;en-us;830473
  */
 
-static int raw_maxline()
+static int32_t raw_maxline()
 {
     if ( IsWindowsVersionOrGreater(5,0,0) == TRUE ) return 8191;  /* XP       */
     if ( IsWindowsVersionOrGreater(4,0,0) == TRUE ) return 2047;  /* NT 4.x   */
     return 996;                                      /* NT 3.5.1 */
 }
 
-static int maxline()
+static int32_t maxline()
 {
-    static int result;
+    static int32_t result;
     if ( !result ) result = raw_maxline();
     return result;
 }
@@ -632,7 +634,7 @@ static void string_renew( string * const s )
  *     affect the executed command).
  */
 
-static long raw_command_length( char const * command )
+static int32_t raw_command_length( char const * command )
 {
     char const * p;
     char const * escape = 0;
@@ -688,7 +690,7 @@ static long raw_command_length( char const * command )
     while ( *p );
 
     /* Return the number of characters the command will occupy. */
-    return ( newline ? newline : p ) - command;
+    return int32_t(( newline ? newline : p ) - command);
 }
 
 
@@ -771,7 +773,7 @@ static void read_pipe
 (
     HANDLE   in,  /* the pipe to read from */
     string * out,
-    int      forwarding_mode
+    int32_t      forwarding_mode
 )
 {
     DWORD bytesInBuffer = 0;
@@ -820,7 +822,7 @@ static void read_pipe
 
 static void read_output()
 {
-    int i;
+    int32_t i;
     for ( i = 0; i < globs.jobs; ++i )
         if ( cmdtab[ i ].pi.hProcess )
         {
@@ -839,17 +841,17 @@ static void CALLBACK try_wait_callback( void * data, BOOLEAN is_timeout )
 {
     struct _cmdtab_t * slot = ( struct _cmdtab_t * )data;
     WaitForSingleObject( process_queue.write_okay, INFINITE );
-    process_queue.job_index = slot - cmdtab;
+    process_queue.job_index = int32_t(slot - cmdtab);
     assert( !is_timeout );
     SetEvent( process_queue.read_okay );
     /* Okay.  Non-blocking. */
     UnregisterWait( slot->wait_handle );
 }
 
-static int try_wait_impl( DWORD timeout )
+static int32_t try_wait_impl( DWORD timeout )
 {
-    int job_index;
-    int res = WaitForSingleObject( process_queue.read_okay, timeout );
+    int32_t job_index;
+    int32_t res = WaitForSingleObject( process_queue.read_okay, timeout );
     if ( res != WAIT_OBJECT_0 )
         return -1;
     job_index = process_queue.job_index;
@@ -857,7 +859,7 @@ static int try_wait_impl( DWORD timeout )
     return job_index;
 }
 
-static void register_wait( int job_id )
+static void register_wait( int32_t job_id )
 {
     if ( globs.jobs > MAXIMUM_WAIT_OBJECTS )
     {
@@ -874,13 +876,13 @@ static void register_wait( int job_id )
  * cmdtab array, or -1.
  */
 
-static int try_wait( int const timeoutMillis )
+static int32_t try_wait( int32_t const timeoutMillis )
 {
     if ( globs.jobs <= MAXIMUM_WAIT_OBJECTS )
     {
-        int i;
+        int32_t i;
         HANDLE active_handles[ MAXIMUM_WAIT_OBJECTS ];
-        int job_ids[ MAXIMUM_WAIT_OBJECTS ];
+        int32_t job_ids[ MAXIMUM_WAIT_OBJECTS ];
         DWORD num_handles = 0;
         DWORD wait_api_result;
         for ( i = 0; i < globs.jobs; ++i )
@@ -910,12 +912,12 @@ static int try_wait( int const timeoutMillis )
 }
 
 
-static int try_kill_one()
+static int32_t try_kill_one()
 {
     /* Only need to check if a timeout was specified with the -l option. */
     if ( globs.timeout > 0 )
     {
-        int i;
+        int32_t i;
         for ( i = 0; i < globs.jobs; ++i )
             if ( cmdtab[ i ].pi.hProcess )
             {
@@ -946,7 +948,7 @@ static void close_alerts()
      */
     if ( ( (float)clock() / (float)( CLOCKS_PER_SEC * 5 ) ) < ( 1.0 / 5.0 ) )
     {
-        int i;
+        int32_t i;
         for ( i = 0; i < globs.jobs; ++i )
             if ( cmdtab[ i ].pi.hProcess )
                 close_alert( &cmdtab[ i ].pi );
@@ -1034,7 +1036,7 @@ static double creation_time( HANDLE const process )
  * process is System (first argument is ignored).
  */
 
-static int is_parent_child( DWORD const parent, DWORD const child )
+static int32_t is_parent_child( DWORD const parent, DWORD const child )
 {
     HANDLE process_snapshot_h = INVALID_HANDLE_VALUE;
 
@@ -1202,7 +1204,7 @@ static void close_alert( PROCESS_INFORMATION const * const pi )
  * function.
  */
 
-static FILE * open_command_file( int const slot )
+static FILE * open_command_file( int32_t const slot )
 {
     string * const command_file = cmdtab[ slot ].command_file;
 
@@ -1234,13 +1236,13 @@ static FILE * open_command_file( int const slot )
     {
         char * const index1 = command_file->value + command_file->size - 6;
         char * const index2 = index1 + 1;
-        int waits_remaining;
+        int32_t waits_remaining;
         assert( command_file->value < index1 );
         assert( index2 + 1 < command_file->value + command_file->size );
         assert( index2[ 1 ] == '.' );
         for ( waits_remaining = 3; ; --waits_remaining )
         {
-            int index;
+            int32_t index;
             for ( index = 0; index != 20; ++index )
             {
                 FILE * f;
@@ -1262,7 +1264,7 @@ static FILE * open_command_file( int const slot )
  * Prepare a command file to be executed using an external shell.
  */
 
-static char const * prepare_command_file( string const * command, int slot )
+static char const * prepare_command_file( string const * command, int32_t slot )
 {
     FILE * const f = open_command_file( slot );
     if ( !f )
@@ -1280,9 +1282,9 @@ static char const * prepare_command_file( string const * command, int slot )
  * Find a free slot in the running commands table.
  */
 
-static int get_free_cmdtab_slot()
+static int32_t get_free_cmdtab_slot()
 {
-    int slot;
+    int32_t slot;
     for ( slot = 0; slot < globs.jobs; ++slot )
         if ( !cmdtab[ slot ].pi.hProcess )
             return slot;
@@ -1314,7 +1316,7 @@ static void string_new_from_argv( string * result, char const * const * argv )
  * Reports the last failed Windows API related error message.
  */
 
-static void reportWindowsError( char const * const apiName, int slot )
+static void reportWindowsError( char const * const apiName, int32_t slot )
 {
     char * errorMessage;
     char buf[24];
@@ -1374,6 +1376,11 @@ static void reportWindowsError( char const * const apiName, int slot )
     closeWinHandle( &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ] );
     string_renew( cmdtab[ slot ].buffer_out );
     string_renew( cmdtab[ slot ].buffer_err );
+}
+
+int32_t shell_maxline()
+{
+    return maxline();
 }
 
 

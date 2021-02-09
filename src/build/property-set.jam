@@ -6,6 +6,7 @@
 
 import "class" : new ;
 import feature ;
+import indirect ;
 import path ;
 import project ;
 import property ;
@@ -549,8 +550,11 @@ rule refine-from-user-input ( parent-requirements : specification * :
                 $(remove-requirements) : $(project-module) $(location) ] ;
 
             parent-requirements = [ property-set.create
-                [ set.difference [ $(parent-requirements).raw ]
-                : [ $(ps).raw ] ] ] ;
+                [ set.difference
+                    [ indirect.difference
+                        [ $(parent-requirements).raw ] : [ $(ps).raw ] ]
+                    : [ $(ps).raw ]
+                ] ] ;
             specification = $(add-requirements) ;
         }
 

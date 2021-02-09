@@ -35,6 +35,7 @@ project b2doc
     ;
 
 path-constant PYGMENTS_DIR : src/pygments ;
+path-constant STYLES_DIR : src/styles ;
 
 doc-dir = [ MATCH "--doc-dir=(.*)" : [ modules.peek : ARGV ] ] ;
 doc-dir ?= html ;
@@ -56,11 +57,27 @@ html index : src/standalone.adoc :
         <flags>--trace
         <flags>--verbose
         <dependency>$(PYGMENTS_DIR)/pygments_init.rb
+        # <flags>"-a stylesheet=amber.css"
+        # <flags>"-a stylesdir=$(STYLES_DIR)"
+        # <asciidoctor-attribute>linkcss
     ;
 explicit index ;
 
 install html : index : <location>$(doc-dir) <dependency>website-html ;
 explicit html ;
+
+make index.html : : @make_redir_html : <location>.. ;
+REDIR_HTML = "
+<html><head><meta http-equiv=\"refresh\" content=\"0; URL=doc/html/index.html\"></head><body>
+Automatic redirection failed, please go to <a href=\"doc/html/index.html\">doc/html/index.html</a>.
+<!-- Distributed under the Boost Software License, Version 1.0. \(See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt\) -->
+</body></html>
+" ;
+actions make_redir_html
+{
+    echo @($(<):O=F:E=$(REDIR_HTML))
+}
+explicit index.html ;
 
 alias standalone-html : html ;
 
@@ -117,5 +134,5 @@ actions website-publish
 alias boostdoc ;
 explicit boostdoc ;
 
-alias boostrelease : standalone-html ;
+alias boostrelease : standalone-html index.html ;
 explicit boostrelease ;
