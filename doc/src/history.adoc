@@ -1,6 +1,13 @@
 [[b2.history]]
 = History
 
+== Version 4.4.1
+
+Minor patch to correct missing fix for macOS default engine compiler.
+
+* Fix engine build defaulting to gcc instead of clang on macOX/Xcode.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.4.0
 
 Along with a variety of fixes this version introduces "dynamic" response file
