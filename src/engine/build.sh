@@ -153,6 +153,8 @@ test_toolset ()
 #
 check_toolset ()
 {
+    # Prefer Clang (clang) on macOS..
+    if test_toolset clang && test_uname Darwin && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
     # GCC (gcc)..
     if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
     # Clang (clang)..

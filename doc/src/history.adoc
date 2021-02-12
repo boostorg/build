@@ -1,6 +1,13 @@
 [[b2.history]]
 = History
 
+== Version 4.4.1
+
+Minor patch to correct missing fix for macOS default engine compiler.
+
+* Fix engine build defaulting to gcc instead of clang on macOX/Xcode.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.4.0
 
 Along with a variety of fixes this version introduces "dynamic" response file
@@ -16,6 +23,12 @@ command is expanded to include the options directly.
 * *New:* Add `:<=value` and `:>=value` variable modifiers for prefix and postfix
   values *after* the complete expansion of variable references.
   -- _René Ferdinand Rivera Morell_
+* *New:* Implement PCH on clang-win and clang-darwin.
+  -- _Nikita Kniazev_
+* *New:* Add support for Intel oneAPI release to intel-linux toolset.
+  -- _René Ferdinand Rivera Morell_
+* *New:* Add support for Intel oneAPI release to intel-windows toolset.
+  -- _Edward Diener_
 * Remove one at time linking limit. Once upon a time this was a performance
   tweak as hardware and software was not up to doing multiple links at once.
   Common setups are better equipped.
@@ -47,7 +60,14 @@ command is expanded to include the options directly.
   -- _Gei0r_
 * Fix building b2 engine with Intel Linux icpc.
   -- _Alain Miniussi_
-* Reword `build.sh` to fix many bugs and to avoid use of common env vars.
+* Rework `build.sh` to fix many bugs and to avoid use of common env vars.
+  -- _René Ferdinand Rivera Morell_
+* Remove limitation of relevant features for configure checks.
+  -- _René Ferdinand Rivera Morell_
+* Reformat configure check output to inform the variants of the checks in a
+  reasonably brief form.
+  -- _René Ferdinand Rivera Morell_
+* Support building engine on Windows Bash with Mingw.
   -- _René Ferdinand Rivera Morell_
 
 == Version 4.3.0
