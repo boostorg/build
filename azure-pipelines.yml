@@ -2,13 +2,13 @@
 # subject to the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
-# Copyright Rene Rivera 2015-2020.
+# Copyright Rene Ferdinand Rivera Morell 2015-2021.
 
 trigger:
   branches:
     include:
-    - develop
-    - master
+    - main
+    - release
     - feature/*
   paths:
     exclude:
@@ -17,7 +17,7 @@ trigger:
 pr:
   branches:
     include:
-    - develop
+    - main
   paths:
     exclude:
     - appveyor.yml

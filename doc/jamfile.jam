@@ -106,7 +106,7 @@ explicit website ;
 actions website-checkout
 {
     rm -rf "$(website-dir)"
-    git clone --verbose --branch gh-pages --depth 1 "https://${GH_TOKEN}github.com/boostorg/build.git" "$(website-dir)" || exit 1
+    git clone --verbose --branch gh-pages --depth 1 "https://${GH_TOKEN}github.com/bfgroup/b2.git" "$(website-dir)" || exit 1
     CD=${PWD}
     cd "$(website-dir)"
     git rm --ignore-unmatch -r "$(website-doc-dir)" || exit 1
