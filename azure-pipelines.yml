@@ -30,7 +30,7 @@ stages:
   - job: 'Linux_Default_Build'
     strategy:
       matrix:
-        Clang 11: {PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
+        Clang 11: {PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -47,7 +47,7 @@ stages:
   - job: 'Linux_Clang_Only_Build'
     strategy:
       matrix:
-        Clang 11: {PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
+        Clang 11: {PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -66,7 +66,7 @@ stages:
     strategy:
       matrix:
         GCC 10: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-latest'}
-        Clang 11: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
+        Clang 11: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -165,9 +165,9 @@ stages:
     strategy:
       matrix:
         Master .. GCC 10: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Master .. Clang 11: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11}
+        Master .. Clang 11: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11}
         Develop .. GCC 10: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Develop .. Clang 11: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11}
+        Develop .. Clang 11: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11}
     steps:
     - bash: |
         set -e
