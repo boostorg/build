@@ -30,7 +30,7 @@ stages:
   - job: 'Linux_Default_Build'
     strategy:
       matrix:
-        Clang 10: {PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 11: {PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -47,7 +47,7 @@ stages:
   - job: 'Linux_Clang_Only_Build'
     strategy:
       matrix:
-        Clang 10: {PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 11: {PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -65,7 +65,8 @@ stages:
   - job: 'Linux_Latest'
     strategy:
       matrix:
-        GCC 10: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-18.04'}
+        GCC 10: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-latest'}
+        Clang 11: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -74,7 +75,7 @@ stages:
   - job: 'Windows_Latest'
     strategy:
       matrix:
-        VS 2019: {TOOLSET: vc142, TEST_TOOLSET: msvc, VM_IMAGE: 'windows-2019'}
+        VS 2019: {TOOLSET: vc142, TEST_TOOLSET: msvc, VM_IMAGE: 'windows-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -83,7 +84,7 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
-        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -164,9 +165,9 @@ stages:
     strategy:
       matrix:
         Master .. GCC 10: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Master .. Clang 10: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10}
+        Master .. Clang 11: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11}
         Develop .. GCC 10: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Develop .. Clang 10: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10}
+        Develop .. Clang 11: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: bionic, LLVM_VER: 11}
     steps:
     - bash: |
         set -e
@@ -197,8 +198,8 @@ stages:
       vmImage: 'macOS-latest'
     strategy:
       matrix:
-        Master .. Xcode 11.7: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        Develop .. Xcode 11.7: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
+        Master .. Xcode 12.3: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        Develop .. Xcode 12.3: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
     steps:
     - bash: |
         set -e
@@ -302,16 +303,16 @@ stages:
       vmImage: 'macOS-latest'
     strategy:
       matrix:
-        1.75.0 .. Xcode 11.7: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.74.0 .. Xcode 11.7: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.73.0 .. Xcode 11.7: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.72.0 .. Xcode 11.7: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.71.0 .. Xcode 11.7: {BOOST_VERSION: 1.71.0, BOOST_VERSION_U: 1_71_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.70.0 .. Xcode 11.7: {BOOST_VERSION: 1.70.0, BOOST_VERSION_U: 1_70_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.69.0 .. Xcode 11.7: {BOOST_VERSION: 1.69.0, BOOST_VERSION_U: 1_69_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.68.0 .. Xcode 11.7: {BOOST_VERSION: 1.68.0, BOOST_VERSION_U: 1_68_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.67.0 .. Xcode 11.7: {BOOST_VERSION: 1.67.0, BOOST_VERSION_U: 1_67_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
-        1.66.0 .. Xcode 11.7: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app}
+        1.75.0 .. Xcode 12.3: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.74.0 .. Xcode 12.3: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.73.0 .. Xcode 12.3: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.72.0 .. Xcode 12.3: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.71.0 .. Xcode 12.3: {BOOST_VERSION: 1.71.0, BOOST_VERSION_U: 1_71_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.70.0 .. Xcode 12.3: {BOOST_VERSION: 1.70.0, BOOST_VERSION_U: 1_70_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.69.0 .. Xcode 12.3: {BOOST_VERSION: 1.69.0, BOOST_VERSION_U: 1_69_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.68.0 .. Xcode 12.3: {BOOST_VERSION: 1.68.0, BOOST_VERSION_U: 1_68_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.67.0 .. Xcode 12.3: {BOOST_VERSION: 1.67.0, BOOST_VERSION_U: 1_67_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.66.0 .. Xcode 12.3: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
     steps:
     - bash: |
         set -e
