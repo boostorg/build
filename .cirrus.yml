@@ -28,8 +28,7 @@ freebsd_task:
   build_script: [
     "set -e",
     "cd src/engine",
-    "set PATH=${PATH};${CXX_PATH}",
-    "./build.sh ${TOOLSET}",
+    "./build.sh --cxx=${CXX} ${TOOLSET}",
     "./b2 -v",
     "cd ../.."
   ]
