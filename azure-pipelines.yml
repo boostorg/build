@@ -373,7 +373,7 @@ stages:
 - stage: Website_Update
   dependsOn: [Core]
   displayName: 'Website Update'
-  condition: in(variables['Build.SourceBranch'], 'refs/heads/master', 'refs/heads/develop')
+  condition: in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/release')
   jobs:
 
   - job: Documentation
