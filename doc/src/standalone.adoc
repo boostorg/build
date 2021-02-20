@@ -6,8 +6,9 @@
 :sectanchors:
 :sectnums:
 :nofooter:
+:stylesheet: amber.css
 // :source-highlighter: rouge
-:source-highlighter: pygments
+// :source-highlighter: pygments
 :source-language: jam
 :highlightjsdir: hljs
 :pygments-style: native
@@ -25,7 +26,6 @@
 ifdef::backend-html5[]
 ++++
 <style>
-include::b2.css[]
 </style>
 ++++
 endif::[]
