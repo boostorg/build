@@ -1,6 +1,16 @@
 [[b2.history]]
 = History
 
+== Version 4.4.2
+
+This release is the first of the new home for B2 at Build Frameworks Group.
+
+* Change references in documentation and sources of boost.org to point
+  at equivalent bfgroup resources.
+  -- _René Ferdinand Rivera Morell_
+* New theme for B2 site and documentation.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.4.1
 
 Minor patch to correct missing fix for macOS default engine compiler.
