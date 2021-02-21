@@ -2,7 +2,7 @@
 Copyright 2004,2006 Vladimir Prus
 Copyright 2018 Rene Rivera
 Distributed under the Boost Software License, Version 1.0.
-(See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 |#
 
 #|
@@ -70,7 +70,7 @@ make index.html : : @make_redir_html : <location>.. ;
 REDIR_HTML = "
 <html><head><meta http-equiv=\"refresh\" content=\"0; URL=doc/html/index.html\"></head><body>
 Automatic redirection failed, please go to <a href=\"doc/html/index.html\">doc/html/index.html</a>.
-<!-- Distributed under the Boost Software License, Version 1.0. \(See accompanying file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt\) -->
+<!-- Distributed under the Boost Software License, Version 1.0. \(See accompanying file LICENSE.txt or copy at https://www.bfgroup.xyz/b2/LICENSE.txt\) -->
 </body></html>
 " ;
 actions make_redir_html

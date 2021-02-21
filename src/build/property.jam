@@ -3,8 +3,8 @@
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Copyright 2020 Nikita Kniazev
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import feature ;
 import indirect ;
@@ -150,7 +150,7 @@ rule evaluate-conditionals-in-context ( properties * : context * )
 # Returns <relevant> properties indicating how the conditionals in
 # properties affect feature relevance.  If the optional argument cond
 # is passed, it is treated as extra conditions for all properties.
-# 
+#
 rule evaluate-conditional-relevance ( properties * :  cond * )
 {
     cond = [ sequence.transform utility.ungrist : $(cond:G) ] ;
@@ -559,7 +559,7 @@ rule translate ( properties * : project-id : project-location : context-module )
         {
             condition = $(split[1]) ;
             property = $(split[2]) ;
-            
+
             local e ;
             for local c in [ regex.split $(condition) "," ]
             {
@@ -797,7 +797,7 @@ class property-map
         for local i in $(self.all-flags)
         {
             local list = $($(i)) ;
-            if [ $(property-set).contains-raw $(list[2-]) ] 
+            if [ $(property-set).contains-raw $(list[2-]) ]
             {
                 matches += $(list[1]) ;
                 match-ranks += [ sequence.length $(list) ] ;

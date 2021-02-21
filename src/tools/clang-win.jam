@@ -2,8 +2,8 @@
 # Copyright Peter Dimov 2018
 #
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import common ;
 import errors ;
@@ -90,7 +90,7 @@ rule init ( version ? : command * : options * )
     local condition = [ common.check-init-parameters clang-win : version $(version) ] ;
 
     common.handle-options clang-win : $(condition) : $(command) : $(options) ;
-    
+
     for local addr in 32 64
     {
         local config = [ SPLIT_BY_CHARACTERS [ SHELL "$(compiler) -m$(addr) -### foo.obj /link 2>&1" ] : "\n" ] ;
@@ -110,7 +110,7 @@ rule init ( version ? : command * : options * )
         }
 
         local ml ;
-        
+
         if $(items)
         {
             ml = [ regex.replace $(items[1]) "x64\\\\+link\\.exe" "x64\\ml64.exe" ] ;
@@ -127,14 +127,14 @@ rule init ( version ? : command * : options * )
         if $(addr) = 32 { assembler ?= ml.exe ; } else { assembler ?= ml64.exe ; }
 
         local link ;
-        
+
         if $(items)
         {
             link = [ regex.replace $(items[1]) "\\\\+HostX64\\\\+x86\\\\+" "\\HostX86\\x86\\" ] ;
         }
 
         local archiver = [ get-option "archiver" : $(addr) : $(options) ] ;
-        
+
         if $(link)
         {
             archiver ?= "$(link) /lib" ;

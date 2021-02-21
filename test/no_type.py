@@ -2,7 +2,7 @@
 
 # Copyright 2002 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test that we cannot specify targets of unknown type as sources. This is based
 # on the fact that Unix 'ar' will happily consume just about anything.

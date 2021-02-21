@@ -10,6 +10,6 @@ Setting up B2 on your project? Take a look at the
 link:#bbv2.overview[overview] and link:#bbv2.extender[extender manual].
 
 If there's anything you find unclear in this documentation, report the
-problem directly in the https://github.com/boostorg/build/issues[issue
-tracker]. For more general questions, please post them to our mailing
-list (http://boost.org/more/mailing_lists.htm#jamboost[]).
+problem directly in the https://github.com/bfgroup/b2/issues[issue
+tracker]. For more general questions, please post them to our discussion
+forums (https://github.com/bfgroup/b2/discussions[]).
