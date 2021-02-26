@@ -25,3 +25,6 @@ $ PREFIX/bin/b2
 ----
 
 A simple executable should be built.
+
+NOTE: A C+\+11 capable compiler is needed to build the `b2` engine. But using
+the `b2` engine and build system does not require C++11.
