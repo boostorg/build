@@ -9,8 +9,8 @@ assignees: ''
 
 ### Make sure you completed the following tasks
 
-- [ ] Searched the [discussions](https://github.com/bfgroup/b2/discussions)
-- [ ] Searched the closed and open [issues](https://github.com/bfgroup/b2/issues?q=is%3Aissue)
+- [ ] I searched the [discussions](https://github.com/bfgroup/b2/discussions)
+- [ ] I searched the closed and open [issues](https://github.com/bfgroup/b2/issues?q=is%3Aissue)
 
 ### Environment and version details
 
