@@ -3,8 +3,8 @@
 # Copyright (C) 2006. Vladimir Prus
 # Copyright (C) 2008. Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests that we explicitly request a file (not target) to be built by
 # specifying its name on the command line.

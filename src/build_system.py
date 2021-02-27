@@ -6,8 +6,8 @@
 # Copyright 2006 Rene Rivera
 # Copyright 2003, 2004, 2005, 2006, 2007 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 import os
 import sys
 import re
@@ -501,7 +501,7 @@ def main_real():
         print "warning: If the default is wrong, your build may not work correctly."
         print "warning: Use the \"toolset=xxxxx\" option to override our guess."
         print "warning: For more configuration options, please consult"
-        print "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html"
+        print "warning: https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.overview.configuration"
 
         using(dt, dtv)
 

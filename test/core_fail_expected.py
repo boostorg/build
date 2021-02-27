@@ -2,7 +2,7 @@
 
 # Copyright 2017 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 
@@ -26,7 +26,7 @@ def test_basic():
     t.expect_nothing_more()
 
     t.cleanup()
-    
+
 def test_error():
     t = BoostBuild.Tester(pass_toolset=0)
 
@@ -108,7 +108,7 @@ def test_quitquick():
     t.expect_nothing_more()
 
     t.cleanup()
-    
+
 def test_quitquick_error():
     """FAIL_EXPECTED targets should cause early exit if they unexpectedly pass."""
     t = BoostBuild.Tester(pass_toolset=0)

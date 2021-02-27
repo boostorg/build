@@ -7,16 +7,16 @@
 freebsd_task:
   # All the GCC's and Clang's currently supported by FreeBSD ports.
   matrix:
-    - { name: 'FreeBSD, GCC 11', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++11', PACKAGE: 'gcc11-devel' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, GCC 10', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++10', PACKAGE: 'gcc10-devel' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, GCC 9', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++9', PACKAGE: 'gcc9-devel' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, GCC 8', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++8', PACKAGE: 'gcc8-devel' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, GCC 7', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++7', PACKAGE: 'gcc7' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, Clang 10', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++10', PACKAGE: 'llvm10' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, Clang 9', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++90', PACKAGE: 'llvm90' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, Clang 8', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++80', PACKAGE: 'llvm80' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, Clang 7', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++70', PACKAGE: 'llvm70' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
-    - { name: 'FreeBSD, Clang 6', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++60', PACKAGE: 'llvm60' }, freebsd_instance: { image_family: 'freebsd-13-0-snap' } }
+    - { name: 'FreeBSD, GCC 11', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++11', PACKAGE: 'gcc11-devel' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, GCC 10', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++10', PACKAGE: 'gcc10-devel' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, GCC 9', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++9', PACKAGE: 'gcc9-devel' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, GCC 8', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++8', PACKAGE: 'gcc8-devel' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, GCC 7', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++7', PACKAGE: 'gcc7' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, Clang 10', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++10', PACKAGE: 'llvm10' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, Clang 9', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++90', PACKAGE: 'llvm90' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, Clang 8', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++80', PACKAGE: 'llvm80' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, Clang 7', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++70', PACKAGE: 'llvm70' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, Clang 6', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++60', PACKAGE: 'llvm60' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
   # To install with ports we need to initialize the package manager. To avoid
   # confirmation prompts we need to set an env var.
   install_script: [
@@ -28,8 +28,7 @@ freebsd_task:
   build_script: [
     "set -e",
     "cd src/engine",
-    "set PATH=${PATH};${CXX_PATH}",
-    "./build.sh ${TOOLSET}",
+    "./build.sh --cxx=${CXX} ${TOOLSET}",
     "./b2 -v",
     "cd ../.."
   ]

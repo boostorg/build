@@ -1,7 +1,7 @@
 // Copyright Vladimir Prus 2004.
 // Distributed under the Boost Software License, Version 1.0.
-// (See accompanying file LICENSE_1_0.txt
-// or copy at http://www.boost.org/LICENSE_1_0.txt)
+// (See accompanying file LICENSE.txt
+// or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #include "canvas.h"
 #include <qapplication.h>
@@ -15,12 +15,12 @@ public:
     {
         setCaption("QCanvas test");
         QVBox* vb = new QVBox(this);
-        setCentralWidget(vb);   
-    
-        Canvas* c = new Canvas(vb); 
+        setCentralWidget(vb);
+
+        Canvas* c = new Canvas(vb);
         QPushButton* b = new QPushButton("Change color", vb);
-        connect(b, SIGNAL(clicked()), c, SLOT(change_color())); 
-    }        
+        connect(b, SIGNAL(clicked()), c, SLOT(change_color()));
+    }
 };
 
 int main(int argc, char **argv)
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
     app.setMainWidget(w);
     w->show();
-    
+
     return app.exec();
 }
 
