@@ -16,7 +16,7 @@
                 "command": "./build.sh"
             },
             "options": {
-                "cwd": "src/engine"
+                "cwd": "${workspaceFolder}/src/engine"
             },
             "problemMatcher": {
                 "owner": "cpptools",
@@ -42,7 +42,7 @@
                 "command": "CXX='infer run -- clang++' ./build.sh clang"
             },
             "options": {
-                "cwd": "src/engine"
+                "cwd": "${workspaceFolder}/src/engine"
             },
             "problemMatcher": {
                 "owner": "cpptools",
