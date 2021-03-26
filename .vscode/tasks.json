@@ -4,7 +4,39 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "B2 Engine Build",
+            "label": "B2 Engine Bootstrap",
+            "type": "shell",
+            "windows": {
+                "command": "bootstrap.bat"
+            },
+            "osx": {
+                "command": "./bootstrap.sh"
+            },
+            "linux": {
+                "command": "./bootstrap.sh"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": {
+                "owner": "cpptools",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}/src/engine"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            },
+            "group": "build"
+        },
+        {
+            "label": "B2 Engine Build (using build.sh|bat)",
             "type": "shell",
             "windows": {
                 "command": "build.bat"
@@ -23,6 +55,38 @@
                 "fileLocation": [
                     "relative",
                     "${workspaceFolder}/src/engine"
+                ],
+                "pattern": {
+                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "column": 3,
+                    "severity": 4,
+                    "message": 5
+                }
+            },
+            "group": "build"
+        },
+        {
+            "label": "B2 Engine Build (using B2)",
+            "type": "shell",
+            "windows": {
+                "command": "${workspaceFolder}\\b2.exe b2"
+            },
+            "osx": {
+                "command": "${workspaceFolder}/b2 b2"
+            },
+            "linux": {
+                "command": "${workspaceFolder}/b2 b2"
+            },
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": {
+                "owner": "cpptools",
+                "fileLocation": [
+                    "relative",
+                    "${workspaceFolder}"
                 ],
                 "pattern": {
                     "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
