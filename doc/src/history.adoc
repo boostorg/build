@@ -3,6 +3,16 @@
 
 == Version 4.5.0
 
+Some minor fixes to improve some old issues.
+
+* Reenable ability of generators to return `property-set` as first item.
+  -- _Andrew McCann_
+* Fix examples to return 0 on success.
+  -- _Mateusz Łoskot_
+* Handle spaces in CXX path in `config_toolset.bat`.
+* Fix Conan b2 generator link, and pkg-config doc build error.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.4.2
 
 This release is the first of the new home for B2 at Build Frameworks Group.

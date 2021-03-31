@@ -726,5 +726,4 @@ There are a number of built-in `glob` patterns to support popular package
 managers. Currently the supported ones are:
 
 * Conan (`conan`): currently supports the
-  link:https://bintray.com/bfgroup/public-conan/b2gen%3Abfgroup[`b2gen`]
-  generator.
+  link:https://docs.conan.io/en/latest/reference/generators/b2.html[`b2 generator`].
