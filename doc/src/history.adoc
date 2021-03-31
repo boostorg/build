@@ -27,13 +27,13 @@ This release is the first of the new home for B2 at Build Frameworks Group.
 
 Minor patch to correct missing fix for macOS default engine compiler.
 
-* Fix engine build defaulting to gcc instead of clang on macOX/Xcode.
+* Fix engine build defaulting to gcc instead of clang on macOS/Xcode.
   -- _René Ferdinand Rivera Morell_
 
 == Version 4.4.0
 
 Along with a variety of fixes this version introduces "dynamic" response file
-support for some toolsets. This means that under most circumtances, if
+support for some toolsets. This means that under most circumstances, if
 supported by the toolset, response files are not generated. Instead the
 command is expanded to include the options directly.
 
@@ -65,7 +65,7 @@ command is expanded to include the options directly.
   -- _Tanzinul Islam_
 * Ensure Embarcadero toolset name is only "embtc".
   -- _Tanzinul Islam_
-* Adapt for Emscripten 2.0 change of default behaviour for archives.
+* Adapt for Emscripten 2.0 change of default behavior for archives.
   -- _Basil Fierz_
 * Fix path to bootstrap for back compat.
   -- _René Ferdinand Rivera Morell_
