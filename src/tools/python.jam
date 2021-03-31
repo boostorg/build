@@ -547,7 +547,13 @@ local rule compute-default-paths ( target-os : version ? : prefix ? :
     }
     else
     {
-        includes ?= $(prefix)/include/python$(version) ;
+        local default-include-path = $(prefix)/include/python$(version) ;
+        if ! [ path.exists $(default-include-path) ] && [ path.exists $(default-include-path)m ]
+        {
+            default-include-path = $(default-include-path)m ;
+        }
+
+        includes ?= $(default-include-path) ;
 
         local lib = $(exec-prefix)/lib ;
         libraries ?= $(lib)/python$(version)/config $(lib) ;

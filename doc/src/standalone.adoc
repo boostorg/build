@@ -11,9 +11,9 @@
 // :source-highlighter: pygments
 :source-language: jam
 :highlightjsdir: hljs
-:pygments-style: native
+// :pygments-style: native
 // :rouge-style: native
-:pygments-style: friendly
+// :pygments-style: friendly
 :caution-caption: ⚑
 :important-caption: ‼
 :note-caption: ℹ
