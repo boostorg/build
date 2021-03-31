@@ -4,8 +4,8 @@
 # Copyright 2013, 2017-2018 Cray, Inc.
 #
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # README.md
 #
@@ -207,7 +207,7 @@ rule check-prgenv-module ( toolset )
                              : toolset initialization failed
                              : please load the PrgEnv-$(default-compiler) module next time ;
         # Do not abort, as suggested by:
-        # http://www.boost.org/build/doc/html/bbv2/extending/toolset_modules.html.
+        # https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.extending.toolset_modules.
     }
 }
 
@@ -244,8 +244,7 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
     # Variable names with a '.' prefix are intended to be globals.
     #
-    # Refer to:
-    # https://github.com/boostorg/build/blob/develop/CONTRIBUTING.rst
+    # Refer to: CONTRIBUTING.adoc
 
     # The Jam language uses dynamic scoping. Setting '.debug-configuration' in
     # this module influences the behavior of methods called from this module.

@@ -2,7 +2,7 @@
 
 # Copyright 2014-2015 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests the link-directory rule used to create the
 # common boost/ directory in the new git layout.
@@ -94,7 +94,7 @@ def test_merge_existing(group1, group2):
         t.expect_content("include/file1.h", "file1")
     else:
         t.ignore_removal("include/file1.h")
-        
+
     if "dir2-link" in group2:
         if "dir2-link" not in group1:
             t.expect_addition("include/file2.h")
@@ -277,7 +277,7 @@ def test_update_file_link(params1, params2):
 
     .project = [ project.current ] ;
     .has-files = [ glob include/file1.h ] ;
-    
+
     rule can-link ( properties * ) {
         if ( ! [ link.can-symlink $(.project) ] ) &&
            ( ! [ link.can-hardlink $(.project) ] )

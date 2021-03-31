@@ -2,8 +2,8 @@
 
 # Copyright (C) Vladimir Prus 2005.
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests that we can declare a rule in Jamroot that will be can be called in
 # child Jamfile to declare a target. Specifically test for use of 'glob' in that
