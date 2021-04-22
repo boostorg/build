@@ -276,10 +276,21 @@ if test_true ${B2_HELP_OPT} ; then
     error_exit
 fi
 
-# If we have a CXX but no B2_TOLSET specified by the user we assume they meant
+# If we have a CXX but no B2_TOOLSET specified by the user we assume they meant
 # "cxx" as the toolset.
 if test "${B2_CXX_OPT}" != "" -a "${B2_TOOLSET}" = "" ; then
     B2_TOOLSET=cxx
+fi
+
+# If we have B2_TOOLSET=cxx but no B2_CXX_OPT nor B2_CXXFLAGS_OPT specified by the user
+# we assume they meant $CXX and $CXXFLAGS.
+if test "${B2_TOOLSET}" = "cxx" ; then
+    if test "${B2_CXX_OPT}" = "" ; then
+        B2_CXX_OPT=${CXX}
+    fi
+    if test "${B2_CXXFLAGS_OPT}" = "" ; then
+        B2_CXXFLAGS_OPT=${CXXFLAGS}
+    fi
 fi
 
 # Guess toolset, or toolset commands.
