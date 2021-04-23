@@ -1,6 +1,6 @@
 # Copyright Vladimir Prus 2004.
 # Copyright Noel Belcourt 2007.
-# Copyright Nikita Kniazev 2020.
+# Copyright Nikita Kniazev 2020-2021.
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE.txt
 # or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -54,15 +54,11 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 #   compile and link options allow you to specify addition command line options for each version
 rule init ( version ? :  command * : options * )
 {
-    command = [ common.get-invocation-command clang-darwin : clang++
-        : $(command) : /usr/bin /usr/local/bin ] ;
-
-    # Determine the version
-    local command-string = $(command:J=" ") ;
-    if $(command)
-    {
-        version ?= [ MATCH "version ([0-9]+[.][0-9]+)"
-            : [ SHELL "$(command-string) --version" ] ] ;
+    command = [ common.find-compiler clang-darwin : clang++ : $(version) : $(command)
+                : /usr/bin /usr/local/bin ] ;
+    local command-string = [ common.make-command-string $(command) ] ;
+    if ! $(version) { # ?= operator does not short-circuit
+    version ?= [ get-short-version $(command-string) ] ;
     }
 
     local condition = [ common.check-init-parameters clang
@@ -78,6 +74,18 @@ rule init ( version ? :  command * : options * )
     # - Archive builder.
     local archiver = [ feature.get-values <archiver> : $(options) ] ;
     toolset.flags clang-darwin.archive .AR $(condition) : $(archiver[1]) ;
+}
+
+rule get-full-version ( command-string )
+{
+    import clang-linux ;
+    return [ clang-linux.get-full-version $(command-string) ] ;
+}
+
+rule get-short-version ( command-string )
+{
+    import clang-linux ;
+    return [ clang-linux.get-short-version $(command-string) ] ;
 }
 
 SPACE = " " ;
