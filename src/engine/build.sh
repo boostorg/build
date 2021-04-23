@@ -286,10 +286,10 @@ fi
 # we assume they meant $CXX and $CXXFLAGS.
 if test "${B2_TOOLSET}" = "cxx" ; then
     if test "${B2_CXX_OPT}" = "" ; then
-        B2_CXX_OPT=${CXX}
+        B2_CXX_OPT="${CXX}"
     fi
     if test "${B2_CXXFLAGS_OPT}" = "" ; then
-        B2_CXXFLAGS_OPT=${CXXFLAGS}
+        B2_CXXFLAGS_OPT="${CXXFLAGS}"
     fi
 fi
 
