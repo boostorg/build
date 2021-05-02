@@ -111,9 +111,7 @@ test_uname ()
 
 test_compiler ()
 {
-    local EXE="${B2_CXX_OPT:-$1}"
-    local CMD
-    local SETUP
+    EXE="${B2_CXX_OPT:-$1}"
     shift
     CMD="${EXE} $@ ${B2_CXXFLAGS_OPT:-}"
     SETUP=${B2_SETUP:-true}
@@ -123,7 +121,7 @@ test_compiler ()
     else
         ( ${SETUP} ; ${CMD} check_cxx11.cpp ) 1>/dev/null 2>/dev/null
     fi
-    local CHECK_RESULT=$?
+    CHECK_RESULT=$?
     if test_true ${CHECK_RESULT} ; then
         B2_CXX=${CMD}
     fi
