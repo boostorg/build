@@ -527,27 +527,27 @@ rule compile.fortran ( targets * : sources * : properties * )
 
 actions compile.c++ bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<:W)" "$(>:W)"
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<:W)" "$(>:W)"
 }
 
 actions compile.c bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c++.preprocess bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" "$(>:W)" -E >"$(<:W)"
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" "$(>:W)" -E >"$(<:W)"
 }
 
 actions compile.c.preprocess bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" "$(>)" -E >$(<)
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" "$(>)" -E >$(<)
 }
 
 actions compile.fortran
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 rule compile.asm ( targets * : sources * : properties * )
@@ -591,12 +591,6 @@ class gcc-pch-generator : pch-generator
             }
         }
 
-        local path-prefix = [ path.join $(name)
-                                        [ feature.get-values location-prefix
-                                          : $(property-set).raw ] ] ;
-        property-set = [ $(property-set).add-raw
-                         <location-prefix>$(path-prefix) ] ;
-
         local pch-file = [ generator.run $(project) $(name) : $(property-set)
             : $(header) ] ;
 
@@ -606,16 +600,6 @@ class gcc-pch-generator : pch-generator
             [ $(pch-file[1]).add-raw <pch-file>$(pch-file[2-]) <cflags>-Winvalid-pch ]
             $(pch-file[2-])
           ;
-    }
-
-    # Calls the base version specifying source's name as the name of the created
-    # target. As a result, the PCH will be named whatever.hpp.gch, and not
-    # whatever.gch.
-    rule generated-targets ( sources + : property-set : project name ? )
-    {
-        name = [ $(sources[1]).name ] ;
-        return [ generator.generated-targets $(sources)
-          : $(property-set) : $(project) $(name) ] ;
     }
 }
 
