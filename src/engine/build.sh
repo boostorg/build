@@ -24,7 +24,7 @@ B2_CXXFLAGS_OPT=
 # script so that we can refer to file relative to it.
 SCRIPT_PATH=""
 if test "${BASH_SOURCE}" ; then
-    SCRIPT_PATH=${BASH_SOURCE[0]}
+    SCRIPT_PATH=${BASH_SOURCE}
 fi
 if test "${SCRIPT_PATH}" = "" ; then
     SCRIPT_PATH=$0
