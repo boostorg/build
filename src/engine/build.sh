@@ -155,6 +155,8 @@ check_toolset ()
     if test_toolset clang && test_uname Darwin && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
     # GCC (gcc)..
     if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
+    # GCC (gcc) with -pthread arg (for AIX)..
+    if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
     # Clang (clang)..
     if test_toolset clang && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
     # Intel macOS (intel-darwin)
@@ -310,19 +312,6 @@ case "${B2_TOOLSET}" in
 
     gcc)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
-        # Check for machine specific options.
-        machine=$(${B2_CXX} -dumpmachine 2>/dev/null)
-        if test $? -ne 0 ; then
-            echo "B2_TOOLSET is gcc, but the 'gcc' command cannot be executed."
-            echo "Make sure 'gcc' is in PATH, or use a different toolset."
-            exit 1
-        fi
-        case $machine in
-            *ibm-aix*)
-            # AIX needs threading option to use std::thread, it seems.
-            B2_CXX="${B2_CXX} -pthread"
-            ;;
-        esac
         B2_CXXFLAGS_RELEASE="-O2 -s"
         B2_CXXFLAGS_DEBUG="-O0 -g"
     ;;
