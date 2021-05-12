@@ -644,7 +644,7 @@ local rule should-clean-project ( project )
             }
             else if [ os.name ] = MACOSX
             {
-                default-toolset = darwin ;
+                default-toolset = clang ;
             }
         }
 
