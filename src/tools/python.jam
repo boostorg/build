@@ -1052,6 +1052,9 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
             ;
     }
 
+    # Declare the numpy target, which contains the NumPy include directory
+
+    alias numpy : : $(target-requirements) : : <include>$(.numpy-include) ;
 }
 
 # Conditional rule specification that will prevent building of a target
