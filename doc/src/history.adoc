@@ -1,6 +1,31 @@
 [[b2.history]]
 = History
 
+== Version 4.6.0
+
+...and some minor fixes.
+
+* *New:* Allow clang toolset to be auto-configured to a specific version by using
+  `toolset=clang-xx` on the command line.
+  -- _Nikita Kniazev_
+* *New:* Include pch header automatically and on-demand on gcc and msvc toolset to
+  mirror clang functionality.
+  -- _Nikita Kniazev_
+* Preserve `bootstrap.sh` invoke arguments to forward to the `build.sh` script.
+  -- _tkoecker_
+* Remove use of `local` in `buils.sh` to be compatible with some, not fully
+  capable, shells.
+  -- _Tanzinul Islam_
+* Workaround shell array ref error in `build.sh` on busybox shells.
+  -- _tkoecker_
+* Check for needing `-pthread` to build engine with gcc on some platforms.
+  -- _tkoecker_
+* Default to using clang on MacOS.
+  -- _Stéphan Kochen_
+* Add `/python//numpy` target to use as a dependency to communicate version
+  specific properties.
+  -- _Peter Dimov_
+
 == Version 4.5.0
 
 Some minor fixes to improve some old issues.
