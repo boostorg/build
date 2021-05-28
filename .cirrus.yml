@@ -2,7 +2,7 @@
 # subject to the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE.txt)
 #
-# Copyright René Ferdinand Rivera Morell 2020.
+# Copyright René Ferdinand Rivera Morell 2020-2021.
 
 freebsd_task:
   # All the GCC's and Clang's currently supported by FreeBSD ports.
@@ -12,6 +12,8 @@ freebsd_task:
     - { name: 'FreeBSD, GCC 9', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++9', PACKAGE: 'gcc9-devel' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
     - { name: 'FreeBSD, GCC 8', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++8', PACKAGE: 'gcc8-devel' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
     - { name: 'FreeBSD, GCC 7', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++7', PACKAGE: 'gcc7' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, Clang 12', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++12', PACKAGE: 'llvm12' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
+    - { name: 'FreeBSD, Clang 11', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++11', PACKAGE: 'llvm11' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
     - { name: 'FreeBSD, Clang 10', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++10', PACKAGE: 'llvm10' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
     - { name: 'FreeBSD, Clang 9', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++90', PACKAGE: 'llvm90' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
     - { name: 'FreeBSD, Clang 8', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++80', PACKAGE: 'llvm80' }, freebsd_instance: { image_family: 'freebsd-12-2' } }
@@ -21,7 +23,8 @@ freebsd_task:
   install_script: [
     "uname -a",
     "env ASSUME_ALWAYS_YES=YES pkg bootstrap",
-    "env ASSUME_ALWAYS_YES=YES pkg install ${PACKAGE}"
+    "env ASSUME_ALWAYS_YES=YES pkg install ${PACKAGE}",
+    "env ASSUME_ALWAYS_YES=YES pkg install python3"
     ]
   # Build the engine.
   build_script: [
@@ -37,6 +40,6 @@ freebsd_task:
     "CXX_PATH=`which ${CXX}`",
     "cd test",
     "echo \"using ${TEST_TOOLSET} : : ${CXX_PATH} ;\" > ${HOME}/user-config.jam",
-    "python2 test_all.py ${TEST_TOOLSET}",
+    "python3 test_all.py ${TEST_TOOLSET}",
     "cd ..",
   ]
