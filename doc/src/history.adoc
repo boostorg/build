@@ -25,6 +25,12 @@
 * Add `/python//numpy` target to use as a dependency to communicate version
   specific properties.
   -- _Peter Dimov_
+* Add default value for cxx and cxxflags from env vars `CXX` and `CXXFLAGS`
+  when using the custom `cxx` toolset to build the engine.
+  -- __Samuel Debionne_ and _René Ferdinand Rivera Morell_
+* Fix detection of `intel-linux` toolset installation when only the compiler
+  executable is in the `PATH`.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 4.5.0
 
