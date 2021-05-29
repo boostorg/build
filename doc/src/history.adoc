@@ -11,6 +11,10 @@
 * *New:* Include pch header automatically and on-demand on gcc and msvc toolset to
   mirror clang functionality.
   -- _Nikita Kniazev_
+* *New:* Features that are narked as 'free' and 'optional' will now be ignored when
+  the value specified on the command line is empty. Hence once can specify
+  `cxxflags=` on the command line without errors.
+  -- _René Ferdinand Rivera Morell_
 * Preserve `bootstrap.sh` invoke arguments to forward to the `build.sh` script.
   -- _tkoecker_
 * Remove use of `local` in `buils.sh` to be compatible with some, not fully

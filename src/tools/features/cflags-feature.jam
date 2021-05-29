@@ -18,4 +18,4 @@ higher-level feature in B2.
 
 feature.feature cflags
     :
-    : free ;
+    : free optional ;

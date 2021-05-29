@@ -15,4 +15,4 @@ compiling Fortran sources.
 
 feature.feature fflags
     :
-    : free ;
+    : free optional ;

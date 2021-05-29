@@ -16,4 +16,4 @@ build the target.
 
 feature.feature flags
     :
-    : free ;
+    : free optional ;
