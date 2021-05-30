@@ -108,6 +108,14 @@ namespace b2
                 (p.size() >= 1 && (p[0] == '/' || p[0] == '\\'));
             #endif
         }
+        inline bool is_relative(const std::string &p)
+        {
+            return
+                (p.size() >= 3 && (
+                    (p[0] == '.' && p[1] == '.' && (p[2] == '/' || p[2] == '\\')) ||
+                    (p[0] == '.' && (p[1] == '/' || p[1] == '\\'))
+                    ));
+        }
         std::string normalize(const std::string &p);
     }
 }

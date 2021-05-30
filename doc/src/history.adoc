@@ -31,9 +31,12 @@
   -- _Peter Dimov_
 * Add default value for cxx and cxxflags from env vars `CXX` and `CXXFLAGS`
   when using the custom `cxx` toolset to build the engine.
-  -- __Samuel Debionne_ and _René Ferdinand Rivera Morell_
+  -- _Samuel Debionne_ and _René Ferdinand Rivera Morell_
 * Fix detection of `intel-linux` toolset installation when only the compiler
   executable is in the `PATH`.
+  -- _René Ferdinand Rivera Morell_
+* Fix `b2` executable path determination for platforms that don't have a
+  native method of getting the path to executables, like OpenBSD.
   -- _René Ferdinand Rivera Morell_
 
 == Version 4.5.0
