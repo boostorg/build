@@ -38,6 +38,8 @@
 * Fix `b2` executable path determination for platforms that don't have a
   native method of getting the path to executables, like OpenBSD.
   -- _René Ferdinand Rivera Morell_
+* Fix `property.find` error message.
+  -- _Thomas Brown_
 
 == Version 4.5.0
 
