@@ -3,7 +3,12 @@
 
 == Version 4.6.0
 
-...and some minor fixes.
+This release wraps up a few new features that make using some toolsets easier
+(thanks to Nikita). It's now also possible to specify empty flags features on
+the command line, like `cxxfalgs=`, and have those be ignored. This helps to
+make CI scripts shorter as they don't need to handle those cases specially.
+And as usual there are many bug fixes and adjustments. Thanks to everyone who
+contributed to this release.
 
 * *New:* Allow clang toolset to be auto-configured to a specific version by using
   `toolset=clang-xx` on the command line.
