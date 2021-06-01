@@ -14,4 +14,4 @@ See <<bbv2.builtin.features.cflags,`<cflags>`>>.
 
 feature.feature linkflags
     :
-    : free ;
+    : free optional ;

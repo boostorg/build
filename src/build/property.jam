@@ -808,6 +808,7 @@ class property-map
         if $(best[2])
         {
             import errors : error : errors.error ;
+	        properties = [ $(property-set).raw ] ;
             errors.error "Ambiguous key $(properties:J= :E=)" ;
         }
         return $(best) ;
@@ -968,6 +969,10 @@ rule __test__ ( )
     $(pm).insert <toolset>gcc : o ;
     $(pm).insert <toolset>gcc <os>NT : obj ;
     $(pm).insert <toolset>gcc <os>CYGWIN : obj ;
+
+    try ;
+        $(pm).find [ new property-set <toolset>gcc <os>NT <os>CYGWIN ] ;
+    catch "Ambiguous key <toolset>gcc <os>NT <os>CYGWIN" ;
 
     assert.equal o : [ $(pm).find-replace <toolset>gcc ] ;
 

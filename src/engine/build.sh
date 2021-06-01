@@ -24,7 +24,7 @@ B2_CXXFLAGS_OPT=
 # script so that we can refer to file relative to it.
 SCRIPT_PATH=""
 if test "${BASH_SOURCE}" ; then
-    SCRIPT_PATH=${BASH_SOURCE[0]}
+    SCRIPT_PATH=${BASH_SOURCE}
 fi
 if test "${SCRIPT_PATH}" = "" ; then
     SCRIPT_PATH=$0
@@ -111,9 +111,7 @@ test_uname ()
 
 test_compiler ()
 {
-    local EXE="${B2_CXX_OPT:-$1}"
-    local CMD
-    local SETUP
+    EXE="${B2_CXX_OPT:-$1}"
     shift
     CMD="${EXE} $@ ${B2_CXXFLAGS_OPT:-}"
     SETUP=${B2_SETUP:-true}
@@ -123,7 +121,7 @@ test_compiler ()
     else
         ( ${SETUP} ; ${CMD} check_cxx11.cpp ) 1>/dev/null 2>/dev/null
     fi
-    local CHECK_RESULT=$?
+    CHECK_RESULT=$?
     if test_true ${CHECK_RESULT} ; then
         B2_CXX=${CMD}
     fi
@@ -157,6 +155,8 @@ check_toolset ()
     if test_toolset clang && test_uname Darwin && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
     # GCC (gcc)..
     if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
+    # GCC (gcc) with -pthread arg (for AIX)..
+    if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
     # Clang (clang)..
     if test_toolset clang && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
     # Intel macOS (intel-darwin)
@@ -276,10 +276,17 @@ if test_true ${B2_HELP_OPT} ; then
     error_exit
 fi
 
-# If we have a CXX but no B2_TOLSET specified by the user we assume they meant
+# If we have a CXX but no B2_TOOLSET specified by the user we assume they meant
 # "cxx" as the toolset.
 if test "${B2_CXX_OPT}" != "" -a "${B2_TOOLSET}" = "" ; then
     B2_TOOLSET=cxx
+fi
+
+# If we have B2_TOOLSET=cxx but no B2_CXX_OPT nor B2_CXXFLAGS_OPT specified by the user
+# we assume they meant $CXX and $CXXFLAGS.
+if test "${B2_TOOLSET}" = "cxx" -a "${B2_CXX_OPT}" = "" -a "${B2_CXXFLAGS_OPT}" = "" ; then
+    B2_CXX_OPT="${CXX}"
+    B2_CXXFLAGS_OPT="${CXXFLAGS}"
 fi
 
 # Guess toolset, or toolset commands.
@@ -312,19 +319,6 @@ case "${B2_TOOLSET}" in
 
     gcc)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
-        # Check for machine specific options.
-        machine=$(${B2_CXX} -dumpmachine 2>/dev/null)
-        if test $? -ne 0 ; then
-            echo "B2_TOOLSET is gcc, but the 'gcc' command cannot be executed."
-            echo "Make sure 'gcc' is in PATH, or use a different toolset."
-            exit 1
-        fi
-        case $machine in
-            *ibm-aix*)
-            # AIX needs threading option to use std::thread, it seems.
-            B2_CXX="${B2_CXX} -pthread"
-            ;;
-        esac
         B2_CXXFLAGS_RELEASE="-O2 -s"
         B2_CXXFLAGS_DEBUG="-O0 -g"
     ;;

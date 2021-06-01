@@ -355,6 +355,11 @@ class Tester(TestCmd.TestCmd):
             f.close()
         self.__ensure_newer_than_last_build(nfile)
 
+    def rename(self, src, dst):
+        src_name = self.native_file_name(src)
+        dst_name = self.native_file_name(dst)
+        os.rename(src_name, dst_name)
+
     def copy(self, src, dst):
         try:
             self.write(dst, self.read(src, binary=True))
@@ -364,15 +369,12 @@ class Tester(TestCmd.TestCmd):
     def copy_timestamp(self, src, dst):
         src_name = self.native_file_name(src)
         dst_name = self.native_file_name(dst)
-        stats = os.stat(src_name)
-        os.utime(dst_name, (stats.st_atime, stats.st_mtime))
+        shutil.copystat(src_name, dst_name)
 
     def copy_preserving_timestamp(self, src, dst):
         src_name = self.native_file_name(src)
         dst_name = self.native_file_name(dst)
-        stats = os.stat(src_name)
-        self.write(dst, self.__read(src, binary=True))
-        os.utime(dst_name, (stats.st_atime, stats.st_mtime))
+        shutil.copy2(src_name, dst_name)
 
     def touch(self, names, wait=True):
         if isstr(names):

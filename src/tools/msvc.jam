@@ -735,14 +735,14 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #    for each source file by rule archive, as in this case compiler must be used
 #    to create a single PDB for our library.
 #
-actions compile-c-c++ bind PDB_NAME
+actions compile-c-c++ bind PDB_NAME PCH_HEADER
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
 }
 
-actions preprocess-c-c++ bind PDB_NAME
+actions preprocess-c-c++ bind PDB_NAME PCH_HEADER
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -996,14 +996,14 @@ class msvc-pch-generator : pch-generator
 
         # If we do not have the PCH source - that is fine. We will just create a
         # temporary .cpp file in the action.
-
+        local pch-header-dir = [ $(pch-header).path ] ;
         local generated = [ generator.run $(project) $(name)
             : [ property-set.create
                 # Passing of <pch-source> is a dirty trick, needed because
                 # non-composing generators with multiple inputs are subtly
                 # broken. For more detailed information see:
                 # https://zigzag.cs.msu.su:7813/boost.build/ticket/111
-                <pch-source>$(pch-source)
+                <pch-source>$(pch-source) "<include>$(pch-header-dir)"
                 [ $(property-set).raw ] ]
             : $(pch-header) ] ;
 
