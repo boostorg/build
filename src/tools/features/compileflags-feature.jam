@@ -16,4 +16,4 @@ language for the tools.
 
 feature.feature compileflags
     :
-    : free ;
+    : free optional ;

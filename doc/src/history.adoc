@@ -1,6 +1,51 @@
 [[b2.history]]
 = History
 
+== Version 4.6.0
+
+This release wraps up a few new features that make using some toolsets easier
+(thanks to Nikita). It's now also possible to specify empty flags features on
+the command line, like `cxxfalgs=`, and have those be ignored. This helps to
+make CI scripts shorter as they don't need to handle those cases specially.
+And as usual there are many bug fixes and adjustments. Thanks to everyone who
+contributed to this release.
+
+* *New:* Allow clang toolset to be auto-configured to a specific version by using
+  `toolset=clang-xx` on the command line.
+  -- _Nikita Kniazev_
+* *New:* Include pch header automatically and on-demand on gcc and msvc toolset to
+  mirror clang functionality.
+  -- _Nikita Kniazev_
+* *New:* Features that are narked as 'free' and 'optional' will now be ignored when
+  the value specified on the command line is empty. Hence once can specify
+  `cxxflags=` on the command line without errors.
+  -- _René Ferdinand Rivera Morell_
+* Preserve `bootstrap.sh` invoke arguments to forward to the `build.sh` script.
+  -- _tkoecker_
+* Remove use of `local` in `buils.sh` to be compatible with some, not fully
+  capable, shells.
+  -- _Tanzinul Islam_
+* Workaround shell array ref error in `build.sh` on busybox shells.
+  -- _tkoecker_
+* Check for needing `-pthread` to build engine with gcc on some platforms.
+  -- _tkoecker_
+* Default to using clang on MacOS.
+  -- _Stéphan Kochen_
+* Add `/python//numpy` target to use as a dependency to communicate version
+  specific properties.
+  -- _Peter Dimov_
+* Add default value for cxx and cxxflags from env vars `CXX` and `CXXFLAGS`
+  when using the custom `cxx` toolset to build the engine.
+  -- _Samuel Debionne_ and _René Ferdinand Rivera Morell_
+* Fix detection of `intel-linux` toolset installation when only the compiler
+  executable is in the `PATH`.
+  -- _René Ferdinand Rivera Morell_
+* Fix `b2` executable path determination for platforms that don't have a
+  native method of getting the path to executables, like OpenBSD.
+  -- _René Ferdinand Rivera Morell_
+* Fix `property.find` error message.
+  -- _Thomas Brown_
+
 == Version 4.5.0
 
 Some minor fixes to improve some old issues.

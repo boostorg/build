@@ -258,7 +258,22 @@ local rule convert-command-line-element ( e )
             values = $(values:J=,) ;
             values = $(values) $(parts[2-]) ;
             values = $(values:J=/) ;
-            lresult = <$(feature)>$(values) ;
+            lresult = ;
+            # Optional free features will ignore empty value arguments.
+            if optional in [ feature.attributes <$(feature)> ]
+            {
+                for local v in $(values)
+                {
+                    if $(v)
+                    {
+                        lresult += <$(feature)>$(v) ;
+                    }
+                }
+            }
+            else
+            {
+                lresult = <$(feature)>$(values) ;
+            }
             parts = ;
         }
 
@@ -272,13 +287,16 @@ local rule convert-command-line-element ( e )
             }
         }
 
-        if ! $(result)
+        if $(lresult)
         {
-            result = $(lresult) ;
-        }
-        else
-        {
-            result = $(result)/$(lresult) ;
+            if ! $(result)
+            {
+                result = $(lresult) ;
+            }
+            else
+            {
+                result = $(result)/$(lresult) ;
+            }
         }
 
         parts = $(parts[2-]) ;

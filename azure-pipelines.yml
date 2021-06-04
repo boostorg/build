@@ -30,7 +30,7 @@ stages:
   - job: 'Linux_Default_Build'
     strategy:
       matrix:
-        Clang 11: {PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
+        Clang 12: {PACKAGES: clang-12, LLVM_OS: focal, LLVM_VER: 12, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -47,7 +47,7 @@ stages:
   - job: 'Linux_Clang_Only_Build'
     strategy:
       matrix:
-        Clang 11: {PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
+        Clang 12: {PACKAGES: clang-12, LLVM_OS: focal, LLVM_VER: 12, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -65,8 +65,8 @@ stages:
   - job: 'Linux_Latest'
     strategy:
       matrix:
-        GCC 10: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-latest'}
-        Clang 11: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
+        GCC 11: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11, VM_IMAGE: 'ubuntu-latest'}
+        Clang 12: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-12, PACKAGES: clang-12, LLVM_OS: focal, LLVM_VER: 12, VM_IMAGE: 'ubuntu-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -84,7 +84,7 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
-        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-latest'}
+        Xcode 12.4: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app, VM_IMAGE: 'macOS-latest'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -97,6 +97,7 @@ stages:
   - job: 'Linux'
     strategy:
       matrix:
+        GCC 10: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-latest'}
         GCC 9: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-9, PACKAGES: g++-9, VM_IMAGE: 'ubuntu-18.04'}
         GCC 8: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-8, PACKAGES: g++-8, VM_IMAGE: 'ubuntu-18.04'}
         GCC 7: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-7, PACKAGES: g++-7, VM_IMAGE: 'ubuntu-18.04'}
@@ -105,6 +106,7 @@ stages:
         GCC 4.9: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-4.9, PACKAGES: g++-4.9, VM_IMAGE: 'ubuntu-16.04'}
         GCC 4.8: {TOOLSET: gcc, TEST_TOOLSET: gcc,  CXX: g++-4.8, PACKAGES: g++-4.8, VM_IMAGE: 'ubuntu-16.04'}
         GCC 4.7: {TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: g++-4.7, PACKAGES: g++-4.7, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 11: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
         Clang 10: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
         Clang 9: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-9, PACKAGES: clang-9, LLVM_OS: bionic, LLVM_VER: 9, VM_IMAGE: 'ubuntu-18.04'}
         Clang 8: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++-8, PACKAGES: clang-8, LLVM_OS: bionic, LLVM_VER: 8, VM_IMAGE: 'ubuntu-18.04'}
@@ -135,6 +137,7 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
+        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-latest'}
         Xcode 12.2: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.2.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 12.1.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.1.1.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 12.0.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.0.1.app, VM_IMAGE: 'macOS-10.15'}
@@ -164,10 +167,10 @@ stages:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
-        Master .. GCC 10: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Master .. Clang 11: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11}
-        Develop .. GCC 10: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        Develop .. Clang 11: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-11, PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11}
+        Master .. GCC 11: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        Master .. Clang 12: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++-12, PACKAGES: clang-12, LLVM_OS: focal, LLVM_VER: 12}
+        Develop .. GCC 11: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-11}
+        Develop .. Clang 12: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++-12, PACKAGES: clang-12, LLVM_OS: focal, LLVM_VER: 12}
     steps:
     - bash: |
         set -e
@@ -198,8 +201,8 @@ stages:
       vmImage: 'macOS-latest'
     strategy:
       matrix:
-        Master .. Xcode 12.3: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        Develop .. Xcode 12.3: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        Master .. Xcode 12.4: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        Develop .. Xcode 12.4: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
     steps:
     - bash: |
         set -e
@@ -264,16 +267,17 @@ stages:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
-        1.75.0 .. GCC 10: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.74.0 .. GCC 10: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.73.0 .. GCC 10: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.72.0 .. GCC 10: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.71.0 .. GCC 10: {BOOST_VERSION: 1.71.0, BOOST_VERSION_U: 1_71_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.70.0 .. GCC 10: {BOOST_VERSION: 1.70.0, BOOST_VERSION_U: 1_70_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.69.0 .. GCC 10: {BOOST_VERSION: 1.69.0, BOOST_VERSION_U: 1_69_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.68.0 .. GCC 10: {BOOST_VERSION: 1.68.0, BOOST_VERSION_U: 1_68_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.67.0 .. GCC 10: {BOOST_VERSION: 1.67.0, BOOST_VERSION_U: 1_67_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
-        1.66.0 .. GCC 10: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: gcc, CXX: g++-10, PACKAGES: g++-10}
+        1.76.0 .. GCC 11: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.75.0 .. GCC 11: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.74.0 .. GCC 11: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.73.0 .. GCC 11: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.72.0 .. GCC 11: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.71.0 .. GCC 11: {BOOST_VERSION: 1.71.0, BOOST_VERSION_U: 1_71_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.70.0 .. GCC 11: {BOOST_VERSION: 1.70.0, BOOST_VERSION_U: 1_70_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.69.0 .. GCC 11: {BOOST_VERSION: 1.69.0, BOOST_VERSION_U: 1_69_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.68.0 .. GCC 11: {BOOST_VERSION: 1.68.0, BOOST_VERSION_U: 1_68_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.67.0 .. GCC 11: {BOOST_VERSION: 1.67.0, BOOST_VERSION_U: 1_67_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
+        1.66.0 .. GCC 11: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
     steps:
     - bash: |
         set -e
@@ -303,16 +307,17 @@ stages:
       vmImage: 'macOS-latest'
     strategy:
       matrix:
-        1.75.0 .. Xcode 12.3: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.74.0 .. Xcode 12.3: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.73.0 .. Xcode 12.3: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.72.0 .. Xcode 12.3: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.71.0 .. Xcode 12.3: {BOOST_VERSION: 1.71.0, BOOST_VERSION_U: 1_71_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.70.0 .. Xcode 12.3: {BOOST_VERSION: 1.70.0, BOOST_VERSION_U: 1_70_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.69.0 .. Xcode 12.3: {BOOST_VERSION: 1.69.0, BOOST_VERSION_U: 1_69_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.68.0 .. Xcode 12.3: {BOOST_VERSION: 1.68.0, BOOST_VERSION_U: 1_68_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.67.0 .. Xcode 12.3: {BOOST_VERSION: 1.67.0, BOOST_VERSION_U: 1_67_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
-        1.66.0 .. Xcode 12.3: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app}
+        1.76.0 .. Xcode 12.4: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.75.0 .. Xcode 12.4: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.74.0 .. Xcode 12.4: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.73.0 .. Xcode 12.4: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.72.0 .. Xcode 12.4: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.71.0 .. Xcode 12.4: {BOOST_VERSION: 1.71.0, BOOST_VERSION_U: 1_71_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.70.0 .. Xcode 12.4: {BOOST_VERSION: 1.70.0, BOOST_VERSION_U: 1_70_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.69.0 .. Xcode 12.4: {BOOST_VERSION: 1.69.0, BOOST_VERSION_U: 1_69_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.68.0 .. Xcode 12.4: {BOOST_VERSION: 1.68.0, BOOST_VERSION_U: 1_68_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.67.0 .. Xcode 12.4: {BOOST_VERSION: 1.67.0, BOOST_VERSION_U: 1_67_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
+        1.66.0 .. Xcode 12.4: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
     steps:
     - bash: |
         set -e
@@ -343,6 +348,7 @@ stages:
       vmImage: 'windows-latest'
     strategy:
       matrix:
+        1.76.0 .. VS 2019: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: vc142}
         1.75.0 .. VS 2019: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: vc142}
         1.74.0 .. VS 2019: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: vc142}
         1.73.0 .. VS 2019: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: vc142}

@@ -15,4 +15,4 @@ when creating static libraries.
 
 feature.feature archiveflags
     :
-    : free ;
+    : free optional ;
