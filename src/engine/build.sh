@@ -117,9 +117,9 @@ test_compiler ()
     SETUP=${B2_SETUP:-true}
     if test_true ${B2_VERBOSE_OPT} ; then
         echo "> ${CMD} check_cxx11.cpp"
-        ( ${SETUP} ; ${CMD} check_cxx11.cpp )
+        ( ${SETUP} ; ${CMD} check_clib.cpp check_cxx11.cpp )
     else
-        ( ${SETUP} ; ${CMD} check_cxx11.cpp ) 1>/dev/null 2>/dev/null
+        ( ${SETUP} ; ${CMD} check_clib.cpp check_cxx11.cpp ) 1>/dev/null 2>/dev/null
     fi
     CHECK_RESULT=$?
     if test_true ${CHECK_RESULT} ; then
@@ -155,6 +155,7 @@ check_toolset ()
     if test_toolset clang && test_uname Darwin && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
     # GCC (gcc)..
     if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
+    if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 -D_GNU_SOURCE ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
     # GCC (gcc) with -pthread arg (for AIX)..
     if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
     # Clang (clang)..
