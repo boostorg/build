@@ -33,7 +33,7 @@ environment:
 build_script:
   - cmd: |
       cd src/engine
-      PATH=%CXX_PATH%;%PATH%
+      set PATH=%CXX_PATH%;%PATH%
   - cmd: |
       ./build.bat %TOOLSET%
   - cmd: |
@@ -42,7 +42,7 @@ build_script:
 
 before_test:
   - cmd: |
-      HOME=%HOMEDRIVE%%HOMEPATH%
+      set HOME=%HOMEDRIVE%%HOMEPATH%
       echo "using" %TEST_TOOLSET% ":" ":" %CXX% ";" > "%HOME%/user-config.jam"
 
 for:
