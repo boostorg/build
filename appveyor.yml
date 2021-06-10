@@ -24,7 +24,7 @@ environment:
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
   - job_name: 'Cygwin 3.1.7 x64, Test'
     job_group: 'Test'
-    TOOLSET:
+    TOOLSET: gcc
     TEST_TOOLSET: gcc
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     CXX_PATH: C:/cygwin64/bin
