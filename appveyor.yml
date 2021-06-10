@@ -22,17 +22,18 @@ environment:
     TOOLSET: vc12
     TEST_TOOLSET: msvc
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  # - job_name: 'Cygwin 3.1.7, Test'
-  #   job_group: 'Test'
-  #   TOOLSET:
-  #   TEST_TOOLSET: gcc
-  #   APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-  #   CXX_PATH: C:/cygwin/bin
+  - job_name: 'Cygwin 3.1.7 x64, Test'
+    job_group: 'Test'
+    TOOLSET:
+    TEST_TOOLSET: gcc
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    CXX_PATH: C:/cygwin64/bin
+    CXX: C:/cygwin64/bin/g++.exe
 
 build_script:
   - cmd: |
       cd src/engine
-      PATH=%PATH%;%CXX_PATH%
+      PATH=%CXX_PATH%;%PATH%
   - cmd: |
       ./build.bat %TOOLSET%
   - cmd: |
@@ -40,7 +41,7 @@ build_script:
       src\engine\b2.exe -v
 
 before_test:
-  -cmd: |
+  - cmd: |
       HOME=%HOMEDRIVE%%HOMEPATH%
       echo "using" %TEST_TOOLSET% ":" ":" %CXX% ";" > "%HOME%/user-config.jam"
 
