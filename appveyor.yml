@@ -43,7 +43,7 @@ build_script:
 before_test:
   - cmd: |
       set HOME=%HOMEDRIVE%%HOMEPATH%
-      echo "using" %TEST_TOOLSET% ":" ":" %B2_CXX% ";" > "%HOME%/user-config.jam"
+      echo using %TEST_TOOLSET% : : %B2_CXX% ; > "%HOME%/user-config.jam"
 
 for:
   - matrix:
