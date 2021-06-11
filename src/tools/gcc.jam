@@ -289,36 +289,18 @@ if [ os.name ] = NT
     JAMSHELL = % ;
 }
 
-local rule get-version ( command-string )
-{
-    local output = [ SHELL $(command-string) : exit-status ] ;
-    if 0 != $(output[2])
-    {
-        errors.error '$(command-string)'
-                     exited with error code $(output[2]) ;
-    }
-
-    local version = [ MATCH "^([0-9.]+)" : $(output[1]) ] ;
-    if ! $(version)
-    {
-        errors.error '$(command-string)'
-                     returned an invalid version string '$(output[1])' ;
-    }
-
-    return $(version) ;
-}
-
 rule get-full-version ( command-string )
 {
     # -dumpfullversion is only supported for gcc 7+.
     # Passing both options works, as the first one that's
     # recognized will be used.
-    return [ get-version "$(command-string) -dumpfullversion -dumpversion" ] ;
+    return [ common.match-command-output version  : "^([0-9.]+)"
+           : "$(command-string) -dumpfullversion -dumpversion" ] ;
 }
 
 rule get-short-version ( command-string : single-digit-since ? )
 {
-    local version = [ get-version "$(command-string) -dumpversion" ] ;
+    local version = [ get-full-version $(command-string) ] ;
     version = [ SPLIT_BY_CHARACTERS $(version) : . ] ;
 
     import version ;

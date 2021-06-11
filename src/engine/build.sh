@@ -131,8 +131,8 @@ test_compiler ()
 
 test_toolset ()
 {
-    if test "${B2_TOOLSET}" = "" ; then return ${TRUE} ; fi
-    if test "${B2_TOOLSET}" = "$1" -o "${B2_TOOLSET}" = "$2" -o "${B2_TOOLSET}" = "$3" ; then return ${TRUE} ; fi
+    if test "${TOOLSET}" = "" ; then return ${TRUE} ; fi
+    if test "${TOOLSET}" = "$1" -o "${TOOLSET}" = "$2" -o "${TOOLSET}" = "$3" ; then return ${TRUE} ; fi
     return 1
 }
 
@@ -151,15 +151,18 @@ test_toolset ()
 #
 check_toolset ()
 {
+    TOOLSET=${B2_TOOLSET%%-*}
+    TOOLSET_SUFFIX=${B2_TOOLSET##$TOOLSET}
+
     # Prefer Clang (clang) on macOS..
-    if test_toolset clang && test_uname Darwin && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
+    if test_toolset clang && test_uname Darwin && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # GCC (gcc)..
-    if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
-    if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 -D_GNU_SOURCE ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
+    if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
+    if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -D_GNU_SOURCE ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # GCC (gcc) with -pthread arg (for AIX)..
-    if test_toolset gcc && test_compiler g++ -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc ; return ${TRUE} ; fi
+    if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # Clang (clang)..
-    if test_toolset clang && test_compiler clang++ -x c++ -std=c++11 ; then B2_TOOLSET=clang ; return ${TRUE} ; fi
+    if test_toolset clang && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # Intel macOS (intel-darwin)
     if test_toolset intel-darwin && test -r "${HOME}/intel/oneapi/setvars.sh" && test_uname Darwin ; then
         B2_SETUP="source ${HOME}/intel/oneapi/setvars.sh"
@@ -318,7 +321,7 @@ fi
 # Set the additional options needed to build the engine based on the toolset.
 case "${B2_TOOLSET}" in
 
-    gcc)
+    gcc|gcc-*)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O2 -s"
         B2_CXXFLAGS_DEBUG="-O0 -g"
@@ -384,7 +387,7 @@ case "${B2_TOOLSET}" in
         B2_CXXFLAGS_DEBUG="-g"
     ;;
 
-    clang*)
+    clang|clang-*)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
         B2_CXXFLAGS_RELEASE="-O3 -s"
         B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g"
