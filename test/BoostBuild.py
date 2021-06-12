@@ -113,6 +113,20 @@ elif windows:
 elif hasattr(os, "uname"):
     default_os = os.uname()[0].lower()
 
+
+def expand_toolset(toolset, target_os=default_os):
+    match = re.match(r'^(clang|intel)(-[\d\.]+|)$', toolset)
+    if match:
+        if match.group(1) == "intel" and target_os == "windows":
+            return match.expand(r'\1-win\2')
+        elif target_os == "darwin":
+            return match.expand(r'\1-darwin\2')
+        else:
+            return match.expand(r'\1-linux\2')
+
+    return toolset
+
+
 def prepare_prefixes_and_suffixes(toolset, target_os=default_os):
     ind = toolset.find('-')
     if ind == -1:
@@ -258,6 +272,7 @@ class Tester(TestCmd.TestCmd):
         self.use_test_config = use_test_config
 
         self.toolset = get_toolset()
+        self.expanded_toolset = expand_toolset(self.toolset)
         self.pass_toolset = pass_toolset
         self.ignore_toolset_requirements = ignore_toolset_requirements
 
@@ -318,6 +333,7 @@ class Tester(TestCmd.TestCmd):
 
     def set_toolset(self, toolset, target_os=default_os):
         self.toolset = toolset
+        self.expanded_toolset = expand_toolset(toolset, target_os)
         self.pass_toolset = True
         prepare_prefixes_and_suffixes(toolset, target_os)
 
@@ -401,7 +417,7 @@ class Tester(TestCmd.TestCmd):
             n = glob.glob(self.native_file_name(name))
             if n: n = n[0]
             if not n:
-                n = self.glob_file(name.replace("$toolset", self.toolset + "*")
+                n = self.glob_file(name.replace("$toolset", self.expanded_toolset + "*")
                     )
             if n:
                 if os.path.isdir(n):
@@ -420,7 +436,7 @@ class Tester(TestCmd.TestCmd):
         toolset currently being tested.
 
         """
-        self.write(name, self.read(name).replace("$toolset", self.toolset))
+        self.write(name, self.read(name).replace("$toolset", self.expanded_toolset))
 
     def dump_stdio(self):
         annotation("STDOUT", self.stdout())
@@ -758,7 +774,7 @@ class Tester(TestCmd.TestCmd):
 
     def expect_content(self, name, content, exact=False):
         actual = self.read(name)
-        content = content.replace("$toolset", self.toolset + "*")
+        content = content.replace("$toolset", self.expanded_toolset + "*")
 
         matched = False
         if exact:
@@ -852,7 +868,7 @@ class Tester(TestCmd.TestCmd):
             names = [names]
         r = map(self.adjust_lib_name, names)
         r = map(self.adjust_suffix, r)
-        r = map(lambda x, t=self.toolset: x.replace("$toolset", t + "*"), r)
+        r = map(lambda x, t=self.expanded_toolset: x.replace("$toolset", t + "*"), r)
         return list(r)
 
     def adjust_name(self, name):

@@ -182,7 +182,7 @@ goto :eof
 
 :Config_GCC
 if not defined CXX ( set "CXX=g++" )
-set "B2_CXX="%CXX%" -x c++ -std=c++11 -s -O3 -o b2.exe"
+set "B2_CXX="%CXX%" -x c++ -std=c++11 -s -O3 -o b2.exe -D_GNU_SOURCE"
 set "_known_=1"
 goto :eof
 
