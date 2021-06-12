@@ -5,6 +5,8 @@
 
 * Fix building b2 engine with cygwin64.
   -- _René Ferdinand Rivera Morell_
+* Fix version detection of clang toolset from compiler exec.
+  -- _Nikita Kniazev_
 
 == Version 4.6.0
 
