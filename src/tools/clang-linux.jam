@@ -108,12 +108,22 @@ rule init ( version ? :  command * : options * ) {
 
 rule get-full-version ( command-string )
 {
-    return [ gcc.get-full-version $(command-string) ] ;
+    return [ common.match-command-output version : "version ([0-9.]+)"
+           : "$(command-string) --version" ] ;
 }
 
-rule get-short-version ( command-string )
+rule get-short-version ( command-string : single-digit-since ? )
 {
-    return [ gcc.get-short-version $(command-string) : 4 ] ;
+    local version = [ get-full-version $(command-string) ] ;
+    version = [ SPLIT_BY_CHARACTERS $(version) : . ] ;
+
+    import version ;
+    if [ version.version-less $(version) : $(single-digit-since:E=4) ]
+    {
+        return $(version[1-2]:J=.) ;
+    }
+
+    return $(version[1]) ;
 }
 
 ###############################################################################

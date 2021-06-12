@@ -1155,6 +1155,25 @@ rule find-compiler ( toolset : tool : version ? : command * : additional-paths *
     return $(command) ;
 }
 
+rule match-command-output ( kind ? : pattern : command-string )
+{
+    local output = [ SHELL $(command-string) : exit-status ] ;
+    if 0 != $(output[2])
+    {
+        errors.error '$(command-string)'
+                     exited with error code $(output[2]) ;
+    }
+
+    local match = [ MATCH $(pattern) : $(output[1]) ] ;
+    if ! $(match)
+    {
+        errors.error '$(command-string)'
+                     returned an invalid $kind string '$(output[1])' ;
+    }
+
+    return $(match) ;
+}
+
 rule __test__ ( )
 {
     import assert ;

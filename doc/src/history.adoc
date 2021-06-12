@@ -1,6 +1,13 @@
 [[b2.history]]
 = History
 
+== Version 4.6.1
+
+* Fix building b2 engine with cygwin64.
+  -- _René Ferdinand Rivera Morell_
+* Fix version detection of clang toolset from compiler exec.
+  -- _Nikita Kniazev_
+
 == Version 4.6.0
 
 This release wraps up a few new features that make using some toolsets easier
