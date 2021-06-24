@@ -64,9 +64,11 @@ def run_tests(critical_tests, other_tests):
         except KeyboardInterrupt:
             """This allows us to abort the testing manually using Ctrl-C."""
             raise
-        except SystemExit:
+        except SystemExit as e:
             """This is the regular way our test scripts are supposed to report
             test failures."""
+            if e.code is None or e.code == 0:
+                passed = 1
         except:
             exc_type, exc_value, exc_tb = sys.exc_info()
             try:
@@ -164,7 +166,8 @@ critical_tests = ["unit_tests", "module_actions", "startup_v2", "core_d12",
 if xml:
     critical_tests.insert(0, "collect_debug_info")
 
-tests = ["absolute_sources",
+tests = ["abs_workdir",
+         "absolute_sources",
          "alias",
          "alternatives",
          "always",
@@ -176,11 +179,13 @@ tests = ["absolute_sources",
          "builtin_echo",
          "builtin_exit",
          "builtin_glob",
+         "builtin_readlink",
          "builtin_split_by_characters",
          "bzip2",
          "c_file",
          "chain",
          "clean",
+         "cli_property_expansion",
          "command_line_properties",
          "composite",
          "conditionals",
@@ -195,9 +200,11 @@ tests = ["absolute_sources",
          "core_actions_quietly",
          "core_at_file",
          "core_bindrule",
+         "core_dependencies",
          "core_syntax_error_exit_status",
          "core_fail_expected",
          "core_jamshell",
+         "core_modifiers",
          "core_multifile_actions",
          "core_nt_cmd_line",
          "core_option_d2",
@@ -244,6 +251,8 @@ tests = ["absolute_sources",
          "inline",
          "libjpeg",
          "liblzma",
+         "libpng",
+         "libtiff",
          "libzstd",
          "lib_source_property",
          "lib_zlib",
@@ -258,6 +267,8 @@ tests = ["absolute_sources",
          "no_type",
          "notfile",
          "ordered_include",
+# FIXME: Disabled due to bug in B2
+#         "ordered_properties",
          "out_of_tree",
          "package",
          "param",
@@ -291,6 +302,8 @@ tests = ["absolute_sources",
          "suffix",
          "tag",
          "test_rc",
+         "test1",
+         "test2",
          "testing",
          "timedata",
          "toolset_clang_darwin",
@@ -325,8 +338,13 @@ if toolset.startswith("gcc") and os.name != "nt":
     # assumes otherwise. Hence enable it only when not on Windows.
     tests.append("gcc_runtime")
 
+if not toolset.startswith("msvc"):
+    tests.append("preprocessor")
+
 if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswith("msvc"):
     tests.append("pch")
+    if sys.platform != "darwin": # clang-darwin does not yet support
+        tests.append("feature_force_include")
 
 # Disable on OSX as it doesn't seem to work for unknown reasons.
 if sys.platform != 'darwin':

@@ -450,9 +450,8 @@ class Tester(TestCmd.TestCmd):
         assert extra_args.__class__ is not str
 
         if os.path.isabs(subdir):
-            print("You must pass a relative directory to subdir <%s>." % subdir
-                )
-            return
+            raise ValueError(
+                "You must pass a relative directory to subdir <%s>." % subdir)
 
         self.previous_tree, dummy = tree.build_tree(self.workdir)
         self.wait_for_time_change_since_last_build()

@@ -14,5 +14,5 @@ unbuilt all ;
 ECHO "Hi" ;
 """)
 
-t.run_build_system("-ftest.jam", stdout="Hi\n")
+t.run_build_system(["-ftest.jam", "-d0"], stdout="Hi\n")
 t.cleanup()
