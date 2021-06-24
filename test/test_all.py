@@ -274,6 +274,7 @@ tests = ["abs_workdir",
          "param",
          "path_features",
          "prebuilt",
+         "preprocessor",
          "print",
          "project_dependencies",
          "project_glob",
@@ -337,9 +338,6 @@ if toolset.startswith("gcc") and os.name != "nt":
     # On Windows it's allowed to have a static runtime with gcc. But this test
     # assumes otherwise. Hence enable it only when not on Windows.
     tests.append("gcc_runtime")
-
-if not toolset.startswith("msvc"):
-    tests.append("preprocessor")
 
 if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswith("msvc"):
     tests.append("pch")
