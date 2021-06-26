@@ -15,7 +15,7 @@ t.write("jamroot.jam", """
 project ;
 preprocessed hello : hello.cpp ;
 preprocessed a : a.c ;
-#exe test : hello a : <define>FAIL ;
+exe test : hello a : <define>FAIL ;
 """)
 
 t.write("hello.cpp", """
@@ -48,7 +48,6 @@ int foo(void)
 t.run_build_system()
 t.expect_addition("bin/$toolset/debug*/hello.ii")
 t.expect_addition("bin/$toolset/debug*/a.i")
-# FIXME: Producing executable from preprocessed target is not yet implemented
-# t.expect_addition("bin/$toolset/debug*/test.exe")
+t.expect_addition("bin/$toolset/debug*/test.exe")
 
 t.cleanup()
