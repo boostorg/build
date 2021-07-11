@@ -5228,6 +5228,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             {
                 expansion_item ei = { stack_pop( s ) };
                 filename = expand( &ei, 1 );
+                list_free( ei.values );
             }
             // Apply modifiers to "raw" filename.
             VAR_EXPANDED filename_mod = eval_modifiers( s, filename, code->arg );
