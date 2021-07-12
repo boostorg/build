@@ -476,6 +476,13 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(). */
 
+    if ( n_args > LOL_MAX )
+    {
+        out_printf( "ERROR: rules are limited to %d arguments\n", LOL_MAX );
+        backtrace( inner );
+        exit( EXITBAD );
+    }
+
     for ( i = 0; i < n_args; ++i )
         lol_add( inner->args, stack_at( s, n_args - i - 1 ) );
 
@@ -568,6 +575,13 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
     inner->prev = frame;
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
+
+    if ( n_args > LOL_MAX )
+    {
+        out_printf( "ERROR: member rules are limited to %d arguments\n", LOL_MAX );
+        backtrace( inner );
+        exit( EXITBAD );
+    }
 
     for( i = 0; i < n_args; ++i )
     {
