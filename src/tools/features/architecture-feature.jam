@@ -8,7 +8,7 @@ import feature ;
 #| tag::doc[]
 
 [[bbv2.builtin.features.architecture]]`architecture`::
-*Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips1`, `parisc`, `arm`,
+*Allowed values:* `x86`, `ia64`, `sparc`, `power`, `mips`, `parisc`, `arm`,
 `s390x`, `combined`, `combined-x86-power`.
 +
 Specifies the general processor family to generate code for.
@@ -30,7 +30,7 @@ feature.feature architecture
         power
 
         # MIPS/SGI
-        mips1
+        mips
 
         # HP/PA-RISC
         parisc
