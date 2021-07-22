@@ -68,7 +68,7 @@ toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips/<address-model>32 : -Vg
 # There are also excluded alternatives (supported by QNX 6.5.0)
 # toolset.flags qcc QCC-TARGET-PLATFORM <architecture>arm/<address-model>32 : -Vgcc_ntoarmle ;
 # toolset.flags qcc QCC-TARGET-PLATFORM <architecture>power/<address-model>32 : -Vgcc_ntoppcbespe ;
-# toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips1/<address-model>32 : -Vgcc_ntomipsbe ;
+# toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips/<address-model>32 : -Vgcc_ntomipsbe ;
 
 local rule check-target-platform
 {
