@@ -63,7 +63,7 @@ toolset.flags qcc QCC-TARGET-PLATFORM <architecture>arm/<address-model>64 : -Vgc
 
 # Combinations supported by QNX 6.5.0
 toolset.flags qcc QCC-TARGET-PLATFORM <architecture>power/<address-model>32 : -Vgcc_ntoppcbe ;
-toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips1/<address-model>32 : -Vgcc_ntomipsle ;
+toolset.flags qcc QCC-TARGET-PLATFORM <architecture>mips/<address-model>32 : -Vgcc_ntomipsle ;
 
 # There are also excluded alternatives (supported by QNX 6.5.0)
 # toolset.flags qcc QCC-TARGET-PLATFORM <architecture>arm/<address-model>32 : -Vgcc_ntoarmle ;
