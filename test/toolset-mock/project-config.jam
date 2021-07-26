@@ -24,12 +24,10 @@ using darwin : 4.2.1 : $(PYTHON) $(here)/src/darwin-4.2.1.py
 
 using clang-darwin : 3.9.0 : $(PYTHON) $(here)/src/clang-3.9.0-darwin.py
   : <archiver>$(here)/src/bin/ar
-    <ranlib>$(here)/src/bin/ranlib
   ;
 
 using clang-linux : 3.9.0 : $(PYTHON) $(here)/src/clang-linux-3.9.0.py
   : <archiver>$(here)/src/bin/ar
-    <ranlib>$(here)/src/bin/ranlib
   ;
 
 using clang-vxworks : 4.0.1 : $(PYTHON) $(here)/src/clang-vxworks-4.0.1.py
@@ -39,5 +37,4 @@ using clang-vxworks : 4.0.1 : $(PYTHON) $(here)/src/clang-vxworks-4.0.1.py
 
 using intel-darwin : 10.2 : $(PYTHON) $(here)/src/intel-darwin-10.2.py
   : <archiver>$(here)/src/bin/ar
-    <ranlib>$(here)/src/bin/ranlib
   ;

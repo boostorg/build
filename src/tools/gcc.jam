@@ -64,13 +64,6 @@ option or defaulted to `ar`, but in some cases you might want to
 override it, for example to explicitly use a system version instead of
 one included with gcc.
 
-`ranlib`::
-Specifies the ranlib command that is used to generated symbol table
-for static libraries. Normally, it is autodetected using gcc
-`-print-prog-name` option or defaulted to `ranlib`, but in some cases
-you might want to override it, for example to explicitly use a system
-version instead of one included with gcc.
-
 `rc`::
 Specifies the resource compiler command that will be used with the
 version of gcc that is being configured. This setting makes sense only
@@ -246,18 +239,6 @@ rule init ( version ? : command * : options * : requirement * )
     }
     local arflags = [ feature.get-values <arflags> : $(options) ] ;
     toolset.flags gcc.archive .ARFLAGS $(condition) : $(arflags) ;
-
-    # - Ranlib.
-    local ranlib = [ common.get-invocation-command gcc
-        : [ .get-prog-name $(command-string) : ranlib : $(flavor) ]
-        : [ feature.get-values <ranlib> : $(options) ]
-        : $(bin)
-        : search-path ] ;
-    toolset.flags gcc.archive .RANLIB $(condition) : $(ranlib[1]) ;
-    if $(.debug-configuration)
-    {
-        ECHO "notice:" using gcc ranlib "::" $(condition) "::" $(ranlib[1]) ;
-    }
 
     # - Resource compiler.
     local rc = [ common.get-invocation-command-nodefault gcc : windres :
@@ -1048,8 +1029,7 @@ actions link.dll bind LIBRARIES
 # logic in intel-linux, but that is hardly worth the trouble as on Linux, 'ar'
 # is always available.
 .AR = ar ;
-.ARFLAGS = rc ;
-.RANLIB = ranlib ;
+.ARFLAGS = rsc ;
 
 toolset.flags gcc.archive AROPTIONS <archiveflags> ;
 
@@ -1091,7 +1071,6 @@ rule archive ( targets * : sources * : properties * )
 actions piecemeal archive
 {
     "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" "$(>)"
-    "$(.RANLIB)" "$(<)"
 }
 
 ###

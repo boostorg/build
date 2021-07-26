@@ -9,7 +9,6 @@
 from MockProgram import *
 
 command('clang++', '-print-prog-name=ar', stdout=script('ar.py'))
-command('clang++', '-print-prog-name=ranlib', stdout=script('ranlib.py'))
 
 if allow_properties('variant=debug', 'link=shared', 'threading=single', 'runtime-link=shared'):
     command('clang++', unordered(ordered('-x', 'c++'), '-O0', '-fno-inline', '-Wall', '-g', '-fPIC', '-c'), '-o', output_file('bin/clang-vxworks-4.0.1/debug/lib.o'), input_file(source='lib.cpp'))

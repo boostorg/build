@@ -86,14 +86,6 @@ rule init ( version ? :  command * : options * ) {
         toolset.flags clang-linux.link RUN_PATH $(condition) : $(lib_path) ;
     }
 
-  # - Ranlib.
-  local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
-  if ( ! $(ranlib) ) && $(root)
-    {
-    ranlib = $(root)/bin/ranlib ;
-    }
-  toolset.flags clang-linux.archive .RANLIB $(condition) : $(ranlib[1]) ;
-
   # - Archive builder.
   local archiver = [ feature.get-values <archiver> : $(options) ] ;
   if ( ! $(archiver) ) && $(root)

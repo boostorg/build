@@ -94,9 +94,6 @@ rule init ( : : options * : requirements * )
     # Archive builder.
     local command-ar = [ validate-command $(toolset) ar ] ;
 
-    # Archive indexer.
-    local command-ranlib = [ validate-command $(toolset) ranlib ] ;
-
     # The 'command' variables always have one element, but they may contain
     # spaces (e.g. if 'command' is an absolute path and some path components
     # have spaces).
@@ -171,7 +168,7 @@ rule init ( : : options * : requirements * )
         handle-options
             $(toolset)
           : $(identifying-condition)
-          : $(command-c) $(command-cxx) $(command-fortran) $(command-ar) $(command-ranlib)
+          : $(command-c) $(command-cxx) $(command-fortran) $(command-ar)
           : $(options) ;
 
         # Add compiler version to 'VERSION' variable on all targets. 'VERSION' is
@@ -472,8 +469,7 @@ actions link.dll bind LIBRARIES
 
 actions piecemeal archive
 {
-    "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
-    "$(.RANLIB)" "$(<)"
+    "$(.AR)" $(AROPTIONS) rsc "$(<)" "$(>)"
 }
 
 ###
@@ -935,7 +931,7 @@ local rule options-helper ( rule-or-module variable-name condition * : feature o
 rule handle-options (
     toolset
   : toolset-condition *
-  : command-c command-cxx command-fortran command-ar command-ranlib
+  : command-c command-cxx command-fortran command-ar
   : options *
 )
 {
@@ -955,7 +951,6 @@ rule handle-options (
     toolset.flags $(toolset) CONFIG_COMMAND_CXX $(toolset-condition) : $(command-cxx) : unchecked ;
     toolset.flags $(toolset) CONFIG_COMMAND_FORTRAN $(toolset-condition) : $(command-fortran) : unchecked ;
     toolset.flags $(toolset).archive .AR $(toolset-condition) : $(command-ar) : unchecked ;
-    toolset.flags $(toolset).archive .RANLIB $(toolset-condition) : $(command-ranlib) : unchecked ;
 
     # The following flags are applied to all targets built by this
     # configuration of this toolset. This particular configuration of this
