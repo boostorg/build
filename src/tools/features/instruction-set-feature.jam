@@ -63,6 +63,8 @@ feature.feature instruction-set
         armv2 armv2a armv3 armv3m armv4 armv4t armv5 armv5t armv5te armv6 armv6j iwmmxt ep9312
         armv7 armv7s
 
+        cortex-a9+vfpv3 cortex-a53 cortex-r5 cortex-r5+vfpv3-d16
+
         # z Systems (aka s390x)
         z196 zEC12 z13 z14 z15
 
