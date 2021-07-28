@@ -408,15 +408,6 @@ local rule init-available-sdk-versions ( condition * : root ? )
     return $(result) ;
 }
 
-# Generic options.
-flags darwin.compile OPTIONS <flags> ;
-
-# The following adds objective-c support to darwin.
-# Thanks to http://thread.gmane.org/gmane.comp.lib.boost.build/13759
-
-generators.register-c-compiler darwin.compile.m : OBJECTIVE_C : OBJ : <toolset>darwin ;
-generators.register-c-compiler darwin.compile.mm : OBJECTIVE_CPP : OBJ : <toolset>darwin ;
-
 rule setup-address-model ( targets * : sources * : properties * )
 {
     local ps = [ property-set.create $(properties) ] ;

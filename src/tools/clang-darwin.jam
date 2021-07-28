@@ -31,9 +31,6 @@ generators.override clang-darwin.searched-lib-generator : searched-lib-generator
 generators.override clang-darwin.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override clang-darwin.compile.c++.pch : pch.default-cpp-pch-generator ;
 
-generators.register-c-compiler clang-darwin.compile.m : OBJECTIVE_C : OBJ : <toolset>clang <toolset-clang:platform>darwin ;
-generators.register-c-compiler clang-darwin.compile.mm : OBJECTIVE_CPP : OBJ : <toolset>clang <toolset-clang:platform>darwin ;
-
 toolset.inherit-rules clang-darwin : gcc ;
 toolset.inherit-flags clang-darwin : gcc
         : <inlining>full
@@ -86,18 +83,10 @@ rule get-short-version ( command-string )
 
 SPACE = " " ;
 
-toolset.flags clang-darwin.compile.m OPTIONS <mflags> ;
-toolset.flags clang-darwin.compile.mm OPTIONS <mflags> ;
-toolset.flags clang-darwin.compile.mm OPTIONS <mmflags> ;
-
 # Declare flags and action for compilation.
 
 # For clang, 'on' and 'full' are identical
 toolset.flags clang-darwin.compile OPTIONS <inlining>full : -Wno-inline ;
-
-# SJW 12/2017: Support for <flags> is widely inconsistent.
-# shouldn't this be handled by the common gcc?
-toolset.flags clang-darwin.compile OPTIONS <flags> ;
 
 # LTO
 toolset.flags clang-darwin.compile OPTIONS <lto>on/<lto-mode>thin : -flto=thin ;
@@ -143,16 +132,6 @@ actions compile.c.pch
 actions compile.c++.pch
 {
     "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
-}
-
-actions compile.m
-{
-    "$(CONFIG_COMMAND)" -x objective-c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-actions compile.mm
-{
-    "$(CONFIG_COMMAND)" -x objective-c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 # Declare actions for linking
