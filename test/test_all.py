@@ -284,6 +284,8 @@ tests = ["abs_workdir",
          "project_test3",
          "project_test4",
          "property_expansion",
+# FIXME: Disabled due lack of qt5 detection
+#         "qt5",
          "rebuilds",
          "relative_sources",
          "remove_requirement",
