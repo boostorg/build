@@ -171,19 +171,6 @@ actions compile.c bind PCH_FILE
 }
 
 ###############################################################################
-# PCH emission
-
-actions compile.c++.pch
-{
-  "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
-}
-
-actions compile.c.pch
-{
-  "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
-}
-
-###############################################################################
 # Linking
 
 local soname-os = [ set.difference $(all-os) : windows ] ;

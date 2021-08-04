@@ -124,16 +124,6 @@ actions compile.c++ bind PCH_FILE
     "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" $(.include-pch)"$(PCH_FILE)" -c -o "$(<)" "$(>)"
 }
 
-actions compile.c.pch
-{
-    "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
-}
-
-actions compile.c++.pch
-{
-    "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -o "$(<)" "$(>)"
-}
-
 # Declare actions for linking
 rule link ( targets * : sources * : properties * )
 {
