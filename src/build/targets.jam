@@ -1320,8 +1320,22 @@ class basic-target : abstract-target
                     [ $(rproperties).raw ] ;
             }
 
-            if ( $(rproperties[1]) != "@error" ) && ( [ $(rproperties).get
-                <build> ] != no )
+            local skip ;
+            if $(rproperties[1]) = "@error"
+            {
+                ECHO [ targets.indent ] "Skipping build of:" [ full-name ]
+                    "cannot compute common properties" ;
+                skip = true ;
+            }
+            else if [ $(rproperties).get <build> ] = no
+            {
+                # If we just see <build>no, we cannot produce any reasonable
+                # diagnostics. The code that adds this property is expected
+                # to explain why a target is not built, for example using
+                # the configure.log-component-configuration function.
+                skip = true ;
+            }
+            else
             {
                 local source-targets ;
                 local properties = [ $(rproperties).non-dependency ] ;
@@ -1340,102 +1354,90 @@ class basic-target : abstract-target
                         $(self.name)": " $(usage-requirements) ;
                 }
 
-                rproperties = [ property-set.create $(properties)
-                    $(usage-requirements) ] ;
-                usage-requirements = [ property-set.create $(usage-requirements)
-                    ] ;
-
-                if [ modules.peek : .debug-building ]
+                #  Skipping this target if a dependency is skipped.
+                #  Consider letting subclasses override this behavior. E.g.
+                #  alias-target-class may override this to not fail to build if
+                #  a dependency fails.
+                if <build>no in $(usage-requirements)
                 {
-                    ECHO [ targets.indent ] "Build properties: "
-                        [ $(rproperties).raw ] ;
-                }
-
-                local extra = [ $(rproperties).get <source> ] ;
-                source-targets += $(extra:G=) ;
-                # We might get duplicate sources, for example if we link to two
-                # libraries having the same <library> usage requirement. Use
-                # stable sort, since for some targets the order is important,
-                # e.g. RUN_PY targets need a python source to come first.
-                source-targets = [ sequence.unique $(source-targets) : stable ]
-                    ;
-
-                local result = [ construct $(self.name) : $(source-targets) :
-                    $(rproperties) ] ;
-
-                if $(result)
-                {
-                    local gur = $(result[1]) ;
-                    result = $(result[2-]) ;
-
-                    # Relevant is automatically applied to usage requirements
-                    # and only applies for propagated features
-                    local relevant = [ propagated-relevant
-                        [ $(gur).get <relevant> ]
-                        [ $(rproperties).get <relevant> ] ] ;
-                    gur = [ property-set.create
-                        [ property.change [ $(gur).raw ] : <relevant> ]
-                        <relevant>$(relevant) ] ;
-
-                    local s = [ create-subvariant $(result)
-                        : [ virtual-target.recent-targets ]
-                        : $(property-set) : $(source-targets)
-                        : $(rproperties) : $(usage-requirements) ] ;
-                    virtual-target.clear-recent-targets ;
-
-                    if $(self.always)
-                    {
-                        for local t in [ $(s).created-targets ]
-                        {
-                            $(t).always ;
-                        }
-                    }
-
-                    local ur = [ compute-usage-requirements $(s) ] ;
-                    ur = [ $(ur).add $(gur) ] ;
-                    $(s).set-usage-requirements $(ur) ;
-                    if [ modules.peek : .debug-building ]
-                    {
-                        ECHO [ targets.indent ] "Usage requirements from"
-                            $(self.name)": " [ $(ur).raw ] ;
-                    }
-
-                    self.generated.$(property-set) = $(ur) $(result) ;
-                }
-            }
-            else
-            {
-                if $(rproperties[1]) = "@error"
-                {
-                    ECHO [ targets.indent ] "Skipping build of:" [ full-name ]
-                        "cannot compute common properties" ;
-                }
-                else if [ $(rproperties).get <build> ] = no
-                {
-                    # If we just see <build>no, we cannot produce any reasonable
-                    # diagnostics. The code that adds this property is expected
-                    # to explain why a target is not built, for example using
-                    # the configure.log-component-configuration function.
+                    skip = true ;
                 }
                 else
                 {
-                    ECHO [ targets.indent ] "Skipping build of: " [ full-name ]
-                        " unknown reason" ;
-                }
+                    rproperties = [ property-set.create $(properties)
+                        $(usage-requirements) ] ;
+                    usage-requirements = [ property-set.create $(usage-requirements)
+                        ] ;
 
+                    if [ modules.peek : .debug-building ]
+                    {
+                        ECHO [ targets.indent ] "Build properties: "
+                            [ $(rproperties).raw ] ;
+                    }
+
+                    local extra = [ $(rproperties).get <source> ] ;
+                    source-targets += $(extra:G=) ;
+                    # We might get duplicate sources, for example if we link to two
+                    # libraries having the same <library> usage requirement. Use
+                    # stable sort, since for some targets the order is important,
+                    # e.g. RUN_PY targets need a python source to come first.
+                    source-targets = [ sequence.unique $(source-targets) : stable ]
+                        ;
+
+                    local result = [ construct $(self.name) : $(source-targets) :
+                        $(rproperties) ] ;
+
+                    if $(result)
+                    {
+                        local gur = $(result[1]) ;
+                        result = $(result[2-]) ;
+
+                        # Relevant is automatically applied to usage requirements
+                        # and only applies for propagated features
+                        local relevant = [ propagated-relevant
+                            [ $(gur).get <relevant> ]
+                            [ $(rproperties).get <relevant> ] ] ;
+                        gur = [ property-set.create
+                            [ property.change [ $(gur).raw ] : <relevant> ]
+                            <relevant>$(relevant) ] ;
+
+                        local s = [ create-subvariant $(result)
+                            : [ virtual-target.recent-targets ]
+                            : $(property-set) : $(source-targets)
+                            : $(rproperties) : $(usage-requirements) ] ;
+                        virtual-target.clear-recent-targets ;
+
+                        if $(self.always)
+                        {
+                            for local t in [ $(s).created-targets ]
+                            {
+                                $(t).always ;
+                            }
+                        }
+
+                        local ur = [ compute-usage-requirements $(s) ] ;
+                        ur = [ $(ur).add $(gur) ] ;
+                        $(s).set-usage-requirements $(ur) ;
+                        if [ modules.peek : .debug-building ]
+                        {
+                            ECHO [ targets.indent ] "Usage requirements from"
+                                $(self.name)": " [ $(ur).raw ] ;
+                        }
+
+                        self.generated.$(property-set) = $(ur) $(result) ;
+                    }
+                }
+            }
+
+            if $(skip)
+            {
                 # We are here either because there has been an error computing
-                # properties or there is <build>no in properties. In the latter
-                # case we do not want any diagnostic. In the former case, we
-                # need diagnostics. FIXME
+                # properties or there is <build>no in properties or usage
+                # requirements. In the latter case we do not want any
+                # diagnostic. In the former case, we need diagnostics. FIXME
 
                 # If this target fails to build, add <build>no to properties to
-                # cause any parent target to fail to build. Except that it
-                # - does not work now, since we check for <build>no only in
-                #   common properties, but not in properties that came from
-                #   dependencies
-                # - it is not clear if that is a good idea anyway. The alias
-                #   target, for example, should not fail to build if a
-                #   dependency fails.
+                # cause any parent target to fail to build.
                 self.generated.$(property-set) = [ property-set.create <build>no
                     ] ;
             }
