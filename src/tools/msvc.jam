@@ -1985,8 +1985,6 @@ local rule register-toolset-really ( )
         toolset.flags msvc.link FINDLIBS_SA <find-shared-library> ;
         toolset.flags msvc.link LIBRARY_OPTION <toolset>msvc : "" : unchecked ;
         toolset.flags msvc.link LIBRARIES_MENTIONED_BY_FILE : <library-file> ;
-
-        toolset.flags msvc.link.dll LINKFLAGS <suppress-import-lib>true : /NOENTRY ;
     }
 
     toolset.flags msvc.archive AROPTIONS <archiveflags> ;
