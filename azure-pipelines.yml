@@ -127,6 +127,7 @@ stages:
   - job: 'Windows'
     strategy:
       matrix:
+        VS 2022: {TOOLSET: vc143, TEST_TOOLSET: msvc, VM_IMAGE: 'windows-2022'}
         VS 2017: {TOOLSET: vc141, TEST_TOOLSET: msvc, VM_IMAGE: 'vs2017-win2016'}
         MinGW 8.1.0: {TOOLSET: mingw, TEST_TOOLSET: gcc, VM_IMAGE: 'vs2017-win2016'}
     pool:
@@ -267,6 +268,7 @@ stages:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
+        1.77.0 .. GCC 11: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
         1.76.0 .. GCC 11: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
         1.75.0 .. GCC 11: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
         1.74.0 .. GCC 11: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: gcc, CXX: g++-11, PACKAGES: g++-11}
@@ -307,6 +309,7 @@ stages:
       vmImage: 'macOS-latest'
     strategy:
       matrix:
+        1.77.0 .. Xcode 12.4: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
         1.76.0 .. Xcode 12.4: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
         1.75.0 .. Xcode 12.4: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
         1.74.0 .. Xcode 12.4: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app}
@@ -348,6 +351,7 @@ stages:
       vmImage: 'windows-latest'
     strategy:
       matrix:
+        1.77.0 .. VS 2019: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: vc142}
         1.76.0 .. VS 2019: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: vc142}
         1.75.0 .. VS 2019: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: vc142}
         1.74.0 .. VS 2019: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: vc142}
