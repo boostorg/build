@@ -138,7 +138,9 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
-        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-latest'}
+        Xcode 13.0: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.0.app, VM_IMAGE: 'macOS-11'}
+        Xcode 12.5.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.5.1.app, VM_IMAGE: 'macOS-11'}
+        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 12.2: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.2.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 12.1.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.1.1.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 12.0.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.0.1.app, VM_IMAGE: 'macOS-10.15'}
