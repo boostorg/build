@@ -1,6 +1,8 @@
 [[b2.history]]
 = History
 
+== Version 4.7.0
+
 == Version 4.6.1
 
 * Fix building b2 engine with cygwin64.
