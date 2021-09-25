@@ -48,7 +48,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ matrix.image }}
-          options: --env-file docker-run-action.env --workdir "${{ github.workspace }}" --mount "type=bind,src=${{ github.workspace }},dst=${{ github.workspace }}"
+          options: --env-file docker-run-action.env --workdir "${{ github.workspace }}" -v "${{ github.workspace }}:${{ github.workspace }}"
           run: |
             set -e
             uname -a
