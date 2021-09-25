@@ -19,7 +19,7 @@ on:
 jobs:
   qemu-multiarch-linux:
     strategy:
-      matric:
+      matrix:
         include:
           - { name: 'Ubuntu 20.04 Focal (armhf)', image: 'multiarch/ubuntu-debootstrap:armhf-focal', cxx: 'g++', toolset: 'gcc' }
           - { name: 'Ubuntu 20.04 Focal (arm64)', image: 'multiarch/ubuntu-debootstrap:arm64-focal', cxx: 'g++', toolset: 'gcc' }
