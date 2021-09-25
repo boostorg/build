@@ -44,22 +44,23 @@ jobs:
           env | grep -v '^#' | xargs > docker-run-action.env
       - name: 'Run'
         uses: addnab/docker-run-action@v3
-        image: ${{ matrix.image }}
-        options: --env-file docker-run-action.env --workdir "${{ github.workspace }}" --mount "type=bind,src=${{ github.workspace }},dst=${{ github.workspace }}"
-        run: |
-          set -e
-          uname -a
-          echo ">>>>>"
-          echo ">>>>> Build.."
-          echo ">>>>>"
-          cd src/engine
-          export "PATH=${PATH};${CXX_PATH}"
-          ./build.sh ${TOOLSET}
-          ./b2 -v
-          cd ../..
-          echo ">>>>>"
-          echo ">>>>> Test.."
-          echo ">>>>>"
-          cd test
-          python test_all.py ${TOOLSET}
-          cd ..
+        with:
+          image: ${{ matrix.image }}
+          options: --env-file docker-run-action.env --workdir "${{ github.workspace }}" --mount "type=bind,src=${{ github.workspace }},dst=${{ github.workspace }}"
+          run: |
+            set -e
+            uname -a
+            echo ">>>>>"
+            echo ">>>>> Build.."
+            echo ">>>>>"
+            cd src/engine
+            export "PATH=${PATH};${CXX_PATH}"
+            ./build.sh ${TOOLSET}
+            ./b2 -v
+            cd ../..
+            echo ">>>>>"
+            echo ">>>>> Test.."
+            echo ">>>>>"
+            cd test
+            python test_all.py ${TOOLSET}
+            cd ..
