@@ -74,5 +74,5 @@ jobs:
             echo ">>>>> Test.."
             echo ">>>>>"
             cd test
-            python test_all.py ${TOOLSET}
+            python3 test_all.py ${TOOLSET}
             cd ..
