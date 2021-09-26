@@ -44,6 +44,12 @@ jobs:
       - name: 'Setup'
         run: |
           env | grep -v '^#' | xargs > docker-run-action.env
+      - name: 'Info'
+        run: |
+          echo ">>>>> ENV:"
+          cat docker-run-action.env
+          echo ">>>>>  WORKDIR: ${{ github.workspace }}"
+          ls -laF ${{ github.workspace }}
       - name: 'Run'
         uses: addnab/docker-run-action@v3
         with:
