@@ -54,7 +54,7 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: ${{ matrix.image }}
-          options: -v "${{ github.workspace }}":"${{ github.workspace }}" --env-file docker-run-action.env
+          options: -v "${{ github.workspace }}":"/home/temp" --env-file docker-run-action.env
           run: |
             set -e
             uname -a
