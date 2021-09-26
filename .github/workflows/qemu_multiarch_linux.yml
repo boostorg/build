@@ -59,6 +59,10 @@ jobs:
             set -e
             uname -a
             echo ">>>>>"
+            echo ">>>>> Install.."
+            echo ">>>>>"
+            ./.ci/linux-cxx-install.sh
+            echo ">>>>>"
             echo ">>>>> Build.."
             echo ">>>>>"
             cd src/engine
