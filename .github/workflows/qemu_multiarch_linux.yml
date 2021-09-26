@@ -19,6 +19,7 @@ on:
 jobs:
   qemu-multiarch-linux:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - { name: 'Ubuntu 20.04 Focal (armhf)', image: 'multiarch/ubuntu-debootstrap:armhf-focal', cxx: 'g++', toolset: 'gcc' }
@@ -52,6 +53,7 @@ jobs:
           ls -laF ${{ github.workspace }}
       - name: 'Run'
         uses: addnab/docker-run-action@v3
+        continue-on-error: true
         with:
           image: ${{ matrix.image }}
           options: -v ${{ github.workspace }}:${{ github.workspace }} -w ${{ github.workspace }} --env-file docker-run-action.env
