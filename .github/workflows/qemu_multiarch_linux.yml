@@ -24,6 +24,8 @@ jobs:
         include:
           - { name: 'Ubuntu 20.04 Focal (armhf)', image: 'multiarch/ubuntu-debootstrap:armhf-focal', cxx: 'g++', toolset: 'gcc' }
           - { name: 'Ubuntu 20.04 Focal (arm64)', image: 'multiarch/ubuntu-debootstrap:arm64-focal', cxx: 'g++', toolset: 'gcc' }
+          - { name: 'Debian 11 Bullseye (armhf)', image: 'multiarch/debian-debootstrap:armhf-bullseye', cxx: 'g++', toolset: 'gcc' }
+          - { name: 'Debian 11 Bullseye (arm64)', image: 'multiarch/debian-debootstrap:arm64-bullseye', cxx: 'g++', toolset: 'gcc' }
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     env:
