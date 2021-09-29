@@ -282,8 +282,8 @@ if [ os.name ] = NT
 {
     # This causes single-line command invocation to not go through .bat files,
     # thus avoiding command-line length limitations.
-    # TODO: Set JAMSHELL on specific targets instead of globally.
-    JAMSHELL = % ;
+    JAMSHELL = [ modules.peek : JAMSHELL ] ;
+    JAMSHELL ?= % ;
 }
 
 rule get-full-version ( command-string )
