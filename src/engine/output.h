@@ -35,6 +35,10 @@ void err_data(char const * const s);
 void out_printf(char const * const f, ...);
 void err_printf(char const * const f, ...);
 
+// Output current errno value & description along with given string.
+void errno_puts(char const * const s);
+void errno_printf(char const * const f, ...);
+
 OBJECT * outf_int( int const value );
 OBJECT * outf_double( double const value );
 OBJECT * outf_time( timestamp const * const value );
