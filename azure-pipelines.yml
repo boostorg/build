@@ -108,9 +108,9 @@ stages:
         GCC 7: {TOOLSET: gcc-7, PACKAGES: g++-7, VM_IMAGE: 'ubuntu-18.04'}
         GCC 6: {TOOLSET: gcc-6, PACKAGES: g++-6, VM_IMAGE: 'ubuntu-18.04'}
         GCC 5: {TOOLSET: gcc-5,  PACKAGES: g++-5, VM_IMAGE: 'ubuntu-18.04'}
-        GCC 4.9: {TOOLSET: gcc-4.9, PACKAGES: g++-4.9, VM_IMAGE: 'ubuntu-16.04'}
-        GCC 4.8: {TOOLSET: gcc-4.8, PACKAGES: g++-4.8, VM_IMAGE: 'ubuntu-16.04'}
-        GCC 4.7: {TOOLSET: gcc-4.7, PACKAGES: g++-4.7, VM_IMAGE: 'ubuntu-16.04'}
+        GCC 4.9: {TOOLSET: gcc-4.9, PACKAGES: g++-4.9, VM_IMAGE: 'ubuntu-18.04'}
+        GCC 4.8: {TOOLSET: gcc-4.8, PACKAGES: g++-4.8, VM_IMAGE: 'ubuntu-18.04'}
+        GCC 4.7: {TOOLSET: gcc-4.7, PACKAGES: g++-4.7, VM_IMAGE: 'ubuntu-18.04'}
         Clang 11: {TOOLSET: clang-11, PACKAGES: clang-11, LLVM_OS: focal, LLVM_VER: 11, VM_IMAGE: 'ubuntu-latest'}
         Clang 10: {TOOLSET: clang-10, PACKAGES: clang-10, LLVM_OS: bionic, LLVM_VER: 10, VM_IMAGE: 'ubuntu-18.04'}
         Clang 9: {TOOLSET: clang-9, PACKAGES: clang-9, LLVM_OS: bionic, LLVM_VER: 9, VM_IMAGE: 'ubuntu-18.04'}
@@ -118,12 +118,12 @@ stages:
         Clang 7: {TOOLSET: clang-7, PACKAGES: clang-7, LLVM_OS: bionic, LLVM_VER: 7, VM_IMAGE: 'ubuntu-18.04'}
         Clang 6: {TOOLSET: clang-6.0, PACKAGES: clang-6.0, LLVM_OS: bionic, LLVM_VER: 6.0, VM_IMAGE: 'ubuntu-18.04'}
         Clang 5: {TOOLSET: clang-5.0, PACKAGES: clang-5.0, LLVM_OS: bionic, LLVM_VER: 5.0, VM_IMAGE: 'ubuntu-18.04'}
-        Clang 4: {TOOLSET: clang-4.0, PACKAGES: clang-4.0, LLVM_OS: xenial, LLVM_VER: 4.0, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.9: {TOOLSET: clang-3.9, PACKAGES: clang-3.9, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.8: {TOOLSET: clang-3.8, PACKAGES: clang-3.8, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.7: {TOOLSET: clang-3.7, PACKAGES: clang-3.7, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.6: {TOOLSET: clang-3.6, PACKAGES: clang-3.6, VM_IMAGE: 'ubuntu-16.04'}
-        Clang 3.5: {TOOLSET: clang-3.5, PACKAGES: clang-3.5, VM_IMAGE: 'ubuntu-16.04'}
+        Clang 4: {TOOLSET: clang-4.0, PACKAGES: clang-4.0, LLVM_OS: xenial, LLVM_VER: 4.0, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 3.9: {TOOLSET: clang-3.9, PACKAGES: clang-3.9, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 3.8: {TOOLSET: clang-3.8, PACKAGES: clang-3.8, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 3.7: {TOOLSET: clang-3.7, PACKAGES: clang-3.7, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 3.6: {TOOLSET: clang-3.6, PACKAGES: clang-3.6, VM_IMAGE: 'ubuntu-18.04'}
+        Clang 3.5: {TOOLSET: clang-3.5, PACKAGES: clang-3.5, VM_IMAGE: 'ubuntu-18.04'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
