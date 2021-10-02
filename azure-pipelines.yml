@@ -107,6 +107,16 @@ stages:
     steps:
     - template: .ci/azp-macos-test.yml
 
+  - job: 'Linux_ASAN'
+    strategy:
+      matrix:
+        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: 13, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+    pool:
+      vmImage: $(VM_IMAGE)
+    continueOnError: 'true'
+    steps:
+    - template: .ci/azp-linux-asan-test.yml
+
 - stage: Compilers
   dependsOn: [Core]
   jobs:
