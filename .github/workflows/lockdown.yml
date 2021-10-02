@@ -5,8 +5,7 @@ on:
     types: opened
   pull_request_target:
     types: opened
-  schedule:
-    - cron: '0/15 * * * *'
+  workflow_dispatch:
 
 permissions:
   issues: write
