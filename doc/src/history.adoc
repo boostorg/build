@@ -15,16 +15,16 @@ auto-detection and bootstrap for VS 2022 preview toolset.
   -- _Dmitry Arkhipov_
 * Fix use of `JAMSHELL` in gcc toolset.
   -- _René Ferdinand Rivera Morell_
-* Fix compiling b2 enging such that it rowks when run in cross-architecture
+* Fix compiling b2 enging such that it works when run in cross-architecture
   emulation context. I.e. when running arm binaries in QEMU 64 bit host.
   -- _René Ferdinand Rivera Morell_
-* Default to 64bit msvc on 64 bit hosts.
+* Default to 64bit MSVC on 64 bit hosts.
   -- _Matt Chambers_
 * Remove `/NOENTRY` option for resource only DLLs to allow correct linking.
   -- _gnaggnoyil_
 * Fix redefinition error of `unix` when compiling engine on OpenBSD.
   -- _Brad Smith_
-* Fix building with clang on iOS and AppltTV having extra unrecognized
+* Fix building with clang on iOS and AppleTV having extra unrecognized
   compiler options.
   -- _Konstantin Ivlev_
 * Add missing Boost.JSON to `boost` support module.
