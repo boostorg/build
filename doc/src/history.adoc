@@ -3,9 +3,16 @@
 
 == Version 4.7.0
 
+Many, many fixes and internal cleanups in this release. But also adding
+auto-detection and bootstrap for VS 2022 preview toolset.
+
 * *New:* Add vc143, aka VS2022, aka cl.exe 17.x toolset support. Includes
   building engine and automatic detection of the prerelease toolset.
   -- _Sergei Krivonos_
+* Allow alias targets to continue even if `<build>no` is in the usage
+  requirement. Which allows composition of alias targets that may contain
+  optional targets, like tests.
+  -- _Dmitry Arkhipov_
 * Fix use of `JAMSHELL` in gcc toolset.
   -- _René Ferdinand Rivera Morell_
 * Fix compiling b2 enging such that it rowks when run in cross-architecture
