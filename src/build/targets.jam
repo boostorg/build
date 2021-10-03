@@ -1321,11 +1321,13 @@ class basic-target : abstract-target
             }
 
             local skip ;
+            local skip-downstream ;
             if $(rproperties[1]) = "@error"
             {
                 ECHO [ targets.indent ] "Skipping build of:" [ full-name ]
                     "cannot compute common properties" ;
                 skip = true ;
+                skip-downstream = true ;
             }
             else if [ $(rproperties).get <build> ] = no
             {
@@ -1334,6 +1336,7 @@ class basic-target : abstract-target
                 # to explain why a target is not built, for example using
                 # the configure.log-component-configuration function.
                 skip = true ;
+                skip-downstream = true ;
             }
             else
             {
@@ -1355,14 +1358,16 @@ class basic-target : abstract-target
                 }
 
                 #  Skipping this target if a dependency is skipped.
-                #  Consider letting subclasses override this behavior. E.g.
-                #  alias-target-class may override this to not fail to build if
-                #  a dependency fails.
+                #  Subclasses can override this behavior. E.g.
+                #  alias-target-class overrides this to not be skipped if a
+                #  dependency is skipped.
                 if <build>no in $(usage-requirements)
                 {
-                    skip = true ;
+                    skip = [ skip-from-usage-requirements ] ;
+                    skip-downstream = true ;
                 }
-                else
+
+                if ! $(skip)
                 {
                     rproperties = [ property-set.create $(properties)
                         $(usage-requirements) ] ;
@@ -1416,6 +1421,11 @@ class basic-target : abstract-target
                         }
 
                         local ur = [ compute-usage-requirements $(s) ] ;
+                        if $(skip-downstream)
+                        {
+                            ur = [ $(ur).add [ property-set.create <build>no ]
+                                ] ;
+                        }
                         ur = [ $(ur).add $(gur) ] ;
                         $(s).set-usage-requirements $(ur) ;
                         if [ modules.peek : .debug-building ]
@@ -1586,6 +1596,14 @@ class basic-target : abstract-target
     {
         import errors : error : errors.error ;
         errors.error "method should be defined in derived classes" ;
+    }
+
+    # Determines if build of this target should be skipped when there is
+    # <build>no in usage requirements. This should usually be true, unless
+    # the target is some kind of grouping, e.g. alias targets.
+    rule skip-from-usage-requirements ( )
+    {
+        return true ;
     }
 }
 

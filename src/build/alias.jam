@@ -49,6 +49,10 @@ class alias-target-class : basic-target
         local base = [ basic-target.compute-usage-requirements $(subvariant) ] ;
         return [ $(base).add [ $(subvariant).sources-usage-requirements ] ] ;
     }
+
+    rule skip-from-usage-requirements ( )
+    {
+    }
 }
 
 
