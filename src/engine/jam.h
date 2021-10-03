@@ -328,7 +328,9 @@
 #ifdef __OpenBSD__
     #define OSMINOR "OS=OPENBSD"
     #define OS_OPENBSD
-    #define unix
+    #ifndef unix
+        #define unix
+    #endif
 #endif
 #if defined (__FreeBSD_kernel__) && !defined(__FreeBSD__)
     #define OSMINOR "OS=KFREEBSD"

@@ -16,6 +16,8 @@
 
 #if !defined(OS_NT)
 #include <unistd.h>
+#else
+#include <windows.h>
 #endif
 
 #if defined(OS_LINUX) || defined(__GLIBC__)
@@ -90,7 +92,32 @@ namespace
 
     unsigned int std_thread_hardware_concurrency()
     {
+        // [2020-08-19] Mingw-w64 (e.g. i686-w64-mingw-32-g++ from Cygwin,
+        // g++-mingw-w64-i686-win32) does not have std::thread etc. But we
+        // should still allow building the engine with this (important) toolset:
+        // - It is free, lightweight, standards-conforming.
+        // - It might be the only C++11 toolset for Windows XP.
+        //   (Please see http://www.crouchingtigerhiddenfruitbat.org/Cygwin/timemachine.html !)
+        // - It is powerful enough even without std::thread etc. For example, it
+        //   can build-and-use Boost.Thread.
+        // - The only thing currently used from std::thread is this call to
+        //   hardware_concurrency !
+        #if ! defined (_WIN32)
         return std::thread::hardware_concurrency();
+        #else
+        return 0;
+        #endif
+    }
+
+    unsigned int win32_logicalcpu()
+    {
+        #if defined (_WIN32)
+        SYSTEM_INFO si;
+        GetSystemInfo (&si);
+        return si.dwNumberOfProcessors;
+        #else
+        return 0;
+        #endif
     }
 }
 
@@ -128,6 +155,10 @@ unsigned int b2::system_info::cpu_thread_count()
     if (cpu_thread_count_ == 0)
     {
         cpu_thread_count_ = std_thread_hardware_concurrency();
+    }
+    if (cpu_thread_count_ == 0)
+    {
+        cpu_thread_count_ = win32_logicalcpu();
     }
     if (cpu_thread_count_ == 0)
     {

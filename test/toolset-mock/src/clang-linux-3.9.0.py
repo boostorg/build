@@ -11,7 +11,6 @@
 from MockProgram import *
 
 command('clang++', '-print-prog-name=ar', stdout=script('ar.py'))
-command('clang++', '-print-prog-name=ranlib', stdout=script('ranlib.py'))
 
 # target-os=linux ..
 

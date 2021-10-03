@@ -9,7 +9,6 @@
 from MockProgram import *
 
 command('icc', '-print-prog-name=ar', stdout=script('ar.py'))
-command('icc', '-print-prog-name=ranlib', stdout=script('ranlib.py'))
 
 # all builds are multi-threaded for darwin
 if allow_properties("variant=debug", "link=shared", "runtime-link=shared"):

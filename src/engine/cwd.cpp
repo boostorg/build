@@ -10,6 +10,7 @@
 
 #include "jam.h"
 #include "mem.h"
+#include "output.h"
 #include "pathsys.h"
 
 #include <assert.h>
@@ -72,7 +73,7 @@ void cwd_init( void )
 
     if ( !cwd_ )
     {
-        perror( "can not get current working directory" );
+        errno_puts( "can not get current working directory" );
         exit( EXITBAD );
     }
 }

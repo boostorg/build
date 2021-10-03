@@ -5,4 +5,6 @@ accompanying file LICENSE.txt or copy at
 https://www.bfgroup.xyz/b2/LICENSE.txt)
 |#
 
+import xml ; # must import to have registered XML type
+
 type DOCBOOK : docbook : XML ;
