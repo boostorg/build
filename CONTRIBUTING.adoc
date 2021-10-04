@@ -41,13 +41,13 @@ When reporting a bug, please try to provide the following information:
 * What you expected.
 
 * What version of B2 did you use. If possible, please try to test with the
-  develop branch state.
+  main branch state.
 
 When submitting a patch, please:
 
 * Make a single patch for a single logical change
 * Follow the policies and coding conventions below
-* Send patches as pull requests to the develop branch
+* Send patches as pull requests to the main branch
 * Provide a good PR message together with the patch
 
 The purpose of message serves to communicate what was changed, and *why*.

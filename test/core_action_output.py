@@ -22,7 +22,7 @@ if $(NT)
 actions go
 {
     $(prefix)stdout$(suffix)
-    $(prefix)stderr$(suffix) 1>&2
+    >&2 $(prefix)stderr$(suffix)
 }
 ECHO "{{{" $(XXX) "}}}" ;
 ALWAYS all ;

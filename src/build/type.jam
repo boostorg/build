@@ -50,6 +50,12 @@ rule register ( type : suffixes * : base-type ? )
         errors.error "Type $(type) is already registered." ;
     }
 
+    if $(base-type) && ! $(base-type) in $(.types)
+    {
+        import errors ;
+        errors.error "Type $(base-type) is not registered." ;
+    }
+
     {
         .types += $(type) ;
         .base.$(type) = $(base-type) ;

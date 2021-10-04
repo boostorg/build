@@ -151,7 +151,7 @@ test_toolset ()
 #
 check_toolset ()
 {
-    TOOLSET=${B2_TOOLSET%%-*}
+    TOOLSET=${B2_TOOLSET%%-[0-9]*}
     TOOLSET_SUFFIX=${B2_TOOLSET##$TOOLSET}
 
     # Prefer Clang (clang) on macOS..

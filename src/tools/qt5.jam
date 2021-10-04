@@ -306,7 +306,6 @@ rule init ( prefix : version ? : condition * : namespace ? : infix ? : full_bin 
        local usage-requirements =
            <include>$(.incprefix)
            <library-path>$(.libprefix)
-           <threading>multi
            <allow>qt5 ;
 
        if $(link) in shared

@@ -12,7 +12,7 @@ https://www.bfgroup.xyz/b2/LICENSE.txt)
 import scanner ;
 import type ;
 
-type XML : xml ;
+type.register XML : xml ;
 
 # XInclude scanner. Mostly stolen from c-scanner. :)
 # Note that this assumes an "xi" prefix for XIncludes. This is not always the

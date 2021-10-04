@@ -9,6 +9,10 @@
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <errno.h>
+
+#include <string>
+#include <memory>
 
 
 #define bjam_out (stdout)
@@ -134,6 +138,35 @@ void out_action
         if ( err_d && ( globs.pipe_action & 2 /* STDERR_FILENO */ ) )
             err_data( err_d );
     }
+}
+
+
+void errno_puts(char const * const s)
+{
+    const auto e = errno;
+    err_printf("[errno %d] %s (%s)\n", e, s, strerror(e));
+}
+
+
+void errno_printf(char const * const f, ...)
+{
+    const auto e = errno;
+    std::string s = "[errno "+std::to_string(e)+"] ";
+    {
+        va_list args;
+        va_start( args, f );
+        int l = vsnprintf( nullptr, 0, f, args );
+        va_end( args );
+        va_start( args, f );
+        std::unique_ptr<char[]> r(new char[l+1]);
+        vsnprintf( r.get(), l+1, f, args );
+        va_end( args );
+        s += r.get();
+    }
+    s += " (";
+    s += strerror(e);
+    s += ")";
+    err_puts(s.c_str());
 }
 
 

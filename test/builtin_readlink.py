@@ -6,11 +6,18 @@
 
 import BoostBuild
 import os
+import sys
 
 t = BoostBuild.Tester(pass_toolset=0)
 
 t.write("link-target", "")
-os.symlink("link-target", "link")
+try:
+    os.symlink("link-target", "link")
+except (AttributeError, OSError) as e:
+    # Either OS does not support symlinks or not enough privilege
+    print("XFAIL: %s" % e)
+    t.cleanup()
+    sys.exit()
 
 t.write("file.jam", """
 ECHO [ READLINK link ] ;

@@ -36,6 +36,10 @@ not specified, the `g++` binary will be searched in PATH.
 The following options can be provided, using
 _`<option-name>option-value syntax`_:
 
+`asmflags`::
+Specifies additional compiler flags that will be used when compiling assembler
+sources.
+
 `cflags`::
 Specifies additional compiler flags that will be used when compiling C
 sources.
@@ -44,9 +48,21 @@ sources.
 Specifies additional compiler flags that will be used when compiling C++
 sources.
 
+`fflags`::
+Specifies additional compiler flags that will be used when compiling Fortran
+sources.
+
+`mflags`::
+Specifies additional compiler flags that will be used when compiling
+Objective-C sources.
+
+`mmflags`::
+Specifies additional compiler flags that will be used when compiling
+Objective-C++ sources.
+
 `compileflags`::
-Specifies additional compiler flags that will be used when compiling both C
-and C++ sources.
+Specifies additional compiler flags that will be used when compiling any
+language sources.
 
 `linkflags`::
 Specifies additional command line options that will be passed to the linker.
@@ -63,13 +79,6 @@ libraries. Normally, it is autodetected using gcc `-print-prog-name`
 option or defaulted to `ar`, but in some cases you might want to
 override it, for example to explicitly use a system version instead of
 one included with gcc.
-
-`ranlib`::
-Specifies the ranlib command that is used to generated symbol table
-for static libraries. Normally, it is autodetected using gcc
-`-print-prog-name` option or defaulted to `ranlib`, but in some cases
-you might want to override it, for example to explicitly use a system
-version instead of one included with gcc.
 
 `rc`::
 Specifies the resource compiler command that will be used with the
@@ -247,18 +256,6 @@ rule init ( version ? : command * : options * : requirement * )
     local arflags = [ feature.get-values <arflags> : $(options) ] ;
     toolset.flags gcc.archive .ARFLAGS $(condition) : $(arflags) ;
 
-    # - Ranlib.
-    local ranlib = [ common.get-invocation-command gcc
-        : [ .get-prog-name $(command-string) : ranlib : $(flavor) ]
-        : [ feature.get-values <ranlib> : $(options) ]
-        : $(bin)
-        : search-path ] ;
-    toolset.flags gcc.archive .RANLIB $(condition) : $(ranlib[1]) ;
-    if $(.debug-configuration)
-    {
-        ECHO "notice:" using gcc ranlib "::" $(condition) "::" $(ranlib[1]) ;
-    }
-
     # - Resource compiler.
     local rc = [ common.get-invocation-command-nodefault gcc : windres :
         [ feature.get-values <rc> : $(options) ] : $(bin) : search-path ] ;
@@ -285,8 +282,8 @@ if [ os.name ] = NT
 {
     # This causes single-line command invocation to not go through .bat files,
     # thus avoiding command-line length limitations.
-    # TODO: Set JAMSHELL on specific targets instead of globally.
-    JAMSHELL = % ;
+    JAMSHELL = [ modules.peek : JAMSHELL ] ;
+    JAMSHELL ?= % ;
 }
 
 rule get-full-version ( command-string )
@@ -396,7 +393,9 @@ local rule compile-link-flags ( * )
     local bsd = [ MATCH ^(.*bsd)$ : $(all-os) ] ;
     threading-flags <target-os>$(bsd) : -pthread ;
 
-    local no-threading = android beos haiku sgi darwin vxworks ;
+    # iOS doesn't need pthread flag according to the https://developer.apple.com/library/archive/documentation/System/Conceptual/ManPages_iPhoneOS/man3/pthread.3.html
+    # The default system libraries include pthread functions.  No additional libraries or CFLAGS are necessary to use this API.
+    local no-threading = android beos haiku sgi darwin vxworks iphone appletv ;
     local threading-generic-os = [ set.difference $(all-os) : $(no-threading) $(bsd) windows cygwin solaris qnx ] ;
     threading-flags <target-os>$(threading-generic-os) : -pthread : rt ;
 }
@@ -453,6 +452,8 @@ generators.register-c-compiler gcc.compile.c.preprocess   : C   : PREPROCESSED_C
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.m   : OBJECTIVE_C   : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.mm  : OBJECTIVE_CPP : OBJ : <toolset>gcc ;
 
 generators.register [ new fortran-compiling-generator
     gcc.compile.fortran : FORTRAN FORTRAN90 : OBJ : <toolset>gcc ] ;
@@ -542,6 +543,16 @@ actions compile.asm
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
+actions compile.m
+{
+    "$(CONFIG_COMMAND)" -x objective-c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
+actions compile.mm
+{
+    "$(CONFIG_COMMAND)" -x objective-c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+}
+
 ###
 ### Precompiled header use and generation.
 ###
@@ -597,22 +608,14 @@ generators.override gcc.compile.c++.pch : pch.default-cpp-pch-generator ;
 
 toolset.flags gcc.compile PCH_FILE <pch>on : <pch-file> ;
 
-rule compile.c++.pch ( targets * : sources * : properties * )
-{
-}
-
 actions compile.c++.pch
 {
-    "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-rule compile.c.pch ( targets * : sources * : properties * )
-{
+    "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c.pch
 {
-    "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 ###
@@ -686,6 +689,8 @@ toolset.flags gcc.compile INCLUDES <include> ;
 toolset.flags gcc.compile FORCE_INCLUDES <force-include> ;
 toolset.flags gcc.compile.c++ TEMPLATE_DEPTH <c++-template-depth> ;
 toolset.flags gcc.compile.fortran USER_OPTIONS <fflags> ;
+toolset.flags gcc.compile.m USER_OPTIONS <mflags> ;
+toolset.flags gcc.compile.mm USER_OPTIONS <mmflags> ;
 
 ###
 ### Linking generators and actions.
@@ -877,7 +882,7 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
 
     # default
 
-    local generic-os = [ set.difference $(all-os) : aix darwin vxworks solaris osf hpux ] ;
+    local generic-os = [ set.difference $(all-os) : aix darwin vxworks solaris osf hpux iphone appletv ] ;
     # Strip the binary when no debugging is needed. We use --strip-all flag
     # as opposed to -s since icc (intel's compiler) is generally
     # option-compatible with and inherits from the gcc toolset, but does not
@@ -1029,12 +1034,12 @@ rule link.dll.mingw ( targets * : sources * : properties * )
 
 actions link.mingw bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @($(<:T).rsp:O=FC:<=@":>=":E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions link.dll.mingw bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" -shared @"@($(<[-1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" -shared @($(<[-1]:T).rsp:O=FC:<=@":>=":E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
 }
 
 actions link bind LIBRARIES
@@ -1056,8 +1061,7 @@ actions link.dll bind LIBRARIES
 # logic in intel-linux, but that is hardly worth the trouble as on Linux, 'ar'
 # is always available.
 .AR = ar ;
-.ARFLAGS = rc ;
-.RANLIB = ranlib ;
+.ARFLAGS = rsc ;
 
 toolset.flags gcc.archive AROPTIONS <archiveflags> ;
 
@@ -1099,7 +1103,6 @@ rule archive ( targets * : sources * : properties * )
 actions piecemeal archive
 {
     "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" "$(>)"
-    "$(.RANLIB)" "$(<)"
 }
 
 ###
@@ -1256,5 +1259,10 @@ cpu-flags gcc OPTIONS : s390x : zEC12 : -march=zEC12 ;
 cpu-flags gcc OPTIONS : s390x : z13 : -march=z13 ;
 cpu-flags gcc OPTIONS : s390x : z14 : -march=z14 ;
 cpu-flags gcc OPTIONS : s390x : z15 : -march=z15 ;
+# ARM
+cpu-flags gcc OPTIONS : arm : cortex-a9+vfpv3 : -mcpu=cortex-a9 -mfpu=vfpv3 -mfloat-abi=hard ;
+cpu-flags gcc OPTIONS : arm : cortex-a53 : -mcpu=cortex-a53 ;
+cpu-flags gcc OPTIONS : arm : cortex-r5 : -mcpu=cortex-r5 ;
+cpu-flags gcc OPTIONS : arm : cortex-r5+vfpv3-d16 : -mcpu=cortex-r5 -mfpu=vfpv3-d16 -mfloat-abi=hard ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;

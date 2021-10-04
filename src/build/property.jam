@@ -66,81 +66,85 @@ rule refine ( properties * : requirements * )
 #
 rule evaluate-conditionals-in-context ( properties * : context * )
 {
-    local base ;
-    local conditionals ;
-    local indirect ;
-    for local p in $(properties)
-    {
-        if [ MATCH "(:<)" : $(p) ] && ! free in [ feature.attributes $(p:G) ]
-        {
-            conditionals += $(p) ;
-        }
-        else if $(p:G) = <conditional>
-        {
-            indirect += $(p) ;
-        }
-        else
-        {
-            base += $(p) ;
-        }
-    }
-
-    local result = $(base) ;
-    for local p in $(conditionals)
-    {
-        # Separate condition and property.
-        local s = [ MATCH "^(.*):(<.*)" : $(p) ] ;
-        # Split condition into individual properties.
-        local condition = [ regex.split $(s[1]) "," ] ;
-        # Evaluate condition.
-        if ! [ MATCH ^(!).* : $(condition:G=) ]
-        {
-            # Only positive checks
-            if $(condition) in $(context)
-            {
-                result += $(s[2]) ;
-            }
-        }
-        else
-        {
-            # Have negative checks
-            local fail ;
-            for local c in $(condition)
-            {
-                local c = [ MATCH ^(!)?(.*) : $(c) ] ;
-                # It is XOR: $(c[1]) = "!" ^ $(c[2]) in $(context)
-                if $(c[1]) = "!" && $(c[2]) in $(context) || $(c[1]) != "!" && ! ( $(c[2]) in $(context) )
-                {
-                    fail = true ;
-                    break ;
-                }
-            }
-            if ! $(fail)
-            {
-                result += $(s[2]) ;
-            }
-        }
-    }
     # Import here to avoid cyclic dependency
     import project ;
-    for local i in [ MATCH "^@(.*)" : $(indirect:G=) ]
+
+    local result ;
+    while $(properties)
     {
-        # If the rule was set in a project module, translate paths
-        # relative to that project's location.
-        local m = [ indirect.get-module $(i) ] ;
-        local p = [ project.target $(m) : allow-missing ] ;
-        local new = [ indirect.call $(i) $(context) ] ;
-        if $(p) && [ $(p).location ]
+        local conditionals ;
+        local indirect ;
+        for local p in $(properties)
         {
-            local location = [ $(p).location ] ;
-            local project-id = [ project.attribute $(m) id ] ;
-            project-id ?= [ path.root $(location) [ path.pwd ] ] ;
-            result +=
-                [ translate $(new) : $(project-id) : $(location) : $(m) ] ;
+            if [ MATCH "(:<)" : $(p) ] && ! free in [ feature.attributes $(p:G) ]
+            {
+                conditionals += $(p) ;
+            }
+            else if $(p:G) = <conditional>
+            {
+                indirect += $(p) ;
+            }
+            else
+            {
+                result += $(p) ;
+            }
         }
-        else
+
+        properties = ;
+        for local p in $(conditionals)
         {
-            result += $(new) ;
+            # Separate condition and property.
+            local s = [ MATCH "^(.*):(<.*)" : $(p) ] ;
+            # Split condition into individual properties.
+            local condition = [ regex.split $(s[1]) "," ] ;
+            # Evaluate condition.
+            if ! [ MATCH ^(!).* : $(condition:G=) ]
+            {
+                # Only positive checks
+                if $(condition) in $(context)
+                {
+                    properties += $(s[2]) ;
+                }
+            }
+            else
+            {
+                # Have negative checks
+                local fail ;
+                for local c in $(condition)
+                {
+                    local c = [ MATCH ^(!)?(.*) : $(c) ] ;
+                    # It is XOR: $(c[1]) = "!" ^ $(c[2]) in $(context)
+                    if $(c[1]) = "!" && $(c[2]) in $(context) || $(c[1]) != "!" && ! ( $(c[2]) in $(context) )
+                    {
+                        fail = true ;
+                        break ;
+                    }
+                }
+                if ! $(fail)
+                {
+                    properties += $(s[2]) ;
+                }
+            }
+        }
+        for local i in [ MATCH "^@(.*)" : $(indirect:G=) ]
+        {
+            # If the rule was set in a project module, translate paths
+            # relative to that project's location.
+            local m = [ indirect.get-module $(i) ] ;
+            local p = [ project.target $(m) : allow-missing ] ;
+            local new = [ indirect.call $(i) $(context) ] ;
+            if $(p) && [ $(p).location ]
+            {
+                local location = [ $(p).location ] ;
+                local project-id = [ project.attribute $(m) id ] ;
+                project-id ?= [ path.root $(location) [ path.pwd ] ] ;
+                properties +=
+                    [ translate $(new) : $(project-id) : $(location) : $(m) ] ;
+            }
+            else
+            {
+                properties += $(new) ;
+            }
         }
     }
     return $(result) ;

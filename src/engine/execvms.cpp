@@ -200,7 +200,7 @@ void exec_cmd
 
             if ( !cwd )
             {
-                perror( "can not get current working directory" );
+                errno_puts( "can not get current working directory" );
                 exit( EXITBAD );
             }
 

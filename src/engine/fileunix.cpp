@@ -37,6 +37,7 @@
 #include "output.h"
 
 #include <assert.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/stat.h>  /* needed for mkdir() */
 
@@ -130,7 +131,12 @@ int file_collect_dir_content_( file_info_t * const d )
     if ( !*dirstr ) dirstr = ".";
 
     if ( -1 == ( n = scandir( dirstr, &namelist, NULL, alphasort ) ) )
+    {
+        if (n != ENOENT && n != ENOTDIR)
+            err_printf( "[errno %d] scandir '%s' failed: %s\n",
+                errno, dirstr, strerror(errno) );
         return -1;
+    }
 
     string_new( path );
     while ( n-- )

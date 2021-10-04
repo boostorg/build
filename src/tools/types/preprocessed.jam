@@ -4,6 +4,7 @@
 # https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import type ;
+import cpp ; # must import to have registered C CPP types
 
 type.register PREPROCESSED_C : i : C ;
 type.register PREPROCESSED_CPP : ii : CPP ;

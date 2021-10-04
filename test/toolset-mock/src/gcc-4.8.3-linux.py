@@ -9,7 +9,6 @@
 from MockProgram import *
 
 command('g++', '-print-prog-name=ar', stdout=script('ar.py'))
-command('g++', '-print-prog-name=ranlib', stdout=script('ranlib.py'))
 
 if allow_properties("variant=debug", "link=shared", "threading=single", "runtime-link=shared"):
     command("g++", unordered("-O0", "-fno-inline", "-Wall", "-g", "-fPIC"), "-c", "-o", output_file("bin/gcc-gnu-4.8.3/debug/lib.o"), input_file(source="lib.cpp"))
