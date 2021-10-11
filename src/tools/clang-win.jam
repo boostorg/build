@@ -217,9 +217,9 @@ rule init ( version ? : command * : options * )
             }
 
             toolset.flags clang-win.compile .CC $(cond) : $(compiler) --target=$(clang-arch)-pc-windows-msvc ;
-            toolset.flags clang-win.link .LD $(cond) : $(linker) /nologo "/machine:$(linker-arch)" ;
-            toolset.flags clang-win.link LINKOPT $(cond) : ;
-            toolset.flags clang-win.link LINKFLAGS $(cond) : "/incremental:no" "/manifest" ;
+            toolset.flags clang-win.link .LD $(cond) : $(compiler) --target=$(clang-arch)-pc-windows-msvc ;
+            toolset.flags clang-win.link LINKOPT $(cond) : /link ;
+            toolset.flags clang-win.link LINKFLAGS $(cond) : "/incremental:no" "/manifest" "/machine:$(linker-arch)" ;
             if $(arch) = x86
             {
                 toolset.flags clang-win.compile .ASM $(cond) : $(assembler) -nologo -c -Zp4 -Cp -Cx ;

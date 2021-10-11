@@ -1,6 +1,11 @@
 [[b2.history]]
 = History
 
+== Version 4.7.1
+
+* Fix regression for linking with `clang-win` toolset.
+  -- _Peter Dimov_
+
 == Version 4.7.0
 
 Many, many fixes and internal cleanups in this release. But also adding
