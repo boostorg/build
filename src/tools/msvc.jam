@@ -1942,6 +1942,7 @@ local rule register-toolset-really ( )
 
     toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : "/std:c++14" ;
     toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : "/std:c++17" ;
+    toolset.flags msvc.compile C++FLAGS  <cxxstd>20 : "/std:c++20" ;
     toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : "/std:c++latest" ;
 
     # By default 8.0 enables rtti support while prior versions disabled it. We

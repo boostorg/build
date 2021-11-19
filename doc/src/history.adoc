@@ -1,6 +1,14 @@
 [[b2.history]]
 = History
 
+== Version 4.7.2
+
+* Fix errors configuring intel-linux toolset if icpx is not in the PATH but
+  icpc is in the PATH.
+  -- _Mark E. Hamilton_
+* Add `cxxstd=20` to msvc toolset now that VS 2019 onward supports it.
+  -- _Peter Dimov_
+
 == Version 4.7.1
 
 * Fix regression for linking with `clang-win` toolset.
