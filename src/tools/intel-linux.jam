@@ -93,23 +93,32 @@ rule init ( version ? :  command * : options * )
         {
             local bin_paths = $(.bin(oneAPI)) ;
             detected_command = [ common.find-tool icpx : $(bin_paths) ] ;
-            command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
-            command_lib_path = $(command_abs_path)/../compiler/lib/intel64 ;
+            if $(detected_command)
+            {
+                command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
+                command_lib_path = $(command_abs_path)/../compiler/lib/intel64 ;
+            }
         }
         if ! $(detected_command)
         {
             local bin_paths = $(.bin(12.0)) $(.bin(11.1)) $(.bin(11.0)) ;
             detected_command = [ common.find-tool icpc : $(bin_paths) ] ;
-            command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
-            command_lib_path = $(command_abs_path)/../lib/x86_64 ;
+            if $(detected_command)
+            {
+                command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
+                command_lib_path = $(command_abs_path)/../lib/x86_64 ;
+            }
         }
         if ! $(detected_command)
         {
             local bin_paths = $(.bin(10.1)) $(.bin(9.1)) $(.bin(9.0))
                 $(.bin(8.1)) $(.bin(8.0)) ;
             detected_command = [ common.find-tool icpc : $(bin_paths) ] ;
-            command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
-            command_lib_path = $(command_abs_path)/../lib ;
+            if $(detected_command)
+            {
+                command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
+                command_lib_path = $(command_abs_path)/../lib ;
+            }
         }
         if $(detected_command)
         {
