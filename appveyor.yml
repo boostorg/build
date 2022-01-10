@@ -15,12 +15,12 @@ environment:
   - job_name: 'Visual Studio 2015, Test'
     job_group: 'Test'
     TOOLSET: vc14
-    TEST_TOOLSET: msvc
+    TEST_TOOLSET: msvc-14.0
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
   - job_name: 'Visual Studio 2013, Test'
     job_group: 'Test'
     TOOLSET: vc12
-    TEST_TOOLSET: msvc
+    TEST_TOOLSET: msvc-12.0
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
   - job_name: 'Cygwin 3.1.7 x64, Test'
     job_group: 'TestCygwin'
@@ -28,7 +28,6 @@ environment:
     TEST_TOOLSET: gcc
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     B2_CXX_PATH: C:/cygwin64/bin
-    B2_CXX: C:/cygwin64/bin/g++.exe
 
 build_script:
   - cmd: |
@@ -39,11 +38,6 @@ build_script:
   - cmd: |
       cd ../..
       src\engine\b2.exe -v
-
-before_test:
-  - cmd: |
-      set HOME=%HOMEDRIVE%%HOMEPATH%
-      echo using %TEST_TOOLSET% : : %B2_CXX% ; > "%HOME%/user-config.jam"
 
 for:
   - matrix:
