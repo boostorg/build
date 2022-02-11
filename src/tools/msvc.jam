@@ -1779,7 +1779,7 @@ local rule default-path ( version )
 rule get-rspline ( target : lang-opt lang-flags )
 {
     CC_RSPLINE on $(target) = [ on $(target) return $(lang-opt) -U$(UNDEFS)
-        $($(lang-flags)) $(OPTIONS) -D$(DEFINES)
+        $($(lang-flags)) $(OPTIONS) $(USER_COMPILEFLAGS) $(USER_$(lang-flags)) -D$(DEFINES)
         \"-I$(INCLUDES:W)\" \"-FI$(FORCE_INCLUDES:W)\" ] ;
 }
 
@@ -1956,8 +1956,9 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile OPTIONS <runtime-debugging>off/<runtime-link>static/<threading>multi : /MT ;
     toolset.flags msvc.compile OPTIONS <runtime-debugging>on/<runtime-link>static/<threading>multi : /MTd ;
 
-    toolset.flags msvc.compile CFLAGS <cflags> : ;
-    toolset.flags msvc.compile.c++ C++FLAGS <cxxflags> : ;
+    toolset.flags msvc.compile USER_CFLAGS <cflags> : ;
+    toolset.flags msvc.compile.c++ USER_C++FLAGS <cxxflags> : ;
+    toolset.flags msvc.compile.c++ USER_COMPILEFLAGS <compileflags> : ;
 
     toolset.flags msvc.compile PDB_CFLAG <debug-symbols>on/<debug-store>database : /Fd ;
 
