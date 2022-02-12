@@ -35,7 +35,7 @@ variables:
 - { name: gcc_latest, value: '11' }
 - { name: vc_latest, value: 'vc142' }
 - { name: vs_latest, value: '2019' }
-- { name: xc_latest, value: '12.5.1' }
+- { name: xc_latest, value: '13.2.1' }
 - { name: macos_latest_vm, value: 'macOS-11' }
 
 
@@ -158,6 +158,7 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
+        Xcode 13.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.1.app, VM_IMAGE: 'macOS-11'}
         Xcode 13.0: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.0.app, VM_IMAGE: 'macOS-11'}
         Xcode 12.4: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app, VM_IMAGE: 'macOS-11'}
         Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-10.15'}
@@ -171,7 +172,6 @@ stages:
         Xcode 11.3.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.1.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 11.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 11.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.2.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 10.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.3.app, VM_IMAGE: 'macOS-10.15'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -287,6 +287,7 @@ stages:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
+        1.78.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
         1.77.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
         1.76.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
         1.75.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
