@@ -171,10 +171,7 @@ stages:
         Xcode 11.3.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.1.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 11.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.app, VM_IMAGE: 'macOS-10.15'}
         Xcode 11.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.2.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 10.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.2.1.app, VM_IMAGE: 'macOS-10.14'}
-        Xcode 10.2: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.2.app, VM_IMAGE: 'macOS-10.14'}
-        Xcode 10.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.1.app, VM_IMAGE: 'macOS-10.14'}
-        Xcode 10.0: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.app, VM_IMAGE: 'macOS-10.14'}
+        Xcode 10.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_10.3.app, VM_IMAGE: 'macOS-10.15'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
