@@ -327,16 +327,10 @@ case "${B2_TOOLSET}" in
         B2_CXXFLAGS_DEBUG="-O0 -g"
     ;;
 
-    intel-linux)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
-        B2_CXXFLAGS_RELEASE="-O3"
-        B2_CXXFLAGS_DEBUG="-O0 -g -p"
-    ;;
-
     intel-*)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
-        B2_CXXFLAGS_RELEASE="-O3 -s -static"
-        B2_CXXFLAGS_DEBUG="-O0 -g -p -static"
+        B2_CXXFLAGS_RELEASE="-O3 -static-intel"
+        B2_CXXFLAGS_DEBUG="-O0 -g -static-intel"
     ;;
 
     vacpp)
