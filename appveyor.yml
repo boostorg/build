@@ -12,6 +12,11 @@ branches:
 
 environment:
   matrix:
+  - job_name: 'Visual Studio 2017, Test'
+    job_group: 'Test'
+    TOOLSET: vc141
+    TEST_TOOLSET: msvc-14.1
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - job_name: 'Visual Studio 2015, Test'
     job_group: 'Test'
     TOOLSET: vc14
