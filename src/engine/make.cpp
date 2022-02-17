@@ -5,6 +5,7 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -53,7 +54,7 @@
 # define max(a,b) ((a)>(b)?(a):(b))
 #endif
 
-static TARGETS * make0sort( TARGETS * c );
+static targets_ptr make0sort( targets_ptr c );
 
 #ifdef OPT_GRAPH_DEBUG_EXT
     static void dependGraphOutput( TARGET * t, int32_t depth );
@@ -171,7 +172,7 @@ static void force_rebuilds( TARGET * t );
 
 static void update_dependants( TARGET * t )
 {
-    TARGETS * q;
+    targets_ptr q;
 
     for ( q = t->dependants; q; q = q->next )
     {
@@ -209,7 +210,7 @@ static void update_dependants( TARGET * t )
 
 static void force_rebuilds( TARGET * t )
 {
-    TARGETS * d;
+    targets_ptr d;
     for ( d = t->rebuilds; d; d = d->next )
     {
         TARGET * r = d->target;
@@ -234,7 +235,7 @@ static void force_rebuilds( TARGET * t )
 int32_t make0rescan( TARGET * t, TARGET * rescanning )
 {
     int32_t result = 0;
-    TARGETS * c;
+    targets_ptr c;
 
     /* Check whether we have already found a cycle. */
     if ( target_scc( t ) == rescanning )
@@ -287,7 +288,7 @@ void make0
     TARGET * rescanning
 )  /* forcibly touch all (real) targets */
 {
-    TARGETS    * c;
+    targets_ptr c;
     TARGET     * ptime = t;
     TARGET     * located_target = 0;
     timestamp    last;
@@ -441,7 +442,7 @@ void make0
 
     /* Step 3c: Add dependencies' includes to our direct dependencies. */
     {
-        TARGETS * incs = 0;
+        targets_ptr incs = 0;
         for ( c = t->depends; c; c = c->next )
             if ( c->target->includes )
                 incs = targetentry( incs, c->target->includes );
@@ -696,7 +697,7 @@ void make0
     if ( ( fate >= T_FATE_BUILD ) && ( fate < T_FATE_BROKEN ) )
     {
         ACTIONS * a;
-        TARGETS * c;
+        targets_ptr c;
         for ( a = t->actions; a; a = a->next )
         {
             for ( c = a->action->targets; c; c = c->next )
@@ -785,7 +786,7 @@ static char const * target_name( TARGET * t )
 
 static void dependGraphOutput( TARGET * t, int32_t depth )
 {
-    TARGETS * c;
+    targets_ptr c;
 
     if ( ( t->flags & T_FLAG_VISITED ) || !t->name || !t->boundname )
         return;
@@ -886,17 +887,17 @@ static void dependGraphOutput( TARGET * t, int32_t depth )
  * that while tail is a loop, next ends at the end of the chain.
  */
 
-static TARGETS * make0sort( TARGETS * chain )
+static targets_ptr make0sort( targets_ptr chain )
 {
     PROFILE_ENTER( MAKE_MAKE0SORT );
 
-    TARGETS * result = 0;
+    targets_ptr result = 0;
 
     /* Walk the current target list. */
     while ( chain )
     {
-        TARGETS * c = chain;
-        TARGETS * s = result;
+        targets_ptr c = chain;
+        targets_ptr s = result;
 
         chain = chain->next;
 

@@ -5,6 +5,7 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -106,15 +107,15 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
      */
     if ( rule->actions )
     {
-        TARGETS * t;
+        targets_ptr t;
 
         /* The action is associated with this instance of this rule. */
         ACTION * const action = (ACTION *)BJAM_MALLOC( sizeof( ACTION ) );
         memset( (char *)action, '\0', sizeof( *action ) );
 
         action->rule = rule;
-        action->targets = targetlist( (TARGETS *)0, lol_get( frame->args, 0 ) );
-        action->sources = targetlist( (TARGETS *)0, lol_get( frame->args, 1 ) );
+        action->targets = targetlist( (targets_ptr)0, lol_get( frame->args, 0 ) );
+        action->sources = targetlist( (targets_ptr)0, lol_get( frame->args, 1 ) );
         action->refs = 1;
 
         /* If we have a group of targets all being built using the same action

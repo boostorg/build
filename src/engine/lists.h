@@ -5,6 +5,7 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -52,14 +53,15 @@
  * LIST - list of strings
  */
 
-typedef struct _list {
+struct LIST {
     union {
         int32_t size;
-        struct _list * next;
+        struct LIST * next;
         OBJECT * align;
     } impl;
-} LIST;
+};
 
+typedef LIST * list_ptr;
 typedef OBJECT * * LISTITER;
 
 /*

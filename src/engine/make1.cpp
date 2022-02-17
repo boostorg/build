@@ -5,6 +5,7 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -59,15 +60,15 @@
 #endif
 
 static CMD      * make1cmds      ( TARGET * );
-static LIST     * make1list      ( LIST *, TARGETS *, int32_t flags );
+static LIST     * make1list      ( LIST *, targets_ptr, int32_t flags );
 static SETTINGS * make1settings  ( struct module_t *, LIST * vars );
 static void       make1bind      ( TARGET * );
 static void       push_cmds( CMDLIST * cmds, int32_t status );
 static int32_t    cmd_sem_lock( TARGET * t );
 static void       cmd_sem_unlock( TARGET * t );
 
-static int32_t targets_contains( TARGETS * l, TARGET * t );
-static int32_t targets_equal( TARGETS * l1, TARGETS * l2 );
+static int32_t targets_contains( targets_ptr l, TARGET * t );
+static int32_t targets_equal( targets_ptr l1, targets_ptr l2 );
 
 /* Ugly static - it is too hard to carry it through the callbacks. */
 
@@ -343,7 +344,7 @@ static void make1a( state * const pState )
     /* Push dependency build requests (to be executed in the natural order). */
     {
         stack temp_stack = { NULL };
-        TARGETS * c;
+        targets_ptr c;
         for ( c = t->depends; c && !quit; c = c->next )
             push_state( &temp_stack, c->target, t, T_STATE_MAKE1A );
         push_stack_on_stack( &state_stack, &temp_stack );
@@ -396,7 +397,7 @@ static void make1b( state * const pState )
      */
     if ( !globs.noexec )
     {
-        TARGETS * c;
+        targets_ptr c;
         for ( c = t->depends; c; c = c->next )
             if ( c->target->status > t->status && !( c->target->flags &
                 T_FLAG_NOCARE ) )
@@ -637,7 +638,7 @@ static void make1c( state const * const pState )
 
         /* Tell parents their dependency has been built. */
         {
-            TARGETS * c;
+            targets_ptr c;
             stack temp_stack = { NULL };
             TARGET * additional_includes = NULL;
 
@@ -1077,7 +1078,7 @@ static CMD * make1cmds( TARGET * t )
     for ( a0 = t->actions; a0; a0 = a0->next )
     {
         RULE         * rule = a0->action->rule;
-        rule_actions * actions = rule->actions;
+        rule_actions_ptr actions = rule->actions;
         SETTINGS     * boundvars;
         LIST         * nt;
         LIST         * ns;
@@ -1172,8 +1173,8 @@ static CMD * make1cmds( TARGET * t )
             int32_t start = 0;
             int32_t chunk = length;
             int32_t cmd_count = 0;
-            TARGETS * semaphores = NULL;
-            TARGETS * targets_iter;
+            targets_ptr semaphores = NULL;
+            targets_ptr targets_iter;
             int32_t unique_targets;
             do
             {
@@ -1315,7 +1316,7 @@ static CMD * make1cmds( TARGET * t )
  * make1list() - turn a list of targets into a LIST, for $(<) and $(>)
  */
 
-static LIST * make1list( LIST * l, TARGETS * targets, int32_t flags )
+static LIST * make1list( LIST * l, targets_ptr targets, int32_t flags )
 {
     for ( ; targets; targets = targets->next )
     {
@@ -1418,7 +1419,7 @@ static void make1bind( TARGET * t )
 }
 
 
-static int32_t targets_contains( TARGETS * l, TARGET * t )
+static int32_t targets_contains( targets_ptr l, TARGET * t )
 {
     for ( ; l; l = l->next )
     {
@@ -1430,7 +1431,7 @@ static int32_t targets_contains( TARGETS * l, TARGET * t )
     return 0;
 }
 
-static int32_t targets_equal( TARGETS * l1, TARGETS * l2 )
+static int32_t targets_equal( targets_ptr l1, targets_ptr l2 )
 {
     for ( ; l1 && l2; l1 = l1->next, l2 = l2->next )
     {
@@ -1446,7 +1447,7 @@ static int32_t targets_equal( TARGETS * l1, TARGETS * l2 )
 static int32_t cmd_sem_lock( TARGET * t )
 {
     CMD * cmd = (CMD *)t->cmds;
-    TARGETS * iter;
+    targets_ptr iter;
     /* Check whether all the semaphores required for updating
      * this target are free.
      */
@@ -1480,7 +1481,7 @@ static int32_t cmd_sem_lock( TARGET * t )
 static void cmd_sem_unlock( TARGET * t )
 {
     CMD * cmd = ( CMD * )t->cmds;
-    TARGETS * iter;
+    targets_ptr iter;
     /* Release the semaphores. */
     for ( iter = cmd->unlock; iter; iter = iter->next )
     {
@@ -1495,7 +1496,7 @@ static void cmd_sem_unlock( TARGET * t )
         /* Find a waiting target that's ready */
         while ( iter->target->parents )
         {
-            TARGETS * first = iter->target->parents;
+            targets_ptr first = iter->target->parents;
             TARGET * t1 = first->target;
 
             /* Pop the first waiting CMD */

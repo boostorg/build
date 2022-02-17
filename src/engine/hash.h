@@ -4,6 +4,12 @@
  * This file is part of Jam - see jam.c for Copyright information.
  */
 
+/*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
+ *  Distributed under the Boost Software License, Version 1.0.
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+ */
+
 /*
  * hash.h - simple in-memory hashing routines
  */
@@ -36,11 +42,24 @@ struct hash * hashinit( int32_t datalen, char const * name );
 void hash_free( struct hash * );
 void hashdone( struct hash * );
 
+typedef void (* hashenumerate_f)( void *, void * );
+
 /*
  * hashenumerate() - call f(i, data) on each item, i in the hash table. The
  * enumeration order is unspecified.
  */
 void hashenumerate( struct hash *, void (* f)( void *, void * ), void * data );
+
+template <typename T, typename D>
+void hash_enumerate( struct hash * h, void (* f)(T *, D *), D * data)
+{
+    hashenumerate(h, reinterpret_cast<hashenumerate_f>(f), data);
+}
+template <typename T, typename D>
+void hash_enumerate( struct hash * h, void (* f)(T *, D *))
+{
+    hashenumerate(h, reinterpret_cast<hashenumerate_f>(f), nullptr);
+}
 
 /*
  * hash_insert() - insert a new item in a hash table, or return an existing one.
