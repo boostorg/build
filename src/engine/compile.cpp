@@ -110,12 +110,11 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
         targets_ptr t;
 
         /* The action is associated with this instance of this rule. */
-        ACTION * const action = (ACTION *)BJAM_MALLOC( sizeof( ACTION ) );
-        memset( (char *)action, '\0', sizeof( *action ) );
+        ACTION * const action = b2::jam::make_ptr<ACTION>();
 
         action->rule = rule;
-        action->targets = targetlist( (targets_ptr)0, lol_get( frame->args, 0 ) );
-        action->sources = targetlist( (targets_ptr)0, lol_get( frame->args, 1 ) );
+        action->targets.reset(); targetlist( action->targets, lol_get( frame->args, 0 ) );
+        action->sources.reset(); targetlist( action->sources, lol_get( frame->args, 1 ) );
         action->refs = 1;
 
         /* If we have a group of targets all being built using the same action
@@ -126,15 +125,15 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
         if ( action->targets )
         {
             TARGET * const t0 = action->targets->target;
-            for ( t = action->targets->next; t; t = t->next )
+            for ( t = action->targets->next.get(); t; t = t->next.get() )
             {
-                t->target->rebuilds = targetentry( t->target->rebuilds, t0 );
-                t0->rebuilds = targetentry( t0->rebuilds, t->target );
+                targetentry( t->target->rebuilds, t0 );
+                targetentry( t0->rebuilds, t->target );
             }
         }
 
         /* Append this action to the actions of each target. */
-        for ( t = action->targets; t; t = t->next )
+        for ( t = action->targets.get(); t; t = t->next.get() )
             t->target->actions = actionlist( t->target->actions, action );
 
         action_free( action );

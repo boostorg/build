@@ -48,6 +48,7 @@
 
 #include "config.h"
 #include "lists.h"
+#include "mem.h"
 #include "rules.h"
 #include "jam_strings.h"
 
@@ -86,7 +87,7 @@ struct _cmd
     int    noop;      /* no-op commands should be faked instead of executed */
     int    asynccnt;  /* number of outstanding dependencies */
     targets_ptr lock;   /* semaphores that are required by this cmd. */
-    targets_ptr unlock; /* semaphores that are released when this cmd finishes. */
+    targets_uptr unlock; /* semaphores that are released when this cmd finishes. */
     char   status;    /* the command status */
 };
 

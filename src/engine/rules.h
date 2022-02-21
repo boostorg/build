@@ -32,6 +32,7 @@
 
 #include "config.h"
 #include "function.h"
+#include "mem.h"
 #include "modules.h"
 #include "timestamp.h"
 
@@ -48,6 +49,20 @@ typedef TARGETS* targets_ptr;
 typedef ACTION* action_ptr;
 typedef ACTIONS* actions_ptr;
 typedef SETTINGS* settings_ptr;
+
+typedef RULE& rule_ref;
+typedef TARGET& target_ref;
+typedef TARGETS& targets_ref;
+typedef ACTION& action_ref;
+typedef ACTIONS& actions_ref;
+typedef SETTINGS& settings_ref;
+
+using rule_uptr = b2::jam::unique_jptr<_rule>;
+using target_uptr = b2::jam::unique_jptr<_target>;
+using targets_uptr = b2::jam::unique_jptr<_targets>;
+using action_uptr = b2::jam::unique_jptr<_action>;
+using actions_uptr = b2::jam::unique_jptr<_actions>;
+using settings_uptr = b2::jam::unique_jptr<_settings>;
 
 /* RULE - a generic jam rule, the product of RULE and ACTIONS. */
 
@@ -89,8 +104,8 @@ struct _actions {
 /* ACTION - a RULE instance with targets and sources. */
 struct _action {
     rule_ptr rule;
-    targets_ptr targets;
-    targets_ptr sources; /* aka $(>) */
+    targets_uptr targets;
+    targets_uptr sources; /* aka $(>) */
     char running; /* has been started */
 #define A_INIT 0
 #define A_RUNNING_NOEXEC 1
@@ -113,9 +128,9 @@ struct _settings {
 
 /* TARGETS - a chain of TARGETs. */
 struct _targets {
-    targets_ptr next;
-    targets_ptr tail; /* valid only for head */
-    target_ptr target;
+    targets_uptr next = nullptr;
+    targets_ptr tail = nullptr; /* valid only for head */
+    target_ptr target = nullptr;
 };
 
 /* TARGET - an entity (e.g. a file) that can be built. */
@@ -125,11 +140,11 @@ struct _target {
     actions_ptr actions; /* rules to execute, if any */
     settings_ptr settings; /* variables to define */
 
-    targets_ptr depends; /* dependencies */
-    targets_ptr dependants; /* the inverse of dependencies */
-    targets_ptr rebuilds; /* targets that should be force-rebuilt
-                           * whenever this one is
-                           */
+    targets_uptr depends; /* dependencies */
+    targets_uptr dependants; /* the inverse of dependencies */
+    targets_uptr rebuilds; /* targets that should be force-rebuilt
+                            * whenever this one is
+                            */
     target_ptr includes; /* internal includes node */
 
     timestamp time; /* update time */
@@ -217,7 +232,7 @@ struct _target {
 #endif
 
     int asynccnt; /* child deps outstanding */
-    targets_ptr parents; /* used by make1() for completion */
+    targets_uptr parents; /* used by make1() for completion */
     target_ptr scc_root; /* used by make to resolve cyclic includes
                           */
     target_ptr rescanning; /* used by make0 to mark visited targets
@@ -254,17 +269,17 @@ void rule_free(rule_ptr);
 /* Target related functions. */
 void bind_explicitly_located_targets();
 target_ptr bindtarget(object_ptr const);
-void freetargets(targets_ptr);
-targets_ptr targetchain(targets_ptr, targets_ptr);
-targets_ptr targetentry(targets_ptr, target_ptr);
+targets_uptr targetchain(targets_uptr, targets_uptr);
+void targetentry(targets_uptr&, target_ptr);
 void target_include(target_ptr const including,
     target_ptr const included);
 void target_include_many(target_ptr const including,
     list_ptr const included_names);
-targets_ptr targetlist(targets_ptr, list_ptr target_names);
+void targetlist(targets_uptr&, list_ptr target_names);
 void touch_target(object_ptr const);
 void clear_includes(target_ptr);
 target_ptr target_scc(target_ptr);
+targets_uptr targets_pop(targets_uptr);
 
 /* Final module cleanup. */
 void rules_done();

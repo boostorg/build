@@ -34,6 +34,7 @@
 #include "hash.h"
 #include "lists.h"
 #include "object.h"
+#include "output.h"
 #include "parse.h"
 #include "pathsys.h"
 #include "search.h"
@@ -59,8 +60,7 @@ static target_ptr get_target_includes( target_ptr const t )
 {
     if ( !t->includes )
     {
-        target_ptr const i = (target_ptr)BJAM_MALLOC( sizeof( *t ) );
-        memset( (char *)i, '\0', sizeof( *i ) );
+        target_ptr const i = b2::jam::make_ptr<_target>();
         i->name = object_copy( t->name );
         i->boundname = object_copy( i->name );
         i->flags |= T_FLAG_NOTFILE | T_FLAG_INTERNAL;
@@ -81,14 +81,14 @@ static target_ptr get_target_includes( target_ptr const t )
 void target_include( target_ptr const including, target_ptr const included )
 {
     target_ptr const internal = get_target_includes( including );
-    internal->depends = targetentry( internal->depends, included );
+    targetentry( internal->depends, included );
 }
 
 void target_include_many( target_ptr const including, list_ptr const included_names
     )
 {
     target_ptr const internal = get_target_includes( including );
-    internal->depends = targetlist( internal->depends, included_names );
+    targetlist( internal->depends, included_names );
 }
 
 
@@ -165,7 +165,7 @@ target_ptr bindtarget( object_ptr const target_name )
     t = (target_ptr)hash_insert( targethash, target_name, &found );
     if ( !found )
     {
-        memset( (char *)t, '\0', sizeof( *t ) );
+        b2::jam::ctor_ptr<_target>(t);
         t->name = object_copy( target_name );
         t->boundname = object_copy( t->name );  /* default for T_FLAG_NOTFILE */
     }
@@ -237,13 +237,12 @@ target_ptr target_scc( target_ptr t )
  *  targets  list of target names
  */
 
-targets_ptr targetlist( targets_ptr chain, list_ptr target_names )
+void targetlist( targets_uptr& chain, list_ptr target_names )
 {
     LISTITER iter = list_begin( target_names );
     LISTITER const end = list_end( target_names );
     for ( ; iter != end; iter = list_next( iter ) )
-        chain = targetentry( chain, bindtarget( list_item( iter ) ) );
-    return chain;
+        targetentry( chain, bindtarget( list_item( iter ) ) );
 }
 
 
@@ -255,17 +254,15 @@ targets_ptr targetlist( targets_ptr chain, list_ptr target_names )
  *  target  new target to append
  */
 
-targets_ptr targetentry( targets_ptr chain, target_ptr target )
+void targetentry( targets_uptr& chain, target_ptr target )
 {
-    targets_ptr const c = (targets_ptr)BJAM_MALLOC( sizeof( TARGETS ) );
+    auto c = b2::jam::make_unique_jptr<TARGETS>();
     c->target = target;
 
-    if ( !chain ) chain = c;
-    else chain->tail->next = c;
-    chain->tail = c;
-    c->next = 0;
-
-    return chain;
+    targets_ptr tail = c.get();
+    if ( !chain ) chain.reset(c.release());
+    else chain->tail->next.reset(c.release());
+    chain->tail = tail;
 }
 
 
@@ -277,13 +274,26 @@ targets_ptr targetentry( targets_ptr chain, target_ptr target )
  *  target  new target to append
  */
 
-targets_ptr targetchain( targets_ptr chain, targets_ptr targets )
+targets_uptr targetchain( targets_uptr chain, targets_uptr targets )
 {
     if ( !targets ) return chain;
     if ( !chain ) return targets;
 
-    chain->tail->next = targets;
-    chain->tail = targets->tail;
+    targets_ptr tail = targets->tail;
+    chain->tail->next = std::move(targets);
+    chain->tail = tail;
+    return chain;
+}
+
+/*
+ * targets_pop() - removes the first TARGET from the chain.
+ */
+
+targets_uptr targets_pop(targets_uptr chain)
+{
+    if ( chain && chain->next )
+            chain->next->tail = chain->tail;
+    chain = std::move( chain->next );
     return chain;
 }
 
@@ -295,9 +305,7 @@ void action_free( action_ptr action )
 {
     if ( --action->refs == 0 )
     {
-        freetargets( action->targets );
-        freetargets( action->sources );
-        BJAM_FREE( action );
+        b2::jam::free_ptr(action);
     }
 }
 
@@ -409,21 +417,6 @@ settings_ptr copysettings( settings_ptr head )
 
 
 /*
- * freetargets() - delete a targets list.
- */
-
-void freetargets( targets_ptr chain )
-{
-    while ( chain )
-    {
-        targets_ptr const n = chain->next;
-        BJAM_FREE( chain );
-        chain = n;
-    }
-}
-
-
-/*
  * freeactions() - delete an action list.
  */
 
@@ -462,15 +455,16 @@ static void freetarget( target_ptr const t, void * )
     if ( t->name       ) object_free ( t->name       );
     if ( t->boundname  ) object_free ( t->boundname  );
     if ( t->settings   ) freesettings( t->settings   );
-    if ( t->depends    ) freetargets ( t->depends    );
-    if ( t->dependants ) freetargets ( t->dependants );
-    if ( t->parents    ) freetargets ( t->parents    );
+    if ( t->depends    ) t->depends.reset();
+    if ( t->dependants ) t->dependants.reset();
+    if ( t->parents    ) t->parents.reset();
     if ( t->actions    ) freeactions ( t->actions    );
     if ( t->includes   )
     {
         freetarget( t->includes, (void *)0 );
         BJAM_FREE( t->includes );
     }
+    t->~_target();
 }
 
 

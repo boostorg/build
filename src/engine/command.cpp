@@ -60,7 +60,7 @@ void cmdlist_free( CMDLIST * l )
 
 CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
 {
-    CMD * cmd = (CMD *)BJAM_MALLOC( sizeof( CMD ) );
+    CMD * cmd = b2::jam::make_ptr<CMD>();
     FRAME frame[ 1 ];
 
     assert( cmd );
@@ -101,8 +101,7 @@ void cmd_free( CMD * cmd )
     lol_free( &cmd->args );
     list_free( cmd->shell );
     string_free( cmd->buf );
-    freetargets( cmd->unlock );
-    BJAM_FREE( (void *)cmd );
+    b2::jam::free_ptr( cmd );
 }
 
 

@@ -54,7 +54,7 @@
 # define max(a,b) ((a)>(b)?(a):(b))
 #endif
 
-static targets_ptr make0sort( targets_ptr c );
+static targets_uptr make0sort( targets_uptr c );
 
 #ifdef OPT_GRAPH_DEBUG_EXT
     static void dependGraphOutput( TARGET * t, int32_t depth );
@@ -174,7 +174,7 @@ static void update_dependants( TARGET * t )
 {
     targets_ptr q;
 
-    for ( q = t->dependants; q; q = q->next )
+    for ( q = t->dependants.get(); q; q = q->next.get() )
     {
         TARGET * p = q->target;
         char fate0 = p->fate;
@@ -211,7 +211,7 @@ static void update_dependants( TARGET * t )
 static void force_rebuilds( TARGET * t )
 {
     targets_ptr d;
-    for ( d = t->rebuilds; d; d = d->next )
+    for ( d = t->rebuilds.get(); d; d = d->next.get() )
     {
         TARGET * r = d->target;
 
@@ -250,7 +250,7 @@ int32_t make0rescan( TARGET * t, TARGET * rescanning )
         return 0;
 
     t->rescanning = rescanning;
-    for ( c = t->depends; c; c = c->next )
+    for ( c = t->depends.get(); c; c = c->next.get() )
     {
         TARGET * dependency = c->target;
         /* Always start at the root of each new strongly connected component. */
@@ -265,7 +265,7 @@ int32_t make0rescan( TARGET * t, TARGET * rescanning )
     if ( result && t->scc_root == NULL )
     {
         t->scc_root = rescanning;
-        rescanning->depends = targetentry( rescanning->depends, t );
+        targetentry( rescanning->depends, t );
     }
     return result;
 }
@@ -408,7 +408,7 @@ void make0
      */
 
     /* Step 3a: Recursively make0() dependencies. */
-    for ( c = t->depends; c; c = c->next )
+    for ( c = t->depends.get(); c; c = c->next.get() )
     {
         int32_t const internal = t->flags & T_FLAG_INTERNAL;
 
@@ -442,20 +442,20 @@ void make0
 
     /* Step 3c: Add dependencies' includes to our direct dependencies. */
     {
-        targets_ptr incs = 0;
-        for ( c = t->depends; c; c = c->next )
+        targets_uptr incs;
+        for ( c = t->depends.get(); c; c = c->next.get() )
             if ( c->target->includes )
-                incs = targetentry( incs, c->target->includes );
-        t->depends = targetchain( t->depends, incs );
+                targetentry( incs, c->target->includes );
+        t->depends = targetchain( std::move(t->depends), std::move(incs) );
     }
 
     if ( located_target )
-        t->depends = targetentry( t->depends, located_target );
+        targetentry( t->depends, located_target );
 
     /* Step 3d: Detect cycles. */
     {
         int32_t cycle_depth = depth;
-        for ( c = t->depends; c; c = c->next )
+        for ( c = t->depends.get(); c; c = c->next.get() )
         {
             TARGET * scc_root = target_scc( c->target );
             if ( scc_root->fate == T_FATE_MAKING &&
@@ -479,7 +479,7 @@ void make0
     timestamp_clear( &last );
     timestamp_clear( &leaf );
     fate = T_FATE_STABLE;
-    for ( c = t->depends; c; c = c->next )
+    for ( c = t->depends.get(); c; c = c->next.get() )
     {
         /* If we are in a different strongly connected component, pull
          * timestamps from the root.
@@ -700,7 +700,7 @@ void make0
         targets_ptr c;
         for ( a = t->actions; a; a = a->next )
         {
-            for ( c = a->action->targets; c; c = c->next )
+            for ( c = a->action->targets.get(); c; c = c->next.get() )
             {
                 if ( c->target->fate == T_FATE_INIT )
                 {
@@ -721,7 +721,7 @@ void make0
      */
 
     if ( globs.newestfirst )
-        t->depends = make0sort( t->depends );
+        t->depends = make0sort( std::move(t->depends) );
 
     /*
      * Step 6: A little harmless tabulating for tracing purposes.
@@ -862,7 +862,7 @@ static void dependGraphOutput( TARGET * t, int32_t depth )
         out_printf( "\n" );
     }
 
-    for ( c = t->depends; c; c = c->next )
+    for ( c = t->depends.get(); c; c = c->next.get() )
     {
         out_printf( "  %s       : Depends on %s (%s)", spaces( depth ),
            target_name( c->target ), target_fate[ (int32_t)c->target->fate ] );
@@ -871,7 +871,7 @@ static void dependGraphOutput( TARGET * t, int32_t depth )
         out_printf( "\n" );
     }
 
-    for ( c = t->depends; c; c = c->next )
+    for ( c = t->depends.get(); c; c = c->next.get() )
         dependGraphOutput( c->target, depth + 1 );
 }
 #endif
@@ -880,42 +880,31 @@ static void dependGraphOutput( TARGET * t, int32_t depth )
 /*
  * make0sort() - reorder TARGETS chain by their time (newest to oldest).
  *
- * We walk chain, taking each item and inserting it on the sorted result, with
- * newest items at the front. This involves updating each of the TARGETS'
- * c->next and c->tail. Note that we make c->tail a valid prev pointer for every
- * entry. Normally, it is only valid at the head, where prev == tail. Note also
- * that while tail is a loop, next ends at the end of the chain.
+ * This sorts in-place by swapping the target pointers in the chain in a
+ * rather terrible n-square/2 algorithm.
  */
 
-static targets_ptr make0sort( targets_ptr chain )
+static targets_uptr make0sort( targets_uptr chain )
 {
     PROFILE_ENTER( MAKE_MAKE0SORT );
 
-    targets_ptr result = 0;
-
-    /* Walk the current target list. */
-    while ( chain )
+    // The current tail we put the next newest item.
+    for ( targets_ptr front = chain.get(); front ; front = front->next.get() )
     {
-        targets_ptr c = chain;
-        targets_ptr s = result;
-
-        chain = chain->next;
-
-        /* Find point s in result for c. */
-        while ( s && timestamp_cmp( &s->target->time, &c->target->time ) > 0 )
-            s = s->next;
-
-        /* Insert c in front of s (might be 0). */
-        c->next = s;                           /* good even if s = 0       */
-        if ( result == s ) result = c;         /* new head of chain?       */
-        if ( !s ) s = result;                  /* wrap to ensure a next    */
-        if ( result != c ) s->tail->next = c;  /* not head? be prev's next */
-        c->tail = s->tail;                     /* take on next's prev      */
-        s->tail = c;                           /* make next's prev us      */
+        // Find the maximum time, i.e. most recent in the rest of the chain.
+        targets_ptr newest = front->next.get();
+        for ( targets_ptr rest = newest; rest ; rest = rest->next.get())
+        {
+            if ( timestamp_cmp( &newest->target->time, &rest->target->time ) > 0 )
+                newest = rest;
+        }
+        // Sort it to the front if needed.
+        if ( front != newest )
+            std::swap( front->target, newest->target );
     }
 
     PROFILE_EXIT( MAKE_MAKE0SORT );
-    return result;
+    return chain;
 }
 
 
