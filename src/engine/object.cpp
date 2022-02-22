@@ -60,7 +60,9 @@ typedef struct string_set
     struct hash_item * * data;
 } string_set;
 
+#if !defined(BJAM_NO_MEM_CACHE) || (BJAM_NO_MEM_CACHE == 0)
 static string_set strhash;
+#endif
 static int32_t strtotal = 0;
 static int32_t strcount_in = 0;
 static int32_t strcount_out = 0;
@@ -80,6 +82,7 @@ typedef struct strblock
 
 static strblock * strblock_chain = 0;
 
+#if !defined(BJAM_NO_MEM_CACHE) || (BJAM_NO_MEM_CACHE == 0)
 /* Storage remaining in the current strblock */
 static char * storage_start = 0;
 static char * storage_finish = 0;
@@ -128,6 +131,7 @@ static char * allocate( int32_t n )
     }
 #endif
 }
+#endif
 
 
 static unsigned int hash_keyval( char const * key, int32_t size )
@@ -154,6 +158,7 @@ static unsigned int hash_keyval( char const * key, int32_t size )
 }
 
 
+#if !defined(BJAM_NO_MEM_CACHE) || (BJAM_NO_MEM_CACHE == 0)
 static void string_set_init( string_set * set )
 {
     set->size = 0;
@@ -227,6 +232,7 @@ static char const * string_set_insert( string_set * set, char const * string,
 
     return result->data;
 }
+#endif
 
 
 /*
@@ -384,7 +390,9 @@ void object_done()
     }
 #endif
 
+#if !defined(BJAM_NO_MEM_CACHE) || (BJAM_NO_MEM_CACHE == 0)
     string_set_done( &strhash );
+#endif
 
     if ( DEBUG_MEM )
     {

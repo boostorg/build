@@ -39,16 +39,14 @@ static LIST * list_alloc( int32_t size )
 static void list_dealloc( LIST * l )
 {
     int32_t size = list_length( l );
-    int32_t bucket;
     LIST * node = l;
 
     if ( size == 0 ) return;
 
-    bucket = get_bucket( size );;
-
 #ifdef BJAM_NO_MEM_CACHE
     BJAM_FREE( node );
 #else
+    int32_t bucket = get_bucket( size );
     node->impl.next = freelist[ bucket ];
     freelist[ bucket ] = node;
 #endif
