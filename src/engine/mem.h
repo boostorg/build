@@ -85,6 +85,12 @@ namespace jam {
         return new (p) T(std::forward<Args>(args)...);
     }
 
+    template <typename T>
+    void dtor_ptr(T* p)
+    {
+        p->~T();
+    }
+
     template <typename T, typename... Args>
     T* make_ptr(Args&&... args)
     {
@@ -94,7 +100,7 @@ namespace jam {
     template <typename T>
     void free_ptr(T* p)
     {
-        p->~T();
+        dtor_ptr(p);
         BJAM_FREE(p);
     }
 
@@ -114,6 +120,48 @@ namespace jam {
     unique_jptr<T> make_unique_jptr(Args&&... args)
     {
         return unique_jptr<T>(make_ptr<T>(std::forward<Args>(args)...));
+    }
+
+    template <typename T>
+    struct unique_jptr_free {
+        using free_f = void (*)(T*);
+
+        explicit unique_jptr_free(free_f f)
+            : free_function(f)
+        {
+        }
+
+        unique_jptr_free(unique_jptr_free&& p)
+            : free_function(std::move(p.free_function))
+        {
+            p.free_function = nullptr;
+        }
+
+        void operator()(T* p) const
+        {
+            // if (free_function)
+            if (p)
+                (*free_function)(p);
+        }
+
+    private:
+        free_f free_function = nullptr;
+    };
+
+    template <typename T>
+    using unique_bare_jptr = std::unique_ptr<T, unique_jptr_free<T>>;
+
+    template <typename T, typename F>
+    unique_bare_jptr<T> make_unique_bare_jptr(T* p, F f)
+    {
+        return unique_bare_jptr<T>(p, unique_jptr_free<T>(f));
+    }
+
+    template <typename T, typename F, typename G>
+    unique_bare_jptr<T> make_unique_bare_jptr(T* p, F enter_f, G exit_f)
+    {
+        enter_f(p);
+        return unique_bare_jptr<T>(p, unique_jptr_free<T>(exit_f));
     }
 
 }
