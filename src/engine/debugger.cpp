@@ -2691,7 +2691,7 @@ static int process_command( char * line )
             *iter++ = '\0';
         }
     }
-    result = run_command( tokens.size(), const_cast<const char **>( &tokens[0] ) );
+    result = run_command( (int) tokens.size(), const_cast<const char **>( &tokens[0] ) );
     return result;
 }
 

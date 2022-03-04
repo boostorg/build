@@ -1291,6 +1291,7 @@ static int32_t get_free_cmdtab_slot()
             return slot;
     err_printf( "no slots for child!\n" );
     b2::clean_exit( EXITBAD );
+    return -1;
 }
 
 
