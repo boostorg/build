@@ -10,11 +10,11 @@
 
 #include "jam.h"
 #include "lists.h"
+#include "mem.h"
 #include "output.h"
+#include "startup.h"
 
 #include <assert.h>
-
-static LIST * freelist[ 32 ];  /* junkpile for list_dealloc() */
 
 static int32_t get_bucket( int32_t size )
 {
@@ -26,14 +26,8 @@ static int32_t get_bucket( int32_t size )
 static LIST * list_alloc( int32_t size )
 {
     int32_t bucket = get_bucket( size );
-    if ( freelist[ bucket ] )
-    {
-        LIST * result = freelist[ bucket ];
-        freelist[ bucket ] = result->impl.next;
-        return result;
-    }
-    return (LIST *)BJAM_MALLOC( sizeof( LIST ) + ( size_t( 1 ) << bucket ) *
-        sizeof( OBJECT * ) );
+    return b2::jam::ctor_ptr<LIST>( BJAM_CALLOC(
+        1, sizeof( LIST ) + ( size_t( 1 ) << bucket ) * sizeof( OBJECT * ) ) );
 }
 
 static void list_dealloc( LIST * l )
@@ -43,13 +37,7 @@ static void list_dealloc( LIST * l )
 
     if ( size == 0 ) return;
 
-#ifdef BJAM_NO_MEM_CACHE
-    BJAM_FREE( node );
-#else
-    int32_t bucket = get_bucket( size );
-    node->impl.next = freelist[ bucket ];
-    freelist[ bucket ] = node;
-#endif
+    b2::jam::free_ptr( node );
 }
 
 /*
@@ -363,16 +351,6 @@ LIST * list_unique( LIST * sorted_list )
 
 void list_done()
 {
-    for ( int32_t i = 0; i < int32_t(sizeof( freelist ) / sizeof( freelist[ 0 ] )); ++i )
-    {
-        LIST * l = freelist[ i ];
-        while ( l )
-        {
-            LIST * const tmp = l;
-            l = l->impl.next;
-            BJAM_FREE( tmp );
-        }
-    }
 }
 
 
@@ -399,7 +377,7 @@ void lol_add( LOL * lol, LIST * l )
     }
 
     err_printf( "lol_add failed due to reached limit of %d elements\n", LOL_MAX );
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
 }
 
 
