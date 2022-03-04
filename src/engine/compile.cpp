@@ -145,10 +145,8 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
      */
     if ( rule->procedure )
     {
-        FUNCTION * const function = rule->procedure;
-        function_refer( function );
-        result = function_run( function, frame, stack_global() );
-        function_free( function );
+        auto function = b2::jam::make_unique_bare_jptr( rule->procedure, function_refer, function_free );
+        result = function_run( function.get(), frame, stack_global() );
     }
 
     if ( DEBUG_PROFILE && rule->procedure )
