@@ -59,6 +59,11 @@ struct LIST {
         struct LIST * next;
         OBJECT * align;
     } impl;
+
+    LIST()
+    {
+        this->impl.next = nullptr;
+    }
 };
 
 typedef LIST * list_ptr;
