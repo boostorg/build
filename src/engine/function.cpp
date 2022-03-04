@@ -23,6 +23,7 @@
 #include "search.h"
 #include "variable.h"
 #include "output.h"
+#include "startup.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -480,7 +481,7 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     {
         out_printf( "ERROR: rules are limited to %d arguments\n", LOL_MAX );
         backtrace( inner );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
 
     for ( i = 0; i < n_args; ++i )
@@ -580,7 +581,7 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
     {
         out_printf( "ERROR: member rules are limited to %d arguments\n", LOL_MAX );
         backtrace( inner );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
 
     for( i = 0; i < n_args; ++i )
@@ -3215,7 +3216,7 @@ static void argument_error( char const * message, FUNCTION * procedure,
     print_source_line( frame );
     out_printf( "see definition of rule '%s' being called\n", frame->rulename );
     backtrace( frame->prev );
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
 }
 
 static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
@@ -3505,7 +3506,7 @@ static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg,
         {
             err_printf( "%s:%d: missing argument name before type name: %s\n",
                 object_str( file ), line, object_str( arg ) );
-            exit( EXITBAD );
+            b2::clean_exit( EXITBAD );
         }
 
         c->arg.arg_name = object_copy( arg );
@@ -3553,7 +3554,7 @@ static struct arg_list arg_compile_impl( struct argument_compiler * c,
     case ARGUMENT_COMPILER_FOUND_TYPE:
         err_printf( "%s:%d: missing argument name after type name: %s\n",
             object_str( file ), line, object_str( c->arg.type_name ) );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     case ARGUMENT_COMPILER_FOUND_OBJECT:
         dynamic_array_push( c->args, c->arg );
         break;
@@ -4134,7 +4135,7 @@ LIST * function_execute_write_file(
             {
                 err_printf( "[errno %d] failed to write output file '%s': %s",
                     errno, out_name->value, strerror(errno) );
-                exit( EXITBAD );
+                b2::clean_exit( EXITBAD );
             }
             string_free( out_name );
         }

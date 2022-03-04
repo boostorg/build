@@ -51,6 +51,7 @@
 #include "search.h"
 #include "variable.h"
 #include "output.h"
+#include "startup.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -257,7 +258,7 @@ int32_t make1( LIST * targets )
     /* If we were interrupted, exit now that all child processes
        have finished. */
     if ( intr )
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
 
     {
         LISTITER iter, end;
@@ -478,7 +479,7 @@ static void make1b( state * const pState )
         default:
             err_printf( "ERROR: %s has bad fate %d", object_str( t->name ),
                 t->fate );
-            abort();
+            b2::clean_exit( b2::exit_result::failure );
         }
 
     /* Proceed to MAKE1C to begin executing the chain of commands prepared for
@@ -1225,7 +1226,7 @@ static CMD * make1cmds( TARGET * t )
 
                     /* Tell the user what did not fit. */
                     out_puts( cmd->buf->value );
-                    exit( EXITBAD );
+                    b2::clean_exit( EXITBAD );
                 }
 
                 assert( !retry || !accept_command );
