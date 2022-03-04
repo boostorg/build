@@ -254,15 +254,18 @@ static void delete_module_( void * xmodule, void * data )
 
 void modules_done()
 {
-    if ( DEBUG_MEM || DEBUG_PROFILE )
+    if ( module_hash )
     {
-        struct hash * class_hash = hashinit( sizeof( struct module_stats ), "object info" );
-        hashenumerate( module_hash, stat_module, (void *)class_hash );
-        hashenumerate( class_hash, print_class_stats, (void *)0 );
-        hash_free( class_hash );
+        if ( DEBUG_MEM || DEBUG_PROFILE )
+        {
+            struct hash * class_hash = hashinit( sizeof( struct module_stats ), "object info" );
+            hashenumerate( module_hash, stat_module, (void *)class_hash );
+            hashenumerate( class_hash, print_class_stats, (void *)0 );
+            hash_free( class_hash );
+        }
+        hashenumerate( module_hash, delete_module_, (void *)0 );
+        hashdone( module_hash );
     }
-    hashenumerate( module_hash, delete_module_, (void *)0 );
-    hashdone( module_hash );
     module_hash = 0;
     delete_module( &root );
 }
