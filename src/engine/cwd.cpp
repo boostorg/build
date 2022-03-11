@@ -12,6 +12,7 @@
 #include "mem.h"
 #include "output.h"
 #include "pathsys.h"
+#include "startup.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -74,7 +75,7 @@ void cwd_init( void )
     if ( !cwd_ )
     {
         errno_puts( "can not get current working directory" );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
 }
 

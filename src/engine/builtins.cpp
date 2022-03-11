@@ -24,6 +24,7 @@
 #include "pathsys.h"
 #include "rules.h"
 #include "jam_strings.h"
+#include "startup.h"
 #include "subst.h"
 #include "timestamp.h"
 #include "variable.h"
@@ -563,7 +564,7 @@ LIST * builtin_depends( FRAME * frame, int flags )
         if ( flags )
             target_include_many( t, sources );
         else
-            t->depends = targetlist( t->depends, sources );
+            targetlist( t->depends, sources );
     }
 
     /* Enter reverse links */
@@ -577,11 +578,11 @@ LIST * builtin_depends( FRAME * frame, int flags )
             LISTITER t_iter = list_begin( targets );
             LISTITER const t_end = list_end( targets );
             for ( ; t_iter != t_end; t_iter = list_next( t_iter ) )
-                s->dependants = targetentry( s->dependants, bindtarget(
+                targetentry( s->dependants, bindtarget(
                     list_item( t_iter ) )->includes );
         }
         else
-            s->dependants = targetlist( s->dependants, targets );
+            targetlist( s->dependants, targets );
     }
 
     return L0;
@@ -604,7 +605,7 @@ LIST * builtin_rebuilds( FRAME * frame, int flags )
     for ( ; iter != end; iter = list_next( iter ) )
     {
         TARGET * const t = bindtarget( list_item( iter ) );
-        t->rebuilds = targetlist( t->rebuilds, rebuilds );
+        targetlist( t->rebuilds, rebuilds );
     }
     return L0;
 }
@@ -650,10 +651,10 @@ LIST * builtin_exit( FRAME * frame, int flags )
             break;
         }
 #endif
-        exit( status );
+        b2::clean_exit( status );
     }
     else
-        exit( EXITBAD );  /* yeech */
+        b2::clean_exit( EXITBAD );  /* yeech */
     return L0;
 }
 
@@ -1176,7 +1177,7 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
     else
         out_printf( "root module.\n" );
     backtrace( frame->prev );
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
 }
 
 
@@ -1258,7 +1259,7 @@ LIST * builtin_import( FRAME * frame, int flags )
         list_print( target_rules );
         out_printf( "\n" );
         backtrace( frame->prev );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
 
     return L0;
@@ -1633,7 +1634,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
         out_printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
             object_str( list_front( rule_name ) ), object_str( module->name ) );
         backtrace( frame->prev );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
     return L0;
 }

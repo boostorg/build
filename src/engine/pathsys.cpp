@@ -395,7 +395,7 @@ char * executable_path( char const * argv0 )
     const char * execname = getexecname();
     return execname ? strdup( execname ) : NULL;
 }
-#elif defined(__FreeBSD__)
+#elif defined(__FreeBSD__) || defined(__FreeBSD_kernel__)
 # include <sys/sysctl.h>
 char * executable_path( char const * argv0 )
 {
