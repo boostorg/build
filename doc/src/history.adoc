@@ -3,6 +3,33 @@
 
 == Version 4.8.0
 
+* *New:* Add support for LoongArch.
+  -- _Zhang Na_
+* Change engine build to use static Intel libs if available instead of C++
+  runtime static libs to fix systems where the static {CPP}} runtime is not
+  available.
+  -- _Alain Miniussi_
+* Reorder msvc `cflags` and `cxxflags`, and add `compileflags`, to fix inability
+  to override flags by users.
+  -- _Peter Dimov_
+* Don't quote `RPATH` on `clang-linux` to fix use of double-quotes to make it
+  possible to use `$ORIGIN`.
+  -- _Dimitry Andric_
+* Fix `b2` executable detection on kFreeBSD.
+  -- _Laurent Bigonville_
+* Add `.ipp` extension to header scanning and a valid {CPP} file.
+  -- _Jim King_
+* Fix missing install targets when `build=no` is in source target usage
+  requirements.
+  -- _Dmitry Arkhipov_
+* Add some future versions of {CPP} to `cxxstd` feature.
+  -- _René Ferdinand Rivera Morell_
+* Fix many memory leaks in engine.
+  -- _René Ferdinand Rivera Morell_
+* Change `abort`/`exit` calls to clean exception handling to allow for memory
+  cleanup in engine.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.7.2
 
 * Fix errors configuring intel-linux toolset if icpx is not in the PATH but
