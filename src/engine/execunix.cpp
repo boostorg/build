@@ -14,6 +14,7 @@
 #include "lists.h"
 #include "output.h"
 #include "jam_strings.h"
+#include "startup.h"
 
 #include <errno.h>
 #include <signal.h>
@@ -216,7 +217,7 @@ void exec_cmd
     if ( pipe( out ) < 0 || ( globs.pipe_action && pipe( err ) < 0 ) )
     {
         errno_puts( "pipe" );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
 
     /* Start the command */
@@ -258,7 +259,7 @@ void exec_cmd
     if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
         errno_puts( "vfork" );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
 
     if ( cmdtab[ slot ].pid == 0 )
@@ -295,7 +296,7 @@ void exec_cmd
         }
         if (0 != setpgid( pid, pid )) {
             errno_puts("setpgid(child)");
-            /* exit( EXITBAD ); */
+            /* b2::clean_exit( EXITBAD ); */
         }
         execvp( argv[ 0 ], (char * *)argv );
         errno_puts( "execvp" );
@@ -325,7 +326,7 @@ void exec_cmd
     if ( !cmdtab[ slot ].stream[ OUT ] )
     {
         errno_puts( "fdopen" );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
 
     /* Parent reads from err[ EXECCMD_PIPE_READ ]. */
@@ -336,7 +337,7 @@ void exec_cmd
         if ( !cmdtab[ slot ].stream[ ERR ] )
         {
             errno_puts( "fdopen" );
-            exit( EXITBAD );
+            b2::clean_exit( EXITBAD );
         }
     }
 
@@ -542,7 +543,7 @@ void exec_wait()
                 if ( pid != cmdtab[ i ].pid )
                 {
                     err_printf( "unknown pid %d with errno = %d\n", pid, errno );
-                    exit( EXITBAD );
+                    b2::clean_exit( EXITBAD );
                 }
 
                 /* Set reason for exit if not timed out. */
@@ -601,7 +602,8 @@ static int get_free_cmdtab_slot()
         if ( !cmdtab[ slot ].pid )
             return slot;
     err_printf( "no slots for child!\n" );
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
+    return -1;
 }
 
 int32_t shell_maxline()

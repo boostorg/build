@@ -16,6 +16,7 @@
 #include "jam_strings.h"
 #include "variable.h"
 #include "output.h"
+#include "startup.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,7 +35,7 @@ static void check_defined( LIST * class_names )
         {
             out_printf( "Class %s is not defined\n", object_str( list_item( iter ) )
                 );
-            abort();
+            b2::clean_exit( b2::exit_result::failure );
         }
     }
 }
@@ -143,7 +144,7 @@ OBJECT * make_class_module( LIST * xname, LIST * bases, FRAME * frame )
     {
         out_printf( "Class %s already defined\n", object_str( list_front( xname ) )
             );
-        abort();
+        b2::clean_exit( b2::exit_result::failure );
     }
     check_defined( bases );
 

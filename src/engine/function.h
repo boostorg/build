@@ -1,4 +1,5 @@
 /*
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2011 Steven Watanabe
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -16,6 +17,9 @@
 
 typedef struct _function FUNCTION;
 typedef struct _stack STACK;
+
+typedef FUNCTION* function_ptr;
+typedef STACK* stack_ptr;
 
 STACK * stack_global( void );
 void stack_push( STACK * s, LIST * l );

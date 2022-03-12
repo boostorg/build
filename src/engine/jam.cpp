@@ -242,10 +242,10 @@ static void usage( const char * progname )
 #endif
 	err_printf("--x     Option is ignored.\n\n");
 
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
 }
 
-int main( int argc, char * * argv )
+int guarded_main( int argc, char * * argv )
 {
     int                     n;
     char                  * s;
@@ -260,15 +260,6 @@ int main( int argc, char * * argv )
 
     saved_argv0 = argv[ 0 ];
     last_update_now_status = 0;
-
-    BJAM_MEM_INIT();
-
-#ifdef OS_MAC
-    InitGraf( &qd.thePort );
-#endif
-
-    cwd_init();
-    constants_init();
 
 #ifdef JAM_DEBUGGER
 
@@ -382,7 +373,7 @@ int main( int argc, char * * argv )
         {
             err_printf( "Invalid pipe descriptor '%d', valid values are -p[0..3]."
                 "\n", globs.pipe_action );
-            exit( EXITBAD );
+            b2::clean_exit( EXITBAD );
         }
     }
 
@@ -398,7 +389,7 @@ int main( int argc, char * * argv )
         if ( globs.jobs < 1 )
         {
             err_printf( "Invalid value for the '-j' option.\n" );
-            exit( EXITBAD );
+            b2::clean_exit( EXITBAD );
         }
     }
 
@@ -449,7 +440,7 @@ int main( int argc, char * * argv )
         {
             err_printf( "[errno %d] failed to write output file '%s': %s",
                 errno, s, strerror(errno) );
-            exit( EXITBAD );
+            b2::clean_exit( EXITBAD );
         }
         /* ++globs.noexec; */
     }
@@ -668,9 +659,32 @@ int main( int argc, char * * argv )
         PROFILE_EXIT( MAIN );
     }
 
+    return status ? EXITBAD : EXITOK;
+}
+
+int main( int argc, char * * argv )
+{
+    BJAM_MEM_INIT();
+
+#ifdef OS_MAC
+    InitGraf( &qd.thePort );
+#endif
+
+    cwd_init();
+    constants_init();
+
+    int result = EXIT_SUCCESS;
+    try
+    {
+        result = guarded_main( argc, argv );
+    }
+    catch ( b2::exit_result exit_code )
+    {
+        result = (int)exit_code;
+    }
+
     if ( DEBUG_PROFILE )
         profile_dump();
-
 
 #ifdef OPT_HEADER_CACHE_EXT
     hcache_done();
@@ -705,5 +719,5 @@ int main( int argc, char * * argv )
 
     BJAM_MEM_CLOSE();
 
-    return status ? EXITBAD : EXITOK;
+    return result;
 }

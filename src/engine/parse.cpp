@@ -18,6 +18,7 @@
 #include "modules.h"
 #include "frames.h"
 #include "function.h"
+#include "mem.h"
 
 /*
  * parse.c - make and destroy parse trees as driven by the parser
@@ -40,7 +41,6 @@ static void parse_impl( FRAME * frame )
     for ( ; ; )
     {
         PARSE * p;
-        FUNCTION * func;
 
         /* Filled by yyparse() calling parse_save(). */
         yypsave = 0;
@@ -50,10 +50,9 @@ static void parse_impl( FRAME * frame )
             break;
 
         /* Run the parse tree. */
-        func = function_compile( p );
+        auto func = b2::jam::make_unique_bare_jptr( function_compile( p ), function_free );
         parse_free( p );
-        list_free( function_run( func, frame, stack_global() ) );
-        function_free( func );
+        list_free( function_run( func.get(), frame, stack_global() ) );
     }
 
     yyfdone();

@@ -5,6 +5,7 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -50,6 +51,7 @@
 #include "search.h"
 #include "variable.h"
 #include "output.h"
+#include "startup.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -59,15 +61,15 @@
 #endif
 
 static CMD      * make1cmds      ( TARGET * );
-static LIST     * make1list      ( LIST *, TARGETS *, int32_t flags );
+static LIST     * make1list      ( LIST *, const targets_uptr &, int32_t flags );
 static SETTINGS * make1settings  ( struct module_t *, LIST * vars );
 static void       make1bind      ( TARGET * );
 static void       push_cmds( CMDLIST * cmds, int32_t status );
 static int32_t    cmd_sem_lock( TARGET * t );
 static void       cmd_sem_unlock( TARGET * t );
 
-static int32_t targets_contains( TARGETS * l, TARGET * t );
-static int32_t targets_equal( TARGETS * l1, TARGETS * l2 );
+static bool targets_contains( const targets_uptr & l, TARGET * t );
+static bool targets_equal( const targets_uptr & l1, const targets_uptr & l2 );
 
 /* Ugly static - it is too hard to carry it through the callbacks. */
 
@@ -256,7 +258,7 @@ int32_t make1( LIST * targets )
     /* If we were interrupted, exit now that all child processes
        have finished. */
     if ( intr )
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
 
     {
         LISTITER iter, end;
@@ -306,7 +308,7 @@ static void make1a( state * const pState )
         TARGET * const parent_scc = target_scc( pState->parent );
         if ( t != parent_scc )
         {
-            t->parents = targetentry( t->parents, parent_scc );
+            targetentry( t->parents, parent_scc );
             ++parent_scc->asynccnt;
         }
     }
@@ -343,8 +345,8 @@ static void make1a( state * const pState )
     /* Push dependency build requests (to be executed in the natural order). */
     {
         stack temp_stack = { NULL };
-        TARGETS * c;
-        for ( c = t->depends; c && !quit; c = c->next )
+        targets_ptr c;
+        for ( c = t->depends.get(); c && !quit; c = c->next.get() )
             push_state( &temp_stack, c->target, t, T_STATE_MAKE1A );
         push_stack_on_stack( &state_stack, &temp_stack );
     }
@@ -396,8 +398,8 @@ static void make1b( state * const pState )
      */
     if ( !globs.noexec )
     {
-        TARGETS * c;
-        for ( c = t->depends; c; c = c->next )
+        targets_ptr c;
+        for ( c = t->depends.get(); c; c = c->next.get() )
             if ( c->target->status > t->status && !( c->target->flags &
                 T_FLAG_NOCARE ) )
             {
@@ -477,7 +479,7 @@ static void make1b( state * const pState )
         default:
             err_printf( "ERROR: %s has bad fate %d", object_str( t->name ),
                 t->fate );
-            abort();
+            b2::clean_exit( b2::exit_result::failure );
         }
 
     /* Proceed to MAKE1C to begin executing the chain of commands prepared for
@@ -637,7 +639,7 @@ static void make1c( state const * const pState )
 
         /* Tell parents their dependency has been built. */
         {
-            TARGETS * c;
+            targets_ptr c;
             stack temp_stack = { NULL };
             TARGET * additional_includes = NULL;
 
@@ -682,9 +684,8 @@ static void make1c( state const * const pState )
                      * cleaned up correctly.
                      */
                     t->includes->includes = saved_includes;
-                    for ( c = t->dependants; c; c = c->next )
-                        c->target->depends = targetentry( c->target->depends,
-                            t->includes );
+                    for ( c = t->dependants.get(); c; c = c->next.get() )
+                       targetentry( c->target->depends, t->includes );
                     /* Will be processed below. */
                     additional_includes = t->includes;
                 }
@@ -695,7 +696,7 @@ static void make1c( state const * const pState )
             }
 
             if ( additional_includes )
-                for ( c = t->parents; c; c = c->next )
+                for ( c = t->parents.get(); c; c = c->next.get() )
                     push_state( &temp_stack, additional_includes, c->target,
                         T_STATE_MAKE1A );
 
@@ -703,19 +704,18 @@ static void make1c( state const * const pState )
             {
                 TARGET * const scc_root = target_scc( t );
                 assert( scc_root->progress < T_MAKE_DONE );
-                for ( c = t->parents; c; c = c->next )
+                for ( c = t->parents.get(); c; c = c->next.get() )
                 {
                     if ( target_scc( c->target ) == scc_root )
                         push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B
                             );
                     else
-                        scc_root->parents = targetentry( scc_root->parents,
-                            c->target );
+                        targetentry( scc_root->parents, c->target );
                 }
             }
             else
             {
-                for ( c = t->parents; c; c = c->next )
+                for ( c = t->parents.get(); c; c = c->next.get() )
                     push_state( &temp_stack, c->target, NULL, T_STATE_MAKE1B );
             }
 
@@ -1077,7 +1077,7 @@ static CMD * make1cmds( TARGET * t )
     for ( a0 = t->actions; a0; a0 = a0->next )
     {
         RULE         * rule = a0->action->rule;
-        rule_actions * actions = rule->actions;
+        rule_actions_ptr actions = rule->actions;
         SETTINGS     * boundvars;
         LIST         * nt;
         LIST         * ns;
@@ -1172,8 +1172,8 @@ static CMD * make1cmds( TARGET * t )
             int32_t start = 0;
             int32_t chunk = length;
             int32_t cmd_count = 0;
-            TARGETS * semaphores = NULL;
-            TARGETS * targets_iter;
+            targets_uptr semaphores;
+            targets_ptr targets_iter;
             int32_t unique_targets;
             do
             {
@@ -1226,7 +1226,7 @@ static CMD * make1cmds( TARGET * t )
 
                     /* Tell the user what did not fit. */
                     out_puts( cmd->buf->value );
-                    exit( EXITBAD );
+                    b2::clean_exit( EXITBAD );
                 }
 
                 assert( !retry || !accept_command );
@@ -1263,7 +1263,7 @@ static CMD * make1cmds( TARGET * t )
             a0->action->last_cmd = last_cmd;
 
             unique_targets = 0;
-            for ( targets_iter = a0->action->targets; targets_iter; targets_iter = targets_iter->next )
+            for ( targets_iter = a0->action->targets.get(); targets_iter; targets_iter = targets_iter->next.get() )
             {
                 if ( targets_contains( targets_iter->next, targets_iter->target ) )
                     continue;
@@ -1278,17 +1278,17 @@ static CMD * make1cmds( TARGET * t )
 
 #if OPT_SEMAPHORE
             /* Collect semaphores */
-            for ( targets_iter = a0->action->targets; targets_iter; targets_iter = targets_iter->next )
+            for ( targets_iter = a0->action->targets.get(); targets_iter; targets_iter = targets_iter->next.get() )
             {
                 TARGET * sem = targets_iter->target->semaphore;
                 if ( sem )
                 {
                     if ( ! targets_contains( semaphores, sem ) )
-                        semaphores = targetentry( semaphores, sem );
+                        targetentry( semaphores, sem );
                 }
             }
-            ( ( CMD * )a0->action->first_cmd )->lock = semaphores;
-            ( ( CMD * )a0->action->last_cmd )->unlock = semaphores;
+            ( ( CMD * )a0->action->first_cmd )->lock = semaphores.get();
+            ( ( CMD * )a0->action->last_cmd )->unlock = std::move(semaphores);
 #endif
         }
 
@@ -1315,9 +1315,10 @@ static CMD * make1cmds( TARGET * t )
  * make1list() - turn a list of targets into a LIST, for $(<) and $(>)
  */
 
-static LIST * make1list( LIST * l, TARGETS * targets, int32_t flags )
+static LIST * make1list( LIST * l, const targets_uptr & ts, int32_t flags )
 {
-    for ( ; targets; targets = targets->next )
+    targets_ptr targets = ts.get();
+    for ( ; targets; targets = targets->next.get() )
     {
         TARGET * t = targets->target;
 
@@ -1418,24 +1419,27 @@ static void make1bind( TARGET * t )
 }
 
 
-static int32_t targets_contains( TARGETS * l, TARGET * t )
+static bool targets_contains( const targets_uptr & ts, TARGET * t )
 {
-    for ( ; l; l = l->next )
+    targets_ptr l = ts.get();
+    for ( ; l; l = l->next.get() )
     {
         if ( t == l->target )
         {
-            return 1;
+            return true;
         }
     }
-    return 0;
+    return false;
 }
 
-static int32_t targets_equal( TARGETS * l1, TARGETS * l2 )
+static bool targets_equal( const targets_uptr & ts1, const targets_uptr & ts2 )
 {
-    for ( ; l1 && l2; l1 = l1->next, l2 = l2->next )
+    targets_ptr l1 = ts1.get();
+    targets_ptr l2 = ts2.get();
+    for ( ; l1 && l2; l1 = l1->next.get(), l2 = l2->next.get() )
     {
         if ( l1->target != l2->target )
-            return 0;
+            return false;
     }
     return !l1 && !l2;
 }
@@ -1446,23 +1450,23 @@ static int32_t targets_equal( TARGETS * l1, TARGETS * l2 )
 static int32_t cmd_sem_lock( TARGET * t )
 {
     CMD * cmd = (CMD *)t->cmds;
-    TARGETS * iter;
+    targets_ptr iter;
     /* Check whether all the semaphores required for updating
      * this target are free.
      */
-    for ( iter = cmd->lock; iter; iter = iter->next )
+    for ( iter = cmd->lock; iter; iter = iter->next.get() )
     {
         if ( iter->target->asynccnt > 0 )
         {
             if ( DEBUG_EXECCMD )
                 out_printf( "SEM: %s is busy, delaying launch of %s\n",
                     object_str( iter->target->name ), object_str( t->name ) );
-            iter->target->parents = targetentry( iter->target->parents, t );
+            targetentry( iter->target->parents, t );
             return 0;
         }
     }
     /* Lock the semaphores. */
-    for ( iter = cmd->lock; iter; iter = iter->next )
+    for ( iter = cmd->lock; iter; iter = iter->next.get() )
     {
         ++iter->target->asynccnt;
         if ( DEBUG_EXECCMD )
@@ -1480,9 +1484,9 @@ static int32_t cmd_sem_lock( TARGET * t )
 static void cmd_sem_unlock( TARGET * t )
 {
     CMD * cmd = ( CMD * )t->cmds;
-    TARGETS * iter;
+    targets_ptr iter;
     /* Release the semaphores. */
-    for ( iter = cmd->unlock; iter; iter = iter->next )
+    for ( iter = cmd->unlock.get(); iter; iter = iter->next.get() )
     {
         if ( DEBUG_EXECCMD )
             out_printf( "SEM: %s is now free\n", object_str(
@@ -1490,19 +1494,14 @@ static void cmd_sem_unlock( TARGET * t )
         --iter->target->asynccnt;
         assert( iter->target->asynccnt <= 0 );
     }
-    for ( iter = cmd->unlock; iter; iter = iter->next )
+    for ( iter = cmd->unlock.get(); iter; iter = iter->next.get() )
     {
         /* Find a waiting target that's ready */
         while ( iter->target->parents )
         {
-            TARGETS * first = iter->target->parents;
-            TARGET * t1 = first->target;
+            TARGET * t1 = iter->target->parents->target;
 
-            /* Pop the first waiting CMD */
-            if ( first->next )
-                first->next->tail = first->tail;
-            iter->target->parents = first->next;
-            BJAM_FREE( first );
+            iter->target->parents = targets_pop(std::move(iter->target->parents));
 
             if ( cmd_sem_lock( t1 ) )
             {
