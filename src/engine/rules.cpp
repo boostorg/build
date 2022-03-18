@@ -291,10 +291,13 @@ targets_uptr targetchain( targets_uptr chain, targets_uptr targets )
 
 targets_uptr targets_pop(targets_uptr chain)
 {
+    targets_uptr result;
     if ( chain && chain->next )
-            chain->next->tail = chain->tail;
-    chain = std::move( chain->next );
-    return chain;
+    {
+        chain->next->tail = chain->tail;
+        result = std::move( chain->next );
+    }
+    return result;
 }
 
 /*
