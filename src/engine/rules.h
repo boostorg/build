@@ -35,6 +35,7 @@
 #include "mem.h"
 #include "modules.h"
 #include "timestamp.h"
+#include <utility>
 
 typedef struct _rule RULE;
 typedef struct _target TARGET;
@@ -131,6 +132,12 @@ struct _targets {
     targets_uptr next = nullptr;
     targets_ptr tail = nullptr; /* valid only for head */
     target_ptr target = nullptr;
+
+    ~_targets()
+    {
+        targets_uptr sink = std::move(next);
+        while ( sink ) sink = std::move(sink->next);
+    }
 };
 
 /* TARGET - an entity (e.g. a file) that can be built. */
