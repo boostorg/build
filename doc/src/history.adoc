@@ -1,6 +1,12 @@
 [[b2.history]]
 = History
 
+== Version 4.8.1
+
+* Fix build of engine on old macOS/XCode versions prior to 9.0 because of
+  missing `EXIT_SUCCESS` and `EXIT_FAILURE` macros.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.8.0
 
 * *New:* Add support for LoongArch.

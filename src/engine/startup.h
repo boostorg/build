@@ -9,6 +9,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "config.h"
 #include "frames.h"
+#include <cstdlib>
 
 namespace b2 {
 namespace startup {
@@ -17,15 +18,22 @@ namespace startup {
     bool bootstrap(FRAME* frame);
 }
 
-enum class exit_result : int
-{
+enum class exit_result : int {
+#ifdef EXIT_SUCCESS
     success = EXIT_SUCCESS,
+#else
+    success = 0,
+#endif
+#ifdef EXIT_FAILURE
     failure = EXIT_FAILURE
+#else
+    failure = 1
+#endif
 };
 
 inline void clean_exit(int exit_code)
 {
-    throw (exit_result)exit_code;
+    throw(exit_result) exit_code;
 }
 
 inline void clean_exit(exit_result exit_code)
