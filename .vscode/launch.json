@@ -5,25 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "(lldb) Launch",
+            "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/src/engine/b2",
-            "args": ["-sBOOST_BUILD_PATH=${workspaceFolder}", "toolset=clang"],
-            "stopAtEntry": true,
-            "cwd": "${workspaceFolder}/test",
-            "environment": [],
-            "externalConsole": true,
-            "MIMode": "lldb"
-        },
-        {
-            "name": "(gdb) Launch: example/hello",
-            "type": "cppdbg",
-            "request": "launch",
-            "program": "${workspaceFolder}/.build/clang-linux-10.0.0/debug/cxxstd-11-iso/b2",
-            "args": ["-n", "toolset=clang"],
+            "program": "${workspaceFolder}/.build/gcc-11/debug/cxxstd-11-iso/b2",
+            "args": ["-na"],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/example/hello",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -36,13 +24,13 @@
             ]
         },
         {
-            "name": "(gdb) Launch: home/tmp/prebuild",
+            "name": "(gdb) Launch: ASAN",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-10.1.0/debug/cxxstd-11-iso/b2",
-            "args": ["-n","-sBOOST_BUILD_PATH=/home/grafik/Sync/DevRoots/B2/mainline/test/..","debug","release","-j1","-d2","toolset=gcc"],
+            "program": "${workspaceFolder}/.build/gcc-11/debug/address-sanitizer-on/cxxstd-11-iso/b2",
+            "args": ["-na", "toolset=gcc"],
             "stopAtEntry": false,
-            "cwd": "/home/grafik/tmp/prebuilt-1",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -53,6 +41,6 @@
                     "ignoreFailures": true
                 }
             ]
-        },
+        }
     ]
 }

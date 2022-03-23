@@ -1,6 +1,6 @@
 /*
+ * Copyright 2016-2022 Rene Rivera
  * Copyright 2011 Steven Watanabe
- * Copyright 2016 Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
  * (See accompanying file LICENSE.txt or copy at
  * https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -221,6 +221,13 @@ static LIST * call_python_function( PYTHON_FUNCTION *, FRAME * );
 
 #endif
 
+
+typedef struct _stack STACK;
+typedef STACK* stack_ptr;
+
+STACK * stack_global( void );
+void stack_push( STACK * s, LIST * l );
+LIST * stack_pop( STACK * s );
 
 struct _stack
 {
@@ -4003,12 +4010,11 @@ static_assert(
 static_assert( sizeof(LIST *) <= sizeof(void *), "sizeof(LIST *) <= sizeof(void *)" );
 static_assert( sizeof(char *) <= sizeof(void *), "sizeof(char *) <= sizeof(void *)" );
 
-void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s,
-    string * out )
+void function_run_actions( FUNCTION * function, FRAME * frame, string * out )
 {
-    *(string * *)stack_allocate( s, sizeof( string * ) ) = out;
-    list_free( function_run( function, frame, s ) );
-    stack_deallocate( s, sizeof( string * ) );
+    *(string * *)stack_allocate( stack_global(), sizeof( string * ) ) = out;
+    list_free( function_run( function, frame ) );
+    stack_deallocate( stack_global(), sizeof( string * ) );
 }
 
 // Result is either the filename or contents depending on:
@@ -4162,8 +4168,9 @@ LIST * function_execute_write_file(
  * especially careful about stack push/pop.
  */
 
-LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
+LIST * function_run( FUNCTION * function_, FRAME * frame )
 {
+    STACK * s = stack_global();
     JAM_FUNCTION * function;
     instruction * code;
     LIST * l;

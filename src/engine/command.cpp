@@ -5,6 +5,7 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -83,8 +84,7 @@ CMD * cmd_new( RULE * rule, LIST * targets, LIST * sources, LIST * shell )
     lol_init( frame->args );
     lol_add( frame->args, list_copy( targets ) );
     lol_add( frame->args, list_copy( sources ) );
-    function_run_actions( rule->actions->command, frame, stack_global(),
-        cmd->buf );
+    function_run_actions( rule->actions->command, frame, cmd->buf );
     frame_free( frame );
 
     return cmd;

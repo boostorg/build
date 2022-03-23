@@ -5,6 +5,7 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -52,7 +53,7 @@ static void parse_impl( FRAME * frame )
         /* Run the parse tree. */
         auto func = b2::jam::make_unique_bare_jptr( function_compile( p ), function_free );
         parse_free( p );
-        list_free( function_run( func.get(), frame, stack_global() ) );
+        list_free( function_run( func.get(), frame ) );
     }
 
     yyfdone();
