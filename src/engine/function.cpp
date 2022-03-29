@@ -378,8 +378,9 @@ struct _stack
     template <typename T>
     struct advance_size
     {
-        static const std::ptrdiff_t value
-            = std::ptrdiff_t( reinterpret_cast<remove_cref_t<T>*>(0) + 1 );
+        struct _helper_1 { remove_cref_t<T> a; };
+        struct _helper_2 { remove_cref_t<T> a; remove_cref_t<T> b; };
+        static const std::ptrdiff_t value = sizeof(_helper_2) - sizeof(_helper_1);
     };
 
     template <typename...A>
