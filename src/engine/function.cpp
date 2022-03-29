@@ -31,7 +31,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <algorithm>
+#include <memory>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 /*
 #define FUNCTION_DEBUG_PROFILE
@@ -225,92 +229,175 @@ static LIST * call_python_function( PYTHON_FUNCTION *, FRAME * );
 typedef struct _stack STACK;
 typedef STACK* stack_ptr;
 
-STACK * stack_global( void );
-void stack_push( STACK * s, LIST * l );
-LIST * stack_pop( STACK * s );
+namespace
+{
+    template <typename T>
+    using remove_cref_t
+        = typename std::remove_const<
+            typename std::remove_reference<
+                typename std::remove_const<T>::type
+                >::type
+            >::type;
+
+    template<typename...>
+    struct type_list;
+    template<bool T, typename L>
+    struct select_last_impl;
+    template<typename... A>
+    struct select_last_impl<true, type_list<A...>>
+    {
+        template<typename T>
+        using type = T;
+    };
+    template<typename... A>
+    struct select_last_impl<false, type_list<A...>>
+    {
+        template<typename T, typename... R>
+        using type = typename select_last_impl<
+            (sizeof...(R) == 1), type_list<A...> >
+                ::template type<R...>;
+    };
+    template<typename... A>
+    using select_last_t =
+        typename select_last_impl<(sizeof...(A) == 1), type_list<A...> >
+            ::template type<A...>;
+}
 
 struct _stack
 {
-    void * data;
-};
+    public:
 
-static void * stack;
+    _stack()
+    {
+        int32_t const size = 1 << 21;
+        start = BJAM_MALLOC( size );
+        end = (char *)start + size;
+        data = end;
+    }
+
+    void done()
+    {
+        BJAM_FREE( start );
+        start = end = data = nullptr;
+    }
+
+    // Get reference to the top i-th T item, optionally as a U. I.e. it skips
+    // the i-th T* items returning it as U&.
+    template <typename T, typename U = T>
+    remove_cref_t<U> & top(int i = 0) const
+    {
+        return *reinterpret_cast<U*>(
+            reinterpret_cast<remove_cref_t<T>*>(data) + i );
+    }
+
+    // Get a pointer to the last A-th item skipping over any A pre i-th items.
+    template <typename...A>
+    remove_cref_t< select_last_t<A...> > * get() const
+    {
+        using U = remove_cref_t< select_last_t<A...> >;
+        return reinterpret_cast<U*>( advance<A...>(data) );
+    }
+
+    // Move "v" to a new slot in ther stack. Returns a reference to the new item.
+    template <class T>
+    remove_cref_t<T> & push( T&& v )
+    {
+        using U = remove_cref_t<T>;
+        check_alignment();
+        data = (char *)data - sizeof(U);
+        check_alignment();
+        return top<U>() = v;
+    }
+
+    // Copy "v" into "n" new items at the top of the stack. Returns a pointer
+    // to the first, i.e. top most, new item.
+    template <class T>
+    remove_cref_t<T> * push( T v, int32_t n )
+    {
+        using U = remove_cref_t<T>;
+        check_alignment();
+        data = (char *)data - ( n * sizeof(U) );
+        check_alignment();
+        std::uninitialized_fill_n( reinterpret_cast<U*>( data ), n, v );
+        return reinterpret_cast<U*>( data );
+    }
+
+    // Removes the top most "T" item from the stack and returns a copy of it.
+    template <class T>
+    remove_cref_t<T> pop()
+    {
+        using U = remove_cref_t<T>;
+        U result = std::move(top<U>());
+        check_alignment();
+        data = (char *)data + sizeof(U);
+        check_alignment();
+        return result;
+    }
+
+    // Removes the top "n" "T" items from the stack.
+    template <class T>
+    void pop( int32_t n )
+    {
+        check_alignment();
+        data = (char *)data + ( n * sizeof(remove_cref_t<T>) );
+        check_alignment();
+    }
+
+    private:
+
+    void * start = nullptr;
+    void * end = nullptr;
+    void * data = nullptr;
+
+    struct list_alignment_helper
+    {
+        char ch;
+        LIST * l;
+    };
+
+    #define LISTPTR_ALIGN_BASE ( sizeof( struct list_alignment_helper ) - sizeof( LIST * ) )
+    #define LISTPTR_ALIGN ( ( LISTPTR_ALIGN_BASE > sizeof( LIST * ) ) ? sizeof( LIST * ) : LISTPTR_ALIGN_BASE )
+
+    void check_alignment()
+    {
+        assert( (size_t)data % LISTPTR_ALIGN == 0 );
+    }
+
+    template <typename T>
+    struct advance_size
+    {
+        static const std::ptrdiff_t value
+            = std::ptrdiff_t( reinterpret_cast<remove_cref_t<T>*>(0) + 1 );
+    };
+
+    template <typename...A>
+    struct sum_advance_size {};
+    template <typename T>
+    struct sum_advance_size<T>
+    {
+        static const std::ptrdiff_t value
+            = advance_size<T>::value;
+    };
+    template <typename T, typename...A>
+    struct sum_advance_size<T, A...>
+    {
+        static const std::ptrdiff_t value
+            = advance_size<T>::value + sum_advance_size<A...>::value;
+    };
+
+    template <typename...R>
+    static void * advance(void * p)
+    {
+        return (char*)p
+            + sum_advance_size<R...>::value
+            - advance_size< select_last_t<R...> >::value;
+    }
+};
 
 STACK * stack_global()
 {
     static STACK result;
-    if ( !stack )
-    {
-        int32_t const size = 1 << 21;
-        stack = BJAM_MALLOC( size );
-        result.data = (char *)stack + size;
-    }
     return &result;
-}
-
-struct list_alignment_helper
-{
-    char ch;
-    LIST * l;
-};
-
-#define LISTPTR_ALIGN_BASE ( sizeof( struct list_alignment_helper ) - sizeof( LIST * ) )
-#define LISTPTR_ALIGN ( ( LISTPTR_ALIGN_BASE > sizeof( LIST * ) ) ? sizeof( LIST * ) : LISTPTR_ALIGN_BASE )
-
-static void check_alignment( STACK * s )
-{
-    assert( (size_t)s->data % LISTPTR_ALIGN == 0 );
-}
-
-void * stack_allocate( STACK * s, int32_t size )
-{
-    check_alignment( s );
-    s->data = (char *)s->data - size;
-    check_alignment( s );
-    return s->data;
-}
-
-void stack_deallocate( STACK * s, int32_t size )
-{
-    check_alignment( s );
-    s->data = (char *)s->data + size;
-    check_alignment( s );
-}
-
-void stack_push( STACK * s, LIST * l )
-{
-    *(LIST * *)stack_allocate( s, sizeof( LIST * ) ) = l;
-}
-
-LIST * stack_pop( STACK * s )
-{
-    LIST * const result = *(LIST * *)s->data;
-    stack_deallocate( s, sizeof( LIST * ) );
-    return result;
-}
-
-LIST * stack_top( STACK * s )
-{
-    check_alignment( s );
-    return *(LIST * *)s->data;
-}
-
-LIST * stack_at( STACK * s, int32_t n )
-{
-    check_alignment( s );
-    return *( (LIST * *)s->data + n );
-}
-
-void stack_set( STACK * s, int32_t n, LIST * value )
-{
-    check_alignment( s );
-    *((LIST * *)s->data + n) = value;
-}
-
-void * stack_get( STACK * s )
-{
-    check_alignment( s );
-    return s->data;
 }
 
 LIST * frame_get_local( FRAME * frame, int32_t idx )
@@ -365,7 +452,7 @@ static void function_set_actions( JAM_FUNCTION * function, FRAME * frame,
     STACK * s, int32_t idx )
 {
     SUBACTION * sub = function->actions + idx;
-    LIST * bindlist = stack_pop( s );
+    LIST * bindlist = s->pop<LIST *>();
     new_rule_actions( frame->module, sub->name, sub->command, bindlist,
         sub->flags );
 }
@@ -458,7 +545,7 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
 {
     FRAME inner[ 1 ];
     int32_t i;
-    LIST * first = stack_pop( s );
+    LIST * first = s->pop<LIST *>();
     LIST * result = L0;
     OBJECT * rulename;
     LIST * trailing;
@@ -473,7 +560,7 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
         backtrace( frame );
         list_free( first );
         for ( i = 0; i < n_args; ++i )
-            list_free( stack_pop( s ) );
+            list_free( s->pop<LIST *>() );
         return result;
     }
 
@@ -492,10 +579,10 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     }
 
     for ( i = 0; i < n_args; ++i )
-        lol_add( inner->args, stack_at( s, n_args - i - 1 ) );
+        lol_add( inner->args, s->top<LIST*>( n_args - i - 1 ) );
 
     for ( i = 0; i < n_args; ++i )
-        stack_pop( s );
+        s->pop<LIST *>();
 
     trailing = list_pop_front( first );
     if ( trailing )
@@ -519,7 +606,7 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 {
     FRAME   inner[ 1 ];
     int32_t i;
-    LIST * first = stack_pop( s );
+    LIST * first = s->pop<LIST *>();
     LIST * result = L0;
     RULE * rule;
     module_t * module;
@@ -538,7 +625,7 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 
         for( i = 0; i < n_args; ++i )
         {
-            list_free( stack_pop( s ) );
+            list_free( s->pop<LIST *>() );
         }
 
         return result;
@@ -593,12 +680,12 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 
     for( i = 0; i < n_args; ++i )
     {
-        lol_add( inner->args, stack_at( s, n_args - i - 1 ) );
+        lol_add( inner->args, s->top<LIST*>( n_args - i - 1 ) );
     }
 
     for( i = 0; i < n_args; ++i )
     {
-        stack_pop( s );
+        s->pop<LIST *>();
     }
 
     if ( list_length( first ) > 1 )
@@ -897,14 +984,14 @@ static int32_t expand_modifiers( STACK * s, int32_t n )
 {
     int32_t i;
     int32_t total = 1;
-    LIST * * args = (LIST**)stack_get( s );
+    LIST * * args = s->get<LIST*>();
     for ( i = 0; i < n; ++i )
         total *= list_length( args[ i ] );
 
     if ( total != 0 )
     {
-        VAR_EDITS * out = (VAR_EDITS*)stack_allocate( s, total * sizeof( VAR_EDITS ) );
-        LISTITER * iter = (LISTITER*)stack_allocate( s, n * sizeof( LIST * ) );
+        VAR_EDITS * out = s->push( VAR_EDITS(), total );
+        LISTITER * iter = s->push( LISTITER(nullptr), n );
         for ( i = 0; i < n; ++i )
             iter[ i ] = list_begin( args[ i ] );
         i = 0;
@@ -927,16 +1014,16 @@ static int32_t expand_modifiers( STACK * s, int32_t n )
                 iter[ i ] = list_begin( args[ i ] );
             }
         }
-        stack_deallocate( s, n * sizeof( LIST * ) );
+        s->pop<LIST*>( n );
     }
     return total;
 }
 
 static VAR_EXPANDED apply_modifiers( STACK * s, int32_t n )
 {
-    LIST * value = stack_top( s );
+    LIST * value = s->top<LIST*>();
     VAR_EXPANDED result;
-    VAR_EDITS * const edits = (VAR_EDITS *)( (LIST * *)stack_get( s ) + 1 );
+    VAR_EDITS * const edits = s->get<LIST*, VAR_EDITS>();
     string buf[ 1 ];
     string_new( buf );
     result = apply_modifiers_impl( L0, buf, edits, n, list_begin( value ),
@@ -951,14 +1038,14 @@ static VAR_EXPANDED eval_modifiers( STACK * s, LIST * value, int32_t modifier_co
     // Convert modifiers to value edits.
     int32_t edits = expand_modifiers( s, modifier_count );
     // Edit the value on the stack.
-    stack_push( s, value );
+    s->push( value );
     VAR_EXPANDED result = apply_modifiers( s, edits );
-    list_free( stack_pop( s ) );
+    list_free( s->pop<LIST *>() );
     // Clean up the value edits on the stack.
-    stack_deallocate( s, edits * sizeof( VAR_EDITS ) );
+    s->pop<VAR_EDITS>( edits );
     // Clean up the filename modifiers.
     for ( int32_t i = 0; i < modifier_count; ++i )
-        list_free( stack_pop( s ) );
+        list_free( s->pop<LIST *>() );
     // Done.
     return result;
 }
@@ -1027,8 +1114,8 @@ subscript_t parse_subscript( char const * s )
 
 static LIST * apply_subscript( STACK * s )
 {
-    LIST * value = stack_top( s );
-    LIST * indices = stack_at( s, 1 );
+    LIST * value = s->top<LIST*>();
+    LIST * indices = s->top<LIST*>( 1 );
     LIST * result = L0;
     int32_t length = list_length( value );
     string buf[ 1 ];
@@ -1208,10 +1295,10 @@ static VAR_EXPANDED apply_modifiers_impl( LIST * result, string * buf,
 
 static LIST * apply_subscript_and_modifiers( STACK * s, int32_t n )
 {
-    LIST * const value = stack_top( s );
-    LIST * const indices = stack_at( s, 1 );
+    LIST * const value = s->top<LIST*>();
+    LIST * const indices = s->top<LIST*>( 1 );
     LIST * result = L0;
-    VAR_EDITS * const edits = (VAR_EDITS *)((LIST * *)stack_get( s ) + 2);
+    VAR_EDITS * const edits = s->get<LIST*, LIST*, VAR_EDITS>();
     int32_t const length = list_length( value );
     string buf[ 1 ];
     LISTITER indices_iter = list_begin( indices );
@@ -1353,7 +1440,7 @@ static void combine_strings( STACK * s, int32_t n, string * out )
     int32_t i;
     for ( i = 0; i < n; ++i )
     {
-        LIST * const values = stack_pop( s );
+        LIST * const values = s->pop<LIST *>();
         LISTITER iter = list_begin( values );
         LISTITER const end = list_end( values );
         if ( iter != end )
@@ -3392,11 +3479,11 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
             {
                 LIST * * const old = &frame->module->fixed_variables[
                     formal_arg->index ];
-                stack_push( s, *old );
+                s->push( *old );
                 *old = value;
             }
             else
-                stack_push( s, var_swap( frame->module, formal_arg->arg_name,
+                s->push( var_swap( frame->module, formal_arg->arg_name,
                     value ) );
         }
 
@@ -3429,14 +3516,14 @@ void argument_list_pop( struct arg_list * formal, int32_t formal_count,
                 continue;
             if ( formal_arg->index != -1 )
             {
-                LIST * const old = stack_pop( s );
+                LIST * const old = s->pop<LIST *>();
                 LIST * * const pos = &frame->module->fixed_variables[
                     formal_arg->index ];
                 list_free( *pos );
                 *pos = old;
             }
             else
-                var_set( frame->module, formal_arg->arg_name, stack_pop( s ),
+                var_set( frame->module, formal_arg->arg_name, s->pop<LIST *>(),
                     VAR_SET );
         }
     }
@@ -4012,9 +4099,9 @@ static_assert( sizeof(char *) <= sizeof(void *), "sizeof(char *) <= sizeof(void 
 
 void function_run_actions( FUNCTION * function, FRAME * frame, string * out )
 {
-    *(string * *)stack_allocate( stack_global(), sizeof( string * ) ) = out;
+    stack_global()->push( out );
     list_free( function_run( function, frame ) );
-    stack_deallocate( stack_global(), sizeof( string * ) );
+    stack_global()->pop<string *>();
 }
 
 // Result is either the filename or contents depending on:
@@ -4177,7 +4264,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
     LIST * r;
     LIST * result = L0;
 #ifndef NDEBUG
-    void * saved_stack = s->data;
+    char * saved_stack = s->get<char>();
 #endif
 
     PROFILE_ENTER_LOCAL(function_run);
@@ -4237,7 +4324,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_EMPTY:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_EMPTY);
-            stack_push( s, L0 );
+            s->push( L0 );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_EMPTY);
             break;
         }
@@ -4246,7 +4333,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_CONSTANT);
             OBJECT * value = function_get_constant( function, code->arg );
-            stack_push( s, list_new( object_copy( value ) ) );
+            s->push( list_new( object_copy( value ) ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_CONSTANT);
             break;
         }
@@ -4254,7 +4341,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_ARG:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_ARG);
-            stack_push( s, frame_get_local( frame, code->arg ) );
+            s->push( frame_get_local( frame, code->arg ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_ARG);
             break;
         }
@@ -4262,7 +4349,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_VAR:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_VAR);
-            stack_push( s, function_get_variable( function, frame, code->arg ) );
+            s->push( function_get_variable( function, frame, code->arg ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_VAR);
             break;
         }
@@ -4270,7 +4357,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_VAR_FIXED:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_VAR_FIXED);
-            stack_push( s, list_copy( frame->module->fixed_variables[ code->arg
+            s->push( list_copy( frame->module->fixed_variables[ code->arg
                 ] ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_VAR_FIXED);
             break;
@@ -4282,13 +4369,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             LIST * value = L0;
             LISTITER iter;
             LISTITER end;
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             for ( iter = list_begin( l ), end = list_end( l ); iter != end;
                 iter = list_next( iter ) )
                 value = list_append( value, function_get_named_variable(
                     function, frame, list_item( iter ) ) );
             list_free( l );
-            stack_push( s, value );
+            s->push( value );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_GROUP);
             break;
         }
@@ -4296,9 +4383,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_APPEND:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_APPEND);
-            r = stack_pop( s );
-            l = stack_pop( s );
-            stack_push( s, list_append( l, r ) );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
+            s->push( list_append( l, r ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_APPEND);
             break;
         }
@@ -4306,9 +4393,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_SWAP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SWAP);
-            l = stack_top( s );
-            stack_set( s, 0, stack_at( s, code->arg ) );
-            stack_set( s, code->arg, l );
+            std::swap( s->top<LIST*>(), s->top<LIST*>( code->arg ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SWAP);
             break;
         }
@@ -4316,7 +4401,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_POP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP);
-            list_free( stack_pop( s ) );
+            list_free( s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP);
             break;
         }
@@ -4336,7 +4421,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_EMPTY:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_EMPTY);
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             if ( !list_cmp( l, L0 ) ) code += code->arg;
             list_free( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_JUMP_EMPTY);
@@ -4346,7 +4431,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_NOT_EMPTY:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_NOT_EMPTY);
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             if ( list_cmp( l, L0 ) ) code += code->arg;
             list_free( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_JUMP_NOT_EMPTY);
@@ -4356,8 +4441,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_LT:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_LT);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) < 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4368,8 +4453,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_LE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_LE);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) <= 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4380,8 +4465,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_GT:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_GT);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) > 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4392,8 +4477,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_GE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_GE);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) >= 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4404,8 +4489,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_EQ:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_EQ);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) == 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4416,8 +4501,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_NE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_NE);
-            r = stack_pop(s);
-            l = stack_pop(s);
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp(l, r) != 0 ) code += code->arg;
             list_free(l);
             list_free(r);
@@ -4428,8 +4513,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_IN:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_IN);
-            r = stack_pop(s);
-            l = stack_pop(s);
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_is_sublist( l, r ) ) code += code->arg;
             list_free(l);
             list_free(r);
@@ -4440,8 +4525,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_JUMP_NOT_IN:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_NOT_IN);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( !list_is_sublist( l, r ) ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4456,9 +4541,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_FOR_INIT:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_FOR_INIT);
-            l = stack_top( s );
-            *(LISTITER *)stack_allocate( s, sizeof( LISTITER ) ) =
-                list_begin( l );
+            l = s->top<LIST*>();
+            s->push( list_begin( l ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_FOR_INIT);
             break;
         }
@@ -4466,20 +4550,19 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_FOR_LOOP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_FOR_LOOP);
-            LISTITER iter = *(LISTITER *)stack_get( s );
-            stack_deallocate( s, sizeof( LISTITER ) );
-            l = stack_top( s );
+            LISTITER iter = s->pop<LISTITER>();
+            l = s->top<LIST*>();
             if ( iter == list_end( l ) )
             {
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
                 code += code->arg;
             }
             else
             {
                 r = list_new( object_copy( list_item( iter ) ) );
                 iter = list_next( iter );
-                *(LISTITER *)stack_allocate( s, sizeof( LISTITER ) ) = iter;
-                stack_push( s, r );
+                s->push( iter );
+                s->push( r );
             }
             PROFILE_EXIT_LOCAL(function_run_INSTR_FOR_LOOP);
             break;
@@ -4488,8 +4571,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_FOR_POP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_FOR_POP);
-            stack_deallocate( s, sizeof( LISTITER ) );
-            list_free( stack_pop( s ) );
+            s->pop<LISTITER>();
+            list_free( s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_FOR_POP);
             break;
         }
@@ -4503,14 +4586,14 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_NOT_GLOB);
             char const * pattern;
             char const * match;
-            l = stack_pop( s );
-            r = stack_top( s );
+            l = s->pop<LIST *>();
+            r = s->top<LIST*>();
             pattern = list_empty( l ) ? "" : object_str( list_front( l ) );
             match = list_empty( r ) ? "" : object_str( list_front( r ) );
             if ( glob( pattern, match ) )
                 code += code->arg;
             else
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
             list_free( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_JUMP_NOT_GLOB);
             break;
@@ -4525,9 +4608,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             PROFILE_ENTER_LOCAL(function_run_INSTR_SET_RESULT);
             list_free( result );
             if ( !code->arg )
-                result = stack_pop( s );
+                result = s->pop<LIST *>();
             else
-                result = list_copy( stack_top( s ) );
+                result = list_copy( s->top<LIST*>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SET_RESULT);
             break;
         }
@@ -4535,7 +4618,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_RESULT:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_RESULT);
-            stack_push( s, result );
+            s->push( result );
             result = L0;
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_RESULT);
             break;
@@ -4548,16 +4631,16 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
                 argument_list_pop( function_->formal_arguments,
                     function_->num_formal_arguments, frame, s );
 #ifndef NDEBUG
-            if ( !( saved_stack == s->data ) )
+            if ( !( saved_stack == s->get<char>() ) )
             {
                 frame->file = function->file;
                 frame->line = function->line;
                 backtrace_line( frame );
                 out_printf( "error: stack check failed.\n" );
                 backtrace( frame );
-                assert( saved_stack == s->data );
+                assert( saved_stack == s->get<char>() );
             }
-            assert( saved_stack == s->data );
+            assert( saved_stack == s->get<char>() );
 #endif
             debug_on_exit_function( function->base.rulename );
             PROFILE_EXIT_LOCAL(function_run_INSTR_RETURN);
@@ -4572,8 +4655,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_LOCAL:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_LOCAL);
-            LIST * value = stack_pop( s );
-            stack_push( s, function_swap_variable( function, frame, code->arg,
+            LIST * value = s->pop<LIST *>();
+            s->push( function_swap_variable( function, frame, code->arg,
                 value ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_LOCAL);
             break;
@@ -4582,7 +4665,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_POP_LOCAL:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_LOCAL);
-            function_set_variable( function, frame, code->arg, stack_pop( s ) );
+            function_set_variable( function, frame, code->arg, s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_LOCAL);
             break;
         }
@@ -4590,10 +4673,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_LOCAL_FIXED:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_LOCAL_FIXED);
-            LIST * value = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
-            stack_push( s, *ptr );
+            s->push( *ptr );
             *ptr = value;
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_LOCAL_FIXED);
             break;
@@ -4602,7 +4685,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_POP_LOCAL_FIXED:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_LOCAL_FIXED);
-            LIST * value = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
             list_free( *ptr );
@@ -4614,16 +4697,16 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_LOCAL_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_LOCAL_GROUP);
-            LIST * const value = stack_pop( s );
+            LIST * const value = s->pop<LIST *>();
             LISTITER iter;
             LISTITER end;
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             for ( iter = list_begin( l ), end = list_end( l ); iter != end;
                 iter = list_next( iter ) )
-                stack_push( s, function_swap_named_variable( function, frame,
+                s->push( function_swap_named_variable( function, frame,
                     list_item( iter ), list_copy( value ) ) );
             list_free( value );
-            stack_push( s, l );
+            s->push( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_LOCAL_GROUP);
             break;
         }
@@ -4633,13 +4716,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_LOCAL_GROUP);
             LISTITER iter;
             LISTITER end;
-            r = stack_pop( s );
+            r = s->pop<LIST *>();
             l = list_reverse( r );
             list_free( r );
             for ( iter = list_begin( l ), end = list_end( l ); iter != end;
                 iter = list_next( iter ) )
                 function_set_named_variable( function, frame, list_item( iter ),
-                    stack_pop( s ) );
+                    s->pop<LIST *>() );
             list_free( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_LOCAL_GROUP);
             break;
@@ -4652,7 +4735,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_ON);
-            LIST * targets = stack_top( s );
+            LIST * targets = s->top<LIST*>();
             if ( !list_empty( targets ) )
             {
                 /* FIXME: push the state onto the stack instead of using
@@ -4664,8 +4747,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             else
             {
                 /* [ on $(TARGET) ... ] is ignored if $(TARGET) is empty. */
-                list_free( stack_pop( s ) );
-                stack_push( s, L0 );
+                list_free( s->pop<LIST *>() );
+                s->push( L0 );
                 code += code->arg;
             }
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_ON);
@@ -4675,15 +4758,15 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_POP_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_ON);
-            LIST * result = stack_pop( s );
-            LIST * targets = stack_pop( s );
+            LIST * result = s->pop<LIST *>();
+            LIST * targets = s->pop<LIST *>();
             if ( !list_empty( targets ) )
             {
                 TARGET * t = bindtarget( list_front( targets ) );
                 popsettings( frame->module, t->settings );
             }
             list_free( targets );
-            stack_push( s, result );
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_ON);
             break;
         }
@@ -4691,9 +4774,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_SET_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SET_ON);
-            LIST * targets = stack_pop( s );
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * targets = s->pop<LIST *>();
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( targets );
             LISTITER const end = list_end( targets );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4708,7 +4791,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             }
             list_free( vars );
             list_free( targets );
-            stack_push( s, value );
+            s->push( value );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SET_ON);
             break;
         }
@@ -4716,9 +4799,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_APPEND_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPEND_ON);
-            LIST * targets = stack_pop( s );
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * targets = s->pop<LIST *>();
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( targets );
             LISTITER const end = list_end( targets );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4733,7 +4816,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             }
             list_free( vars );
             list_free( targets );
-            stack_push( s, value );
+            s->push( value );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPEND_ON);
             break;
         }
@@ -4741,9 +4824,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_DEFAULT_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_DEFAULT_ON);
-            LIST * targets = stack_pop( s );
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * targets = s->pop<LIST *>();
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( targets );
             LISTITER const end = list_end( targets );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4758,7 +4841,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             }
             list_free( vars );
             list_free( targets );
-            stack_push( s, value );
+            s->push( value );
             PROFILE_EXIT_LOCAL(function_run_INSTR_DEFAULT_ON);
             break;
         }
@@ -4767,7 +4850,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_GET_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_GET_ON);
-            LIST * targets = stack_pop( s );
+            LIST * targets = s->pop<LIST *>();
             LIST * result = L0;
             if ( !list_empty( targets ) )
             {
@@ -4790,7 +4873,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
                 }
             }
             list_free( targets );
-            stack_push( s, list_copy( result ) );
+            s->push( list_copy( result ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_GET_ON);
             break;
         }
@@ -4803,7 +4886,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SET);
             function_set_variable( function, frame, code->arg,
-                stack_pop( s ) );
+                s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SET);
             break;
         }
@@ -4812,7 +4895,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPEND);
             function_append_variable( function, frame, code->arg,
-                stack_pop( s ) );
+                s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPEND);
             break;
         }
@@ -4821,7 +4904,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_DEFAULT);
             function_default_variable( function, frame, code->arg,
-                stack_pop( s ) );
+                s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_DEFAULT);
             break;
         }
@@ -4832,7 +4915,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
             list_free( *ptr );
-            *ptr = stack_pop( s );
+            *ptr = s->pop<LIST *>();
             PROFILE_EXIT_LOCAL(function_run_INSTR_SET_FIXED);
             break;
         }
@@ -4842,7 +4925,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPEND_FIXED);
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
-            *ptr = list_append( *ptr, stack_pop( s ) );
+            *ptr = list_append( *ptr, s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPEND_FIXED);
             break;
         }
@@ -4851,7 +4934,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_DEFAULT_FIXED);
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
-            LIST * value = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
             assert( code->arg < frame->module->num_fixed_variables );
             if ( list_empty( *ptr ) )
                 *ptr = value;
@@ -4864,8 +4947,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_SET_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SET_GROUP);
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4880,8 +4963,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_APPEND_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPEND_GROUP);
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4896,8 +4979,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_DEFAULT_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_DEFAULT_GROUP);
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4920,7 +5003,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
                 function, code[ 1 ].op_code ) );
             LIST * result = function_call_rule( function, frame, s, code->arg,
                 unexpanded, function->file, code[ 1 ].arg );
-            stack_push( s, result );
+            s->push( result );
             ++code;
             PROFILE_EXIT_LOCAL(function_run_INSTR_CALL_RULE);
             break;
@@ -4931,7 +5014,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             PROFILE_ENTER_LOCAL(function_run_INSTR_CALL_MEMBER_RULE);
             OBJECT * rule_name = function_get_constant( function, code[1].op_code );
             LIST * result = function_call_member_rule( function, frame, s, code->arg, rule_name, function->file, code[1].arg );
-            stack_push( s, result );
+            s->push( result );
             ++code;
             PROFILE_EXIT_LOCAL(function_run_INSTR_CALL_MEMBER_RULE);
             break;
@@ -4961,18 +5044,17 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_MODIFIERS);
             int32_t n;
-            int32_t i;
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             n = expand_modifiers( s, code->arg );
-            stack_push( s, l );
+            s->push( l );
             VAR_EXPANDED m = apply_modifiers( s, n );
             l = m.value;
             list_free( m.inner );
-            list_free( stack_pop( s ) );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
-            for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );  /* pop modifiers */
-            stack_push( s, l );
+            list_free( s->pop<LIST *>() );
+            s->pop<VAR_EDITS>( n );
+            for ( int32_t i = 0; i < code->arg; ++i )
+                list_free( s->pop<LIST *>() );  /* pop modifiers */
+            s->push( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_MODIFIERS);
             break;
         }
@@ -4981,9 +5063,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX);
             l = apply_subscript( s );
-            list_free( stack_pop( s ) );
-            list_free( stack_pop( s ) );
-            stack_push( s, l );
+            list_free( s->pop<LIST *>() );
+            list_free( s->pop<LIST *>() );
+            s->push( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_INDEX);
             break;
         }
@@ -4993,18 +5075,18 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS);
             int32_t i;
             int32_t n;
-            l = stack_pop( s );
-            r = stack_pop( s );
+            l = s->pop<LIST *>();
+            r = s->pop<LIST *>();
             n = expand_modifiers( s, code->arg );
-            stack_push( s, r );
-            stack_push( s, l );
+            s->push( r );
+            s->push( l );
             l = apply_subscript_and_modifiers( s, n );
-            list_free( stack_pop( s ) );
-            list_free( stack_pop( s ) );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            list_free( s->pop<LIST *>() );
+            list_free( s->pop<LIST *>() );
+            s->pop<VAR_EDITS>( n );
             for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );  /* pop modifiers */
-            stack_push( s, l );
+                list_free( s->pop<LIST *>() );  /* pop modifiers */
+            s->push( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS);
             break;
         }
@@ -5013,25 +5095,25 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_MODIFIERS_GROUP);
             int32_t i;
-            LIST * const vars = stack_pop( s );
+            LIST * const vars = s->pop<LIST *>();
             int32_t const n = expand_modifiers( s, code->arg );
             LIST * result = L0;
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
             {
-                stack_push( s, function_get_named_variable( function, frame,
+                s->push( function_get_named_variable( function, frame,
                     list_item( iter ) ) );
                 VAR_EXPANDED m = apply_modifiers( s, n );
                 result = m.value;
                 list_free( m.inner );
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
             }
             list_free( vars );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            s->pop<VAR_EDITS>( n );
             for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );  /* pop modifiers */
-            stack_push( s, result );
+                list_free( s->pop<LIST *>() );  /* pop modifiers */
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_MODIFIERS_GROUP);
             break;
         }
@@ -5039,20 +5121,20 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_APPLY_INDEX_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX_GROUP);
-            LIST * vars = stack_pop( s );
+            LIST * vars = s->pop<LIST *>();
             LIST * result = L0;
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
             {
-                stack_push( s, function_get_named_variable( function, frame,
+                s->push( function_get_named_variable( function, frame,
                     list_item( iter ) ) );
                 result = list_append( result, apply_subscript( s ) );
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
             }
             list_free( vars );
-            list_free( stack_pop( s ) );
-            stack_push( s, result );
+            list_free( s->pop<LIST *>() );
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_INDEX_GROUP);
             break;
         }
@@ -5061,27 +5143,27 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS_GROUP);
             int32_t i;
-            LIST * const vars = stack_pop( s );
-            LIST * const r = stack_pop( s );
+            LIST * const vars = s->pop<LIST *>();
+            LIST * const r = s->pop<LIST *>();
             int32_t const n = expand_modifiers( s, code->arg );
             LIST * result = L0;
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
-            stack_push( s, r );
+            s->push( r );
             for ( ; iter != end; iter = list_next( iter ) )
             {
-                stack_push( s, function_get_named_variable( function, frame,
+                s->push( function_get_named_variable( function, frame,
                     list_item( iter ) ) );
                 result = list_append( result, apply_subscript_and_modifiers( s,
                     n ) );
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
             }
-            list_free( stack_pop( s ) );
+            list_free( s->pop<LIST *>() );
             list_free( vars );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            s->pop<VAR_EDITS>( n );
             for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );  /* pop modifiers */
-            stack_push( s, result );
+                list_free( s->pop<LIST *>() );  /* pop modifiers */
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS_GROUP);
             break;
         }
@@ -5089,18 +5171,17 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_COMBINE_STRINGS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_COMBINE_STRINGS);
-            int32_t const buffer_size = code->arg * sizeof( expansion_item );
-            LIST * * const stack_pos = (LIST * * const)stack_get( s );
-            expansion_item * items = (expansion_item *)stack_allocate( s, buffer_size );
+            LIST * * const stack_pos = s->get<LIST*>();
+            expansion_item * items = s->push( expansion_item(), code->arg );
             LIST * result;
             int32_t i;
             for ( i = 0; i < code->arg; ++i )
                 items[ i ].values = stack_pos[ i ];
             result = expand( items, code->arg );
-            stack_deallocate( s, buffer_size );
+            s->pop<expansion_item>( code->arg );
             for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );
-            stack_push( s, result );
+                list_free( s->pop<LIST *>() );
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_COMBINE_STRINGS);
             break;
         }
@@ -5108,7 +5189,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_GET_GRIST:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_GET_GRIST);
-            LIST * vals = stack_pop( s );
+            LIST * vals = s->pop<LIST *>();
             LIST * result = L0;
             LISTITER iter, end;
 
@@ -5132,7 +5213,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             }
 
             list_free( vals );
-            stack_push( s, result );
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_GET_GRIST);
             break;
         }
@@ -5140,7 +5221,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_INCLUDE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_INCLUDE);
-            LIST * nt = stack_pop( s );
+            LIST * nt = s->pop<LIST *>();
             if ( !list_empty( nt ) )
             {
                 TARGET * const t = bindtarget( list_front( nt ) );
@@ -5182,14 +5263,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_PUSH_MODULE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_MODULE);
-            LIST * const module_name = stack_pop( s );
-            module_t * const outer_module = frame->module;
+            LIST * const module_name = s->pop<LIST *>();
+            module_t * outer_module = frame->module;
             frame->module = !list_empty( module_name )
                 ? bindmodule( list_front( module_name ) )
                 : root_module();
             list_free( module_name );
-            *(module_t * *)stack_allocate( s, sizeof( module_t * ) ) =
-                outer_module;
+            s->push( outer_module );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_MODULE);
             break;
         }
@@ -5197,9 +5277,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_POP_MODULE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_MODULE);
-            module_t * const outer_module = *(module_t * *)stack_get( s );
-            stack_deallocate( s, sizeof( module_t * ) );
-            frame->module = outer_module;
+            frame->module = s->pop<module_t *>();
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_MODULE);
             break;
         }
@@ -5207,16 +5285,15 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_CLASS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_CLASS);
-            LIST * bases = stack_pop( s );
-            LIST * name = stack_pop( s );
+            LIST * bases = s->pop<LIST *>();
+            LIST * name = s->pop<LIST *>();
             OBJECT * class_module = make_class_module( name, bases, frame );
 
-            module_t * const outer_module = frame->module;
+            module_t * outer_module = frame->module;
             frame->module = bindmodule( class_module );
             object_free( class_module );
 
-            *(module_t * *)stack_allocate( s, sizeof( module_t * ) ) =
-                outer_module;
+            s->push( outer_module );
             PROFILE_EXIT_LOCAL(function_run_INSTR_CLASS);
             break;
         }
@@ -5235,7 +5312,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             string buf[ 1 ];
             string_new( buf );
             combine_strings( s, code->arg, buf );
-            stack_push( s, list_new( object_new( buf->value ) ) );
+            s->push( list_new( object_new( buf->value ) ) );
             string_free( buf );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPEND_STRINGS);
             break;
@@ -5248,18 +5325,18 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             // Get expanded filename.
             LIST * filename = nullptr;
             {
-                expansion_item ei = { stack_pop( s ) };
+                expansion_item ei = { s->pop<LIST *>() };
                 filename = expand( &ei, 1 );
                 list_free( ei.values );
             }
             // Apply modifiers to "raw" filename.
             VAR_EXPANDED filename_mod = eval_modifiers( s, filename, code->arg );
             // Get contents.
-            LIST * contents = stack_pop( s );
+            LIST * contents = s->pop<LIST *>();
             // Write out the contents file, or expand the contents, as needed.
             LIST * filename_or_contents = function_execute_write_file( function, frame, s, filename_mod, contents );
             // The result that gets replaced into the @() space.
-            stack_push( s, filename_or_contents );
+            s->push( filename_or_contents );
             list_free( filename_mod.value );
             list_free( filename_mod.inner );
             list_free( contents );
@@ -5270,8 +5347,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_OUTPUT_STRINGS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_OUTPUT_STRINGS);
-            string * const buf = *(string * *)( (char *)stack_get( s ) + (
-                code->arg * sizeof( LIST * ) ) );
+            string * const buf = s->top<LIST*, string*>( code->arg );
             combine_strings( s, code->arg, buf );
             PROFILE_EXIT_LOCAL(function_run_INSTR_OUTPUT_STRINGS);
             break;
@@ -5563,5 +5639,5 @@ static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
 
 void function_done( void )
 {
-    BJAM_FREE( stack );
+    stack_global()->done();
 }
