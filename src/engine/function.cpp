@@ -239,6 +239,17 @@ namespace
                 >::type
             >::type;
 
+    #if 1
+    template <typename...A>
+    struct select_last_impl {};
+    template <typename T>
+    struct select_last_impl<T> { using type = T; };
+    template <typename T, typename... A>
+    struct select_last_impl<T, A...> {
+        using type = typename select_last_impl<A...>::type; };
+    template <typename... A>
+    using select_last_t = typename select_last_impl<A...>::type;
+    #else
     template<typename...>
     struct type_list;
     template<bool T, typename L>
@@ -261,6 +272,7 @@ namespace
     using select_last_t =
         typename select_last_impl<(sizeof...(A) == 1), type_list<A...> >
             ::template type<A...>;
+    #endif
 }
 
 struct _stack
