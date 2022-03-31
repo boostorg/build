@@ -681,6 +681,8 @@ int main( int argc, char * * argv )
     catch ( b2::exit_result exit_code )
     {
         result = (int)exit_code;
+        out_flush();
+        err_flush();
     }
 
     if ( DEBUG_PROFILE )

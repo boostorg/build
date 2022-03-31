@@ -37,6 +37,7 @@
 #include "jam_strings.h"
 #include "variable.h"
 #include "output.h"
+#include "startup.h"
 
 #include <assert.h>
 #include <stdarg.h>
@@ -146,7 +147,15 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
     if ( rule->procedure )
     {
         auto function = b2::jam::make_unique_bare_jptr( rule->procedure, function_refer, function_free );
-        result = function_run( function.get(), frame );
+        try
+        {
+            result = function_run( function.get(), frame );
+        }
+        catch( b2::exit_result r )
+        {
+            lol_free( frame->args );
+            b2::clean_exit( r );
+        }
     }
 
     if ( DEBUG_PROFILE && rule->procedure )
