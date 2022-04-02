@@ -296,9 +296,8 @@ struct _stack
             // err_flush();
             while ( cleanups.size() > 0 )
             {
-                std::get<0>(cleanups.back())(
-                    std::get<1>(cleanups.back()),
-                    std::get<2>(cleanups.back()) );
+                cleanups.back().function(
+                    cleanups.back().stack, cleanups.back().count );
                 cleanups.pop_back();
             }
             // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)data, cleanups.size() );
@@ -333,7 +332,7 @@ struct _stack
         check_alignment();
         data = (char *)data - sizeof(U);
         check_alignment();
-        cleanups.push_back(std::make_tuple(&_stack::cleanup_item<U>, this, 1));
+        cleanups.push_back(cleanup_info{&_stack::cleanup_item<U>, this, 1});
         return top<U>() = v;
     }
 
@@ -347,7 +346,7 @@ struct _stack
         data = (char *)data - ( n * sizeof(U) );
         check_alignment();
         std::uninitialized_fill_n( reinterpret_cast<U*>( data ), n, v );
-        cleanups.push_back(std::make_tuple(&_stack::cleanup_item<U>, this, n));
+        cleanups.push_back(cleanup_info{&_stack::cleanup_item<U>, this, n});
         return reinterpret_cast<U*>( data );
     }
 
@@ -380,7 +379,13 @@ struct _stack
     void * end = nullptr;
     void * data = nullptr;
     using cleanup_f = void(*)( _stack*, int32_t );
-    std::vector<std::tuple<cleanup_f, _stack*, int32_t>> cleanups;
+    struct cleanup_info
+    {
+        cleanup_f function;
+        _stack* stack;
+        int32_t count;
+    };
+    std::vector<cleanup_info> cleanups;
 
     template <typename T>
     void do_cleanup(int32_t) {}
