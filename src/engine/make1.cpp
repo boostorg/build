@@ -769,7 +769,7 @@ static void call_timing_rule( TARGET * target, timing_info const * const time )
             );
 
         /* Call the rule. */
-        evaluate_rule( bindrule( rulename , root_module() ), rulename, frame );
+        list_free( evaluate_rule( bindrule( rulename , root_module() ), rulename, frame ) );
 
         /* Clean up. */
         frame_free( frame );
