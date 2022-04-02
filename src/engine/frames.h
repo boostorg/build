@@ -16,6 +16,9 @@
 
 typedef struct frame FRAME;
 
+void frame_init( FRAME * );
+void frame_free( FRAME * );
+
 struct frame
 {
     FRAME      * prev;
@@ -29,6 +32,9 @@ struct frame
 #ifdef JAM_DEBUGGER
     void       * function;
 #endif
+
+    inline frame() { frame_init( this ); }
+    inline ~frame() { frame_free( this ); }
 };
 
 
@@ -39,8 +45,5 @@ struct frame
  */
 extern FRAME * frame_before_python_call;
 
-
-void frame_init( FRAME * );
-void frame_free( FRAME * );
 
 #endif
