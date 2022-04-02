@@ -1558,7 +1558,6 @@ static void debug_parent_backtrace( int argc, const char * * argv )
     OBJECT * depth_str;
     int depth;
     int i;
-    FRAME_INFO frame;
 
     if ( debug_state == DEBUG_NO_CHILD )
     {
@@ -1577,6 +1576,7 @@ static void debug_parent_backtrace( int argc, const char * * argv )
 
     for ( i = 0; i < depth; ++i )
     {
+        FRAME_INFO frame;
         char buf[ 16 ];
         sprintf( buf, "%d", i );
         new_args[ 2 ] = buf;
