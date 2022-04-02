@@ -36,6 +36,7 @@
 #include <string>
 #include <type_traits>
 #include <utility>
+#include <vector>
 
 /*
 #define FUNCTION_DEBUG_PROFILE
@@ -289,6 +290,20 @@ struct _stack
 
     void done()
     {
+        if ( cleanups.size() > 0 )
+        {
+            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)data, cleanups.size() );
+            // err_flush();
+            while ( cleanups.size() > 0 )
+            {
+                std::get<0>(cleanups.back())(
+                    std::get<1>(cleanups.back()),
+                    std::get<2>(cleanups.back()) );
+                cleanups.pop_back();
+            }
+            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)data, cleanups.size() );
+            // err_flush();
+        }
         BJAM_FREE( start );
         start = end = data = nullptr;
     }
@@ -318,6 +333,7 @@ struct _stack
         check_alignment();
         data = (char *)data - sizeof(U);
         check_alignment();
+        cleanups.push_back(std::make_tuple(&_stack::cleanup_item<U>, this, 1));
         return top<U>() = v;
     }
 
@@ -331,6 +347,7 @@ struct _stack
         data = (char *)data - ( n * sizeof(U) );
         check_alignment();
         std::uninitialized_fill_n( reinterpret_cast<U*>( data ), n, v );
+        cleanups.push_back(std::make_tuple(&_stack::cleanup_item<U>, this, n));
         return reinterpret_cast<U*>( data );
     }
 
@@ -343,6 +360,7 @@ struct _stack
         check_alignment();
         data = (char *)data + sizeof(U);
         check_alignment();
+        cleanups.pop_back();
         return result;
     }
 
@@ -353,6 +371,7 @@ struct _stack
         check_alignment();
         data = (char *)data + ( n * sizeof(remove_cref_t<T>) );
         check_alignment();
+        cleanups.pop_back();
     }
 
     private:
@@ -360,6 +379,11 @@ struct _stack
     void * start = nullptr;
     void * end = nullptr;
     void * data = nullptr;
+    using cleanup_f = void(*)( _stack*, int32_t );
+    std::vector<std::tuple<cleanup_f, _stack*, int32_t>> cleanups;
+
+    template <typename T>
+    void do_cleanup(int32_t) {}
 
     struct list_alignment_helper
     {
@@ -405,7 +429,25 @@ struct _stack
             + sum_advance_size<R...>::value
             - advance_size< select_last_t<R...> >::value;
     }
+
+    template <typename T>
+    static void cleanup_item(_stack * s, int32_t n)
+    {
+        s->data = (char *)s->data + ( n * sizeof(remove_cref_t<T>) );
+        s->check_alignment();
+    }
 };
+
+template <>
+void _stack::cleanup_item<LIST*>(_stack * s, int32_t n)
+{
+    for (int32_t i = 0; i < n; ++i)
+    {
+        list_free( s->top<LIST*>(i) );
+    }
+    s->data = (char *)s->data + ( n * sizeof(remove_cref_t<LIST*>) );
+    s->check_alignment();
+}
 
 STACK * stack_global()
 {
@@ -3344,7 +3386,6 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
 
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        LIST * error;
         FRAME frame[ 1 ];
         frame_init( frame );
         frame->module = typecheck;
@@ -3355,10 +3396,11 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
 
         /* Prepare the argument list */
         lol_add( frame->args, list_new( object_copy( list_item( iter ) ) ) );
-        error = evaluate_rule( bindrule( type_name, frame->module ), type_name, frame );
+        b2::jam::list error( evaluate_rule(
+            bindrule( type_name, frame->module ), type_name, frame ) );
 
-        if ( !list_empty( error ) )
-            argument_error( object_str( list_front( error ) ), called, caller,
+        if ( !error.empty() )
+            argument_error( object_str( *error.begin() ), called, caller,
                 arg_name );
 
         frame_free( frame );
