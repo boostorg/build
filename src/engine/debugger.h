@@ -12,6 +12,7 @@
 #include <setjmp.h>
 #include "object.h"
 #include "frames.h"
+#include "lists.h"
 
 #ifdef JAM_DEBUGGER
 
@@ -19,6 +20,7 @@ void debug_on_instruction( FRAME * frame, OBJECT * file, int line );
 void debug_on_enter_function( FRAME * frame, OBJECT * name, OBJECT * file, int line );
 void debug_on_exit_function( OBJECT * name );
 int debugger( void );
+void debugger_done();
 
 struct debug_child_data_t
 {
@@ -28,7 +30,7 @@ struct debug_child_data_t
 };
 
 extern struct debug_child_data_t debug_child_data;
-extern LIST * debug_print_result;
+extern b2::jam::list debug_print_result;
 extern const char debugger_opt[];
 extern int debug_interface;
 

@@ -75,7 +75,7 @@ PARSE * parse_make( int type, PARSE * left, PARSE * right, PARSE * third,
     OBJECT * string, OBJECT * string1, int num );
 
 void parse_refer( PARSE * );
-void parse_free( PARSE * );
+void parse_free( PARSE * & );
 LIST * parse_evaluate( PARSE *, FRAME * );
 
 #endif

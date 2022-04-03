@@ -142,7 +142,7 @@ void var_defines( struct module_t * module, const char * const * e, int preproce
             /* Get name. */
             string_append_range( buf, *e, val );
             {
-                OBJECT * const varname = object_new( buf->value );
+                OBJECT * varname = object_new( buf->value );
                 var_set( module, varname, l, VAR_SET );
                 object_free( varname );
             }

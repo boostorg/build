@@ -62,7 +62,7 @@ void cwd_init( void )
         if ( cwd_buffer )
         {
             /* We store the path using its canonical/long/key format. */
-            OBJECT * const cwd = object_new( cwd_buffer );
+            OBJECT * cwd = object_new( cwd_buffer );
             cwd_ = path_as_key( cwd );
             object_free( cwd );
             cwd_s = cwd_buffer;

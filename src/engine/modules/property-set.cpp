@@ -186,7 +186,6 @@ LIST * property_set_create( FRAME * frame, int flags )
                     list_new( object_new( message->value ) ), 0 );
                 /* unreachable */
                 string_free( message );
-                object_free( list_front( imports ) );
                 list_free( imports );
                 object_free( rulename );
             }

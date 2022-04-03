@@ -860,7 +860,7 @@ LIST * glob_recursive( char const * pattern )
     if ( !has_wildcards( pattern ) )
     {
         /* No metacharacters. Check if the path exists. */
-        OBJECT * const p = object_new( pattern );
+        OBJECT * p = object_new( pattern );
         result = append_if_exists( result, p );
         object_free( p );
     }
@@ -893,7 +893,7 @@ LIST * glob_recursive( char const * pattern )
 
             if ( has_wildcards( basename->value ) )
             {
-                OBJECT * const b = object_new( basename->value );
+                OBJECT * b = object_new( basename->value );
                 LISTITER iter = list_begin( dirs );
                 LISTITER const end = list_end( dirs );
                 for ( ; iter != end; iter = list_next( iter ) )
@@ -936,7 +936,7 @@ LIST * glob_recursive( char const * pattern )
         else
         {
             /* No directory, just a pattern. */
-            OBJECT * const p = object_new( pattern );
+            OBJECT * p = object_new( pattern );
             result = list_append( result, glob1( constant_dot, p ) );
             object_free( p );
         }
@@ -1919,7 +1919,7 @@ LIST *builtin_readlink( FRAME * frame, int flags )
 
 LIST *builtin_debug_print_helper( FRAME * frame, int flags )
 {
-    debug_print_result = list_copy( lol_get( frame->args, 0 ) );
+    debug_print_result.reset( list_copy( lol_get( frame->args, 0 ) ) );
     return L0;
 }
 

@@ -71,7 +71,7 @@ static int debug_depth;
 static OBJECT * debug_file;
 static int debug_line;
 static FRAME * debug_frame;
-LIST * debug_print_result;
+b2::jam::list debug_print_result;
 static int current_token;
 static int debug_selected_frame_number;
 
@@ -713,7 +713,7 @@ static void debug_child_print( int argc, const char * * argv )
     lines[ 1 ] = NULL;
     parse_string( constant_builtin, lines, &new_frame );
     string_free( buf );
-    debug_list_write( command_output, debug_print_result );
+    debug_list_write( command_output, *debug_print_result );
     fflush( command_output );
     debug_frame = saved_frame;
     debug_file = saved_file;
@@ -2735,3 +2735,8 @@ static void debug_listen( void )
 struct debug_child_data_t debug_child_data;
 const char debugger_opt[] = "--b2db-internal-debug-handle=";
 int debug_interface;
+
+void debugger_done()
+{
+    debug_print_result.reset();
+}

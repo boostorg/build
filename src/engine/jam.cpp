@@ -579,7 +579,7 @@ int guarded_main( int argc, char * * argv )
             }
             else
             {
-                OBJECT * const target = object_new( arg_v[ n ] );
+                OBJECT * target = object_new( arg_v[ n ] );
                 mark_target_for_updating( target );
                 object_free( target );
             }
@@ -618,7 +618,7 @@ int guarded_main( int argc, char * * argv )
             frame_init( frame );
             for ( n = 0; ( s = getoptval( optv, 'f', n ) ); ++n )
             {
-                OBJECT * const filename = object_new( s );
+                OBJECT * filename = object_new( s );
                 parse_file( filename, frame );
                 object_free( filename );
             }
@@ -639,7 +639,7 @@ int guarded_main( int argc, char * * argv )
             /* Manually touch -t targets. */
             for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
             {
-                OBJECT * const target = object_new( s );
+                OBJECT * target = object_new( s );
                 touch_target( target );
                 object_free( target );
             }
@@ -695,6 +695,7 @@ int main( int argc, char * * argv )
     clear_targets_to_update();
 
     /* Widely scattered cleanup. */
+    debugger_done();
     property_set_done();
     exec_done();
     file_done();

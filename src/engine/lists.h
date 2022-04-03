@@ -148,6 +148,7 @@ namespace b2 { namespace jam {
 
         friend struct iterator;
 
+        inline list() = default;
         inline list(const list &other)
             : list_obj(list_copy(other.list_obj)) {}
         inline explicit list(const object &o)
@@ -155,7 +156,7 @@ namespace b2 { namespace jam {
         inline explicit list(LIST *l)
             : list_obj(list_copy(l)) {}
 
-        inline ~list() { if (list_obj) list_free(list_obj); }
+        inline ~list() { reset(); }
         inline LIST* release()
         {
             LIST* r = list_obj;
@@ -171,6 +172,12 @@ namespace b2 { namespace jam {
         {
             list_obj = list_append(list_obj, list_copy(other.list_obj));
             return *this;
+        }
+        inline LIST* operator*() { return list_obj; }
+        inline void reset(LIST * new_list = nullptr)
+        {
+            std::swap( list_obj, new_list );
+            if (new_list) list_free(new_list);
         }
 
         private:

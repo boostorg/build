@@ -20,6 +20,7 @@
 #include "frames.h"
 #include "function.h"
 #include "mem.h"
+#include "startup.h"
 
 /*
  * parse.c - make and destroy parse trees as driven by the parser
@@ -32,6 +33,16 @@
 
 static PARSE * yypsave;
 
+struct parse_ptr
+{
+    parse_ptr() : ptr( yypsave ) {}
+    ~parse_ptr() { if ( ptr ) parse_free( ptr ); }
+    operator PARSE*() const { return ptr; }
+
+    private:
+    PARSE * ptr = nullptr;
+};
+
 static void parse_impl( FRAME * frame )
 {
 
@@ -41,18 +52,19 @@ static void parse_impl( FRAME * frame )
 
     for ( ; ; )
     {
-        PARSE * p;
-
         /* Filled by yyparse() calling parse_save(). */
-        yypsave = 0;
+        yypsave = nullptr;
 
         /* If parse error or empty parse, outta here. */
-        if ( yyparse() || !( p = yypsave ) )
+        int yy_result = yyparse();
+        parse_ptr p;
+        if ( yy_result || !p )
             break;
 
-        /* Run the parse tree. */
+        /* Compile the parse tree. */
         auto func = b2::jam::make_unique_bare_jptr( function_compile( p ), function_free );
-        parse_free( p );
+
+        /* Run the parsed function. */
         list_free( function_run( func.get(), frame ) );
     }
 
@@ -124,7 +136,7 @@ void parse_refer( PARSE * p )
 }
 
 
-void parse_free( PARSE * p )
+void parse_free( PARSE * & p )
 {
     if ( --p->refs )
         return;
@@ -145,4 +157,5 @@ void parse_free( PARSE * p )
         object_free( p->file );
 
     BJAM_FREE( (char *)p );
+    p = nullptr;
 }
