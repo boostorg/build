@@ -5,6 +5,7 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
  *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
@@ -63,34 +64,34 @@
 # define YYMAXDEPTH 10000	/* for OSF and other less endowed yaccs */
 
 # define F0 -1
-# define P0 (PARSE *)0
+static PARSE * P0 = nullptr;
 # define S0 (OBJECT *)0
 
 # define pappend( l,r )    	parse_make( PARSE_APPEND,l,r,P0,S0,S0,0 )
-# define peval( c,l,r )	parse_make( PARSE_EVAL,l,r,P0,S0,S0,c )
-# define pfor( s,l,r,x )    	parse_make( PARSE_FOREACH,l,r,P0,s,S0,x )
-# define pif( l,r,t )	  	parse_make( PARSE_IF,l,r,t,S0,S0,0 )
-# define pincl( l )       	parse_make( PARSE_INCLUDE,l,P0,P0,S0,S0,0 )
-# define plist( s )	  	parse_make( PARSE_LIST,P0,P0,P0,s,S0,0 )
-# define plocal( l,r,t )  	parse_make( PARSE_LOCAL,l,r,t,S0,S0,0 )
-# define pmodule( l,r )	  	parse_make( PARSE_MODULE,l,r,P0,S0,S0,0 )
-# define pclass( l,r )	  	parse_make( PARSE_CLASS,l,r,P0,S0,S0,0 )
-# define pnull()	  	parse_make( PARSE_NULL,P0,P0,P0,S0,S0,0 )
-# define pon( l,r )	  	parse_make( PARSE_ON,l,r,P0,S0,S0,0 )
-# define prule( s,p )     	parse_make( PARSE_RULE,p,P0,P0,s,S0,0 )
-# define prules( l,r )	  	parse_make( PARSE_RULES,l,r,P0,S0,S0,0 )
-# define pset( l,r,a )          parse_make( PARSE_SET,l,r,P0,S0,S0,a )
-# define pset1( l,r,t,a )	parse_make( PARSE_SETTINGS,l,r,t,S0,S0,a )
-# define psetc( s,p,a,l )     	parse_make( PARSE_SETCOMP,p,a,P0,s,S0,l )
-# define psete( s,l,s1,f ) 	parse_make( PARSE_SETEXEC,l,P0,P0,s,s1,f )
-# define pswitch( l,r )   	parse_make( PARSE_SWITCH,l,r,P0,S0,S0,0 )
-# define pwhile( l,r )   	parse_make( PARSE_WHILE,l,r,P0,S0,S0,0 )
+# define peval( c,l,r )	    parse_make( PARSE_EVAL,l,r,P0,S0,S0,c )
+# define pfor( s,l,r,x )    parse_make( PARSE_FOREACH,l,r,P0,s,S0,x )
+# define pif( l,r,t )       parse_make( PARSE_IF,l,r,t,S0,S0,0 )
+# define pincl( l )         parse_make( PARSE_INCLUDE,l,P0,P0,S0,S0,0 )
+# define plist( s )         parse_make( PARSE_LIST,P0,P0,P0,s,S0,0 )
+# define plocal( l,r,t )    parse_make( PARSE_LOCAL,l,r,t,S0,S0,0 )
+# define pmodule( l,r )     parse_make( PARSE_MODULE,l,r,P0,S0,S0,0 )
+# define pclass( l,r )      parse_make( PARSE_CLASS,l,r,P0,S0,S0,0 )
+# define pnull()            parse_make( PARSE_NULL,P0,P0,P0,S0,S0,0 )
+# define pon( l,r )         parse_make( PARSE_ON,l,r,P0,S0,S0,0 )
+# define prule( s,p )       parse_make( PARSE_RULE,p,P0,P0,s,S0,0 )
+# define prules( l,r )      parse_make( PARSE_RULES,l,r,P0,S0,S0,0 )
+# define pset( l,r,a )      parse_make( PARSE_SET,l,r,P0,S0,S0,a )
+# define pset1( l,r,t,a )   parse_make( PARSE_SETTINGS,l,r,t,S0,S0,a )
+# define psetc( s,p,a,l )   parse_make( PARSE_SETCOMP,p,a,P0,s,S0,l )
+# define psete( s,l,s1,f )  parse_make( PARSE_SETEXEC,l,P0,P0,s,s1,f )
+# define pswitch( l,r )     parse_make( PARSE_SWITCH,l,r,P0,S0,S0,0 )
+# define pwhile( l,r )      parse_make( PARSE_WHILE,l,r,P0,S0,S0,0 )
 # define preturn( l )       parse_make( PARSE_RETURN,l,P0,P0,S0,S0,0 )
 # define pbreak()           parse_make( PARSE_BREAK,P0,P0,P0,S0,S0,0 )
 # define pcontinue()        parse_make( PARSE_CONTINUE,P0,P0,P0,S0,S0,0 )
 
-# define pnode( l,r )    	parse_make( F0,l,r,P0,S0,S0,0 )
-# define psnode( s,l )     	parse_make( F0,l,P0,P0,s,S0,0 )
+# define pnode( l,r )       parse_make( F0,l,r,P0,S0,S0,0 )
+# define psnode( s,l )      parse_make( F0,l,P0,P0,s,S0,0 )
 
 %}
 

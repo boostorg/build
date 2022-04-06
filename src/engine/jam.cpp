@@ -695,6 +695,7 @@ int main( int argc, char * * argv )
     clear_targets_to_update();
 
     /* Widely scattered cleanup. */
+    parse_done();
     debugger_done();
     property_set_done();
     exec_done();
