@@ -3,6 +3,8 @@
 
 == Version 4.9.0
 
+* Add `minimal` and `debug` options for `optimization` feature.
+  -- _René Ferdinand Rivera Morell_
 * Add Rocket Lake, Alder Lake, Sapphire Rapids and Zen 3 instruction sets.
   -- _Andrey Semashev_
 * Remove all, on-exit, memory leaks and fix all ASAN errors.
