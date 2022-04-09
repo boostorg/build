@@ -30,6 +30,7 @@ generators.override intel-vxworks.searched-lib-generator : searched-lib-generato
 toolset.inherit-rules intel-vxworks : gcc ;
 toolset.inherit-flags intel-vxworks : gcc
         : <inlining>off <inlining>on <inlining>full <optimization>space
+          <optimization>minimal <optimization>debug
           <warnings>off <warnings>all <warnings>on
           <warnings>extra <warnings>pedantic
           <warnings-as-errors>off <warnings-as-errors>on

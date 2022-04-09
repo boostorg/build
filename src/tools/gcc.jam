@@ -626,6 +626,8 @@ actions compile.c.pch
 toolset.flags gcc.compile OPTIONS <optimization>off   : -O0 ;
 toolset.flags gcc.compile OPTIONS <optimization>speed : -O3 ;
 toolset.flags gcc.compile OPTIONS <optimization>space : -Os ;
+toolset.flags gcc.compile OPTIONS <optimization>minimal : -O1 ;
+toolset.flags gcc.compile OPTIONS <optimization>debug : -Og ;
 
 toolset.flags gcc.compile OPTIONS <inlining>off  : -fno-inline ;
 toolset.flags gcc.compile OPTIONS <inlining>on   : -Wno-inline ;

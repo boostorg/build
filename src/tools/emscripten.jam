@@ -45,6 +45,7 @@ toolset.inherit-rules emscripten : gcc ;
 toolset.inherit-flags emscripten : gcc
         :
         <optimization>off <optimization>speed <optimization>space
+        <optimization>minimal <optimization>debug
         <profiling>off <profiling>on
         <debug-symbols>off <debug-symbols>on
         <rtti>off <rtti>on
