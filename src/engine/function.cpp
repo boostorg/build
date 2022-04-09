@@ -326,29 +326,12 @@ struct _stack
 
     // Move "v" to a new slot in ther stack. Returns a reference to the new item.
     template <class T>
-    remove_cref_t<T> & push( T&& v )
-    {
-        using U = remove_cref_t<T>;
-        check_alignment();
-        data = (char *)data - sizeof(U);
-        check_alignment();
-        cleanups.push_back(cleanup_info{&_stack::cleanup_item<U>, this, 1});
-        return top<U>() = v;
-    }
+    remove_cref_t<T> & push( T&& v );
 
     // Copy "v" into "n" new items at the top of the stack. Returns a pointer
     // to the first, i.e. top most, new item.
     template <class T>
-    remove_cref_t<T> * push( T v, int32_t n )
-    {
-        using U = remove_cref_t<T>;
-        check_alignment();
-        data = (char *)data - ( n * sizeof(U) );
-        check_alignment();
-        std::uninitialized_fill_n( reinterpret_cast<U*>( data ), n, v );
-        cleanups.push_back(cleanup_info{&_stack::cleanup_item<U>, this, n});
-        return reinterpret_cast<U*>( data );
-    }
+    remove_cref_t<T> * push( T v, int32_t n );
 
     // Removes the top most "T" item from the stack and returns a copy of it.
     template <class T>
@@ -436,7 +419,7 @@ struct _stack
     }
 
     template <typename T>
-    static void cleanup_item(_stack * s, int32_t n)
+    static void cleanup_item(_stack * s, int32_t n, T*_=nullptr)
     {
         s->data = (char *)s->data + ( n * sizeof(remove_cref_t<T>) );
         s->check_alignment();
@@ -444,7 +427,7 @@ struct _stack
 };
 
 template <>
-void _stack::cleanup_item<LIST*>(_stack * s, int32_t n)
+void _stack::cleanup_item<LIST*>(_stack * s, int32_t n, LIST**)
 {
     for (int32_t i = 0; i < n; ++i)
     {
@@ -452,6 +435,31 @@ void _stack::cleanup_item<LIST*>(_stack * s, int32_t n)
     }
     s->data = (char *)s->data + ( n * sizeof(remove_cref_t<LIST*>) );
     s->check_alignment();
+}
+
+template <class T>
+remove_cref_t<T> & _stack::push( T&& v )
+{
+    using U = remove_cref_t<T>;
+    check_alignment();
+    data = (char *)data - sizeof(U);
+    check_alignment();
+    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<U>, this, 1};
+    cleanups.push_back(ci);
+    return top<U>() = v;
+}
+
+template <class T>
+remove_cref_t<T> * _stack::push( T v, int32_t n )
+{
+    using U = remove_cref_t<T>;
+    check_alignment();
+    data = (char *)data - ( n * sizeof(U) );
+    check_alignment();
+    std::uninitialized_fill_n( reinterpret_cast<U*>( data ), n, v );
+    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<U>, this, n};
+    cleanups.push_back(ci);
+    return reinterpret_cast<U*>( data );
 }
 
 STACK * stack_global()
