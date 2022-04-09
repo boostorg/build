@@ -603,61 +603,57 @@ static void function_default_named_variable( JAM_FUNCTION * function,
 static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     STACK * s, int32_t n_args, char const * unexpanded, OBJECT * file, int32_t line )
 {
-    FRAME inner[ 1 ];
+    FRAME inner;
     int32_t i;
-    LIST * first = s->pop<LIST *>();
+    b2::jam::list first( s->pop<LIST *>(), true );
     LIST * result = L0;
     OBJECT * rulename;
-    LIST * trailing;
 
     frame->file = file;
     frame->line = line;
 
-    if ( list_empty( first ) )
+    if ( first.empty() )
     {
         backtrace_line( frame );
         out_printf( "warning: rulename %s expands to empty string\n", unexpanded );
         backtrace( frame );
-        list_free( first );
+        first.reset();
         for ( i = 0; i < n_args; ++i )
             list_free( s->pop<LIST *>() );
         return result;
     }
 
-    rulename = object_copy( list_front( first ) );
+    rulename = object_copy( list_front( *first ) );
 
-    frame_init( inner );
-    inner->prev = frame;
-    inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
-    inner->module = frame->module;  /* This gets fixed up in evaluate_rule(). */
+    inner.prev = frame;
+    inner.prev_user = frame->module->user_module ? frame : frame->prev_user;
+    inner.module = frame->module;  /* This gets fixed up in evaluate_rule(). */
 
     if ( n_args > LOL_MAX )
     {
         out_printf( "ERROR: rules are limited to %d arguments\n", LOL_MAX );
-        backtrace( inner );
+        backtrace( &inner );
         b2::clean_exit( EXITBAD );
     }
 
     for ( i = 0; i < n_args; ++i )
-        lol_add( inner->args, s->top<LIST*>( n_args - i - 1 ) );
+        lol_add( inner.args, s->top<LIST*>( n_args - i - 1 ) );
 
     for ( i = 0; i < n_args; ++i )
         s->pop<LIST *>();
 
-    trailing = list_pop_front( first );
-    if ( trailing )
+    if ( !first.pop_front().empty() )
     {
-        if ( inner->args->count == 0 )
-            lol_add( inner->args, trailing );
+        if ( inner.args->count == 0 )
+            lol_add( inner.args, first.release() );
         else
         {
-            LIST * * const l = &inner->args->list[ 0 ];
-            *l = list_append( trailing, *l );
+            LIST * * const l = &inner.args->list[ 0 ];
+            *l = list_append( first.release(), *l );
         }
     }
 
-    result = evaluate_rule( bindrule( rulename, inner->module ), rulename, inner );
-    frame_free( inner );
+    result = evaluate_rule( bindrule( rulename, inner.module ), rulename, &inner );
     object_free( rulename );
     return result;
 }
@@ -1512,8 +1508,8 @@ static void combine_strings( STACK * s, int32_t n, string * out )
                 string_push_back( out, ' ' );
                 string_append( out, object_str( list_item( iter ) ) );
             }
-            list_free( values );
         }
+        list_free( values );
     }
 }
 
@@ -3391,24 +3387,23 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
 
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        FRAME frame[ 1 ];
-        frame_init( frame );
-        frame->module = typecheck;
-        frame->prev = caller;
-        frame->prev_user = caller->module->user_module
+        FRAME frame;
+        frame.module = typecheck;
+        frame.prev = caller;
+        frame.prev_user = caller->module->user_module
             ? caller
             : caller->prev_user;
 
         /* Prepare the argument list */
-        lol_add( frame->args, list_new( object_copy( list_item( iter ) ) ) );
-        b2::jam::list error( evaluate_rule(
-            bindrule( type_name, frame->module ), type_name, frame ) );
+        lol_add( frame.args, list_new( object_copy( list_item( iter ) ) ) );
+        b2::jam::list error(
+            evaluate_rule(
+                bindrule( type_name, frame.module ), type_name, &frame ),
+            true );
 
         if ( !error.empty() )
             argument_error( object_str( *error.begin() ), called, caller,
                 arg_name );
-
-        frame_free( frame );
     }
 }
 
@@ -3499,7 +3494,7 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
-            LIST * value = L0;
+            b2::jam::list value;
 
             switch ( formal_arg->flags )
             {
@@ -3507,15 +3502,15 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
                 if ( actual_iter == actual_end )
                     argument_error( "missing argument", function, frame,
                         formal_arg->arg_name );
-                value = list_new( object_copy( list_item( actual_iter ) ) );
+                value.reset( list_new( object_copy( list_item( actual_iter ) ) ) );
                 actual_iter = list_next( actual_iter );
                 break;
             case ARG_OPTIONAL:
                 if ( actual_iter == actual_end )
-                    value = L0;
+                    value.reset();
                 else
                 {
-                    value = list_new( object_copy( list_item( actual_iter ) ) );
+                    value.reset( list_new( object_copy( list_item( actual_iter ) ) ) );
                     actual_iter = list_next( actual_iter );
                 }
                 break;
@@ -3525,14 +3520,14 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
                         formal_arg->arg_name );
                 /* fallthrough */
             case ARG_STAR:
-                value = list_copy_range( actual, actual_iter, actual_end );
+                value.reset( list_copy_range( actual, actual_iter, actual_end ) );
                 actual_iter = actual_end;
                 break;
             case ARG_VARIADIC:
                 return;
             }
 
-            type_check( formal_arg->type_name, value, frame, function,
+            type_check( formal_arg->type_name, *value, frame, function,
                 formal_arg->arg_name );
 
             if ( formal_arg->index != -1 )
@@ -3540,11 +3535,11 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
                 LIST * * const old = &frame->module->fixed_variables[
                     formal_arg->index ];
                 s->push( *old );
-                *old = value;
+                *old = value.release();
             }
             else
                 s->push( var_swap( frame->module, formal_arg->arg_name,
-                    value ) );
+                    value.release() ) );
         }
 
         if ( actual_iter != actual_end )
@@ -5281,11 +5276,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_INCLUDE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_INCLUDE);
-            LIST * nt = s->pop<LIST *>();
-            if ( !list_empty( nt ) )
+            b2::jam::list nt( s->pop<LIST *>(), true );
+            if ( !nt.empty() )
             {
-                TARGET * const t = bindtarget( list_front( nt ) );
-                list_free( nt );
+                TARGET * const t = bindtarget( *nt.begin() );
 
                 /* DWA 2001/10/22 - Perforce Jam cleared the arguments here,
                  * which prevented an included file from being treated as part

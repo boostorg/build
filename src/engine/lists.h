@@ -153,8 +153,8 @@ namespace b2 { namespace jam {
             : list_obj(list_copy(other.list_obj)) {}
         inline explicit list(const object &o)
             : list_obj(list_new(object_copy(o))) {}
-        inline explicit list(LIST *l)
-            : list_obj(list_copy(l)) {}
+        inline explicit list(LIST *l, bool own = false)
+            : list_obj(own ? l : list_copy(l)) {}
 
         inline ~list() { reset(); }
         inline LIST* release()
@@ -178,6 +178,11 @@ namespace b2 { namespace jam {
         {
             std::swap( list_obj, new_list );
             if (new_list) list_free(new_list);
+        }
+        inline list& pop_front()
+        {
+            list_obj = list_pop_front(list_obj);
+            return *this;
         }
 
         private:
