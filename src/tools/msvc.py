@@ -1256,9 +1256,9 @@ __cpu_type_g6       = ['i686', 'pentiumpro', 'pentium2', 'pentium3', 'pentium3m'
 __cpu_type_em64t    = ['prescott', 'nocona', 'core2', 'corei7', 'corei7-avx', 'core-avx-i', 'conroe', 'conroe-xe', 'conroe-l', 'allendale', 'merom',
                       'merom-xe', 'kentsfield', 'kentsfield-xe', 'penryn', 'wolfdale',
                       'yorksfield', 'nehalem', 'sandy-bridge', 'ivy-bridge', 'haswell', 'broadwell', 'skylake', 'skylake-avx512', 'cannonlake',
-                      'icelake-client', 'icelake-server', 'cascadelake', 'cooperlake', 'tigerlake' ]
+                      'icelake-client', 'icelake-server', 'cascadelake', 'cooperlake', 'tigerlake', 'rocketlake', 'alderlake', 'sapphirerapids' ]
 __cpu_type_amd64    = ['k8', 'opteron', 'athlon64', 'athlon-fx', 'k8-sse3', 'opteron-sse3', 'athlon64-sse3', 'amdfam10', 'barcelona',
-                      'bdver1', 'bdver2', 'bdver3', 'btver1', 'btver2', 'znver1', 'znver2' ]
+                      'bdver1', 'bdver2', 'bdver3', 'btver1', 'btver2', 'znver1', 'znver2', 'znver3' ]
 __cpu_type_g7       = ['pentium4', 'pentium4m', 'athlon', 'athlon-tbird', 'athlon-4', 'athlon-xp'
                       'athlon-mp'] + __cpu_type_em64t + __cpu_type_amd64
 __cpu_type_itanium  = ['itanium', 'itanium1', 'merced']

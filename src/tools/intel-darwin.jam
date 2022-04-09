@@ -138,10 +138,11 @@ flags intel-darwin.compile OPTIONS <optimization>space : -O1 ; # no specific spa
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
                      yorksfield nehalem sandy-bridge ivy-bridge haswell
                      broadwell skylake skylake-avx512 cannonlake icelake-client
-                     icelake-server cascadelake cooperlake tigerlake ;
+                     icelake-server cascadelake cooperlake tigerlake rocketlake
+                     alderlake sapphirerapids ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
                      athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3
-                     bdver4 btver1 btver2 znver1 znver2 ;
+                     bdver4 btver1 btver2 znver1 znver2 znver3 ;
 .cpu-type-x86-64   = $(.cpu-type-em64t) $(.cpu-type-amd64) ;
 
 flags intel-darwin.compile OPTIONS <instruction-set>$(.cpu-type-x86-64)/<address-model>32 : -m32 ; # -mcmodel=small ;
