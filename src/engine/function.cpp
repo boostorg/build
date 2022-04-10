@@ -286,6 +286,7 @@ struct _stack
         start = BJAM_MALLOC( size );
         end = (char *)start + size;
         data = end;
+        cleanups.reserve( size / sizeof(void*) );
     }
 
     void done()
