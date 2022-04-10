@@ -327,7 +327,7 @@ struct _stack
 
     // Move "v" to a new slot in ther stack. Returns a reference to the new item.
     template <class T>
-    remove_cref_t<T> & push( T&& v );
+    remove_cref_t<T> & push( T v );
 
     // Copy "v" into "n" new items at the top of the stack. Returns a pointer
     // to the first, i.e. top most, new item.
@@ -439,7 +439,7 @@ void _stack::cleanup_item<LIST*>(_stack * s, int32_t n, LIST**)
 }
 
 template <class T>
-remove_cref_t<T> & _stack::push( T&& v )
+remove_cref_t<T> & _stack::push( T v )
 {
     using U = remove_cref_t<T>;
     check_alignment();
