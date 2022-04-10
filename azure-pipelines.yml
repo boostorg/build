@@ -186,10 +186,10 @@ stages:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
-        Master .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        Master .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
+        # Master .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
+        # Master .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
         Develop .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        Develop .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
+        # Develop .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
     steps:
     - bash: |
         set -e
@@ -199,7 +199,7 @@ stages:
     - bash: |
         set -e
         cd src/engine
-        ./build.sh ${TOOLSET} --cxx=${CXX}
+        ./build.sh ${TOOLSET} --cxx=${CXX} "--cxxflags=-fsanitize=address" --debug
         ./b2 -v
       displayName: Build
     - bash: |
