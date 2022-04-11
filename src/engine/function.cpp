@@ -37,6 +37,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
+#include <array>
 
 /*
 #define FUNCTION_DEBUG_PROFILE
@@ -286,20 +287,19 @@ struct _stack
         start = BJAM_MALLOC( size );
         end = (char *)start + size;
         data = end;
-        cleanups.reserve( size / sizeof(void*) );
     }
 
     void done()
     {
-        if ( cleanups.size() > 0 )
+        if ( cleanups_size > 0 )
         {
             // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)data, cleanups.size() );
             // err_flush();
-            while ( cleanups.size() > 0 )
+            while ( cleanups_size > 0 )
             {
-                cleanups.back().function(
-                    cleanups.back().stack, cleanups.back().count );
-                cleanups.pop_back();
+                --cleanups_size;
+                cleanups[cleanups_size].function(
+                    cleanups[cleanups_size].stack, cleanups[cleanups_size].count );
             }
             // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)data, cleanups.size() );
             // err_flush();
@@ -327,7 +327,7 @@ struct _stack
 
     // Move "v" to a new slot in ther stack. Returns a reference to the new item.
     template <class T>
-    remove_cref_t<T> & push( T v );
+    remove_cref_t<T> & push( T&& v );
 
     // Copy "v" into "n" new items at the top of the stack. Returns a pointer
     // to the first, i.e. top most, new item.
@@ -343,7 +343,7 @@ struct _stack
         check_alignment();
         data = (char *)data + sizeof(U);
         check_alignment();
-        cleanups.pop_back();
+        --cleanups_size;
         return result;
     }
 
@@ -354,7 +354,7 @@ struct _stack
         check_alignment();
         data = (char *)data + ( n * sizeof(remove_cref_t<T>) );
         check_alignment();
-        cleanups.pop_back();
+        --cleanups_size;
     }
 
     private:
@@ -369,7 +369,8 @@ struct _stack
         _stack* stack;
         int32_t count;
     };
-    std::vector<cleanup_info> cleanups;
+    std::array<cleanup_info, 1<<16> cleanups;
+    size_t cleanups_size = 0;
 
     template <typename T>
     void do_cleanup(int32_t) {}
@@ -439,14 +440,14 @@ void _stack::cleanup_item<LIST*>(_stack * s, int32_t n, LIST**)
 }
 
 template <class T>
-remove_cref_t<T> & _stack::push( T v )
+remove_cref_t<T> & _stack::push( T&& v )
 {
     using U = remove_cref_t<T>;
     check_alignment();
     data = (char *)data - sizeof(U);
     check_alignment();
-    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<U>, this, 1};
-    cleanups.push_back(ci);
+    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<U>, this, 1 };
+    cleanups[cleanups_size++] = ci;
     return top<U>() = v;
 }
 
@@ -458,8 +459,8 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
     data = (char *)data - ( n * sizeof(U) );
     check_alignment();
     std::uninitialized_fill_n( reinterpret_cast<U*>( data ), n, v );
-    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<U>, this, n};
-    cleanups.push_back(ci);
+    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<U>, this, n };
+    cleanups[cleanups_size++] = ci;
     return reinterpret_cast<U*>( data );
 }
 
