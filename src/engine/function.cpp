@@ -313,7 +313,9 @@ struct _stack
     template <typename T, typename U = T>
     remove_cref_t<U> & top(int i = 0) const
     {
+        assert( ((ptrdiff_t)data) > (1<<4) );
         void * data_n = reinterpret_cast<remove_cref_t<T>*>(data) + i;
+        assert( ((ptrdiff_t)data_n) > (1<<4) );
         return *reinterpret_cast<U*>( data_n );
     }
 
@@ -339,7 +341,10 @@ struct _stack
     remove_cref_t<T> pop()
     {
         using U = remove_cref_t<T>;
-        U result( top<U>() );
+        assert( ((ptrdiff_t)this) > (1<<4) );
+        auto v = top<U>();
+        assert( ((ptrdiff_t)&v) > (1<<4) );
+        U result = v;
         pop<T>( 1 );
         return result;
     }
