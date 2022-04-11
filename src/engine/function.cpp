@@ -313,8 +313,8 @@ struct _stack
     template <typename T, typename U = T>
     remove_cref_t<U> & top(int i = 0) const
     {
-        return *reinterpret_cast<U*>(
-            reinterpret_cast<remove_cref_t<T>*>(data) + i );
+        void * data_n = reinterpret_cast<remove_cref_t<T>*>(data) + i;
+        return *reinterpret_cast<U*>( data_n );
     }
 
     // Get a pointer to the last A-th item skipping over any A pre i-th items.
@@ -339,7 +339,7 @@ struct _stack
     remove_cref_t<T> pop()
     {
         using U = remove_cref_t<T>;
-        U result = std::move(top<U>());
+        U result( top<U>() );
         pop<T>( 1 );
         return result;
     }
@@ -350,7 +350,8 @@ struct _stack
     {
         using U = remove_cref_t<T>;
         check_alignment();
-        data = reinterpret_cast<U*>( data ) + n;
+        U* u = reinterpret_cast<U*>( data );
+        data = u + n;
         check_alignment();
         --cleanups_size;
     }
