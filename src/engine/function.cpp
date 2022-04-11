@@ -340,10 +340,7 @@ struct _stack
     {
         using U = remove_cref_t<T>;
         U result = std::move(top<U>());
-        check_alignment();
-        data = (char *)data + sizeof(U);
-        check_alignment();
-        --cleanups_size;
+        pop<T>( 1 );
         return result;
     }
 
@@ -351,8 +348,9 @@ struct _stack
     template <class T>
     void pop( int32_t n )
     {
+        using U = remove_cref_t<T>;
         check_alignment();
-        data = (char *)data + ( n * sizeof(remove_cref_t<T>) );
+        data = reinterpret_cast<U*>( data ) + n;
         check_alignment();
         --cleanups_size;
     }
