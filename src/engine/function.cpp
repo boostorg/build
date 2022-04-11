@@ -426,6 +426,9 @@ struct _stack
         s->data = (char *)s->data + ( n * sizeof(remove_cref_t<T>) );
         s->check_alignment();
     }
+
+    template <typename T>
+    void cleanup_push(int32_t n, T*_ = nullptr);
 };
 
 template <>
@@ -446,8 +449,7 @@ remove_cref_t<T> & _stack::push( T&& v )
     check_alignment();
     data = (char *)data - sizeof(U);
     check_alignment();
-    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<U>, this, 1 };
-    cleanups[cleanups_size++] = ci;
+    cleanup_push<U>( 1 );
     return top<U>() = v;
 }
 
@@ -459,9 +461,22 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
     data = (char *)data - ( n * sizeof(U) );
     check_alignment();
     std::uninitialized_fill_n( reinterpret_cast<U*>( data ), n, v );
-    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<U>, this, n };
-    cleanups[cleanups_size++] = ci;
+    cleanup_push<U>( n );
     return reinterpret_cast<U*>( data );
+}
+
+template <typename T>
+void _stack::cleanup_push( int32_t n, T*_ )
+{
+    if ( cleanups_size == cleanups.max_size() )
+    {
+        err_puts( "Function stack cleanup overflow.\n" );
+        err_flush();
+        b2::clean_exit( b2::exit_result::failure );
+        return;
+    }
+    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<T>, this, n };
+    cleanups[cleanups_size++] = ci;
 }
 
 STACK * stack_global()
