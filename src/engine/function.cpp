@@ -387,7 +387,9 @@ struct _stack
     {
         using U = remove_cref_t<T>;
         assert( ((ptrdiff_t)data) > (1<<4) );
-        return &( static_cast<U*>( data )[n] );
+        remove_cref_t<T> * result = &( static_cast<U*>( data )[n] );
+        assert( ((ptrdiff_t)result) > (1<<4) );
+        return result;
     }
 
     template <typename T>
