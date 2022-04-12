@@ -313,10 +313,7 @@ struct _stack
     template <typename T, typename U = T>
     remove_cref_t<U> & top(int i = 0) const
     {
-        assert( ((ptrdiff_t)data) > (1<<4) );
-        void * data_n = reinterpret_cast<remove_cref_t<T>*>(data) + i;
-        assert( ((ptrdiff_t)data_n) > (1<<4) );
-        return *reinterpret_cast<U*>( data_n );
+        return *reinterpret_cast<U*>( nth<T>( i ) );
     }
 
     // Get a pointer to the last A-th item skipping over any A pre i-th items.
@@ -324,7 +321,7 @@ struct _stack
     remove_cref_t< select_last_t<A...> > * get() const
     {
         using U = remove_cref_t< select_last_t<A...> >;
-        return reinterpret_cast<U*>( advance<A...>(data) );
+        return static_cast<U*>( advance<A...>(data) );
     }
 
     // Move "v" to a new slot in ther stack. Returns a reference to the new item.
@@ -341,10 +338,7 @@ struct _stack
     remove_cref_t<T> pop()
     {
         using U = remove_cref_t<T>;
-        assert( ((ptrdiff_t)this) > (1<<4) );
-        auto v = top<U>();
-        assert( ((ptrdiff_t)&v) > (1<<4) );
-        U result = v;
+        U result = top<U>();
         pop<T>( 1 );
         return result;
     }
@@ -353,10 +347,8 @@ struct _stack
     template <class T>
     void pop( int32_t n )
     {
-        using U = remove_cref_t<T>;
         check_alignment();
-        U* u = reinterpret_cast<U*>( data );
-        data = u + n;
+        data = nth<T>( n );
         check_alignment();
         --cleanups_size;
     }
@@ -376,9 +368,6 @@ struct _stack
     std::array<cleanup_info, 1<<16> cleanups;
     size_t cleanups_size = 0;
 
-    template <typename T>
-    void do_cleanup(int32_t) {}
-
     struct list_alignment_helper
     {
         char ch;
@@ -391,6 +380,14 @@ struct _stack
     void check_alignment()
     {
         assert( (size_t)data % LISTPTR_ALIGN == 0 );
+    }
+
+    template <typename T>
+    remove_cref_t<T> * nth( int32_t n ) const
+    {
+        using U = remove_cref_t<T>;
+        assert( ((ptrdiff_t)data) > (1<<4) );
+        return &( static_cast<U*>( data )[n] );
     }
 
     template <typename T>
@@ -427,7 +424,7 @@ struct _stack
     template <typename T>
     static void cleanup_item(_stack * s, int32_t n, T*_=nullptr)
     {
-        s->data = (char *)s->data + ( n * sizeof(remove_cref_t<T>) );
+        s->data = s->nth<T>( n );
         s->check_alignment();
     }
 
@@ -442,7 +439,7 @@ void _stack::cleanup_item<LIST*>(_stack * s, int32_t n, LIST**)
     {
         list_free( s->top<LIST*>(i) );
     }
-    s->data = (char *)s->data + ( n * sizeof(remove_cref_t<LIST*>) );
+    s->data = s->nth<LIST*>( n );
     s->check_alignment();
 }
 
@@ -457,11 +454,11 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
 {
     using U = remove_cref_t<T>;
     check_alignment();
-    data = (char *)data - ( n * sizeof(U) );
+    data = nth<T>( -n );
     check_alignment();
-    std::uninitialized_fill_n( reinterpret_cast<U*>( data ), n, v );
+    std::uninitialized_fill_n( static_cast<U*>( data ), n, v );
     cleanup_push<U>( n );
-    return reinterpret_cast<U*>( data );
+    return static_cast<U*>( data );
 }
 
 template <typename T>
