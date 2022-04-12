@@ -357,7 +357,7 @@ struct _stack
 
     void * start = nullptr;
     void * end = nullptr;
-    void * data = nullptr;
+    mutable void * data = nullptr;
     using cleanup_f = void(*)( _stack*, int32_t );
     struct cleanup_info
     {
