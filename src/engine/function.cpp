@@ -311,14 +311,14 @@ struct _stack
     // Get reference to the top i-th T item, optionally as a U. I.e. it skips
     // the i-th T items returning it as U&.
     template <typename T, typename U = T>
-    remove_cref_t<U> & top(int i = 0) const
+    remove_cref_t<U> & top(int i = 0)
     {
         return *reinterpret_cast<U*>( nth<T>( i ) );
     }
 
     // Get a pointer to the last A-th item skipping over any A pre i-th items.
     template <typename...A>
-    remove_cref_t< select_last_t<A...> > * get() const
+    remove_cref_t< select_last_t<A...> > * get()
     {
         using U = remove_cref_t< select_last_t<A...> >;
         return static_cast<U*>( advance<A...>(data) );
@@ -357,7 +357,7 @@ struct _stack
 
     void * start = nullptr;
     void * end = nullptr;
-    mutable void * data = nullptr;
+    void * data = nullptr;
     using cleanup_f = void(*)( _stack*, int32_t );
     struct cleanup_info
     {
@@ -383,7 +383,7 @@ struct _stack
     }
 
     template <typename T>
-    remove_cref_t<T> * nth( int32_t n ) const
+    remove_cref_t<T> * nth( int32_t n )
     {
         using U = remove_cref_t<T>;
         assert( ((ptrdiff_t)data) > (1<<4) );
@@ -418,9 +418,12 @@ struct _stack
     template <typename...R>
     static void * advance(void * p)
     {
-        return (char*)p
+        assert( ((ptrdiff_t)p) > (1<<4) );
+        p = static_cast<char*>(p)
             + sum_advance_size<R...>::value
             - advance_size< select_last_t<R...> >::value;
+        assert( ((ptrdiff_t)p) > (1<<4) );
+        return p;
     }
 
     template <typename T>
