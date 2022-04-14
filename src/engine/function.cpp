@@ -462,6 +462,7 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
     data = nth<T>( -n );
     check_alignment();
     std::uninitialized_fill_n( static_cast<U*>( data ), n, v );
+    assert( ((ptrdiff_t)data) > (1<<4) );
     cleanup_push<U>( n );
     return static_cast<U*>( data );
 }
