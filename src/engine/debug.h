@@ -65,7 +65,7 @@ OBJECT * profile_make_local( char const * );
 #define b2_cbreak(test) \
     if ( !static_cast<bool>( test ) ) \
     { \
-        err_printf("%s: %d: %s: Assertion '%s' failed.\n"); \
+        err_printf("%s: %d: %s: Assertion '%s' failed.\n", __FILE__, __LINE__, __FUNCTION__, #test); \
         err_flush(); \
         psnip_trap(); \
     } \

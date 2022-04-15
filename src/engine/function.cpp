@@ -24,7 +24,6 @@
 #include "variable.h"
 #include "output.h"
 #include "startup.h"
-#include "debug.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -387,9 +386,11 @@ struct _stack
     remove_cref_t<T> * nth( int32_t n )
     {
         using U = remove_cref_t<T>;
-        b2_cbreak( ((ptrdiff_t)data) > (1<<4) );
+        assert( n > -1000 );
+        assert( n < 1000 );
+        assert( ((ptrdiff_t)data) > (1<<4) );
         remove_cref_t<T> * result = &( static_cast<U*>( data )[n] );
-        b2_cbreak( ((ptrdiff_t)result) > (1<<4) );
+        assert( ((ptrdiff_t)result) > (1<<4) );
         return result;
     }
 
@@ -419,11 +420,11 @@ struct _stack
     template <typename...R>
     static void * advance(void * p)
     {
-        b2_cbreak( ((ptrdiff_t)p) > (1<<4) );
+        assert( ((ptrdiff_t)p) > (1<<4) );
         p = static_cast<char*>(p)
             + sum_advance_size<R...>::value
             - advance_size< select_last_t<R...> >::value;
-        b2_cbreak( ((ptrdiff_t)p) > (1<<4) );
+        assert( ((ptrdiff_t)p) > (1<<4) );
         return p;
     }
 
@@ -463,7 +464,7 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
     data = nth<T>( -n );
     check_alignment();
     std::uninitialized_fill_n( static_cast<U*>( data ), n, v );
-    b2_cbreak( ((ptrdiff_t)data) > (1<<4) );
+    assert( ((ptrdiff_t)data) > (1<<4) );
     cleanup_push<U>( n );
     return static_cast<U*>( data );
 }
