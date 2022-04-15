@@ -283,6 +283,10 @@ struct _stack
 
     _stack()
     {
+        static int32_t ctor_count = 0;
+        ++ctor_count;
+        assert( ctor_count == 1 );
+
         int32_t const size = 1 << 21;
         start = BJAM_MALLOC( size );
         assert( ((ptrdiff_t)start) > (1<<4) );
@@ -291,8 +295,19 @@ struct _stack
         data = end;
     }
 
+    ~_stack()
+    {
+        static int32_t dtor_count = 0;
+        ++dtor_count;
+        assert( dtor_count == 1 );
+    }
+
     void done()
     {
+        static int32_t done_count = 0;
+        ++done_count;
+        assert( done_count == 1 );
+
         if ( cleanups_size > 0 )
         {
             // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)data, cleanups.size() );
