@@ -285,7 +285,9 @@ struct _stack
     {
         int32_t const size = 1 << 21;
         start = BJAM_MALLOC( size );
+        assert( ((ptrdiff_t)start) > (1<<4) );
         end = (char *)start + size;
+        assert( ((ptrdiff_t)end) > (1<<4) );
         data = end;
     }
 
@@ -348,7 +350,7 @@ struct _stack
     void pop( int32_t n )
     {
         check_alignment();
-        data = nth<T>( n );
+        set_data( nth<T>( n ) );
         check_alignment();
         --cleanups_size;
     }
@@ -380,6 +382,12 @@ struct _stack
     void check_alignment()
     {
         assert( (size_t)data % LISTPTR_ALIGN == 0 );
+    }
+
+    void set_data(void * d)
+    {
+        assert( ((ptrdiff_t)d) > (1<<4) );
+        data = d;
     }
 
     template <typename T>
@@ -431,7 +439,7 @@ struct _stack
     template <typename T>
     static void cleanup_item(_stack * s, int32_t n, T*_=nullptr)
     {
-        s->data = s->nth<T>( n );
+        s->set_data( s->nth<T>( n ) );
         s->check_alignment();
     }
 
@@ -446,7 +454,7 @@ void _stack::cleanup_item<LIST*>(_stack * s, int32_t n, LIST**)
     {
         list_free( s->top<LIST*>(i) );
     }
-    s->data = s->nth<LIST*>( n );
+    s->set_data( s->nth<LIST*>( n ) );
     s->check_alignment();
 }
 
@@ -461,7 +469,7 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
 {
     using U = remove_cref_t<T>;
     check_alignment();
-    data = nth<T>( -n );
+    set_data( nth<T>( -n ) );
     check_alignment();
     std::uninitialized_fill_n( static_cast<U*>( data ), n, v );
     assert( ((ptrdiff_t)data) > (1<<4) );
