@@ -283,32 +283,17 @@ struct _stack
 
     _stack()
     {
-        static int32_t ctor_count = 0;
-        ++ctor_count;
-        assert( ctor_count == 1 );
-
         int32_t const size = 1 << 21;
         start = BJAM_MALLOC( size );
         end = (char *)start + size;
         data_backup = data = end;
     }
 
-    ~_stack()
-    {
-        static int32_t dtor_count = 0;
-        ++dtor_count;
-        assert( dtor_count == 1 );
-    }
-
     void done()
     {
-        static int32_t done_count = 0;
-        ++done_count;
-        assert( done_count == 1 );
-
         if ( cleanups_size > 0 )
         {
-            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)get_end() - (char*)get_data(), cleanups.size() );
+            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups.size() );
             // err_flush();
             while ( cleanups_size > 0 )
             {
@@ -316,10 +301,10 @@ struct _stack
                 cleanups[cleanups_size].function(
                     cleanups[cleanups_size].stack, cleanups[cleanups_size].count );
             }
-            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)get_end() - (char*)get_data(), cleanups.size() );
+            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups.size() );
             // err_flush();
         }
-        BJAM_FREE( get_start() );
+        BJAM_FREE( start );
         data_backup = start = end = data = nullptr;
     }
 
@@ -391,48 +376,26 @@ struct _stack
     #define LISTPTR_ALIGN_BASE ( sizeof( struct list_alignment_helper ) - sizeof( LIST * ) )
     #define LISTPTR_ALIGN ( ( LISTPTR_ALIGN_BASE > sizeof( LIST * ) ) ? sizeof( LIST * ) : LISTPTR_ALIGN_BASE )
 
-    void set_data(void * d)
+    inline void set_data(void * d)
     {
         assert( (start < d && d <= end) || (start <= d && d < end) );
         assert( ((ptrdiff_t)d) % LISTPTR_ALIGN == 0 );
-        assert( ((ptrdiff_t)d) > (1<<4) );
         data_backup = data = d;
     }
 
-    void * get_data() const
+    inline void * get_data()
     {
-        assert( data == data_backup );
+        if ( data != data_backup ) data = data_backup;
         assert( (start < data && data <= end) || (start <= data && data < end) );
         assert( ((ptrdiff_t)data) % LISTPTR_ALIGN == 0 );
-        assert( ((ptrdiff_t)start) > (1<<4) );
-        assert( ((ptrdiff_t)data) > (1<<4) );
-        assert( ((ptrdiff_t)end) > (1<<4) );
         return data;
-    }
-
-    void * get_end() const
-    {
-        assert( data == data_backup );
-        assert( (start < data && data <= end) || (start <= data && data < end) );
-        return end;
-    }
-
-    void * get_start() const
-    {
-        assert( data == data_backup );
-        assert( (start < data && data <= end) || (start <= data && data < end) );
-        return start;
     }
 
     template <typename T>
     remove_cref_t<T> * nth( int32_t n )
     {
         using U = remove_cref_t<T>;
-        assert( n > -1000 );
-        assert( n < 1000 );
-        remove_cref_t<T> * result = &( static_cast<U*>( get_data() )[n] );
-        assert( ((ptrdiff_t)result) > (1<<4) );
-        return result;
+        return &( static_cast<U*>( get_data() )[n] );
     }
 
     template <typename T>
@@ -519,7 +482,7 @@ void _stack::cleanup_push( int32_t n, T*_ )
     cleanups[cleanups_size++] = ci;
 }
 
-STACK * stack_global()
+static STACK * stack_global()
 {
     static STACK result;
     return &result;
