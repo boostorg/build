@@ -289,9 +289,7 @@ struct _stack
 
         int32_t const size = 1 << 21;
         start = BJAM_MALLOC( size );
-        assert( ((ptrdiff_t)start) > (1<<4) );
         end = (char *)start + size;
-        assert( ((ptrdiff_t)end) > (1<<4) );
         data = end;
     }
 
@@ -310,7 +308,7 @@ struct _stack
 
         if ( cleanups_size > 0 )
         {
-            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)data, cleanups.size() );
+            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)get_end() - (char*)get_data(), cleanups.size() );
             // err_flush();
             while ( cleanups_size > 0 )
             {
@@ -318,10 +316,10 @@ struct _stack
                 cleanups[cleanups_size].function(
                     cleanups[cleanups_size].stack, cleanups[cleanups_size].count );
             }
-            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)data, cleanups.size() );
+            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)get_end() - (char*)get_data(), cleanups.size() );
             // err_flush();
         }
-        BJAM_FREE( start );
+        BJAM_FREE( get_start() );
         start = end = data = nullptr;
     }
 
@@ -338,7 +336,7 @@ struct _stack
     remove_cref_t< select_last_t<A...> > * get()
     {
         using U = remove_cref_t< select_last_t<A...> >;
-        return static_cast<U*>( advance<A...>(data) );
+        return static_cast<U*>( advance<A...>(get_data()) );
     }
 
     // Move "v" to a new slot in ther stack. Returns a reference to the new item.
@@ -364,9 +362,7 @@ struct _stack
     template <class T>
     void pop( int32_t n )
     {
-        check_alignment();
         set_data( nth<T>( n ) );
-        check_alignment();
         --cleanups_size;
     }
 
@@ -394,15 +390,41 @@ struct _stack
     #define LISTPTR_ALIGN_BASE ( sizeof( struct list_alignment_helper ) - sizeof( LIST * ) )
     #define LISTPTR_ALIGN ( ( LISTPTR_ALIGN_BASE > sizeof( LIST * ) ) ? sizeof( LIST * ) : LISTPTR_ALIGN_BASE )
 
-    void check_alignment()
-    {
-        assert( (size_t)data % LISTPTR_ALIGN == 0 );
-    }
-
     void set_data(void * d)
     {
+        assert( (size_t)d % LISTPTR_ALIGN == 0 );
         assert( ((ptrdiff_t)d) > (1<<4) );
         data = d;
+    }
+
+    void * get_data() const
+    {
+        assert( (size_t)data % LISTPTR_ALIGN == 0 );
+        assert( ((ptrdiff_t)start) > (1<<4) );
+        assert( ((ptrdiff_t)data) > (1<<4) );
+        assert( ((ptrdiff_t)end) > (1<<4) );
+        assert( (start < data && data <= end) || (start <= data && data < end) );
+        return data;
+    }
+
+    void * get_end() const
+    {
+        assert( (size_t)data % LISTPTR_ALIGN == 0 );
+        assert( ((ptrdiff_t)start) > (1<<4) );
+        assert( ((ptrdiff_t)data) > (1<<4) );
+        assert( ((ptrdiff_t)end) > (1<<4) );
+        assert( (start < data && data <= end) || (start <= data && data < end) );
+        return end;
+    }
+
+    void * get_start() const
+    {
+        assert( (size_t)data % LISTPTR_ALIGN == 0 );
+        assert( ((ptrdiff_t)start) > (1<<4) );
+        assert( ((ptrdiff_t)data) > (1<<4) );
+        assert( ((ptrdiff_t)end) > (1<<4) );
+        assert( (start < data && data <= end) || (start <= data && data < end) );
+        return start;
     }
 
     template <typename T>
@@ -411,8 +433,7 @@ struct _stack
         using U = remove_cref_t<T>;
         assert( n > -1000 );
         assert( n < 1000 );
-        assert( ((ptrdiff_t)data) > (1<<4) );
-        remove_cref_t<T> * result = &( static_cast<U*>( data )[n] );
+        remove_cref_t<T> * result = &( static_cast<U*>( get_data() )[n] );
         assert( ((ptrdiff_t)result) > (1<<4) );
         return result;
     }
@@ -455,7 +476,6 @@ struct _stack
     static void cleanup_item(_stack * s, int32_t n, T*_=nullptr)
     {
         s->set_data( s->nth<T>( n ) );
-        s->check_alignment();
     }
 
     template <typename T>
@@ -470,7 +490,6 @@ void _stack::cleanup_item<LIST*>(_stack * s, int32_t n, LIST**)
         list_free( s->top<LIST*>(i) );
     }
     s->set_data( s->nth<LIST*>( n ) );
-    s->check_alignment();
 }
 
 template <class T>
@@ -483,13 +502,10 @@ template <class T>
 remove_cref_t<T> * _stack::push( T v, int32_t n )
 {
     using U = remove_cref_t<T>;
-    check_alignment();
     set_data( nth<T>( -n ) );
-    check_alignment();
-    std::uninitialized_fill_n( static_cast<U*>( data ), n, v );
-    assert( ((ptrdiff_t)data) > (1<<4) );
+    std::uninitialized_fill_n( nth<U>( 0 ), n, v );
     cleanup_push<U>( n );
-    return static_cast<U*>( data );
+    return nth<U>( 0 );
 }
 
 template <typename T>
