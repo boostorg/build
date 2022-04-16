@@ -290,7 +290,7 @@ struct _stack
         int32_t const size = 1 << 21;
         start = BJAM_MALLOC( size );
         end = (char *)start + size;
-        data = end;
+        data_backup = data = end;
     }
 
     ~_stack()
@@ -320,7 +320,7 @@ struct _stack
             // err_flush();
         }
         BJAM_FREE( get_start() );
-        start = end = data = nullptr;
+        data_backup = start = end = data = nullptr;
     }
 
     // Get reference to the top i-th T item, optionally as a U. I.e. it skips
@@ -380,6 +380,7 @@ struct _stack
     };
     std::array<cleanup_info, 1<<16> cleanups;
     size_t cleanups_size = 0;
+    void * data_backup = nullptr;
 
     struct list_alignment_helper
     {
@@ -392,37 +393,33 @@ struct _stack
 
     void set_data(void * d)
     {
-        assert( (size_t)d % LISTPTR_ALIGN == 0 );
+        assert( (start < d && d <= end) || (start <= d && d < end) );
+        assert( ((ptrdiff_t)d) % LISTPTR_ALIGN == 0 );
         assert( ((ptrdiff_t)d) > (1<<4) );
-        data = d;
+        data_backup = data = d;
     }
 
     void * get_data() const
     {
-        assert( (size_t)data % LISTPTR_ALIGN == 0 );
+        assert( data == data_backup );
+        assert( (start < data && data <= end) || (start <= data && data < end) );
+        assert( ((ptrdiff_t)data) % LISTPTR_ALIGN == 0 );
         assert( ((ptrdiff_t)start) > (1<<4) );
         assert( ((ptrdiff_t)data) > (1<<4) );
         assert( ((ptrdiff_t)end) > (1<<4) );
-        assert( (start < data && data <= end) || (start <= data && data < end) );
         return data;
     }
 
     void * get_end() const
     {
-        assert( (size_t)data % LISTPTR_ALIGN == 0 );
-        assert( ((ptrdiff_t)start) > (1<<4) );
-        assert( ((ptrdiff_t)data) > (1<<4) );
-        assert( ((ptrdiff_t)end) > (1<<4) );
+        assert( data == data_backup );
         assert( (start < data && data <= end) || (start <= data && data < end) );
         return end;
     }
 
     void * get_start() const
     {
-        assert( (size_t)data % LISTPTR_ALIGN == 0 );
-        assert( ((ptrdiff_t)start) > (1<<4) );
-        assert( ((ptrdiff_t)data) > (1<<4) );
-        assert( ((ptrdiff_t)end) > (1<<4) );
+        assert( data == data_backup );
         assert( (start < data && data <= end) || (start <= data && data < end) );
         return start;
     }
