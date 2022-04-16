@@ -378,17 +378,17 @@ struct _stack
 
     inline void set_data(void * d)
     {
-        assert( (start < d && d <= end) || (start <= d && d < end) );
+        assert( (start <= d && d <= end) );
         assert( ((ptrdiff_t)d) % LISTPTR_ALIGN == 0 );
         data_backup = data = d;
     }
 
     inline void * get_data()
     {
-        assert( (start < data_backup && data_backup <= end) || (start <= data_backup && data_backup < end) );
+        assert( (start < end) && (start <= data_backup && data_backup <= end) );
         if ( data != data_backup ) data = data_backup;
         assert( data == data_backup );
-        assert( (start < data && data <= end) || (start <= data && data < end) );
+        assert( (start < end) && (start <= data && data <= end) );
         assert( ((ptrdiff_t)data) % LISTPTR_ALIGN == 0 );
         return data;
     }
@@ -426,11 +426,9 @@ struct _stack
     template <typename...R>
     static void * advance(void * p)
     {
-        assert( ((ptrdiff_t)p) > (1<<4) );
         p = static_cast<char*>(p)
             + sum_advance_size<R...>::value
             - advance_size< select_last_t<R...> >::value;
-        assert( ((ptrdiff_t)p) > (1<<4) );
         return p;
     }
 
@@ -486,8 +484,8 @@ void _stack::cleanup_push( int32_t n, T*_ )
 
 static STACK * stack_global()
 {
-    static STACK result;
-    return &result;
+    static std::unique_ptr<_stack> singleton(new _stack);
+    return singleton.get();
 }
 
 LIST * frame_get_local( FRAME * frame, int32_t idx )
