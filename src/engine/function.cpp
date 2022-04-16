@@ -385,7 +385,9 @@ struct _stack
 
     inline void * get_data()
     {
+        assert( (start < data_backup && data_backup <= end) || (start <= data_backup && data_backup < end) );
         if ( data != data_backup ) data = data_backup;
+        assert( data == data_backup );
         assert( (start < data && data <= end) || (start <= data && data < end) );
         assert( ((ptrdiff_t)data) % LISTPTR_ALIGN == 0 );
         return data;
