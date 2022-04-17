@@ -295,6 +295,7 @@ struct _stack
         {
             // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups.size() );
             // err_flush();
+            assert( cleanups_size <= cleanups.size() );
             while ( cleanups_size > 0 )
             {
                 cleanups_size -= 1;
@@ -474,7 +475,7 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
 template <typename T>
 void _stack::cleanup_push( int32_t n, T*_ )
 {
-    if ( cleanups_size == cleanups.max_size() )
+    if ( cleanups_size == cleanups.size() )
     {
         err_puts( "Function stack cleanup overflow.\n" );
         err_flush();
