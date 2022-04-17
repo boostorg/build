@@ -483,7 +483,9 @@ void _stack::cleanup_push( int32_t n, T*_ )
         return;
     }
     cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<T>, this, n };
-    cleanups[cleanups_size++] = ci;
+    cleanups[cleanups_size] = ci;
+    cleanups_size += 1;
+    assert( cleanups_size <= cleanups.size() );
 }
 
 static STACK * stack_global()
