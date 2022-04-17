@@ -293,8 +293,13 @@ struct _stack
     {
         if ( cleanups_size > 0 )
         {
-            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups.size() );
+            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups_size );
             // err_flush();
+            if ( !( cleanups_size <= cleanups.size() ) )
+            {
+                err_printf( "STACK: %d, ITEMS: %d (max = %d)\n", (char*)end - (char*)get_data(), cleanups_size, cleanups.size() );
+                err_flush();
+            }
             assert( cleanups_size <= cleanups.size() );
             while ( cleanups_size > 0 )
             {
@@ -305,7 +310,7 @@ struct _stack
                 auto c = v.count;
                 f( s, c );
             }
-            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups.size() );
+            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups_size );
             // err_flush();
         }
         BJAM_FREE( start );
