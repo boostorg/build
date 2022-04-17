@@ -297,9 +297,12 @@ struct _stack
             // err_flush();
             while ( cleanups_size > 0 )
             {
-                --cleanups_size;
-                cleanups[cleanups_size].function(
-                    cleanups[cleanups_size].stack, cleanups[cleanups_size].count );
+                cleanups_size -= 1;
+                auto v = cleanups[cleanups_size];
+                auto f = v.function;
+                auto s = v.stack;
+                auto c = v.count;
+                f( s, c );
             }
             // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups.size() );
             // err_flush();
