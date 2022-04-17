@@ -357,7 +357,15 @@ struct _stack
     void pop( int32_t n )
     {
         set_data( nth<T>( n ) );
-        --cleanups_size;
+        if ( cleanups_size == cleanups_t::size_type(0) )
+        {
+            err_puts( "Function stack cleanup underflow.\n" );
+            err_flush();
+            b2::clean_exit( b2::exit_result::failure );
+            return;
+        }
+        cleanups_size -= 1;
+        assert( cleanups[cleanups_size].count == n );
     }
 
     private:
