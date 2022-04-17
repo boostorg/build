@@ -291,7 +291,7 @@ struct _stack
 
     void done()
     {
-        if ( cleanups_size > 0 )
+        if ( cleanups_size > cleanups_t::size_type(0) )
         {
             // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups_size );
             // err_flush();
@@ -372,8 +372,9 @@ struct _stack
         _stack* stack;
         int32_t count;
     };
-    std::array<cleanup_info, 1<<16> cleanups;
-    size_t cleanups_size = 0;
+    using cleanups_t = std::array<cleanup_info, 1<<16>;
+    cleanups_t cleanups;
+    cleanups_t::size_type cleanups_size = 0;
     void * data_backup = nullptr;
 
     struct list_alignment_helper
