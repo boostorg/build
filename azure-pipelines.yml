@@ -186,10 +186,10 @@ stages:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
-        # Master .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        # Master .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
+        Master .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
+        Master .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
         Develop .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        # Develop .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
+        Develop .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
     steps:
     - bash: |
         set -e
@@ -199,7 +199,7 @@ stages:
     - bash: |
         set -e
         cd src/engine
-        ./build.sh ${TOOLSET} --cxx=${CXX} "--cxxflags=-fsanitize=address" --debug
+        ./build.sh ${TOOLSET} --cxx=${CXX}
         ./b2 -v
       displayName: Build
     - bash: |
@@ -210,71 +210,71 @@ stages:
         git checkout ${BOOST_BRANCH}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
-  # - job: 'Dev_macOS'
-  #   displayName: 'Dev macOS'
-  #   pool:
-  #     vmImage: "${{variables.macos_latest_vm}}"
-  #   strategy:
-  #     matrix:
-  #       Master .. Xcode ${{variables.xc_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
-  #       Develop .. Xcode ${{variables.xc_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
-  #   steps:
-  #   - bash: |
-  #       set -e
-  #       uname -a
-  #       sudo xcode-select -switch ${XCODE_APP}
-  #       which clang++
-  #     displayName: Install
-  #   - bash: |
-  #       set -e
-  #       cd src/engine
-  #       ./build.sh ${TOOLSET} --cxx=${CXX}
-  #       ./b2 -v
-  #     displayName: Build
-  #   - bash: |
-  #       set -e
-  #       pushd ${HOME}
-  #       git clone --recursive https://github.com/boostorg/boost.git
-  #       cd boost
-  #       git checkout ${BOOST_BRANCH}
-  #       CXX_PATH=`which ${CXX}`
-  #       echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-  #       "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
-  #       popd
-  #     displayName: Test
+  - job: 'Dev_macOS'
+    displayName: 'Dev macOS'
+    pool:
+      vmImage: "${{variables.macos_latest_vm}}"
+    strategy:
+      matrix:
+        Master .. Xcode ${{variables.xc_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
+        Develop .. Xcode ${{variables.xc_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
+    steps:
+    - bash: |
+        set -e
+        uname -a
+        sudo xcode-select -switch ${XCODE_APP}
+        which clang++
+      displayName: Install
+    - bash: |
+        set -e
+        cd src/engine
+        ./build.sh ${TOOLSET} --cxx=${CXX}
+        ./b2 -v
+      displayName: Build
+    - bash: |
+        set -e
+        pushd ${HOME}
+        git clone --recursive https://github.com/boostorg/boost.git
+        cd boost
+        git checkout ${BOOST_BRANCH}
+        CXX_PATH=`which ${CXX}`
+        echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        popd
+      displayName: Test
 
-  # - job: 'Dev_Windows'
-  #   displayName: 'Dev Windows'
-  #   pool:
-  #     vmImage: "${{variables.windows_latest_vm}}"
-  #   strategy:
-  #     matrix:
-  #       Master .. VS ${{variables.vs_latest}}: {BOOST_BRANCH: master, TOOLSET: "${{variables.vc_latest}}"}
-  #       Develop .. VS ${{variables.vs_latest}}: {BOOST_BRANCH: develop, TOOLSET: "${{variables.vc_latest}}"}
-  #   steps:
-  #   - powershell: |
-  #       cd src/engine
-  #       $env:path += ';' + ${env:CXX_PATH}
-  #       cmd /c build.bat ${env:TOOLSET}
-  #       ./b2.exe -v
-  #       cd ../..
-  #     displayName: Build
-  #   - powershell: |
-  #       $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
-  #       cd "${env:HOME}"
-  #       git clone --recursive https://github.com/boostorg/boost.git
-  #       cd boost
-  #       $OriginalErrorActionPreference = $ErrorActionPreference
-  #       $ErrorActionPreference= 'silentlycontinue'
-  #       git checkout "${env:BOOST_BRANCH}"
-  #       $ErrorActionPreference = $OriginalErrorActionPreference
-  #       echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
-  #       & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
-  #     displayName: Test
+  - job: 'Dev_Windows'
+    displayName: 'Dev Windows'
+    pool:
+      vmImage: "${{variables.windows_latest_vm}}"
+    strategy:
+      matrix:
+        Master .. VS ${{variables.vs_latest}}: {BOOST_BRANCH: master, TOOLSET: "${{variables.vc_latest}}"}
+        Develop .. VS ${{variables.vs_latest}}: {BOOST_BRANCH: develop, TOOLSET: "${{variables.vc_latest}}"}
+    steps:
+    - powershell: |
+        cd src/engine
+        $env:path += ';' + ${env:CXX_PATH}
+        cmd /c build.bat ${env:TOOLSET}
+        ./b2.exe -v
+        cd ../..
+      displayName: Build
+    - powershell: |
+        $env:HOME = "$env:HOMEDRIVE" + "$env:HOMEPATH"
+        cd "${env:HOME}"
+        git clone --recursive https://github.com/boostorg/boost.git
+        cd boost
+        $OriginalErrorActionPreference = $ErrorActionPreference
+        $ErrorActionPreference= 'silentlycontinue'
+        git checkout "${env:BOOST_BRANCH}"
+        $ErrorActionPreference = $OriginalErrorActionPreference
+        echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
+        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
+      displayName: Test
 
 - stage: Boost_Release
   dependsOn: [Boost_Dev]
