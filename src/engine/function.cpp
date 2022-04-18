@@ -304,11 +304,7 @@ struct _stack
             while ( cleanups_size > 0 )
             {
                 cleanups_size -= 1;
-                auto v = cleanups[cleanups_size];
-                auto f = v.function;
-                auto s = v.stack;
-                auto c = v.count;
-                f( s, c );
+                cleanups[cleanups_size]( this );
             }
             // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups_size );
             // err_flush();
@@ -356,7 +352,6 @@ struct _stack
     template <class T>
     void pop( int32_t n )
     {
-        set_data( nth<T>( n ) );
         if ( cleanups_size == cleanups_t::size_type(0) )
         {
             err_puts( "Function stack cleanup underflow.\n" );
@@ -364,8 +359,8 @@ struct _stack
             b2::clean_exit( b2::exit_result::failure );
             return;
         }
-        cleanups_size -= 1;
-        assert( cleanups[cleanups_size].count == n );
+        set_data( nth<T>( n ) );
+        cleanups_size -= n;
     }
 
     private:
@@ -373,14 +368,8 @@ struct _stack
     void * start = nullptr;
     void * end = nullptr;
     void * data = nullptr;
-    using cleanup_f = void(*)( _stack*, int32_t );
-    struct cleanup_info
-    {
-        cleanup_f function;
-        _stack* stack;
-        int32_t count;
-    };
-    using cleanups_t = std::array<cleanup_info, 1<<16>;
+    using cleanup_f = void(*)( _stack* );
+    using cleanups_t = std::array<cleanup_f, 1<<16>;
     cleanups_t cleanups;
     cleanups_t::size_type cleanups_size = 0;
     void * data_backup = nullptr;
@@ -451,9 +440,9 @@ struct _stack
     }
 
     template <typename T>
-    static void cleanup_item(_stack * s, int32_t n, T*_=nullptr)
+    static void cleanup_item(_stack * s, T*_=nullptr)
     {
-        s->set_data( s->nth<T>( n ) );
+        s->set_data( s->nth<T>( 1 ) );
     }
 
     template <typename T>
@@ -461,13 +450,10 @@ struct _stack
 };
 
 template <>
-void _stack::cleanup_item<LIST*>(_stack * s, int32_t n, LIST**)
+void _stack::cleanup_item<LIST*>(_stack * s, LIST**)
 {
-    for (int32_t i = 0; i < n; ++i)
-    {
-        list_free( s->top<LIST*>(i) );
-    }
-    s->set_data( s->nth<LIST*>( n ) );
+    list_free( s->top<LIST*>() );
+    s->set_data( s->nth<LIST*>( 1 ) );
 }
 
 template <class T>
@@ -489,17 +475,15 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
 template <typename T>
 void _stack::cleanup_push( int32_t n, T*_ )
 {
-    if ( cleanups_size == cleanups.size() )
+    if ( cleanups_size+n > cleanups.size() )
     {
         err_puts( "Function stack cleanup overflow.\n" );
         err_flush();
         b2::clean_exit( b2::exit_result::failure );
         return;
     }
-    cleanup_info ci = { (cleanup_f)&_stack::cleanup_item<T>, this, n };
-    cleanups[cleanups_size] = ci;
-    cleanups_size += 1;
-    assert( cleanups_size <= cleanups.size() );
+    std::fill_n( &cleanups[cleanups_size], n, (cleanup_f)&_stack::cleanup_item<T> );
+    cleanups_size += n;
 }
 
 static STACK * stack_global()
