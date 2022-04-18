@@ -286,31 +286,21 @@ struct _stack
         int32_t const size = 1 << 21;
         start = BJAM_MALLOC( size );
         end = (char *)start + size;
-        data_backup = data = end;
+        data = end;
     }
 
     void done()
     {
         if ( cleanups_size > cleanups_t::size_type(0) )
         {
-            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups_size );
-            // err_flush();
-            if ( !( cleanups_size <= cleanups.size() ) )
-            {
-                err_printf( "STACK: %d, ITEMS: %d (max = %d)\n", (char*)end - (char*)get_data(), cleanups_size, cleanups.size() );
-                err_flush();
-            }
-            assert( cleanups_size <= cleanups.size() );
             while ( cleanups_size > 0 )
             {
                 cleanups_size -= 1;
                 cleanups[cleanups_size]( this );
             }
-            // err_printf( "STACK: %d, ITEMS: %d\n", (char*)end - (char*)get_data(), cleanups_size );
-            // err_flush();
         }
         BJAM_FREE( start );
-        data_backup = start = end = data = nullptr;
+        start = end = data = nullptr;
     }
 
     // Get reference to the top i-th T item, optionally as a U. I.e. it skips
@@ -352,13 +342,6 @@ struct _stack
     template <class T>
     void pop( int32_t n )
     {
-        if ( cleanups_size == cleanups_t::size_type(0) )
-        {
-            err_puts( "Function stack cleanup underflow.\n" );
-            err_flush();
-            b2::clean_exit( b2::exit_result::failure );
-            return;
-        }
         set_data( nth<T>( n ) );
         cleanups_size -= n;
     }
@@ -369,10 +352,9 @@ struct _stack
     void * end = nullptr;
     void * data = nullptr;
     using cleanup_f = void(*)( _stack* );
-    using cleanups_t = std::array<cleanup_f, 1<<16>;
+    using cleanups_t = std::array<cleanup_f, (1<<21)/sizeof(void*)>;
     cleanups_t cleanups;
     cleanups_t::size_type cleanups_size = 0;
-    void * data_backup = nullptr;
 
     struct list_alignment_helper
     {
@@ -385,18 +367,11 @@ struct _stack
 
     inline void set_data(void * d)
     {
-        assert( (start <= d && d <= end) );
-        assert( ((ptrdiff_t)d) % LISTPTR_ALIGN == 0 );
-        data_backup = data = d;
+        data = d;
     }
 
     inline void * get_data()
     {
-        assert( (start < end) && (start <= data_backup && data_backup <= end) );
-        if ( data != data_backup ) data = data_backup;
-        assert( data == data_backup );
-        assert( (start < end) && (start <= data && data <= end) );
-        assert( ((ptrdiff_t)data) % LISTPTR_ALIGN == 0 );
         return data;
     }
 
@@ -475,21 +450,14 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
 template <typename T>
 void _stack::cleanup_push( int32_t n, T*_ )
 {
-    if ( cleanups_size+n > cleanups.size() )
-    {
-        err_puts( "Function stack cleanup overflow.\n" );
-        err_flush();
-        b2::clean_exit( b2::exit_result::failure );
-        return;
-    }
     std::fill_n( &cleanups[cleanups_size], n, (cleanup_f)&_stack::cleanup_item<T> );
     cleanups_size += n;
 }
 
 static STACK * stack_global()
 {
-    static std::unique_ptr<_stack> singleton(new _stack);
-    return singleton.get();
+    static _stack singleton;
+    return &singleton;
 }
 
 LIST * frame_get_local( FRAME * frame, int32_t idx )
