@@ -450,7 +450,7 @@ remove_cref_t<T> * _stack::push( T v, int32_t n )
 template <typename T>
 void _stack::cleanup_push( int32_t n, T*_ )
 {
-    std::fill_n( &cleanups[cleanups_size], n, (cleanup_f)&_stack::cleanup_item<T> );
+    std::uninitialized_fill_n( &cleanups[cleanups_size], n, (cleanup_f)&_stack::cleanup_item<T> );
     cleanups_size += n;
 }
 
