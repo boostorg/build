@@ -12,7 +12,7 @@ import numbers ;
 .minor = "9" ;
 
 
-rule boost-build ( )
+rule build ( )
 {
     return "$(.major).$(.minor)-git" ;
 }
@@ -22,7 +22,7 @@ rule print ( )
 {
     if [ verify-engine-version ]
     {
-        ECHO "B2" [ boost-build ] ;
+        ECHO "B2" [ build ] ;
     }
 }
 
@@ -40,7 +40,7 @@ rule verify-engine-version ( )
         l = $(l:D) ;
         ECHO "warning: mismatched versions of B2 engine and core" ;
         ECHO "warning: B2 engine ($(e)) is $(v:J=.)" ;
-        ECHO "warning: B2 core (at $(l)) is" [ boost-build ] ;
+        ECHO "warning: B2 core (at $(l)) is" [ build ] ;
     }
     else
     {

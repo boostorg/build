@@ -3,12 +3,23 @@
 
 == Version 4.9.0
 
+This release has mostly internal cleanups and restructuring. The most
+significant being: fixing all memory leaks, automatic build system
+startup with the `boost-build` rule.
+
 * Add `minimal` and `debug` options for `optimization` feature.
   -- _René Ferdinand Rivera Morell_
 * Add Rocket Lake, Alder Lake, Sapphire Rapids and Zen 3 instruction sets.
   -- _Andrey Semashev_
 * Remove all, on-exit, memory leaks and fix all ASAN errors.
   -- _René Ferdinand Rivera Morell_
+* Remove use of `boost-build.jam` as a initialization configuration file.
+  -- _René Ferdinand Rivera Morell_
+
+WARNING: This release removes the use of `boost-build.jam` and the
+`boost-build` rule for initialization. The `boost-build.jam` is still
+searched for and loaded to not break existing operations. But is considered
+deprecated and will be removed in a future release.
 
 == Version 4.8.2
 

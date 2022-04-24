@@ -181,8 +181,8 @@ feature.feature b2-install-layout : standard portable : incidental propagated ;
 
 add-install-dir b2prefix-standard : : prefix ;
 add-install-dir b2bindir-standard : : bindir ;
-add-install-dir b2coredir-standard : boost-build/src : datarootdir ;
-add-install-dir b2examplesdir-standard : boost-build/examples : datarootdir ;
+add-install-dir b2coredir-standard : b2/src : datarootdir ;
+add-install-dir b2examplesdir-standard : b2/examples : datarootdir ;
 
 add-install-dir b2prefix-portable : : prefix ;
 add-install-dir b2bindir-portable : : b2prefix-portable ;

@@ -189,7 +189,6 @@ set B2_CXXFLAGS=%B2_CXXFLAGS% -DNDEBUG
 @echo ON
 %B2_CXX% %CXXFLAGS% %B2_CXXFLAGS% %B2_SOURCES% %B2_CXX_LINK%
 dir *.exe
-copy /b .\b2.exe .\bjam.exe
 
 :Finish
 @exit /b %ERRORLEVEL%
