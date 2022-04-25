@@ -5,7 +5,8 @@
 
 This release has mostly internal cleanups and restructuring. The most
 significant being: fixing all memory leaks, automatic build system
-startup with the `boost-build` rule.
+startup with the `boost-build` rule, the Jam Python interfaces, and
+the unmaintained Python build system port.
 
 * Add `minimal` and `debug` options for `optimization` feature.
   -- _René Ferdinand Rivera Morell_
@@ -14,6 +15,9 @@ startup with the `boost-build` rule.
 * Remove all, on-exit, memory leaks and fix all ASAN errors.
   -- _René Ferdinand Rivera Morell_
 * Remove use of `boost-build.jam` as a initialization configuration file.
+  -- _René Ferdinand Rivera Morell_
+* Remove the incomplete build system port and Jam engine Python support
+  extensions.
   -- _René Ferdinand Rivera Morell_
 
 WARNING: This release removes the use of `boost-build.jam` and the

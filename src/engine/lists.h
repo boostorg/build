@@ -45,10 +45,6 @@
 #include "config.h"
 #include "object.h"
 
-#ifdef HAVE_PYTHON
-# include <Python.h>
-#endif
-
 /*
  * LIST - list of strings
  */
@@ -112,11 +108,6 @@ void   lol_free( LOL * );
 LIST * lol_get( LOL *, int i );
 void   lol_print( LOL * );
 void   lol_build( LOL *, char const * * elements );
-
-#ifdef HAVE_PYTHON
-PyObject * list_to_python( LIST * );
-LIST * list_from_python( PyObject * );
-#endif
 
 namespace b2 { namespace jam {
     struct list

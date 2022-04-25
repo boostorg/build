@@ -38,10 +38,4 @@ LIST * function_get_variables( FUNCTION * f );
 
 void function_done( void );
 
-#ifdef HAVE_PYTHON
-
-FUNCTION * function_python( PyObject * function, PyObject * bjam_signature );
-
-#endif
-
 #endif
