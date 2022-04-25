@@ -130,7 +130,6 @@ void constants_done( void )
     object_free( constant_timestamp );
     object_free( constant_python );
     object_free( constant_python_interface );
-    object_free( constant_extra_pythonpath );
     object_free( constant_FILE_ARCHIVESCAN );
     object_free( constant_BUILTIN_GLOB_ARCHIVE_BACK );
 
@@ -188,7 +187,6 @@ OBJECT * constant_timestamp;
 OBJECT * constant_JAM_TIMESTAMP_RESOLUTION;
 OBJECT * constant_python;
 OBJECT * constant_python_interface;
-OBJECT * constant_extra_pythonpath;
 OBJECT * constant_FILE_ARCHIVESCAN;
 OBJECT * constant_BUILTIN_GLOB_ARCHIVE_BACK;
 
