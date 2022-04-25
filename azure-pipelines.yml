@@ -210,7 +210,7 @@ stages:
         git checkout ${BOOST_BRANCH}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
@@ -243,7 +243,7 @@ stages:
         git checkout ${BOOST_BRANCH}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
@@ -273,7 +273,7 @@ stages:
         git checkout "${env:BOOST_BRANCH}"
         $ErrorActionPreference = $OriginalErrorActionPreference
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
-        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
+        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
 
 - stage: Boost_Release
@@ -286,6 +286,7 @@ stages:
       vmImage: 'ubuntu-latest'
     strategy:
       matrix:
+        1.79.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
         1.78.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
         1.77.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
         1.76.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
@@ -318,7 +319,7 @@ stages:
         cd boost_${BOOST_VERSION_U}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
@@ -328,6 +329,8 @@ stages:
       vmImage: "${{variables.macos_latest_vm}}"
     strategy:
       matrix:
+        1.79.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
+        1.78.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.77.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.76.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.75.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
@@ -360,7 +363,7 @@ stages:
         cd boost_${BOOST_VERSION_U}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" "--boost-build=${BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
@@ -370,6 +373,8 @@ stages:
       vmImage: "${{variables.windows_latest_vm}}"
     strategy:
       matrix:
+        1.79.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: "${{variables.vc_latest}}"}
+        1.78.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: "${{variables.vc_latest}}"}
         1.77.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: "${{variables.vc_latest}}"}
         1.76.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: "${{variables.vc_latest}}"}
         1.75.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: "${{variables.vc_latest}}"}
@@ -396,7 +401,7 @@ stages:
         git clone -b boost-${env:BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${env:BOOST_VERSION_U}
         cd "boost_${env:BOOST_VERSION_U}"
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
-        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" "--boost-build=${env:BUILD_SOURCESDIRECTORY}/src" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
+        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
 
 - stage: Website_Update
