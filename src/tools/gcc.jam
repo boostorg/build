@@ -1272,3 +1272,8 @@ cpu-flags gcc OPTIONS : arm : cortex-r5 : -mcpu=cortex-r5 ;
 cpu-flags gcc OPTIONS : arm : cortex-r5+vfpv3-d16 : -mcpu=cortex-r5 -mfpu=vfpv3-d16 -mfloat-abi=hard ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;
+
+# This is a remporary solution for doing combined architecture builds on macOS.
+toolset.flags gcc
+    OPTIONS <target-os>darwin/<architecture>arm+x86/<address-model>64
+    : "-arch arm64" "-arch x86_64" ;
