@@ -117,8 +117,50 @@ stages:
     steps:
     - template: .ci/azp-linux-asan-test.yml
 
+- stage: Extra
+  jobs:
+
+  - job: 'macOS'
+    strategy:
+      matrix:
+        Xcode ${{variables.xc_latest}}: {
+          B2_ARGS: "architecture=arm+x86 address-model=64",
+          TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++,
+          XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
+    - template: .ci/azp-macos-extra.yml
+
+- stage: Website_Update
+  dependsOn: [Core, Extra]
+  displayName: 'Website Update'
+  condition: in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/release')
+  jobs:
+
+  - job: Documentation
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.x'
+    - task: UseRubyVersion@0
+    - bash: |
+        pip install --user Pygments
+        pip install --user "https://github.com/bfgroup/jam_pygments/archive/master.zip"
+        gem install asciidoctor
+        gem install pygments.rb
+        echo "using asciidoctor ;" >> project-config.jam
+        ./bootstrap.sh
+        pushd doc
+        ../b2 --website-doc-dir=manual/$(Build.SourceBranchName) website
+      displayName: 'Build & Publish'
+      env:
+        GH_TOKEN: $(GitHubToken)
+
 - stage: Compilers
-  dependsOn: [Core]
+  dependsOn: [Core, Extra]
   jobs:
 
   - job: 'Linux'
@@ -177,7 +219,7 @@ stages:
     - template: .ci/azp-macos-test.yml
 
 - stage: Boost_Dev
-  dependsOn: [Core]
+  dependsOn: [Core, Extra]
   jobs:
 
   - job: 'Dev_Linux'
@@ -403,30 +445,3 @@ stages:
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
         & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
-
-- stage: Website_Update
-  dependsOn: [Core]
-  displayName: 'Website Update'
-  condition: in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/release')
-  jobs:
-
-  - job: Documentation
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '3.x'
-    - task: UseRubyVersion@0
-    - bash: |
-        pip install --user Pygments
-        pip install --user "https://github.com/bfgroup/jam_pygments/archive/master.zip"
-        gem install asciidoctor
-        gem install pygments.rb
-        echo "using asciidoctor ;" >> project-config.jam
-        ./bootstrap.sh
-        pushd doc
-        ../b2 --website-doc-dir=manual/$(Build.SourceBranchName) website
-      displayName: 'Build & Publish'
-      env:
-        GH_TOKEN: $(GitHubToken)
