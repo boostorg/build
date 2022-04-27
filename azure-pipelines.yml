@@ -125,8 +125,16 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
-        Xcode ${{variables.xc_latest}}: {
+        Xcode ${{variables.xc_latest}} arm+x86/64: {
           B2_ARGS: "architecture=arm+x86 address-model=64",
+          TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++,
+          XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+        Xcode ${{variables.xc_latest}} arm/64: {
+          B2_ARGS: "architecture=arm address-model=64",
+          TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++,
+          XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+        Xcode ${{variables.xc_latest}} x86/64: {
+          B2_ARGS: "architecture=x86 address-model=64",
           TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++,
           XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
     pool:

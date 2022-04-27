@@ -7,13 +7,6 @@ steps:
   displayName: Install
 - bash: |
     set -e
-    cd src/engine
-    ./build.sh ${TOOLSET} --cxx=${CXX}
-    ./b2 -v
-    cd ../..
-  displayName: Build
-- bash: |
-    set -e
     CXX_PATH=`which ${CXX}`
     echo "using ${TEST_TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
     ./bootstrap.sh ${TOOLSET}
