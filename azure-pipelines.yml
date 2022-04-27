@@ -42,6 +42,7 @@ variables:
 stages:
 
 - stage: Core
+  dependsOn: []
   jobs:
 
   - job: 'Linux_Default_Build'
@@ -118,6 +119,7 @@ stages:
     - template: .ci/azp-linux-asan-test.yml
 
 - stage: Extra
+  dependsOn: []
   jobs:
 
   - job: 'macOS'
