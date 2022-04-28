@@ -5,15 +5,15 @@ set -e
 pushd $1
 $HOME/temp/.b2/bin/b2 -d+2 ${B2_ARGS}
 echo "-----"
-find . -perm -111 -type f
+find . -perm -111 -type f -exec file "{}" "+"
 echo "-----"
-find . -name "*.o"
+find . -name "*.o" -exec file "{}" "+"
 echo "-----"
-find . -name "*.a"
+find . -name "*.a" -exec file "{}" "+"
 echo "-----"
-find . -name "*.so"
+find . -name "*.so" -exec file "{}" "+"
 echo "-----"
-find . -name "*.dylib"
+find . -name "*.dylib" -exec file "{}" "+"
 echo "-----"
 popd
 
