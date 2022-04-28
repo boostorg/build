@@ -105,7 +105,7 @@ rule init-flags ( toolset : condition * : version )
     init-flags-cross $(toolset) : $(condition) : arm x86 : 64 : darwin ;
     init-flags-cross $(toolset) : $(condition) : arm x86 : 64 32 : linux ;
 
-    # This is a remporary solution for doing combined architecture builds on macOS.
+    # This is a temporary solution for doing combined architecture builds on macOS.
     toolset.flags $(toolset)
         OPTIONS $(condition)/<target-os>darwin/<architecture>arm+x86/<address-model>64
         : "-arch arm64" "-arch x86_64"
