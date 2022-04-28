@@ -4,7 +4,7 @@ set -e
 
 pushd $1
 $HOME/temp/.b2/bin/b2 -d+2 ${B2_ARGS}
-find . -perm -100 -type f -o -name "*.o" -o -name "*.a" -o -name "*.so" -o -name "*.dylib" -exec file '{}' '+'
+find . -perm -111 -type f -o -name "*.o" -o -name "*.a" -o -name "*.so" -o -name "*.dylib" -exec file "{}" "+"
 popd
 
 # Use, modification, and distribution are
