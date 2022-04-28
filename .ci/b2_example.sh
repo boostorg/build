@@ -9,9 +9,9 @@ find . -perm -111 -type f
 echo "-----"
 find . -name "*.o"
 echo "-----"
-find . -name "*.a" -o
+find . -name "*.a"
 echo "-----"
-find . -name "*.so" -o
+find . -name "*.so"
 echo "-----"
 find . -name "*.dylib"
 echo "-----"
