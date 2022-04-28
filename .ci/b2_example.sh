@@ -4,11 +4,17 @@ set -e
 
 pushd $1
 $HOME/temp/.b2/bin/b2 -d+2 ${B2_ARGS}
-find . -perm -111 -type f -print
-find . -name "*.o" -print
-find . -name "*.a" -o -print
-find . -name "*.so" -o -print
-find . -name "*.dylib" -print
+echo "-----"
+find . -perm -111 -type f
+echo "-----"
+find . -name "*.o"
+echo "-----"
+find . -name "*.a" -o
+echo "-----"
+find . -name "*.so" -o
+echo "-----"
+find . -name "*.dylib"
+echo "-----"
 popd
 
 # Use, modification, and distribution are
