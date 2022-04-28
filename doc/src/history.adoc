@@ -19,6 +19,11 @@ the unmaintained Python build system port.
 * Remove the incomplete build system port and Jam engine Python support
   extensions.
   -- _René Ferdinand Rivera Morell_
+* Fix not being able to do combined arm+x86 builds on macOS with `darwin`
+  and `clang` toolsets.
+  -- _René Ferdinand Rivera Morell_
+* Fix not being able to do cross-compiles on macOS with `clang` toolset.
+  -- _René Ferdinand Rivera Morell_
 
 WARNING: This release removes the use of `boost-build.jam` and the
 `boost-build` rule for initialization. The `boost-build.jam` is still
