@@ -149,10 +149,10 @@ stages:
           B2_ARGS: "architecture=x86 address-model=64",
           TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}",
           LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang ${{variables.clang_latest}} x86/32: {
-          B2_ARGS: "architecture=x86 address-model=32",
-          TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}",
-          LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        # Clang ${{variables.clang_latest}} x86/32: {
+        #   B2_ARGS: "architecture=x86 address-model=32",
+        #   TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}",
+        #   LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
