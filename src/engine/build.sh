@@ -220,7 +220,7 @@ check_toolset ()
     # OSF Tru64 C++ (tru64cxx)
     if test_toolset tru64cxx && test_uname OSF1 && test_compiler cc ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
     # QNX (qcc)
-    if test_toolset qcc && test_uname QNX && test_compiler QCC ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
+    if test_toolset qcc && test_uname QNX && test_compiler QCC ; then B2_TOOLSET=qcc ; return ${TRUE} ; fi
     # Linux XL/VA C++ (xlcpp, vacpp)
     if test_toolset xlcpp vacpp && test_uname Linux && test_compiler xlC_r ; then
         if /usr/bin/lscpu | grep Byte | grep Little > /dev/null 2>&1 ; then
@@ -406,7 +406,7 @@ case "${B2_TOOLSET}" in
     ;;
 
     qcc)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
+        CXX_VERSION_OPT=""
         B2_CXXFLAGS_RELEASE="-O3 -Wc,-finline-functions"
         B2_CXXFLAGS_DEBUG="O0 -Wc,-fno-inline -gstabs+"
     ;;
@@ -429,7 +429,9 @@ build_b2 ()
 ###
 ###
 "
-    echo_run ${B2_CXX} ${CXX_VERSION_OPT}
+    if test "${CXX_VERSION_OPT}" != ""; then
+        echo_run ${B2_CXX} ${CXX_VERSION_OPT}
+    fi
 echo "
 ###
 ###
