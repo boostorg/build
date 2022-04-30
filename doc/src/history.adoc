@@ -24,6 +24,9 @@ the unmaintained Python build system port.
   -- _René Ferdinand Rivera Morell_
 * Fix not being able to do cross-compiles on macOS with `clang` toolset.
   -- _René Ferdinand Rivera Morell_
+* Fix errors when collecting a large number of object files with long names
+  into a static archive for `gcc` and `clang` toolsets.
+  -- _René Ferdinand Rivera Morell_
 
 WARNING: This release removes the use of `boost-build.jam` and the
 `boost-build` rule for initialization. The `boost-build.jam` is still

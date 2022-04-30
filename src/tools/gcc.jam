@@ -1104,7 +1104,7 @@ rule archive ( targets * : sources * : properties * )
 #
 actions piecemeal archive
 {
-    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" "$(>)"
+    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" @($(<[-1]:T).rsp:O=FC:<=@":>=":E="$(>)")
 }
 
 ###
@@ -1272,3 +1272,8 @@ cpu-flags gcc OPTIONS : arm : cortex-r5 : -mcpu=cortex-r5 ;
 cpu-flags gcc OPTIONS : arm : cortex-r5+vfpv3-d16 : -mcpu=cortex-r5 -mfpu=vfpv3-d16 -mfloat-abi=hard ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;
+
+# Enable response file control
+toolset.flags gcc RESPONSE_FILE_SUB <response-file>auto : a ;
+toolset.flags gcc RESPONSE_FILE_SUB <response-file>file : f ;
+toolset.flags gcc RESPONSE_FILE_SUB <response-file>contents : c ;
