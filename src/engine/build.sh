@@ -180,7 +180,7 @@ check_toolset ()
     if test_toolset intel-linux && test_path icpx ; then
         if test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
-    if test_toolset xyz && test_path icc ; then
+    if test_toolset intel-linux && test_path icc ; then
         if test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "${HOME}/intel/oneapi/setvars.sh" ; then
