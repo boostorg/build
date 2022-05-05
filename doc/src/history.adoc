@@ -31,6 +31,9 @@ the unmaintained Python build system port.
   -- _René Ferdinand Rivera Morell_
 * Fix missing assembly flags for intel-win toolset.
   -- _René Ferdinand Rivera Morell_
+* Fix possible command line length limit exceeded error with msvc toolset for
+  link actions.
+  -- _René Ferdinand Rivera Morell_
 
 WARNING: This release removes the use of `boost-build.jam` and the
 `boost-build` rule for initialization. The `boost-build.jam` is still
