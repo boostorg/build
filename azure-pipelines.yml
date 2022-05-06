@@ -33,7 +33,7 @@ variables:
 - { name: windows_latest_vm, value: 'windows-2022' }
 - { name: clang_latest, value: '14' }
 - { name: gcc_latest, value: '12' }
-- { name: vc_latest, value: 'vc142' }
+- { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
 - { name: xc_latest, value: '13.2.1' }
 - { name: macos_latest_vm, value: 'macOS-11' }
@@ -111,7 +111,7 @@ stages:
   - job: 'Linux_ASAN'
     strategy:
       matrix:
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: 13, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     continueOnError: 'true'
