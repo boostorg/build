@@ -34,6 +34,9 @@ the unmaintained Python build system port.
 * Fix possible command line length limit exceeded error with msvc toolset for
   link actions.
   -- _René Ferdinand Rivera Morell_
+* *New*: Add a "t" mode to `FILE_OPEN` built-in rule that gives one the
+  contents of a file when evaluated.
+  -- _René Ferdinand Rivera Morell_
 
 WARNING: This release removes the use of `boost-build.jam` and the
 `boost-build` rule for initialization. The `boost-build.jam` is still

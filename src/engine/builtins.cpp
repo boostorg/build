@@ -30,6 +30,8 @@
 #include "variable.h"
 #include "output.h"
 
+#include <string>
+
 #include <ctype.h>
 #include <stdlib.h>
 
@@ -1720,6 +1722,26 @@ LIST * builtin_file_open( FRAME * frame, int flags )
     char const * mode = object_str( list_front( lol_get( frame->args, 1 ) ) );
     int fd;
     char buffer[ sizeof( "4294967295" ) ];
+
+    if ( strcmp(mode, "t") == 0 )
+    {
+        FILE* f = fopen( name, "r" );
+        if ( !f ) return L0;
+        char buf[ 1025 ];
+        std::string text;
+        size_t c = 0;
+        do
+        {
+            c = fread( buf, sizeof(char), 1024, f );
+            if ( c > 0 )
+            {
+                buf[c] = 0;
+                text += buf;
+            }
+        }
+        while( c > 0 );
+        return list_new( object_new( text.c_str() ) );
+    }
 
     if ( strcmp(mode, "w") == 0 )
         fd = open( name, O_WRONLY|O_CREAT|O_TRUNC, 0666 );
