@@ -150,6 +150,10 @@ Installation of the engine, build, and example files.
 |#
 
 feature.feature b2-install-layout : standard portable : incidental propagated ;
+if [ os.on-windows ]
+{
+    feature.set-default b2-install-layout : portable ;
+}
 
 add-install-dir b2prefix-standard : : prefix ;
 add-install-dir b2bindir-standard : : bindir ;
