@@ -155,7 +155,8 @@ REM return to current directory as vsdevcmd_end.bat switches to %USERPROFILE%\So
 pushd %CD%
 if "_%VSINSTALLDIR%_" == "__" call :Call_If_Exists "%B2_TOOLSET_ROOT%Auxiliary\Build\vcvarsall.bat" %B2_BUILD_ARGS%
 popd
-set "B2_CXX="%CXX%" /nologo /MP /MT /TP /Feb2 /wd4996 /O2 /GL /EHsc"
+@REM set "B2_CXX="%CXX%" /nologo /MP /MT /TP /Feb2 /wd4996 /O2 /GL /EHsc"
+set "B2_CXX="%CXX%" /nologo -TP /wd4996 /wd4675 /EHs /GR /Zc:throwingNew /O2 /Ob2 /W3 /MD /Zc:forScope /Zc:wchar_t /Zc:inline /Gw /favor:blend"
 set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
 goto :eof
