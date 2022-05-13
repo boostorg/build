@@ -1740,6 +1740,7 @@ LIST * builtin_file_open( FRAME * frame, int flags )
             }
         }
         while( c > 0 );
+        fclose( f );
         return list_new( object_new( text.c_str() ) );
     }
 
