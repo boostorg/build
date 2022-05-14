@@ -185,6 +185,43 @@ stages:
       env:
         GH_TOKEN: $(GitHubToken)
 
+- stage: Installers
+  dependsOn: [Core, Extra]
+  condition: in(variables['Build.SourceBranch'], 'refs/heads/main', 'refs/heads/release')
+  jobs:
+  - job: Windows_Wix
+    strategy:
+      matrix:
+        VS ${{variables.vs_latest}}: {TOOLSET: "${{variables.vc_latest}}", TEST_TOOLSET: msvc, VM_IMAGE: "${{variables.windows_latest_vm}}"}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
+    - powershell: |
+        $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+        $env:path += ';' + $env:CXX_PATH
+        echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > ${env:HOME}/user-config.jam
+        ./bootstrap.bat $env:TOOLSET
+        ./b2.exe --debug-configuration --prefix=${env:HOME}/temp/.b2 install toolset=$env:TEST_TOOLSET
+        Remove-Item ./b2.exe
+        $env:path += $env:HOME + '/temp/.b2' + ';' + $env:PATH
+        cd $env:HOME
+        echo $null >> build.jam
+        b2 -v
+        b2 -n --debug-configuration
+      displayName: Bootstrap
+    - powershell: |
+        $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+        $env:path += ';' + $env:CXX_PATH
+        cd ${env:HOME}/temp
+        git clone https://github.com/bfgroup/b2-pkg.git
+      displayName: Clone
+    - powershell: |
+        $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+        $env:path += ';' + $env:CXX_PATH
+        cd ${env:HOME}/temp/b2-pkg
+        b2 --b2root=$(Build.SourcesDirectory) windows
+      displayName: Build
+
 - stage: Compilers
   dependsOn: [Core, Extra]
   jobs:
