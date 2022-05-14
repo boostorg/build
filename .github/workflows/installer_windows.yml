@@ -32,9 +32,9 @@ jobs:
     steps:
       - name: "Checkout"
         uses: actions/checkout@master
-      - name: "Install"
       - name: "Checkout"
         uses: actions/checkout@master
         with: { repository: "bfgroup/b2-pkg" }
+      - name: "Install"
         run: |
           choco install vswhere
