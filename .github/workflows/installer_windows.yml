@@ -45,5 +45,5 @@ jobs:
           ./bootstrap.bat
       - name: "Build"
         run: |
-          cd "%GITHUB_WORKSPACE%/b2-pkg"
-          "%GITHUB_WORKSPACE%/b2/b2.exe" --b2root="GITHUB_WORKSPACE%/b2" windows
+          cd %GITHUB_WORKSPACE%/b2-pkg
+          %GITHUB_WORKSPACE%/b2/b2.exe --b2root=%GITHUB_WORKSPACE%/b2 windows
