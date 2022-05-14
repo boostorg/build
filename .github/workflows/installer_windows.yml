@@ -39,3 +39,11 @@ jobs:
       - name: "Install"
         run: |
           choco install vswhere
+      - name: "Bootstrap"
+        run: |
+          cd "%GITHUB_WORKSPACE%/b2"
+          ./bootstrap.bat
+      - name: "Build"
+        run: |
+          cd "%GITHUB_WORKSPACE%/b2-pkg"
+          "%GITHUB_WORKSPACE%/b2/b2.exe" --b2root="GITHUB_WORKSPACE%/b2" windows
