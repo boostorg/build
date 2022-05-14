@@ -1,0 +1,40 @@
+# Use, modification, and distribution are
+# subject to the Boost Software License, Version 1.0. (See accompanying
+# file LICENSE.txt)
+#
+# Copyright René Ferdinand Rivera Morell 2022.
+
+name: 'Installer: Windows'
+
+on:
+  push:
+    branches: ["main", "release"]
+    paths-ignore:
+      [
+        ".circleci/**",
+        ".cirrus.yml",
+        ".drone.star",
+        ".semaphore/**",
+        ".travis.yml",
+        "appveyor.yml",
+        "azure-pipelines.yml",
+        ".ci/azp-*.yml",
+      ]
+
+jobs:
+  wix:
+    strategy:
+      matrix:
+        include:
+          - { name: "Windows", image: "" }
+    name: ${{ matrix.name }}
+    runs-on: "windows-latest"
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@master
+      - name: "Install"
+      - name: "Checkout"
+        uses: actions/checkout@master
+        with: { repository: "bfgroup/b2-pkg" }
+        run: |
+          choco install vswhere
