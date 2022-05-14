@@ -47,4 +47,4 @@ jobs:
         run: |
           cd "${env:GITHUB_WORKSPACE}/b2-pkg"
           $env:path += ';' + "${env:GITHUB_WORKSPACE}/b2"
-          b2 --debug-configuration --b2root="${env:GITHUB_WORKSPACE}/b2" windows
+          b2 --debug-configuration --b2root="${env:GITHUB_WORKSPACE}/b2" windows-wix
