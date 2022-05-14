@@ -41,9 +41,9 @@ jobs:
           choco install vswhere
       - name: "Bootstrap"
         run: |
-          cd "%GITHUB_WORKSPACE%/b2"
+          cd "${env:GITHUB_WORKSPACE}/b2"
           ./bootstrap.bat
       - name: "Build"
         run: |
-          cd %GITHUB_WORKSPACE%/b2-pkg
-          %GITHUB_WORKSPACE%/b2/b2.exe --b2root=%GITHUB_WORKSPACE%/b2 windows
+          cd "${env:GITHUB_WORKSPACE}/b2-pkg"
+          "${env:GITHUB_WORKSPACE}/b2/b2.exe" --b2root="${env:GITHUB_WORKSPACE}/b2" windows
