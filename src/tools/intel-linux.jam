@@ -38,6 +38,7 @@ toolset.inherit-rules intel-linux : gcc ;
 toolset.inherit-flags intel-linux : gcc
         : <inlining>off <inlining>on <inlining>full
           <optimization>space <optimization>speed
+          <optimization>minimal <optimization>debug
           <warnings>off <warnings>all <warnings>on
           <warnings>extra <warnings>pedantic
           <warnings-as-errors>off <warnings-as-errors>on

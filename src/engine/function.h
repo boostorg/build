@@ -16,14 +16,8 @@
 #include "jam_strings.h"
 
 typedef struct _function FUNCTION;
-typedef struct _stack STACK;
 
 typedef FUNCTION* function_ptr;
-typedef STACK* stack_ptr;
-
-STACK * stack_global( void );
-void stack_push( STACK * s, LIST * l );
-LIST * stack_pop( STACK * s );
 
 FUNCTION * function_compile( PARSE * parse );
 FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int32_t flags ), int32_t flags, const char * * args );
@@ -32,10 +26,10 @@ void function_free( FUNCTION * );
 OBJECT * function_rulename( FUNCTION * );
 void function_set_rulename( FUNCTION *, OBJECT * );
 void function_location( FUNCTION *, OBJECT * *, int32_t * );
-LIST * function_run( FUNCTION * function, FRAME * frame, STACK * s );
+LIST * function_run( FUNCTION * function, FRAME * frame );
 
 FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int32_t line );
-void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string * out );
+void function_run_actions( FUNCTION * function, FRAME * frame, string * out );
 
 FUNCTION * function_bind_variables( FUNCTION * f, module_t * module, int32_t * counter );
 FUNCTION * function_unbind_variables( FUNCTION * f );
@@ -43,11 +37,5 @@ FUNCTION * function_unbind_variables( FUNCTION * f );
 LIST * function_get_variables( FUNCTION * f );
 
 void function_done( void );
-
-#ifdef HAVE_PYTHON
-
-FUNCTION * function_python( PyObject * function, PyObject * bjam_signature );
-
-#endif
 
 #endif

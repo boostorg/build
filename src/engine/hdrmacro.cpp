@@ -75,7 +75,7 @@ void macro_headers( TARGET * t )
      */
     if ( !re )
     {
-        OBJECT * const re_str = object_new(
+        OBJECT * re_str = object_new(
             "^[     ]*#[    ]*define[   ]*([A-Za-z][A-Za-z0-9_]*)[  ]*"
             "[<\"]([^\">]*)[\">].*$" );
         re = regex_compile( re_str );

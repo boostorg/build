@@ -61,7 +61,6 @@ struct _PARSE {
     OBJECT * string;
     OBJECT * string1;
     int      num;
-    int      refs;
     OBJECT * rulename;
     OBJECT * file;
     int      line;
@@ -71,11 +70,19 @@ void parse_file( OBJECT *, FRAME * );
 void parse_string( OBJECT * name, const char * * lines, FRAME * frame );
 void parse_save( PARSE * );
 
-PARSE * parse_make( int type, PARSE * left, PARSE * right, PARSE * third,
+PARSE * parse_make(
+    int type, PARSE * & left, PARSE * & right, PARSE * & third,
     OBJECT * string, OBJECT * string1, int num );
+inline PARSE * parse_make(
+    int type, PARSE * & left, PARSE * && right, PARSE * & third,
+    OBJECT * string, OBJECT * string1, int num )
+{
+    PARSE * r = right;
+    return parse_make( type, left, r, third, string, string1, num );
+}
 
-void parse_refer( PARSE * );
-void parse_free( PARSE * );
+void parse_free( PARSE * & );
 LIST * parse_evaluate( PARSE *, FRAME * );
+void parse_done();
 
 #endif

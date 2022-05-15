@@ -185,7 +185,7 @@ void file_dirscan_( file_info_t * const d, scanback func, void * closure )
              * There will be no trailing slash in $(p), but there will be one in
              * $(p2). But, that seems rather fragile.
              */
-            OBJECT * const dir_no_slash = object_new_range( name, 2 );
+            OBJECT * dir_no_slash = object_new_range( name, 2 );
             (*func)( closure, d->name, 1 /* stat()'ed */, &d->time );
             (*func)( closure, dir_no_slash, 1 /* stat()'ed */, &d->time );
             object_free( dir_no_slash );
@@ -379,7 +379,7 @@ void file_archscan( char const * arch, scanback func, void * closure )
                 object_str( archive->file->name ),
                 object_str( member_file->name ) );
             {
-                OBJECT * const member = object_new( buf );
+                OBJECT * member = object_new( buf );
                 (*func)( closure, member, 1 /* time valid */, &member_file->time );
                 object_free( member );
             }

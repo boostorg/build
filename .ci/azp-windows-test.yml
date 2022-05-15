@@ -26,7 +26,7 @@ steps:
     ./bootstrap.bat $env:TOOLSET
     ./b2.exe --debug-configuration --prefix=${env:HOME}/temp/.b2 install toolset=$env:TEST_TOOLSET
     Remove-Item ./b2.exe
-    $env:path += $env:HOME + '/temp/.b2/bin' + ';' + $env:PATH
+    $env:path += $env:HOME + '/temp/.b2' + ';' + $env:PATH
     cd $env:HOME
     echo $null >> build.jam
     b2 -v

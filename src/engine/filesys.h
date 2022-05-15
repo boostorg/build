@@ -95,7 +95,7 @@ namespace b2 { namespace filesys {
 
 /*  Archive/library file support */
 file_archive_info_t * file_archive_info( OBJECT * const path, int * found );
-file_archive_info_t * file_archive_query( OBJECT * const path );
+file_archive_info_t * file_archive_query( OBJECT * path );
 
 /* FILELIST linked-list */
 FILELIST * filelist_new( OBJECT * path );

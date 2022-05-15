@@ -363,7 +363,7 @@ void file_archscan( char const * arch, scanback func, void * closure )
                 object_str( archive->file->name ),
                 object_str( member_file->name ) );
             {
-                OBJECT * const member = object_new( buf );
+                OBJECT * member = object_new( buf );
                 (*func)( closure, member, 1 /* time valid */, &member_file->time );
                 object_free( member );
             }

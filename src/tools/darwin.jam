@@ -509,3 +509,8 @@ actions piecemeal archive
 {
     "$(.LIBTOOL)" -static -o "$(<:T)"  $(ARFLAGS)  "$(>:T)"
 }
+
+# This is a temporary solution for doing combined architecture builds on macOS.
+flags darwin
+    OPTIONS <target-os>darwin/<architecture>arm+x86/<address-model>64
+    : "-arch arm64" "-arch x86_64" ;

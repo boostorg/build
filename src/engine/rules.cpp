@@ -564,7 +564,7 @@ static rule_ptr global_rule( rule_ptr r )
         return r;
 
     {
-        object_ptr const name = global_rule_name( r );
+        object_ptr name = global_rule_name( r );
         rule_ptr const result = define_rule( r->module, name, root_module() );
         object_free( name );
         return result;

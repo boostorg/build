@@ -47,6 +47,9 @@ feature.feature architecture
 
         # z Systems (aka s390x)
         s390x
+
+        # Combined architecture(s)
+        arm+x86
     :
         propagated optional
     ;

@@ -309,12 +309,13 @@ OBJECT * object_copy( OBJECT * obj )
  * object_free() - free an object
  */
 
-void object_free( OBJECT * obj )
+void object_free( OBJECT * & obj )
 {
     object_validate( obj );
 #ifdef BJAM_NO_MEM_CACHE
     BJAM_FREE( object_get_item( obj ) );
 #endif
+    obj = nullptr;
     ++strcount_out;
 }
 
