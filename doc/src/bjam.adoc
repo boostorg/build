@@ -963,9 +963,10 @@ rule FILE_OPEN ( filename : mode )
 ----
 
 The `FILE_OPEN` rule opens the specified file and returns a file
-descriptor. The _mode_ parameter can be either "w" or "r". Note that at
+descriptor if the _mode_ parameter is either "w" or "r". Note that at
 present, only the `UPDATE_NOW` rule can use the resulting file
-descriptor number.
+descriptor number. If the _mode_ parameter is "t" this opens the file as a
+text file and returns the contents as a single string.
 
 [[jam.language.rules.builtins.utility._update_now__]]
 ===== `UPDATE_NOW`

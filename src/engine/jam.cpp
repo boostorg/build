@@ -205,16 +205,6 @@ static void run_unit_tests()
 
 int anyhow = 0;
 
-#ifdef HAVE_PYTHON
-    extern PyObject * bjam_call         ( PyObject * self, PyObject * args );
-    extern PyObject * bjam_import_rule  ( PyObject * self, PyObject * args );
-    extern PyObject * bjam_define_action( PyObject * self, PyObject * args );
-    extern PyObject * bjam_variable     ( PyObject * self, PyObject * args );
-    extern PyObject * bjam_backtrace    ( PyObject * self, PyObject * args );
-    extern PyObject * bjam_caller       ( PyObject * self, PyObject * args );
-    int python_optimize = 1;  /* Set Python optimzation on by default */
-#endif
-
 void regex_done();
 
 char const * saved_argv0;
@@ -237,9 +227,6 @@ static void usage( const char * progname )
 	err_printf("-sx=y   Set variable x=y, overriding environment.\n");
 	err_printf("-tx     Rebuild x, even if it is up-to-date.\n");
 	err_printf("-v      Print the version of jam and exit.\n");
-#ifdef HAVE_PYTHON
-	err_printf("-z      Disable Python Optimization and enable asserts\n");
-#endif
 	err_printf("--x     Option is ignored.\n\n");
 
     b2::clean_exit( EXITBAD );
@@ -328,11 +315,7 @@ int guarded_main( int argc, char * * argv )
     --argc;
     ++argv;
 
-    #ifdef HAVE_PYTHON
-    #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qvz"
-    #else
     #define OPTSTRING "-:l:m:d:j:p:f:gs:t:ano:qv"
-    #endif
 
     if ( getoptions( argc, argv, OPTSTRING, optv ) < 0 )
     {
@@ -402,11 +385,6 @@ int guarded_main( int argc, char * * argv )
     if ( ( s = getoptval( optv, 'm', 0 ) ) )
         globs.max_buf = atoi( s ) * 1024;  /* convert to kb */
 
-    #ifdef HAVE_PYTHON
-    if ( ( s = getoptval( optv, 'z', 0 ) ) )
-        python_optimize = 0;  /* disable python optimization */
-    #endif
-
     /* Turn on/off debugging */
     for ( n = 0; ( s = getoptval( optv, 'd', n ) ); ++n )
     {
@@ -447,34 +425,6 @@ int guarded_main( int argc, char * * argv )
 
     {
         PROFILE_ENTER( MAIN );
-
-#ifdef HAVE_PYTHON
-        {
-            PROFILE_ENTER( MAIN_PYTHON );
-            Py_OptimizeFlag = python_optimize;
-            Py_Initialize();
-            {
-                static PyMethodDef BjamMethods[] = {
-                    {"call", bjam_call, METH_VARARGS,
-                     "Call the specified bjam rule."},
-                    {"import_rule", bjam_import_rule, METH_VARARGS,
-                     "Imports Python callable to bjam."},
-                    {"define_action", bjam_define_action, METH_VARARGS,
-                     "Defines a command line action."},
-                    {"variable", bjam_variable, METH_VARARGS,
-                     "Obtains a variable from bjam's global module."},
-                    {"backtrace", bjam_backtrace, METH_VARARGS,
-                     "Returns bjam backtrace from the last call into Python."},
-                    {"caller", bjam_caller, METH_VARARGS,
-                     "Returns the module from which the last call into Python is made."},
-                    {NULL, NULL, 0, NULL}
-                };
-
-                Py_InitModule( "bjam", BjamMethods );
-            }
-            PROFILE_EXIT( MAIN_PYTHON );
-        }
-#endif
 
 #ifndef NDEBUG
         run_unit_tests();
@@ -579,7 +529,7 @@ int guarded_main( int argc, char * * argv )
             }
             else
             {
-                OBJECT * const target = object_new( arg_v[ n ] );
+                OBJECT * target = object_new( arg_v[ n ] );
                 mark_target_for_updating( target );
                 object_free( target );
             }
@@ -618,7 +568,7 @@ int guarded_main( int argc, char * * argv )
             frame_init( frame );
             for ( n = 0; ( s = getoptval( optv, 'f', n ) ); ++n )
             {
-                OBJECT * const filename = object_new( s );
+                OBJECT * filename = object_new( s );
                 parse_file( filename, frame );
                 object_free( filename );
             }
@@ -639,7 +589,7 @@ int guarded_main( int argc, char * * argv )
             /* Manually touch -t targets. */
             for ( n = 0; ( s = getoptval( optv, 't', n ) ); ++n )
             {
-                OBJECT * const target = object_new( s );
+                OBJECT * target = object_new( s );
                 touch_target( target );
                 object_free( target );
             }
@@ -681,6 +631,8 @@ int main( int argc, char * * argv )
     catch ( b2::exit_result exit_code )
     {
         result = (int)exit_code;
+        out_flush();
+        err_flush();
     }
 
     if ( DEBUG_PROFILE )
@@ -693,6 +645,8 @@ int main( int argc, char * * argv )
     clear_targets_to_update();
 
     /* Widely scattered cleanup. */
+    parse_done();
+    debugger_done();
     property_set_done();
     exec_done();
     file_done();
@@ -712,10 +666,6 @@ int main( int argc, char * * argv )
     /* Close log out. */
     if ( globs.out )
         fclose( globs.out );
-
-#ifdef HAVE_PYTHON
-    Py_Finalize();
-#endif
 
     BJAM_MEM_CLOSE();
 

@@ -5,7 +5,7 @@
 
 # Boost library support module.
 #
-# This module allows to use the boost library from boost-build projects. The
+# This module allows to use the boost library from B2 projects. The
 # location of a boost source tree or the path to a pre-built version of the
 # library can be configured from either site-config.jam or user-config.jam. If
 # no location is configured the module looks for a BOOST_ROOT environment

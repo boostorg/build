@@ -11,6 +11,8 @@
 #include "config.h"
 #include "constants.h"
 #include "object.h"
+#include "psnip_debug_trap.h"
+#include "output.h"
 
 
 typedef struct profile_info
@@ -59,5 +61,14 @@ OBJECT * profile_make_local( char const * );
     if (DEBUG_PROFILE && !constant_LOCAL_##scope) constant_LOCAL_##scope = profile_make_local( #scope ); \
     PROFILE_ENTER( LOCAL_##scope )
 #define PROFILE_EXIT_LOCAL( scope ) PROFILE_EXIT( LOCAL_##scope )
+
+#define b2_cbreak(test) \
+    if ( !static_cast<bool>( test ) ) \
+    { \
+        err_printf("%s: %d: %s: Assertion '%s' failed.\n", __FILE__, __LINE__, __FUNCTION__, #test); \
+        err_flush(); \
+        psnip_trap(); \
+    } \
+    while ( false )
 
 #endif

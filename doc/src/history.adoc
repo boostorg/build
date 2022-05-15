@@ -1,6 +1,48 @@
 [[b2.history]]
 = History
 
+== Version 4.9.0
+
+This release has mostly internal cleanups and restructuring. The most
+significant being: fixing all memory leaks, automatic build system
+startup with the `boost-build` rule, the Jam Python interfaces, and
+the unmaintained Python build system port.
+
+* Add `minimal` and `debug` options for `optimization` feature.
+  -- _René Ferdinand Rivera Morell_
+* Add Rocket Lake, Alder Lake, Sapphire Rapids and Zen 3 instruction sets.
+  -- _Andrey Semashev_
+* Remove all, on-exit, memory leaks and fix all ASAN errors.
+  -- _René Ferdinand Rivera Morell_
+* Remove use of `boost-build.jam` as a initialization configuration file.
+  -- _René Ferdinand Rivera Morell_
+* Remove the incomplete build system port and Jam engine Python support
+  extensions.
+  -- _René Ferdinand Rivera Morell_
+* Fix not being able to do combined arm+x86 builds on macOS with `darwin`
+  and `clang` toolsets.
+  -- _René Ferdinand Rivera Morell_
+* Fix not being able to do cross-compiles on macOS with `clang` toolset.
+  -- _René Ferdinand Rivera Morell_
+* Fix errors when collecting a large number of object files with long names
+  into a static archive for `gcc` and `clang` toolsets.
+  -- _René Ferdinand Rivera Morell_
+* Fix detection of QCC in `build.sh` engine build script.
+  -- _René Ferdinand Rivera Morell_
+* Fix missing assembly flags for intel-win toolset.
+  -- _René Ferdinand Rivera Morell_
+* Fix possible command line length limit exceeded error with msvc toolset for
+  link actions.
+  -- _René Ferdinand Rivera Morell_
+* *New*: Add a "t" mode to `FILE_OPEN` built-in rule that gives one the
+  contents of a file when evaluated.
+  -- _René Ferdinand Rivera Morell_
+
+WARNING: This release removes the use of `boost-build.jam` and the
+`boost-build` rule for initialization. The `boost-build.jam` is still
+searched for and loaded to not break existing operations. But is considered
+deprecated and will be removed in a future release.
+
 == Version 4.8.2
 
 * Fix crash on exit cleanup of target lists caused by recursive destruction

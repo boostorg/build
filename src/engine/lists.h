@@ -45,10 +45,6 @@
 #include "config.h"
 #include "object.h"
 
-#ifdef HAVE_PYTHON
-# include <Python.h>
-#endif
-
 /*
  * LIST - list of strings
  */
@@ -113,11 +109,6 @@ LIST * lol_get( LOL *, int i );
 void   lol_print( LOL * );
 void   lol_build( LOL *, char const * * elements );
 
-#ifdef HAVE_PYTHON
-PyObject * list_to_python( LIST * );
-LIST * list_from_python( PyObject * );
-#endif
-
 namespace b2 { namespace jam {
     struct list
     {
@@ -148,14 +139,15 @@ namespace b2 { namespace jam {
 
         friend struct iterator;
 
+        inline list() = default;
         inline list(const list &other)
             : list_obj(list_copy(other.list_obj)) {}
         inline explicit list(const object &o)
             : list_obj(list_new(object_copy(o))) {}
-        inline explicit list(LIST *l)
-            : list_obj(list_copy(l)) {}
+        inline explicit list(LIST *l, bool own = false)
+            : list_obj(own ? l : list_copy(l)) {}
 
-        inline ~list() { if (list_obj) list_free(list_obj); }
+        inline ~list() { reset(); }
         inline LIST* release()
         {
             LIST* r = list_obj;
@@ -170,6 +162,17 @@ namespace b2 { namespace jam {
         inline list &append(const list &other)
         {
             list_obj = list_append(list_obj, list_copy(other.list_obj));
+            return *this;
+        }
+        inline LIST* operator*() { return list_obj; }
+        inline void reset(LIST * new_list = nullptr)
+        {
+            std::swap( list_obj, new_list );
+            if (new_list) list_free(new_list);
+        }
+        inline list& pop_front()
+        {
+            list_obj = list_pop_front(list_obj);
             return *this;
         }
 

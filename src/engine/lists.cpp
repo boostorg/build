@@ -418,38 +418,3 @@ void lol_print( LOL * lol )
         list_print( lol->list[ i ] );
     }
 }
-
-#ifdef HAVE_PYTHON
-
-PyObject * list_to_python( LIST * l )
-{
-    PyObject * result = PyList_New( 0 );
-    LISTITER iter = list_begin( l );
-    LISTITER const end = list_end( l );
-    for ( ; iter != end; iter = list_next( iter ) )
-    {
-        PyObject * s = PyString_FromString( object_str( list_item( iter ) ) );
-        PyList_Append( result, s );
-        Py_DECREF( s );
-    }
-
-    return result;
-}
-
-LIST * list_from_python( PyObject * l )
-{
-    LIST * result = L0;
-
-    Py_ssize_t n = PySequence_Size( l );
-    Py_ssize_t i;
-    for ( i = 0; i < n; ++i )
-    {
-        PyObject * v = PySequence_GetItem( l, i );
-        result = list_push_back( result, object_new( PyString_AsString( v ) ) );
-        Py_DECREF( v );
-    }
-
-    return result;
-}
-
-#endif

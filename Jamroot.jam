@@ -115,33 +115,6 @@ Define the b2 executable. Sources are based on platform.
 TODO: Make platform specific source be no-ops when not needed.
 |#
 
-local python-exe = [ MATCH --with-python=(.*) : [ modules.peek : ARGV ] ] ;
-local python-include ;
-local python-ldlib ;
-if $(python-exe)
-{
-    python-include = [ SHELL
-        "$(python-exe) -c \"import sysconfig; print(sysconfig.get_path('include'));\""
-        : strip-eol ] ;
-    python-libdir = [ SHELL
-        "$(python-exe) -c \"import sysconfig; import os.path; print(sysconfig.get_config_var('LIBDIR'));\""
-        : strip-eol ] ;
-    python-ldlib = [ MATCH ".*(python.*)" : [ SHELL
-        "$(python-exe) -c \"import sysconfig; import os.path; print(sysconfig.get_config_var('LIBRARY'));\""
-        : strip-eol ] ] ;
-    python-ldlib = $(python-ldlib:S=) ;
-
-    lib python
-        :
-        : <name>$(python-ldlib) <search>$(python-libdir)
-        :
-        : <include>$(python-include) <define>HAVE_PYTHON ;
-}
-else
-{
-    alias python ;
-}
-
 obj jamgram.obj
     :   jamgram.cpp
     :   <toolset>gcc:<cxxflags>-Wno-free-nonheap-object
@@ -163,7 +136,6 @@ local unix_os = [ set.difference [ feature.values <target-os> ] : windows vms ] 
 exe b2
     :   $(b2_src)
         jamgram.obj
-        python
     :   <target-os>windows:<source>$(b2_src_nt)
         <target-os>vms:<source>$(b2_src_vms)
         <target-os>$(unix_os):<source>$(b2_src_unix)
@@ -178,11 +150,15 @@ Installation of the engine, build, and example files.
 |#
 
 feature.feature b2-install-layout : standard portable : incidental propagated ;
+if [ os.on-windows ]
+{
+    feature.set-default b2-install-layout : portable ;
+}
 
 add-install-dir b2prefix-standard : : prefix ;
 add-install-dir b2bindir-standard : : bindir ;
-add-install-dir b2coredir-standard : boost-build/src : datarootdir ;
-add-install-dir b2examplesdir-standard : boost-build/examples : datarootdir ;
+add-install-dir b2coredir-standard : b2/src : datarootdir ;
+add-install-dir b2examplesdir-standard : b2/examples : datarootdir ;
 
 add-install-dir b2prefix-portable : : prefix ;
 add-install-dir b2bindir-portable : : b2prefix-portable ;
@@ -230,17 +206,6 @@ local .core-sources =
     [ path.glob-tree $(SELF)/src/util : *.jam ]
     [ path.glob-tree $(SELF)/src/tools : *.jam *.xml *.xsl *.doxyfile *.hpp doxproc.py ]
     ;
-if $(python-exe)
-{
-    .core-sources +=
-        [ path.glob-tree $(SELF)/src/build : *.py ]
-        [ path.glob-tree $(SELF)/src/contrib : *.py ]
-        [ path.glob-tree $(SELF)/src/kernel : *.py ]
-        [ path.glob-tree $(SELF)/src/options : *.py ]
-        [ path.glob-tree $(SELF)/src/util : *.py ]
-        [ path.glob-tree $(SELF)/src/tools : *.py : doxproc.py ]
-        ;
-}
 
 install b2-core
     :   # What to install

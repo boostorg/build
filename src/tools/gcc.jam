@@ -626,6 +626,8 @@ actions compile.c.pch
 toolset.flags gcc.compile OPTIONS <optimization>off   : -O0 ;
 toolset.flags gcc.compile OPTIONS <optimization>speed : -O3 ;
 toolset.flags gcc.compile OPTIONS <optimization>space : -Os ;
+toolset.flags gcc.compile OPTIONS <optimization>minimal : -O1 ;
+toolset.flags gcc.compile OPTIONS <optimization>debug : -Og ;
 
 toolset.flags gcc.compile OPTIONS <inlining>off  : -fno-inline ;
 toolset.flags gcc.compile OPTIONS <inlining>on   : -Wno-inline ;
@@ -1102,7 +1104,7 @@ rule archive ( targets * : sources * : properties * )
 #
 actions piecemeal archive
 {
-    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" "$(>)"
+    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" @($(<[-1]:T).rsp:O=FC:<=@":>=":E="$(>)")
 }
 
 ###
@@ -1173,6 +1175,9 @@ cpu-flags gcc OPTIONS : x86 : icelake-server : -march=icelake-server ;
 cpu-flags gcc OPTIONS : x86 : cascadelake : -march=skylake-avx512 -mavx512vnni ;
 cpu-flags gcc OPTIONS : x86 : cooperlake : -march=cooperlake ;
 cpu-flags gcc OPTIONS : x86 : tigerlake : -march=tigerlake ;
+cpu-flags gcc OPTIONS : x86 : rocketlake : -march=rocketlake ;
+cpu-flags gcc OPTIONS : x86 : alderlake : -march=alderlake ;
+cpu-flags gcc OPTIONS : x86 : sapphirerapids : -march=sapphirerapids ;
 cpu-flags gcc OPTIONS : x86 : k6 : -march=k6 ;
 cpu-flags gcc OPTIONS : x86 : k6-2 : -march=k6-2 ;
 cpu-flags gcc OPTIONS : x86 : k6-3 : -march=k6-3 ;
@@ -1199,6 +1204,7 @@ cpu-flags gcc OPTIONS : x86 : btver1 : -march=btver1 ;
 cpu-flags gcc OPTIONS : x86 : btver2 : -march=btver2 ;
 cpu-flags gcc OPTIONS : x86 : znver1 : -march=znver1 ;
 cpu-flags gcc OPTIONS : x86 : znver2 : -march=znver2 ;
+cpu-flags gcc OPTIONS : x86 : znver3 : -march=znver3 ;
 cpu-flags gcc OPTIONS : x86 : winchip-c6 : -march=winchip-c6 ;
 cpu-flags gcc OPTIONS : x86 : winchip2 : -march=winchip2 ;
 cpu-flags gcc OPTIONS : x86 : c3 : -march=c3 ;
@@ -1266,3 +1272,8 @@ cpu-flags gcc OPTIONS : arm : cortex-r5 : -mcpu=cortex-r5 ;
 cpu-flags gcc OPTIONS : arm : cortex-r5+vfpv3-d16 : -mcpu=cortex-r5 -mfpu=vfpv3-d16 -mfloat-abi=hard ;
 # AIX variant of RS/6000 & PowerPC
 toolset.flags gcc AROPTIONS <address-model>64/<target-os>aix : "-X64" ;
+
+# Enable response file control
+toolset.flags gcc RESPONSE_FILE_SUB <response-file>auto : a ;
+toolset.flags gcc RESPONSE_FILE_SUB <response-file>file : f ;
+toolset.flags gcc RESPONSE_FILE_SUB <response-file>contents : c ;

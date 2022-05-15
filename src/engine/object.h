@@ -42,7 +42,7 @@ struct hash_header
 
 char const * object_str  ( OBJECT * );
 OBJECT *     object_copy ( OBJECT * );
-void         object_free ( OBJECT * );
+void         object_free ( OBJECT * & );
 int          object_equal( OBJECT *, OBJECT * );
 unsigned int object_hash ( OBJECT * );
 

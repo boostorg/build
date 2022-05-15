@@ -76,7 +76,7 @@ static struct hash * archivecache_hash;
 
 file_archive_info_t * file_archive_info( OBJECT * const path, int * found )
 {
-    OBJECT * const path_key = path_as_key( path );
+    OBJECT * path_key = path_as_key( path );
     file_archive_info_t * archive;
 
     if ( !archivecache_hash )
@@ -106,7 +106,7 @@ file_archive_info_t * file_archive_info( OBJECT * const path, int * found )
  * the path does not reference an existing file system object.
  */
 
-file_archive_info_t * file_archive_query( OBJECT * const path )
+file_archive_info_t * file_archive_query( OBJECT * path )
 {
     int found;
     file_archive_info_t * const archive = file_archive_info( path, &found );
@@ -213,7 +213,7 @@ void file_done()
 
 file_info_t * file_info( OBJECT * const path, int * found )
 {
-    OBJECT * const path_key = path_as_key( path );
+    OBJECT * path_key = path_as_key( path );
     file_info_t * finfo;
 
     if ( !filecache_hash )
@@ -423,7 +423,7 @@ static void file_archivescan_impl( OBJECT * path, archive_scanback func, void * 
                 object_str( member_file->name ) );
 
             {
-                OBJECT * const member = object_new( buf );
+                OBJECT * member = object_new( buf );
                 (*func)( closure, member, symbols, 1, &member_file->time );
                 object_free( member );
             }

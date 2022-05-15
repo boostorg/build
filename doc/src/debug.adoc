@@ -16,7 +16,7 @@ $ b2 -dconsole
 Breakpoint 1 set at gcc.init
 (b2db) run
 Starting program: /usr/bin/b2
-Breakpoint 1, gcc.init ( ) at /usr/share/boost-build/tools/gcc.jam:74
+Breakpoint 1, gcc.init ( ) at /usr/share/b2/tools/gcc.jam:74
 74      local tool-command = ;
 (b2db) quit
 ....

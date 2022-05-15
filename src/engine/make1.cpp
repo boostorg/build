@@ -769,7 +769,7 @@ static void call_timing_rule( TARGET * target, timing_info const * const time )
             );
 
         /* Call the rule. */
-        evaluate_rule( bindrule( rulename , root_module() ), rulename, frame );
+        list_free( evaluate_rule( bindrule( rulename , root_module() ), rulename, frame ) );
 
         /* Clean up. */
         frame_free( frame );
@@ -845,7 +845,7 @@ static void call_action_rule
             lol_add( frame->args, L0 );
 
         /* Call the rule. */
-        evaluate_rule( bindrule( rulename, root_module() ), rulename, frame );
+        list_free( evaluate_rule( bindrule( rulename, root_module() ), rulename, frame ) );
 
         /* Clean up. */
         frame_free( frame );

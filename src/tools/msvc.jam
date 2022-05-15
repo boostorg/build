@@ -915,7 +915,7 @@ rule link.dll ( targets + : sources * : properties * )
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)"
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib" $(LINKOPT) $(LINKFLAGS)) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)"
     }
 
     actions manifest
@@ -930,7 +930,7 @@ rule link.dll ( targets + : sources * : properties * )
 
     actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib") $(LINKOPT) $(LINKFLAGS) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)"
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib" $(LINKOPT) $(LINKFLAGS)) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)"
     }
 
     actions manifest.dll
@@ -2144,10 +2144,11 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
                      merom-xe kentsfield kentsfield-xe penryn wolfdale
                      yorksfield nehalem sandy-bridge ivy-bridge haswell
                      broadwell skylake skylake-avx512 cannonlake icelake-client
-                     icelake-server cascadelake cooperlake tigerlake ;
+                     icelake-server cascadelake cooperlake tigerlake rocketlake
+                     alderlake sapphirerapids ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
                      athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3
-                     bdver4 btver1 btver2 znver1 znver2 ;
+                     bdver4 btver1 btver2 znver1 znver2 znver3 ;
 .cpu-type-g7       = pentium4 pentium4m athlon athlon-tbird athlon-4 athlon-xp
                      athlon-mp $(.cpu-type-em64t) $(.cpu-type-amd64) ;
 .cpu-type-itanium  = itanium itanium1 merced ;

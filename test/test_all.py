@@ -154,7 +154,7 @@ def reorder_tests(tests, first_test):
         return tests
 
 
-critical_tests = ["unit_tests", "module_actions", "startup_v2", "core_d12",
+critical_tests = ["unit_tests", "module_actions", "core_d12",
     "core_typecheck", "core_delete_module", "core_language", "core_arguments",
     "core_varnames", "core_import_module"]
 

@@ -59,7 +59,7 @@ rule init ( version ? :  command * : options * ) {
     : version $(version) ] ;
 
   common.handle-options clang-linux : $(condition) : $(command) : $(options) ;
-  clang.init-cxxstd-flags clang-linux : $(condition) : $(version) ;
+  clang.init-flags clang-linux : $(condition) : $(version) ;
 
   # Support for gcc root as the backend, this is mainly useful for clang/gcc on Windows
   # since on Linux gcc will be the default compiler already located on the PATH.

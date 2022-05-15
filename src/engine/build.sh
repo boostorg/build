@@ -180,7 +180,7 @@ check_toolset ()
     if test_toolset intel-linux && test_path icpx ; then
         if test_compiler icpx -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
-    if test_toolset xyz && test_path icc ; then
+    if test_toolset intel-linux && test_path icc ; then
         if test_compiler icc -x c++ -std=c++11 ; then B2_TOOLSET=intel-linux ; return ${TRUE} ; fi
     fi
     if test_toolset intel-linux && test -r "${HOME}/intel/oneapi/setvars.sh" ; then
@@ -220,7 +220,7 @@ check_toolset ()
     # OSF Tru64 C++ (tru64cxx)
     if test_toolset tru64cxx && test_uname OSF1 && test_compiler cc ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
     # QNX (qcc)
-    if test_toolset qcc && test_uname QNX && test_compiler QCC ; then B2_TOOLSET=mipspro ; return ${TRUE} ; fi
+    if test_toolset qcc && test_uname QNX && test_compiler QCC ; then B2_TOOLSET=qcc ; return ${TRUE} ; fi
     # Linux XL/VA C++ (xlcpp, vacpp)
     if test_toolset xlcpp vacpp && test_uname Linux && test_compiler xlC_r ; then
         if /usr/bin/lscpu | grep Byte | grep Little > /dev/null 2>&1 ; then
@@ -406,7 +406,7 @@ case "${B2_TOOLSET}" in
     ;;
 
     qcc)
-        CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
+        CXX_VERSION_OPT=""
         B2_CXXFLAGS_RELEASE="-O3 -Wc,-finline-functions"
         B2_CXXFLAGS_DEBUG="O0 -Wc,-fno-inline -gstabs+"
     ;;
@@ -429,7 +429,9 @@ build_b2 ()
 ###
 ###
 "
-    echo_run ${B2_CXX} ${CXX_VERSION_OPT}
+    if test "${CXX_VERSION_OPT}" != ""; then
+        echo_run ${B2_CXX} ${CXX_VERSION_OPT}
+    fi
 echo "
 ###
 ###
@@ -495,7 +497,6 @@ modules/set.cpp \
     else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} -DNDEBUG"
     fi
     ( B2_VERBOSE_OPT=${TRUE} echo_run ${B2_CXX} ${B2_CXXFLAGS} ${B2_SOURCES} -o b2 )
-    ( B2_VERBOSE_OPT=${TRUE} echo_run cp b2 bjam )
 }
 
 if test_true ${B2_VERBOSE_OPT} ; then

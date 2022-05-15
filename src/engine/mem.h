@@ -152,9 +152,9 @@ namespace jam {
     using unique_bare_jptr = std::unique_ptr<T, unique_jptr_free<T>>;
 
     template <typename T, typename F>
-    unique_bare_jptr<T> make_unique_bare_jptr(T* p, F f)
+    unique_bare_jptr<T> make_unique_bare_jptr(T* p, F exit_f)
     {
-        return unique_bare_jptr<T>(p, unique_jptr_free<T>(f));
+        return unique_bare_jptr<T>(p, unique_jptr_free<T>(exit_f));
     }
 
     template <typename T, typename F, typename G>

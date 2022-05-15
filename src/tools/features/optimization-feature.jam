@@ -8,7 +8,7 @@ import feature ;
 #| tag::doc[]
 
 [[bbv2.builtin.features.optimization]]`optimization`::
-*Allowed values:* `off`, `speed`, `space`.
+*Allowed values:* `off`, `speed`, `space`, 'minimal', 'debug'.
 +
 Enables optimization. `speed` optimizes for faster code, `space` optimizes for
 smaller binary.
@@ -16,7 +16,7 @@ smaller binary.
 |# # end::doc[]
 
 feature.feature optimization
-    : off speed space
+    : off speed space minimal debug
     : propagated ;
 
 #| tag::inline-doc[]
