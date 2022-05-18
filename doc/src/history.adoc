@@ -1,6 +1,15 @@
 [[b2.history]]
 = History
 
+== Version 4.9.1
+
+* Fix bad calculation of initial dev-only path to bootstrap file within the
+  b2 dev tree.
+  -- _René Ferdinand Rivera Morell_
+* Fix bad path calculation in final fallback for loading bootstrap file from
+  path specified in boost-build rule.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.9.0
 
 This release has mostly internal cleanups and restructuring. The most

@@ -1,5 +1,5 @@
 /*
-Copyright 2020 René Ferdinand Rivera Morell
+Copyright 2020-2022 René Ferdinand Rivera Morell
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
@@ -208,7 +208,7 @@ bool b2::startup::bootstrap(FRAME *frame)
     // development.
     if (bootstrap_file.empty())
     {
-        std::string work_dir(b2::paths::normalize(b2_exe_path + "/../"));
+        std::string work_dir(b2::paths::normalize(b2_exe_path + "/..") + "/");
         while (bootstrap_file.empty() && !work_dir.empty())
         {
             bootstrap_files_searched += "  " +  work_dir + "src/kernel/" + bootstrap_jam + "\n";
@@ -235,7 +235,7 @@ bool b2::startup::bootstrap(FRAME *frame)
         if (!dot_boost_build_dir.empty())
         {
             std::string dir = b2::jam::object(*dot_boost_build_dir.begin());
-            if (!b2_file_path.empty() && b2::paths::is_relative(dir))
+            if (!b2_file_path.empty() && !b2::paths::is_rooted(dir))
                 dir = b2_file_path + "/../" + dir;
             const std::string path
                 = b2::paths::normalize(dir + "/" + bootstrap_jam);
