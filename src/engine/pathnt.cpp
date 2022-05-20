@@ -8,8 +8,8 @@
  * Copyright 2001-2004 David Abrahams.
  * Copyright 2005 Rene Rivera.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -17,6 +17,8 @@
  */
 
 #include "jam.h"
+#ifdef USE_PATHNT
+
 #include "pathsys.h"
 #include "hash.h"
 
@@ -139,7 +141,7 @@ static int canonicWindowsPath( char const * const path, int32_t path_length,
     {
         char const * const dir = path;
         const int32_t dir_length = int32_t(p - path);
-        OBJECT * const dir_obj = object_new_range( dir, dir_length );
+        OBJECT * dir_obj = object_new_range( dir, dir_length );
         int found;
         path_key_entry * const result = (path_key_entry *)hash_insert(
             path_key_cache, dir_obj, &found );
@@ -393,7 +395,7 @@ OBJECT * path_as_key( OBJECT * path )
 
 static void free_path_key_entry( void * xentry, void * const data )
 {
-    path_key_entry * const entry = (path_key_entry *)xentry;
+    path_key_entry * entry = (path_key_entry *)xentry;
     if (entry->path) object_free( entry->path );
     if (entry->key) object_free( entry->key );
 }
@@ -407,3 +409,5 @@ void path_done( void )
         hashdone( path_key_cache );
     }
 }
+
+#endif // USE_PATHNT

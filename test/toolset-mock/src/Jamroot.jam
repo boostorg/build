@@ -1,8 +1,8 @@
 # Copyright 2017 Steven Watanabe
 #
 # Distributed under the Boost Software License, Version 1.0.
-#    (See accompanying file LICENSE_1_0.txt or copy at
-#          http://www.boost.org/LICENSE_1_0.txt)
+#    (See accompanying file LICENSE.txt or copy at
+#          https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import os ;
 import print ;
@@ -11,7 +11,6 @@ import feature ;
 
 .PYTHON = [ os.environ PYTHON_CMD ] ;
 path-constant .AR : ar.py ;
-path-constant .RANLIB : ranlib.py ;
 path-constant .LIBTOOL : libtool.py ;
 path-constant .STRIP : strip.py ;
 path-constant .LD : ld.py ;
@@ -25,14 +24,12 @@ rule cfg-header ( target : : properties * )
 {
     local PYTHON = [ c-escape $(.PYTHON) ] ;
     local AR = [ c-escape $(.AR) ] ;
-    local RANLIB = [ c-escape $(.RANLIB) ] ;
     local LIBTOOL = [ c-escape $(.LIBTOOL) ] ;
     local STRIP = [ c-escape $(.STRIP) ] ;
     local LD = [ c-escape $(.LD) ] ;
     print.output $(target) ;
     print.text "#define PYTHON_CMD "\"$(PYTHON)\" : true ;
     print.text "#define AR_CMD "\"$(AR)\" : true ;
-    print.text "#define RANLIB_CMD "\"$(RANLIB)\" : true ;
     print.text "#define LIBTOOL_CMD "\"$(LIBTOOL)\" : true ;
     print.text "#define STRIP_CMD "\"$(STRIP)\" : true ;
     print.text "#define LD_CMD "\"$(LD)\" : true ;
@@ -55,7 +52,6 @@ rule write-target-os ( target : : properties * )
 make target-os.txt : : @write-target-os ;
 
 exe ar : [ obj ar.obj : mock-program.cpp : <define>PY_SCRIPT=AR_CMD ] ;
-exe ranlib : [ obj ranlib.obj : mock-program.cpp : <define>PY_SCRIPT=RANLIB_CMD ] ;
 exe libtool : [ obj libtool.obj : mock-program.cpp : <define>PY_SCRIPT=LIBTOOL_CMD ] ;
 exe strip : [ obj strip.obj : mock-program.cpp : <define>PY_SCRIPT=STRIP_CMD ] ;
 exe ld : [ obj ld.obj : mock-program.cpp : <define>PY_SCRIPT=LD_CMD ] ;

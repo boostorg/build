@@ -2,7 +2,7 @@
 
 # Copyright 2002 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 
@@ -14,5 +14,5 @@ unbuilt all ;
 ECHO "Hi" ;
 """)
 
-t.run_build_system("-ftest.jam", stdout="Hi\n")
+t.run_build_system(["-ftest.jam", "-d0"], stdout="Hi\n")
 t.cleanup()

@@ -9,8 +9,8 @@
  * Copyright 2005 Reece H. Dunn.
  * Copyright 2005 Rene Rivera.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -142,7 +142,7 @@ void var_defines( struct module_t * module, const char * const * e, int preproce
             /* Get name. */
             string_append_range( buf, *e, val );
             {
-                OBJECT * const varname = object_new( buf->value );
+                OBJECT * varname = object_new( buf->value );
                 var_set( module, varname, l, VAR_SET );
                 object_free( varname );
             }

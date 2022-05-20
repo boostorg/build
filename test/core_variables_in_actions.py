@@ -2,8 +2,8 @@
 
 # Copyright 2012. Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #   Tests that variables in actions get expanded but double quote characters
 # get treated as regular characters and not string literal delimiters when

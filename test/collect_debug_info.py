@@ -2,7 +2,7 @@
 
 # Copyright 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #   Temporarily enabled dummy test that always fails and is used to collect
 # extra debugging information from Boost Build test runner sites.

@@ -2,8 +2,8 @@
 
 # Copyright 2012. Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test correct "-p" option handling.
 
@@ -22,7 +22,7 @@ if $(NT)
 actions go
 {
     $(prefix)stdout$(suffix)
-    $(prefix)stderr$(suffix) 1>&2
+    >&2 $(prefix)stderr$(suffix)
 }
 ECHO "{{{" $(XXX) "}}}" ;
 ALWAYS all ;

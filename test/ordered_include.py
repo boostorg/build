@@ -3,8 +3,8 @@
 # Copyright (c) 2008 Steven Watanabe
 #
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt) or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt) or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 
@@ -22,24 +22,24 @@ def test_default_order():
     #include <test.hpp>
     int main() { f(); }
     """)
-    
+
     tester.write("a/test.hpp", """
     void f();
     """)
-    
+
     tester.write("b/test.hpp", """
     """)
-    
+
     tester.run_build_system()
-    
+
     tester.expect_addition("bin/$toolset/debug*/test.obj")
-    
+
     # Check that the dependencies are correct
     tester.touch("a/test.hpp")
     tester.run_build_system()
     tester.expect_touch("bin/$toolset/debug*/test.obj")
     tester.expect_nothing_more()
-    
+
     tester.touch("b/test.hpp")
     tester.run_build_system()
     tester.expect_nothing_more()
@@ -60,24 +60,24 @@ def test_default_order_mixed():
     #include <test.hpp>
     int main() { f(); }
     """)
-    
+
     tester.write("a/test.hpp", """
     void f();
     """)
-    
+
     tester.write("b/test.hpp", """
     """)
-    
+
     tester.run_build_system()
-    
+
     tester.expect_addition("bin/$toolset/debug*/test.obj")
-    
+
     # Check that the dependencies are correct
     tester.touch("a/test.hpp")
     tester.run_build_system()
     tester.expect_touch("bin/$toolset/debug*/test.obj")
     tester.expect_nothing_more()
-    
+
     tester.touch("b/test.hpp")
     tester.run_build_system()
     tester.expect_nothing_more()

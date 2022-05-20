@@ -24,12 +24,16 @@
 #include "pathsys.h"
 #include "rules.h"
 #include "jam_strings.h"
+#include "startup.h"
 #include "subst.h"
 #include "timestamp.h"
 #include "variable.h"
 #include "output.h"
 
+#include <string>
+
 #include <ctype.h>
+#include <stdlib.h>
 
 #ifdef OS_NT
 #include <windows.h>
@@ -394,17 +398,6 @@ void load_builtins()
                       builtin_check_if_file, 0, args );
     }
 
-#ifdef HAVE_PYTHON
-    {
-        char const * args[] = { "python-module",
-                            ":", "function",
-                            ":", "jam-module",
-                            ":", "rule-name", 0 };
-        bind_builtin( "PYTHON_IMPORT_RULE",
-                      builtin_python_import_rule, 0, args );
-    }
-#endif
-
 # if defined( OS_NT ) || defined( OS_CYGWIN )
     {
         char const * args[] = { "key_path", ":", "data", "?", 0 };
@@ -560,7 +553,7 @@ LIST * builtin_depends( FRAME * frame, int flags )
         if ( flags )
             target_include_many( t, sources );
         else
-            t->depends = targetlist( t->depends, sources );
+            targetlist( t->depends, sources );
     }
 
     /* Enter reverse links */
@@ -574,11 +567,11 @@ LIST * builtin_depends( FRAME * frame, int flags )
             LISTITER t_iter = list_begin( targets );
             LISTITER const t_end = list_end( targets );
             for ( ; t_iter != t_end; t_iter = list_next( t_iter ) )
-                s->dependants = targetentry( s->dependants, bindtarget(
+                targetentry( s->dependants, bindtarget(
                     list_item( t_iter ) )->includes );
         }
         else
-            s->dependants = targetlist( s->dependants, targets );
+            targetlist( s->dependants, targets );
     }
 
     return L0;
@@ -601,7 +594,7 @@ LIST * builtin_rebuilds( FRAME * frame, int flags )
     for ( ; iter != end; iter = list_next( iter ) )
     {
         TARGET * const t = bindtarget( list_item( iter ) );
-        t->rebuilds = targetlist( t->rebuilds, rebuilds );
+        targetlist( t->rebuilds, rebuilds );
     }
     return L0;
 }
@@ -647,10 +640,10 @@ LIST * builtin_exit( FRAME * frame, int flags )
             break;
         }
 #endif
-        exit( status );
+        b2::clean_exit( status );
     }
     else
-        exit( EXITBAD );  /* yeech */
+        b2::clean_exit( EXITBAD );  /* yeech */
     return L0;
 }
 
@@ -856,7 +849,7 @@ LIST * glob_recursive( char const * pattern )
     if ( !has_wildcards( pattern ) )
     {
         /* No metacharacters. Check if the path exists. */
-        OBJECT * const p = object_new( pattern );
+        OBJECT * p = object_new( pattern );
         result = append_if_exists( result, p );
         object_free( p );
     }
@@ -889,7 +882,7 @@ LIST * glob_recursive( char const * pattern )
 
             if ( has_wildcards( basename->value ) )
             {
-                OBJECT * const b = object_new( basename->value );
+                OBJECT * b = object_new( basename->value );
                 LISTITER iter = list_begin( dirs );
                 LISTITER const end = list_end( dirs );
                 for ( ; iter != end; iter = list_next( iter ) )
@@ -932,7 +925,7 @@ LIST * glob_recursive( char const * pattern )
         else
         {
             /* No directory, just a pattern. */
-            OBJECT * const p = object_new( pattern );
+            OBJECT * p = object_new( pattern );
             result = list_append( result, glob1( constant_dot, p ) );
             object_free( p );
         }
@@ -1173,7 +1166,7 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
     else
         out_printf( "root module.\n" );
     backtrace( frame->prev );
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
 }
 
 
@@ -1255,7 +1248,7 @@ LIST * builtin_import( FRAME * frame, int flags )
         list_print( target_rules );
         out_printf( "\n" );
         backtrace( frame->prev );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
 
     return L0;
@@ -1630,7 +1623,7 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
         out_printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
             object_str( list_front( rule_name ) ), object_str( module->name ) );
         backtrace( frame->prev );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
     return L0;
 }
@@ -1727,6 +1720,27 @@ LIST * builtin_file_open( FRAME * frame, int flags )
     char const * mode = object_str( list_front( lol_get( frame->args, 1 ) ) );
     int fd;
     char buffer[ sizeof( "4294967295" ) ];
+
+    if ( strcmp(mode, "t") == 0 )
+    {
+        FILE* f = fopen( name, "r" );
+        if ( !f ) return L0;
+        char buf[ 1025 ];
+        std::string text;
+        size_t c = 0;
+        do
+        {
+            c = fread( buf, sizeof(char), 1024, f );
+            if ( c > 0 )
+            {
+                buf[c] = 0;
+                text += buf;
+            }
+        }
+        while( c > 0 );
+        fclose( f );
+        return list_new( object_new( text.c_str() ) );
+    }
 
     if ( strcmp(mode, "w") == 0 )
         fd = open( name, O_WRONLY|O_CREAT|O_TRUNC, 0666 );
@@ -1915,87 +1929,11 @@ LIST *builtin_readlink( FRAME * frame, int flags )
 
 LIST *builtin_debug_print_helper( FRAME * frame, int flags )
 {
-    debug_print_result = list_copy( lol_get( frame->args, 0 ) );
+    debug_print_result.reset( list_copy( lol_get( frame->args, 0 ) ) );
     return L0;
 }
 
 #endif
-
-#ifdef HAVE_PYTHON
-
-LIST * builtin_python_import_rule( FRAME * frame, int flags )
-{
-    static int first_time = 1;
-    char const * python_module   = object_str( list_front( lol_get( frame->args,
-        0 ) ) );
-    char const * python_function = object_str( list_front( lol_get( frame->args,
-        1 ) ) );
-    OBJECT     * jam_module      = list_front( lol_get( frame->args, 2 ) );
-    OBJECT     * jam_rule        = list_front( lol_get( frame->args, 3 ) );
-
-    PyObject * pName;
-    PyObject * pModule;
-    PyObject * pDict;
-    PyObject * pFunc;
-
-    if ( first_time )
-    {
-        /* At the first invocation, we add the value of the global
-         * EXTRA_PYTHONPATH to the sys.path Python variable.
-         */
-        LIST * extra = 0;
-        module_t * outer_module = frame->module;
-        LISTITER iter, end;
-
-        first_time = 0;
-
-        extra = var_get( root_module(), constant_extra_pythonpath );
-
-        iter = list_begin( extra ), end = list_end( extra );
-        for ( ; iter != end; iter = list_next( iter ) )
-        {
-            string buf[ 1 ];
-            string_new( buf );
-            string_append( buf, "import sys\nsys.path.append(\"" );
-            string_append( buf, object_str( list_item( iter ) ) );
-            string_append( buf, "\")\n" );
-            PyRun_SimpleString( buf->value );
-            string_free( buf );
-        }
-    }
-
-    pName   = PyString_FromString( python_module );
-    pModule = PyImport_Import( pName );
-    Py_DECREF( pName );
-
-    if ( pModule != NULL )
-    {
-        pDict = PyModule_GetDict( pModule );
-        pFunc = PyDict_GetItemString( pDict, python_function );
-
-        if ( pFunc && PyCallable_Check( pFunc ) )
-        {
-            module_t * m = bindmodule( jam_module );
-            new_rule_body( m, jam_rule, function_python( pFunc, 0 ), 0 );
-        }
-        else
-        {
-            if ( PyErr_Occurred() )
-                PyErr_Print();
-            err_printf( "Cannot find function \"%s\"\n", python_function );
-        }
-        Py_DECREF( pModule );
-    }
-    else
-    {
-        PyErr_Print();
-        err_printf( "Failed to load \"%s\"\n", python_module );
-    }
-    return L0;
-
-}
-
-#endif  /* #ifdef HAVE_PYTHON */
 
 
 void lol_build( LOL * lol, char const * * elements )
@@ -2020,296 +1958,6 @@ void lol_build( LOL * lol, char const * * elements )
     if ( l != L0 )
         lol_add( lol, l );
 }
-
-
-#ifdef HAVE_PYTHON
-
-static LIST *jam_list_from_string(PyObject *a)
-{
-    return list_new( object_new( PyString_AsString( a ) ) );
-}
-
-static LIST *jam_list_from_sequence(PyObject *a)
-{
-    LIST * l = 0;
-
-    int i = 0;
-    int s = PySequence_Size( a );
-
-    for ( ; i < s; ++i )
-    {
-        /* PySequence_GetItem returns new reference. */
-        PyObject * e = PySequence_GetItem( a, i );
-        char * s = PyString_AsString( e );
-        if ( !s )
-        {
-            /* try to get the repr() on the object */
-            PyObject *repr = PyObject_Repr(e);
-            if (repr)
-            {
-                const char *str = PyString_AsString(repr);
-                PyErr_Format(PyExc_TypeError, "expecting type <str> got %s", str);
-            }
-            /* fall back to a dumb error */
-            else
-            {
-                PyErr_BadArgument();
-            }
-            return NULL;
-        }
-        l = list_push_back( l, object_new( s ) );
-        Py_DECREF( e );
-    }
-
-    return l;
-}
-
-static void make_jam_arguments_from_python(FRAME* inner, PyObject *args)
-{
-    int i;
-    int size;
-
-    /* Build up the list of arg lists. */
-    frame_init( inner );
-    inner->prev = 0;
-    inner->prev_user = 0;
-    inner->module = bindmodule( constant_python_interface );
-
-    size = PyTuple_Size( args );
-    for (i = 0 ; i < size; ++i)
-    {
-        PyObject * a = PyTuple_GetItem( args, i );
-        if ( PyString_Check( a ) )
-        {
-            lol_add( inner->args, jam_list_from_string(a) );
-        }
-        else if ( PySequence_Check( a ) )
-        {
-            lol_add( inner->args, jam_list_from_sequence(a) );
-        }
-    }
-}
-
-
-/*
- * Calls the bjam rule specified by name passed in 'args'. The name is looked up
- * in the context of bjam's 'python_interface' module. Returns the list of
- * strings returned by the rule.
- */
-
-PyObject * bjam_call( PyObject * self, PyObject * args )
-{
-    FRAME    inner[ 1 ];
-    LIST   * result;
-    PARSE  * p;
-    OBJECT * rulename;
-    PyObject *args_proper;
-
-    /* PyTuple_GetItem returns borrowed reference. */
-    rulename = object_new( PyString_AsString( PyTuple_GetItem( args, 0 ) ) );
-
-    args_proper = PyTuple_GetSlice(args, 1, PyTuple_Size(args));
-    make_jam_arguments_from_python (inner, args_proper);
-    if ( PyErr_Occurred() )
-    {
-        return NULL;
-    }
-    Py_DECREF(args_proper);
-
-    result = evaluate_rule( bindrule( rulename, inner->module), rulename, inner );
-    object_free( rulename );
-
-    frame_free( inner );
-
-    /* Convert the bjam list into a Python list result. */
-    {
-        PyObject * const pyResult = PyList_New( list_length( result ) );
-        int i = 0;
-        LISTITER iter = list_begin( result );
-        LISTITER const end = list_end( result );
-        for ( ; iter != end; iter = list_next( iter ) )
-        {
-            PyList_SetItem( pyResult, i, PyString_FromString( object_str(
-                list_item( iter ) ) ) );
-            i += 1;
-        }
-        list_free( result );
-        return pyResult;
-    }
-}
-
-
-/*
- * Accepts four arguments:
- * - module name
- * - rule name,
- * - Python callable.
- * - (optional) bjam language function signature.
- * Creates a bjam rule with the specified name in the specified module, which
- * will invoke the Python callable.
- */
-
-PyObject * bjam_import_rule( PyObject * self, PyObject * args )
-{
-    char     * module;
-    char     * rule;
-    PyObject * func;
-    PyObject * bjam_signature = NULL;
-    module_t * m;
-    RULE     * r;
-    OBJECT   * module_name;
-    OBJECT   * rule_name;
-
-    if ( !PyArg_ParseTuple( args, "ssO|O:import_rule",
-                            &module, &rule, &func, &bjam_signature ) )
-        return NULL;
-
-    if ( !PyCallable_Check( func ) )
-    {
-        PyErr_SetString( PyExc_RuntimeError, "Non-callable object passed to "
-            "bjam.import_rule" );
-        return NULL;
-    }
-
-    module_name = *module ? object_new( module ) : 0;
-    m = bindmodule( module_name );
-    if ( module_name )
-        object_free( module_name );
-    rule_name = object_new( rule );
-    new_rule_body( m, rule_name, function_python( func, bjam_signature ), 0 );
-    object_free( rule_name );
-
-    Py_INCREF( Py_None );
-    return Py_None;
-}
-
-
-/*
- * Accepts four arguments:
- *  - an action name
- *  - an action body
- *  - a list of variable that will be bound inside the action
- *  - integer flags.
- *  Defines an action on bjam side.
- */
-
-PyObject * bjam_define_action( PyObject * self, PyObject * args )
-{
-    char     * name;
-    char     * body;
-    module_t * m;
-    PyObject * bindlist_python;
-    int        flags;
-    LIST     * bindlist = L0;
-    int        n;
-    int        i;
-    OBJECT   * name_str;
-    FUNCTION * body_func;
-
-    if ( !PyArg_ParseTuple( args, "ssO!i:define_action", &name, &body,
-        &PyList_Type, &bindlist_python, &flags ) )
-        return NULL;
-
-    n = PyList_Size( bindlist_python );
-    for ( i = 0; i < n; ++i )
-    {
-        PyObject * next = PyList_GetItem( bindlist_python, i );
-        if ( !PyString_Check( next ) )
-        {
-            PyErr_SetString( PyExc_RuntimeError, "bind list has non-string "
-                "type" );
-            return NULL;
-        }
-        bindlist = list_push_back( bindlist, object_new( PyString_AsString( next
-            ) ) );
-    }
-
-    name_str = object_new( name );
-    body_func = function_compile_actions( body, constant_builtin, -1 );
-    new_rule_actions( root_module(), name_str, body_func, bindlist, flags );
-    function_free( body_func );
-    object_free( name_str );
-
-    Py_INCREF( Py_None );
-    return Py_None;
-}
-
-
-/*
- * Returns the value of a variable in root Jam module.
- */
-
-PyObject * bjam_variable( PyObject * self, PyObject * args )
-{
-    char     * name;
-    LIST     * value;
-    PyObject * result;
-    int        i;
-    OBJECT   * varname;
-    LISTITER   iter;
-    LISTITER   end;
-
-    if ( !PyArg_ParseTuple( args, "s", &name ) )
-        return NULL;
-
-    varname = object_new( name );
-    value = var_get( root_module(), varname );
-    object_free( varname );
-    iter = list_begin( value );
-    end = list_end( value );
-
-    result = PyList_New( list_length( value ) );
-    for ( i = 0; iter != end; iter = list_next( iter ), ++i )
-        PyList_SetItem( result, i, PyString_FromString( object_str( list_item(
-            iter ) ) ) );
-
-    return result;
-}
-
-
-PyObject * bjam_backtrace( PyObject * self, PyObject * args )
-{
-    PyObject     * result = PyList_New( 0 );
-    struct frame * f = frame_before_python_call;
-
-    for ( ; (f = f->prev); )
-    {
-        PyObject   * tuple = PyTuple_New( 4 );
-        char const * file;
-        int          line;
-        char         buf[ 32 ];
-        string module_name[ 1 ];
-
-        get_source_line( f, &file, &line );
-        sprintf( buf, "%d", line );
-        string_new( module_name );
-        if ( f->module->name )
-        {
-            string_append( module_name, object_str( f->module->name ) );
-            string_append( module_name, "." );
-        }
-
-        /* PyTuple_SetItem steals reference. */
-        PyTuple_SetItem( tuple, 0, PyString_FromString( file ) );
-        PyTuple_SetItem( tuple, 1, PyString_FromString( buf ) );
-        PyTuple_SetItem( tuple, 2, PyString_FromString( module_name->value ) );
-        PyTuple_SetItem( tuple, 3, PyString_FromString( f->rulename ) );
-
-        string_free( module_name );
-
-        PyList_Append( result, tuple );
-        Py_DECREF( tuple );
-    }
-    return result;
-}
-
-PyObject * bjam_caller( PyObject * self, PyObject * args )
-{
-    return PyString_FromString( frame_before_python_call->prev->module->name ?
-        object_str( frame_before_python_call->prev->module->name ) : "" );
-}
-
-#endif  /* #ifdef HAVE_PYTHON */
 
 
 #ifdef HAVE_POPEN

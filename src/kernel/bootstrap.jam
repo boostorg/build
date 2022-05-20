@@ -2,8 +2,8 @@
 # Copyright 2003, 2005, 2006 Rene Rivera
 # Copyright 2003, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # First of all, check the jam version.
 if $(JAM_VERSION:J="") < 030112
@@ -108,8 +108,6 @@ IMPORT modules : import : : import ;
     BOOST_BUILD_PATH += $(whereami:D)/$(subdirs) ;
 
     modules.poke .ENVIRON : BOOST_BUILD_PATH : $(BOOST_BUILD_PATH) ;
-
-    modules.poke : EXTRA_PYTHONPATH : $(whereami) ;
 }
 
 # Reload the modules, to clean up things. The modules module can tolerate being
@@ -128,138 +126,11 @@ local dont-build = [ option.process ] ;
 #
 if ! $(dont-build)
 {
-    if ! --python in $(ARGV)
-    {
-        # Allow users to override the build system file from the command-line
-        # (mostly for testing).
-        local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
-        build-system ?= build-system ;
+    # Allow users to override the build system file from the command-line
+    # (mostly for testing).
+    local build-system = [ MATCH --build-system=(.*) : $(ARGV) ] ;
+    build-system ?= build-system ;
 
-        # Use last element in case of multiple command-line options.
-        import $(build-system[-1]) ;
-    }
-    else
-    {
-
-        # Define additional interface exposed to Python code. Python code will
-        # also have access to select bjam builtins in the 'bjam' module, but
-        # some things are easier to define outside C.
-        module python_interface
-        {
-            rule load ( module-name : location )
-            {
-                USER_MODULE $(module-name) ;
-                # Make all rules in the loaded module available in the global
-                # namespace, so that we do not have to bother specifying the
-                # "correct" module when calling from Python.
-                module $(module-name)
-                {
-                    __name__ = $(1) ;
-                    include $(2) ;
-                    local rules = [ RULENAMES $(1) ] ;
-                    IMPORT $(1) : $(rules) : $(1) : $(1).$(rules) ;
-                }
-            }
-
-            rule peek ( module-name ? : variables + )
-            {
-                module $(<)
-                {
-                    return $($(>)) ;
-                }
-            }
-
-            rule set-variable ( module-name : name : value * )
-            {
-                module $(<)
-                {
-                    $(>) = $(3) ;
-                }
-            }
-
-            rule set-top-level-targets ( targets * )
-            {
-                DEPENDS all : $(targets) ;
-            }
-
-            rule call-in-module ( m : rulename : * )
-            {
-                module $(m)
-                {
-                    return [ $(2) $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9)
-                        : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16)
-                        : $(17) : $(18) : $(19) ] ;
-                }
-            }
-
-
-            rule set-update-action ( action : targets * : sources * :
-                properties * )
-            {
-                $(action) $(targets) : $(sources) : $(properties) ;
-            }
-
-            rule set-update-action-in-module ( m : action : targets * :
-                sources * : properties * )
-            {
-                module $(m)
-                {
-                    $(2) $(3) : $(4) : $(5) ;
-                }
-            }
-
-            rule set-target-variable ( targets + : variable : value * : append ?
-                )
-            {
-                if $(append)
-                {
-                    $(variable) on $(targets) += $(value) ;
-                }
-                else
-                {
-                    $(variable) on $(targets) = $(value) ;
-                }
-            }
-
-            rule get-target-variable ( targets + : variable )
-            {
-                return [ on $(targets) return $($(variable)) ] ;
-            }
-
-            rule import-rules-from-parent ( parent-module : this-module :
-                user-rules * )
-            {
-                IMPORT $(parent-module) : $(user-rules) : $(this-module) :
-                    $(user-rules) ;
-                EXPORT $(this-module) : $(user-rules) ;
-            }
-
-            rule mark-included ( targets * : includes * )
-            {
-                NOCARE $(includes) ;
-                INCLUDES $(targets) : $(includes) ;
-                ISFILE $(includes) ;
-            }
-        }
-
-        PYTHON_IMPORT_RULE bootstrap : bootstrap : PyBB : bootstrap ;
-        modules.poke PyBB : root : [ NORMALIZE_PATH $(.bootstrap-file:DT)/.. ] ;
-
-        module PyBB
-        {
-            local ok = [ bootstrap $(root) ] ;
-            if ! $(ok)
-            {
-                EXIT ;
-            }
-        }
-
-
-        #PYTHON_IMPORT_RULE boost.build.build_system : main : PyBB : main ;
-
-        #module PyBB
-        #{
-        #    main ;
-        #}
-    }
+    # Use last element in case of multiple command-line options.
+    import $(build-system[-1]) ;
 }

@@ -2,7 +2,7 @@
 
 # Copyright 2003 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This tests correct handling of dependencies, specifically, on generated
 # sources, and from generated sources.
@@ -20,7 +20,7 @@ rule hdrrule
 }
 actions copy
 {
-   cp $(>) $(<)
+   cp $(>) $(<) || copy $(>) $(<)
 }
 """)
 
@@ -30,7 +30,7 @@ DEPENDS a : b ;
 
 actions create-b
 {
-   echo '#include <foo.h>' > $(<)
+   echo "#include <foo.h>" > $(<)
 }
 copy a : b ;
 create-b b ;
@@ -41,14 +41,14 @@ HDRSCAN on b foo.h bar.h = \"#include <(.*)>\" ;
 # This creates 'a' which depends on 'b', which is generated. The generated 'b'
 # contains '#include <foo.h>' and no rules for foo.h are given. The system
 # should error out on the first invocation.
-t.run_build_system("-f-", stdin=code)
+t.run_build_system(["-f-"], status=1, stdin=code)
 t.fail_test(t.stdout().find("...skipped a for lack of foo.h...") == -1)
 
 t.rm('b')
 
 # Now test that if target 'c' also depends on 'b', then it will not be built, as
 # well.
-t.run_build_system("-f-", stdin=code + " copy c : b ; DEPENDS c : b ; DEPENDS all : c ; ")
+t.run_build_system(["-f-"], status=1, stdin=code + " copy c : b ; DEPENDS c : b ; DEPENDS all : c ; ")
 t.fail_test(t.stdout().find("...skipped c for lack of foo.h...") == -1)
 
 t.rm('b')
@@ -61,7 +61,7 @@ actions create-foo
 }
 create-foo foo.h ;
 """
-t.run_build_system("-f-", stdin=code)
+t.run_build_system(["-f-"], stdin=code)
 
 # Run two times, adding explicit dependency from all to foo.h at the beginning
 # and at the end, to make sure that foo.h is generated before 'a' in all cases.
@@ -76,11 +76,11 @@ def mk_correct_order_func(s1, s2):
 correct_order = mk_correct_order_func("create-foo", "copy a")
 
 t.rm(["a", "b", "foo.h"])
-t.run_build_system("-d+2 -f-", stdin=code + " DEPENDS all : foo.h ;")
+t.run_build_system(["-d+2", "-f-"], stdin=code + " DEPENDS all : foo.h ;")
 t.fail_test(not correct_order(t.stdout()))
 
 t.rm(["a", "b", "foo.h"])
-t.run_build_system("-d+2 -f-", stdin=" DEPENDS all : foo.h ; " + code)
+t.run_build_system(["-d+2", "-f-"], stdin=" DEPENDS all : foo.h ; " + code)
 t.fail_test(not correct_order(t.stdout()))
 
 # Now foo.h exists. Test include from b -> foo.h -> bar.h -> biz.h. b and foo.h
@@ -88,7 +88,7 @@ t.fail_test(not correct_order(t.stdout()))
 t.rm(["a", "b"])
 t.write("foo.h", "#include <bar.h>")
 t.write("bar.h", "#include <biz.h>")
-t.run_build_system("-d+2 -f-", stdin=code)
+t.run_build_system(["-d+2", "-f-"], status=1, stdin=code)
 t.fail_test(t.stdout().find("...skipped a for lack of biz.h...") == -1)
 
 # Add an action for biz.h.
@@ -102,11 +102,11 @@ create-biz biz.h ;
 
 t.rm(["b"])
 correct_order = mk_correct_order_func("create-biz", "copy a")
-t.run_build_system("-d+2 -f-", stdin=code + " DEPENDS all : biz.h ;")
+t.run_build_system(["-d+2", "-f-"], stdin=code + " DEPENDS all : biz.h ;")
 t.fail_test(not correct_order(t.stdout()))
 
 t.rm(["a", "biz.h"])
-t.run_build_system("-d+2 -f-", stdin=" DEPENDS all : biz.h ; " + code)
+t.run_build_system(["-d+2", "-f-"], stdin=" DEPENDS all : biz.h ; " + code)
 t.fail_test(not correct_order(t.stdout()))
 
 t.write("a", "")
@@ -116,7 +116,7 @@ DEPENDS all : main d ;
 
 actions copy
 {
-    cp $(>) $(<) ;
+    cp $(>) $(<) || copy $(>) $(<)
 }
 
 DEPENDS main : a ;
@@ -151,7 +151,7 @@ rule hdrrule
 """
 
 correct_order = mk_correct_order_func("create-d", "copy main")
-t.run_build_system("-d2 -f-", stdin=code)
+t.run_build_system(["-d2", "-f-"], stdin=code)
 t.fail_test(not correct_order(t.stdout()))
 
 t.cleanup()

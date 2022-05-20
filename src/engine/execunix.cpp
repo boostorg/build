@@ -6,11 +6,15 @@
  */
 
 #include "jam.h"
+
+#ifdef USE_EXECUNIX
+
 #include "execcmd.h"
 
 #include "lists.h"
 #include "output.h"
 #include "jam_strings.h"
+#include "startup.h"
 
 #include <errno.h>
 #include <signal.h>
@@ -25,8 +29,6 @@
 #if defined(sun) || defined(__sun)
     #include <wait.h>
 #endif
-
-#ifdef USE_EXECUNIX
 
 #include <sys/times.h>
 
@@ -154,7 +156,7 @@ int exec_check
 
     return is_raw_cmd
         ? EXEC_CHECK_OK
-        : check_cmd_for_too_long_lines( command->value, MAXLINE, error_length,
+        : check_cmd_for_too_long_lines( command->value, shell_maxline(), error_length,
             error_max_length );
 }
 
@@ -214,8 +216,8 @@ void exec_cmd
     /* Create pipes for collecting child output. */
     if ( pipe( out ) < 0 || ( globs.pipe_action && pipe( err ) < 0 ) )
     {
-        perror( "pipe" );
-        exit( EXITBAD );
+        errno_puts( "pipe" );
+        b2::clean_exit( EXITBAD );
     }
 
     /* Start the command */
@@ -256,8 +258,8 @@ void exec_cmd
 
     if ( ( cmdtab[ slot ].pid = vfork() ) == -1 )
     {
-        perror( "vfork" );
-        exit( EXITBAD );
+        errno_puts( "vfork" );
+        b2::clean_exit( EXITBAD );
     }
 
     if ( cmdtab[ slot ].pid == 0 )
@@ -293,11 +295,11 @@ void exec_cmd
             setrlimit( RLIMIT_CPU, &r_limit );
         }
         if (0 != setpgid( pid, pid )) {
-            perror("setpgid(child)");
-            /* exit( EXITBAD ); */
+            errno_puts("setpgid(child)");
+            /* b2::clean_exit( EXITBAD ); */
         }
         execvp( argv[ 0 ], (char * *)argv );
-        perror( "execvp" );
+        errno_puts( "execvp" );
         _exit( 127 );
     }
 
@@ -323,8 +325,8 @@ void exec_cmd
     cmdtab[ slot ].stream[ OUT ] = fdopen( cmdtab[ slot ].fd[ OUT ], "rb" );
     if ( !cmdtab[ slot ].stream[ OUT ] )
     {
-        perror( "fdopen" );
-        exit( EXITBAD );
+        errno_puts( "fdopen" );
+        b2::clean_exit( EXITBAD );
     }
 
     /* Parent reads from err[ EXECCMD_PIPE_READ ]. */
@@ -334,8 +336,8 @@ void exec_cmd
         cmdtab[ slot ].stream[ ERR ] = fdopen( cmdtab[ slot ].fd[ ERR ], "rb" );
         if ( !cmdtab[ slot ].stream[ ERR ] )
         {
-            perror( "fdopen" );
-            exit( EXITBAD );
+            errno_puts( "fdopen" );
+            b2::clean_exit( EXITBAD );
         }
     }
 
@@ -541,7 +543,7 @@ void exec_wait()
                 if ( pid != cmdtab[ i ].pid )
                 {
                     err_printf( "unknown pid %d with errno = %d\n", pid, errno );
-                    exit( EXITBAD );
+                    b2::clean_exit( EXITBAD );
                 }
 
                 /* Set reason for exit if not timed out. */
@@ -600,7 +602,13 @@ static int get_free_cmdtab_slot()
         if ( !cmdtab[ slot ].pid )
             return slot;
     err_printf( "no slots for child!\n" );
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
+    return -1;
+}
+
+int32_t shell_maxline()
+{
+    return MAXLINE;
 }
 
 # endif /* USE_EXECUNIX */

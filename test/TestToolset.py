@@ -3,8 +3,8 @@
 # Copyright 2017 Steven Watanabe
 #
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # validates a toolset using a mock of the compiler
 
@@ -44,7 +44,7 @@ def get_property(name, properties):
 def get_target_os(properties):
     return get_property("target-os", properties) or default_target_os
 
-def expand_properties(properties):
+def expand_properties(properties, toolset):
     result = properties[:]
     if not has_property("variant", properties):
         result += ["variant=debug"]
@@ -58,10 +58,15 @@ def expand_properties(properties):
         result += ["rtti=on"]
     if not has_property("runtime-link", properties):
         result += ["runtime-link=shared"]
+    if toolset == "msvc" and "runtime-link=shared" in result:
+        result.remove("threading=" + get_property("threading", result))
+        result += ["threading=multi"]
     if not has_property("strip", properties):
         result += ["strip=off"]
     if not has_property("target-os", properties):
         result += ["target-os=" + default_target_os]
+    if not has_property("windows-api", properties):
+        result += ["windows-api=desktop"]
     return result
 
 def compute_path(properties, target_type):
@@ -82,14 +87,17 @@ def compute_path(properties, target_type):
         path += "/link-static"
     if "rtti=off" in properties:
         path += "/rtti-off"
-    if "runtime-link=static" in properties and target_type in ["exe"]:
+    if "runtime-link=static" in properties: # and target_type in ["exe"]:
         path += "/runtime-link-static"
     if "strip=on" in properties and target_type in ["dll", "exe", "obj2"]:
         path += "/strip-on"
     if get_target_os(properties) != default_target_os:
         path += "/target-os-" + get_target_os(properties)
     if "threading=multi" in properties:
+      if "runtime-link=static" not in properties: # TODO: I don't think this it's intended to work this way though
         path += "/threading-multi"
+    if not "windows-api=desktop" in properties:
+        path += "/windows-api-" + get_property("windows-api", properties)
     return path
 
 def test_toolset(toolset, version, property_sets):
@@ -104,12 +112,15 @@ def test_toolset(toolset, version, property_sets):
     for properties in property_sets:
         t.set_toolset(toolset + "-" + version, get_target_os(properties))
         properties = adjust_properties(properties)
+        expanded_properties = expand_properties(properties, toolset)
         def path(t):
-            return toolset.split("-")[0] + "-*" + version + compute_path(properties, t)
-        os.environ["B2_PROPERTIES"] = " ".join(expand_properties(properties))
+            return toolset.split("-")[0] + "-*" + version + compute_path(expanded_properties, t)
+        os.environ["B2_PROPERTIES"] = " ".join(expanded_properties)
         t.run_build_system(["--user-config=", "-sPYTHON_CMD=%s" % sys.executable] + properties)
         t.expect_addition("bin/%s/lib.obj" % (path("obj")))
         if "link=static" not in properties:
+            if get_target_os(properties) in ["cygwin", "windows"] and toolset != "clang-linux":
+                t.expect_addition("bin/%s/l1.implib" % (path("dll")))
             t.expect_addition("bin/%s/l1.dll" % (path("dll")))
             t.ignore_addition("bin/%s/*l1.*.rsp" % (path("dll")))
         else:

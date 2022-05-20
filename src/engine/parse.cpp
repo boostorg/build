@@ -5,9 +5,10 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "jam.h"
@@ -18,6 +19,10 @@
 #include "modules.h"
 #include "frames.h"
 #include "function.h"
+#include "mem.h"
+#include "startup.h"
+
+#include <set>
 
 /*
  * parse.c - make and destroy parse trees as driven by the parser
@@ -29,6 +34,18 @@
  */
 
 static PARSE * yypsave;
+static std::set<PARSE*> parse_mem;
+
+
+struct parse_ptr
+{
+    parse_ptr() : ptr( yypsave ) {}
+    ~parse_ptr() { if ( ptr ) parse_free( ptr ); }
+    operator PARSE*() const { return ptr; }
+
+    private:
+    PARSE * ptr = nullptr;
+};
 
 static void parse_impl( FRAME * frame )
 {
@@ -39,21 +56,20 @@ static void parse_impl( FRAME * frame )
 
     for ( ; ; )
     {
-        PARSE * p;
-        FUNCTION * func;
-
         /* Filled by yyparse() calling parse_save(). */
-        yypsave = 0;
+        yypsave = nullptr;
 
         /* If parse error or empty parse, outta here. */
-        if ( yyparse() || !( p = yypsave ) )
+        int yy_result = yyparse();
+        parse_ptr p;
+        if ( yy_result || !p )
             break;
 
-        /* Run the parse tree. */
-        func = function_compile( p );
-        parse_free( p );
-        list_free( function_run( func, frame, stack_global() ) );
-        function_free( func );
+        /* Compile the parse tree. */
+        auto func = b2::jam::make_unique_bare_jptr( function_compile( p ), function_free );
+
+        /* Run the parsed function. */
+        list_free( function_run( func.get(), frame ) );
     }
 
     yyfdone();
@@ -84,9 +100,9 @@ void parse_save( PARSE * p )
 
 PARSE * parse_make(
     int      type,
-    PARSE  * left,
-    PARSE  * right,
-    PARSE  * third,
+    PARSE *& left,
+    PARSE *& right,
+    PARSE *& third,
     OBJECT * string,
     OBJECT * string1,
     int      num )
@@ -94,19 +110,18 @@ PARSE * parse_make(
     PARSE * p = (PARSE *)BJAM_MALLOC( sizeof( PARSE ) );
 
     p->type = type;
-    p->left = left;
-    p->right = right;
-    p->third = third;
+    p->left = left; left = nullptr;
+    p->right = right; right = nullptr;
+    p->third = third; third = nullptr;
     p->string = string;
     p->string1 = string1;
     p->num = num;
-    p->refs = 1;
     p->rulename = 0;
 
-    if ( left )
+    if ( p->left )
     {
-        p->file = object_copy( left->file );
-        p->line = left->line;
+        p->file = object_copy( p->left->file );
+        p->line = p->left->line;
     }
     else
     {
@@ -114,20 +129,16 @@ PARSE * parse_make(
         p->file = object_copy( p->file );
     }
 
+    parse_mem.insert( p );
+
     return p;
 }
 
 
-void parse_refer( PARSE * p )
+void parse_free( PARSE * & p )
 {
-    ++p->refs;
-}
-
-
-void parse_free( PARSE * p )
-{
-    if ( --p->refs )
-        return;
+    if ( parse_mem.count( p ) == 0 ) return;
+    parse_mem.erase( p );
 
     if ( p->string )
         object_free( p->string );
@@ -145,4 +156,15 @@ void parse_free( PARSE * p )
         object_free( p->file );
 
     BJAM_FREE( (char *)p );
+    p = nullptr;
+}
+
+
+void parse_done()
+{
+    while ( parse_mem.size() > 0 )
+    {
+        PARSE * p = *parse_mem.begin();
+        parse_free( p );
+    }
 }

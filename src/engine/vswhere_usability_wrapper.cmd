@@ -17,8 +17,8 @@ if errorlevel 1 goto :no-vswhere
 set VSWHERE_REQ=-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64
 set VSWHERE_PRP=-property installationPath
 
-REM Visual Studio Unknown Version, Beyond 2019
-set VSWHERE_LMT=-version "[17.0,18.0)"
+REM Visual Studio Unknown Version, Beyond 2022
+set VSWHERE_LMT=-version "[18.0,19.0)"
 set VSWHERE_PRERELEASE=-prerelease
 SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT% %VSWHERE_PRERELEASE%
 for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
@@ -30,9 +30,22 @@ for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
     exit /B 0
 )
 
+REM Visual Studio 2022
+set VSWHERE_LMT=-version "[17.0,18.0)"
+set VSWHERE_PRERELEASE=-prerelease
+SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT% %VSWHERE_PRERELEASE%
+for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
+    endlocal
+	echo Found with vswhere %%i
+    @rem comment out setting VCINSTALLDIR for Boost.build
+    @rem set "VCINSTALLDIR=%%i\VC\"
+    set "VS170COMNTOOLS=%%i\Common7\Tools\"
+    exit /B 0
+)
+
 REM Visual Studio 2019 (16.X, toolset 14.2)
 set VSWHERE_LMT=-version "[16.0,17.0)"
-SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT%
+SET VSWHERE_ARGS=-latest -products * %VSWHERE_REQ% %VSWHERE_PRP% %VSWHERE_LMT% %VSWHERE_PRERELEASE%
 for /f "usebackq tokens=*" %%i in (`vswhere %VSWHERE_ARGS%`) do (
     endlocal
 	echo Found with vswhere %%i

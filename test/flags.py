@@ -2,8 +2,8 @@
 
 # Copyright (C) Steven Watanabe 2018
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests the check-has-flag rule
 
@@ -58,12 +58,12 @@ if t.status != 0:
     BoostBuild.annotation("config.log", log_file)
     t.fail_test(True)
 
-t.expect_output_lines(['    - has --illegal-flag-cpp   : no',
-                       '    - has -DMACRO_CPP          : yes',
-                       '    - has --illegal-flag-c     : no',
-                       '    - has -DMACRO_C            : yes',
-                       '    - has --illegal-flag-link  : no',
-                       '    - has *bin*/input.* : yes'])
+t.expect_output_lines(['    - has --illegal-flag-cpp   : no*',
+                       '    - has -DMACRO_CPP          : yes*',
+                       '    - has --illegal-flag-c     : no*',
+                       '    - has -DMACRO_C            : yes*',
+                       '    - has --illegal-flag-link  : no*',
+                       '    - has *bin*/input.* : yes*'])
 t.expect_addition('bin/$toolset/debug*/fail_cpp.obj')
 t.expect_addition('bin/$toolset/debug*/pass_cpp.obj')
 t.expect_addition('bin/$toolset/debug*/fail_c.obj')

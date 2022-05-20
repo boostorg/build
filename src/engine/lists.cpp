@@ -10,11 +10,11 @@
 
 #include "jam.h"
 #include "lists.h"
+#include "mem.h"
 #include "output.h"
+#include "startup.h"
 
 #include <assert.h>
-
-static LIST * freelist[ 32 ];  /* junkpile for list_dealloc() */
 
 static int32_t get_bucket( int32_t size )
 {
@@ -26,32 +26,18 @@ static int32_t get_bucket( int32_t size )
 static LIST * list_alloc( int32_t size )
 {
     int32_t bucket = get_bucket( size );
-    if ( freelist[ bucket ] )
-    {
-        LIST * result = freelist[ bucket ];
-        freelist[ bucket ] = result->impl.next;
-        return result;
-    }
-    return (LIST *)BJAM_MALLOC( sizeof( LIST ) + ( size_t( 1 ) << bucket ) *
-        sizeof( OBJECT * ) );
+    return b2::jam::ctor_ptr<LIST>( BJAM_CALLOC(
+        1, sizeof( LIST ) + ( size_t( 1 ) << bucket ) * sizeof( OBJECT * ) ) );
 }
 
 static void list_dealloc( LIST * l )
 {
     int32_t size = list_length( l );
-    int32_t bucket;
     LIST * node = l;
 
     if ( size == 0 ) return;
 
-    bucket = get_bucket( size );;
-
-#ifdef BJAM_NO_MEM_CACHE
-    BJAM_FREE( node );
-#else
-    node->impl.next = freelist[ bucket ];
-    freelist[ bucket ] = node;
-#endif
+    b2::jam::free_ptr( node );
 }
 
 /*
@@ -365,16 +351,6 @@ LIST * list_unique( LIST * sorted_list )
 
 void list_done()
 {
-    for ( int32_t i = 0; i < int32_t(sizeof( freelist ) / sizeof( freelist[ 0 ] )); ++i )
-    {
-        LIST * l = freelist[ i ];
-        while ( l )
-        {
-            LIST * const tmp = l;
-            l = l->impl.next;
-            BJAM_FREE( tmp );
-        }
-    }
 }
 
 
@@ -395,7 +371,13 @@ void lol_init( LOL * lol )
 void lol_add( LOL * lol, LIST * l )
 {
     if ( lol->count < LOL_MAX )
+    {
         lol->list[ lol->count++ ] = l;
+        return;
+    }
+
+    err_printf( "lol_add failed due to reached limit of %d elements\n", LOL_MAX );
+    b2::clean_exit( EXITBAD );
 }
 
 
@@ -436,38 +418,3 @@ void lol_print( LOL * lol )
         list_print( lol->list[ i ] );
     }
 }
-
-#ifdef HAVE_PYTHON
-
-PyObject * list_to_python( LIST * l )
-{
-    PyObject * result = PyList_New( 0 );
-    LISTITER iter = list_begin( l );
-    LISTITER const end = list_end( l );
-    for ( ; iter != end; iter = list_next( iter ) )
-    {
-        PyObject * s = PyString_FromString( object_str( list_item( iter ) ) );
-        PyList_Append( result, s );
-        Py_DECREF( s );
-    }
-
-    return result;
-}
-
-LIST * list_from_python( PyObject * l )
-{
-    LIST * result = L0;
-
-    Py_ssize_t n = PySequence_Size( l );
-    Py_ssize_t i;
-    for ( i = 0; i < n; ++i )
-    {
-        PyObject * v = PySequence_GetItem( l, i );
-        result = list_push_back( result, object_new( PyString_AsString( v ) ) );
-        Py_DECREF( v );
-    }
-
-    return result;
-}
-
-#endif

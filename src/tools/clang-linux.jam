@@ -1,10 +1,11 @@
+# Copyright 2021 Nikita Kniazev
 #  Copyright 2020 Rene Rivera
 #  Copyright (c) 2003      Michael Stevens
 #  Copyright (c) 2010-2011 Bryce Lelbach (blelbach@cct.lsu.edu, maintainer)
 #
 #  Use, modification and distribution is subject to the Boost Software
-#  License Version 1.0. (See accompanying file LICENSE_1_0.txt or
-#  http://www.boost.org/LICENSE_1_0.txt)
+#  License Version 1.0. (See accompanying file LICENSE.txt or
+#  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import common ;
 import toolset ;
@@ -20,6 +21,7 @@ import type ;
 import numbers ;
 import os ;
 import property ;
+import set ;
 
 feature.extend-subfeature toolset clang : platform : linux ;
 
@@ -34,9 +36,6 @@ generators.override clang-linux.searched-lib-generator : searched-lib-generator 
 generators.override clang-linux.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override clang-linux.compile.c++.pch : pch.default-cpp-pch-generator ;
 
-type.set-generated-target-suffix PCH
-  : <toolset>clang <toolset-clang:platform>linux : pth ;
-
 toolset.inherit-rules clang-linux : gcc ;
 toolset.inherit-flags clang-linux : gcc
   : <inlining>full
@@ -50,22 +49,17 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
 }
 
 rule init ( version ? :  command * : options * ) {
-  command = [ common.get-invocation-command clang-linux : clang++
-    : $(command) ] ;
-
-  # Determine the version
-  if $(command) {
-    local command-string = \"$(command)\" ;
-    command-string = $(command-string:J=" ") ;
-    version ?= [ MATCH "version ([0-9.]+)"
-      : [ SHELL "$(command-string) --version" ] ] ;
+  command = [ common.find-compiler clang-linux : clang++ : $(version) : $(command) ] ;
+  local command-string = [ common.make-command-string $(command) ] ;
+  if ! $(version) { # ?= operator does not short-circuit
+  version ?= [ get-short-version $(command-string) ] ;
   }
 
   local condition = [ common.check-init-parameters clang-linux
     : version $(version) ] ;
 
   common.handle-options clang-linux : $(condition) : $(command) : $(options) ;
-  clang.init-cxxstd-flags clang-linux : $(condition) : $(version) ;
+  clang.init-flags clang-linux : $(condition) : $(version) ;
 
   # Support for gcc root as the backend, this is mainly useful for clang/gcc on Windows
   # since on Linux gcc will be the default compiler already located on the PATH.
@@ -92,14 +86,6 @@ rule init ( version ? :  command * : options * ) {
         toolset.flags clang-linux.link RUN_PATH $(condition) : $(lib_path) ;
     }
 
-  # - Ranlib.
-  local ranlib = [ feature.get-values <ranlib> : $(options) ] ;
-  if ( ! $(ranlib) ) && $(root)
-    {
-    ranlib = $(root)/bin/ranlib ;
-    }
-  toolset.flags clang-linux.archive .RANLIB $(condition) : $(ranlib[1]) ;
-
   # - Archive builder.
   local archiver = [ feature.get-values <archiver> : $(options) ] ;
   if ( ! $(archiver) ) && $(root)
@@ -109,8 +95,30 @@ rule init ( version ? :  command * : options * ) {
   toolset.flags clang-linux.archive .AR $(condition) : $(archiver[1]) ;
 }
 
+rule get-full-version ( command-string )
+{
+    return [ common.match-command-output version : "version ([0-9.]+)"
+           : "$(command-string) --version" ] ;
+}
+
+rule get-short-version ( command-string : single-digit-since ? )
+{
+    local version = [ get-full-version $(command-string) ] ;
+    version = [ SPLIT_BY_CHARACTERS $(version) : . ] ;
+
+    import version ;
+    if [ version.version-less $(version) : $(single-digit-since:E=4) ]
+    {
+        return $(version[1-2]:J=.) ;
+    }
+
+    return $(version[1]) ;
+}
+
 ###############################################################################
 # Flags
+
+local all-os = [ feature.values <target-os> ] ;
 
 # note: clang silently ignores some of these inlining options
 # For clang, 'on' and 'full' are identical.
@@ -133,155 +141,45 @@ toolset.flags clang-linux.link OPTIONS <stdlib>gnu <stdlib>gnu11 : -stdlib=libst
 toolset.flags clang-linux.compile OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
 toolset.flags clang-linux.link OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
 
+# Enable response file control
+toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>auto : a ;
+toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>file : f ;
+toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>contents : c ;
+
+# Used in actions for multi argument options
+_ = " " ;
 ###############################################################################
 # C and C++ compilation
 
 rule compile.c++ ( targets * : sources * : properties * ) {
-  local pch-file = [ on $(<) return $(PCH_FILE) ] ;
-
-  if $(pch-file) {
-    DEPENDS $(<) : $(pch-file) ;
-    clang-linux.compile.c++.with-pch $(targets) : $(sources) ;
-  }
-  else {
-    clang-linux.compile.c++.without-pch $(targets) : $(sources) ;
-  }
+  DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
-actions compile.c++.without-pch {
-  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -o "$(<)" "$(>)"
-}
-
-actions compile.c++.with-pch bind PCH_FILE
+actions compile.c++ bind PCH_FILE
 {
-  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pch -Xclang "$(PCH_FILE)" -include"$(FORCE_INCLUDES)" -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang$(_)-include-pch$(_)-Xclang$(_)"$(PCH_FILE)" -include"$(FORCE_INCLUDES)" -o "$(<)" "$(>)"
 }
 
 rule compile.c ( targets * : sources * : properties * )
 {
-  local pch-file = [ on $(<) return $(PCH_FILE) ] ;
-
-  if $(pch-file) {
-    DEPENDS $(<) : $(pch-file) ;
-    clang-linux.compile.c.with-pch $(targets) : $(sources) ;
-  }
-  else {
-    clang-linux.compile.c.without-pch $(targets) : $(sources) ;
-  }
+  DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
-actions compile.c.without-pch
+actions compile.c bind PCH_FILE
 {
-  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-actions compile.c.with-pch bind PCH_FILE
-{
-  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang -include-pch -Xclang "$(PCH_FILE)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-###############################################################################
-# PCH emission
-
-RM = [ common.rm-command ] ;
-
-rule compile.c++.pch ( targets * : sources * : properties * ) {
-}
-
-actions compile.c++.pch {
-  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
-}
-
-rule compile.c.pch ( targets * : sources * : properties * ) {
-}
-
-actions compile.c.pch
-{
-  $(RM) -f "$(<)" && "$(CONFIG_COMMAND)" -c -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -Xclang -emit-pch -o "$(<)" "$(>)"
+  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang$(_)-include-pch$(_)-Xclang$(_)"$(PCH_FILE)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 ###############################################################################
 # Linking
 
-SPACE = " " ;
+local soname-os = [ set.difference $(all-os) : windows ] ;
+toolset.flags clang-linux.link SONAME_OPT <target-os>$(soname-os) : "-Wl,-soname -Wl," ;
 
-rule link ( targets * : sources * : properties * ) {
-  SPACE on $(targets) = " " ;
-
-  local tosw ;
-  local pselect = [ property.select <target-os> : $(properties) ] ;
-
-  if $(pselect)
-    {
-
-    local tosv = [ feature.get-values <target-os> : $(pselect) ] ;
-
-    if $(tosv) = windows
-        {
-        tosw = 1 ;
-        }
-    }
-  else if [ os.name ] in NT
-    {
-    tosw = 1 ;
-    }
-  if $(tosw)
-    {
-    link-w $(targets) : $(sources) ;
-    }
-  else
-    {
-    link-o $(targets) : $(sources) ;
-    }
+actions link bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @($(<[1]:T).rsp:O=FC:<=@":>=":E=-Wl,-R$(_)-Wl,$(RPATH) -Wl,-rpath-link$(_)-Wl,"$(RPATH_LINK)" $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
 }
 
-rule link.dll ( targets * : sources * : properties * ) {
-  SPACE on $(targets) = " " ;
-
-  local tosw ;
-  local pselect = [ property.select <target-os> : $(properties) ] ;
-
-  if $(pselect)
-    {
-
-    local tosv = [ feature.get-values <target-os> : $(pselect) ] ;
-
-    if $(tosv) = windows
-        {
-        tosw = 1 ;
-        }
-    }
-  else if [ os.name ] in NT
-    {
-    tosw = 1 ;
-    }
-  if $(tosw)
-    {
-    link.dll-w $(targets) : $(sources) ;
-    }
-  else
-    {
-    link.dll-o $(targets) : $(sources) ;
-    }
-}
-
-# Target OS is not Windows, needs the RPATH stuff
-actions link-o bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=-Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-}
-
-# Target OS is not Windows, needs the RPATH and SONAME stuff
-actions link.dll-o bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=-Wl,-R$(SPACE)-Wl,"$(RPATH)" -Wl,-soname$(SPACE)-Wl,$(<[1]:D=) -shared $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-}
-
-# Target OS is Windows, does not need the RPATH stuff
-actions link-w bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-}
-
-# Target OS is Windows, does not need the RPATH and SONAME stuff
-actions link.dll-w bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" -shared @"@($(<[1]:T).rsp:E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP))" $(OPTIONS) $(USER_OPTIONS)
-
+actions link.dll bind LIBRARIES {
+    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @($(<[1]:T).rsp:O=FC:<=@":>=":E=-Wl,-R$(_)-Wl,$(RPATH) $(SONAME_OPT)$(<[1]:D=) -shared $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
 }

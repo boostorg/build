@@ -2,8 +2,8 @@
 
 # Copyright (C) 2013 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 import MockToolset
@@ -14,7 +14,7 @@ MockToolset.create(t)
 
 # Build from source
 t.write("libtiff/tiff.h", 'libtiff')
-t.write("libtiff/tiff.c", 'tiff')
+t.write("libtiff/tif_aux.c", 'tif_aux')
 
 t.write("Jamroot.jam", """
 path-constant here : . ;
@@ -23,10 +23,10 @@ alias libtiff : /libtiff//libtiff : : <link>static <link>shared ;
 """)
 
 MockToolset.set_expected(t, '''
-source_file('tiff.c', 'tiff')
-action('-c -x c -I./libtiff -o $tiff.o $tiff.c')
-action('--dll $tiff.o -o $tiff.so')
-action('--archive $tiff.o -o $tiff.a')
+source_file('tif_aux.c', 'tif_aux')
+action('-c -x c -I./libtiff -o $tif_aux.o $tif_aux.c')
+action('--dll $tif_aux.o -o $tiff.so')
+action('--archive $tif_aux.o -o $tiff.a')
 ''')
 
 t.run_build_system()
@@ -39,7 +39,7 @@ t.rm('libtiff')
 common_stuff = '''
 source_file('test.cpp', 'test.cpp')
 source_file('main.cpp', 'int main() {}')
-source_file('tiff.h.cpp', '#include <tiff.h>')
+source_file('tiff.h.cpp', '#include <tiff.h>\\n')
 action('-c -x c++ $main.cpp -o $main.o')
 '''
 t.write('test.cpp', 'test.cpp')

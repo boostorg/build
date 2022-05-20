@@ -3,7 +3,7 @@
 # Copyright 2014 Steven Watanabe
 # Copyright 2015 Artur Shepilko
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This tests the GLOB_ARCHIVE rule.
 

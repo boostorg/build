@@ -5,9 +5,10 @@
  */
 
 /*  This file is ALSO:
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -44,22 +45,24 @@
 #include "config.h"
 #include "object.h"
 
-#ifdef HAVE_PYTHON
-# include <Python.h>
-#endif
-
 /*
  * LIST - list of strings
  */
 
-typedef struct _list {
+struct LIST {
     union {
         int32_t size;
-        struct _list * next;
+        struct LIST * next;
         OBJECT * align;
     } impl;
-} LIST;
 
+    LIST()
+    {
+        this->impl.next = nullptr;
+    }
+};
+
+typedef LIST * list_ptr;
 typedef OBJECT * * LISTITER;
 
 /*
@@ -106,11 +109,6 @@ LIST * lol_get( LOL *, int i );
 void   lol_print( LOL * );
 void   lol_build( LOL *, char const * * elements );
 
-#ifdef HAVE_PYTHON
-PyObject * list_to_python( LIST * );
-LIST * list_from_python( PyObject * );
-#endif
-
 namespace b2 { namespace jam {
     struct list
     {
@@ -141,14 +139,15 @@ namespace b2 { namespace jam {
 
         friend struct iterator;
 
+        inline list() = default;
         inline list(const list &other)
             : list_obj(list_copy(other.list_obj)) {}
         inline explicit list(const object &o)
             : list_obj(list_new(object_copy(o))) {}
-        inline explicit list(LIST *l)
-            : list_obj(list_copy(l)) {}
+        inline explicit list(LIST *l, bool own = false)
+            : list_obj(own ? l : list_copy(l)) {}
 
-        inline ~list() { if (list_obj) list_free(list_obj); }
+        inline ~list() { reset(); }
         inline LIST* release()
         {
             LIST* r = list_obj;
@@ -163,6 +162,17 @@ namespace b2 { namespace jam {
         inline list &append(const list &other)
         {
             list_obj = list_append(list_obj, list_copy(other.list_obj));
+            return *this;
+        }
+        inline LIST* operator*() { return list_obj; }
+        inline void reset(LIST * new_list = nullptr)
+        {
+            std::swap( list_obj, new_list );
+            if (new_list) list_free(new_list);
+        }
+        inline list& pop_front()
+        {
+            list_obj = list_pop_front(list_obj);
             return *this;
         }
 

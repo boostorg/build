@@ -2,8 +2,8 @@
 # Copyright 2006, 2007 Rene Rivera
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # This file is part of Boost Build version 2. You can think of it as forming the
 # main() routine. It is invoked by the bootstrapping code in bootstrap.jam.
@@ -644,7 +644,7 @@ local rule should-clean-project ( project )
             }
             else if [ os.name ] = MACOSX
             {
-                default-toolset = darwin ;
+                default-toolset = clang ;
             }
         }
 
@@ -653,7 +653,7 @@ local rule should-clean-project ( project )
         ECHO "warning: If the default is wrong, your build may not work correctly." ;
         ECHO "warning: Use the \"toolset=xxxxx\" option to override our guess." ;
         ECHO "warning: For more configuration options, please consult" ;
-        ECHO "warning: http://boost.org/boost-build2/doc/html/bbv2/advanced/configuration.html" ;
+        ECHO "warning: https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.overview.configuration" ;
 
         toolset.using $(default-toolset) : $(default-toolset-version) ;
     }
@@ -771,14 +771,22 @@ local rule should-clean-project ( project )
     # on the command line) have been loaded.
     if $(properties)
     {
-        expanded += [ build-request.convert-command-line-elements $(properties) ] ;
-        expanded = [ build-request.expand-no-defaults $(expanded) ] ;
-        local xexpanded ;
-        for local e in $(expanded)
+        local cli_properties = [ build-request.convert-command-line-elements $(properties) ] ;
+        if $(cli_properties)
         {
-            xexpanded += [ property-set.create [ feature.split $(e) ] ] ;
+            expanded += $(cli_properties) ;
+            expanded = [ build-request.expand-no-defaults $(expanded) ] ;
+            local xexpanded ;
+            for local e in $(expanded)
+            {
+                xexpanded += [ property-set.create [ feature.split $(e) ] ] ;
+            }
+            expanded = $(xexpanded) ;
         }
-        expanded = $(xexpanded) ;
+        else
+        {
+            expanded = [ property-set.empty ] ;
+        }
     }
     else
     {

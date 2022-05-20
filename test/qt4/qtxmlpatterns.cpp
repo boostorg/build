@@ -1,7 +1,7 @@
 // (c) Copyright Juergen Hunold 2008
 // Use, modification and distribution is subject to the Boost Software
-// License, Version 1.0. (See accompanying file LICENSE_1_0.txt or copy at
-// http://www.boost.org/LICENSE_1_0.txt)
+// License, Version 1.0. (See accompanying file LICENSE.txt or copy at
+// https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 #define BOOST_TEST_MODULE QtXmlPatterns
 
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE( extract )
      QByteArray result;
      QBuffer out(&result);
      out.open(QIODevice::WriteOnly);
-     
+
      QXmlSerializer serializer(query, &out);
      BOOST_CHECK_EQUAL(query.evaluateTo(&serializer), true);
 

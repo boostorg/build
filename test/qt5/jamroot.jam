@@ -1,7 +1,7 @@
 #  (c) Copyright Juergen Hunold 2008
 #  Use, modification, and distribution are subject to the
 #  Boost Software License, Version 1.0. (See accompanying file
-#  LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+#  LICENSE.txt or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import qt5 ;
 import testing ;
@@ -9,6 +9,20 @@ import cast ;
 
 path-constant CWD : . ;
 
+if ! [ qt5.initialized ]
+{
+    # assuming qt5 from system
+    using qt5 : /usr/ ;
+
+    project qttest-initialization : ;
+
+    alias qt-tests-initialization :
+      [ run initialization.cpp /qt5//QtCore ]
+    : # requirements
+    : # default-build
+    : # usage-requirements
+    ; 
+}
 
 if [ qt5.initialized ]
 {

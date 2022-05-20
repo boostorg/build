@@ -2,8 +2,8 @@
 
 # Copyright (C) Vladimir Prus 2006.
 # Distributed under the Boost Software License, Version 1.0. (See
-# accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Regression test: if a library had no explicit sources, but only <source>
 # properties, it was built as if it were a searched library, and the specified

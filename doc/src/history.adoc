@@ -1,8 +1,256 @@
 [[b2.history]]
 = History
 
+== Version 4.9.1
+
+* Fix bad calculation of initial dev-only path to bootstrap file within the
+  b2 dev tree.
+  -- _René Ferdinand Rivera Morell_
+* Fix bad path calculation in final fallback for loading bootstrap file from
+  path specified in boost-build rule.
+  -- _René Ferdinand Rivera Morell_
+
+== Version 4.9.0
+
+This release has mostly internal cleanups and restructuring. The most
+significant being: fixing all memory leaks, automatic build system
+startup with the `boost-build` rule, the Jam Python interfaces, and
+the unmaintained Python build system port.
+
+* Add `minimal` and `debug` options for `optimization` feature.
+  -- _René Ferdinand Rivera Morell_
+* Add Rocket Lake, Alder Lake, Sapphire Rapids and Zen 3 instruction sets.
+  -- _Andrey Semashev_
+* Remove all, on-exit, memory leaks and fix all ASAN errors.
+  -- _René Ferdinand Rivera Morell_
+* Remove use of `boost-build.jam` as a initialization configuration file.
+  -- _René Ferdinand Rivera Morell_
+* Remove the incomplete build system port and Jam engine Python support
+  extensions.
+  -- _René Ferdinand Rivera Morell_
+* Fix not being able to do combined arm+x86 builds on macOS with `darwin`
+  and `clang` toolsets.
+  -- _René Ferdinand Rivera Morell_
+* Fix not being able to do cross-compiles on macOS with `clang` toolset.
+  -- _René Ferdinand Rivera Morell_
+* Fix errors when collecting a large number of object files with long names
+  into a static archive for `gcc` and `clang` toolsets.
+  -- _René Ferdinand Rivera Morell_
+* Fix detection of QCC in `build.sh` engine build script.
+  -- _René Ferdinand Rivera Morell_
+* Fix missing assembly flags for intel-win toolset.
+  -- _René Ferdinand Rivera Morell_
+* Fix possible command line length limit exceeded error with msvc toolset for
+  link actions.
+  -- _René Ferdinand Rivera Morell_
+* *New*: Add a "t" mode to `FILE_OPEN` built-in rule that gives one the
+  contents of a file when evaluated.
+  -- _René Ferdinand Rivera Morell_
+
+WARNING: This release removes the use of `boost-build.jam` and the
+`boost-build` rule for initialization. The `boost-build.jam` is still
+searched for and loaded to not break existing operations. But is considered
+deprecated and will be removed in a future release.
+
+== Version 4.8.2
+
+* Fix crash on exit cleanup of target lists caused by recursive destruction
+  and incorrect target list pop unlinking.
+  -- _René Ferdinand Rivera Morell_
+
+== Version 4.8.1
+
+* Fix build of engine on old macOS/XCode versions prior to 9.0 because of
+  missing `EXIT_SUCCESS` and `EXIT_FAILURE` macros.
+  -- _René Ferdinand Rivera Morell_
+
+== Version 4.8.0
+
+* *New:* Add support for LoongArch.
+  -- _Zhang Na_
+* Change engine build to use static Intel libs if available instead of C++
+  runtime static libs to fix systems where the static {CPP}} runtime is not
+  available.
+  -- _Alain Miniussi_
+* Reorder msvc `cflags` and `cxxflags`, and add `compileflags`, to fix inability
+  to override flags by users.
+  -- _Peter Dimov_
+* Don't quote `RPATH` on `clang-linux` to fix use of double-quotes to make it
+  possible to use `$ORIGIN`.
+  -- _Dimitry Andric_
+* Fix `b2` executable detection on kFreeBSD.
+  -- _Laurent Bigonville_
+* Add `.ipp` extension to header scanning and a valid {CPP} file.
+  -- _Jim King_
+* Fix missing install targets when `build=no` is in source target usage
+  requirements.
+  -- _Dmitry Arkhipov_
+* Add some future versions of {CPP} to `cxxstd` feature.
+  -- _René Ferdinand Rivera Morell_
+* Fix many memory leaks in engine.
+  -- _René Ferdinand Rivera Morell_
+* Change `abort`/`exit` calls to clean exception handling to allow for memory
+  cleanup in engine.
+  -- _René Ferdinand Rivera Morell_
+
+== Version 4.7.2
+
+* Fix errors configuring intel-linux toolset if icpx is not in the PATH but
+  icpc is in the PATH.
+  -- _Mark E. Hamilton_
+* Add `cxxstd=20` to msvc toolset now that VS 2019 onward supports it.
+  -- _Peter Dimov_
+
+== Version 4.7.1
+
+* Fix regression for linking with `clang-win` toolset.
+  -- _Peter Dimov_
+
+== Version 4.7.0
+
+Many, many fixes and internal cleanups in this release. But also adding
+auto-detection and bootstrap for VS 2022 preview toolset.
+
+* *New:* Add vc143, aka VS2022, aka cl.exe 17.x toolset support. Includes
+  building engine and automatic detection of the prerelease toolset.
+  -- _Sergei Krivonos_
+* Allow alias targets to continue even if `<build>no` is in the usage
+  requirement. Which allows composition of alias targets that may contain
+  optional targets, like tests.
+  -- _Dmitry Arkhipov_
+* Fix use of `JAMSHELL` in gcc toolset.
+  -- _René Ferdinand Rivera Morell_
+* Fix compiling b2 enging such that it works when run in cross-architecture
+  emulation context. I.e. when running arm binaries in QEMU 64 bit host.
+  -- _René Ferdinand Rivera Morell_
+* Default to 64bit MSVC on 64 bit hosts.
+  -- _Matt Chambers_
+* Remove `/NOENTRY` option for resource only DLLs to allow correct linking.
+  -- _gnaggnoyil_
+* Fix redefinition error of `unix` when compiling engine on OpenBSD.
+  -- _Brad Smith_
+* Fix building with clang on iOS and AppleTV having extra unrecognized
+  compiler options.
+  -- _Konstantin Ivlev_
+* Add missing Boost.JSON to `boost` support module.
+  -- _Dmitry Arkhipov_
+* Add arm/arm64 target support in clang-win toolset.
+  -- _Volo Zyko_
+* Avoid warnings about threading model for qt5.
+  -- _psandana_
+* Unify Clang and GCC PCH creation.
+  -- _Nikita Kniazev_
+* Move Objective-C support to GCC toolset.
+  -- _Nikita Kniazev_
+* Support values for instruction-set feature for Xilinx ZYNQ.
+  -- _Thomas Brown_
+* MIPS: add generic mips architecture.
+  -- _YunQiang Su_
+* Fix preprocessing on MSVC compiler.
+  -- _Nikita Kniazev_
+
+== Version 4.6.1
+
+* Fix building b2 engine with cygwin64.
+  -- _René Ferdinand Rivera Morell_
+* Fix version detection of clang toolset from compiler exec.
+  -- _Nikita Kniazev_
+
+== Version 4.6.0
+
+This release wraps up a few new features that make using some toolsets easier
+(thanks to Nikita). It's now also possible to specify empty flags features on
+the command line, like `cxxfalgs=`, and have those be ignored. This helps to
+make CI scripts shorter as they don't need to handle those cases specially.
+And as usual there are many bug fixes and adjustments. Thanks to everyone who
+contributed to this release.
+
+* *New:* Allow clang toolset to be auto-configured to a specific version by using
+  `toolset=clang-xx` on the command line.
+  -- _Nikita Kniazev_
+* *New:* Include pch header automatically and on-demand on gcc and msvc toolset to
+  mirror clang functionality.
+  -- _Nikita Kniazev_
+* *New:* Features that are narked as 'free' and 'optional' will now be ignored when
+  the value specified on the command line is empty. Hence once can specify
+  `cxxflags=` on the command line without errors.
+  -- _René Ferdinand Rivera Morell_
+* Preserve `bootstrap.sh` invoke arguments to forward to the `build.sh` script.
+  -- _tkoecker_
+* Remove use of `local` in `buils.sh` to be compatible with some, not fully
+  capable, shells.
+  -- _Tanzinul Islam_
+* Workaround shell array ref error in `build.sh` on busybox shells.
+  -- _tkoecker_
+* Check for needing `-pthread` to build engine with gcc on some platforms.
+  -- _tkoecker_
+* Default to using clang on MacOS.
+  -- _Stéphan Kochen_
+* Add `/python//numpy` target to use as a dependency to communicate version
+  specific properties.
+  -- _Peter Dimov_
+* Add default value for cxx and cxxflags from env vars `CXX` and `CXXFLAGS`
+  when using the custom `cxx` toolset to build the engine.
+  -- _Samuel Debionne_ and _René Ferdinand Rivera Morell_
+* Fix detection of `intel-linux` toolset installation when only the compiler
+  executable is in the `PATH`.
+  -- _René Ferdinand Rivera Morell_
+* Fix `b2` executable path determination for platforms that don't have a
+  native method of getting the path to executables, like OpenBSD.
+  -- _René Ferdinand Rivera Morell_
+* Fix `property.find` error message.
+  -- _Thomas Brown_
+
+== Version 4.5.0
+
+Some minor fixes to improve some old issues.
+
+* Reenable ability of generators to return `property-set` as first item.
+  -- _Andrew McCann_
+* Fix examples to return 0 on success.
+  -- _Mateusz Łoskot_
+* Handle spaces in CXX path in `config_toolset.bat`.
+* Fix Conan b2 generator link, and pkg-config doc build error.
+  -- _René Ferdinand Rivera Morell_
+
+== Version 4.4.2
+
+This release is the first of the new home for B2 at Build Frameworks Group.
+
+* Change references in documentation and sources of boost.org to point
+  at equivalent bfgroup resources.
+  -- _René Ferdinand Rivera Morell_
+* New theme for B2 site and documentation.
+  -- _René Ferdinand Rivera Morell_
+
+== Version 4.4.1
+
+Minor patch to correct missing fix for macOS default engine compiler.
+
+* Fix engine build defaulting to gcc instead of clang on macOS/Xcode.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.4.0
 
+Along with a variety of fixes this version introduces "dynamic" response file
+support for some toolsets. This means that under most circumstances, if
+supported by the toolset, response files are not generated. Instead the
+command is expanded to include the options directly.
+
+* *New:* Add `response-file` feature to control the kind of response file usage in
+  toolset action.
+  -- _René Ferdinand Rivera Morell_
+* *New:* Add `:O=value` variable modifier for `@()` expansion.
+  -- _René Ferdinand Rivera Morell_
+* *New:* Add `:<=value` and `:>=value` variable modifiers for prefix and postfix
+  values *after* the complete expansion of variable references.
+  -- _René Ferdinand Rivera Morell_
+* *New:* Implement PCH on clang-win and clang-darwin.
+  -- _Nikita Kniazev_
+* *New:* Add support for Intel oneAPI release to intel-linux toolset.
+  -- _René Ferdinand Rivera Morell_
+* *New:* Add support for Intel oneAPI release to intel-windows toolset.
+  -- _Edward Diener_
 * Remove one at time linking limit. Once upon a time this was a performance
   tweak as hardware and software was not up to doing multiple links at once.
   Common setups are better equipped.
@@ -10,6 +258,38 @@
 * Fix building engine with GCC on AIX.
   -- _René Ferdinand Rivera Morell_
 * Support building engine as either 32 or 64 bit addressing model.
+  -- _René Ferdinand Rivera Morell_
+* Basic support for building b2 engine on GNU/Hurd.
+  -- _Pino Toscano_
+* Update "borland" toolset to bcc32c for building B2.
+  -- _Tanzinul Islam_
+* Ensure Embarcadero toolset name is only "embtc".
+  -- _Tanzinul Islam_
+* Adapt for Emscripten 2.0 change of default behavior for archives.
+  -- _Basil Fierz_
+* Fix path to bootstrap for back compat.
+  -- _René Ferdinand Rivera Morell_
+* Add missing BOOST_ROOT to boot strap search.
+  -- _René Ferdinand Rivera Morell_
+* Fix for engine compile on FreeBSD.
+  -- _René Ferdinand Rivera Morell_
+* Default MSVC to a native platform, and remove ambiguous implicit
+  address-model ARM/ARM64 values.
+  -- _Nikita Kniazev_
+* Fix detection of MIPS32 for b2 engine build.
+  -- _Ivan Melnikov_
+* Enable building b2 engine with clang on Windows.
+  -- _Gei0r_
+* Fix building b2 engine with Intel Linux icpc.
+  -- _Alain Miniussi_
+* Rework `build.sh` to fix many bugs and to avoid use of common env vars.
+  -- _René Ferdinand Rivera Morell_
+* Remove limitation of relevant features for configure checks.
+  -- _René Ferdinand Rivera Morell_
+* Reformat configure check output to inform the variants of the checks in a
+  reasonably brief form.
+  -- _René Ferdinand Rivera Morell_
+* Support building engine on Windows Bash with Mingw.
   -- _René Ferdinand Rivera Morell_
 
 == Version 4.3.0

@@ -1,9 +1,9 @@
 /*
+ * Copyright 2016-2022 Rene Rivera
  * Copyright 2011 Steven Watanabe
- * Copyright 2016 Rene Rivera
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "jam.h"
@@ -13,6 +13,7 @@
 #include "compile.h"
 #include "constants.h"
 #include "debugger.h"
+#include "execcmd.h"
 #include "filesys.h"
 #include "frames.h"
 #include "lists.h"
@@ -22,12 +23,21 @@
 #include "search.h"
 #include "variable.h"
 #include "output.h"
+#include "startup.h"
 
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <type_traits>
+#include <utility>
+#include <vector>
+#include <array>
 
 /*
 #define FUNCTION_DEBUG_PROFILE
@@ -203,103 +213,236 @@ typedef struct _jam_function
 } JAM_FUNCTION;
 
 
-#ifdef HAVE_PYTHON
+typedef struct _stack STACK;
+typedef STACK* stack_ptr;
 
-#define FUNCTION_PYTHON     2
-
-typedef struct _python_function
+namespace
 {
-    FUNCTION base;
-    PyObject * python_function;
-} PYTHON_FUNCTION;
+    template <typename T>
+    using remove_cref_t
+        = typename std::remove_const<
+            typename std::remove_reference<
+                typename std::remove_const<T>::type
+                >::type
+            >::type;
 
-static LIST * call_python_function( PYTHON_FUNCTION *, FRAME * );
-
-#endif
-
+    #if 1
+    template <typename...A>
+    struct select_last_impl {};
+    template <typename T>
+    struct select_last_impl<T> { using type = T; };
+    template <typename T, typename... A>
+    struct select_last_impl<T, A...> {
+        using type = typename select_last_impl<A...>::type; };
+    template <typename... A>
+    using select_last_t = typename select_last_impl<A...>::type;
+    #else
+    template<typename...>
+    struct type_list;
+    template<bool T, typename L>
+    struct select_last_impl;
+    template<typename... A>
+    struct select_last_impl<true, type_list<A...>>
+    {
+        template<typename T>
+        using type = T;
+    };
+    template<typename... A>
+    struct select_last_impl<false, type_list<A...>>
+    {
+        template<typename T, typename... R>
+        using type = typename select_last_impl<
+            (sizeof...(R) == 1), type_list<A...> >
+                ::template type<R...>;
+    };
+    template<typename... A>
+    using select_last_t =
+        typename select_last_impl<(sizeof...(A) == 1), type_list<A...> >
+            ::template type<A...>;
+    #endif
+}
 
 struct _stack
 {
-    void * data;
-};
+    public:
 
-static void * stack;
-
-STACK * stack_global()
-{
-    static STACK result;
-    if ( !stack )
+    _stack()
     {
         int32_t const size = 1 << 21;
-        stack = BJAM_MALLOC( size );
-        result.data = (char *)stack + size;
+        start = BJAM_MALLOC( size );
+        end = (char *)start + size;
+        data = end;
     }
-    return &result;
-}
 
-struct list_alignment_helper
-{
-    char ch;
-    LIST * l;
+    void done()
+    {
+        if ( cleanups_size > cleanups_t::size_type(0) )
+        {
+            while ( cleanups_size > 0 )
+            {
+                cleanups_size -= 1;
+                cleanups[cleanups_size]( this );
+            }
+        }
+        BJAM_FREE( start );
+        start = end = data = nullptr;
+    }
+
+    // Get reference to the top i-th T item, optionally as a U. I.e. it skips
+    // the i-th T items returning it as U&.
+    template <typename T, typename U = T>
+    remove_cref_t<U> & top(int i = 0)
+    {
+        return *reinterpret_cast<U*>( nth<T>( i ) );
+    }
+
+    // Get a pointer to the last A-th item skipping over any A pre i-th items.
+    template <typename...A>
+    remove_cref_t< select_last_t<A...> > * get()
+    {
+        using U = remove_cref_t< select_last_t<A...> >;
+        return static_cast<U*>( advance<A...>(get_data()) );
+    }
+
+    // Move "v" to a new slot in ther stack. Returns a reference to the new item.
+    template <class T>
+    remove_cref_t<T> & push( T v );
+
+    // Copy "v" into "n" new items at the top of the stack. Returns a pointer
+    // to the first, i.e. top most, new item.
+    template <class T>
+    remove_cref_t<T> * push( T v, int32_t n );
+
+    // Removes the top most "T" item from the stack and returns a copy of it.
+    template <class T>
+    remove_cref_t<T> pop()
+    {
+        using U = remove_cref_t<T>;
+        U result = top<U>();
+        pop<T>( 1 );
+        return result;
+    }
+
+    // Removes the top "n" "T" items from the stack.
+    template <class T>
+    void pop( int32_t n )
+    {
+        set_data( nth<T>( n ) );
+        cleanups_size -= n;
+    }
+
+    private:
+
+    void * start = nullptr;
+    void * end = nullptr;
+    void * data = nullptr;
+    using cleanup_f = void(*)( _stack* );
+    using cleanups_t = std::array<cleanup_f, (1<<21)/sizeof(void*)>;
+    cleanups_t cleanups;
+    cleanups_t::size_type cleanups_size = 0;
+
+    struct list_alignment_helper
+    {
+        char ch;
+        LIST * l;
+    };
+
+    #define LISTPTR_ALIGN_BASE ( sizeof( struct list_alignment_helper ) - sizeof( LIST * ) )
+    #define LISTPTR_ALIGN ( ( LISTPTR_ALIGN_BASE > sizeof( LIST * ) ) ? sizeof( LIST * ) : LISTPTR_ALIGN_BASE )
+
+    inline void set_data(void * d)
+    {
+        data = d;
+    }
+
+    inline void * get_data()
+    {
+        return data;
+    }
+
+    template <typename T>
+    remove_cref_t<T> * nth( int32_t n )
+    {
+        using U = remove_cref_t<T>;
+        return &( static_cast<U*>( get_data() )[n] );
+    }
+
+    template <typename T>
+    struct advance_size
+    {
+        struct _helper_1 { remove_cref_t<T> a; };
+        struct _helper_2 { remove_cref_t<T> a; remove_cref_t<T> b; };
+        static const std::ptrdiff_t value = sizeof(_helper_2) - sizeof(_helper_1);
+    };
+
+    template <typename...A>
+    struct sum_advance_size {};
+    template <typename T>
+    struct sum_advance_size<T>
+    {
+        static const std::ptrdiff_t value
+            = advance_size<T>::value;
+    };
+    template <typename T, typename...A>
+    struct sum_advance_size<T, A...>
+    {
+        static const std::ptrdiff_t value
+            = advance_size<T>::value + sum_advance_size<A...>::value;
+    };
+
+    template <typename...R>
+    static void * advance(void * p)
+    {
+        p = static_cast<char*>(p)
+            + sum_advance_size<R...>::value
+            - advance_size< select_last_t<R...> >::value;
+        return p;
+    }
+
+    template <typename T>
+    static void cleanup_item(_stack * s, T*_=nullptr)
+    {
+        s->set_data( s->nth<T>( 1 ) );
+    }
+
+    template <typename T>
+    void cleanup_push(int32_t n, T*_ = nullptr);
 };
 
-#define LISTPTR_ALIGN_BASE ( sizeof( struct list_alignment_helper ) - sizeof( LIST * ) )
-#define LISTPTR_ALIGN ( ( LISTPTR_ALIGN_BASE > sizeof( LIST * ) ) ? sizeof( LIST * ) : LISTPTR_ALIGN_BASE )
-
-static void check_alignment( STACK * s )
+template <>
+void _stack::cleanup_item<LIST*>(_stack * s, LIST**)
 {
-    assert( (size_t)s->data % LISTPTR_ALIGN == 0 );
+    list_free( s->top<LIST*>() );
+    s->set_data( s->nth<LIST*>( 1 ) );
 }
 
-void * stack_allocate( STACK * s, int32_t size )
+template <class T>
+remove_cref_t<T> & _stack::push( T v )
 {
-    check_alignment( s );
-    s->data = (char *)s->data - size;
-    check_alignment( s );
-    return s->data;
+    return *push<T>( v, 1 );
 }
 
-void stack_deallocate( STACK * s, int32_t size )
+template <class T>
+remove_cref_t<T> * _stack::push( T v, int32_t n )
 {
-    check_alignment( s );
-    s->data = (char *)s->data + size;
-    check_alignment( s );
+    using U = remove_cref_t<T>;
+    set_data( nth<T>( -n ) );
+    std::uninitialized_fill_n( nth<U>( 0 ), n, v );
+    cleanup_push<U>( n );
+    return nth<U>( 0 );
 }
 
-void stack_push( STACK * s, LIST * l )
+template <typename T>
+void _stack::cleanup_push( int32_t n, T*_ )
 {
-    *(LIST * *)stack_allocate( s, sizeof( LIST * ) ) = l;
+    std::uninitialized_fill_n( &cleanups[cleanups_size], n, (cleanup_f)&_stack::cleanup_item<T> );
+    cleanups_size += n;
 }
 
-LIST * stack_pop( STACK * s )
+static STACK * stack_global()
 {
-    LIST * const result = *(LIST * *)s->data;
-    stack_deallocate( s, sizeof( LIST * ) );
-    return result;
-}
-
-LIST * stack_top( STACK * s )
-{
-    check_alignment( s );
-    return *(LIST * *)s->data;
-}
-
-LIST * stack_at( STACK * s, int32_t n )
-{
-    check_alignment( s );
-    return *( (LIST * *)s->data + n );
-}
-
-void stack_set( STACK * s, int32_t n, LIST * value )
-{
-    check_alignment( s );
-    *((LIST * *)s->data + n) = value;
-}
-
-void * stack_get( STACK * s )
-{
-    check_alignment( s );
-    return s->data;
+    static _stack singleton;
+    return &singleton;
 }
 
 LIST * frame_get_local( FRAME * frame, int32_t idx )
@@ -354,7 +497,7 @@ static void function_set_actions( JAM_FUNCTION * function, FRAME * frame,
     STACK * s, int32_t idx )
 {
     SUBACTION * sub = function->actions + idx;
-    LIST * bindlist = stack_pop( s );
+    LIST * bindlist = s->pop<LIST *>();
     new_rule_actions( frame->module, sub->name, sub->command, bindlist,
         sub->flags );
 }
@@ -445,54 +588,57 @@ static void function_default_named_variable( JAM_FUNCTION * function,
 static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     STACK * s, int32_t n_args, char const * unexpanded, OBJECT * file, int32_t line )
 {
-    FRAME inner[ 1 ];
+    FRAME inner;
     int32_t i;
-    LIST * first = stack_pop( s );
+    b2::jam::list first( s->pop<LIST *>(), true );
     LIST * result = L0;
     OBJECT * rulename;
-    LIST * trailing;
 
     frame->file = file;
     frame->line = line;
 
-    if ( list_empty( first ) )
+    if ( first.empty() )
     {
         backtrace_line( frame );
         out_printf( "warning: rulename %s expands to empty string\n", unexpanded );
         backtrace( frame );
-        list_free( first );
+        first.reset();
         for ( i = 0; i < n_args; ++i )
-            list_free( stack_pop( s ) );
+            list_free( s->pop<LIST *>() );
         return result;
     }
 
-    rulename = object_copy( list_front( first ) );
+    rulename = object_copy( list_front( *first ) );
 
-    frame_init( inner );
-    inner->prev = frame;
-    inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
-    inner->module = frame->module;  /* This gets fixed up in evaluate_rule(). */
+    inner.prev = frame;
+    inner.prev_user = frame->module->user_module ? frame : frame->prev_user;
+    inner.module = frame->module;  /* This gets fixed up in evaluate_rule(). */
 
-    for ( i = 0; i < n_args; ++i )
-        lol_add( inner->args, stack_at( s, n_args - i - 1 ) );
-
-    for ( i = 0; i < n_args; ++i )
-        stack_pop( s );
-
-    trailing = list_pop_front( first );
-    if ( trailing )
+    if ( n_args > LOL_MAX )
     {
-        if ( inner->args->count == 0 )
-            lol_add( inner->args, trailing );
+        out_printf( "ERROR: rules are limited to %d arguments\n", LOL_MAX );
+        backtrace( &inner );
+        b2::clean_exit( EXITBAD );
+    }
+
+    for ( i = 0; i < n_args; ++i )
+        lol_add( inner.args, s->top<LIST*>( n_args - i - 1 ) );
+
+    for ( i = 0; i < n_args; ++i )
+        s->pop<LIST *>();
+
+    if ( !first.pop_front().empty() )
+    {
+        if ( inner.args->count == 0 )
+            lol_add( inner.args, first.release() );
         else
         {
-            LIST * * const l = &inner->args->list[ 0 ];
-            *l = list_append( trailing, *l );
+            LIST * * const l = &inner.args->list[ 0 ];
+            *l = list_append( first.release(), *l );
         }
     }
 
-    result = evaluate_rule( bindrule( rulename, inner->module ), rulename, inner );
-    frame_free( inner );
+    result = evaluate_rule( bindrule( rulename, inner.module ), rulename, &inner );
     object_free( rulename );
     return result;
 }
@@ -501,7 +647,7 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 {
     FRAME   inner[ 1 ];
     int32_t i;
-    LIST * first = stack_pop( s );
+    LIST * first = s->pop<LIST *>();
     LIST * result = L0;
     RULE * rule;
     module_t * module;
@@ -520,7 +666,7 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 
         for( i = 0; i < n_args; ++i )
         {
-            list_free( stack_pop( s ) );
+            list_free( s->pop<LIST *>() );
         }
 
         return result;
@@ -566,14 +712,21 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
     inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
     inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
 
-    for( i = 0; i < n_args; ++i )
+    if ( n_args > LOL_MAX )
     {
-        lol_add( inner->args, stack_at( s, n_args - i - 1 ) );
+        out_printf( "ERROR: member rules are limited to %d arguments\n", LOL_MAX );
+        backtrace( inner );
+        b2::clean_exit( EXITBAD );
     }
 
     for( i = 0; i < n_args; ++i )
     {
-        stack_pop( s );
+        lol_add( inner->args, s->top<LIST*>( n_args - i - 1 ) );
+    }
+
+    for( i = 0; i < n_args; ++i )
+    {
+        s->pop<LIST *>();
     }
 
     if ( list_length( first ) > 1 )
@@ -619,18 +772,30 @@ typedef struct
 
 typedef struct
 {
-    PATHNAME f;           /* :GDBSMR -- pieces */
-    char     parent;      /* :P -- go to parent directory */
-    char     filemods;    /* one of the above applied */
-    char     downshift;   /* :L -- downshift result */
-    char     upshift;     /* :U -- upshift result */
-    char     to_slashes;  /* :T -- convert "\" to "/" */
-    char     to_windows;  /* :W -- convert cygwin to native paths */
-    PATHPART empty;       /* :E -- default for empties */
-    PATHPART join;        /* :J -- join list with char */
+    PATHNAME f;             /* :GDBSMR -- pieces */
+    PATHPART empty;         /* :E -- default for empties */
+    PATHPART join;          /* :J -- join list with char */
+    PATHPART prefix;        /* :< */
+    PATHPART postfix;       /* :> */
+    bool     parent:1;      /* :P -- go to parent directory */
+    bool     filemods:1;    /* one of the above applied */
+    bool     downshift:1;   /* :L -- downshift result */
+    bool     upshift:1;     /* :U -- upshift result */
+    bool     to_slashes:1;  /* :T -- convert "\" to "/" */
+    bool     to_windows:1;  /* :W -- convert cygwin to native paths */
+    bool     opt_file:1;    /* :O=F -- replace @() with the file part */
+    bool     opt_content:1; /* :O=C -- repalce @() with the content (E) part */
 } VAR_EDITS;
 
-static LIST * apply_modifiers_impl( LIST * result, string * buf,
+struct VAR_EXPANDED
+{
+    LIST * value = L0;
+    LIST * inner = L0;
+    bool opt_file:1;
+    bool  opt_content:1;
+};
+
+static VAR_EXPANDED apply_modifiers_impl( LIST * result, string * buf,
     VAR_EDITS * edits, int32_t n, LISTITER iter, LISTITER end );
 static void get_iters( subscript_t const subscript, LISTITER * const first,
     LISTITER * const last, int32_t const length );
@@ -677,6 +842,7 @@ static int32_t var_edit_parse( char const * mods, VAR_EDITS * edits, int32_t hav
     while ( *mods )
     {
         PATHPART * fp;
+        bool opt = false;
 
         switch ( *mods++ )
         {
@@ -693,6 +859,9 @@ static int32_t var_edit_parse( char const * mods, VAR_EDITS * edits, int32_t hav
             case 'M': fp = &edits->f.f_member; goto fileval;
             case 'T': edits->to_slashes = 1; continue;
             case 'W': edits->to_windows = 1; continue;
+            case '<': fp = &edits->prefix; goto strval;
+            case '>': fp = &edits->postfix; goto strval;
+            case 'O': opt = true; goto strval;
             default:
                 continue;  /* Should complain, but so what... */
         }
@@ -722,17 +891,35 @@ static int32_t var_edit_parse( char const * mods, VAR_EDITS * edits, int32_t hav
         }
 
     strval:
-        /* Handle :X=value, or :X */
-        if ( *mods != '=' )
+        /* Handle :O=??? */
+        if ( opt )
         {
-            fp->ptr = "";
-            fp->len = 0;
+            if ( *mods == '=' )
+            {
+                for (++mods; *mods; ++mods)
+                {
+                    switch ( *mods )
+                    {
+                        case 'F': edits->opt_file = true; break;
+                        case 'C': edits->opt_content = true; break;
+                    }
+                }
+            }
         }
         else
         {
-            fp->ptr = ++mods;
-            fp->len = int32_t(strlen( mods ));
-            mods += fp->len;
+            /* Handle :X=value, or :X */
+            if ( *mods != '=' )
+            {
+                fp->ptr = "";
+                fp->len = 0;
+            }
+            else
+            {
+                fp->ptr = ++mods;
+                fp->len = int32_t(strlen( mods ));
+                mods += fp->len;
+            }
         }
     }
 
@@ -838,14 +1025,14 @@ static int32_t expand_modifiers( STACK * s, int32_t n )
 {
     int32_t i;
     int32_t total = 1;
-    LIST * * args = (LIST**)stack_get( s );
+    LIST * * args = s->get<LIST*>();
     for ( i = 0; i < n; ++i )
         total *= list_length( args[ i ] );
 
     if ( total != 0 )
     {
-        VAR_EDITS * out = (VAR_EDITS*)stack_allocate( s, total * sizeof( VAR_EDITS ) );
-        LISTITER * iter = (LISTITER*)stack_allocate( s, n * sizeof( LIST * ) );
+        VAR_EDITS * out = s->push( VAR_EDITS(), total );
+        LISTITER * iter = s->push( LISTITER(nullptr), n );
         for ( i = 0; i < n; ++i )
             iter[ i ] = list_begin( args[ i ] );
         i = 0;
@@ -868,21 +1055,39 @@ static int32_t expand_modifiers( STACK * s, int32_t n )
                 iter[ i ] = list_begin( args[ i ] );
             }
         }
-        stack_deallocate( s, n * sizeof( LIST * ) );
+        s->pop<LIST*>( n );
     }
     return total;
 }
 
-static LIST * apply_modifiers( STACK * s, int32_t n )
+static VAR_EXPANDED apply_modifiers( STACK * s, int32_t n )
 {
-    LIST * value = stack_top( s );
-    LIST * result = L0;
-    VAR_EDITS * const edits = (VAR_EDITS *)( (LIST * *)stack_get( s ) + 1 );
+    LIST * value = s->top<LIST*>();
+    VAR_EXPANDED result;
+    VAR_EDITS * const edits = s->get<LIST*, VAR_EDITS>();
     string buf[ 1 ];
     string_new( buf );
-    result = apply_modifiers_impl( result, buf, edits, n, list_begin( value ),
+    result = apply_modifiers_impl( L0, buf, edits, n, list_begin( value ),
         list_end( value ) );
     string_free( buf );
+    return result;
+}
+
+// STACK: LIST * modifiers[modifier_count]
+static VAR_EXPANDED eval_modifiers( STACK * s, LIST * value, int32_t modifier_count )
+{
+    // Convert modifiers to value edits.
+    int32_t edits = expand_modifiers( s, modifier_count );
+    // Edit the value on the stack.
+    s->push( value );
+    VAR_EXPANDED result = apply_modifiers( s, edits );
+    list_free( s->pop<LIST *>() );
+    // Clean up the value edits on the stack.
+    s->pop<VAR_EDITS>( edits );
+    // Clean up the filename modifiers.
+    for ( int32_t i = 0; i < modifier_count; ++i )
+        list_free( s->pop<LIST *>() );
+    // Done.
     return result;
 }
 
@@ -950,8 +1155,8 @@ subscript_t parse_subscript( char const * s )
 
 static LIST * apply_subscript( STACK * s )
 {
-    LIST * value = stack_top( s );
-    LIST * indices = stack_at( s, 1 );
+    LIST * value = s->top<LIST*>();
+    LIST * indices = s->top<LIST*>( 1 );
     LIST * result = L0;
     int32_t length = list_length( value );
     string buf[ 1 ];
@@ -1027,6 +1232,32 @@ static void get_iters( subscript_t const subscript, LISTITER * const first,
     *last = end;
 }
 
+static LIST * apply_modifiers_prepost( LIST * result, string * buf,
+    VAR_EDITS * edits, int32_t n, LISTITER begin, LISTITER end )
+{
+    for ( LISTITER iter = begin; iter != end; iter = list_next( iter ) )
+    {
+        for ( int32_t i = 0; i < n; ++i )
+        {
+            if ( edits[ i ].prefix.ptr )
+            {
+                string_append( buf, edits[ i ].prefix.ptr );
+            }
+        }
+        string_append( buf, object_str( list_item( iter ) ) );
+        for ( int32_t i = 0; i < n; ++i )
+        {
+            if ( edits[ i ].postfix.ptr )
+            {
+                string_append( buf, edits[ i ].postfix.ptr );
+            }
+        }
+        result = list_push_back( result, object_new( buf->value ) );
+        string_truncate( buf, 0 );
+    }
+    return result;
+}
+
 static LIST * apply_modifiers_empty( LIST * result, string * buf,
     VAR_EDITS * edits, int32_t n )
 {
@@ -1083,20 +1314,32 @@ static LIST * apply_modifiers_non_empty( LIST * result, string * buf,
     return result;
 }
 
-static LIST * apply_modifiers_impl( LIST * result, string * buf,
+static VAR_EXPANDED apply_modifiers_impl( LIST * result, string * buf,
     VAR_EDITS * edits, int32_t n, LISTITER iter, LISTITER end )
 {
-    return iter == end
+    LIST * modified = iter == end
         ? apply_modifiers_empty( result, buf, edits, n )
         : apply_modifiers_non_empty( result, buf, edits, n, iter, end );
+    VAR_EXPANDED expanded;
+    expanded.value = apply_modifiers_prepost(
+        L0, buf, edits, n, list_begin( modified ), list_end( modified ) );
+    expanded.inner = modified;
+    expanded.opt_file = false;
+    expanded.opt_content = false;
+    for ( int32_t i = 0; i < n; ++i )
+    {
+        expanded.opt_file |= edits[i].opt_file;
+        expanded.opt_content |= edits[i].opt_content;
+    }
+    return expanded;
 }
 
 static LIST * apply_subscript_and_modifiers( STACK * s, int32_t n )
 {
-    LIST * const value = stack_top( s );
-    LIST * const indices = stack_at( s, 1 );
+    LIST * const value = s->top<LIST*>();
+    LIST * const indices = s->top<LIST*>( 1 );
     LIST * result = L0;
-    VAR_EDITS * const edits = (VAR_EDITS *)((LIST * *)stack_get( s ) + 2);
+    VAR_EDITS * const edits = s->get<LIST*, LIST*, VAR_EDITS>();
     int32_t const length = list_length( value );
     string buf[ 1 ];
     LISTITER indices_iter = list_begin( indices );
@@ -1110,7 +1353,10 @@ static LIST * apply_subscript_and_modifiers( STACK * s, int32_t n )
         subscript_t const sub = parse_subscript( object_str( list_item(
             indices_iter ) ) );
         get_iters( sub, &iter, &end, length );
-        result = apply_modifiers_impl( result, buf, edits, n, iter, end );
+        VAR_EXPANDED modified
+            = apply_modifiers_impl( result, buf, edits, n, iter, end );
+        result = modified.value;
+        list_free( modified.inner );
     }
     string_free( buf );
     return result;
@@ -1235,7 +1481,7 @@ static void combine_strings( STACK * s, int32_t n, string * out )
     int32_t i;
     for ( i = 0; i < n; ++i )
     {
-        LIST * const values = stack_pop( s );
+        LIST * const values = s->pop<LIST *>();
         LISTITER iter = list_begin( values );
         LISTITER const end = list_end( values );
         if ( iter != end )
@@ -1247,8 +1493,8 @@ static void combine_strings( STACK * s, int32_t n, string * out )
                 string_push_back( out, ' ' );
                 string_append( out, object_str( list_item( iter ) ) );
             }
-            list_free( values );
         }
+        list_free( values );
     }
 }
 
@@ -1256,6 +1502,7 @@ struct dynamic_array
 {
     int32_t size;
     int32_t capacity;
+    int32_t unit_size;
     void * data;
 };
 
@@ -1263,6 +1510,7 @@ static void dynamic_array_init( struct dynamic_array * array )
 {
     array->size = 0;
     array->capacity = 0;
+    array->unit_size = 0;
     array->data = 0;
 }
 
@@ -1274,6 +1522,14 @@ static void dynamic_array_free( struct dynamic_array * array )
 static void dynamic_array_push_impl( struct dynamic_array * const array,
     void const * const value, int32_t const unit_size )
 {
+    if ( array->unit_size == 0 )
+    {
+        array->unit_size = unit_size;
+    }
+    else
+    {
+        assert( array->unit_size == unit_size );
+    }
     if ( array->capacity == 0 )
     {
         array->capacity = 2;
@@ -1293,7 +1549,7 @@ static void dynamic_array_push_impl( struct dynamic_array * const array,
 }
 
 #define dynamic_array_push( array, value ) (dynamic_array_push_impl(array, &value, sizeof(value)))
-#define dynamic_array_at( type, array, idx ) (((type *)(array)->data)[idx])
+#define dynamic_array_at( type, array, idx ) ( (assert( array->unit_size == sizeof(type) )) , (((type *)(array)->data)[idx]) )
 #define dynamic_array_pop( array ) (--(array)->size)
 
 /*
@@ -1611,14 +1867,54 @@ typedef struct
     OBJECT * s;
 } VAR_PARSE_STRING;
 
-typedef struct
-{
-    VAR_PARSE base;
-    struct dynamic_array filename[ 1 ];
-    struct dynamic_array contents[ 1 ];
-} VAR_PARSE_FILE;
-
 static void var_parse_free( VAR_PARSE * );
+
+static std::string var_parse_to_string( VAR_PARSE_STRING * string, bool debug = false );
+static std::string var_parse_to_string( VAR_PARSE_GROUP * group, bool debug = false );
+static std::string var_parse_to_string( VAR_PARSE_VAR const * parse, bool debug = false );
+
+static std::string var_parse_to_string( VAR_PARSE_STRING * string, bool debug )
+{
+    std::string result;
+    if ( debug ) result += "'";
+    result += object_str( string->s ) ?  object_str( string->s ) : "";
+    if ( debug ) result += "'";
+    return result;
+}
+static std::string var_parse_to_string( VAR_PARSE_GROUP * group, bool debug )
+{
+    std::string result;
+    if ( debug ) result += "[";
+    for ( int32_t i = 0; i < group->elems->size; ++i )
+    {
+        switch ( dynamic_array_at( VAR_PARSE *, group->elems, i )->type )
+        {
+            case VAR_PARSE_TYPE_VAR:
+            result += var_parse_to_string( dynamic_array_at( VAR_PARSE_VAR *, group->elems, i ), debug );
+            break;
+
+            case VAR_PARSE_TYPE_STRING:
+            result += var_parse_to_string( dynamic_array_at( VAR_PARSE_STRING *, group->elems, i ), debug );
+            break;
+        }
+    }
+    if ( debug ) result += "[";
+    return result;
+}
+static std::string var_parse_to_string( VAR_PARSE_VAR const * parse, bool debug )
+{
+    std::string result = "$(";
+    result += var_parse_to_string( parse->name, debug );
+    if ( parse->subscript )
+    {
+        result += "[" + var_parse_to_string( parse->subscript, debug ) + "]";
+    }
+    for ( int32_t i = 0; i < parse->modifiers->size; ++i )
+    {
+        result += ":" + var_parse_to_string( dynamic_array_at( VAR_PARSE_GROUP *, parse->modifiers, i ), debug );
+    }
+    return result + ")";
+}
 
 
 /*
@@ -1732,6 +2028,21 @@ static VAR_PARSE_GROUP * var_parse_var_new_modifier( VAR_PARSE_VAR * var )
     return result;
 }
 
+static int32_t var_parse_var_mod_index( VAR_PARSE_VAR const * var , char m)
+{
+    for ( int32_t i = 0; i < var->modifiers->size; ++i )
+    {
+        VAR_PARSE_GROUP * mod = dynamic_array_at( VAR_PARSE_GROUP *, var->modifiers, i );
+        VAR_PARSE_STRING * mod_val = dynamic_array_at( VAR_PARSE_STRING *, mod->elems, 0 );
+        const char * mod_str = object_str(mod_val->s);
+        if (mod_str && mod_str[0] == m)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
 
 /*
  * VAR_PARSE_STRING
@@ -1745,35 +2056,6 @@ static void var_parse_string_free( VAR_PARSE_STRING * string )
 
 
 /*
- * VAR_PARSE_FILE
- */
-
-static VAR_PARSE_FILE * var_parse_file_new( void )
-{
-    VAR_PARSE_FILE * const result = (VAR_PARSE_FILE *)BJAM_MALLOC( sizeof(
-        VAR_PARSE_FILE ) );
-    result->base.type = VAR_PARSE_TYPE_FILE;
-    dynamic_array_init( result->filename );
-    dynamic_array_init( result->contents );
-    return result;
-}
-
-static void var_parse_file_free( VAR_PARSE_FILE * file )
-{
-    int32_t i;
-    for ( i = 0; i < file->filename->size; ++i )
-        var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *,
-            file->filename, i ) );
-    dynamic_array_free( file->filename );
-    for ( i = 0; i < file->contents->size; ++i )
-        var_parse_group_free( dynamic_array_at( VAR_PARSE_GROUP *,
-            file->contents, i ) );
-    dynamic_array_free( file->contents );
-    BJAM_FREE( file );
-}
-
-
-/*
  * VAR_PARSE
  */
 
@@ -1782,15 +2064,12 @@ static void var_parse_free( VAR_PARSE * parse )
     switch ( parse->type )
     {
         case VAR_PARSE_TYPE_VAR:
+        case VAR_PARSE_TYPE_FILE:
             var_parse_var_free( (VAR_PARSE_VAR *)parse );
             break;
 
         case VAR_PARSE_TYPE_STRING:
             var_parse_string_free( (VAR_PARSE_STRING *)parse );
-            break;
-
-        case VAR_PARSE_TYPE_FILE:
-            var_parse_file_free( (VAR_PARSE_FILE *)parse );
             break;
 
         default:
@@ -1898,17 +2177,55 @@ static void var_parse_string_compile( VAR_PARSE_STRING const * parse,
         );
 }
 
-static void var_parse_file_compile( VAR_PARSE_FILE const * parse, compiler * c )
+static void parse_var_string( char const * first, char const * last,
+    struct dynamic_array * out );
+
+static void var_parse_file_compile( VAR_PARSE_VAR const * parse, compiler * c )
 {
-    int32_t i;
-    for ( i = 0; i < parse->filename->size; ++i )
-        var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *,
-            parse->filename, parse->filename->size - i - 1 ), c );
-    compile_emit( c, INSTR_APPEND_STRINGS, parse->filename->size );
-    for ( i = 0; i < parse->contents->size; ++i )
-        var_parse_group_compile( dynamic_array_at( VAR_PARSE_GROUP *,
-            parse->contents, parse->contents->size - i - 1 ), c );
-    compile_emit( c, INSTR_WRITE_FILE, parse->contents->size );
+    std::string var = var_parse_to_string( parse, true );
+    int32_t empty_mod_index = var_parse_var_mod_index( parse, 'E' );
+    int32_t grist_mod_index = var_parse_var_mod_index( parse, 'G' );
+    int32_t modifier_count = 0;
+    // Push the contents, aka the edit modifier value.
+    {
+        assert( empty_mod_index >= 0 );
+        // We reparse the edit modifier as we do teh expansion differently than
+        // regular var expansion.
+        std::string contents_val = var_parse_to_string(
+            dynamic_array_at(
+                VAR_PARSE_GROUP *, parse->modifiers, empty_mod_index ), false );
+        dynamic_array contents_dyn_array;
+        dynamic_array_init( &contents_dyn_array );
+        parse_var_string(
+            contents_val.c_str() + 2, contents_val.c_str() + contents_val.size(),
+            &contents_dyn_array );
+        for ( int32_t i = contents_dyn_array.size - 1; i >= 0; --i )
+        {
+            auto group = dynamic_array_at(
+                VAR_PARSE_GROUP *, ( &contents_dyn_array ), i );
+            var_parse_group_compile( group, c );
+            var_parse_group_free( group );
+        }
+        dynamic_array_free( &contents_dyn_array );
+        compile_emit( c, INSTR_APPEND_STRINGS, contents_dyn_array.size );
+    }
+    // If there are modifiers, emit them in reverse order.
+    if ( parse->modifiers->size > 0 )
+    {
+        for ( int32_t i = parse->modifiers->size - 1; i >= 0; --i )
+        {
+            // Skip special modifiers.
+            if ( i == empty_mod_index || i == grist_mod_index ) continue;
+            modifier_count += 1;
+            var_parse_group_compile(
+                dynamic_array_at( VAR_PARSE_GROUP *, parse->modifiers, i ), c );
+        }
+    }
+    // Push the filename, aka var name.
+    var_parse_group_compile( parse->name, c );
+    // This instruction applies the modifiers and writes out the file and fills
+    // in the file name.
+    compile_emit( c, INSTR_WRITE_FILE, modifier_count );
 }
 
 static void var_parse_compile( VAR_PARSE const * parse, compiler * c )
@@ -1924,7 +2241,7 @@ static void var_parse_compile( VAR_PARSE const * parse, compiler * c )
             break;
 
         case VAR_PARSE_TYPE_FILE:
-            var_parse_file_compile( (VAR_PARSE_FILE const *)parse, c );
+            var_parse_file_compile( (VAR_PARSE_VAR const *)parse, c );
             break;
 
         default:
@@ -1964,8 +2281,6 @@ static void var_parse_actions_compile( VAR_PARSE_ACTIONS const * actions,
  * Parse VAR_PARSE_VAR
  */
 
-static VAR_PARSE * parse_at_file( char const * start, char const * mid,
-    char const * end );
 static VAR_PARSE * parse_variable( char const * * string );
 static int32_t try_parse_variable( char const * * s_, char const * * string,
     VAR_PARSE_GROUP * out );
@@ -2026,36 +2341,22 @@ static int32_t try_parse_variable( char const * * s_, char const * * string,
     }
     if ( s[ 0 ] == '@' && s[ 1 ] == '(' )
     {
-        int32_t depth = 1;
-        char const * ine;
-        char const * split = 0;
         var_parse_group_maybe_add_constant( out, *string, s );
         s += 2;
-        ine = s;
-
-        /* Scan the content of the response file @() section. */
-        while ( *ine && ( depth > 0 ) )
+        VAR_PARSE_VAR *vp = (VAR_PARSE_VAR*)parse_variable( &s );
+        /* We at least need the empty (:E) modifier. */
+        if (var_parse_var_mod_index(vp, 'E') >= 0)
         {
-            switch ( *ine )
-            {
-            case '(': ++depth; break;
-            case ')': --depth; break;
-            case ':':
-                if ( ( depth == 1 ) && ( ine[ 1 ] == 'E' ) && ( ine[ 2 ] == '='
-                    ) )
-                    split = ine;
-                break;
-            }
-            ++ine;
+            vp->base.type = VAR_PARSE_TYPE_FILE;
+            var_parse_group_add( out, (VAR_PARSE*)vp );
+            *string = s;
+            *s_ = s;
+            return 1;
         }
-
-        if ( !split || depth )
-            return 0;
-
-        var_parse_group_add( out, parse_at_file( s, split, ine - 1 ) );
-        *string = ine;
-        *s_ = ine;
-        return 1;
+        else
+        {
+            var_parse_var_free( vp );
+        }
     }
     return 0;
 }
@@ -2219,20 +2520,6 @@ static void parse_var_string( char const * first, char const * last,
             dynamic_array_push( out, group );
         }
     }
-}
-
-/*
- * start should point to the character immediately following the opening "@(",
- * mid should point to the ":E=", and end should point to the closing ")".
- */
-
-static VAR_PARSE * parse_at_file( char const * start, char const * mid,
-    char const * end )
-{
-    VAR_PARSE_FILE * result = var_parse_file_new();
-    parse_var_string( start, mid, result->filename );
-    parse_var_string( mid + 3, end, result->contents );
-    return (VAR_PARSE *)result;
 }
 
 /*
@@ -2961,13 +3248,6 @@ void function_location( FUNCTION * function_, OBJECT * * file, int32_t * line )
         *file = constant_builtin;
         *line = -1;
     }
-#ifdef HAVE_PYTHON
-    if ( function_->type == FUNCTION_PYTHON )
-    {
-        *file = constant_builtin;
-        *line = -1;
-    }
-#endif
     else
     {
         JAM_FUNCTION * function = (JAM_FUNCTION *)function_;
@@ -3065,7 +3345,7 @@ static void argument_error( char const * message, FUNCTION * procedure,
     print_source_line( frame );
     out_printf( "see definition of rule '%s' being called\n", frame->rulename );
     backtrace( frame->prev );
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
 }
 
 static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
@@ -3086,24 +3366,23 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
 
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        LIST * error;
-        FRAME frame[ 1 ];
-        frame_init( frame );
-        frame->module = typecheck;
-        frame->prev = caller;
-        frame->prev_user = caller->module->user_module
+        FRAME frame;
+        frame.module = typecheck;
+        frame.prev = caller;
+        frame.prev_user = caller->module->user_module
             ? caller
             : caller->prev_user;
 
         /* Prepare the argument list */
-        lol_add( frame->args, list_new( object_copy( list_item( iter ) ) ) );
-        error = evaluate_rule( bindrule( type_name, frame->module ), type_name, frame );
+        lol_add( frame.args, list_new( object_copy( list_item( iter ) ) ) );
+        b2::jam::list error(
+            evaluate_rule(
+                bindrule( type_name, frame.module ), type_name, &frame ),
+            true );
 
-        if ( !list_empty( error ) )
-            argument_error( object_str( list_front( error ) ), called, caller,
+        if ( !error.empty() )
+            argument_error( object_str( *error.begin() ), called, caller,
                 arg_name );
-
-        frame_free( frame );
     }
 }
 
@@ -3194,7 +3473,7 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
-            LIST * value = L0;
+            b2::jam::list value;
 
             switch ( formal_arg->flags )
             {
@@ -3202,15 +3481,15 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
                 if ( actual_iter == actual_end )
                     argument_error( "missing argument", function, frame,
                         formal_arg->arg_name );
-                value = list_new( object_copy( list_item( actual_iter ) ) );
+                value.reset( list_new( object_copy( list_item( actual_iter ) ) ) );
                 actual_iter = list_next( actual_iter );
                 break;
             case ARG_OPTIONAL:
                 if ( actual_iter == actual_end )
-                    value = L0;
+                    value.reset();
                 else
                 {
-                    value = list_new( object_copy( list_item( actual_iter ) ) );
+                    value.reset( list_new( object_copy( list_item( actual_iter ) ) ) );
                     actual_iter = list_next( actual_iter );
                 }
                 break;
@@ -3220,26 +3499,26 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
                         formal_arg->arg_name );
                 /* fallthrough */
             case ARG_STAR:
-                value = list_copy_range( actual, actual_iter, actual_end );
+                value.reset( list_copy_range( actual, actual_iter, actual_end ) );
                 actual_iter = actual_end;
                 break;
             case ARG_VARIADIC:
                 return;
             }
 
-            type_check( formal_arg->type_name, value, frame, function,
+            type_check( formal_arg->type_name, *value, frame, function,
                 formal_arg->arg_name );
 
             if ( formal_arg->index != -1 )
             {
                 LIST * * const old = &frame->module->fixed_variables[
                     formal_arg->index ];
-                stack_push( s, *old );
-                *old = value;
+                s->push( *old );
+                *old = value.release();
             }
             else
-                stack_push( s, var_swap( frame->module, formal_arg->arg_name,
-                    value ) );
+                s->push( var_swap( frame->module, formal_arg->arg_name,
+                    value.release() ) );
         }
 
         if ( actual_iter != actual_end )
@@ -3271,14 +3550,14 @@ void argument_list_pop( struct arg_list * formal, int32_t formal_count,
                 continue;
             if ( formal_arg->index != -1 )
             {
-                LIST * const old = stack_pop( s );
+                LIST * const old = s->pop<LIST *>();
                 LIST * * const pos = &frame->module->fixed_variables[
                     formal_arg->index ];
                 list_free( *pos );
                 *pos = old;
             }
             else
-                var_set( frame->module, formal_arg->arg_name, stack_pop( s ),
+                var_set( frame->module, formal_arg->arg_name, s->pop<LIST *>(),
                     VAR_SET );
         }
     }
@@ -3355,7 +3634,7 @@ static void argument_compiler_add( struct argument_compiler * c, OBJECT * arg,
         {
             err_printf( "%s:%d: missing argument name before type name: %s\n",
                 object_str( file ), line, object_str( arg ) );
-            exit( EXITBAD );
+            b2::clean_exit( EXITBAD );
         }
 
         c->arg.arg_name = object_copy( arg );
@@ -3403,7 +3682,7 @@ static struct arg_list arg_compile_impl( struct argument_compiler * c,
     case ARGUMENT_COMPILER_FOUND_TYPE:
         err_printf( "%s:%d: missing argument name after type name: %s\n",
             object_str( file ), line, object_str( c->arg.type_name ) );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     case ARGUMENT_COMPILER_FOUND_OBJECT:
         dynamic_array_push( c->args, c->arg );
         break;
@@ -3606,10 +3885,6 @@ FUNCTION * function_unbind_variables( FUNCTION * f )
         JAM_FUNCTION * const func = (JAM_FUNCTION *)f;
         return func->generic ? func->generic : f;
     }
-#ifdef HAVE_PYTHON
-    if ( f->type == FUNCTION_PYTHON )
-        return f;
-#endif
     assert( f->type == FUNCTION_BUILTIN );
     return f;
 }
@@ -3619,10 +3894,6 @@ FUNCTION * function_bind_variables( FUNCTION * f, module_t * module,
 {
     if ( f->type == FUNCTION_BUILTIN )
         return f;
-#ifdef HAVE_PYTHON
-    if ( f->type == FUNCTION_PYTHON )
-        return f;
-#endif
     {
         JAM_FUNCTION * func = (JAM_FUNCTION *)f;
         JAM_FUNCTION * new_func = (JAM_FUNCTION *)BJAM_MALLOC( sizeof( JAM_FUNCTION ) );
@@ -3700,10 +3971,6 @@ LIST * function_get_variables( FUNCTION * f )
 {
     if ( f->type == FUNCTION_BUILTIN )
         return L0;
-#ifdef HAVE_PYTHON
-    if ( f->type == FUNCTION_PYTHON )
-        return L0;
-#endif
     {
         JAM_FUNCTION * func = (JAM_FUNCTION *)f;
         LIST * result = L0;
@@ -3810,14 +4077,6 @@ void function_free( FUNCTION * function_ )
             object_free( func->file );
         }
     }
-#ifdef HAVE_PYTHON
-    else if ( function_->type == FUNCTION_PYTHON )
-    {
-        PYTHON_FUNCTION * func = (PYTHON_FUNCTION *)function_;
-        Py_DECREF( func->python_function );
-        if ( function_->rulename ) object_free( function_->rulename );
-    }
-#endif
     else
     {
         assert( function_->type == FUNCTION_BUILTIN );
@@ -3854,12 +4113,157 @@ static_assert(
 static_assert( sizeof(LIST *) <= sizeof(void *), "sizeof(LIST *) <= sizeof(void *)" );
 static_assert( sizeof(char *) <= sizeof(void *), "sizeof(char *) <= sizeof(void *)" );
 
-void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s,
-    string * out )
+void function_run_actions( FUNCTION * function, FRAME * frame, string * out )
 {
-    *(string * *)stack_allocate( s, sizeof( string * ) ) = out;
-    list_free( function_run( function, frame, s ) );
-    stack_deallocate( s, sizeof( string * ) );
+    stack_global()->push( out );
+    list_free( function_run( function, frame ) );
+    stack_global()->pop<string *>();
+}
+
+// Result is either the filename or contents depending on:
+// 1. If the RESPONSE_FILE_SUB == f or not set (it's filename)
+// 2. If the RESPONSE_FILE_SUB == c (it's contents)
+// 3. If the RESPONSE_FILE_SUB == a (depends on the length of contents)
+// Note, returns a *copy* of the filename or contents.
+LIST * function_execute_write_file(
+    JAM_FUNCTION * function, FRAME * frame, STACK * s,
+    VAR_EXPANDED filename, LIST * contents )
+{
+    LIST * filename_or_contents_result = nullptr;
+
+    char response_file_sub_c = 'f';
+    if ( filename.opt_file && filename.opt_content )
+    {
+        LIST * response_file_sub = function_get_named_variable(
+            function, frame, constant_RESPONSE_FILE_SUB );
+        if ( response_file_sub && list_front( response_file_sub ) )
+            response_file_sub_c =  object_str( list_front( response_file_sub ) )[0];
+        list_free( response_file_sub );
+        const char * contents_str = object_str( list_front( contents ) );
+        if ( response_file_sub_c == 'a' )
+        {
+            if ( int32_t( strlen( contents_str ) + 256 ) > shell_maxline() )
+                response_file_sub_c = 'f';
+            else
+                response_file_sub_c = 'c';
+        }
+    }
+    else if ( filename.opt_file )
+        response_file_sub_c = 'f';
+    else if ( filename.opt_content )
+        response_file_sub_c = 'c';
+    if ( response_file_sub_c == 'c' )
+    {
+        filename_or_contents_result = list_copy( contents );
+    }
+    else
+    {
+        char const * out = object_str( list_front( filename.inner ) );
+        OBJECT * tmp_filename = nullptr;
+        FILE * out_file = nullptr;
+        bool out_debug = DEBUG_EXEC != 0;
+
+        /* For stdout/stderr we will create a temp file and generate a
+        * command that outputs the content as needed.
+        */
+        if ( ( strcmp( "STDOUT", out ) == 0 ) ||
+            ( strcmp( "STDERR", out ) == 0 ) )
+        {
+            int32_t err_redir = strcmp( "STDERR", out ) == 0;
+            string result[ 1 ];
+
+            tmp_filename = path_tmpfile();
+
+            /* Construct os-specific cat command. */
+            {
+                const char * command = "cat";
+                const char * quote = "\"";
+                const char * redirect = "1>&2";
+
+                #ifdef OS_NT
+                command = "type";
+                quote = "\"";
+                #elif defined( OS_VMS )
+                command = "pipe type";
+                quote = "";
+
+                /* Get tmp file name in os-format. */
+                {
+                    string os_filename[ 1 ];
+
+                    string_new( os_filename );
+                    path_translate_to_os( object_str( tmp_filename ), os_filename );
+                    object_free( tmp_filename );
+                    tmp_filename = object_new( os_filename->value );
+                    string_free( os_filename );
+                }
+                #endif
+
+                string_new( result );
+                string_append( result, command );
+                string_append( result, " " );
+                string_append( result, quote );
+                string_append( result, object_str( tmp_filename ) );
+                string_append( result, quote );
+                if ( err_redir )
+                {
+                    string_append( result, " " );
+                    string_append( result, redirect );
+                }
+            }
+
+            /* Replace STDXXX with the temporary file. */
+            filename_or_contents_result = list_new( object_new( result->value ) );
+            out = object_str( tmp_filename );
+
+            string_free( result );
+
+            /* Make sure temp files created by this get nuked eventually. */
+            file_remove_atexit( tmp_filename );
+        }
+        else
+        {
+            filename_or_contents_result = list_copy( filename.value );
+        }
+
+        if ( !globs.noexec )
+        {
+            string out_name[ 1 ];
+            /* Handle "path to file" filenames. */
+            if ( ( out[ 0 ] == '"' ) && ( out[ strlen( out ) - 1 ] == '"' )
+                )
+            {
+                string_copy( out_name, out + 1 );
+                string_truncate( out_name, out_name->size - 1 );
+            }
+            else
+                string_copy( out_name, out );
+            out_file = fopen( out_name->value, "w" );
+
+            if ( !out_file )
+            {
+                err_printf( "[errno %d] failed to write output file '%s': %s",
+                    errno, out_name->value, strerror(errno) );
+                b2::clean_exit( EXITBAD );
+            }
+            string_free( out_name );
+        }
+
+        if ( out_debug ) out_printf( "\nfile %s\n", out );
+        if ( out_file ) fputs( object_str( list_front( contents ) ), out_file );
+        if ( out_debug ) out_puts( object_str( list_front( contents ) ) );
+        if ( out_file )
+        {
+            fflush( out_file );
+            fclose( out_file );
+        }
+        if ( tmp_filename )
+            object_free( tmp_filename );
+
+        if ( out_debug ) out_putc( '\n' );
+    }
+
+    return filename_or_contents_result;
 }
 
 /*
@@ -3867,15 +4271,16 @@ void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s,
  * especially careful about stack push/pop.
  */
 
-LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
+LIST * function_run( FUNCTION * function_, FRAME * frame )
 {
+    STACK * s = stack_global();
     JAM_FUNCTION * function;
     instruction * code;
     LIST * l;
     LIST * r;
     LIST * result = L0;
 #ifndef NDEBUG
-    void * saved_stack = s->data;
+    char * saved_stack = s->get<char>();
 #endif
 
     PROFILE_ENTER_LOCAL(function_run);
@@ -3900,20 +4305,6 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         return result;
     }
 
-#ifdef HAVE_PYTHON
-    else if ( function_->type == FUNCTION_PYTHON )
-    {
-        PROFILE_ENTER_LOCAL(function_run_FUNCTION_PYTHON);
-        PYTHON_FUNCTION * f = (PYTHON_FUNCTION *)function_;
-        debug_on_enter_function( frame, f->base.rulename, NULL, -1 );
-        result = call_python_function( f, frame );
-        debug_on_exit_function( f->base.rulename );
-        PROFILE_EXIT_LOCAL(function_run_FUNCTION_PYTHON);
-        PROFILE_EXIT_LOCAL(function_run);
-        return result;
-    }
-#endif
-
     assert( function_->type == FUNCTION_JAM );
 
     if ( function_->formal_arguments )
@@ -3935,7 +4326,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_EMPTY:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_EMPTY);
-            stack_push( s, L0 );
+            s->push( L0 );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_EMPTY);
             break;
         }
@@ -3944,7 +4335,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_CONSTANT);
             OBJECT * value = function_get_constant( function, code->arg );
-            stack_push( s, list_new( object_copy( value ) ) );
+            s->push( list_new( object_copy( value ) ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_CONSTANT);
             break;
         }
@@ -3952,7 +4343,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_ARG:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_ARG);
-            stack_push( s, frame_get_local( frame, code->arg ) );
+            s->push( frame_get_local( frame, code->arg ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_ARG);
             break;
         }
@@ -3960,7 +4351,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_VAR:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_VAR);
-            stack_push( s, function_get_variable( function, frame, code->arg ) );
+            s->push( function_get_variable( function, frame, code->arg ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_VAR);
             break;
         }
@@ -3968,7 +4359,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_VAR_FIXED:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_VAR_FIXED);
-            stack_push( s, list_copy( frame->module->fixed_variables[ code->arg
+            s->push( list_copy( frame->module->fixed_variables[ code->arg
                 ] ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_VAR_FIXED);
             break;
@@ -3980,13 +4371,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             LIST * value = L0;
             LISTITER iter;
             LISTITER end;
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             for ( iter = list_begin( l ), end = list_end( l ); iter != end;
                 iter = list_next( iter ) )
                 value = list_append( value, function_get_named_variable(
                     function, frame, list_item( iter ) ) );
             list_free( l );
-            stack_push( s, value );
+            s->push( value );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_GROUP);
             break;
         }
@@ -3994,9 +4385,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_APPEND:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_APPEND);
-            r = stack_pop( s );
-            l = stack_pop( s );
-            stack_push( s, list_append( l, r ) );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
+            s->push( list_append( l, r ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_APPEND);
             break;
         }
@@ -4004,9 +4395,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_SWAP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SWAP);
-            l = stack_top( s );
-            stack_set( s, 0, stack_at( s, code->arg ) );
-            stack_set( s, code->arg, l );
+            std::swap( s->top<LIST*>(), s->top<LIST*>( code->arg ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SWAP);
             break;
         }
@@ -4014,7 +4403,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_POP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP);
-            list_free( stack_pop( s ) );
+            list_free( s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP);
             break;
         }
@@ -4034,7 +4423,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_EMPTY:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_EMPTY);
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             if ( !list_cmp( l, L0 ) ) code += code->arg;
             list_free( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_JUMP_EMPTY);
@@ -4044,7 +4433,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_NOT_EMPTY:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_NOT_EMPTY);
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             if ( list_cmp( l, L0 ) ) code += code->arg;
             list_free( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_JUMP_NOT_EMPTY);
@@ -4054,8 +4443,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_LT:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_LT);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) < 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4066,8 +4455,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_LE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_LE);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) <= 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4078,8 +4467,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_GT:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_GT);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) > 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4090,8 +4479,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_GE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_GE);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) >= 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4102,8 +4491,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_EQ:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_EQ);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp( l, r ) == 0 ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4114,8 +4503,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_NE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_NE);
-            r = stack_pop(s);
-            l = stack_pop(s);
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_cmp(l, r) != 0 ) code += code->arg;
             list_free(l);
             list_free(r);
@@ -4126,8 +4515,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_IN:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_IN);
-            r = stack_pop(s);
-            l = stack_pop(s);
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( list_is_sublist( l, r ) ) code += code->arg;
             list_free(l);
             list_free(r);
@@ -4138,8 +4527,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_JUMP_NOT_IN:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_NOT_IN);
-            r = stack_pop( s );
-            l = stack_pop( s );
+            r = s->pop<LIST *>();
+            l = s->pop<LIST *>();
             if ( !list_is_sublist( l, r ) ) code += code->arg;
             list_free( l );
             list_free( r );
@@ -4154,9 +4543,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_FOR_INIT:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_FOR_INIT);
-            l = stack_top( s );
-            *(LISTITER *)stack_allocate( s, sizeof( LISTITER ) ) =
-                list_begin( l );
+            l = s->top<LIST*>();
+            s->push( list_begin( l ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_FOR_INIT);
             break;
         }
@@ -4164,20 +4552,19 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_FOR_LOOP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_FOR_LOOP);
-            LISTITER iter = *(LISTITER *)stack_get( s );
-            stack_deallocate( s, sizeof( LISTITER ) );
-            l = stack_top( s );
+            LISTITER iter = s->pop<LISTITER>();
+            l = s->top<LIST*>();
             if ( iter == list_end( l ) )
             {
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
                 code += code->arg;
             }
             else
             {
                 r = list_new( object_copy( list_item( iter ) ) );
                 iter = list_next( iter );
-                *(LISTITER *)stack_allocate( s, sizeof( LISTITER ) ) = iter;
-                stack_push( s, r );
+                s->push( iter );
+                s->push( r );
             }
             PROFILE_EXIT_LOCAL(function_run_INSTR_FOR_LOOP);
             break;
@@ -4186,8 +4573,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_FOR_POP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_FOR_POP);
-            stack_deallocate( s, sizeof( LISTITER ) );
-            list_free( stack_pop( s ) );
+            s->pop<LISTITER>();
+            list_free( s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_FOR_POP);
             break;
         }
@@ -4201,14 +4588,14 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             PROFILE_ENTER_LOCAL(function_run_INSTR_JUMP_NOT_GLOB);
             char const * pattern;
             char const * match;
-            l = stack_pop( s );
-            r = stack_top( s );
+            l = s->pop<LIST *>();
+            r = s->top<LIST*>();
             pattern = list_empty( l ) ? "" : object_str( list_front( l ) );
             match = list_empty( r ) ? "" : object_str( list_front( r ) );
             if ( glob( pattern, match ) )
                 code += code->arg;
             else
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
             list_free( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_JUMP_NOT_GLOB);
             break;
@@ -4223,9 +4610,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             PROFILE_ENTER_LOCAL(function_run_INSTR_SET_RESULT);
             list_free( result );
             if ( !code->arg )
-                result = stack_pop( s );
+                result = s->pop<LIST *>();
             else
-                result = list_copy( stack_top( s ) );
+                result = list_copy( s->top<LIST*>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SET_RESULT);
             break;
         }
@@ -4233,7 +4620,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_RESULT:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_RESULT);
-            stack_push( s, result );
+            s->push( result );
             result = L0;
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_RESULT);
             break;
@@ -4246,16 +4633,16 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 argument_list_pop( function_->formal_arguments,
                     function_->num_formal_arguments, frame, s );
 #ifndef NDEBUG
-            if ( !( saved_stack == s->data ) )
+            if ( !( saved_stack == s->get<char>() ) )
             {
                 frame->file = function->file;
                 frame->line = function->line;
                 backtrace_line( frame );
                 out_printf( "error: stack check failed.\n" );
                 backtrace( frame );
-                assert( saved_stack == s->data );
+                assert( saved_stack == s->get<char>() );
             }
-            assert( saved_stack == s->data );
+            assert( saved_stack == s->get<char>() );
 #endif
             debug_on_exit_function( function->base.rulename );
             PROFILE_EXIT_LOCAL(function_run_INSTR_RETURN);
@@ -4270,8 +4657,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_LOCAL:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_LOCAL);
-            LIST * value = stack_pop( s );
-            stack_push( s, function_swap_variable( function, frame, code->arg,
+            LIST * value = s->pop<LIST *>();
+            s->push( function_swap_variable( function, frame, code->arg,
                 value ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_LOCAL);
             break;
@@ -4280,7 +4667,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_POP_LOCAL:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_LOCAL);
-            function_set_variable( function, frame, code->arg, stack_pop( s ) );
+            function_set_variable( function, frame, code->arg, s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_LOCAL);
             break;
         }
@@ -4288,10 +4675,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_LOCAL_FIXED:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_LOCAL_FIXED);
-            LIST * value = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
-            stack_push( s, *ptr );
+            s->push( *ptr );
             *ptr = value;
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_LOCAL_FIXED);
             break;
@@ -4300,7 +4687,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_POP_LOCAL_FIXED:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_LOCAL_FIXED);
-            LIST * value = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
             list_free( *ptr );
@@ -4312,16 +4699,16 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_LOCAL_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_LOCAL_GROUP);
-            LIST * const value = stack_pop( s );
+            LIST * const value = s->pop<LIST *>();
             LISTITER iter;
             LISTITER end;
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             for ( iter = list_begin( l ), end = list_end( l ); iter != end;
                 iter = list_next( iter ) )
-                stack_push( s, function_swap_named_variable( function, frame,
+                s->push( function_swap_named_variable( function, frame,
                     list_item( iter ), list_copy( value ) ) );
             list_free( value );
-            stack_push( s, l );
+            s->push( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_LOCAL_GROUP);
             break;
         }
@@ -4331,13 +4718,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_LOCAL_GROUP);
             LISTITER iter;
             LISTITER end;
-            r = stack_pop( s );
+            r = s->pop<LIST *>();
             l = list_reverse( r );
             list_free( r );
             for ( iter = list_begin( l ), end = list_end( l ); iter != end;
                 iter = list_next( iter ) )
                 function_set_named_variable( function, frame, list_item( iter ),
-                    stack_pop( s ) );
+                    s->pop<LIST *>() );
             list_free( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_LOCAL_GROUP);
             break;
@@ -4350,7 +4737,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_ON);
-            LIST * targets = stack_top( s );
+            LIST * targets = s->top<LIST*>();
             if ( !list_empty( targets ) )
             {
                 /* FIXME: push the state onto the stack instead of using
@@ -4362,8 +4749,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             else
             {
                 /* [ on $(TARGET) ... ] is ignored if $(TARGET) is empty. */
-                list_free( stack_pop( s ) );
-                stack_push( s, L0 );
+                list_free( s->pop<LIST *>() );
+                s->push( L0 );
                 code += code->arg;
             }
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_ON);
@@ -4373,15 +4760,15 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_POP_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_ON);
-            LIST * result = stack_pop( s );
-            LIST * targets = stack_pop( s );
+            LIST * result = s->pop<LIST *>();
+            LIST * targets = s->pop<LIST *>();
             if ( !list_empty( targets ) )
             {
                 TARGET * t = bindtarget( list_front( targets ) );
                 popsettings( frame->module, t->settings );
             }
             list_free( targets );
-            stack_push( s, result );
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_ON);
             break;
         }
@@ -4389,9 +4776,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_SET_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SET_ON);
-            LIST * targets = stack_pop( s );
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * targets = s->pop<LIST *>();
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( targets );
             LISTITER const end = list_end( targets );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4406,7 +4793,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
             list_free( vars );
             list_free( targets );
-            stack_push( s, value );
+            s->push( value );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SET_ON);
             break;
         }
@@ -4414,9 +4801,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_APPEND_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPEND_ON);
-            LIST * targets = stack_pop( s );
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * targets = s->pop<LIST *>();
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( targets );
             LISTITER const end = list_end( targets );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4431,7 +4818,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
             list_free( vars );
             list_free( targets );
-            stack_push( s, value );
+            s->push( value );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPEND_ON);
             break;
         }
@@ -4439,9 +4826,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_DEFAULT_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_DEFAULT_ON);
-            LIST * targets = stack_pop( s );
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * targets = s->pop<LIST *>();
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( targets );
             LISTITER const end = list_end( targets );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4456,7 +4843,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
             list_free( vars );
             list_free( targets );
-            stack_push( s, value );
+            s->push( value );
             PROFILE_EXIT_LOCAL(function_run_INSTR_DEFAULT_ON);
             break;
         }
@@ -4465,7 +4852,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_GET_ON:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_GET_ON);
-            LIST * targets = stack_pop( s );
+            LIST * targets = s->pop<LIST *>();
             LIST * result = L0;
             if ( !list_empty( targets ) )
             {
@@ -4488,7 +4875,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 }
             }
             list_free( targets );
-            stack_push( s, list_copy( result ) );
+            s->push( list_copy( result ) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_GET_ON);
             break;
         }
@@ -4501,7 +4888,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SET);
             function_set_variable( function, frame, code->arg,
-                stack_pop( s ) );
+                s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SET);
             break;
         }
@@ -4510,7 +4897,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPEND);
             function_append_variable( function, frame, code->arg,
-                stack_pop( s ) );
+                s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPEND);
             break;
         }
@@ -4519,7 +4906,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_DEFAULT);
             function_default_variable( function, frame, code->arg,
-                stack_pop( s ) );
+                s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_DEFAULT);
             break;
         }
@@ -4530,7 +4917,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
             list_free( *ptr );
-            *ptr = stack_pop( s );
+            *ptr = s->pop<LIST *>();
             PROFILE_EXIT_LOCAL(function_run_INSTR_SET_FIXED);
             break;
         }
@@ -4540,7 +4927,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPEND_FIXED);
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
             assert( code->arg < frame->module->num_fixed_variables );
-            *ptr = list_append( *ptr, stack_pop( s ) );
+            *ptr = list_append( *ptr, s->pop<LIST *>() );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPEND_FIXED);
             break;
         }
@@ -4549,7 +4936,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_DEFAULT_FIXED);
             LIST * * ptr = &frame->module->fixed_variables[ code->arg ];
-            LIST * value = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
             assert( code->arg < frame->module->num_fixed_variables );
             if ( list_empty( *ptr ) )
                 *ptr = value;
@@ -4562,8 +4949,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_SET_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SET_GROUP);
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4578,8 +4965,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_APPEND_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPEND_GROUP);
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4594,8 +4981,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_DEFAULT_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_DEFAULT_GROUP);
-            LIST * value = stack_pop( s );
-            LIST * vars = stack_pop( s );
+            LIST * value = s->pop<LIST *>();
+            LIST * vars = s->pop<LIST *>();
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
@@ -4618,7 +5005,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
                 function, code[ 1 ].op_code ) );
             LIST * result = function_call_rule( function, frame, s, code->arg,
                 unexpanded, function->file, code[ 1 ].arg );
-            stack_push( s, result );
+            s->push( result );
             ++code;
             PROFILE_EXIT_LOCAL(function_run_INSTR_CALL_RULE);
             break;
@@ -4629,7 +5016,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             PROFILE_ENTER_LOCAL(function_run_INSTR_CALL_MEMBER_RULE);
             OBJECT * rule_name = function_get_constant( function, code[1].op_code );
             LIST * result = function_call_member_rule( function, frame, s, code->arg, rule_name, function->file, code[1].arg );
-            stack_push( s, result );
+            s->push( result );
             ++code;
             PROFILE_EXIT_LOCAL(function_run_INSTR_CALL_MEMBER_RULE);
             break;
@@ -4659,16 +5046,17 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_MODIFIERS);
             int32_t n;
-            int32_t i;
-            l = stack_pop( s );
+            l = s->pop<LIST *>();
             n = expand_modifiers( s, code->arg );
-            stack_push( s, l );
-            l = apply_modifiers( s, n );
-            list_free( stack_pop( s ) );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
-            for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );  /* pop modifiers */
-            stack_push( s, l );
+            s->push( l );
+            VAR_EXPANDED m = apply_modifiers( s, n );
+            l = m.value;
+            list_free( m.inner );
+            list_free( s->pop<LIST *>() );
+            s->pop<VAR_EDITS>( n );
+            for ( int32_t i = 0; i < code->arg; ++i )
+                list_free( s->pop<LIST *>() );  /* pop modifiers */
+            s->push( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_MODIFIERS);
             break;
         }
@@ -4677,9 +5065,9 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX);
             l = apply_subscript( s );
-            list_free( stack_pop( s ) );
-            list_free( stack_pop( s ) );
-            stack_push( s, l );
+            list_free( s->pop<LIST *>() );
+            list_free( s->pop<LIST *>() );
+            s->push( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_INDEX);
             break;
         }
@@ -4689,18 +5077,18 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS);
             int32_t i;
             int32_t n;
-            l = stack_pop( s );
-            r = stack_pop( s );
+            l = s->pop<LIST *>();
+            r = s->pop<LIST *>();
             n = expand_modifiers( s, code->arg );
-            stack_push( s, r );
-            stack_push( s, l );
+            s->push( r );
+            s->push( l );
             l = apply_subscript_and_modifiers( s, n );
-            list_free( stack_pop( s ) );
-            list_free( stack_pop( s ) );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            list_free( s->pop<LIST *>() );
+            list_free( s->pop<LIST *>() );
+            s->pop<VAR_EDITS>( n );
             for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );  /* pop modifiers */
-            stack_push( s, l );
+                list_free( s->pop<LIST *>() );  /* pop modifiers */
+            s->push( l );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS);
             break;
         }
@@ -4709,23 +5097,25 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_MODIFIERS_GROUP);
             int32_t i;
-            LIST * const vars = stack_pop( s );
+            LIST * const vars = s->pop<LIST *>();
             int32_t const n = expand_modifiers( s, code->arg );
             LIST * result = L0;
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
             {
-                stack_push( s, function_get_named_variable( function, frame,
+                s->push( function_get_named_variable( function, frame,
                     list_item( iter ) ) );
-                result = list_append( result, apply_modifiers( s, n ) );
-                list_free( stack_pop( s ) );
+                VAR_EXPANDED m = apply_modifiers( s, n );
+                result = m.value;
+                list_free( m.inner );
+                list_free( s->pop<LIST *>() );
             }
             list_free( vars );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            s->pop<VAR_EDITS>( n );
             for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );  /* pop modifiers */
-            stack_push( s, result );
+                list_free( s->pop<LIST *>() );  /* pop modifiers */
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_MODIFIERS_GROUP);
             break;
         }
@@ -4733,20 +5123,20 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_APPLY_INDEX_GROUP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX_GROUP);
-            LIST * vars = stack_pop( s );
+            LIST * vars = s->pop<LIST *>();
             LIST * result = L0;
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
             for ( ; iter != end; iter = list_next( iter ) )
             {
-                stack_push( s, function_get_named_variable( function, frame,
+                s->push( function_get_named_variable( function, frame,
                     list_item( iter ) ) );
                 result = list_append( result, apply_subscript( s ) );
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
             }
             list_free( vars );
-            list_free( stack_pop( s ) );
-            stack_push( s, result );
+            list_free( s->pop<LIST *>() );
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_INDEX_GROUP);
             break;
         }
@@ -4755,27 +5145,27 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS_GROUP);
             int32_t i;
-            LIST * const vars = stack_pop( s );
-            LIST * const r = stack_pop( s );
+            LIST * const vars = s->pop<LIST *>();
+            LIST * const r = s->pop<LIST *>();
             int32_t const n = expand_modifiers( s, code->arg );
             LIST * result = L0;
             LISTITER iter = list_begin( vars );
             LISTITER const end = list_end( vars );
-            stack_push( s, r );
+            s->push( r );
             for ( ; iter != end; iter = list_next( iter ) )
             {
-                stack_push( s, function_get_named_variable( function, frame,
+                s->push( function_get_named_variable( function, frame,
                     list_item( iter ) ) );
                 result = list_append( result, apply_subscript_and_modifiers( s,
                     n ) );
-                list_free( stack_pop( s ) );
+                list_free( s->pop<LIST *>() );
             }
-            list_free( stack_pop( s ) );
+            list_free( s->pop<LIST *>() );
             list_free( vars );
-            stack_deallocate( s, n * sizeof( VAR_EDITS ) );
+            s->pop<VAR_EDITS>( n );
             for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );  /* pop modifiers */
-            stack_push( s, result );
+                list_free( s->pop<LIST *>() );  /* pop modifiers */
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPLY_INDEX_MODIFIERS_GROUP);
             break;
         }
@@ -4783,18 +5173,17 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_COMBINE_STRINGS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_COMBINE_STRINGS);
-            int32_t const buffer_size = code->arg * sizeof( expansion_item );
-            LIST * * const stack_pos = (LIST * * const)stack_get( s );
-            expansion_item * items = (expansion_item *)stack_allocate( s, buffer_size );
+            LIST * * const stack_pos = s->get<LIST*>();
+            expansion_item * items = s->push( expansion_item(), code->arg );
             LIST * result;
             int32_t i;
             for ( i = 0; i < code->arg; ++i )
                 items[ i ].values = stack_pos[ i ];
             result = expand( items, code->arg );
-            stack_deallocate( s, buffer_size );
+            s->pop<expansion_item>( code->arg );
             for ( i = 0; i < code->arg; ++i )
-                list_free( stack_pop( s ) );
-            stack_push( s, result );
+                list_free( s->pop<LIST *>() );
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_COMBINE_STRINGS);
             break;
         }
@@ -4802,7 +5191,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_GET_GRIST:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_GET_GRIST);
-            LIST * vals = stack_pop( s );
+            LIST * vals = s->pop<LIST *>();
             LIST * result = L0;
             LISTITER iter, end;
 
@@ -4826,7 +5215,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             }
 
             list_free( vals );
-            stack_push( s, result );
+            s->push( result );
             PROFILE_EXIT_LOCAL(function_run_INSTR_GET_GRIST);
             break;
         }
@@ -4834,11 +5223,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_INCLUDE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_INCLUDE);
-            LIST * nt = stack_pop( s );
-            if ( !list_empty( nt ) )
+            b2::jam::list nt( s->pop<LIST *>(), true );
+            if ( !nt.empty() )
             {
-                TARGET * const t = bindtarget( list_front( nt ) );
-                list_free( nt );
+                TARGET * const t = bindtarget( *nt.begin() );
 
                 /* DWA 2001/10/22 - Perforce Jam cleared the arguments here,
                  * which prevented an included file from being treated as part
@@ -4876,14 +5264,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_PUSH_MODULE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_MODULE);
-            LIST * const module_name = stack_pop( s );
-            module_t * const outer_module = frame->module;
+            LIST * const module_name = s->pop<LIST *>();
+            module_t * outer_module = frame->module;
             frame->module = !list_empty( module_name )
                 ? bindmodule( list_front( module_name ) )
                 : root_module();
             list_free( module_name );
-            *(module_t * *)stack_allocate( s, sizeof( module_t * ) ) =
-                outer_module;
+            s->push( outer_module );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_MODULE);
             break;
         }
@@ -4891,9 +5278,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_POP_MODULE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_MODULE);
-            module_t * const outer_module = *(module_t * *)stack_get( s );
-            stack_deallocate( s, sizeof( module_t * ) );
-            frame->module = outer_module;
+            frame->module = s->pop<module_t *>();
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_MODULE);
             break;
         }
@@ -4901,16 +5286,15 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_CLASS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_CLASS);
-            LIST * bases = stack_pop( s );
-            LIST * name = stack_pop( s );
+            LIST * bases = s->pop<LIST *>();
+            LIST * name = s->pop<LIST *>();
             OBJECT * class_module = make_class_module( name, bases );
 
-            module_t * const outer_module = frame->module;
+            module_t * outer_module = frame->module;
             frame->module = bindmodule( class_module );
             object_free( class_module );
 
-            *(module_t * *)stack_allocate( s, sizeof( module_t * ) ) =
-                outer_module;
+            s->push( outer_module );
             PROFILE_EXIT_LOCAL(function_run_INSTR_CLASS);
             break;
         }
@@ -4929,120 +5313,34 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
             string buf[ 1 ];
             string_new( buf );
             combine_strings( s, code->arg, buf );
-            stack_push( s, list_new( object_new( buf->value ) ) );
+            s->push( list_new( object_new( buf->value ) ) );
             string_free( buf );
             PROFILE_EXIT_LOCAL(function_run_INSTR_APPEND_STRINGS);
             break;
         }
 
+        // WRITE_FILE( LIST*1 filename,  LIST*1 modifiers[N], LIST*1 contents )
         case INSTR_WRITE_FILE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_WRITE_FILE);
-            string buf[ 1 ];
-            char const * out;
-            OBJECT * tmp_filename = 0;
-            int32_t out_debug = DEBUG_EXEC ? 1 : 0;
-            FILE * out_file = 0;
-            string_new( buf );
-            combine_strings( s, code->arg, buf );
-            out = object_str( list_front( stack_top( s ) ) );
-
-            /* For stdout/stderr we will create a temp file and generate a
-             * command that outputs the content as needed.
-             */
-            if ( ( strcmp( "STDOUT", out ) == 0 ) ||
-                ( strcmp( "STDERR", out ) == 0 ) )
+            // Get expanded filename.
+            LIST * filename = nullptr;
             {
-                int32_t err_redir = strcmp( "STDERR", out ) == 0;
-                string result[ 1 ];
-
-                tmp_filename = path_tmpfile();
-
-                /* Construct os-specific cat command. */
-                {
-                    const char * command = "cat";
-                    const char * quote = "\"";
-                    const char * redirect = "1>&2";
-
-                #ifdef OS_NT
-                    command = "type";
-                    quote = "\"";
-                #elif defined( OS_VMS )
-                    command = "pipe type";
-                    quote = "";
-
-                    /* Get tmp file name is os-format. */
-                    {
-                        string os_filename[ 1 ];
-
-                        string_new( os_filename );
-                        path_translate_to_os( object_str( tmp_filename ), os_filename );
-                        object_free( tmp_filename );
-                        tmp_filename = object_new( os_filename->value );
-                        string_free( os_filename );
-                    }
-                #endif
-
-                    string_new( result );
-                    string_append( result, command );
-                    string_append( result, " " );
-                    string_append( result, quote );
-                    string_append( result, object_str( tmp_filename ) );
-                    string_append( result, quote );
-                    if ( err_redir )
-                    {
-                        string_append( result, " " );
-                        string_append( result, redirect );
-                    }
-                }
-
-                /* Replace STDXXX with the temporary file. */
-                list_free( stack_pop( s ) );
-                stack_push( s, list_new( object_new( result->value ) ) );
-                out = object_str( tmp_filename );
-
-                string_free( result );
-
-                /* Make sure temp files created by this get nuked eventually. */
-                file_remove_atexit( tmp_filename );
+                expansion_item ei = { s->pop<LIST *>() };
+                filename = expand( &ei, 1 );
+                list_free( ei.values );
             }
-
-            if ( !globs.noexec )
-            {
-                string out_name[ 1 ];
-                /* Handle "path to file" filenames. */
-                if ( ( out[ 0 ] == '"' ) && ( out[ strlen( out ) - 1 ] == '"' )
-                    )
-                {
-                    string_copy( out_name, out + 1 );
-                    string_truncate( out_name, out_name->size - 1 );
-                }
-                else
-                    string_copy( out_name, out );
-                out_file = fopen( out_name->value, "w" );
-
-                if ( !out_file )
-                {
-                    err_printf( "[errno %d] failed to write output file '%s': %s",
-                        errno, out_name->value, strerror(errno) );
-                    exit( EXITBAD );
-                }
-                string_free( out_name );
-            }
-
-            if ( out_debug ) out_printf( "\nfile %s\n", out );
-            if ( out_file ) fputs( buf->value, out_file );
-            if ( out_debug ) out_puts( buf->value );
-            if ( out_file )
-            {
-                fflush( out_file );
-                fclose( out_file );
-            }
-            string_free( buf );
-            if ( tmp_filename )
-                object_free( tmp_filename );
-
-            if ( out_debug ) out_putc( '\n' );
+            // Apply modifiers to "raw" filename.
+            VAR_EXPANDED filename_mod = eval_modifiers( s, filename, code->arg );
+            // Get contents.
+            LIST * contents = s->pop<LIST *>();
+            // Write out the contents file, or expand the contents, as needed.
+            LIST * filename_or_contents = function_execute_write_file( function, frame, s, filename_mod, contents );
+            // The result that gets replaced into the @() space.
+            s->push( filename_or_contents );
+            list_free( filename_mod.value );
+            list_free( filename_mod.inner );
+            list_free( contents );
             PROFILE_EXIT_LOCAL(function_run_INSTR_WRITE_FILE);
             break;
         }
@@ -5050,8 +5348,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
         case INSTR_OUTPUT_STRINGS:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_OUTPUT_STRINGS);
-            string * const buf = *(string * *)( (char *)stack_get( s ) + (
-                code->arg * sizeof( LIST * ) ) );
+            string * const buf = s->top<LIST*, string*>( code->arg );
             combine_strings( s, code->arg, buf );
             PROFILE_EXIT_LOCAL(function_run_INSTR_OUTPUT_STRINGS);
             break;
@@ -5071,277 +5368,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame, STACK * s )
 }
 
 
-#ifdef HAVE_PYTHON
-
-static struct arg_list * arg_list_compile_python( PyObject * bjam_signature,
-    int32_t * num_arguments )
-{
-    if ( bjam_signature )
-    {
-        struct argument_list_compiler c[ 1 ];
-        struct arg_list * result;
-        Py_ssize_t s;
-        Py_ssize_t i;
-        argument_list_compiler_init( c );
-
-        s = PySequence_Size( bjam_signature );
-        for ( i = 0; i < s; ++i )
-        {
-            struct argument_compiler arg_comp[ 1 ];
-            struct arg_list arg;
-            PyObject * v = PySequence_GetItem( bjam_signature, i );
-            Py_ssize_t j;
-            Py_ssize_t inner;
-            argument_compiler_init( arg_comp );
-
-            inner = PySequence_Size( v );
-            for ( j = 0; j < inner; ++j )
-                argument_compiler_add( arg_comp, object_new( PyString_AsString(
-                    PySequence_GetItem( v, j ) ) ), constant_builtin, -1 );
-
-            arg = arg_compile_impl( arg_comp, constant_builtin, -1 );
-            dynamic_array_push( c->args, arg );
-            argument_compiler_free( arg_comp );
-            Py_DECREF( v );
-        }
-
-        *num_arguments = c->args->size;
-        result = (struct arg_list *)BJAM_MALLOC( c->args->size * sizeof( struct arg_list ) );
-        memcpy( result, c->args->data, c->args->size * sizeof( struct arg_list )
-            );
-        argument_list_compiler_free( c );
-        return result;
-    }
-    *num_arguments = 0;
-    return 0;
-}
-
-FUNCTION * function_python( PyObject * function, PyObject * bjam_signature )
-{
-    PYTHON_FUNCTION * result = (PYTHON_FUNCTION *)BJAM_MALLOC( sizeof( PYTHON_FUNCTION ) );
-
-    result->base.type = FUNCTION_PYTHON;
-    result->base.reference_count = 1;
-    result->base.rulename = 0;
-    result->base.formal_arguments = arg_list_compile_python( bjam_signature,
-        &result->base.num_formal_arguments );
-    Py_INCREF( function );
-    result->python_function = function;
-
-    return (FUNCTION *)result;
-}
-
-
-static void argument_list_to_python( struct arg_list * formal, int32_t formal_count,
-    FUNCTION * function, FRAME * frame, PyObject * kw )
-{
-    LOL * all_actual = frame->args;
-    int32_t i;
-
-    for ( i = 0; i < formal_count; ++i )
-    {
-        LIST * actual = lol_get( all_actual, i );
-        LISTITER actual_iter = list_begin( actual );
-        LISTITER const actual_end = list_end( actual );
-        int32_t j;
-        for ( j = 0; j < formal[ i ].size; ++j )
-        {
-            struct argument * formal_arg = &formal[ i ].args[ j ];
-            PyObject * value;
-            LIST * l;
-
-            switch ( formal_arg->flags )
-            {
-            case ARG_ONE:
-                if ( actual_iter == actual_end )
-                    argument_error( "missing argument", function, frame,
-                        formal_arg->arg_name );
-                type_check_range( formal_arg->type_name, actual_iter, list_next(
-                    actual_iter ), frame, function, formal_arg->arg_name );
-                value = PyString_FromString( object_str( list_item( actual_iter
-                    ) ) );
-                actual_iter = list_next( actual_iter );
-                break;
-            case ARG_OPTIONAL:
-                if ( actual_iter == actual_end )
-                    value = 0;
-                else
-                {
-                    type_check_range( formal_arg->type_name, actual_iter,
-                        list_next( actual_iter ), frame, function,
-                        formal_arg->arg_name );
-                    value = PyString_FromString( object_str( list_item(
-                        actual_iter ) ) );
-                    actual_iter = list_next( actual_iter );
-                }
-                break;
-            case ARG_PLUS:
-                if ( actual_iter == actual_end )
-                    argument_error( "missing argument", function, frame,
-                        formal_arg->arg_name );
-                /* fallthrough */
-            case ARG_STAR:
-                type_check_range( formal_arg->type_name, actual_iter,
-                    actual_end, frame, function, formal_arg->arg_name );
-                l = list_copy_range( actual, actual_iter, actual_end );
-                value = list_to_python( l );
-                list_free( l );
-                actual_iter = actual_end;
-                break;
-            case ARG_VARIADIC:
-                return;
-            }
-
-            if ( value )
-            {
-                PyObject * key = PyString_FromString( object_str(
-                    formal_arg->arg_name ) );
-                PyDict_SetItem( kw, key, value );
-                Py_DECREF( key );
-                Py_DECREF( value );
-            }
-        }
-
-        if ( actual_iter != actual_end )
-            argument_error( "extra argument", function, frame, list_item(
-                actual_iter ) );
-    }
-
-    for ( ; i < all_actual->count; ++i )
-    {
-        LIST * const actual = lol_get( all_actual, i );
-        if ( !list_empty( actual ) )
-            argument_error( "extra argument", function, frame, list_front(
-                actual ) );
-    }
-}
-
-
-/* Given a Python object, return a string to use in Jam code instead of the said
- * object.
- *
- * If the object is a string, use the string value.
- * If the object implemenets __jam_repr__ method, use that.
- * Otherwise return 0.
- */
-
-OBJECT * python_to_string( PyObject * value )
-{
-    if ( PyString_Check( value ) )
-        return object_new( PyString_AS_STRING( value ) );
-
-    /* See if this instance defines the special __jam_repr__ method. */
-    if ( PyInstance_Check( value )
-        && PyObject_HasAttrString( value, "__jam_repr__" ) )
-    {
-        PyObject * repr = PyObject_GetAttrString( value, "__jam_repr__" );
-        if ( repr )
-        {
-            PyObject * arguments2 = PyTuple_New( 0 );
-            PyObject * value2 = PyObject_Call( repr, arguments2, 0 );
-            Py_DECREF( repr );
-            Py_DECREF( arguments2 );
-            if ( PyString_Check( value2 ) )
-                return object_new( PyString_AS_STRING( value2 ) );
-            Py_DECREF( value2 );
-        }
-    }
-    return 0;
-}
-
-
-static module_t * python_module()
-{
-    static module_t * python = 0;
-    if ( !python )
-        python = bindmodule( constant_python );
-    return python;
-}
-
-
-static LIST * call_python_function( PYTHON_FUNCTION * function, FRAME * frame )
-{
-    LIST * result = 0;
-    PyObject * arguments = 0;
-    PyObject * kw = NULL;
-    int32_t i;
-    PyObject * py_result;
-    FRAME * prev_frame_before_python_call;
-
-    if ( function->base.formal_arguments )
-    {
-        arguments = PyTuple_New( 0 );
-        kw = PyDict_New();
-        argument_list_to_python( function->base.formal_arguments,
-            function->base.num_formal_arguments, &function->base, frame, kw );
-    }
-    else
-    {
-        arguments = PyTuple_New( frame->args->count );
-        for ( i = 0; i < frame->args->count; ++i )
-            PyTuple_SetItem( arguments, i, list_to_python( lol_get( frame->args,
-                i ) ) );
-    }
-
-    frame->module = python_module();
-
-    prev_frame_before_python_call = frame_before_python_call;
-    frame_before_python_call = frame;
-    py_result = PyObject_Call( function->python_function, arguments, kw );
-    frame_before_python_call = prev_frame_before_python_call;
-    Py_DECREF( arguments );
-    Py_XDECREF( kw );
-    if ( py_result != NULL )
-    {
-        if ( PyList_Check( py_result ) )
-        {
-            int32_t size = PyList_Size( py_result );
-            int32_t i;
-            for ( i = 0; i < size; ++i )
-            {
-                OBJECT * s = python_to_string( PyList_GetItem( py_result, i ) );
-                if ( !s )
-                    err_printf(
-                        "Non-string object returned by Python call.\n" );
-                else
-                    result = list_push_back( result, s );
-            }
-        }
-        else if ( py_result == Py_None )
-        {
-            result = L0;
-        }
-        else
-        {
-            OBJECT * const s = python_to_string( py_result );
-            if ( s )
-                result = list_new( s );
-            else
-                /* We have tried all we could. Return empty list. There are
-                 * cases, e.g. feature.feature function that should return a
-                 * value for the benefit of Python code and which also can be
-                 * called by Jam code, where no sensible value can be returned.
-                 * We cannot even emit a warning, since there would be a pile of
-                 * them.
-                 */
-                result = L0;
-        }
-
-        Py_DECREF( py_result );
-    }
-    else
-    {
-        PyErr_Print();
-        err_printf( "Call failed\n" );
-    }
-
-    return result;
-}
-
-#endif
-
-
 void function_done( void )
 {
-    BJAM_FREE( stack );
+    stack_global()->done();
 }

@@ -2,10 +2,10 @@
 #define B2_CONFIG_H
 
 /*
-Copyright 2002-2018 Rene Rivera.
+Copyright 2002-2021 Rene Rivera.
 Distributed under the Boost Software License, Version 1.0.
-(See accompanying file LICENSE_1_0.txt or copy at
-http://www.boost.org/LICENSE_1_0.txt)
+(See accompanying file LICENSE.txt or copy at
+https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
 
 #define OPT_HEADER_CACHE_EXT 1
@@ -16,6 +16,7 @@ http://www.boost.org/LICENSE_1_0.txt)
 #define JAM_DEBUGGER 1
 #define OPT_FIX_TARGET_VARIABLES_EXT 1
 #define OPT_IMPROVED_PATIENCE_EXT 1
+// #define BJAM_NO_MEM_CACHE 1
 
 // Autodetect various operating systems..
 
@@ -29,6 +30,14 @@ http://www.boost.org/LICENSE_1_0.txt)
     #if !defined(VMS)
         #define VMS 1
     #endif
+#endif
+
+// To work around QEMU failures on mixed mode situations (32 vs 64) we need to
+// enable partial LFS support in system headers. And we need to do this before
+// any system headers are included.
+
+#if !defined(NT) && !defined(VMS)
+#   define _FILE_OFFSET_BITS 64
 #endif
 
 // Correct missing types in some earlier compilers..

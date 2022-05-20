@@ -556,9 +556,7 @@ To use precompiled headers, follow the following steps:
 1. Create a header that includes headers used by your project that you
 want precompiled. It is better to include only headers that are
 sufficiently stable -- like headers from the compiler and external
-libraries. Please wrap the header in `#ifdef BOOST_BUILD_PCH_ENABLED`, so
-that the potentially expensive inclusion of headers is not done when PCH is
-not enabled. Include the new header at the top of your source files.
+libraries. B2 will include the header automatically and on-demand.
 
 2. Declare a new B2 target for the precompiled header and add
 that precompiled header to the sources of the target whose compilation
@@ -577,8 +575,6 @@ The `pch` example in B2 distribution can be used as reference.
 
 Please note the following:
 
-* The inclusion of the precompiled header must be the first thing in a
-source file, before any code or preprocessor directives.
 * The build properties used to compile the source files and the
 precompiled header must be the same. Consider using project requirements
 to assure this.
@@ -592,6 +588,9 @@ headers are not supported.
 namespaces in precompiled headers, which limits their utility. See the
 http://gcc.gnu.org/bugzilla/show_bug.cgi?id=29085[bug report] for
 details.
+* Previosuly B2 had not been automatically inluding the header, a user
+was required to include the header at the top of every source file
+the precompiled header will be used with.
 
 [[bbv2.reference.generated_headers]]
 == Generated headers
@@ -726,5 +725,4 @@ There are a number of built-in `glob` patterns to support popular package
 managers. Currently the supported ones are:
 
 * Conan (`conan`): currently supports the
-  link:https://bintray.com/bfgroup/public-conan/b2gen%3Abfgroup[`b2gen`]
-  generator.
+  link:https://docs.conan.io/en/latest/reference/generators/b2.html[`b2 generator`].

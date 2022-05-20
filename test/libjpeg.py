@@ -2,8 +2,8 @@
 
 # Copyright (C) 2013 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import BoostBuild
 import MockToolset
@@ -44,22 +44,21 @@ action('-c -x c++ $main.cpp -o $main.o')
 '''
 t.write('test.cpp', 'test.cpp')
 
-# Default initialization - static library
-t.rm('bin')
 t.write("Jamroot.jam", """
 path-constant here : . ;
 using libjpeg ;
-exe test : test.cpp /libjpeg//libjpeg : : <link>static <link>shared ;
+exe test : test.cpp /libjpeg//libjpeg ;
 """)
 
+# Default initialization - static library
+t.rm('bin')
 MockToolset.set_expected(t, common_stuff + '''
 action('$main.o --static-lib=jpeg -o $config.exe')
 action('-c -x c++ $jpeg.h.cpp -o $jpeg.h.o')
 action('-c -x c++ $test.cpp -o $test.o')
 action('$test.o --static-lib=jpeg -o $test')
 ''')
-t.run_build_system()
-t.expect_addition('bin/mock/debug/test.exe')
+t.run_build_system(["link=static"])
 t.expect_addition('bin/mock/debug/link-static/test.exe')
 
 # Default initialization - shared library
@@ -67,7 +66,7 @@ t.rm('bin')
 t.write("Jamroot.jam", """
 path-constant here : . ;
 using libjpeg ;
-exe test : test.cpp /libjpeg//libjpeg : : <link>static <link>shared ;
+exe test : test.cpp /libjpeg//libjpeg ;
 """)
 
 MockToolset.set_expected(t, common_stuff + '''
@@ -76,9 +75,8 @@ action('-c -x c++ $jpeg.h.cpp -o $jpeg.h.o')
 action('-c -x c++ $test.cpp -o $test.o')
 action('$test.o --shared-lib=jpeg -o $test')
 ''')
-t.run_build_system()
+t.run_build_system(["link=shared"])
 t.expect_addition('bin/mock/debug/test.exe')
-t.expect_addition('bin/mock/debug/link-static/test.exe')
 
 # Initialization in explicit location - static library
 t.rm('bin')

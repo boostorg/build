@@ -8,8 +8,8 @@
  * Copyright 2001-2004 David Abrahams.
  * Copyright 2007 Rene Rivera.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -37,13 +37,16 @@
  */
 
 #include "jam.h"
-#include "output.h"
+
 #ifdef USE_EXECNT
+
+#include "output.h"
 #include "execcmd.h"
 
 #include "lists.h"
 #include "output.h"
 #include "pathsys.h"
+#include "startup.h"
 #include "string.h"
 
 #include <assert.h>
@@ -318,7 +321,7 @@ int32_t exec_check
      */
 
     /* Check for too long command lines. */
-    return check_cmd_for_too_long_lines( command->value, maxline(),
+    return check_cmd_for_too_long_lines( command->value, shell_maxline(),
         error_length, error_max_length );
 }
 
@@ -1268,7 +1271,7 @@ static char const * prepare_command_file( string const * command, int32_t slot )
     if ( !f )
     {
         err_printf( "failed to write command file!\n" );
-        exit( EXITBAD );
+        b2::clean_exit( EXITBAD );
     }
     fputs( command->value, f );
     fclose( f );
@@ -1287,7 +1290,8 @@ static int32_t get_free_cmdtab_slot()
         if ( !cmdtab[ slot ].pi.hProcess )
             return slot;
     err_printf( "no slots for child!\n" );
-    exit( EXITBAD );
+    b2::clean_exit( EXITBAD );
+    return -1;
 }
 
 
@@ -1374,6 +1378,11 @@ static void reportWindowsError( char const * const apiName, int32_t slot )
     closeWinHandle( &cmdtab[ slot ].pipe_err[ EXECCMD_PIPE_WRITE ] );
     string_renew( cmdtab[ slot ].buffer_out );
     string_renew( cmdtab[ slot ].buffer_err );
+}
+
+int32_t shell_maxline()
+{
+    return maxline();
 }
 
 

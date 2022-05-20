@@ -2,8 +2,8 @@
 
 # Copyright 2017 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Tests configure.check-target-builds and friends
 
@@ -33,8 +33,8 @@ obj bar : foo.cpp :
 """)
     t.run_build_system()
     t.expect_output_lines([
-        "    - pass builds              : yes",
-        "    - fail builds              : no"])
+        "    - pass builds              : yes*",
+        "    - fail builds              : no*"])
     t.expect_addition("bin/$toolset/debug*/pass.obj")
     t.expect_addition("bin/$toolset/debug*/foo.obj")
     t.expect_addition("bin/$toolset/debug*/bar.obj")
@@ -43,15 +43,15 @@ obj bar : foo.cpp :
     # An up-to-date build should use the cache
     t.run_build_system()
     t.expect_output_lines([
-        "    - pass builds              : yes (cached)",
-        "    - fail builds              : no  (cached)"])
+        "    - pass builds              : yes (cached)*",
+        "    - fail builds              : no  (cached)*"])
     t.expect_nothing_more()
 
     # -a should re-run everything, including configuration checks
     t.run_build_system(["-a"])
     t.expect_output_lines([
-        "    - pass builds              : yes",
-        "    - fail builds              : no"])
+        "    - pass builds              : yes*",
+        "    - fail builds              : no*"])
     t.expect_touch("bin/$toolset/debug*/pass.obj")
     t.expect_touch("bin/$toolset/debug*/foo.obj")
     t.expect_touch("bin/$toolset/debug*/bar.obj")
@@ -60,23 +60,23 @@ obj bar : foo.cpp :
     # --reconfigure should re-run configuration checks only
     t.run_build_system(["--reconfigure"])
     t.expect_output_lines([
-        "    - pass builds              : yes",
-        "    - fail builds              : no"])
+        "    - pass builds              : yes*",
+        "    - fail builds              : no*"])
     t.expect_touch("bin/$toolset/debug*/pass.obj")
     t.expect_nothing_more()
 
     # -a -n should not rebuild configuration checks
     t.run_build_system(["-a", "-n"])
     t.expect_output_lines([
-        "    - pass builds              : yes (cached)",
-        "    - fail builds              : no  (cached)"])
+        "    - pass builds              : yes (cached)*",
+        "    - fail builds              : no  (cached)*"])
     t.expect_nothing_more()
 
     # --clean-all should clear all configuration checks
     t.run_build_system(["--clean-all"])
     t.expect_output_lines([
-        "    - pass builds              : yes (cached)",
-        "    - fail builds              : no  (cached)"])
+        "    - pass builds              : yes (cached)*",
+        "    - fail builds              : no  (cached)*"])
     t.expect_removal("bin/$toolset/debug*/pass.obj")
     t.expect_removal("bin/$toolset/debug*/foo.obj")
     t.expect_removal("bin/$toolset/debug*/bar.obj")
@@ -96,8 +96,8 @@ obj bar : foo.cpp :
     # state here.
     t.run_build_system()
     t.expect_output_lines([
-        "    - pass builds              : yes",
-        "    - fail builds              : no"])
+        "    - pass builds              : yes*",
+        "    - fail builds              : no*"])
     t.expect_addition("bin/$toolset/debug*/pass.obj")
     t.expect_addition("bin/$toolset/debug*/foo.obj")
     t.expect_addition("bin/$toolset/debug*/bar.obj")
@@ -127,7 +127,7 @@ obj foo : foo.cpp :
 """)
     t.run_build_system()
     t.expect_output_lines([
-        "    - which one?               : pass"])
+        "    - which one?               : pass*"])
     t.expect_addition("bin/$toolset/debug*/pass.obj")
     t.expect_addition("bin/$toolset/debug*/foo.obj")
     t.expect_nothing_more()
@@ -135,34 +135,34 @@ obj foo : foo.cpp :
     # An up-to-date build should use the cache
     t.run_build_system()
     t.expect_output_lines([
-        "    - which one?               : pass (cached)"])
+        "    - which one?               : pass (cached)*"])
     t.expect_nothing_more()
 
     # -a should re-run everything, including configuration checks
     t.run_build_system(["-a"])
     t.expect_output_lines([
-        "    - which one?               : pass"])
+        "    - which one?               : pass*"])
     t.expect_touch("bin/$toolset/debug*/pass.obj")
     t.expect_touch("bin/$toolset/debug*/foo.obj")
     t.expect_nothing_more()
-    
+
     # --reconfigure should re-run configuration checks only
     t.run_build_system(["--reconfigure"])
     t.expect_output_lines([
-        "    - which one?               : pass"])
+        "    - which one?               : pass*"])
     t.expect_touch("bin/$toolset/debug*/pass.obj")
     t.expect_nothing_more()
 
     # -a -n should not rebuild configuration checks
     t.run_build_system(["-a", "-n"])
     t.expect_output_lines([
-        "    - which one?               : pass (cached)"])
+        "    - which one?               : pass (cached)*"])
     t.expect_nothing_more()
 
     # --clean-all should clear all configuration checks
     t.run_build_system(["--clean-all"])
     t.expect_output_lines([
-        "    - which one?               : pass (cached)"])
+        "    - which one?               : pass (cached)*"])
     t.expect_removal("bin/$toolset/debug*/pass.obj")
     t.expect_removal("bin/$toolset/debug*/foo.obj")
     t.expect_nothing_more()
@@ -180,7 +180,7 @@ obj foo : foo.cpp :
     # state here.
     t.run_build_system()
     t.expect_output_lines([
-        "    - which one?               : pass"])
+        "    - which one?               : pass*"])
     t.expect_addition("bin/$toolset/debug*/pass.obj")
     t.expect_addition("bin/$toolset/debug*/foo.obj")
     t.expect_nothing_more()
@@ -226,8 +226,8 @@ rule c1 ( properties * )
 """)
     t.run_build_system(["subdir"])
     t.expect_output_lines([
-        "    - pass builds              : yes",
-        "    - fail builds              : no"])
+        "    - pass builds              : yes*",
+        "    - fail builds              : no*"])
     t.expect_addition("subdir/bin/$toolset/debug*/pass.obj")
     t.expect_addition("subdir/bin/$toolset/debug*/foo.obj")
     t.expect_addition("subdir/bin/$toolset/debug*/bar.obj")
@@ -252,12 +252,12 @@ obj foo : foo.cpp :
 """)
     t.run_build_system()
     t.expect_output_lines([
-        "    - which one?               : none"])
+        "    - which one?               : none*"])
 
     # An up-to-date build should use the cache
     t.run_build_system()
     t.expect_output_lines([
-        "    - which one?               : none (cached)"])
+        "    - which one?               : none (cached)*"])
     t.expect_nothing_more()
     t.cleanup()
 

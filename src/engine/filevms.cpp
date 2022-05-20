@@ -9,7 +9,7 @@
  *  Copyright 2005 Rene Rivera.
  *  Copyright 2015 Artur Shepilko.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 
@@ -363,7 +363,7 @@ void file_archscan( char const * arch, scanback func, void * closure )
                 object_str( archive->file->name ),
                 object_str( member_file->name ) );
             {
-                OBJECT * const member = object_new( buf );
+                OBJECT * member = object_new( buf );
                 (*func)( closure, member, 1 /* time valid */, &member_file->time );
                 object_free( member );
             }

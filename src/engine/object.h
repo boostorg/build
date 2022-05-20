@@ -1,4 +1,5 @@
 /*
+ * Copyright 2022 René Ferdinand Rivera Morell
  * Copyright 2011 Steven Watanabe
  *
  * This file is part of Jam - see jam.c for Copyright information.
@@ -16,6 +17,8 @@
 #include <cstring>
 
 typedef struct _object OBJECT;
+
+typedef OBJECT * object_ptr;
 
 OBJECT * object_new( char const * const );
 OBJECT * object_new_range( char const * const, int32_t size );
@@ -39,7 +42,7 @@ struct hash_header
 
 char const * object_str  ( OBJECT * );
 OBJECT *     object_copy ( OBJECT * );
-void         object_free ( OBJECT * );
+void         object_free ( OBJECT * & );
 int          object_equal( OBJECT *, OBJECT * );
 unsigned int object_hash ( OBJECT * );
 

@@ -1,7 +1,8 @@
 /*
+ *  Copyright 2022 René Ferdinand Rivera Morell
  *  Copyright 2011 Steven Watanabe
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #ifndef FUNCTION_SW20111123_H
@@ -17,13 +18,10 @@
 #include <functional>
 
 typedef struct _function FUNCTION;
-typedef struct _stack STACK;
 
 typedef std::function<LIST* (FRAME *, int32_t flags)> function_builtin_t;
 
-STACK * stack_global( void );
-void stack_push( STACK * s, LIST * l );
-LIST * stack_pop( STACK * s );
+typedef FUNCTION* function_ptr;
 
 FUNCTION * function_compile( PARSE * parse );
 FUNCTION * function_builtin( function_builtin_t func, int32_t flags, const char * * args );
@@ -32,10 +30,10 @@ void function_free( FUNCTION * );
 OBJECT * function_rulename( FUNCTION * );
 void function_set_rulename( FUNCTION *, OBJECT * );
 void function_location( FUNCTION *, OBJECT * *, int32_t * );
-LIST * function_run( FUNCTION * function, FRAME * frame, STACK * s );
+LIST * function_run( FUNCTION * function, FRAME * frame );
 
 FUNCTION * function_compile_actions( const char * actions, OBJECT * file, int32_t line );
-void function_run_actions( FUNCTION * function, FRAME * frame, STACK * s, string * out );
+void function_run_actions( FUNCTION * function, FRAME * frame, string * out );
 
 FUNCTION * function_bind_variables( FUNCTION * f, module_t * module, int32_t * counter );
 FUNCTION * function_unbind_variables( FUNCTION * f );
@@ -43,11 +41,5 @@ FUNCTION * function_unbind_variables( FUNCTION * f );
 LIST * function_get_variables( FUNCTION * f );
 
 void function_done( void );
-
-#ifdef HAVE_PYTHON
-
-FUNCTION * function_python( PyObject * function, PyObject * bjam_signature );
-
-#endif
 
 #endif

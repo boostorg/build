@@ -1,7 +1,8 @@
+# Copyright René Ferdinand Rivera Morell 2022
 # Copyright Vladimir Prus 2004.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Importing common is needed because the rules we inherit here depend on it.
 # That is nasty.
@@ -16,6 +17,7 @@ import toolset ;
 import generators ;
 import type ;
 import path ;
+import numbers ;
 
 feature.extend-subfeature toolset intel : platform : win ;
 
@@ -32,6 +34,15 @@ generators.override intel-win.compile.mc : mc.compile ;
 toolset.flags intel-win.compile PCH_SOURCE <pch>on : <pch-source> ;
 
 toolset.add-requirements <toolset>intel-win,<runtime-link>shared:<threading>multi ;
+
+.oneapidir = [ W32_GETREG
+    "HKEY_LOCAL_MACHINE\\SOFTWARE\\WOW6432Node\\Intel\\Products\\IntelOneAPI" : "ProductDir" ] ;
+.oneapidir ?= "C:\\Program Files (x86)\\Intel\\oneAPI\\" ;
+.oneapidir = [ path.make $(.oneapidir) ] ;
+
+# Intel oneAPI 2020, and onward.
+.bin(oneAPI) =
+    [ path.join $(.oneapidir) compiler/latest/windows/bin ] ;
 
 # Initializes the intel toolset for windows
 rule init ( version ? :     # the compiler version
@@ -51,22 +62,52 @@ rule init ( version ? :     # the compiler version
         {
             errors.error "Autodetect of version from command not implemented!" ;
         }
-        local intel_versions = [ get-autodetect-versions () ] ;
-        if ! $(intel_versions)
+        local versions ;
         {
-            errors.error "No intel compiler version found!" ;
-        }
-        else
-        {
-            local msvc-version = [ feature.get-values <compatibility> : $(options) ] ; # On auto config mode the user can still request a msvc backend. If some intel compiler doesn't support it, don't try to configure it!
-            msvc-version = [ get-msvc-version-from-vc-string $(msvc-version) ] ;
-            for local v in $(intel_versions)
+            # On auto config mode the user can still request a msvc backend.
+            # If some intel compiler doesn't support it, don't try to configure
+            # it!
+            local autodetect-versions = [ get-autodetect-versions () ] ;
+            if $(autodetect-versions)
             {
-                if [ is-msvc-supported $(v) : $(msvc-version) ]
+                local msvc-version = [ feature.get-values <compatibility> : $(options) ] ;
+                msvc-version = [ get-msvc-version-from-vc-string $(msvc-version) ] ;
+                for local v in 
                 {
-                    configure $(v) : : $(options) ;
+                    if [ is-msvc-supported $(v) : $(msvc-version) ]
+                    {
+                        versions += $(v) ;
+                        configure $(v) : : $(options) ;
+                    }
                 }
             }
+        }
+        {
+            local detected_version ;
+            local detected_command ;
+            local command_abs_path ;
+            if ! $(detected_command)
+            {
+                local bin_paths = $(.bin(oneAPI)) ;
+                detected_command = [ common.find-tool icx.exe : $(bin_paths) ] ;
+                if $(detected_command)
+                {
+                    command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
+                }
+            }
+            if $(detected_command)
+            {
+                local version_cmd = "\"$(detected_command)\" /QV 2>&1" ;
+                local version_output = [ SHELL $(version_cmd) ] ;
+                detected_version = [ MATCH "Version ([0-9]+[.][0-9]+)[.][0-9]+" : $(version_output) ] ;
+            }
+            versions += $(detected_version) ;
+            configure $(detected_version) : $(detected_command) : $(options) ;
+        }
+        if ! $(versions)
+        {
+            errors.error "No intel compiler version found!" ;
+            return ;
         }
     }
 }
@@ -109,7 +150,7 @@ local rule configure ( version ? : command * : options * )
         }
         if ! $(.iclvars-$(version)-supported-vcs)
         {
-            errors.error "Supported msvc versions not known for intel $(version)" ;
+            errors.error "Supported msvc versions not known for intel" $(version) ;
         }
 
         for local v in $(msvc_versions)
@@ -166,27 +207,49 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     local root = [ feature.get-values <root> : $(options) ] ;
     if $(command) || $(root)
     {
-        local bin = [ common.get-absolute-tool-path $(command[-1]) ] ;
-        if $(major) >= 12
+        local bin ;
+        if $(command)
         {
-            bin = [ path.make $(bin) ] ;
-            bin = [ path.parent $(bin) ] ;
+            bin = [ common.get-absolute-tool-path $(command[-1]) ] ;
+            if $(bin) && ( $(major) = 2022 || [ numbers.less 2022 $(major) ] )
+            {
+                bin = [ path.make $(bin) ] ;
+                bin = [ path.parent [ path.parent [ path.parent [ path.parent $(bin) ] ] ] ] ;
+            }
+            else if $(bin) && ( $(major) = 12 || [ numbers.less 12 $(major) ] )
+            {
+                bin = [ path.make $(bin) ] ;
+                bin = [ path.parent $(bin) ] ;
+            }
         }
         root ?= $(bin) ;
         root = $(root)/ ;
     }
 
     local setup ;
-    setup = [ path.glob $(root) : iclvars_*.bat ] ;
+    local setup_astk_bat ;
+    local setup_bat ;
+    if $(major) = 21 || [ numbers.less 21 $(major) ]
+    {
+        setup_astk_bat = "setvars_*.bat" ;
+        setup_bat = "setvars.bat" ;
+    }
+    else
+    {
+        setup_astk_bat = "iclvars_*.bat" ;
+        setup_bat = "iclvars.bat" ;
+    }
+
+    setup = [ path.glob $(root) : $(setup_astk_bat) ] ;
     if ! $(setup)
     {
-       setup = [ path.join $(root) "iclvars.bat" ] ;
+       setup = [ path.join $(root) $(setup_bat) ] ;
        setup = [ path.native $(setup) ] ;
     }
 
     local target_types ;
     local iclvars_vs_arg ;
-    if $(major) >= 12
+    if $(major) = 12 || [ numbers.less 12 $(major) ]
     {
         # if we have a known intel toolset check for visual studio compatibility
         # if not trust parameters
@@ -208,7 +271,17 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         # and don't rely on whether the OS reports whether we're 64 or 32 bit
         # as that really only tells us which subsystem bjam is running in:
         #
-        local intel64_path = [ path.join $(root) intel64 ] ;
+        local root_start ;
+        if $(major) = 21 || [ numbers.less 21 $(major) ]
+        {
+            root_start = [ path.join $(root) "compiler/latest/windows/bin" ] ;
+            root_start = [ path.native $(root_start) ] ;
+        }
+        else
+        {
+            root_start = $(root) ;
+        }
+        local intel64_path = [ path.join $(root_start) intel64 ] ;
         if [ path.glob $(intel64_path) : icl.exe ]
         {
             target_types = ia32 intel64 ;
@@ -227,13 +300,16 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     local default-assembler-intel64 = ml64 ;
     local default-assembler-ia32_intel64 = ml64 ;
     local default-assembler-ia32  = "ml -coff" ;
+    local assembler-flags-intel64 = "-c -Zp4 -Cp -Cx" ;    
+    local assembler-flags-ia32_intel64 = "-c -Zp4 -Cp -Cx" ;    
+    local assembler-flags-ia32 = "-c -Zp4 -Cp -Cx" ;    
     assembler = [ feature.get-values <assembler> : $(options) ] ;
 
     for local c in $(target_types)
     {
         local cpu-conditions ;
         local setup-call ;
-        if $(major) >= 12
+        if $(major) = 12 || [ numbers.less 12 $(major) ]
         {
             cpu-conditions = $(condition)/$(.cpu-arch-$(c)) ;
 
@@ -289,7 +365,8 @@ local rule configure-really ( version ? : command * : options * : compatibility 
         toolset.flags intel-win.link .LD $(cpu-conditions) : xilink /nologo ;
         toolset.flags intel-win.archive .LD $(cpu-conditions) : xilink /lib /nologo ;
         toolset.flags intel-win.link .MT $(cpu-conditions) : mt -nologo ;
-        toolset.flags intel-win.compile .ASM $(cpu-conditions) : $(cpu-assembler) -nologo ;
+        toolset.flags intel-win.compile .ASM $(cpu-conditions) : $(cpu-assembler) -nologo $(assembler-flags-$(c)) ;
+        toolset.flags intel-win.compile .ASM_OUTPUT $(cpu-conditions) : -Fo ;
         toolset.flags intel-win.compile .MC $(cpu-conditions) : mc ;
         toolset.flags intel-win.compile .RC $(cpu-conditions) : rc ;
     }
@@ -310,18 +387,18 @@ local rule configure-really ( version ? : command * : options * : compatibility 
 
     # Disable Microsoft "secure" overloads in Dinkumware libraries since they
     # cause compile errors with Intel versions 9 and 10.
-    if $(major) < 12
+    if [ numbers.less $(major) 12 ]
     {
         C++FLAGS += -D_SECURE_SCL=0 ;
     }
 
-    if $(major) > 5
+    if [ numbers.less 5 $(major) ]
     {
         C++FLAGS += "/Zc:forScope" ; # Add support for correct for loop scoping.
     }
 
     # Add options recognized only by intel7 and above.
-    if $(major) >= 7
+    if $(major) = 7 || [ numbers.less 7 $(major) ]
     {
         C++FLAGS += /Qansi_alias ;
     }
@@ -340,7 +417,7 @@ local rule configure-really ( version ? : command * : options * : compatibility 
     }
     else
     {
-        if $(major) > 5
+        if [ numbers.less 5 $(major) ]
         {
             # Add support for wchar_t
             C++FLAGS += "/Zc:wchar_t"
@@ -498,6 +575,9 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 .iclvars-18.0-supported-vcs = "14.1 14.0 12.0 11.0 10.0" ;
 .iclvars-19.0-supported-vcs = "14.2 14.1 14.0 12.0" ;
 .iclvars-19.1-supported-vcs = "14.2 14.1 14.0 12.0" ;
+.iclvars-21.1-supported-vcs = "14.2 14.1" ;
+.iclvars-2021.1-supported-vcs = "14.2 14.1" ;
+.iclvars-2022.0-supported-vcs = "14.3 14.2 14.1" ;
 .iclvars-version-alias-vc14.2 = vs2019 ;
 .iclvars-version-alias-vc14.1 = vs2017 ;
 .iclvars-version-alias-vc14 = vs2015 ;

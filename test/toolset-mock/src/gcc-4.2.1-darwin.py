@@ -3,13 +3,12 @@
 # Copyright 2017 Steven Watanabe
 #
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 from MockProgram import *
 
 command('g++', '-print-prog-name=ar', stdout=script('ar.py'))
-command('g++', '-print-prog-name=ranlib', stdout=script('ranlib.py'))
 
 # all builds are multi-threaded for darwin
 if allow_properties("variant=debug", "link=shared", "runtime-link=shared"):

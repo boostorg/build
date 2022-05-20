@@ -1,7 +1,7 @@
 // Copyright 2019-2020 Rene Rivera
 // Copyright 2003, 2006 Vladimir Prus
 // Distributed under the Boost Software License, Version 1.0.
-// (See accompanying file LICENSE.txt or http://www.boost.org/LICENSE_1_0.txt)
+// (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 = B2 contributor guidelines
 
@@ -11,23 +11,18 @@ contains guidelines which helps to assure that development goes on smoothly, and
 changes are made quickly.
 
 The guidelines are not mandatory, and you can decide for yourself which one to
-follow. But note, that 10 mins that you spare writing a comment, for example,
+follow. But note, the 10 mins that you spare writing a comment, for example,
 might lead to significantly longer delay for everyone.
-
-Before contributing, make sure you are subscribed to our mailing list
-at boost-build@lists.boost.org.
 
 == Additional resources include
 
 === The issue tracker
 
-https://github.com/boostorg/build/issues
+https://github.com/bfgroup/b2/issues
 
-=== Mailing list
+=== Discussion forums
 
-boost-build@lists.boost.org
-
-http://lists.boost.org/boost-build/
+https://github.com/bfgroup/b2/discussions
 
 == BUGS and PATCHES
 
@@ -46,13 +41,13 @@ When reporting a bug, please try to provide the following information:
 * What you expected.
 
 * What version of B2 did you use. If possible, please try to test with the
-  develop branch state.
+  main branch state.
 
 When submitting a patch, please:
 
 * Make a single patch for a single logical change
 * Follow the policies and coding conventions below
-* Send patches as pull requests to the develop branch
+* Send patches as pull requests to the main branch
 * Provide a good PR message together with the patch
 
 The purpose of message serves to communicate what was changed, and *why*.

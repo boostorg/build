@@ -2,8 +2,8 @@
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Copyright 2010 Rene Rivera
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import scanner ;
 import type ;
@@ -76,6 +76,7 @@ scanner.register c-scanner : include ;
 type.register CPP : cpp cxx cc ;
 type.register H   : h ;
 type.register HPP : hpp : H ;
+type.register IPP : ipp : HPP ;
 type.register C   : c ;
 
 # It most cases where a CPP file or a H file is a source of some action, we
@@ -88,3 +89,5 @@ type.set-scanner C   : c-scanner ;
 # header.
 type.set-scanner H   : c-scanner ;
 type.set-scanner HPP : c-scanner ;
+# Private implementation files need scanning too.
+type.set-scanner IPP : c-scanner ;

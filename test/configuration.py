@@ -2,8 +2,8 @@
 
 # Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Test Boost Build configuration file handling.
 
@@ -346,8 +346,7 @@ def test_global_config():
     t.write("project-config.jam", "ECHO bad ;")
     t.run_build_system(["--config=my-config.jam", "--debug-configuration"],
                        match=TestCmd.match_re, stdout=
-r"""notice: found boost-build\.jam at .*
-notice: loading B2 from .*
+r"""notice: loading B2 from .*
 notice: Searching '.*' for all-config configuration file 'my-config\.jam'\.
 notice: Loading all-config configuration file 'my-config\.jam' from '.*'\.
 Loading my-config
@@ -357,8 +356,7 @@ Done
 """)
     t.run_build_system(["--config=", "--debug-configuration"],
                        match=TestCmd.match_re, stdout=
-r"""notice: found boost-build\.jam at .*
-notice: loading B2 from .*
+r"""notice: loading B2 from .*
 notice: Configuration file loading explicitly disabled.
 Done
 """)

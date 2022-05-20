@@ -1,8 +1,8 @@
 /*
  * Copyright 2001-2004 David Abrahams.
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "jam.h"
@@ -257,15 +257,18 @@ static void delete_module_( void * xmodule, void * data )
 
 void modules_done()
 {
-    if ( DEBUG_MEM || DEBUG_PROFILE )
+    if ( module_hash )
     {
-        struct hash * class_hash = hashinit( sizeof( struct module_stats ), "object info" );
-        hashenumerate( module_hash, stat_module, (void *)class_hash );
-        hashenumerate( class_hash, print_class_stats, (void *)0 );
-        hash_free( class_hash );
+        if ( DEBUG_MEM || DEBUG_PROFILE )
+        {
+            struct hash * class_hash = hashinit( sizeof( struct module_stats ), "object info" );
+            hashenumerate( module_hash, stat_module, (void *)class_hash );
+            hashenumerate( class_hash, print_class_stats, (void *)0 );
+            hash_free( class_hash );
+        }
+        hashenumerate( module_hash, delete_module_, (void *)0 );
+        hashdone( module_hash );
     }
-    hashenumerate( module_hash, delete_module_, (void *)0 );
-    hashdone( module_hash );
     module_hash = 0;
     delete_module( &root );
 }

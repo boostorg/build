@@ -1,17 +1,18 @@
+# Copyright 2021 Nikita Kniazev
 # Copyright 2002, 2003, 2004, 2006 Vladimir Prus
 # Copyright 2008, 2012 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import numbers ;
 
 
 # Mirror engine JAM_VERSION
 .major = "4" ;
-.minor = "4" ;
+.minor = "9" ;
 
 
-rule boost-build ( )
+rule build ( )
 {
     return "$(.major).$(.minor)-git" ;
 }
@@ -21,7 +22,7 @@ rule print ( )
 {
     if [ verify-engine-version ]
     {
-        ECHO "B2" [ boost-build ] ;
+        ECHO "B2" [ build ] ;
     }
 }
 
@@ -37,9 +38,10 @@ rule verify-engine-version ( )
         local l = [ modules.binding version ] ;
         l = $(l:D) ;
         l = $(l:D) ;
-        ECHO "warning: mismatched versions of B2 engine and core" ;
-        ECHO "warning: B2 engine ($(e)) is $(v:J=.)" ;
-        ECHO "warning: B2 core (at $(l)) is" [ boost-build ] ;
+        ECHO "error: mismatched versions of B2 engine and core" ;
+        ECHO "error: B2 engine ($(e)) is $(v:J=.)" ;
+        ECHO "error: B2 core (at $(l)) is" [ build ] ;
+        EXIT : 1 ;
     }
     else
     {
@@ -51,6 +53,34 @@ rule verify-engine-version ( )
 # Returns "true" if the first version is less than the second one.
 #
 # rule version-less ( lhs + : rhs + ) # BUILTIN
+
+# Returns "true" if the required version is compatible with the having one.
+# This uses sematic versioning where (major.x.y) is compatible with
+# (major.n.m) and (major.x.z). And is incompatible for other values.
+#
+rule version-compatible ( req + : has + )
+{
+    numbers.check $(req) ;
+    numbers.check $(has) ;
+
+    if $(req) = $(has)
+    {
+        return true ;
+    }
+
+    while $(req) && [ numbers.equal $(req[1]) $(has[1]:E=0) ]
+    {
+        req = $(req[2-]) ;
+        has = $(has[2-]) ;
+    }
+
+    if $(req)
+    {
+        return ;
+    }
+
+    return true ;
+}
 
 
 # Returns "true" if the current JAM version version is at least the given
@@ -116,4 +146,34 @@ rule __test__ ( )
     assert.false version-less 03 1 10 0   :  3 1 10 0 0 ;
 
     # TODO: Add tests for invalid input data being sent to version-less.
+
+
+    assert.true  version-compatible 4     : 4     ;
+    assert.true  version-compatible 4     : 4 9   ;
+    assert.false version-compatible 4 9   : 4     ;
+    assert.true  version-compatible 4 9   : 4 9   ;
+    assert.false version-compatible 4 9 1 : 4 9   ;
+    assert.true  version-compatible 4 9 1 : 4 9 1 ;
+    assert.false version-compatible 4 8   : 4 9   ;
+    assert.false version-compatible 4 8 1 : 4 9   ;
+    assert.false version-compatible 4 8 1 : 4 9 1 ;
+    assert.true  version-compatible 5     : 5     ;
+    assert.false version-compatible 5     : 4     ;
+    assert.false version-compatible 5     : 4 9   ;
+    assert.false version-compatible 5 1   : 5     ;
+    assert.true  version-compatible 5 1   : 5 1   ;
+    assert.false version-compatible 5 1   : 5 2   ;
+    assert.false version-compatible 5 1 1 : 5     ;
+    assert.false version-compatible 5 1 1 : 5 1   ;
+    assert.false version-compatible 5 2   : 5     ;
+    assert.false version-compatible 5 2   : 5 1   ;
+    assert.true  version-compatible 5 2   : 5 2   ;
+    assert.true  version-compatible 4     : 4 0   ;
+    assert.true  version-compatible 4 0   : 4     ;
+    assert.true  version-compatible 04    : 4     ;
+    assert.true  version-compatible 04    : 04    ;
+    assert.true  version-compatible 04    : 4     ;
+    assert.true  version-compatible 04 00 : 04    ;
+    assert.true  version-compatible 04    : 04 00 ;
 }
+

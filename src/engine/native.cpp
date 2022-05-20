@@ -1,7 +1,7 @@
 /* Copyright 2003. Vladimir Prus
  * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE_1_0.txt or copy at
- * http://www.boost.org/LICENSE_1_0.txt)
+ * (See accompanying file LICENSE.txt or copy at
+ * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 #include "native.h"
@@ -14,7 +14,7 @@
 void declare_native_rule( char const * module, char const * rule,
     char const * * args, function_builtin_t f, int32_t version )
 {
-    OBJECT * const module_obj = module ? object_new( module ) : 0 ;
+    OBJECT * module_obj = module ? object_new( module ) : 0 ;
     module_t * m = bindmodule( module_obj );
     if ( module_obj )
         object_free( module_obj );

@@ -1,7 +1,7 @@
 # Copyright Wind River 2017.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt
-# or copy at http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 import intel ;
 import feature : feature ;
@@ -30,6 +30,7 @@ generators.override intel-vxworks.searched-lib-generator : searched-lib-generato
 toolset.inherit-rules intel-vxworks : gcc ;
 toolset.inherit-flags intel-vxworks : gcc
         : <inlining>off <inlining>on <inlining>full <optimization>space
+          <optimization>minimal <optimization>debug
           <warnings>off <warnings>all <warnings>on
           <warnings>extra <warnings>pedantic
           <warnings-as-errors>off <warnings-as-errors>on
@@ -117,10 +118,10 @@ flags intel-vxworks.compile INCLUDES <include> ;
                      yorksfield nehalem sandy-bridge ivy-bridge haswell
                      broadwell skylake skylake-avx512 cannonlake
                      icelake-client icelake-server cascadelake cooperlake
-                     tigerlake ;
+                     tigerlake rocketlake alderlake sapphirerapids ;
 .cpu-type-amd64    = k8 opteron athlon64 athlon-fx k8-sse3 opteron-sse3
                      athlon64-sse3 amdfam10 barcelona bdver1 bdver2 bdver3 btver1 btver2
-                     znver1 znver2 ;
+                     znver1 znver2 znver3 ;
 .cpu-type-x86-64   = $(.cpu-type-em64t) $(.cpu-type-amd64) ;
 
 #flags intel-vxworks.compile OPTIONS <instruction-set>$(.cpu-type-x86-64)/<address-model>32 : -m32 ; # -mcmodel=small ;

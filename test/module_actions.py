@@ -4,8 +4,8 @@
 # Copyright 2006 Rene Rivera
 # Copyright 2003 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # Demonstration that module variables have the correct effect in actions.
 
@@ -13,10 +13,9 @@ import BoostBuild
 import os
 import re
 
-t = BoostBuild.Tester(["-d+1"], pass_toolset=0)
+t = BoostBuild.Tester(["-d+1", "-f", "bare.jam"], pass_toolset=0)
 
-t.write("boost-build.jam", "boost-build . ;")
-t.write("bootstrap.jam", """\
+t.write("bare.jam", """\
 # Top-level rule causing a target to be built by invoking the specified action.
 rule make ( target : sources * : act )
 {

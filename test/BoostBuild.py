@@ -1,9 +1,9 @@
 # Copyright 2002-2005 Vladimir Prus.
 # Copyright 2002-2003 Dave Abrahams.
-# Copyright 2006 Rene Rivera.
+# Copyright 2006 Rene Ferdinand Rivera Morell.
 # Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE_1_0.txt or copy at
-# http://www.boost.org/LICENSE_1_0.txt)
+# (See accompanying file LICENSE.txt or copy at
+# https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 from __future__ import print_function
 
@@ -112,6 +112,20 @@ elif windows:
     default_os = "windows"
 elif hasattr(os, "uname"):
     default_os = os.uname()[0].lower()
+
+
+def expand_toolset(toolset, target_os=default_os):
+    match = re.match(r'^(clang|intel)(-[\d\.]+|)$', toolset)
+    if match:
+        if match.group(1) == "intel" and target_os == "windows":
+            return match.expand(r'\1-win\2')
+        elif target_os == "darwin":
+            return match.expand(r'\1-darwin\2')
+        else:
+            return match.expand(r'\1-linux\2')
+
+    return toolset
+
 
 def prepare_prefixes_and_suffixes(toolset, target_os=default_os):
     ind = toolset.find('-')
@@ -236,11 +250,16 @@ class Tester(TestCmd.TestCmd):
                                     system output like the --verbose command
                                     line option does.
     """
-    def __init__(self, arguments=None, executable="b2",
+    def __init__(self, arguments=None, executable=None,
         match=TestCmd.match_exact, boost_build_path=None,
         translate_suffixes=True, pass_toolset=True, use_test_config=True,
         ignore_toolset_requirements=False, workdir="", pass_d0=False,
         **keywords):
+
+        if not executable:
+            executable = os.getenv('B2')
+        if not executable:
+            executable = 'b2'
 
         assert arguments.__class__ is not str
         self.original_workdir = os.path.dirname(__file__)
@@ -253,6 +272,7 @@ class Tester(TestCmd.TestCmd):
         self.use_test_config = use_test_config
 
         self.toolset = get_toolset()
+        self.expanded_toolset = expand_toolset(self.toolset)
         self.pass_toolset = pass_toolset
         self.ignore_toolset_requirements = ignore_toolset_requirements
 
@@ -313,6 +333,7 @@ class Tester(TestCmd.TestCmd):
 
     def set_toolset(self, toolset, target_os=default_os):
         self.toolset = toolset
+        self.expanded_toolset = expand_toolset(toolset, target_os)
         self.pass_toolset = True
         prepare_prefixes_and_suffixes(toolset, target_os)
 
@@ -350,18 +371,26 @@ class Tester(TestCmd.TestCmd):
             f.close()
         self.__ensure_newer_than_last_build(nfile)
 
+    def rename(self, src, dst):
+        src_name = self.native_file_name(src)
+        dst_name = self.native_file_name(dst)
+        os.rename(src_name, dst_name)
+
     def copy(self, src, dst):
         try:
             self.write(dst, self.read(src, binary=True))
         except:
             self.fail_test(1)
 
+    def copy_timestamp(self, src, dst):
+        src_name = self.native_file_name(src)
+        dst_name = self.native_file_name(dst)
+        shutil.copystat(src_name, dst_name)
+
     def copy_preserving_timestamp(self, src, dst):
         src_name = self.native_file_name(src)
         dst_name = self.native_file_name(dst)
-        stats = os.stat(src_name)
-        self.write(dst, self.__read(src, binary=True))
-        os.utime(dst_name, (stats.st_atime, stats.st_mtime))
+        shutil.copy2(src_name, dst_name)
 
     def touch(self, names, wait=True):
         if isstr(names):
@@ -388,7 +417,7 @@ class Tester(TestCmd.TestCmd):
             n = glob.glob(self.native_file_name(name))
             if n: n = n[0]
             if not n:
-                n = self.glob_file(name.replace("$toolset", self.toolset + "*")
+                n = self.glob_file(name.replace("$toolset", self.expanded_toolset + "*")
                     )
             if n:
                 if os.path.isdir(n):
@@ -407,7 +436,7 @@ class Tester(TestCmd.TestCmd):
         toolset currently being tested.
 
         """
-        self.write(name, self.read(name).replace("$toolset", self.toolset))
+        self.write(name, self.read(name).replace("$toolset", self.expanded_toolset))
 
     def dump_stdio(self):
         annotation("STDOUT", self.stdout())
@@ -421,9 +450,8 @@ class Tester(TestCmd.TestCmd):
         assert extra_args.__class__ is not str
 
         if os.path.isabs(subdir):
-            print("You must pass a relative directory to subdir <%s>." % subdir
-                )
-            return
+            raise ValueError(
+                "You must pass a relative directory to subdir <%s>." % subdir)
 
         self.previous_tree, dummy = tree.build_tree(self.workdir)
         self.wait_for_time_change_since_last_build()
@@ -745,7 +773,7 @@ class Tester(TestCmd.TestCmd):
 
     def expect_content(self, name, content, exact=False):
         actual = self.read(name)
-        content = content.replace("$toolset", self.toolset + "*")
+        content = content.replace("$toolset", self.expanded_toolset + "*")
 
         matched = False
         if exact:
@@ -839,7 +867,7 @@ class Tester(TestCmd.TestCmd):
             names = [names]
         r = map(self.adjust_lib_name, names)
         r = map(self.adjust_suffix, r)
-        r = map(lambda x, t=self.toolset: x.replace("$toolset", t + "*"), r)
+        r = map(lambda x, t=self.expanded_toolset: x.replace("$toolset", t + "*"), r)
         return list(r)
 
     def adjust_name(self, name):

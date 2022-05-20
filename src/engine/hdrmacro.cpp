@@ -7,7 +7,7 @@
 /*  This file is ALSO:
  *  Copyright 2001-2004 David Abrahams.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 /*
@@ -75,7 +75,7 @@ void macro_headers( TARGET * t )
      */
     if ( !re )
     {
-        OBJECT * const re_str = object_new(
+        OBJECT * re_str = object_new(
             "^[     ]*#[    ]*define[   ]*([A-Za-z][A-Za-z0-9_]*)[  ]*"
             "[<\"]([^\">]*)[\">].*$" );
         re = regex_compile( re_str );

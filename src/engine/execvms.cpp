@@ -8,7 +8,7 @@
  *  Copyright 2001-2004 David Abrahams.
  *  Copyright 2015 Artur Shepilko.
  *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE_1_0.txt or http://www.boost.org/LICENSE_1_0.txt)
+ *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
 
@@ -35,6 +35,7 @@
 #include "lists.h"
 #include "execcmd.h"
 #include "output.h"
+#include "startup.h"
 
 #ifdef OS_VMS
 
@@ -89,7 +90,7 @@ int exec_check
 
     return is_raw_cmd
         ? EXEC_CHECK_OK
-        : check_cmd_for_too_long_lines( command->value, MAXLINE, error_length,
+        : check_cmd_for_too_long_lines( command->value, shell_maxline(), error_length,
             error_max_length );
 }
 
@@ -200,8 +201,8 @@ void exec_cmd
 
             if ( !cwd )
             {
-                perror( "can not get current working directory" );
-                exit( EXITBAD );
+                errno_puts( "can not get current working directory" );
+                b2::clean_exit( EXITBAD );
             }
 
             fprintf( f, "$ SET DEFAULT %s\n", cwd);
@@ -413,6 +414,11 @@ clock_t get_cpu_time()
     result = ( cputime / 100 ) * CLOCKS_PER_SEC;
 
     return result;
+}
+
+int32_t shell_maxline()
+{
+    return MAXLINE;
 }
 
 
