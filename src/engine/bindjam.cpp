@@ -172,6 +172,7 @@ struct converter_<jam_binder, std::tuple<ValueTypes...>, LIST *>
         int _[]{0,((void)(
             std::get<I>(result) = from_jam<typename std::tuple_element<I, TupleType>::type>(*(jam_value_i+I))
             ),0)...};
+        (void)_;
         return result;
     }
     static TupleType from_bind_value(LIST *jam_value)
