@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-11/debug/cxxstd-11-iso/b2",
+            "program": "${workspaceFolder}/.build/gcc-12/debug/cxxstd-11-iso/b2",
             "args": ["-na"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
