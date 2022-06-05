@@ -18,8 +18,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace {
-inline void hash_fnv1a(std::uint64_t & value, void * data, std::size_t size)
+static inline void hash_fnv1a(std::uint64_t & value, void * data, std::size_t size)
 {
 	value = 0xcbf29ce484222325;
 	std::uint8_t * d = static_cast<std::uint8_t *>(data);
@@ -33,7 +32,8 @@ inline void hash_fnv1a(std::uint32_t & value, void * data, std::size_t size)
 	std::uint8_t * e = d + size;
 	while (d != e) value = (value * 0x1000193) ^ *(d++);
 }
-inline void hash_fnv1a(std::uint32_t & value32,
+#if 0
+static inline void hash_fnv1a(std::uint32_t & value32,
 	std::uint64_t & value64,
 	void * data,
 	std::size_t size)
@@ -49,7 +49,8 @@ inline void hash_fnv1a(std::uint32_t & value32,
 		d += 1;
 	}
 }
-inline bool str_view_equal(const char * str_a,
+#endif
+static inline bool str_view_equal(const char * str_a,
 	std::size_t size_a,
 	const char * str_b,
 	std::size_t size_b)
@@ -58,21 +59,19 @@ inline bool str_view_equal(const char * str_a,
 		|| ((str_a != nullptr) && (str_b != nullptr) && (size_a == size_b)
 			&& std::equal(str_a, str_a + size_a, str_b));
 }
-} // namespace
 
 namespace b2 {
 
 struct value_base : value
 {
 	virtual type get_type() const override { return type::null; }
-	virtual bool equal_to(const value & o) const = 0;
 	virtual str_view as_string() const override { return { nullptr, 0 }; }
 	virtual double as_number() const override
 	{
 		using nl = std::numeric_limits<double>;
 		return nl::has_quiet_NaN ? nl::quiet_NaN() : nl::lowest();
 	}
-	virtual object * as_object() const { return nullptr; }
+	virtual object * as_object() const override { return nullptr; }
 };
 
 struct value_str : value_base
@@ -142,7 +141,7 @@ struct value_object : value_base
 	{
 		return as_object() == o.as_object();
 	}
-	virtual object * as_object() const { return value.get(); }
+	virtual object * as_object() const override { return value.get(); }
 	std::unique_ptr<object> value;
 };
 
@@ -186,7 +185,7 @@ using value_cache_t = std::unordered_set<value *, value_hash_f, value_eq_f>;
 
 static value_cache_t value_cache;
 
-value_ptr value::make(const char * string, int32_t size)
+value_ptr value::make(const char * string, std::size_t size)
 {
 	value_str_view test_val(string, size);
 	auto existing = value_cache.find(&test_val);

@@ -29,7 +29,10 @@ inline int object_equal(b2::value_ptr a, b2::value_ptr b)
 {
 	return a->equal_to(*b);
 }
-inline unsigned int object_hash(b2::value_ptr obj) { return obj->hash64; }
+inline unsigned int object_hash(b2::value_ptr obj)
+{
+	return (unsigned int)(obj->hash64);
+}
 inline const char * object_str(b2::value_ptr obj) { return obj->str(); }
 inline void object_done(void) { b2::value::done(); }
 

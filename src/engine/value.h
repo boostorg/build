@@ -45,7 +45,7 @@ struct value
 	virtual double as_number() const = 0;
 	virtual object * as_object() const = 0;
 	inline const char * str() { return as_string().str; }
-	static value * make(const char * str, int32_t size);
+	static value * make(const char * str, std::size_t size);
 	static inline value * make(const char * str)
 	{
 		return make(str, strlen(str));
