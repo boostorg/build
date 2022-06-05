@@ -194,4 +194,4 @@ set B2_CXXFLAGS=%B2_CXXFLAGS% -DNDEBUG
 dir *.exe
 
 :Finish
-@exit /b %ERRORLEVEL%
+exit /b %ERRORLEVEL%
