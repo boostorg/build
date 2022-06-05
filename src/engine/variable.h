@@ -58,42 +58,42 @@ namespace b2 { namespace jam {
             if (var_symbol) object_free(var_symbol);
         }
 
-        inline operator list() const { return list{var_get(var_module, var_symbol)}; }
+        inline operator list_ref() const { return list_ref{var_get(var_module, var_symbol)}; }
 
-        inline variable & operator=(list && v)
+        inline variable & operator=(list_ref && v)
         {
             var_set(var_module, var_symbol, v.release(), VAR_SET);
             return *this;
         }
-        inline variable & operator=(const list & v) { return *this = list{v}; }
-        inline variable & operator=(const char *v) { return *this = list{object{v}}; }
-        inline variable & operator=(const std::string &v) { return *this = list{object{v}}; }
+        inline variable & operator=(const list_ref & v) { return *this = list_ref{v}; }
+        inline variable & operator=(const char *v) { return *this = list_ref{value_ref{v}}; }
+        inline variable & operator=(const std::string &v) { return *this = list_ref{value_ref{v}}; }
 
-        inline variable & operator+=(list & v)
+        inline variable & operator+=(list_ref & v)
         {
             var_set(var_module, var_symbol, v.release(), VAR_APPEND);
             return *this;
         }
-        inline variable & operator+=(list && v)
+        inline variable & operator+=(list_ref && v)
         {
             var_set(var_module, var_symbol, v.release(), VAR_APPEND);
             return *this;
         }
-        inline variable & operator+=(const char *v) { return *this += list{object{v}}; }
-        inline variable & operator+=(const std::string &v) { return *this += list{object{v}}; }
+        inline variable & operator+=(const char *v) { return *this += list_ref{value_ref{v}}; }
+        inline variable & operator+=(const std::string &v) { return *this += list_ref{value_ref{v}}; }
 
-        inline variable & operator|=(list & v)
+        inline variable & operator|=(list_ref & v)
         {
             var_set(var_module, var_symbol, v.release(), VAR_DEFAULT);
             return *this;
         }
-        inline variable & operator|=(list && v)
+        inline variable & operator|=(list_ref && v)
         {
             var_set(var_module, var_symbol, v.release(), VAR_DEFAULT);
             return *this;
         }
-        inline variable & operator|=(const char *v) { return *this |= list{object{v}}; }
-        inline variable & operator|=(const std::string &v) { return *this |= list{object{v}}; }
+        inline variable & operator|=(const char *v) { return *this |= list_ref{value_ref{v}}; }
+        inline variable & operator|=(const std::string &v) { return *this |= list_ref{value_ref{v}}; }
 
         inline operator bool() const
         {

@@ -85,7 +85,7 @@ struct rule_actions {
 typedef struct rule_actions* rule_actions_ptr;
 
 struct _rule {
-    object_ptr name;
+    b2::value_ptr name;
     function_ptr procedure;
     rule_actions_ptr actions; /* build actions, or NULL for no actions */
     module_ptr module; /* module in which this rule is executed */
@@ -123,7 +123,7 @@ struct _action {
 /* SETTINGS - variables to set when executing a TARGET's ACTIONS. */
 struct _settings {
     settings_ptr next;
-    object_ptr symbol; /* symbol name for var_set() */
+    b2::value_ptr symbol; /* symbol name for var_set() */
     list_ptr value; /* symbol value for var_set() */
 };
 
@@ -142,8 +142,8 @@ struct _targets {
 
 /* TARGET - an entity (e.g. a file) that can be built. */
 struct _target {
-    object_ptr name;
-    object_ptr boundname; /* if search() relocates target */
+    b2::value_ptr name;
+    b2::value_ptr boundname; /* if search() relocates target */
     actions_ptr actions; /* rules to execute, if any */
     settings_ptr settings; /* variables to define */
 
@@ -257,7 +257,7 @@ struct _target {
 void action_free(action_ptr);
 actions_ptr actionlist(actions_ptr, action_ptr);
 void freeactions(actions_ptr);
-settings_ptr addsettings(settings_ptr, int flag, object_ptr symbol, list_ptr value);
+settings_ptr addsettings(settings_ptr, int flag, b2::value_ptr symbol, list_ptr value);
 void pushsettings(module_ptr, settings_ptr);
 void popsettings(module_ptr, settings_ptr);
 settings_ptr copysettings(settings_ptr);
@@ -266,16 +266,16 @@ void actions_refer(rule_actions_ptr);
 void actions_free(rule_actions_ptr);
 
 /* Rule related functions. */
-rule_ptr bindrule(object_ptr rulename, module_ptr);
-rule_ptr import_rule(rule_ptr source, module_ptr, object_ptr name);
+rule_ptr bindrule(b2::value_ptr rulename, module_ptr);
+rule_ptr import_rule(rule_ptr source, module_ptr, b2::value_ptr name);
 void rule_localize(rule_ptr rule, module_ptr module);
-rule_ptr new_rule_body(module_ptr, object_ptr rulename, function_ptr func, int exprt);
-rule_ptr new_rule_actions(module_ptr, object_ptr rulename, function_ptr command, list_ptr bindlist, int flags);
+rule_ptr new_rule_body(module_ptr, b2::value_ptr rulename, function_ptr func, int exprt);
+rule_ptr new_rule_actions(module_ptr, b2::value_ptr rulename, function_ptr command, list_ptr bindlist, int flags);
 void rule_free(rule_ptr);
 
 /* Target related functions. */
 void bind_explicitly_located_targets();
-target_ptr bindtarget(object_ptr const);
+target_ptr bindtarget(b2::value_ptr const);
 targets_uptr targetchain(targets_uptr, targets_uptr);
 void targetentry(targets_uptr&, target_ptr);
 void target_include(target_ptr const including,
@@ -283,7 +283,7 @@ void target_include(target_ptr const including,
 void target_include_many(target_ptr const including,
     list_ptr const included_names);
 void targetlist(targets_uptr&, list_ptr target_names);
-void touch_target(object_ptr const);
+void touch_target(b2::value_ptr const);
 void clear_includes(target_ptr);
 target_ptr target_scc(target_ptr);
 targets_uptr targets_pop(targets_uptr);

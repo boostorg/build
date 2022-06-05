@@ -469,7 +469,6 @@ md5.cpp \
 mem.cpp \
 modules.cpp \
 native.cpp \
-object.cpp \
 option.cpp \
 output.cpp \
 parse.cpp \
@@ -483,6 +482,7 @@ search.cpp \
 startup.cpp \
 subst.cpp \
 timestamp.cpp \
+value.cpp \
 variable.cpp \
 w32_getreg.cpp \
 modules/mod_regex.cpp \

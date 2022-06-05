@@ -189,16 +189,9 @@ struct jam_cxx_self
     template <class Class>
     static Class *get(FRAME *frame)
     {
-        OBJECT *cxx_self_name = object_new("__cxx_self__");
-        const char *cxx_self_value = object_str(list_front(var_get(frame->module, cxx_self_name)));
-        object_free(cxx_self_name);
-        std::intptr_t result = 0;
-        for (int i = sizeof(void *) - 1; i >= 0; --i)
-        {
-            result = (result << 8) + (cxx_self_value[i * 2 + 0] - 'a') +
-                     ((cxx_self_value[i * 2 + 1] - 'a') << 4);
-        }
-        Class *self = reinterpret_cast<Class *>(result);
+        value_ref cxx_self_name(value::make("__cxx_self__"));
+        value_ref cxx_self_value(list_front(var_get(frame->module, cxx_self_name)));
+        Class * self = static_cast<Class*>(cxx_self_value->as_object());
         return self;
     }
 
@@ -206,22 +199,12 @@ struct jam_cxx_self
     template <class Class>
     static void set(FRAME *frame, Class *self)
     {
-        char cxx_self_value[sizeof(void *) * 2 + 1];
-        std::intptr_t self_int = reinterpret_cast<std::intptr_t>(self);
-        for (std::size_t i = 0; i < sizeof(void *); ++i)
-        {
-            cxx_self_value[i * 2 + 0] = char(self_int & 0xf) + 'a';
-            cxx_self_value[i * 2 + 1] = char((self_int & 0xf0) >> 4) + 'a';
-            self_int >>= 8;
-        }
-        cxx_self_value[sizeof(void *) * 2] = 0;
-        OBJECT *cxx_self_name = object_new("__cxx_self__");
-        OBJECT *cxx_self_obj = object_new(cxx_self_value);
+        value_ref cxx_self_name(value::make("__cxx_self__"));
+        value_ref cxx_self_value(value::make(self));
         var_set(
             frame->module, cxx_self_name,
-            list_new(cxx_self_obj),
+            list_new(cxx_self_value),
             VAR_SET);
-        object_free(cxx_self_name);
     }
 };
 

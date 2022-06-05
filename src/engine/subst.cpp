@@ -30,7 +30,7 @@ regexp * regex_compile( OBJECT * pattern )
     if ( !found )
     {
         e->pattern = object_copy( pattern );
-        e->regex = regcomp( (char *)pattern );
+        e->regex = regcomp( object_str( pattern ) );
     }
 
     return e->regex;

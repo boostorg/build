@@ -45,7 +45,7 @@ LIST *b2::startup::builtin_boost_build(FRAME *frame, int flags)
 {
     // Do nothing, but keep the rule, for backwards compatability.
     // But do record the path passed in as a fallback to the loading.
-    b2::jam::variable(".boost-build-dir") = b2::jam::list(lol_get(frame->args, 0));
+    b2::jam::variable(".boost-build-dir") = b2::list_ref(lol_get(frame->args, 0));
     return L0;
 }
 
@@ -53,14 +53,14 @@ extern char const *saved_argv0;
 
 bool b2::startup::bootstrap(FRAME *frame)
 {
-    b2::jam::list ARGV = b2::jam::variable{"ARGV"};
-    b2::jam::object opt_debug_configuration{"--debug-configuration"};
+    b2::list_ref ARGV = b2::jam::variable{"ARGV"};
+    b2::value_ref opt_debug_configuration{"--debug-configuration"};
     b2::jam::variable dot_OPTION__debug_configuration{".OPTION", "debug-configration"};
     for (auto arg: ARGV)
     {
         if (opt_debug_configuration == arg)
         {
-            dot_OPTION__debug_configuration = b2::jam::list{b2::jam::object{"true"}};
+            dot_OPTION__debug_configuration = b2::list_ref{b2::value_ref{"true"}};
             break;
         }
     }
@@ -131,12 +131,12 @@ bool b2::startup::bootstrap(FRAME *frame)
     // $(BOOST_ROOT)/boost-build.jam
     if (b2_file_path.empty())
     {
-        b2::jam::list BOOST_BUILD_PATH = b2::jam::variable{"BOOST_BUILD_PATH"};
+        b2::list_ref BOOST_BUILD_PATH = b2::jam::variable{"BOOST_BUILD_PATH"};
         // For back-compat with Boost we also search in the BOOST_ROOT location.
-        BOOST_BUILD_PATH.append(b2::jam::list(b2::jam::variable{"BOOST_ROOT"}));
+        BOOST_BUILD_PATH.append(b2::list_ref(b2::jam::variable{"BOOST_ROOT"}));
         for (auto search_path: BOOST_BUILD_PATH)
         {
-            std::string path = b2::jam::object{search_path};
+            std::string path = b2::value_ref{search_path};
             path = b2::paths::normalize(path+"/"+boost_build_jam);
             if (b2::filesys::is_file(path))
             {
@@ -159,7 +159,7 @@ bool b2::startup::bootstrap(FRAME *frame)
     {
         b2::jam::variable dot_boost_build_file{".boost-build-file"};
         dot_boost_build_file = b2_file_path;
-        b2::jam::object b2_file_path_sym{b2_file_path};
+        b2::value_ref b2_file_path_sym{b2_file_path};
         parse_file(b2_file_path_sym, frame);
     }
 
@@ -230,11 +230,11 @@ bool b2::startup::bootstrap(FRAME *frame)
     // Last resort, search in the directory referenced by the boost-build rule.
     if (bootstrap_file.empty())
     {
-        b2::jam::list dot_boost_build_dir
+        b2::list_ref dot_boost_build_dir
             = b2::jam::variable(".boost-build-dir");
         if (!dot_boost_build_dir.empty())
         {
-            std::string dir = b2::jam::object(*dot_boost_build_dir.begin());
+            std::string dir = b2::value_ref(*dot_boost_build_dir.begin());
             if (!b2_file_path.empty() && !b2::paths::is_rooted(dir))
                 dir = b2_file_path + "/../" + dir;
             const std::string path
@@ -268,10 +268,10 @@ bool b2::startup::bootstrap(FRAME *frame)
     // Set the bootstrap=file var as it's used by the build system to refer to
     // the rest of the build system files.
     b2::jam::variable dot_bootstrap_file{".bootstrap-file"};
-    dot_bootstrap_file = b2::jam::list{b2::jam::object{bootstrap_file}};
+    dot_bootstrap_file = b2::list_ref{b2::value_ref{bootstrap_file}};
 
     // Load the build system bootstrap file we found.
-    parse_file(b2::jam::object{bootstrap_file}, frame);
+    parse_file(b2::value_ref{bootstrap_file}, frame);
 
     return true;
 }

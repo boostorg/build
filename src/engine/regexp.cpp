@@ -801,8 +801,12 @@ regexec(
     char *s;
 
     /* Be paranoid... */
-    if (prog == NULL || string == NULL) {
+    if (prog == NULL) {
         regerror("NULL parameter");
+        return(0);
+    }
+    if (string == NULL) {
+        regerror("NULL string");
         return(0);
     }
 

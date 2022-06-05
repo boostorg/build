@@ -109,8 +109,8 @@ LIST * lol_get( LOL *, int i );
 void   lol_print( LOL * );
 void   lol_build( LOL *, char const * * elements );
 
-namespace b2 { namespace jam {
-    struct list
+namespace b2 {
+    struct list_ref
     {
         struct iterator
         {
@@ -139,15 +139,15 @@ namespace b2 { namespace jam {
 
         friend struct iterator;
 
-        inline list() = default;
-        inline list(const list &other)
+        inline list_ref() = default;
+        inline list_ref(const list_ref &other)
             : list_obj(list_copy(other.list_obj)) {}
-        inline explicit list(const object &o)
-            : list_obj(list_new(object_copy(o))) {}
-        inline explicit list(LIST *l, bool own = false)
+        inline explicit list_ref(const value_ref &o)
+            : list_obj(list_new(value::copy(o))) {}
+        inline explicit list_ref(LIST *l, bool own = false)
             : list_obj(own ? l : list_copy(l)) {}
 
-        inline ~list() { reset(); }
+        inline ~list_ref() { reset(); }
         inline LIST* release()
         {
             LIST* r = list_obj;
@@ -159,7 +159,7 @@ namespace b2 { namespace jam {
         inline iterator end() { return iterator(list_end(list_obj)); }
         inline bool empty() const { return list_empty(list_obj) || length() == 0; }
         inline int32_t length() const { return list_length(list_obj); }
-        inline list &append(const list &other)
+        inline list_ref &append(const list_ref &other)
         {
             list_obj = list_append(list_obj, list_copy(other.list_obj));
             return *this;
@@ -170,7 +170,7 @@ namespace b2 { namespace jam {
             std::swap( list_obj, new_list );
             if (new_list) list_free(new_list);
         }
-        inline list& pop_front()
+        inline list_ref& pop_front()
         {
             list_obj = list_pop_front(list_obj);
             return *this;
@@ -180,6 +180,6 @@ namespace b2 { namespace jam {
 
         LIST *list_obj = nullptr;
     };
-}}
+}
 
 #endif

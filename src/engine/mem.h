@@ -94,7 +94,7 @@ namespace jam {
     template <typename T, typename... Args>
     T* make_ptr(Args&&... args)
     {
-        return ctor_ptr<T>(BJAM_MALLOC(sizeof(T)));
+        return ctor_ptr<T>(BJAM_MALLOC(sizeof(T)), std::forward<Args>(args)...);
     }
 
     template <typename T>

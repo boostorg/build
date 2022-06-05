@@ -590,7 +590,7 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
 {
     FRAME inner;
     int32_t i;
-    b2::jam::list first( s->pop<LIST *>(), true );
+    b2::list_ref first( s->pop<LIST *>(), true );
     LIST * result = L0;
     OBJECT * rulename;
 
@@ -3375,7 +3375,7 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
 
         /* Prepare the argument list */
         lol_add( frame.args, list_new( object_copy( list_item( iter ) ) ) );
-        b2::jam::list error(
+        b2::list_ref error(
             evaluate_rule(
                 bindrule( type_name, frame.module ), type_name, &frame ),
             true );
@@ -3473,7 +3473,7 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
-            b2::jam::list value;
+            b2::list_ref value;
 
             switch ( formal_arg->flags )
             {
@@ -5223,7 +5223,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_INCLUDE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_INCLUDE);
-            b2::jam::list nt( s->pop<LIST *>(), true );
+            b2::list_ref nt( s->pop<LIST *>(), true );
             if ( !nt.empty() )
             {
                 TARGET * const t = bindtarget( *nt.begin() );

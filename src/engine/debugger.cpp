@@ -71,7 +71,7 @@ static int debug_depth;
 static OBJECT * debug_file;
 static int debug_line;
 static FRAME * debug_frame;
-b2::jam::list debug_print_result;
+b2::list_ref debug_print_result;
 static int current_token;
 static int debug_selected_frame_number;
 

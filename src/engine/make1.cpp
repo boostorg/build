@@ -833,7 +833,7 @@ static void call_action_rule
         if ( command_output )
         {
             OBJECT * command_output_obj = object_new( command_output );
-            char * output_i = (char*)object_str(command_output_obj);
+            char * output_i = (char*)object_str(command_output_obj); // TODO: Fix this.
             /* Clean the output of control characters. */
             for (; *output_i; ++output_i)
             {
