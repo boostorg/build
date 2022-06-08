@@ -5,6 +5,17 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(Windows) Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\.build\\msvc-14.3\\debug\\cxxstd-11-iso\\threading-multi\\b2.exe",
+            "args": ["-v"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}\\src\\engine",
+            "environment": [],
+            "console": "externalTerminal"
+        },
+        {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",

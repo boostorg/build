@@ -89,7 +89,7 @@ struct value_ref
 	inline operator value_ptr() const { return val; }
 	inline operator std::string() const { return val->str(); }
 	inline bool operator==(value_ptr b) const { return val->equal_to(*b); }
-	inline value_ptr operator->() const noexcept { return val; };
+	inline value_ptr operator->() const { return val; };
 
 	private:
 	value_ptr val = nullptr;

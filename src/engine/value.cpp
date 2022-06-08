@@ -96,8 +96,8 @@ struct value_str : value_base
 	virtual type get_type() const override { return type::string; }
 	virtual bool equal_to(const value & o) const override
 	{
-		return str_view_equal(
-			value, size, o.as_string().str, o.as_string().size);
+		return (hash64 == o.hash64) &&
+			str_view_equal(value, size, o.as_string().str, o.as_string().size);
 	}
 	virtual str_view as_string() const override { return { value, size }; }
 
@@ -119,7 +119,7 @@ struct value_number : value_base
 	virtual type get_type() const override { return type::number; }
 	virtual bool equal_to(const value & o) const override
 	{
-		return as_number() == o.as_number();
+		return (hash64 == o.hash64) && as_number() == o.as_number();
 	}
 	virtual double as_number() const override { return value; }
 	double value;
@@ -139,7 +139,7 @@ struct value_object : value_base
 	virtual type get_type() const override { return type::object; }
 	virtual bool equal_to(const value & o) const override
 	{
-		return as_object() == o.as_object();
+		return (hash64 == o.hash64) && as_object() == o.as_object();
 	}
 	virtual object * as_object() const override { return value.get(); }
 	std::unique_ptr<object> value;
@@ -156,8 +156,8 @@ struct value_str_view : value_base
 	virtual ~value_str_view() {}
 	virtual bool equal_to(const value & o) const override
 	{
-		return str_view_equal(
-			value, size, o.as_string().str, o.as_string().size);
+		return (hash64 == o.hash64) &&
+			str_view_equal(value, size, o.as_string().str, o.as_string().size);
 	}
 	virtual str_view as_string() const override { return { value, size }; }
 
@@ -167,7 +167,7 @@ struct value_str_view : value_base
 
 struct value_hash_f
 {
-	inline std::size_t operator()(const value * o) const noexcept
+	inline std::size_t operator()(const value * o) const
 	{
 		return o->hash64;
 	}
@@ -175,7 +175,7 @@ struct value_hash_f
 
 struct value_eq_f
 {
-	inline bool operator()(const value * a, const value * b) const noexcept
+	inline bool operator()(const value * a, const value * b) const
 	{
 		return a->equal_to(*b);
 	}
