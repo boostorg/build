@@ -1,79 +1,64 @@
-/*  Copyright 2019 Rene Rivera
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
- */
+/*
+Copyright 2019-2022 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
 
 #include "mod_set.h"
+
 #include <algorithm>
 #include <unordered_map>
 
-void b2::set::add(const std::vector<std::string> &values)
+void b2::set::add(list_cref values)
 {
-    elements.insert(values.cbegin(), values.cend());
+	for (auto v : values) elements.insert(value_ref(v));
 }
 
-void b2::set::add(const set &value)
+void b2::set::add(const set & value)
 {
-    elements.insert(value.elements.cbegin(), value.elements.cend());
+	elements.insert(value.elements.cbegin(), value.elements.cend());
 }
 
-bool b2::set::contains(const std::string &value) const
+bool b2::set::contains(value_ref value) const
 {
-    return elements.find(value) != elements.end();
+	return elements.find(value) != elements.end();
 }
 
-std::vector<std::string> b2::set::to_vector() const
+b2::list_ref b2::set::to_list() const
 {
-    return {elements.cbegin(), elements.cend()};
+	list_ref result;
+	for (auto v : elements) result.push_back(v);
+	return result;
 }
 
-std::vector<std::string> b2::set::difference(
-    const std::vector<std::string> &a,
-    const std::vector<std::string> &b)
+b2::list_ref b2::set::difference(b2::list_cref a, b2::list_cref b)
 {
-    // Somewhat less efficient variation on difference to maintain the order
-    // of sequence "a".
-    std::unordered_set<std::string> rhs{b.cbegin(), b.cend()};
-    std::vector<std::string> result;
-    for (const std::string & val: a)
-    {
-        if (rhs.count(val) == 0)
-            result.push_back(val);
-    }
-    return result;
+	// Somewhat less efficient variation on difference to maintain the order
+	// of sequence "a".
+	value_set rhs { b.begin(), b.end() };
+	list_ref result;
+	for (auto val : a)
+		if (rhs.count(val) == 0) result.push_back(val);
+	return result;
 }
 
-std::vector<std::string> b2::set::intersection(
-    const std::vector<std::string> &a,
-    const std::vector<std::string> &b)
+b2::list_ref b2::set::intersection(b2::list_cref a, b2::list_cref b)
 {
-    std::unordered_set<std::string> lhs{a.cbegin(), a.cend()};
-    std::vector<std::string> result;
-    for (const std::string & val: b)
-    {
-        if (lhs.count(val) > 0)
-            result.push_back(val);
-    }
-    return result;
+	value_set lhs { a.begin(), a.end() };
+	list_ref result;
+	for (auto val : b)
+		if (lhs.count(val) > 0) result.push_back(val);
+	return result;
 }
 
-bool b2::set::equal(
-    const std::vector<std::string> &a,
-    const std::vector<std::string> &b)
+bool b2::set::equal(b2::list_cref a, b2::list_cref b)
 {
-    std::unordered_map<std::string, unsigned> val_count;
-    for (const std::string & val: a)
-    {
-        val_count[val] += 1;
-    }
-    for (const std::string & val: b)
-    {
-        val_count[val] += 1;
-    }
-    for (auto &vc: val_count)
-    {
-        if (vc.second == 1)
-            return false;
-    }
-    return true;
+	std::unordered_map<value_ref, unsigned, value_ref::hash_function,
+		value_ref::equal_function>
+		val_count;
+	for (auto val : a) val_count[val] += 1;
+	for (auto val : b) val_count[val] += 1;
+	for (auto & vc : val_count)
+		if (vc.second == 1) return false;
+	return true;
 }

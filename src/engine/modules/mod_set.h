@@ -1,8 +1,8 @@
-/*  Copyright 2019 Rene Rivera
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE.txt or
- * https://www.bfgroup.xyz/b2/LICENSE.txt)
- */
+/*
+Copyright 2019-2022 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
 
 #ifndef B2_MOD_SET_H
 #define B2_MOD_SET_H
@@ -10,8 +10,10 @@
 #include "../config.h"
 
 #include "../bind.h"
+#include "../lists.h"
 #include "../optval.h"
 #include "../value.h"
+
 #include <string>
 #include <unordered_set>
 #include <vector>
@@ -40,7 +42,7 @@ class set : public object
 	Jam::
 	`rule add ( elements * )`
 	end::set[] */
-	void add(const std::vector<std::string> & values);
+	void add(list_cref values);
 
 	void add(const set & value);
 
@@ -52,17 +54,17 @@ class set : public object
 	Jam::
 	`rule contains ( element )`
 	end::set[] */
-	bool contains(const std::string & value) const;
+	bool contains(value_ref value) const;
 
 	/* tag::set[]
-	== `b2::set::to_vector`
+	== `b2::set::to_list`
 
-	Return a vector with all the elements of the set.
+	Return a list with all the elements of the set.
 
 	Jam::
 	`rule list ( )`
 	end::set[] */
-	std::vector<std::string> to_vector() const;
+	list_ref to_list() const;
 
 	/* tag::set[]
 	== `b2::set::difference`
@@ -72,8 +74,7 @@ class set : public object
 	Jam::
 	`rule difference ( set1 * : set2 * )`
 	end::set[] */
-	static std::vector<std::string> difference(
-		const std::vector<std::string> & a, const std::vector<std::string> & b);
+	static list_ref difference(list_cref a, list_cref b);
 
 	/* tag::set[]
 	== `b2::set::intersection`
@@ -83,8 +84,7 @@ class set : public object
 	Jam::
 	`rule intersection ( set1 * : set2 * )`
 	end::set[] */
-	static std::vector<std::string> intersection(
-		const std::vector<std::string> & a, const std::vector<std::string> & b);
+	static list_ref intersection(list_cref a, list_cref b);
 
 	/* tag::set[]
 	== `b2::set::equal`
@@ -96,11 +96,14 @@ class set : public object
 	Jam::
 	`rule equal ( set1 * : set2 * )`
 	end::set[] */
-	static bool equal(
-		const std::vector<std::string> & a, const std::vector<std::string> & b);
+	static bool equal(list_cref a, list_cref b);
 
 	private:
-	std::unordered_set<std::string> elements;
+	using value_set = std::unordered_set<value_ref,
+		value_ref::hash_function,
+		value_ref::equal_function>;
+
+	value_set elements;
 };
 
 struct set_module : b2::bind::module_<set_module>
@@ -115,11 +118,10 @@ struct set_module : b2::bind::module_<set_module>
 			.def(&set::equal, "equal", "set1" * _n | "set2" * _n);
 		binder.def_class("set", type_<set>())
 			.def(init_<>())
-			.def(static_cast<void (set::*)(const std::vector<std::string> &)>(
-					 &set::add),
-				"add", "elemets" * _n)
+			.def(static_cast<void (set::*)(b2::list_cref)>(&set::add), "add",
+				"elemets" * _n)
 			.def(&set::contains, "contains", "element" * _1)
-			.def(&set::to_vector, "list");
+			.def(&set::to_list, "list");
 	}
 };
 

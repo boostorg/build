@@ -1,8 +1,10 @@
 /*
- * Copyright 2022 René Ferdinand Rivera Morell
- * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
- */
+Copyright 2022 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
+
+#include "value.h"
 
 #include "jam.h"
 #include "mem.h"
@@ -101,6 +103,7 @@ struct value_str : value_base
 			value, size, o.as_string().str, o.as_string().size);
 	}
 	virtual str_view as_string() const override { return { value, size }; }
+	virtual value * to_string() override { return this; }
 
 	std::size_t size;
 	char value[8];
@@ -123,6 +126,10 @@ struct value_number : value_base
 		return as_number() == o.as_number();
 	}
 	virtual double as_number() const override { return value; }
+	virtual value * to_string() override
+	{
+		return value::make(std::to_string(value));
+	}
 	double value;
 };
 
@@ -143,6 +150,10 @@ struct value_object : value_base
 		return as_object() == o.as_object();
 	}
 	virtual object * as_object() const override { return value.get(); }
+	virtual value * to_string() override
+	{
+		return value::make("@" + std::to_string(std::uintptr_t(value.get())));
+	}
 	std::unique_ptr<object> value;
 };
 
@@ -161,6 +172,7 @@ struct value_str_view : value_base
 			value, size, o.as_string().str, o.as_string().size);
 	}
 	virtual str_view as_string() const override { return { value, size }; }
+	virtual value * to_string() override { return nullptr; }
 
 	const char * value = nullptr;
 	std::size_t size = 0;
@@ -185,6 +197,11 @@ static value_cache_t value_cache;
 
 value_ptr value::make(const char * string, std::size_t size)
 {
+	if (!string || size == 0)
+	{
+		string = "";
+		size = 0;
+	}
 	value_str_view test_val(string, size);
 	auto existing = value_cache.find(&test_val);
 	if (existing != value_cache.end()) return *existing;

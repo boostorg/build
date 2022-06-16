@@ -1,14 +1,19 @@
-/*  Copyright 2019 Rene Rivera
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
- */
+/*
+Copyright 2019-2022 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
 
 #ifndef B2_MOD_STRING_H
 #define B2_MOD_STRING_H
 
 #include "../config.h"
+
 #include "../bind.h"
+#include "../lists.h"
 #include "../optval.h"
+#include "../value.h"
+
 #include <string>
 #include <vector>
 
@@ -18,8 +23,7 @@
 
 end::string[] */
 
-namespace b2
-{
+namespace b2 {
 /* tag::string[]
 
 == `string_whitespace`
@@ -30,7 +34,7 @@ Jam::
 `rule whitespace ( )`
 
 end::string[] */
-std::string string_whitespace();
+value_ref string_whitespace();
 
 /* tag::string[]
 
@@ -43,7 +47,7 @@ Jam::
 `rule chars ( string )`
 
 end::string[] */
-std::vector<std::string> string_chars(std::string s);
+list_ref string_chars(value_ref s);
 
 /* tag::string[]
 
@@ -56,7 +60,7 @@ Jam::
 `rule abbreviate ( string )`
 
 end::string[] */
-std::string string_abbreviate(std::string s);
+value_ref string_abbreviate(value_ref s);
 
 /* tag::string[]
 
@@ -69,7 +73,7 @@ Jam::
 `rule join ( strings * : separator ? )`
 
 end::string[] */
-std::string string_join(const std::vector<std::string> &strings, optval<std::string> separator);
+value_ref string_join(list_cref strings, value_ref separator);
 
 /* tag::string[]
 
@@ -81,7 +85,7 @@ Jam::
 `rule words ( string : whitespace * )`
 
 end::string[] */
-std::vector<std::string> string_words(std::string s, const std::vector<std::string> &whitespace);
+list_ref string_words(std::string s, list_cref whitespace);
 
 /* tag::string[]
 
@@ -93,24 +97,22 @@ Jam::
 `rule is-whitespace ( string ? )`
 
 end::string[] */
-bool string_is_whitespace(optval<std::string> s);
+bool string_is_whitespace(value_ref s);
 
-struct string_module
-    : b2::bind::module_<string_module>
+struct string_module : b2::bind::module_<string_module>
 {
-    const char *module_name = "string";
+	const char * module_name = "string";
 
-    template <class Binder>
-    void def(Binder &binder)
-    {
-        binder
-            .def(&b2::string_whitespace, "whitespace")
-            .def(&b2::string_chars, "chars", "string"*_1)
-            .def(&b2::string_abbreviate, "abbreviate", "string"*_1)
-            .def(&b2::string_join, "join", "strings"*_n | "separator"*_01)
-            .def(&b2::string_words, "words", "string"*_1 | "whitespace"*_n)
-            .def(&b2::string_is_whitespace, "is-whitespace", "string"*_01);
-    }
+	template <class Binder>
+	void def(Binder & binder)
+	{
+		binder.def(&b2::string_whitespace, "whitespace")
+			.def(&b2::string_chars, "chars", "string" * _1)
+			.def(&b2::string_abbreviate, "abbreviate", "string" * _1)
+			.def(&b2::string_join, "join", "strings" * _n | "separator" * _01)
+			.def(&b2::string_words, "words", "string" * _1 | "whitespace" * _n)
+			.def(&b2::string_is_whitespace, "is-whitespace", "string" * _01);
+	}
 };
 } // namespace b2
 

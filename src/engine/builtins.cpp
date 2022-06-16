@@ -1936,30 +1936,6 @@ LIST *builtin_debug_print_helper( FRAME * frame, int flags )
 #endif
 
 
-void lol_build( LOL * lol, char const * * elements )
-{
-    LIST * l = L0;
-    lol_init( lol );
-
-    while ( elements && *elements )
-    {
-        if ( !strcmp( *elements, ":" ) )
-        {
-            lol_add( lol, l );
-            l = L0;
-        }
-        else
-        {
-            l = list_push_back( l, object_new( *elements ) );
-        }
-        ++elements;
-    }
-
-    if ( l != L0 )
-        lol_add( lol, l );
-}
-
-
 #ifdef HAVE_POPEN
 
 #if defined(_MSC_VER) || defined(__BORLANDC__) || defined(__MINGW64__) || defined(__MINGW32__)

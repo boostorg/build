@@ -1,8 +1,8 @@
 /*
- * Copyright 2022 René Ferdinand Rivera Morell
- * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
- */
+Copyright 2022 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
 
 #ifndef BOOST_JAM_VALUE_H
 #define BOOST_JAM_VALUE_H
@@ -26,6 +26,8 @@ struct value
 	{
 		const char * str;
 		std::size_t size;
+		inline const char * begin() const { return str; }
+		inline const char * end() const { return str + size; }
 	};
 
 	enum class type : char
@@ -44,28 +46,41 @@ struct value
 	virtual str_view as_string() const = 0;
 	virtual double as_number() const = 0;
 	virtual object * as_object() const = 0;
+	virtual value * to_string() = 0;
 	inline const char * str() { return as_string().str; }
 	static value * make(const char * str, std::size_t size);
 	static inline value * make(const char * str)
 	{
 		return make(str, strlen(str));
 	}
+	static inline value * make(const char * begin, const char * end)
+	{
+		return make(begin, end - begin);
+	}
+	static inline value * make(const std::string & str)
+	{
+		return make(str.c_str(), str.size());
+	}
 	static value * make(object * obj);
 	static value * make(double v);
 	static inline value * copy(value * v) { return v; }
 	static inline void free(value *& v) { v = nullptr; }
 	static void done();
+
+	inline bool has_value() const { return get_type() == type::null; }
 };
 
 typedef value * value_ptr;
 
 struct value_ref
 {
+	inline value_ref()
+		: val(nullptr)
+	{}
 	inline value_ref(const value_ref & a)
 		: val(value::copy(a.val))
 	{}
-
-	inline explicit value_ref(value_ptr a)
+	inline value_ref(value_ptr a)
 		: val(value::copy(a))
 	{}
 	inline explicit value_ref(const char * s)
@@ -89,7 +104,25 @@ struct value_ref
 	inline operator value_ptr() const { return val; }
 	inline operator std::string() const { return val->str(); }
 	inline bool operator==(value_ptr b) const { return val->equal_to(*b); }
-	inline value_ptr operator->() const { return val; };
+	inline value_ptr operator->() const { return val; }
+	inline value & operator*() const { return *val; }
+	inline bool has_value() const { return val != nullptr; }
+
+	struct hash_function
+	{
+		inline std::size_t operator()(const value_ref & a) const
+		{
+			return a->hash64;
+		}
+	};
+
+	struct equal_function
+	{
+		inline bool operator()(const value_ref & a, const value_ref & b) const
+		{
+			return (a->hash64 == b->hash64) && a->equal_to(*b);
+		}
+	};
 
 	private:
 	value_ptr val = nullptr;
