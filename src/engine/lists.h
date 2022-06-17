@@ -108,6 +108,7 @@ inline LISTITER list_end(LIST * l)
 	return l ? list_begin(l) + l->impl.size : 0;
 }
 inline LISTITER list_next(LISTITER it) { return ((it) + 1); }
+inline LISTITER list_prev(LISTITER it) { return ((it)-1); }
 inline OBJECT *& list_item(LISTITER it) { return (*(it)); }
 inline bool list_empty(LIST * l) { return ((l) == L0); }
 inline OBJECT *& list_front(LIST * l) { return list_item(list_begin(l)); }
@@ -149,6 +150,12 @@ struct list_cref
 {
 	struct iterator
 	{
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type = OBJECT *;
+		using difference_type = std::ptrdiff_t;
+		using pointer = value_type *;
+		using reference = value_type &;
+
 		inline explicit iterator(LISTITER i)
 			: list_i(i)
 		{}
@@ -164,6 +171,17 @@ struct list_cref
 			list_i = list_next(list_i);
 			return result;
 		}
+		inline iterator operator--()
+		{
+			list_i = list_prev(list_i);
+			return *this;
+		}
+		inline iterator operator--(int)
+		{
+			iterator result { *this };
+			list_i = list_prev(list_i);
+			return result;
+		}
 		inline bool operator==(iterator other) const
 		{
 			return list_i == other.list_i;
@@ -172,11 +190,17 @@ struct list_cref
 		{
 			return list_i != other.list_i;
 		}
-		inline OBJECT *& operator*() const { return list_item(list_i); }
-		inline OBJECT ** operator->() const { return &list_item(list_i); }
+		inline reference operator*() const { return list_item(list_i); }
+		inline pointer operator->() const { return &list_item(list_i); }
 
 		private:
 		LISTITER list_i;
+
+		friend inline difference_type distance(
+			const iterator & a, const iterator & b)
+		{
+			return b.list_i - a.list_i;
+		}
 	};
 
 	friend struct iterator;
