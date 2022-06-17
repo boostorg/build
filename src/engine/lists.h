@@ -192,15 +192,13 @@ struct list_cref
 		}
 		inline reference operator*() const { return list_item(list_i); }
 		inline pointer operator->() const { return &list_item(list_i); }
+		inline difference_type operator-(const iterator & b)
+		{
+			return b.list_i - list_i;
+		}
 
 		private:
 		LISTITER list_i;
-
-		friend inline difference_type distance(
-			const iterator & a, const iterator & b)
-		{
-			return b.list_i - a.list_i;
-		}
 	};
 
 	friend struct iterator;
