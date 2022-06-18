@@ -234,7 +234,7 @@ struct list_ref : private list_cref
 
 	inline list_ref() = default;
 	inline list_ref(list_ref && other)
-		: list_cref(std::move(other.list_obj))
+		: list_cref(other.release())
 	{}
 	inline list_ref(const list_cref & other)
 		: list_cref(list_copy(*other))
