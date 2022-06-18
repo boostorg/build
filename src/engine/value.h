@@ -11,6 +11,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include <cstdint>
 #include <cstring>
+#include <limits>
 #include <string>
 
 namespace b2 {
@@ -112,7 +113,7 @@ struct value_ref
 	{
 		inline std::size_t operator()(const value_ref & a) const
 		{
-			return a->hash64;
+			return (std::size_t)(std::numeric_limits<std::size_t>::max() & a->hash64);
 		}
 	};
 
