@@ -182,7 +182,8 @@ struct value_hash_f
 {
 	inline std::size_t operator()(const value * o) const
 	{
-		(std::size_t)((std::numeric_limits<std::size_t>::max)() & o->hash64);
+		return (std::size_t)(
+			(std::numeric_limits<std::size_t>::max)() & o->hash64);
 	}
 };
 
