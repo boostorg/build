@@ -58,9 +58,13 @@ static inline bool str_view_equal(const char * str_a,
 	const char * str_b,
 	std::size_t size_b)
 {
+	// Some MSVC versions with the debug iterators will complain about using
+	// std::equal with raw pointers. So we fall back to what std::equal
+	// itself calls, i.e. we call memcmp instead of std::equal. And this is
+	// how good C++ dies.
 	return (str_a == str_b)
 		|| ((str_a != nullptr) && (str_b != nullptr) && (size_a == size_b)
-			&& std::equal(str_a, str_a + size_a, str_b));
+			&& (std::memcmp(str_a, str_b, size_a) == 0));
 }
 
 namespace b2 {
