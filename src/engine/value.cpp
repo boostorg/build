@@ -83,13 +83,13 @@ struct value_base : value
 
 struct value_str : value_base
 {
+	using value_type = char[8];
+
 	static value_str * make(const char * v, std::size_t n)
 	{
-		std::size_t m = n + 1 < sizeof(value_str::value)
-			? sizeof(value_str::value)
-			: n + 1;
-		void * o
-			= BJAM_MALLOC(sizeof(value_str) - sizeof(value_str::value) + m);
+		const auto value_size = sizeof(value_str::value_type);
+		std::size_t m = n + 1 < value_size ? value_size : n + 1;
+		void * o = BJAM_MALLOC(sizeof(value_str) - value_size + m);
 		return b2::jam::ctor_ptr<value_str>(o, v, n);
 	}
 	value_str(const char * v, std::size_t n)
@@ -110,7 +110,7 @@ struct value_str : value_base
 	virtual value * to_string() override { return this; }
 
 	std::size_t size;
-	char value[8];
+	value_type value;
 };
 
 struct value_number : value_base
