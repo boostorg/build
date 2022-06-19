@@ -113,7 +113,7 @@ struct value_ref
 	{
 		inline std::size_t operator()(const value_ref & a) const
 		{
-			return (std::size_t)(std::numeric_limits<std::size_t>::max() & a->hash64);
+			return (std::size_t)((std::numeric_limits<std::size_t>::max)() & a->hash64);
 		}
 	};
 
