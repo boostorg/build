@@ -199,6 +199,12 @@ struct list_cref
 
 		private:
 		LISTITER list_i;
+
+		// MSVC secure/debug std asks for comparisons of iterators.
+		friend inline bool operator<(const iterator & a, const iterator & b)
+		{
+			return a.list_i < b.list_i;
+		}
 	};
 
 	friend struct iterator;
