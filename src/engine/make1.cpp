@@ -1276,7 +1276,7 @@ static CMD * make1cmds( TARGET * t )
              */
             ( ( CMD * )a0->action->first_cmd )->asynccnt = unique_targets;
 
-#if OPT_SEMAPHORE
+#ifdef OPT_SEMAPHORE
             /* Collect semaphores */
             for ( targets_iter = a0->action->targets.get(); targets_iter; targets_iter = targets_iter->next.get() )
             {
