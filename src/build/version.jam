@@ -8,8 +8,8 @@ import numbers ;
 
 
 # Mirror engine JAM_VERSION
-.major = "4" ;
-.minor = "9" ;
+.major = "5" ;
+.minor = "0" ;
 
 
 rule build ( )
