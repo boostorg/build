@@ -194,7 +194,7 @@ struct list_cref
 		inline pointer operator->() const { return &list_item(list_i); }
 		inline difference_type operator-(const iterator & b) const
 		{
-			return b.list_i - list_i;
+			return list_i - b.list_i;
 		}
 
 		private:
