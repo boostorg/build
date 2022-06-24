@@ -1,5 +1,6 @@
 steps:
 - powershell: |
+    Set-PSDebug -Trace 1
     cd src/engine
     $env:path += ';' + $env:CXX_PATH
     cmd /c build.bat $env:TOOLSET
@@ -7,6 +8,7 @@ steps:
     cd ../..
   displayName: Build
 - powershell: |
+    Set-PSDebug -Trace 1
     $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
     cd test
     echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > ${env:HOME}/user-config.jam
@@ -14,12 +16,14 @@ steps:
     cd ..
   displayName: Test
 - powershell: |
+    Set-PSDebug -Trace 1
     $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
     $env:path += ';' + $env:CXX_PATH
     echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > ${env:HOME}/user-config.jam
     ./src/engine/b2.exe --debug-configuration b2 warnings-as-errors=on variant=debug,release toolset=$env:TEST_TOOLSET
   displayName: "No Warnings"
 - powershell: |
+    Set-PSDebug -Trace 1
     $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
     $env:path += ';' + $env:CXX_PATH
     echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > ${env:HOME}/user-config.jam
