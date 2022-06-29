@@ -685,7 +685,76 @@ int yylex()
                 }
 
         if ( yylval.type == ARG )
+        {
+            #if 0
+            auto arg_len = std::strlen( buf );
+            if ( arg_len > 2 && buf[arg_len - 2] == ':' )
+            {
+                auto k = buf[arg_len - 1];
+                if ( k == 'n' )
+                {
+                    // Check that it's in number format "[+-][0-9]+ ([.][0-9]+)?"
+                    bool not_a_number = false;
+                    char * buf_i = buf;
+                    char * buf_e = buf + arg_len - 2;
+                    if ( !not_a_number && buf_i != buf_e )
+                    {
+                        // [+-]
+                        if ( *buf_i == '+' || *buf_i == '-' )
+                            ++buf_i;
+                    }
+                    if ( !not_a_number && buf_i != buf_e )
+                    {
+                        // [0-9]+
+                        if ( buf_i == buf_e || *buf < '0' || '9' < *buf_i )
+                            not_a_number = true;
+                        else
+                        {
+                            ++buf_i;
+                            while (buf_i != buf_e && '0' <= *buf_i && *buf_i <= '9')
+                                buf_i += 1;
+                        }
+                    }
+                    // ([.][0-9]+)?
+                    if ( !not_a_number && buf_i != buf_e && '.' == *buf_i )
+                    {
+                        // [.]
+                        buf_i += 1;
+                        // [0-9]+
+                        if ( buf_i == buf_e || *buf < '0' || '9' < *buf_i )
+                            not_a_number = true;
+                        else
+                        {
+                            ++buf_i;
+                            while (buf_i != buf_e && '0' <= *buf_i && *buf_i <= '9')
+                                buf_i += 1;
+                        }
+                    }
+                    if ( not_a_number || buf_i != buf_e )
+                    {
+                        // Invalid number, we parse as a string instead.
+                        yylval.string = b2::value::make( buf );
+                    }
+                    else
+                    {
+                        // Valid number, convert.
+                        yylval.string = b2::value::make( std::strtod( buf, nullptr ) );
+                    }
+                }
+                else
+                {
+                    yylval.string = b2::value::make( buf );
+                }
+
+            }
+            else
+            {
+                yylval.string = b2::value::make( buf );
+            }
+            #else
             yylval.string = object_new( buf );
+            #endif
+        }
 
         if ( scanmode == SCAN_NORMAL && yylval.type == ARG )
             scanmode = SCAN_XASSIGN;
