@@ -12,8 +12,7 @@
             "args": ["-v"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}\\src\\engine",
-            "environment": [],
-            "console": "externalTerminal"
+            "environment": []
         },
         {
             "name": "(gdb) Launch",
