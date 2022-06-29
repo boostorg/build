@@ -284,7 +284,7 @@ stages:
         git checkout ${BOOST_BRANCH}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
@@ -317,7 +317,7 @@ stages:
         git checkout ${BOOST_BRANCH}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
@@ -347,7 +347,7 @@ stages:
         git checkout "${env:BOOST_BRANCH}"
         $ErrorActionPreference = $OriginalErrorActionPreference
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
-        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
+        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" --debug-configuration --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
 
 - stage: Boost_Release
@@ -393,7 +393,7 @@ stages:
         cd boost_${BOOST_VERSION_U}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
@@ -437,7 +437,7 @@ stages:
         cd boost_${BOOST_VERSION_U}
         CXX_PATH=`which ${CXX}`
         echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=${TOOLSET} install
+        "${BUILD_SOURCESDIRECTORY}/src/engine/b2" --debug-configuration --layout=versioned -n -d1 toolset=${TOOLSET} install
         popd
       displayName: Test
 
@@ -475,5 +475,5 @@ stages:
         git clone -b boost-${env:BOOST_VERSION} --single-branch --recurse-submodules https://github.com/boostorg/boost.git boost_${env:BOOST_VERSION_U}
         cd "boost_${env:BOOST_VERSION_U}"
         echo "using" "msvc" ";" > "${env:HOME}/user-config.jam"
-        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" --debug-configuration --build-type=complete --layout=versioned -n -d1 toolset=msvc install
+        & "${env:BUILD_SOURCESDIRECTORY}\src\engine\b2.exe" --debug-configuration --layout=versioned -n -d1 toolset=msvc install
       displayName: Test
