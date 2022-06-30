@@ -492,8 +492,8 @@ modules/order.cpp \
 modules/path.cpp \
 modules/property-set.cpp \
 modules/sequence.cpp \
-modules/sysinfo.cpp \
-modules/version.cpp \
+modules/mod_sysinfo.cpp \
+modules/mod_version.cpp \
  "
 
     if test_true ${B2_DEBUG_OPT} ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"

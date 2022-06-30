@@ -22,8 +22,8 @@ Distributed under the Boost Software License, Version 1.0.
 #include "modules/mod_regex.h"
 #include "modules/mod_set.h"
 #include "modules/mod_string.h"
-#include "modules/sysinfo.h"
-#include "modules/version.h"
+#include "modules/mod_sysinfo.h"
+#include "modules/mod_version.h"
 
 #include <cstddef>
 #include <cstdint>

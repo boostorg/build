@@ -1,11 +1,11 @@
-/*  Copyright 2019 Rene Rivera
- *  Distributed under the Boost Software License, Version 1.0.
- *  (See accompanying file LICENSE.txt or
- * https://www.bfgroup.xyz/b2/LICENSE.txt)
- */
+/*
+Copyright 2019-2022 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
 
-#ifndef B2_SYSINFO_H
-#define B2_SYSINFO_H
+#ifndef B2_MOD_SYSINFO_H
+#define B2_MOD_SYSINFO_H
 
 #include "../config.h"
 

@@ -135,7 +135,7 @@
 #include "timestamp.h"
 #include "variable.h"
 #include "execcmd.h"
-#include "modules/sysinfo.h"
+#include "modules/mod_sysinfo.h"
 
 #include <errno.h>
 #include <string.h>

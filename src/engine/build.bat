@@ -184,8 +184,8 @@ set B2_SOURCES=%B2_SOURCES% modules/order.cpp
 set B2_SOURCES=%B2_SOURCES% modules/path.cpp
 set B2_SOURCES=%B2_SOURCES% modules/property-set.cpp
 set B2_SOURCES=%B2_SOURCES% modules/sequence.cpp
-set B2_SOURCES=%B2_SOURCES% modules/sysinfo.cpp
-set B2_SOURCES=%B2_SOURCES% modules/version.cpp
+set B2_SOURCES=%B2_SOURCES% modules/mod_sysinfo.cpp
+set B2_SOURCES=%B2_SOURCES% modules/mod_version.cpp
 
 set B2_CXXFLAGS=%B2_CXXFLAGS% -DNDEBUG
 
