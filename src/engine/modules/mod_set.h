@@ -18,84 +18,71 @@ Distributed under the Boost Software License, Version 1.0.
 #include <unordered_set>
 #include <vector>
 
-/* tag::set[]
+/* tag::reference[]
 
 = `string` module.
 
-end::set[] */
-
-namespace b2 {
-
-/* tag::set[]
 == `b2::set`
 
 Set of strings.
-end::set[] */
+
+=== `b2::set::add`
+
+Set of strings.
+
+Jam::
+`rule add ( elements * )`
+
+=== `b2::set::contains`
+
+Does the set contain the given `value`.
+
+Jam::
+`rule contains ( element )`
+
+=== `b2::set::to_list`
+
+Return a list with all the elements of the set.
+
+Jam::
+`rule list ( )`
+
+=== `b2::set::difference`
+
+Returns the elements of `a` that are not in `b`.
+
+Jam::
+`rule difference ( set1 * : set2 * )`
+
+=== `b2::set::intersection`
+
+Removes all the items appearing in both `a` & `b`.
+
+Jam::
+`rule intersection ( set1 * : set2 * )`
+
+=== `b2::set::equal`
+
+Returns whether `a` & `b` contain the same elements. Note that this
+ignores any element ordering differences as well as any element
+duplication.
+
+Jam::
+`rule equal ( set1 * : set2 * )`
+
+end::reference[] */
+
+namespace b2 {
+
 class set : public object
 {
 	public:
-	/* tag::set[]
-	== `b2::set::add`
-
-	Set of strings.
-
-	Jam::
-	`rule add ( elements * )`
-	end::set[] */
 	void add(list_cref values);
-
 	void add(const set & value);
-
-	/* tag::set[]
-	== `b2::set::contains`
-
-	Does the set contain the given `value`.
-
-	Jam::
-	`rule contains ( element )`
-	end::set[] */
 	bool contains(value_ref value) const;
-
-	/* tag::set[]
-	== `b2::set::to_list`
-
-	Return a list with all the elements of the set.
-
-	Jam::
-	`rule list ( )`
-	end::set[] */
 	list_ref to_list() const;
-
-	/* tag::set[]
-	== `b2::set::difference`
-
-	Returns the elements of `a` that are not in `b`.
-
-	Jam::
-	`rule difference ( set1 * : set2 * )`
-	end::set[] */
 	static list_ref difference(list_cref a, list_cref b);
-
-	/* tag::set[]
-	== `b2::set::intersection`
-
-	Removes all the items appearing in both `a` & `b`.
-
-	Jam::
-	`rule intersection ( set1 * : set2 * )`
-	end::set[] */
 	static list_ref intersection(list_cref a, list_cref b);
-
-	/* tag::set[]
-	== `b2::set::equal`
-
-	Returns whether `a` & `b` contain the same elements. Note that this
-	ignores any element ordering differences as well as any element
-	duplication.
-
-	Jam::
-	`rule equal ( set1 * : set2 * )`
-	end::set[] */
 	static bool equal(list_cref a, list_cref b);
 
 	private:
