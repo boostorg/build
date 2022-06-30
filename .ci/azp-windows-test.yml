@@ -2,6 +2,7 @@ steps:
 - powershell: |
     Set-PSDebug -Trace 1
     cd src/engine
+    $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
     $env:path += ';' + $env:CXX_PATH
     cmd /c build.bat $env:TOOLSET
     ./b2.exe -v
@@ -10,6 +11,7 @@ steps:
 - powershell: |
     Set-PSDebug -Trace 1
     $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+    $env:path += ';' + $env:CXX_PATH
     cd test
     echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > ${env:HOME}/user-config.jam
     python test_all.py $env:TEST_TOOLSET
