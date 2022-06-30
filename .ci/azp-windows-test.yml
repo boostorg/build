@@ -4,7 +4,7 @@ steps:
     cd src/engine
     $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
     $env:path += ';' + $env:CXX_PATH
-    set
+    Get-ChildItem env:
     dir $env:CXX_PATH
     cmd /c build.bat $env:TOOLSET
     ./b2.exe -v
