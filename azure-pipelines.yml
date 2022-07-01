@@ -171,7 +171,7 @@ stages:
         $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
         $env:path += ';' + $env:CXX_PATH
         cmd /c build.bat $env:TOOLSET
-        gdb -ex run --args ./b2.exe -v
+        ./b2.exe -v
       displayName: Build
 
 - stage: Website_Update
