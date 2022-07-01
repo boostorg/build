@@ -234,6 +234,6 @@ if not "_%B2_TOOLSET_ROOT%_" == "__" (
     set "PATH=%B2_TOOLSET_ROOT%bin;%PATH%"
     )
 for /F "delims=" %%I in ("%CXX%") do set "PATH=%PATH%;%%~dpI"
-set "B2_CXX="%CXX%" -x c++ -std=c++11 -s -O3 -o b2.exe"
+set "B2_CXX="%CXX%" -x c++ -std=c++11 -s -O0 -g -o b2.exe"
 set "_known_=1"
 goto :eof
