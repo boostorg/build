@@ -237,7 +237,7 @@ stages:
       matrix:
         # VS 2022: {TOOLSET: vc143, TEST_TOOLSET: msvc, VM_IMAGE: 'windows-2022'}
         VS 2019: {TOOLSET: vc142, TEST_TOOLSET: msvc, VM_IMAGE: 'windows-2019'}
-        MinGW 8.1.0: {TOOLSET: mingw, TEST_TOOLSET: gcc, VM_IMAGE: 'windows-2022'}
+        # MinGW 8.1.0: {TOOLSET: mingw, TEST_TOOLSET: gcc, VM_IMAGE: 'windows-2022'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
