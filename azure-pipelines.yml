@@ -158,6 +158,22 @@ stages:
     steps:
     - template: .ci/azp-linux-extra.yml
 
+  - job: 'Windows'
+    strategy:
+      matrix:
+        MinGW 8.1.0: {TOOLSET: mingw, TEST_TOOLSET: gcc, VM_IMAGE: 'windows-2022'}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
+    - powershell: |
+        Set-PSDebug -Trace 1
+        cd src/engine
+        $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
+        $env:path += ';' + $env:CXX_PATH
+        cmd /c build.bat $env:TOOLSET
+        gdb -ex run --args ./b2.exe -v
+      displayName: Build
+
 - stage: Website_Update
   dependsOn: [Core, Extra]
   displayName: 'Website Update'
@@ -221,7 +237,7 @@ stages:
       matrix:
         # VS 2022: {TOOLSET: vc143, TEST_TOOLSET: msvc, VM_IMAGE: 'windows-2022'}
         VS 2019: {TOOLSET: vc142, TEST_TOOLSET: msvc, VM_IMAGE: 'windows-2019'}
-        MinGW 8.1.0: {TOOLSET: mingw, TEST_TOOLSET: gcc, VM_IMAGE: 'windows-2022', CXX_PATH: 'C:/mingw64/bin'}
+        # MinGW 8.1.0: {TOOLSET: mingw, TEST_TOOLSET: gcc, VM_IMAGE: 'windows-2022'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
