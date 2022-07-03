@@ -868,9 +868,10 @@ originally in `$(target-module)`.
 
 :leveloffset: +2
 
-include::path.adoc[]
-
 include::../../src/engine/mod_regex.h[tag=reference]
+include::../../src/engine/mod_string.h[tag=reference]
+
+include::path.adoc[]
 
 include::sequence.adoc[]
 

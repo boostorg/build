@@ -19,6 +19,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 /* tag::reference[]
 
+[[b2.reference.modules.string]]
 = `string` module.
 
 end::reference[] */
@@ -28,12 +29,13 @@ namespace b2 {
 
 == `b2::string_whitespace`
 
-Returns the canonical set of whitespace characters, as a single string.
+====
+[horizontal]
+Jam:: `rule whitespace ( )`
+{CPP}:: `b2::value_ref string_whitespace();`
+====
 
-Jam::
-`rule whitespace ( )`
-{CPP}::
-``
+Returns the canonical set of whitespace characters, as a single string.
 
 end::reference[] */
 value_ref string_whitespace();
@@ -42,13 +44,14 @@ value_ref string_whitespace();
 
 == `b2::string_chars`
 
+====
+[horizontal]
+Jam:: `rule chars ( string )`
+{CPP}:: `b2::list_ref string_chars(b2::value_ref s);`
+====
+
 Splits the given `string` into a list of strings composed of each character of
 the `string` in sequence.
-
-Jam::
-`rule chars ( string )`
-{CPP}::
-`b2::list_ref string_chars(b2::value_ref s);`
 
 end::reference[] */
 list_ref string_chars(value_ref s);
@@ -57,13 +60,14 @@ list_ref string_chars(value_ref s);
 
 == `b2::string_abbreviate`
 
+====
+[horizontal]
+Jam:: `rule abbreviate ( string )`
+{CPP}:: `b2::value_ref string_abbreviate(b2::value_ref s);`
+====
+
 Apply a set of standard transformations to string to produce an abbreviation
 no more than 5 characters long.
-
-Jam::
-`rule abbreviate ( string )`
-{CPP}::
-`b2::value_ref string_abbreviate(b2::value_ref s);`
 
 end::reference[] */
 value_ref string_abbreviate(value_ref s);
@@ -72,13 +76,15 @@ value_ref string_abbreviate(value_ref s);
 
 == `b2::string_join`
 
+====
+[horizontal]
+Jam:: `rule join ( strings * : separator ? )`
+{CPP}:: `b2::value_ref string_join(b2::list_cref strings, b2::value_ref
+separator);`
+====
+
 Concatenates the given `strings`, inserting the given `separator` between each
 string.
-
-Jam::
-`rule join ( strings * : separator ? )`
-{CPP}::
-`b2::value_ref string_join(b2::list_cref strings, b2::value_ref separator);`
 
 end::reference[] */
 value_ref string_join(list_cref strings, value_ref separator);
@@ -87,12 +93,13 @@ value_ref string_join(list_cref strings, value_ref separator);
 
 == `b2::string_words`
 
-Split a string into whitespace separated words.
+====
+[horizontal]
+Jam:: `rule words ( string : whitespace * )`
+{CPP}:: `b2::list_ref string_words(std::string s, b2::list_cref whitespace);`
+====
 
-Jam::
-`rule words ( string : whitespace * )`
-{CPP}::
-`b2::list_ref string_words(std::string s, b2::list_cref whitespace);`
+Split a string into whitespace separated words.
 
 end::reference[] */
 list_ref string_words(std::string s, list_cref whitespace);
@@ -101,12 +108,13 @@ list_ref string_words(std::string s, list_cref whitespace);
 
 == `b2::string_is_whitespace`
 
-Check that the given `string` is composed entirely of whitespace.
+====
+[horizontal]
+Jam:: `rule is-whitespace ( string ? )`
+{CPP}:: `bool string_is_whitespace(b2::value_ref s);`
+====
 
-Jam::
-`rule is-whitespace ( string ? )`
-{CPP}::
-`bool string_is_whitespace(b2::value_ref s);`
+Check that the given `string` is composed entirely of whitespace.
 
 end::reference[] */
 bool string_is_whitespace(value_ref s);
