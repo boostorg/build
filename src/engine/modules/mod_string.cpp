@@ -93,3 +93,38 @@ bool b2::string_is_whitespace(value_ref s)
 	}
 	return true;
 }
+
+const char * b2::string_module::init_code = R"jam(
+rule __test__ ( )
+{
+    import assert ;
+    assert.result a b c : chars abc ;
+
+    assert.result rntm : abbreviate runtime ;
+    assert.result ovrld : abbreviate overload ;
+    assert.result dbg : abbreviate debugging ;
+    assert.result async : abbreviate asynchronous ;
+    assert.result pop : abbreviate pop ;
+    assert.result aaa : abbreviate aaa ;
+    assert.result qck : abbreviate quack ;
+    assert.result sttc : abbreviate static ;
+
+    # Check boundary cases.
+    assert.result a : chars a ;
+    assert.result : chars "" ;
+    assert.result a b c d e f g h : chars abcdefgh ;
+    assert.result a b c d e f g h i : chars abcdefghi ;
+    assert.result a b c d e f g h i j : chars abcdefghij ;
+    assert.result a b c d e f g h i j k : chars abcdefghijk ;
+
+    assert.result a//b/c/d : join a "" b c d : / ;
+    assert.result abcd : join  a "" b c d ;
+
+    assert.result a b c : words "a b	c" ;
+
+    assert.true is-whitespace "     	" ;
+    assert.false is-whitespace "  a b c	" ;
+    assert.true is-whitespace "" ;
+    assert.true is-whitespace ;
+}
+)jam";
