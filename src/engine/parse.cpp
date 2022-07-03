@@ -123,6 +123,7 @@ void parse_buffer( OBJECT * name, const char * buffer, FRAME * frame )
         lines.push_back(strings_i);
         strings_i += std::strlen(strings_i)+1;
     }
+    lines.push_back(nullptr);
     parse_string( name, lines.data(), frame );
 }
 
