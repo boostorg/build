@@ -488,10 +488,10 @@ w32_getreg.cpp \
 modules/mod_regex.cpp \
 modules/mod_set.cpp \
 modules/mod_string.cpp \
-modules/order.cpp \
-modules/path.cpp \
-modules/property-set.cpp \
-modules/sequence.cpp \
+modules/mod_order.cpp \
+modules/mod_path.cpp \
+modules/mod_property_set.cpp \
+modules/mod_sequence.cpp \
 modules/mod_sysinfo.cpp \
 modules/mod_version.cpp \
  "

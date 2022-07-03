@@ -180,10 +180,10 @@ set B2_SOURCES=%B2_SOURCES% timestamp.cpp value.cpp variable.cpp w32_getreg.cpp
 set B2_SOURCES=%B2_SOURCES% modules/mod_regex.cpp
 set B2_SOURCES=%B2_SOURCES% modules/mod_set.cpp
 set B2_SOURCES=%B2_SOURCES% modules/mod_string.cpp
-set B2_SOURCES=%B2_SOURCES% modules/order.cpp
-set B2_SOURCES=%B2_SOURCES% modules/path.cpp
-set B2_SOURCES=%B2_SOURCES% modules/property-set.cpp
-set B2_SOURCES=%B2_SOURCES% modules/sequence.cpp
+set B2_SOURCES=%B2_SOURCES% modules/mod_order.cpp
+set B2_SOURCES=%B2_SOURCES% modules/mod_path.cpp
+set B2_SOURCES=%B2_SOURCES% modules/mod_property_set.cpp
+set B2_SOURCES=%B2_SOURCES% modules/mod_sequence.cpp
 set B2_SOURCES=%B2_SOURCES% modules/mod_sysinfo.cpp
 set B2_SOURCES=%B2_SOURCES% modules/mod_version.cpp
 
