@@ -870,7 +870,7 @@ originally in `$(target-module)`.
 
 include::path.adoc[]
 
-include::regex.adoc[]
+include::../../src/engine/mod_regex.h[tag=reference]
 
 include::sequence.adoc[]
 
