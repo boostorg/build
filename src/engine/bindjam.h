@@ -13,15 +13,13 @@ Distributed under the Boost Software License, Version 1.0.
 namespace b2 {
 
 /*
-Binds all the declared C++ interfaces to Jam equivalents.
-*/
-void bind_jam();
-
-/*
 Jam language C++ interface binder.
 */
 struct jam_binder : bind::binder_<jam_binder>
 {
+    template <typename F>
+	jam_binder(F * frame);
+
 	/*
 	Bind the named module to Jam. All this does for Jam is define the module
 	scope in Jam.
@@ -68,6 +66,21 @@ struct jam_binder : bind::binder_<jam_binder>
 		const char * function_name,
 		::b2::bind::args_<A...> args,
 		Function f);
+
+	/*
+	Evaluate the Jam program in `data` within the `modules_name` scope.
+	*/
+	void eval_data(const char * module_name, const char * data);
+
+    /*
+    Mark the module as loaded. Future attempts at loading, with `module.load`,
+    will fail (as noop).
+    */
+    void set_loaded(const char * module_name);
+
+    private:
+
+    void * frame = nullptr;
 };
 
 /*

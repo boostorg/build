@@ -96,6 +96,7 @@ class set : public object
 struct set_module : b2::bind::module_<set_module>
 {
 	const char * module_name = "set";
+    static const char * init_code;
 
 	template <class Binder>
 	void def(Binder & binder)
@@ -109,6 +110,8 @@ struct set_module : b2::bind::module_<set_module>
 				"elemets" * _n)
 			.def(&set::contains, "contains", "element" * _1)
 			.def(&set::to_list, "list");
+        binder.eval(init_code);
+        binder.loaded();
 	}
 };
 

@@ -519,9 +519,6 @@ int guarded_main( int argc, char * * argv )
         load_builtins();
         b2::startup::load_builtins();
 
-        /* Initialize the native API bindings. */
-        b2::bind_jam();
-
         /* Add the targets in the command line to the update list. */
         for ( n = 1; n < arg_c; ++n )
         {
@@ -578,7 +575,13 @@ int guarded_main( int argc, char * * argv )
             }
 
             if ( !n  )
+            {
+                /* Initialize the native API bindings. */
+                b2::bind_jam(frame);
+
+                /* LUnch the bootstrap to load up the build system. */
                 status = b2::startup::bootstrap(frame) ? 0 : 13;
+            }
         }
 
         /* FIXME: What shall we do if builtin_update_now,

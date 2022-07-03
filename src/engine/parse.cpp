@@ -22,7 +22,10 @@
 #include "mem.h"
 #include "startup.h"
 
+#include <cstring>
 #include <set>
+#include <string>
+#include <vector>
 
 /*
  * parse.c - make and destroy parse trees as driven by the parser
@@ -89,6 +92,38 @@ void parse_string( OBJECT * name, const char * * lines, FRAME * frame )
 {
     yysparse( name, lines );
     parse_impl( frame );
+}
+
+
+void parse_buffer( OBJECT * name, const char * buffer, FRAME * frame )
+{
+    std::size_t buffer_s = std::strlen(buffer);
+    std::string strings;
+    strings.reserve(buffer_s*2);
+    std::vector<const char *> lines;
+    const char * buffer_e = buffer+buffer_s;
+    for (const char * buffer_i = buffer; buffer_i && buffer_i != buffer_e; )
+    {
+        const char * eol = std::strchr(buffer_i, '\n');
+        if (eol)
+        {
+            strings.append(buffer_i, eol+1);
+            strings.append(1, '\0');
+            buffer_i = eol+1;
+        }
+        else
+        {
+            strings.append(buffer_i);
+            buffer_i = nullptr;
+        }
+    }
+    for (const char * strings_i = strings.c_str();
+        strings_i != strings.c_str()+strings.size(); )
+    {
+        lines.push_back(strings_i);
+        strings_i += std::strlen(strings_i)+1;
+    }
+    parse_string( name, lines.data(), frame );
 }
 
 

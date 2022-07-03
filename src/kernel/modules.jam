@@ -196,6 +196,21 @@ rule load (
             .untested = ;
         }
     }
+    else if ! ( $(module-name) in $(.tested) )
+    {
+        # Native modules are pre-loaded but can be untested. In that case we
+        # make sure we run tests for those.
+        .untested += $(module-name) ;
+        if ! $(.loading[1])
+        {
+            local argv = [ peek : ARGV ] ;
+            for local m in $(.untested)
+            {
+                run-module-test $(m) ;
+            }
+            .untested = ;
+        }
+    }
     else if $(module-name) in $(.loading)
     {
         import errors ;
@@ -291,6 +306,14 @@ rule import ( module-names + : rules-opt * : rename-opt * )
                 search = $(caller-location)/$(m:D) $(search)/$(m:D) $(search) ;
             }
 
+            load $(module-name) : : $(search) ;
+        }
+        else if ! ( $(module-name) in $(.tested) )
+        {
+            # Native modules are pre-loaded but can be untested. In that case we
+            # make sure we run tests for those. The load takes care of doing the
+            # testing.
+            .untested += $(module-name) ;
             load $(module-name) : : $(search) ;
         }
 

@@ -15,6 +15,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "native.h"
 #include "optval.h"
 #include "output.h"
+#include "parse.h"
 #include "rules.h"
 #include "types.h"
 #include "variable.h"
@@ -701,9 +702,27 @@ void jam_binder::bind_function(const char * module_name,
 	jam_bind(module_name, function_name, arg_spec, f);
 }
 
-void bind_jam()
+void jam_binder::eval_data(const char * module_name, const char * data)
 {
-	jam_binder()
+	b2::jam::module_scope scope(static_cast<FRAME *>(this->frame), module_name);
+	parse_buffer(scope.name(), data, scope.frame());
+}
+
+void jam_binder::set_loaded(const char * module_name)
+{
+	b2::jam::variable modules_loaded("modules", ".loaded");
+	modules_loaded += module_name;
+}
+
+template <>
+jam_binder::jam_binder(FRAME * frame)
+	: frame(frame)
+{}
+
+template <>
+void bind_jam(FRAME * frame)
+{
+	jam_binder(frame)
 		.bind(sysinfo_module())
 		.bind(version_module())
 		.bind(string_module())
