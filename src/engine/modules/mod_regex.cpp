@@ -193,3 +193,54 @@ list_ref b2::regex_replace_each(
 	}
 	return result;
 }
+
+const char * b2::regex_module::init_code = R"jam(
+rule __test__ ( )
+{
+    import assert ;
+
+    assert.result a b c : split "a/b/c" / ;
+    assert.result "" a b c : split "/a/b/c" / ;
+    assert.result "" "" a b c : split "//a/b/c" / ;
+    assert.result "" a "" b c : split "/a//b/c" / ;
+    assert.result "" a "" b c "" : split "/a//b/c/" / ;
+    assert.result "" a "" b c "" "" : split "/a//b/c//" / ;
+    # assert.result "" a b c "" : split "abc" "" ;
+    # assert.result "" "" : split "" "" ;
+    assert.result "<x>y" "z" "<a>b" "c" "<d>e" "f" : split "<x>y\\z\\<a>b\\c\\<d>e\\f" "[\\/]" ;
+
+    assert.result a b c "" a "" b c "" "" : split-list "a/b/c" "/a//b/c//" : / ;
+
+    assert.result a c b d
+        : match (.)(.)(.)(.) : abcd : 1 3 2 4 ;
+    assert.result a b c d
+        : match (.)(.)(.)(.) : abcd ;
+    assert.result ababab cddc
+        : match "((ab)*)([cd]+)" : abababcddc : 1 3 ;
+    assert.result "a:"
+        : match "(^.:)" : "a:/b" ;
+
+    assert.result a.h c.h
+        : transform <a.h> \"b.h\" <c.h> : <(.*)> ;
+
+    assert.result a.h b.h c.h
+        : transform <a.h> \"b.h\" <c.h> : "<([^>]*)>|\"([^\"]*)\"" : 1 2 ;
+
+    assert.result "^<?xml version=\"1.0\"^>"
+        : escape "<?xml version=\"1.0\">" : "&|()<>^" : "^" ;
+
+    assert.result "<?xml version=\\\"1.0\\\">"
+        : escape "<?xml version=\"1.0\">" : "\\\"" : "\\" ;
+
+    assert.result "string&nbsp;string&nbsp;" : replace "string string " " " "&nbsp;" ;
+    assert.result "&nbsp;string&nbsp;string" : replace " string string" " " "&nbsp;" ;
+    assert.result "string&nbsp;&nbsp;string" : replace "string  string" " " "&nbsp;" ;
+    assert.result "-" : replace "&" "&" "-" ;
+    # assert.result "x" : replace "" "" "x" ;
+    # assert.result "xax" : replace "a" "" "x" ;
+    # assert.result "xaxbx" : replace "ab" "" "x" ;
+    assert.result "a-b-c-d" : replace "a_b.c/d" "[_./]" "-" ;
+
+    assert.result "-" "a-b" : replace-list "&" "a&b" : "&" : "-" ;
+}
+)jam";
