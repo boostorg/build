@@ -6,8 +6,8 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "mod_regex.h"
 
-#include "../mem.h"
-#include "../regexp.h"
+#include "mem.h"
+#include "regexp.h"
 
 #include <memory>
 #include <numeric>

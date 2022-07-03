@@ -4,11 +4,11 @@
  * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
-#include "../constants.h"
-#include "../frames.h"
-#include "../lists.h"
-#include "../native.h"
-#include "../filesys.h"
+#include "constants.h"
+#include "frames.h"
+#include "lists.h"
+#include "native.h"
+#include "filesys.h"
 
 
 LIST * path_exists( FRAME * frame, int flags )

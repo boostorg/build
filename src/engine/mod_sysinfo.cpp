@@ -5,8 +5,8 @@ Distributed under the Boost Software License, Version 1.0.
 */
 
 #include "mod_sysinfo.h"
-#include "../jam.h"
-#include "../output.h"
+#include "jam.h"
+#include "output.h"
 
 #include <thread>
 

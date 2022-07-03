@@ -20,11 +20,11 @@ Distributed under the Boost Software License, Version 1.0.
 #include "types.h"
 #include "variable.h"
 
-#include "modules/mod_regex.h"
-#include "modules/mod_set.h"
-#include "modules/mod_string.h"
-#include "modules/mod_sysinfo.h"
-#include "modules/mod_version.h"
+#include "mod_regex.h"
+#include "mod_set.h"
+#include "mod_string.h"
+#include "mod_sysinfo.h"
+#include "mod_version.h"
 
 #include <cstddef>
 #include <cstdint>

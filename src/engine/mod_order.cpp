@@ -4,12 +4,12 @@
  * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
-#include "../lists.h"
-#include "../mem.h"
-#include "../native.h"
-#include "../object.h"
-#include "../jam_strings.h"
-#include "../variable.h"
+#include "lists.h"
+#include "mem.h"
+#include "native.h"
+#include "object.h"
+#include "jam_strings.h"
+#include "variable.h"
 
 
 /* Use quite klugy approach: when we add order dependency from 'a' to 'b', just

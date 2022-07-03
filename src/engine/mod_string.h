@@ -7,12 +7,12 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef B2_MOD_STRING_H
 #define B2_MOD_STRING_H
 
-#include "../config.h"
+#include "config.h"
 
-#include "../bind.h"
-#include "../lists.h"
-#include "../optval.h"
-#include "../value.h"
+#include "bind.h"
+#include "lists.h"
+#include "optval.h"
+#include "value.h"
 
 #include <string>
 #include <vector>

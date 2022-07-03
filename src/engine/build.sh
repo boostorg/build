@@ -485,15 +485,15 @@ timestamp.cpp \
 value.cpp \
 variable.cpp \
 w32_getreg.cpp \
-modules/mod_regex.cpp \
-modules/mod_set.cpp \
-modules/mod_string.cpp \
-modules/mod_order.cpp \
-modules/mod_path.cpp \
-modules/mod_property_set.cpp \
-modules/mod_sequence.cpp \
-modules/mod_sysinfo.cpp \
-modules/mod_version.cpp \
+mod_regex.cpp \
+mod_set.cpp \
+mod_string.cpp \
+mod_order.cpp \
+mod_path.cpp \
+mod_property_set.cpp \
+mod_sequence.cpp \
+mod_sysinfo.cpp \
+mod_version.cpp \
  "
 
     if test_true ${B2_DEBUG_OPT} ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"

@@ -177,15 +177,15 @@ set B2_SOURCES=%B2_SOURCES% native.cpp option.cpp output.cpp parse.cpp pathnt.cp
 set B2_SOURCES=%B2_SOURCES% pathsys.cpp pathunix.cpp regexp.cpp rules.cpp scan.cpp search.cpp jam_strings.cpp
 set B2_SOURCES=%B2_SOURCES% startup.cpp subst.cpp
 set B2_SOURCES=%B2_SOURCES% timestamp.cpp value.cpp variable.cpp w32_getreg.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_regex.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_set.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_string.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_order.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_path.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_property_set.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_sequence.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_sysinfo.cpp
-set B2_SOURCES=%B2_SOURCES% modules/mod_version.cpp
+set B2_SOURCES=%B2_SOURCES% mod_regex.cpp
+set B2_SOURCES=%B2_SOURCES% mod_set.cpp
+set B2_SOURCES=%B2_SOURCES% mod_string.cpp
+set B2_SOURCES=%B2_SOURCES% mod_order.cpp
+set B2_SOURCES=%B2_SOURCES% mod_path.cpp
+set B2_SOURCES=%B2_SOURCES% mod_property_set.cpp
+set B2_SOURCES=%B2_SOURCES% mod_sequence.cpp
+set B2_SOURCES=%B2_SOURCES% mod_sysinfo.cpp
+set B2_SOURCES=%B2_SOURCES% mod_version.cpp
 
 set B2_CXXFLAGS=%B2_CXXFLAGS% -DNDEBUG
 

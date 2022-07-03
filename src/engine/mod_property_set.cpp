@@ -5,15 +5,15 @@
  * https://www.bfgroup.xyz/b2/LICENSE.txt)
  */
 
-#include "../object.h"
-#include "../lists.h"
-#include "../modules.h"
-#include "../rules.h"
-#include "../variable.h"
-#include "../native.h"
-#include "../compile.h"
-#include "../mem.h"
-#include "../constants.h"
+#include "object.h"
+#include "lists.h"
+#include "modules.h"
+#include "rules.h"
+#include "variable.h"
+#include "native.h"
+#include "compile.h"
+#include "mem.h"
+#include "constants.h"
 #include "string.h"
 
 struct ps_map_entry

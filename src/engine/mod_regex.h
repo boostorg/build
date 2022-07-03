@@ -7,13 +7,13 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef B2_MOD_REGEX_H
 #define B2_MOD_REGEX_H
 
-#include "../config.h"
+#include "config.h"
 
-#include "../bind.h"
-#include "../lists.h"
-#include "../optval.h"
-#include "../types.h"
-#include "../value.h"
+#include "bind.h"
+#include "lists.h"
+#include "optval.h"
+#include "types.h"
+#include "value.h"
 
 #include <tuple>
 #include <vector>
