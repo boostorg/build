@@ -20,55 +20,78 @@ Distributed under the Boost Software License, Version 1.0.
 
 /* tag::reference[]
 
-= `string` module.
+= `set` module.
+
+Classes and functions to manipulate sets of unique values.
 
 == `b2::set`
 
-Set of strings.
+Set class contains unique values.
 
 === `b2::set::add`
 
-Set of strings.
+====
+[horizontal]
+Jam:: `rule add ( elements * )`
+{CPP}:: `void b2::set::add(b2::list_cref elements);`, `void b2::set::add(const
+b2::set & elements);`
+====
 
-Jam::
-`rule add ( elements * )`
+Add the `elements` to the set.
 
 === `b2::set::contains`
 
-Does the set contain the given `value`.
+====
+[horizontal]
+Jam:: `rule contains ( element )`
+{CPP}:: `bool b2::set::contains(b2::value_ref element) const;`
+====
 
-Jam::
-`rule contains ( element )`
+Does the set contain the given `element`.
 
 === `b2::set::to_list`
 
-Return a list with all the elements of the set.
+====
+[horizontal]
+Jam:: `rule list ( )`
+{CPP}:: `b2::list_ref b2::set::to_list() const;`
+====
 
-Jam::
-`rule list ( )`
+Return a list with all the elements of the set.
 
 === `b2::set::difference`
 
-Returns the elements of `a` that are not in `b`.
+====
+[horizontal]
+Jam:: `rule difference ( set1 * : set2 * )`
+{CPP}:: `static b2::list_ref b2::set::difference(b2::list_cref set1,
+b2::list_cref set2);`
+====
 
-Jam::
-`rule difference ( set1 * : set2 * )`
+Returns the elements of `set1` that are not in `set2`.
 
 === `b2::set::intersection`
 
-Removes all the items appearing in both `a` & `b`.
+====
+[horizontal]
+Jam:: `rule intersection ( set1 * : set2 * )`
+{CPP}:: `static b2::list_ref b2::set::intersection(b2::list_cref set1,
+b2::list_cref set2);`
+====
 
-Jam::
-`rule intersection ( set1 * : set2 * )`
+Removes all the items appearing in both `set1` & `set2`.
 
 === `b2::set::equal`
 
-Returns whether `a` & `b` contain the same elements. Note that this
+====
+[horizontal]
+Jam:: `rule equal ( set1 * : set2 * )`
+{CPP}:: `static bool b2::set::equal(b2::list_cref set1, b2::list_cref set2);`
+====
+
+Returns whether `set1` & `set2` contain the same elements. Note that this
 ignores any element ordering differences as well as any element
 duplication.
-
-Jam::
-`rule equal ( set1 * : set2 * )`
 
 end::reference[] */
 
@@ -96,7 +119,7 @@ class set : public object
 struct set_module : b2::bind::module_<set_module>
 {
 	const char * module_name = "set";
-    static const char * init_code;
+	static const char * init_code;
 
 	template <class Binder>
 	void def(Binder & binder)
@@ -110,8 +133,8 @@ struct set_module : b2::bind::module_<set_module>
 				"elemets" * _n)
 			.def(&set::contains, "contains", "element" * _1)
 			.def(&set::to_list, "list");
-        binder.eval(init_code);
-        binder.loaded();
+		binder.eval(init_code);
+		binder.loaded();
 	}
 };
 
