@@ -912,10 +912,16 @@ rule link.dll ( targets + : sources * : properties * )
 # assemblies and Windows native DLLs. The manifests are embedded as resources
 # and are useful in any PE target (both DLL and EXE).
 
+OPT_OUT = "/out:" ;
+OPT_LIBPATH = "/LIBPATH:" ;
+OPT_MANIFESTINPUT = "/MANIFESTINPUT:" ;
+OPT_IMPLIB = "/IMPLIB:" ;
+OPT_DEF = "/def:" ;
+
 {
     actions link bind DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib" $(LINKOPT) $(LINKFLAGS)) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)"
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib" $(LINKOPT) $(LINKFLAGS) $(OPT_OUT)"$(<[1]:W)" $(OPT_LIBPATH)"$(LINKPATH:W)" $(OPT_MANIFESTINPUT)"$(MANIFEST_FILE)")
     }
 
     actions manifest
@@ -930,7 +936,7 @@ rule link.dll ( targets + : sources * : properties * )
 
     actions link.dll bind IMPORT_LIB DEF_FILE LIBRARIES_MENTIONED_BY_FILE MANIFEST_FILE
     {
-        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib" $(LINKOPT) $(LINKFLAGS)) /out:"$(<[1]:W)" /LIBPATH:"$(LINKPATH:W)" /MANIFESTINPUT:"$(MANIFEST_FILE)" /DLL /IMPLIB:"$(IMPORT_LIB:W)" /def:"$(DEF_FILE)"
+        $(.SETUP) $(.LD) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>)" $(LIBRARIES_MENTIONED_BY_FILE) $(LIBRARIES) "$(LIBRARY_OPTION)$(FINDLIBS_ST).lib" "$(LIBRARY_OPTION)$(FINDLIBS_SA).lib" $(LINKOPT) $(LINKFLAGS) $(OPT_OUT)"$(<[1]:W)" $(OPT_LIBPATH)"$(LINKPATH:W)" $(OPT_MANIFESTINPUT)"$(MANIFEST_FILE)" /DLL $(OPT_IMPLIB)"$(IMPORT_LIB:W)" $(OPT_DEF)"$(DEF_FILE)")
     }
 
     actions manifest.dll
