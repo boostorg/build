@@ -1,6 +1,11 @@
 [[b2.history]]
 = History
 
+== Version 4.9.2
+
+* Fix too long msvc link actions.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.9.1
 
 * Fix bad calculation of initial dev-only path to bootstrap file within the
