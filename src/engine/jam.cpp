@@ -330,13 +330,7 @@ int guarded_main( int argc, char * * argv )
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
-        out_printf( "B2 Version %s. %s.\n", VERSION, OSMINOR );
-        out_printf( "  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.\n" );
-        out_printf( "  Copyright 2001 David Turner.\n" );
-        out_printf( "  Copyright 2001-2004 David Abrahams.\n" );
-        out_printf( "  Copyright 2002-2019 Rene Rivera.\n" );
-        out_printf( "  Copyright 2003-2015 Vladimir Prus.\n" );
-        out_printf( "\n  DEFAULTS: jobs = %i\n", globs.jobs);
+        out_printf( "B2 %s (%s, jobs=%i).\n", VERSION, OSMINOR, globs.jobs );
         return EXITOK;
     }
 
