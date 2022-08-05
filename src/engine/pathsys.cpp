@@ -374,7 +374,7 @@ std::string b2::paths::rooted(const std::string & path, const std::string & root
     {
         PATHNAME p(path.c_str());
         p.f_root.ptr = root.c_str();
-        p.f_root.len = root.length();
+        p.f_root.len = (int32_t)root.length();
         string s;
         string_new(&s);
         path_build(&p, &s);
