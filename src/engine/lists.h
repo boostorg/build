@@ -112,6 +112,10 @@ inline LISTITER list_prev(LISTITER it) { return ((it)-1); }
 inline OBJECT *& list_item(LISTITER it) { return (*(it)); }
 inline bool list_empty(LIST * l) { return ((l) == L0); }
 inline OBJECT *& list_front(LIST * l) { return list_item(list_begin(l)); }
+inline OBJECT *& list_item(LIST * l, int i)
+{
+	return list_begin(l)[i < 0 ? l->impl.size + i : i];
+}
 void lol_add_err();
 inline void lol_add(LOL * lol, LIST * l)
 {
@@ -145,6 +149,8 @@ inline void lol_print(LOL * lol)
 void lol_build(LOL * lol, char const ** elements);
 
 namespace b2 {
+
+struct list_ref;
 
 struct list_cref
 {
@@ -224,6 +230,23 @@ struct list_cref
 	inline bool empty() const { return list_empty(list_obj) || length() == 0; }
 	inline int32_t length() const { return list_length(list_obj); }
 	inline LIST * operator*() const { return list_obj; }
+	inline OBJECT *& operator[](int i) const { return list_item(list_obj, i); }
+	inline bool contains(value_ref a) const
+	{
+		for (auto b : *this)
+			if (a == b) return true;
+		return false;
+	}
+	list_ref slice(int i, int j = -1) const;
+	inline bool operator==(const list_cref & b) const
+	{
+		if (length() != b.length()) return false;
+		iterator b_i = b.begin();
+		for (value_ref v : *this)
+			if (v != value_ref(*(b_i++))) return false;
+		return true;
+	}
+	bool operator==(const list_ref & b) const;
 
 	protected:
 	LIST * list_obj = nullptr;
@@ -237,6 +260,9 @@ struct list_ref : private list_cref
 	using list_cref::empty;
 	using list_cref::length;
 	using list_cref::operator*;
+	using list_cref::operator[];
+	using list_cref::contains;
+	using list_cref::operator==;
 
 	inline list_ref() = default;
 	inline list_ref(list_ref && other)
@@ -248,12 +274,16 @@ struct list_ref : private list_cref
 	inline list_ref(const list_ref & other)
 		: list_cref(list_copy(other.list_obj))
 	{}
-	inline explicit list_ref(const value_ref & o)
-		: list_cref(list_new(value::copy(o)))
+	inline explicit list_ref(value_ref o)
+		: list_cref(list_new(o))
 	{}
 	inline explicit list_ref(LIST * l, bool own = false)
 		: list_cref(own ? l : list_copy(l))
 	{}
+	inline list_ref(iterator i, const iterator & e)
+	{
+		for (; i != e; ++i) this->push_back(value::copy(*i));
+	}
 
 	inline ~list_ref() { reset(); }
 	inline LIST * release()
@@ -264,7 +294,12 @@ struct list_ref : private list_cref
 	}
 	inline list_ref & append(const list_ref & other)
 	{
-		list_obj = list_append(list_obj, list_copy(other.list_obj));
+		list_obj = list_append(list_obj, list_copy(*other));
+		return *this;
+	}
+	inline list_ref & append(list_cref other)
+	{
+		list_obj = list_append(list_obj, list_copy(*other));
 		return *this;
 	}
 	inline void reset(LIST * new_list = nullptr)
@@ -288,7 +323,76 @@ struct list_ref : private list_cref
 		list_obj = list_push_back(list_obj, value::make(value...));
 		return *this;
 	}
+	template <typename T>
+	inline list_ref & operator+(T value)
+	{
+		return push_back(value);
+	}
+	inline list_ref & operator+(const list_ref & other)
+	{
+		return append(other);
+	}
+	inline list_ref & operator+(const list_cref & other)
+	{
+		return append(other);
+	}
+	inline list_ref & operator=(list_ref && other)
+	{
+		reset(other.list_obj);
+		other.list_obj = nullptr;
+		return *this;
+	}
+	inline list_ref & slice(int i, int j = -1)
+	{
+		list_obj
+			= list_sublist(list_obj, i, (j < 0 ? length() + j : j) - i + 1);
+		return *this;
+	}
 };
+
+inline list_ref list_cref::slice(int i, int j) const
+{
+	return list_ref(
+		list_sublist(list_obj, i, (j < 0 ? length() + j : j) - i + 1), true);
+}
+
+inline bool list_cref::operator==(const list_ref & b) const
+{
+	return *this == list_cref(*b);
+}
+
+struct lists
+{
+	inline lists() { lol_init(&lol); }
+	inline ~lists() { lol_free(&lol); }
+	inline void push_back(const list_cref & l) { lol_add(&lol, list_copy(*l)); }
+	inline list_cref operator[](int32_t i) const
+	{
+		return list_cref(lol_get(&lol, i));
+	}
+	inline bool empty() const { return length() == 0; }
+	inline int32_t length() const { return lol.count; }
+	inline void print() const { lol_print(&lol); }
+	inline operator LOL *() const { return &lol; }
+	inline lists & operator|(const list_cref & l)
+	{
+		push_back(l);
+		return *this;
+	}
+	inline lists & operator|(LIST * l) { return (*this) |= list_cref(l); }
+	inline lists & operator|(list_ref && l) { return (*this) |= std::move(l); }
+	inline lists & operator|=(list_ref && l)
+	{
+		list_ref to_add(std::move(l));
+		lol_add(&lol, to_add.release());
+		return *this;
+	}
+	// inline list_ref
+
+	private:
+	mutable LOL lol;
+};
+
 } // namespace b2
 
 #endif

@@ -59,7 +59,7 @@ void unknown_rule( FRAME *, char const * key, module_t *, OBJECT * rule_name );
 
 LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
 {
-    LIST          * result = L0;
+    b2::list_ref result;
     profile_frame   prof[ 1 ];
     module_t      * prev_module = frame->module;
 
@@ -147,7 +147,7 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
     if ( rule->procedure )
     {
         auto function = b2::jam::make_unique_bare_jptr( rule->procedure, function_refer, function_free );
-        result = function_run( function.get(), frame );
+        result.reset( function_run( function.get(), frame ) );
     }
 
     if ( DEBUG_PROFILE && rule->procedure )
@@ -156,7 +156,7 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
     if ( DEBUG_COMPILE )
         debug_compile( -1, 0, frame );
 
-    return result;
+    return result.release();
 }
 
 
@@ -169,11 +169,8 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
  * which might be implemented in Jam.
  */
 
-LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, ... )
+LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, LOL * args )
 {
-    va_list va;
-    LIST * result;
-
     FRAME inner[ 1 ];
     frame_init( inner );
     inner->prev = caller_frame;
@@ -182,21 +179,37 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, ... )
         : caller_frame->prev_user;
     inner->module = caller_frame->module;
 
-    va_start( va, caller_frame );
-    for ( ; ; )
+    for ( int32_t a = 0; a < args->count; ++a)
     {
-        LIST * const l = va_arg( va, LIST * );
-        if ( !l )
-            break;
-        lol_add( inner->args, l );
+        lol_add( inner->args, list_copy(lol_get(args, a)) );
     }
-    va_end( va );
 
-    result = evaluate_rule( bindrule( rulename, inner->module ), rulename, inner );
+    b2::list_ref result( evaluate_rule( bindrule( rulename, inner->module ), rulename, inner ), true );
 
     frame_free( inner );
 
-    return result;
+    return result.release();
+}
+
+LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, LIST * arg, ... )
+{
+    b2::lists args;
+    if ( arg )
+    {
+        args.push_back( b2::list_cref( arg ) );
+        va_list va;
+        va_start( va, arg );
+        for ( ; ; )
+        {
+            LIST * l = va_arg( va, LIST * );
+            if ( !l )
+                break;
+            args.push_back( b2::list_cref( l ) );
+        }
+        va_end( va );
+    }
+
+    return call_rule( rulename, caller_frame, args );
 }
 
 

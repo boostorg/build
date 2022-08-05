@@ -86,6 +86,7 @@ struct module_scope
 
 	inline const value_ref & name() const { return module_name; }
 	inline FRAME * frame() const { return module_frame; }
+	inline operator module_ptr() const { return module_frame->module; }
 
 	private:
 	value_ref module_name;

@@ -1,25 +1,24 @@
-/* Copyright Vladimir Prus 2003.
- * Distributed under the Boost Software License, Version 1.0.
- * (See accompanying file LICENSE.txt or copy at
- * https://www.bfgroup.xyz/b2/LICENSE.txt)
- */
+/*
+Copyright 2022 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
+
+#include "mod_path.h"
 
 #include "constants.h"
-#include "frames.h"
-#include "lists.h"
-#include "native.h"
 #include "filesys.h"
+#include "pathsys.h"
 
+namespace b2 { namespace paths {
 
-LIST * path_exists( FRAME * frame, int flags )
+bool exists(value_ref location) { return file_query(location) != nullptr; }
+
+list_ref normalize_all(list_cref paths)
 {
-    return file_query( list_front( lol_get( frame->args, 0 ) ) ) ?
-        list_new( object_copy( constant_true ) ) : L0;
+	list_ref result;
+	for (auto path : paths) result.push_back(normalize(path->str()));
+	return result;
 }
 
-
-void init_path()
-{
-    char const * args[] = { "location", 0 };
-    declare_native_rule( "path", "exists", args, path_exists, 1 );
-}
+}} // namespace b2::paths

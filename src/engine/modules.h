@@ -57,11 +57,8 @@ void module_set_fixed_variables( module_t *, int n );
  */
 int module_get_fixed_var( module_t *, OBJECT * name );
 
-void modules_done();
+LIST * module_rules( module_t * m = nullptr);
 
-namespace b2
-{
-std::vector<std::string> modules_peek(const std::string & module_name, const std::vector<std::string> variables);
-}
+void modules_done();
 
 #endif

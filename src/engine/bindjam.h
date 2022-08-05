@@ -8,18 +8,28 @@ Distributed under the Boost Software License, Version 1.0.
 #define B2_BINDJAM_H
 
 #include "bind.h"
+#include "frames.h"
 #include "value.h"
 
-namespace b2 {
+namespace b2 { namespace jam {
+
+/*
+Context for Jam calls.
+*/
+struct jam_context : bind::context_
+{
+	FRAME * frame = nullptr;
+
+	jam_context(FRAME * f)
+		: frame(f)
+	{}
+};
 
 /*
 Jam language C++ interface binder.
 */
-struct jam_binder : bind::binder_<jam_binder>
+struct jam_binder : b2::bind::binder_<jam_binder>
 {
-    template <typename F>
-	jam_binder(F * frame);
-
 	/*
 	Bind the named module to Jam. All this does for Jam is define the module
 	scope in Jam.
@@ -72,15 +82,11 @@ struct jam_binder : bind::binder_<jam_binder>
 	*/
 	void eval_data(const char * module_name, const char * data);
 
-    /*
-    Mark the module as loaded. Future attempts at loading, with `module.load`,
-    will fail (as noop).
-    */
-    void set_loaded(const char * module_name);
-
-    private:
-
-    void * frame = nullptr;
+	/*
+	Mark the module as loaded. Future attempts at loading, with `module.load`,
+	will fail (as noop).
+	*/
+	void set_loaded(const char * module_name);
 };
 
 /*
@@ -95,6 +101,12 @@ Value from_jam(value_ptr jam_value);
 template <class Value>
 value_ptr to_jam(Value value);
 
-} // namespace b2
+/*
+Binds all the declared C++ interfaces to Jam equivalents.
+*/
+template <typename F>
+void bind_jam(F * frame);
+
+}} // namespace b2::jam
 
 #endif

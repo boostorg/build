@@ -24,8 +24,7 @@ C++ 11 reflection and non-intrusive declaration of a binding API.
 
 end::binder[] */
 
-namespace b2 {
-namespace bind {
+namespace b2 { namespace bind {
 
 /** tag::binder_type[]
 
@@ -180,6 +179,12 @@ auto operator|(const args_<A...> & a, const param_ & b) -> args_<A..., arg_<1>>
 	return a | arg_<1> { { b } };
 }
 
+template <int BC>
+auto operator|(const param_ & a, const arg_<BC> & b) -> args_<arg_<1>, arg_<BC>>
+{
+	return arg_<1> { { a } } | b;
+}
+
 /** tag::binder_module[]
 
 == `b2::bind::module_`
@@ -329,6 +334,39 @@ struct converter_
 	static CxxValue from_bind_value(BindValue);
 };
 
+struct context_
+{};
+
+struct context_ref_
+{
+	explicit context_ref_(context_ & c)
+		: context(&c)
+	{}
+	context_ref_() = default;
+	context_ref_(const context_ref_ &) = default;
+	context_ref_(context_ref_ &&) = default;
+	context_ref_ & operator=(const context_ref_ &) = default;
+	context_ref_ & operator=(context_ & c)
+	{
+		context = &c;
+		return *this;
+	}
+
+	template <typename C>
+	C & get() const
+	{
+		return static_cast<C &>(*context);
+	}
+
+	private:
+	context_ * context = nullptr;
+};
+
+struct binder_interface_
+{
+	context_ref_ context_ref;
+};
+
 /** tag::binder_binder[]
 
 == `b2::bind::binder_`
@@ -340,7 +378,7 @@ that language.
 
 end::binder_binder[] */
 template <class Binder>
-struct binder_
+struct binder_ : binder_interface_
 {
 	/** tag::binder_binder[]
 
@@ -401,10 +439,7 @@ struct binder_
 		return *this;
 	}
 
-    void loaded()
-    {
-        self().set_loaded(current_module_name);
-    }
+	void loaded() { self().set_loaded(current_module_name); }
 
 	// Internal..
 
@@ -473,7 +508,9 @@ struct binder_
 	const char * current_module_name = nullptr;
 };
 
-}; // namespace bind
+}} // namespace b2::bind
+
+namespace b2 {
 
 enum bind_param_count_one : bool
 {
@@ -511,12 +548,6 @@ inline bind::param_ operator*(const char * name, bind_param_count_optional)
 {
 	return bind::param_ { name, bind::param_::optional };
 }
-
-/*
-Binds all the declared C++ interfaces to Jam equivalents.
-*/
-template <typename F>
-void bind_jam(F * frame);
 
 } // namespace b2
 

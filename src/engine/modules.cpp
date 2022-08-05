@@ -436,34 +436,17 @@ int module_get_fixed_var( struct module_t * m_, OBJECT * name )
     return v && v->n < m_->num_fixed_variables ? v->n : -1;
 }
 
-namespace b2
+static void module_rules_add( RULE * r, b2::list_ref * result )
 {
-
-static module_t * get_module(const std::string & name)
-{
-    if (name.size() == 0)
-    {
-        return root_module();
-    }
-    else
-    {
-        OBJECT * name_obj = object_new(name.c_str());
-        struct module_t * module = bindmodule(name_obj);
-        object_free(name_obj);
-        return module;
-    }
+    if ( r->exported )
+        result->push_back( object_copy( r->name ) );
 }
 
-std::vector<std::string> modules_peek(const std::string & module_name, const std::vector<std::string> variables)
+LIST * module_rules( module_t * m )
 {
-    std::vector<std::string> values;
-    struct module_t * module = get_module(module_name);
-    for (auto & variable : variables)
-    {
-        OBJECT *variable_obj = object_new(variable.c_str());
-        values.emplace_back(object_str(list_front(var_get(module, variable_obj))));
-        object_free(variable_obj);
-    }
-    return values;
-}
+    b2::list_ref result;
+    if (!m) m = root_module();
+    if (m->rules)
+        hash_enumerate(m->rules, &module_rules_add, &result);
+    return result.release();
 }

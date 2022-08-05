@@ -82,12 +82,6 @@ if "\n" = "n"
 }
 
 
-# Bootstrap the module system. Then bring the import rule into the global module.
-#
-SEARCH on <module@>modules.jam = $(.bootstrap-file:D) ;
-module modules { include <module@>modules.jam ; }
-IMPORT modules : import : : import ;
-
 {
     # Add module subdirectories to the BOOST_BUILD_PATH, which allows us to make
     # incremental refactoring steps by moving modules to appropriate

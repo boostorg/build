@@ -15,7 +15,6 @@
  */
 
 void load_builtins();
-void init_path();
 void init_regex();
 void init_property_set();
 void init_sequence();

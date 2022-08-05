@@ -159,39 +159,26 @@ LIST * property_set_create( FRAME * frame, int flags )
     }
     else
     {
-        OBJECT * rulename = object_new( "new" );
-        OBJECT * varname = object_new( "self.raw" );
-        LIST * val = call_rule( rulename, frame,
-            list_new( object_new( "property-set" ) ), 0 );
+        b2::list_ref val = b2::jam::run_rule( frame, "new",
+            b2::list_ref() + "property-set" );
         LISTITER iter, end;
-        object_free( rulename );
-        pos->value = object_copy( list_front( val ) );
-        var_set( bindmodule( pos->value ), varname, unique, VAR_SET );
-        object_free( varname );
+        pos->value = *val.begin();
+        var_set( bindmodule( pos->value ), b2::value_ref( "self.raw" ), unique, VAR_SET );
 
         for ( iter = list_begin( unique ), end = list_end( unique ); iter != end; ++iter )
         {
             const char * str = object_str( list_item( iter ) );
             if ( str[ 0 ] != '<' || ! strchr( str, '>' ) )
             {
-                string message[ 1 ];
-                string_new( message );
-                string_append( message, "Invalid property: '" );
-                string_append( message, str );
-                string_append( message, "'" );
-                LIST * imports = list_new( object_new( "errors" ) );
-                import_module( imports, frame->module );
-                rulename = object_new( "errors.error" );
-                call_rule( rulename, frame,
-                    list_new( object_new( message->value ) ), 0 );
+                b2::list_ref imports("errors");
+                import_module( *imports, frame->module );
+                b2::jam::run_rule( frame, "errors.error",
+                    b2::list_ref() + (std::string("Invalid property: '") + str + "'") );
                 /* unreachable */
-                string_free( message );
-                list_free( imports );
-                object_free( rulename );
             }
         }
 
-        return val;
+        return val.release();
     }
 }
 

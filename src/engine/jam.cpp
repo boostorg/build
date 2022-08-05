@@ -112,6 +112,7 @@
 #define JAMVERSYM "JAMVERSION=" VERSION
 
 #include "bind.h"
+#include "bindjam.h"
 #include "builtins.h"
 #include "class.h"
 #include "compile.h"
@@ -571,7 +572,7 @@ int guarded_main( int argc, char * * argv )
             if ( !n  )
             {
                 /* Initialize the native API bindings. */
-                b2::bind_jam(frame);
+                b2::jam::bind_jam(frame);
 
                 /* LUnch the bootstrap to load up the build system. */
                 status = b2::startup::bootstrap(frame) ? 0 : 13;

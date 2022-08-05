@@ -91,11 +91,30 @@
             "name": "(gdb) Launch, Unit Tests",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/src/engine/b2",
-            "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests"],
+            "program": "${workspaceFolder}/.build/gcc-12/debug/cxxstd-11-iso/b2",
+            "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests", "toolset=gcc"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/test",
             "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "(gdb) Launch, Unit Tests: ASAN",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.build/gcc-12/debug/address-sanitizer-on/cxxstd-11-iso/b2",
+            "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests", "toolset=gcc"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/test",
+            "environment": [{"LSAN_OPTIONS":"verbosity=1:log_threads=1"}],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [

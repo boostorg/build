@@ -84,10 +84,10 @@ struct value_ref
 	inline value_ref(value_ptr a)
 		: val(value::copy(a))
 	{}
-	inline explicit value_ref(const char * s)
+	inline value_ref(const char * s)
 		: val(value::make(s))
 	{}
-	inline explicit value_ref(const std::string & s)
+	inline value_ref(const std::string & s)
 		: val(value::make(s.c_str()))
 	{}
 
@@ -105,15 +105,36 @@ struct value_ref
 	inline operator value_ptr() const { return val; }
 	inline operator std::string() const { return val->str(); }
 	inline bool operator==(value_ptr b) const { return val->equal_to(*b); }
+	inline bool operator==(const char * v) const
+	{
+		return (*this) == value_ref(v);
+	}
+	template <typename T>
+	inline bool operator!=(T v) const
+	{
+		return !((*this) == v);
+	}
 	inline value_ptr operator->() const { return val; }
 	inline value & operator*() const { return *val; }
 	inline bool has_value() const { return val != nullptr; }
+
+	inline value_ref operator+(const std::string & v) const
+	{
+		return value_ref((*this)->str() + v);
+	}
+
+	friend inline value_ref operator+(const std::string & a, value_ref b)
+	{
+        const char * c = b.has_value() ? b->str() : "";
+		return value_ref(a + c);
+	}
 
 	struct hash_function
 	{
 		inline std::size_t operator()(const value_ref & a) const
 		{
-			return (std::size_t)((std::numeric_limits<std::size_t>::max)() & a->hash64);
+			return (std::size_t)(
+				(std::numeric_limits<std::size_t>::max)() & a->hash64);
 		}
 	};
 

@@ -367,6 +367,25 @@ std::string b2::paths::normalize(const std::string &p)
 }
 
 
+std::string b2::paths::rooted(const std::string & path, const std::string & root)
+{
+    std::string result = path;
+    if (!is_rooted(path))
+    {
+        PATHNAME p(path.c_str());
+        p.f_root.ptr = root.c_str();
+        p.f_root.len = root.length();
+        string s;
+        string_new(&s);
+        path_build(&p, &s);
+        result = s.value;
+        string_free(&s);
+    }
+
+    return b2::paths::normalize(result);
+}
+
+
 /*
  * executable_path()
  */

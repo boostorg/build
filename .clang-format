@@ -71,7 +71,9 @@ PenaltyBreakBeforeFirstCallParameter: 0
 PenaltyBreakFirstLessLess: 0
 PenaltyReturnTypeOnItsOwnLine: 999999
 PointerAlignment: Middle
+PPIndentWidth: 0
 ReflowComments: true
+ShortNamespaceLines: 0
 SortIncludes: CaseInsensitive
 SortUsingDeclarations: false
 SpaceAfterCStyleCast: false

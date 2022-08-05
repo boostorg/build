@@ -20,6 +20,8 @@ Distributed under the Boost Software License, Version 1.0.
 #include "types.h"
 #include "variable.h"
 
+#include "mod_jam_modules.h"
+#include "mod_path.h"
 #include "mod_regex.h"
 #include "mod_set.h"
 #include "mod_string.h"
@@ -28,11 +30,12 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
 
-namespace b2 {
+namespace b2 { namespace jam {
 
 /*
 Basic core types to marshal..
@@ -88,134 +91,150 @@ value_ref from_jam<value_ref>(value_ptr v)
 	return value_ref(v);
 }
 
-namespace bind {
 // General marshaling of one jam value list. Default converts the first item
 // to/from the list.
 template <class CxxValue>
-struct converter_<jam_binder, CxxValue, LIST *>
+struct converter
 {
-	static LIST * to_bind_value(const CxxValue & cpp_value)
+	static list_ref to_bind_value(const CxxValue & cxx_value)
 	{
-		return list_new(to_jam(cpp_value));
+		return list_ref(to_jam(cxx_value));
 	}
-	static CxxValue from_bind_value(LIST * jam_value)
+	static CxxValue from_bind_value(
+		list_cref::iterator & i, list_cref::iterator e)
 	{
-		return from_jam<CxxValue>(list_front(jam_value));
+		return (i == e) ? CxxValue() : from_jam<CxxValue>(*(i++));
 	}
 };
 
 // Marshaling specialization for vector container.
 // TODO: Generalize to more containers.
 template <class Value>
-struct converter_<jam_binder, std::vector<Value>, LIST *>
+struct converter<std::vector<Value>>
 {
-	static LIST * to_bind_value(const std::vector<Value> & cpp_value)
+	using CxxValue = std::vector<Value>;
+	static list_ref to_bind_value(const CxxValue & cxx_value)
 	{
-		LIST * result = L0;
-		for (auto & v : cpp_value)
-		{
-			result = list_push_back(result, to_jam(v));
-		}
+		list_ref result;
+		for (auto & v : cxx_value) result.push_back(to_jam(v));
 		return result;
 	}
-	static std::vector<Value> from_bind_value(LIST * jam_value)
+	static CxxValue from_bind_value(
+		list_cref::iterator & i, list_cref::iterator e)
 	{
-		std::vector<Value> result;
-		const LISTITER e = list_end(jam_value);
-		for (LISTITER i = list_begin(jam_value); i != e; i = list_next(i))
-		{
-			result.emplace_back(from_jam<Value>(list_item(i)));
-		}
+		CxxValue result;
+		for (; i != e; ++i) result.emplace_back(from_jam<Value>(*i));
 		return result;
 	}
 };
 
 // Marshaling for optval container.
 template <class ValueType>
-struct converter_<jam_binder, optval<ValueType>, LIST *>
+struct converter<optval<ValueType>>
 {
-	static LIST * to_bind_value(const optval<ValueType> & cpp_value)
+	using CxxValue = optval<ValueType>;
+	static list_ref to_bind_value(const CxxValue & cxx_value)
 	{
-		LIST * result = L0;
-		if (cpp_value.has_value())
-		{
-			result = list_push_back(
-				result, to_jam(static_cast<ValueType>(cpp_value)));
-		}
+		list_ref result;
+		if (cxx_value.has_value())
+			result.push_back(to_jam(static_cast<ValueType>(cxx_value)));
 		return result;
 	}
-	static optval<ValueType> from_bind_value(LIST * jam_value)
+	static CxxValue from_bind_value(
+		list_cref::iterator & i, list_cref::iterator e)
 	{
-		if (list_length(jam_value) == 0) return optval<ValueType> {};
-		return from_jam<ValueType>(list_front(jam_value));
+		return (i == e) ? CxxValue() : from_jam<ValueType>(*(i++));
 	}
 };
 
-// Marshaling of tuples as multi-param arguments.
-template <class... ValueTypes>
-struct converter_<jam_binder, std::tuple<ValueTypes...>, LIST *>
+//
+template <>
+struct converter<list_ref>
 {
-	using TupleType = std::tuple<ValueTypes...>;
-	template <std::size_t... I>
-	static LIST * to_bind_value(
-		LIST * result, const TupleType & cpp_value, mp::index_sequence<I...>)
+	static list_ref to_bind_value(const list_ref & cxx_value)
 	{
-		using std::get;
-		value_ptr jam_val[] { nullptr, to_jam(get<I>(cpp_value))... };
-		for (int i = 1; i <= std::tuple_size<TupleType>::value; ++i)
-		{
-			result = list_push_back(result, jam_val[i]);
-		}
+		return cxx_value;
+	}
+	static list_ref from_bind_value(
+		list_cref::iterator & i, list_cref::iterator e)
+	{
+		list_ref result(i, e);
+		i = e;
 		return result;
-	}
-	static LIST * to_bind_value(const TupleType & cpp_value)
-	{
-		return to_bind_value(L0, cpp_value,
-			mp::make_index_sequence<std::tuple_size<TupleType>::value> {});
-	}
-	template <std::size_t... I>
-	static TupleType from_bind_value(LIST * jam_value, mp::index_sequence<I...>)
-	{
-		TupleType result;
-		LISTITER jam_value_i = list_begin(jam_value);
-		int _[] { 0,
-			((void)(std::get<I>(result)
-				 = from_jam<typename std::tuple_element<I, TupleType>::type>(
-					 *(jam_value_i + I))),
-				0)... };
-		(void)_;
-		return result;
-	}
-	static TupleType from_bind_value(LIST * jam_value)
-	{
-		return from_bind_value(jam_value,
-			mp::make_index_sequence<std::tuple_size<TupleType>::value> {});
 	}
 };
 
 // Marshaling for value_ref container.
 template <>
-struct converter_<jam_binder, value_ref, LIST *>
+struct converter<value_ref>
 {
-	static LIST * to_bind_value(const value_ref & cpp_value)
+	static list_ref to_bind_value(const value_ref & cxx_value)
 	{
-		LIST * result = L0;
-		if (cpp_value.has_value())
-		{
-			result = list_push_back(result, cpp_value);
-		}
+		list_ref result;
+		if (cxx_value.has_value()) result.push_back(cxx_value);
 		return result;
 	}
-	static value_ref from_bind_value(LIST * jam_value)
+	static value_ref from_bind_value(
+		list_cref::iterator & i, list_cref::iterator e)
 	{
-		if (list_length(jam_value) == 0) return value_ref();
-		return value_ref(list_front(jam_value));
+		return (i == e) ? value_ref() : value_ref(*(i++));
 	}
 };
 
-// Marshalling for list_ref container.
+// Marshaling of tuples as multi-param arguments.
+template <class... ValueTypes>
+struct converter<std::tuple<ValueTypes...>>
+{
+	using CxxValue = std::tuple<ValueTypes...>;
+
+	static list_ref to_bind_value(const CxxValue & cxx_value)
+	{
+		return to_bind_value(cxx_value,
+			mp::make_index_sequence<std::tuple_size<CxxValue>::value> {});
+	}
+	template <std::size_t... I>
+	static list_ref to_bind_value(
+		const CxxValue & cxx_value, mp::index_sequence<I...>)
+	{
+		using std::get;
+		value_ptr jam_val[] { nullptr, to_jam(get<I>(cxx_value))... };
+		list_ref result;
+		for (int i = 1; i <= std::tuple_size<CxxValue>::value; ++i)
+			result.push_back(jam_val[i]);
+		return result;
+	}
+
+	static CxxValue from_bind_value(
+		list_cref::iterator & i, list_cref::iterator e)
+	{
+		return from_bind_value(
+			i, e, mp::make_index_sequence<std::tuple_size<CxxValue>::value> {});
+	}
+	template <std::size_t... I>
+	static CxxValue from_bind_value(list_cref::iterator & i,
+		list_cref::iterator e,
+		mp::index_sequence<I...>)
+	{
+		CxxValue result;
+		int _[] { 0,
+			((void)(std::get<I>(result)
+				 = converter<typename std::tuple_element<I,
+					 CxxValue>::type>::from_bind_value(i, e)),
+				0)... };
+		(void)_;
+		return result;
+	}
+};
+
+}} // namespace b2::jam
+
+namespace b2 { namespace bind {
+
+using namespace b2::jam;
+
+// Direct, marshalling for list_cref container.
 template <>
-struct converter_<jam_binder, list_cref, LIST *>
+struct converter_<b2::jam::jam_binder, list_cref, LIST *>
 {
 	static LIST * to_bind_value(const list_cref & cpp_value)
 	{
@@ -227,13 +246,12 @@ struct converter_<jam_binder, list_cref, LIST *>
 	}
 };
 
-// Marshalling for list_ref container.
+// Direct, marshalling for list_ref container.
 template <>
-struct converter_<jam_binder, list_ref, LIST *>
+struct converter_<b2::jam::jam_binder, list_ref, LIST *>
 {
 	static LIST * to_bind_value(const list_ref & cpp_value)
 	{
-		// TODO: Can we optimize this to not do a list copy?
 		return list_ref(cpp_value).release();
 	}
 	static list_ref from_bind_value(LIST * jam_value)
@@ -243,7 +261,25 @@ struct converter_<jam_binder, list_ref, LIST *>
 	}
 };
 
-} // namespace bind
+template <class CxxValue>
+struct converter_<b2::jam::jam_binder, CxxValue, LIST *>
+{
+	static LIST * to_bind_value(const CxxValue & cxx_value)
+	{
+		return b2::jam::converter<CxxValue>::to_bind_value(cxx_value).release();
+	}
+	static CxxValue from_bind_value(LIST * jam_value)
+	{
+		list_cref v(jam_value);
+		auto i = v.begin();
+		auto e = v.end();
+		return b2::jam::converter<CxxValue>::from_bind_value(i, e);
+	}
+};
+
+}} // namespace b2::bind
+
+namespace b2 { namespace jam {
 
 struct jam_cxx_self
 {
@@ -269,29 +305,49 @@ struct jam_cxx_self
 	}
 };
 
-// Marshals arguments from Jam LOL to C++ tuple..
+// Marshals arguments from Jam function FRAME to C++ tuple..
+
+template <std::size_t N, class ArgType, class Enable = void>
+struct jam_marshal_arg
+{
+	template <class ArgsTuple>
+	static void convert(ArgsTuple & to_args, jam_context & context)
+	{
+		LIST * arg_value = lol_get(context.frame->args, N);
+		if (arg_value != L0)
+			std::get<N>(to_args)
+				= jam_binder::convert_from_bind_value<ArgType>(arg_value);
+	}
+};
+
+template <std::size_t N>
+struct jam_marshal_arg<N, bind::context_ref_>
+{
+	template <class ArgsTuple>
+	static void convert(ArgsTuple & to_args, jam_context & context)
+	{
+		std::get<N>(to_args) = bind::context_ref_(context);
+	}
+};
 
 template <class ArgsTuple, std::size_t N, class Enable = void>
 struct jam_marshal_args
 {
-	static void convert(ArgsTuple & to_args, LOL * from_args) {}
+	static void convert(ArgsTuple & to_args, jam_context & context) {}
 };
 template <class ArgsTuple, std::size_t N>
 struct jam_marshal_args<ArgsTuple,
 	N,
 	typename std::enable_if<(N < std::tuple_size<ArgsTuple>::value)>::type>
 {
-	static void convert(ArgsTuple & to_args, LOL * from_args)
+	static void convert(ArgsTuple & to_args, jam_context & context)
 	{
 		using arg_type = typename std::tuple_element<N, ArgsTuple>::type;
-		LIST * arg_value = lol_get(from_args, N);
-		if (arg_value != L0)
-			std::get<N>(to_args)
-				= jam_binder::convert_from_bind_value<arg_type>(arg_value);
+		jam_marshal_arg<N, arg_type>::convert(to_args, context);
 
 		if (N < std::tuple_size<ArgsTuple>::value)
 		{
-			jam_marshal_args<ArgsTuple, N + 1>::convert(to_args, from_args);
+			jam_marshal_args<ArgsTuple, N + 1>::convert(to_args, context);
 		}
 	}
 };
@@ -307,7 +363,8 @@ static LIST * jam_call_init(
 		// Marshal arguments from frame->args.
 		using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
 		ArgsTuple args;
-		jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+		jam_context context { frame };
+		jam_marshal_args<ArgsTuple, 0>::convert(args, context);
 		// Construct the class instance, and set the hidden jam instance var
 		// to keep track of it.
 		Class * self = invoke<Class *>(cxx_call, args,
@@ -338,7 +395,8 @@ static LIST * jam_call_method(
 		// Marshal arguments from frame->args.
 		using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
 		ArgsTuple args;
-		jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+		jam_context context { frame };
+		jam_marshal_args<ArgsTuple, 0>::convert(args, context);
 		// Invoke call, and return marshaled result.
 		return jam_binder::convert_to_bind_value<LIST *>(
 			invoke<Return>(cxx_call,
@@ -367,7 +425,8 @@ static LIST * jam_call_method(
 		// Marshal arguments from frame->args.
 		using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
 		ArgsTuple args;
-		jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+		jam_context context { frame };
+		jam_marshal_args<ArgsTuple, 0>::convert(args, context);
 		// Invoke call, and return marshaled result.
 		invoke<Return>(cxx_call,
 			std::tuple_cat(
@@ -395,7 +454,8 @@ static LIST * jam_call_function(
 		// Marshal arguments from frame->args.
 		using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
 		ArgsTuple args;
-		jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+		jam_context context { frame };
+		jam_marshal_args<ArgsTuple, 0>::convert(args, context);
 		// Invoke call, and return marshaled result.
 		return jam_binder::convert_to_bind_value<LIST *>(
 			invoke<Return>(cxx_call, args,
@@ -419,7 +479,8 @@ static LIST * jam_call_function(
 		// Marshal arguments from frame->args.
 		using ArgsTuple = std::tuple<typename remove_cvref<Args>::type...>;
 		ArgsTuple args;
-		jam_marshal_args<ArgsTuple, 0>::convert(args, frame->args);
+		jam_context context { frame };
+		jam_marshal_args<ArgsTuple, 0>::convert(args, context);
 		// Invoke call, and return marshaled result.
 		invoke<Return>(cxx_call, args,
 			make_index_sequence<std::tuple_size<ArgsTuple>::value> {});
@@ -704,7 +765,8 @@ void jam_binder::bind_function(const char * module_name,
 
 void jam_binder::eval_data(const char * module_name, const char * data)
 {
-	b2::jam::module_scope scope(static_cast<FRAME *>(this->frame), module_name);
+	b2::jam::module_scope scope(
+		context_ref.get<jam_context>().frame, module_name);
 	parse_buffer(scope.name(), data, scope.frame());
 }
 
@@ -715,19 +777,18 @@ void jam_binder::set_loaded(const char * module_name)
 }
 
 template <>
-jam_binder::jam_binder(FRAME * frame)
-	: frame(frame)
-{}
-
-template <>
-void bind_jam(FRAME * frame)
+void bind_jam(FRAME * f)
 {
-	jam_binder(frame)
-		.bind(sysinfo_module())
-		.bind(version_module())
-		.bind(string_module())
+	jam_context context { f };
+	jam_binder binder;
+	binder.context_ref = context;
+	binder.bind(jam::modules::modules_module())
+		.bind(paths::paths_module())
+		.bind(regex_module())
 		.bind(set_module())
-		.bind(regex_module());
+		.bind(string_module())
+		.bind(sysinfo_module())
+		.bind(version_module());
 }
 
-} // namespace b2
+}} // namespace b2::jam

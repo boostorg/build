@@ -476,7 +476,6 @@ void load_builtins()
 #endif
 
     /* Initialize builtin modules. */
-    init_path();
     init_property_set();
     init_sequence();
     init_order();

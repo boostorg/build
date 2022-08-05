@@ -639,7 +639,7 @@ rule_ptr new_rule_actions( module_ptr m, b2::value_ptr rulename, function_ptr co
  * modules, look in module 'name1' for rule 'name2'.
  */
 
-rule_ptr lookup_rule( b2::value_ptr rulename, module_ptr m, int local_only )
+rule_ptr lookup_rule( b2::value_ptr rulename, module_ptr m, bool local_only )
 {
     rule_ptr r;
     rule_ptr result = 0;
@@ -698,11 +698,18 @@ rule_ptr lookup_rule( b2::value_ptr rulename, module_ptr m, int local_only )
 }
 
 
+rule_ptr find_rule( b2::value_ptr rulename, module_ptr m )
+{
+    rule_ptr result = lookup_rule( rulename, m, false );
+    if ( !result )
+        result = lookup_rule( rulename, root_module(), false );
+    return result;
+}
+
+
 rule_ptr bindrule( b2::value_ptr rulename, module_ptr m )
 {
-    rule_ptr result = lookup_rule( rulename, m, 0 );
-    if ( !result )
-        result = lookup_rule( rulename, root_module(), 0 );
+    rule_ptr result = find_rule( rulename, m );
     /* We have only one caller, 'evaluate_rule', which will complain about
      * calling an undefined rule. We could issue the error here, but we do not
      * have the necessary information, such as frame.
