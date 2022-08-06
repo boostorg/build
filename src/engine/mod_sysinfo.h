@@ -55,6 +55,7 @@ struct sysinfo_module : b2::bind::module_<sysinfo_module>
 			.def(init_<>())
 			.def(&b2::system_info::cpu_core_count, "cpu_core_count")
 			.def(&b2::system_info::cpu_thread_count, "cpu_thread_count");
+		binder.loaded();
 	}
 };
 

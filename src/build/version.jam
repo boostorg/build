@@ -8,13 +8,27 @@ import numbers ;
 
 
 # Mirror engine JAM_VERSION
-.major = "5" ;
-.minor = "0" ;
+.major = 5 ;
+.minor = 0 ;
+.patch = 0 ;
 
 
 rule build ( )
 {
-    return "$(.major).$(.minor)-git" ;
+    return "$(.major).$(.minor).$(.patch)" ;
+}
+
+
+rule info ( )
+{
+    import sysinfo ;
+    import "class" : new ;
+
+    local si = [ new system_info ] ;
+
+    local OS = [ modules.peek : OS ] ;
+    local jobs = [ $(si).cpu_thread_count ] ;
+    return "OS=$(OS)" "jobs=$(jobs)" ;
 }
 
 
@@ -22,7 +36,8 @@ rule print ( )
 {
     if [ verify-engine-version ]
     {
-        ECHO "B2" [ build ] ;
+        local i = [ info ] ;
+        ECHO "B2" [ build ] "($(i:J=, ))" ;
     }
 }
 

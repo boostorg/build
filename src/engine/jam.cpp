@@ -108,7 +108,7 @@
 #define VERSION_MAJOR_SYM JAM_STRINGIZE(VERSION_MAJOR)
 #define VERSION_MINOR_SYM JAM_STRINGIZE(VERSION_MINOR)
 #define VERSION_PATCH_SYM JAM_STRINGIZE(VERSION_PATCH)
-#define VERSION VERSION_MAJOR_SYM "." VERSION_MINOR_SYM
+#define VERSION VERSION_MAJOR_SYM "." VERSION_MINOR_SYM "." VERSION_PATCH_SYM
 #define JAMVERSYM "JAMVERSION=" VERSION
 
 #include "bind.h"
@@ -331,7 +331,7 @@ int guarded_main( int argc, char * * argv )
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
-        out_printf( "B2 %s (%s, jobs=%i).\n", VERSION, OSMINOR, globs.jobs );
+        out_printf( "B2 %s (%s, jobs=%i)\n\n", VERSION, OSMINOR, globs.jobs );
         return EXITOK;
     }
 
