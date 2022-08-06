@@ -344,7 +344,11 @@ struct context_ref_
 	{}
 	context_ref_() = default;
 	context_ref_(const context_ref_ &) = default;
-	context_ref_(context_ref_ &&) = default;
+	context_ref_(context_ref_ && o)
+	{
+		context = o.context;
+		o.context = nullptr;
+	}
 	context_ref_ & operator=(const context_ref_ &) = default;
 	context_ref_ & operator=(context_ & c)
 	{
