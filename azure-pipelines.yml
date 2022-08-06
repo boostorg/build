@@ -275,14 +275,14 @@ stages:
 
   - job: 'Dev_Linux'
     displayName: 'Dev Linux'
-    pool:
-      vmImage: 'ubuntu-latest'
     strategy:
       matrix:
-        Master .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        Master .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
-        Develop .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        Develop .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}"}
+        Master .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: master, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Master .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: master, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Develop .. GCC ${{variables.gcc_latest}}: {BOOST_BRANCH: develop, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Develop .. Clang ${{variables.clang_latest}}: {BOOST_BRANCH: develop, TOOLSET: clang, CXX: "clang++-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+    pool:
+      vmImage: $(VM_IMAGE)
     steps:
     - bash: |
         set -e
@@ -375,24 +375,24 @@ stages:
 
   - job: 'Release_Linux'
     displayName: 'Release Linux'
-    pool:
-      vmImage: 'ubuntu-latest'
     strategy:
       matrix:
-        1.79.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.78.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.77.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.76.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.75.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.74.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.73.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.72.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.71.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.71.0, BOOST_VERSION_U: 1_71_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.70.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.70.0, BOOST_VERSION_U: 1_70_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.69.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.69.0, BOOST_VERSION_U: 1_69_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.68.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.68.0, BOOST_VERSION_U: 1_68_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.67.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.67.0, BOOST_VERSION_U: 1_67_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
-        1.66.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}"}
+        1.79.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.78.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.77.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.76.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.76.0, BOOST_VERSION_U: 1_76_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.75.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.75.0, BOOST_VERSION_U: 1_75_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.74.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.74.0, BOOST_VERSION_U: 1_74_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.73.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.73.0, BOOST_VERSION_U: 1_73_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.72.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.72.0, BOOST_VERSION_U: 1_72_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.71.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.71.0, BOOST_VERSION_U: 1_71_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.70.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.70.0, BOOST_VERSION_U: 1_70_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.69.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.69.0, BOOST_VERSION_U: 1_69_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.68.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.68.0, BOOST_VERSION_U: 1_68_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.67.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.67.0, BOOST_VERSION_U: 1_67_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.66.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.66.0, BOOST_VERSION_U: 1_66_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+    pool:
+      vmImage: $(VM_IMAGE)
     steps:
     - bash: |
         set -e
