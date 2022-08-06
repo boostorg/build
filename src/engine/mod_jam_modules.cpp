@@ -379,8 +379,8 @@ void import(list_cref module_names,
 				source_names.append(rules_opt);
 			list_cref target_names(
 				rename_opt.empty() ? *source_names : *rename_opt);
-			run_rule(context.frame, "IMPORT", list_ref() + m, source_names,
-				list_ref() + caller_module, target_names);
+			run_rule(context.frame, "IMPORT", list_ref(module_basename),
+				source_names, list_ref() + caller_module, target_names);
 		}
 	}
 }
