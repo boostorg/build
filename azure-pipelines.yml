@@ -28,7 +28,7 @@ pr:
     - appveyor.yml
 
 variables:
-- { name: linux_latest_vm, value: 'ubuntu-20.04' }
+- { name: linux_latest_vm, value: 'ubuntu-22.04' }
 - { name: linux_latest_os, value: 'focal' }
 - { name: windows_latest_vm, value: 'windows-2022' }
 - { name: clang_latest, value: '14' }
@@ -208,7 +208,7 @@ stages:
   - job: 'Linux'
     strategy:
       matrix:
-        # GCC 12: {TOOLSET: gcc-12, PACKAGES: g++-12, VM_IMAGE: 'ubuntu-20.04'}
+        # GCC 12: {TOOLSET: gcc-12, PACKAGES: g++-12, VM_IMAGE: 'ubuntu-22.04'}
         GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: 'ubuntu-20.04'}
         GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-20.04'}
         GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: 'ubuntu-18.04'}
