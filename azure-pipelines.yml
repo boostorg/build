@@ -32,7 +32,7 @@ variables:
 - { name: linux_latest_os, value: 'focal' }
 - { name: windows_latest_vm, value: 'windows-2022' }
 - { name: clang_latest, value: '14' }
-- { name: gcc_latest, value: '11' }
+- { name: gcc_latest, value: '12' }
 - { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
 - { name: xc_latest, value: '13.4.1' }
@@ -209,7 +209,7 @@ stages:
     strategy:
       matrix:
         # GCC 12: {TOOLSET: gcc-12, PACKAGES: g++-12, VM_IMAGE: 'ubuntu-20.04'}
-        # GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: 'ubuntu-20.04'}
+        GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: 'ubuntu-20.04'}
         GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: 'ubuntu-20.04'}
         GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: 'ubuntu-18.04'}
         GCC 8: {TOOLSET: gcc-8, PACKAGES: g++-8, VM_IMAGE: 'ubuntu-18.04'}
