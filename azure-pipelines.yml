@@ -35,8 +35,8 @@ variables:
 - { name: gcc_latest, value: '11' }
 - { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
-- { name: xc_latest, value: '13.2.1' }
-- { name: macos_latest_vm, value: 'macOS-11' }
+- { name: xc_latest, value: '13.4.1' }
+- { name: macos_latest_vm, value: 'macOS-12' }
 
 
 stages:
@@ -246,21 +246,23 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
-        # Xcode 13.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.2.1.app, VM_IMAGE: 'macOS-11'}
-        Xcode 13.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.1.app, VM_IMAGE: 'macOS-11'}
+        # Xcode 13.4.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.4.1.app, VM_IMAGE: 'macOS-12'}
+        Xcode 13.3.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.3.1.app, VM_IMAGE: 'macOS-12'}
+        Xcode 13.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.2.1.app, VM_IMAGE: 'macOS-12'}
+        Xcode 13.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.1.app, VM_IMAGE: 'macOS-12'}
         Xcode 13.0: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_13.0.app, VM_IMAGE: 'macOS-11'}
         Xcode 12.4: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.4.app, VM_IMAGE: 'macOS-11'}
-        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 12.2: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.2.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 12.1.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.1.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 12.0.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.0.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.6.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.5.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.4.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.4.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.3.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.1.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.app, VM_IMAGE: 'macOS-10.15'}
-        Xcode 11.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.2.1.app, VM_IMAGE: 'macOS-10.15'}
+        Xcode 12.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.3.app, VM_IMAGE: 'macOS-11'}
+        Xcode 12.2: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.2.app, VM_IMAGE: 'macOS-11'}
+        Xcode 12.1.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.1.1.app, VM_IMAGE: 'macOS-11'}
+        Xcode 12.0.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_12.0.1.app, VM_IMAGE: 'macOS-11'}
+        Xcode 11.7: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-11'}
+        # Xcode 11.6: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.6.app, VM_IMAGE: 'macOS-10.15'}
+        # Xcode 11.5: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.5.app, VM_IMAGE: 'macOS-10.15'}
+        # Xcode 11.4.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.4.1.app, VM_IMAGE: 'macOS-10.15'}
+        # Xcode 11.3.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.1.app, VM_IMAGE: 'macOS-10.15'}
+        # Xcode 11.3: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.3.app, VM_IMAGE: 'macOS-10.15'}
+        # Xcode 11.2.1: {TOOLSET: clang, TEST_TOOLSET: clang, CXX: clang++, XCODE_APP: /Applications/Xcode_11.2.1.app, VM_IMAGE: 'macOS-10.15'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
