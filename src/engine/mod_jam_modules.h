@@ -272,17 +272,17 @@ struct modules_module : b2::bind::module_<modules_module>
 			.def(&clone_rules, "clone-rules",
 				"source_module" * _1 + "target_module" * _1)
 			.def(&call_in, "call-in",
-				"module_name" * _01 | "rule_name" * _1 + "a1" * _n | "a2" * _n
+				"module_name" * _01 | ("rule_name" * _1 + "a1" * _n) | "a2" * _n
 					| "a3" * _n | "a4" * _n | "a5" * _n | "a6" * _n | "a7" * _n
 					| "a8" * _n | "a9" * _n | "a10" * _n | "a11" * _n
 					| "a12" * _n | "a13" * _n | "a14" * _n | "a15" * _n
 					| "a16" * _n | "a17" * _n | "a18" * _n)
 			.def(&call_locally, "call-locally",
-				"rule_name" * _1 + "a1" * _n | "a2" * _n | "a3" * _n | "a4" * _n
-					| "a5" * _n | "a6" * _n | "a7" * _n | "a8" * _n | "a9" * _n
-					| "a10" * _n | "a11" * _n | "a12" * _n | "a13" * _n
-					| "a14" * _n | "a15" * _n | "a16" * _n | "a17" * _n
-					| "a18" * _n)
+				("rule_name" * _1 + "a1" * _n) | "a2" * _n | "a3" * _n
+					| "a4" * _n | "a5" * _n | "a6" * _n | "a7" * _n | "a8" * _n
+					| "a9" * _n | "a10" * _n | "a11" * _n | "a12" * _n
+					| "a13" * _n | "a14" * _n | "a15" * _n | "a16" * _n
+					| "a17" * _n | "a18" * _n)
 			.def(&b2::paths::normalize_all, "normalize-paths", "paths" * _n)
 			.def(&run_tests, "run-tests", "m" * _1)
 			.def(&load, "load",
