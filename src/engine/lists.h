@@ -40,14 +40,15 @@
  *  lol_print() - debug print LISTS separated by ":"
  */
 
-#ifndef LISTS_DWA20011022_H
-#define LISTS_DWA20011022_H
+#ifndef B2_LISTS_H
+#define B2_LISTS_H
 
 #include "config.h"
 
 #include "jam.h"
 #include "object.h"
 #include "output.h"
+#include "value.h"
 
 /*
  * LIST - list of strings
@@ -152,205 +153,353 @@ namespace b2 {
 
 struct list_ref;
 
+/* tag::reference[]
+
+= `b2::list_cref`
+
+Container of b2 values, that is a non-owning reference to the `LIST`. Mostly
+follows random access container behavior.
+
+== `b2::list_cref` Overview
+
+[source]
+----
+end::reference[] */
 struct list_cref
 {
-	struct iterator
-	{
-		using iterator_category = std::random_access_iterator_tag;
-		using value_type = OBJECT *;
-		using difference_type = std::ptrdiff_t;
-		using pointer = value_type *;
-		using reference = value_type &;
+	// types
+	struct iterator;
+	using size_type = int32_t;
+	using value_type = OBJECT *;
 
-		inline explicit iterator(LISTITER i)
-			: list_i(i)
-		{}
+	// construct/copy/destroy
+	list_cref() = default;
+	list_cref(const list_cref &) = default;
+	list_cref(list_cref && other);
+	explicit list_cref(LIST * l);
+	list_cref & operator=(const list_cref &) = default;
 
-		inline iterator operator++()
-		{
-			list_i = list_next(list_i);
-			return *this;
-		}
-		inline iterator operator++(int)
-		{
-			iterator result { *this };
-			list_i = list_next(list_i);
-			return result;
-		}
-		inline iterator operator--()
-		{
-			list_i = list_prev(list_i);
-			return *this;
-		}
-		inline iterator operator--(int)
-		{
-			iterator result { *this };
-			list_i = list_prev(list_i);
-			return result;
-		}
-		inline bool operator==(iterator other) const
-		{
-			return list_i == other.list_i;
-		}
-		inline bool operator!=(iterator other) const
-		{
-			return list_i != other.list_i;
-		}
-		inline reference operator*() const { return list_item(list_i); }
-		inline pointer operator->() const { return &list_item(list_i); }
-		inline difference_type operator-(const iterator & b) const
-		{
-			return list_i - b.list_i;
-		}
+	// iterators
+	iterator begin() const;
+	iterator end() const;
 
-		private:
-		LISTITER list_i;
+	// capacity
+	[[nodiscard]] bool empty() const noexcept;
+	[[nodiscard]] size_type length() const noexcept;
+	[[nodiscard]] size_type size() const noexcept;
 
-		// MSVC secure/debug std asks for comparisons of iterators.
-		friend inline bool operator<(const iterator & a, const iterator & b)
-		{
-			return a.list_i < b.list_i;
-		}
-	};
+	// element access
+	value_type & operator[](size_type i) const;
 
-	friend struct iterator;
-
-	inline list_cref() = default;
-	inline list_cref(const list_cref &) = default;
-	inline list_cref(list_cref && other)
-		: list_obj(std::move(other.list_obj))
-	{}
-	inline explicit list_cref(LIST * l)
-		: list_obj(l)
-	{}
-	inline list_cref & operator=(const list_cref &) = default;
-
-	inline iterator begin() const { return iterator(list_begin(list_obj)); }
-	inline iterator end() const { return iterator(list_end(list_obj)); }
-	inline bool empty() const { return list_empty(list_obj) || length() == 0; }
-	inline int32_t length() const { return list_length(list_obj); }
-	inline LIST * operator*() const { return list_obj; }
-	inline OBJECT *& operator[](int i) const { return list_item(list_obj, i); }
-	inline bool contains(value_ref a) const
-	{
-		for (auto b : *this)
-			if (a == b) return true;
-		return false;
-	}
-	list_ref slice(int i, int j = -1) const;
-	inline bool operator==(const list_cref & b) const
-	{
-		if (length() != b.length()) return false;
-		iterator b_i = b.begin();
-		for (value_ref v : *this)
-			if (v != value_ref(*(b_i++))) return false;
-		return true;
-	}
+	// list operations
+	bool contains(value_ref a) const;
+	list_ref slice(size_type i, size_type j = -1) const;
+	bool operator==(const list_cref & b) const;
 	bool operator==(const list_ref & b) const;
 
+	// data access
+	LIST * data() const noexcept;
+	LIST * operator*() const noexcept;
+
 	protected:
+	friend struct iterator;
 	LIST * list_obj = nullptr;
 };
+/* tag::reference[]
+----
+end::reference[] */
 
+struct list_cref::iterator
+{
+	using iterator_category = std::random_access_iterator_tag;
+	using value_type = OBJECT *;
+	using difference_type = std::ptrdiff_t;
+	using pointer = value_type *;
+	using reference = value_type &;
+
+	inline explicit iterator(LISTITER i)
+		: list_i(i)
+	{}
+
+	inline iterator operator++()
+	{
+		list_i = list_next(list_i);
+		return *this;
+	}
+	inline iterator operator++(int)
+	{
+		iterator result { *this };
+		list_i = list_next(list_i);
+		return result;
+	}
+	inline iterator operator--()
+	{
+		list_i = list_prev(list_i);
+		return *this;
+	}
+	inline iterator operator--(int)
+	{
+		iterator result { *this };
+		list_i = list_prev(list_i);
+		return result;
+	}
+	inline bool operator==(iterator other) const
+	{
+		return list_i == other.list_i;
+	}
+	inline bool operator!=(iterator other) const
+	{
+		return list_i != other.list_i;
+	}
+	inline reference operator*() const { return list_item(list_i); }
+	inline pointer operator->() const { return &list_item(list_i); }
+	inline difference_type operator-(const iterator & b) const
+	{
+		return list_i - b.list_i;
+	}
+
+	private:
+	LISTITER list_i;
+
+	// MSVC secure/debug std asks for comparisons of iterators.
+	friend inline bool operator<(const iterator & a, const iterator & b)
+	{
+		return a.list_i < b.list_i;
+	}
+};
+
+/* tag::reference[]
+== `b2::list_cref` Construct/Copy/Destroy
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::list_cref::list_cref`
+
+[source]
+----
+inline list_cref::list_cref(list_cref && other)
+inline list_cref::list_cref(LIST * l)
+----
+end::reference[] */
+inline list_cref::list_cref(list_cref && other)
+	: list_obj(std::move(other.list_obj))
+{}
+inline list_cref::list_cref(LIST * l)
+	: list_obj(l)
+{}
+
+/* tag::reference[]
+== `b2::list_cref` Iterators
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::list_cref::begin`
+
+[source]
+----
+inline list_cref::iterator list_cref::begin() const
+----
+end::reference[] */
+inline list_cref::iterator list_cref::begin() const
+{
+	return iterator(list_begin(list_obj));
+}
+
+/* tag::reference[]
+=== `b2::list_cref::end`
+
+[source]
+----
+inline list_cref::iterator list_cref::end() const
+----
+end::reference[] */
+inline list_cref::iterator list_cref::end() const
+{
+	return iterator(list_end(list_obj));
+}
+
+/* tag::reference[]
+== `b2::list_cref` Capacity
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::list_cref::empty`
+
+[source]
+----
+[[nodiscard]] inline bool list_cref::empty() const noexcept
+----
+end::reference[] */
+[[nodiscard]] inline bool list_cref::empty() const noexcept
+{
+	return list_empty(list_obj) || length() == 0;
+}
+
+/* tag::reference[]
+=== `b2::list_cref::length`
+
+[source]
+----
+[[nodiscard]] inline list_cref::size_type list_cref::length() const noexcept
+[[nodiscard]] inline list_cref::size_type list_cref::size() const noexcept
+----
+end::reference[] */
+[[nodiscard]] inline list_cref::size_type list_cref::length() const noexcept
+{
+	return list_length(list_obj);
+}
+[[nodiscard]] inline list_cref::size_type list_cref::size() const noexcept
+{
+	return length();
+}
+
+/* tag::reference[]
+== `b2::list_cref` Element Access
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::list_cref::operator[]`
+
+[source]
+----
+inline list_cref::value_type & list_cref::operator[](
+	list_cref::size_type i) const
+----
+end::reference[] */
+inline list_cref::value_type & list_cref::operator[](
+	list_cref::size_type i) const
+{
+	return list_item(list_obj, i);
+}
+
+/* tag::reference[]
+== `b2::list_cref` List Operations
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::list_cref::contains`
+
+[source]
+----
+inline bool list_cref::contains(value_ref a) const
+----
+end::reference[] */
+inline bool list_cref::contains(value_ref a) const
+{
+	for (auto b : *this)
+		if (a == b) return true;
+	return false;
+}
+
+/* tag::reference[]
+=== `b2::list_cref::slice`
+
+[source]
+----
+inline list_ref list_cref::slice(
+	list_cref::size_type i, list_cref::size_type j) const
+----
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::list_cref::operator==`
+
+[source]
+----
+inline bool list_cref::operator==(const list_cref & b) const
+inline bool list_cref::operator==(const list_ref & b) const
+----
+end::reference[] */
+inline bool list_cref::operator==(const list_cref & b) const
+{
+	if (length() != b.length()) return false;
+	iterator b_i = b.begin();
+	for (value_ref v : *this)
+		if (v != value_ref(*(b_i++))) return false;
+	return true;
+}
+
+/* tag::reference[]
+== `b2::list_cref` Data Access
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::list_cref::operator==`
+
+[source]
+----
+inline LIST * list_cref::data() const noexcept
+inline LIST * list_cref::operator*() const noexcept
+----
+end::reference[] */
+inline LIST * list_cref::data() const noexcept { return list_obj; }
+inline LIST * list_cref::operator*() const noexcept { return data(); }
+
+/* tag::reference[]
+
+= `b2::list_ref`
+
+Container of b2 values, that is an owning reference to the `LIST`. Mostly
+follows random access container behavior. And as an owning reference will
+allocate, copy, move `LIST` objects as needed.
+
+== `b2::list_ref` Overview
+
+[source]
+----
+end::reference[] */
 struct list_ref : private list_cref
 {
+	// types
 	using list_cref::iterator;
+	using list_cref::size_type;
+	using list_cref::value_type;
+
 	using list_cref::begin;
 	using list_cref::end;
 	using list_cref::empty;
 	using list_cref::length;
-	using list_cref::operator*;
+	using list_cref::size;
 	using list_cref::operator[];
 	using list_cref::contains;
 	using list_cref::operator==;
+	using list_cref::data;
+	using list_cref::operator*;
 
-	inline list_ref() = default;
-	inline list_ref(list_ref && other)
-		: list_cref(other.release())
-	{}
-	inline list_ref(const list_cref & other)
-		: list_cref(list_copy(*other))
-	{}
-	inline list_ref(const list_ref & other)
-		: list_cref(list_copy(other.list_obj))
-	{}
-	inline explicit list_ref(value_ref o)
-		: list_cref(list_new(o))
-	{}
-	inline explicit list_ref(LIST * l, bool own = false)
-		: list_cref(own ? l : list_copy(l))
-	{}
-	inline list_ref(iterator i, const iterator & e)
-	{
-		for (; i != e; ++i) this->push_back(value::copy(*i));
-	}
+	// construct/copy/destroy
+	list_ref() = default;
+	list_ref(list_ref && other);
+	list_ref(const list_cref & other);
+	list_ref(const list_ref & other);
+	explicit list_ref(value_ref o);
+	explicit list_ref(LIST * l, bool own = false);
+	list_ref(iterator i, const iterator & e);
+	~list_ref();
 
-	inline ~list_ref() { reset(); }
-	inline LIST * release()
-	{
-		LIST * r = list_obj;
-		list_obj = nullptr;
-		return r;
-	}
-	inline list_ref & append(const list_ref & other)
-	{
-		list_obj = list_append(list_obj, list_copy(*other));
-		return *this;
-	}
-	inline list_ref & append(list_cref other)
-	{
-		list_obj = list_append(list_obj, list_copy(*other));
-		return *this;
-	}
-	inline void reset(LIST * new_list = nullptr)
-	{
-		std::swap(list_obj, new_list);
-		if (new_list) list_free(new_list);
-	}
-	inline list_ref & pop_front()
-	{
-		list_obj = list_pop_front(list_obj);
-		return *this;
-	}
-	inline list_ref & push_back(OBJECT * value)
-	{
-		list_obj = list_push_back(list_obj, value);
-		return *this;
-	}
+	// modifiers
+	LIST * release();
+	void reset(LIST * new_list = nullptr);
+	list_ref & append(const list_ref & other);
+	list_ref & append(list_cref other);
+	list_ref & pop_front();
+	list_ref & push_back(OBJECT * value);
 	template <typename... T>
-	inline list_ref & push_back(T... value)
-	{
-		list_obj = list_push_back(list_obj, value::make(value...));
-		return *this;
-	}
+	list_ref & push_back(T... value);
 	template <typename T>
-	inline list_ref & operator+(T value)
-	{
-		return push_back(value);
-	}
-	inline list_ref & operator+(const list_ref & other)
-	{
-		return append(other);
-	}
-	inline list_ref & operator+(const list_cref & other)
-	{
-		return append(other);
-	}
-	inline list_ref & operator=(list_ref && other)
-	{
-		reset(other.list_obj);
-		other.list_obj = nullptr;
-		return *this;
-	}
-	inline list_ref & slice(int i, int j = -1)
-	{
-		list_obj
-			= list_sublist(list_obj, i, (j < 0 ? length() + j : j) - i + 1);
-		return *this;
-	}
-};
+	list_ref & operator+(T value);
+	list_ref & operator+(const list_ref & other);
+	list_ref & operator+(const list_cref & other);
+	list_ref & operator=(list_ref && other);
 
-inline list_ref list_cref::slice(int i, int j) const
+	// list operations
+	inline list_ref & slice(size_type i, size_type j = -1);
+};
+/* tag::reference[]
+----
+end::reference[] */
+
+inline list_ref list_cref::slice(
+	list_cref::size_type i, list_cref::size_type j) const
 {
 	return list_ref(
 		list_sublist(list_obj, i, (j < 0 ? length() + j : j) - i + 1), true);
@@ -361,37 +510,295 @@ inline bool list_cref::operator==(const list_ref & b) const
 	return *this == list_cref(*b);
 }
 
+inline list_ref::list_ref(list_ref && other)
+	: list_cref(other.release())
+{}
+inline list_ref::list_ref(const list_cref & other)
+	: list_cref(list_copy(*other))
+{}
+inline list_ref::list_ref(const list_ref & other)
+	: list_cref(list_copy(other.list_obj))
+{}
+inline list_ref::list_ref(value_ref o)
+	: list_cref(list_new(o))
+{}
+inline list_ref::list_ref(LIST * l, bool own)
+	: list_cref(own ? l : list_copy(l))
+{}
+inline list_ref::list_ref(iterator i, const iterator & e)
+{
+	for (; i != e; ++i) this->push_back(value::copy(*i));
+}
+inline list_ref::~list_ref() { reset(); }
+
+inline LIST * list_ref::release()
+{
+	LIST * r = list_obj;
+	list_obj = nullptr;
+	return r;
+}
+inline void list_ref::reset(LIST * new_list)
+{
+	std::swap(list_obj, new_list);
+	if (new_list) list_free(new_list);
+}
+inline list_ref & list_ref::append(const list_ref & other)
+{
+	list_obj = list_append(list_obj, list_copy(*other));
+	return *this;
+}
+inline list_ref & list_ref::append(list_cref other)
+{
+	list_obj = list_append(list_obj, list_copy(*other));
+	return *this;
+}
+inline list_ref & list_ref::pop_front()
+{
+	list_obj = list_pop_front(list_obj);
+	return *this;
+}
+inline list_ref & list_ref::push_back(OBJECT * value)
+{
+	list_obj = list_push_back(list_obj, value);
+	return *this;
+}
+template <typename... T>
+inline list_ref & list_ref::push_back(T... value)
+{
+	list_obj = list_push_back(list_obj, value::make(value...));
+	return *this;
+}
+template <typename T>
+inline list_ref & list_ref::operator+(T value)
+{
+	return push_back(value);
+}
+inline list_ref & list_ref::operator+(const list_ref & other)
+{
+	return append(other);
+}
+inline list_ref & list_ref::operator+(const list_cref & other)
+{
+	return append(other);
+}
+inline list_ref & list_ref::operator=(list_ref && other)
+{
+	reset(other.list_obj);
+	other.list_obj = nullptr;
+	return *this;
+}
+
+inline list_ref & list_ref::slice(size_type i, size_type j)
+{
+	list_obj = list_sublist(list_obj, i, (j < 0 ? length() + j : j) - i + 1);
+	return *this;
+}
+
+/* tag::reference[]
+
+= `b2::lists`
+
+Container of a "list of list" that is owning an instance of `LOL` object. The
+interface allows for inline composition of the `LOL`.
+
+== `b2::lists` Overview
+
+[source]
+----
+end::reference[] */
 struct lists
 {
-	inline lists() { lol_init(&lol); }
-	inline ~lists() { lol_free(&lol); }
-	inline void push_back(const list_cref & l) { lol_add(&lol, list_copy(*l)); }
-	inline list_cref operator[](int32_t i) const
-	{
-		return list_cref(lol_get(&lol, i));
-	}
-	inline bool empty() const { return length() == 0; }
-	inline int32_t length() const { return lol.count; }
-	inline void print() const { lol_print(&lol); }
-	inline operator LOL *() const { return &lol; }
-	inline lists & operator|(const list_cref & l)
-	{
-		push_back(l);
-		return *this;
-	}
-	inline lists & operator|(LIST * l) { return (*this) |= list_cref(l); }
-	inline lists & operator|(list_ref && l) { return (*this) |= std::move(l); }
-	inline lists & operator|=(list_ref && l)
-	{
-		list_ref to_add(std::move(l));
-		lol_add(&lol, to_add.release());
-		return *this;
-	}
-	// inline list_ref
+	// types
+	using size_type = int32_t;
+
+	// construct/copy/destroy
+	lists();
+	~lists();
+
+	// capacity
+	[[nodiscard]] bool empty() const noexcept;
+	[[nodiscard]] size_type size() const noexcept;
+	[[nodiscard]] size_type length() const noexcept;
+	[[nodiscard]] size_type max_size() const noexcept;
+	[[nodiscard]] size_type capacity() const noexcept;
+
+	// element access
+	list_cref operator[](size_type i) const;
+
+	// modifiers
+	void push_back(const list_cref & l);
+	void push_back(list_ref && l);
+	lists & operator|(const list_cref & l);
+	lists & operator|(LIST * l);
+	lists & operator|(list_ref && l);
+	lists & operator|=(list_ref && l);
+
+	// display
+	void print() const;
+
+	// data access
+	LOL * data() const noexcept;
+	operator LOL *() const noexcept;
 
 	private:
 	mutable LOL lol;
 };
+/* tag::reference[]
+----
+end::reference[] */
+
+/* tag::reference[]
+== `b2::lists` Construct/Copy/Destroy
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::lists::lists`
+end::reference[] */
+inline lists::lists() { lol_init(&lol); }
+
+/* tag::reference[]
+=== `b2::lists::~lists`
+end::reference[] */
+inline lists::~lists() { lol_free(&lol); }
+
+/* tag::reference[]
+== `b2::lists` Capacity
+end::reference[] */
+[[nodiscard]] inline bool lists::empty() const noexcept
+{
+	return length() == 0;
+}
+[[nodiscard]] inline lists::size_type lists::size() const noexcept
+{
+	return lol.count;
+}
+[[nodiscard]] inline lists::size_type lists::length() const noexcept
+{
+	return lol.count;
+}
+[[nodiscard]] inline lists::size_type lists::max_size() const noexcept
+{
+	return LOL_MAX;
+}
+[[nodiscard]] inline lists::size_type lists::capacity() const noexcept
+{
+	return LOL_MAX;
+}
+
+/* tag::reference[]
+== `b2::lists` Element Access
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::lists::operator[]`
+
+[source]
+----
+inline list_cref lists::operator[](int32_t i) const
+----
+
+Returns a constant reference, i.e. `list_cref`, of the list at the given `i`
+index.
+end::reference[] */
+inline list_cref lists::operator[](list_cref::size_type i) const
+{
+	return list_cref(lol_get(&lol, i));
+}
+
+/* tag::reference[]
+== `b2::lists` Modifiers
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::lists::push_back`
+
+[source]
+----
+inline void lists::push_back(const list_cref & l)
+inline void lists::push_back(list_ref && l)
+----
+
+Adds the given list to the end of the `LOL`.
+end::reference[] */
+inline void lists::push_back(const list_cref & l)
+{
+	lol_add(&lol, list_copy(*l));
+}
+inline void lists::push_back(list_ref && l)
+{
+	list_ref to_add(std::move(l));
+	lol_add(&lol, to_add.release());
+}
+
+/* tag::reference[]
+=== `b2::lists::operator|`
+
+[source]
+----
+inline lists & lists::operator|(const list_cref & l)
+inline lists & lists::operator|(LIST * l)
+inline lists & lists::operator|(list_ref && l)
+inline lists & lists::operator|=(list_ref && l)
+----
+
+Adds the given list to the end of the `LOL`. This returns this object making it
+possible to chain additions into a single statement.
+end::reference[] */
+inline lists & lists::operator|(const list_cref & l)
+{
+	push_back(l);
+	return *this;
+}
+inline lists & lists::operator|(LIST * l)
+{
+	push_back(list_cref(l));
+	return *this;
+}
+inline lists & lists::operator|(list_ref && l)
+{
+	push_back(std::move(l));
+	return *this;
+}
+inline lists & lists::operator|=(list_ref && l)
+{
+	push_back(std::move(l));
+	return *this;
+}
+
+/* tag::reference[]
+== `b2::lists` Element Access
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::lists::print`
+
+[source]
+----
+inline void lists::print() const
+----
+
+Outputs, to cout, the lists as colon (`:`) separated and space separated
+elements.
+end::reference[] */
+inline void lists::print() const { lol_print(&lol); }
+
+/* tag::reference[]
+== `b2::lists` Data Access
+end::reference[] */
+
+/* tag::reference[]
+=== `b2::lists::data`
+
+[source]
+----
+inline LOL * lists::data() const noexcept
+inline lists::operator LOL *() const noexcept
+----
+
+Returns the underlying `LOL` object.
+end::reference[] */
+inline LOL * lists::data() const noexcept { return &lol; }
+inline lists::operator LOL *() const noexcept { return data(); }
 
 } // namespace b2
 

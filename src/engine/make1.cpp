@@ -103,7 +103,7 @@ static void make1c_closure( void * const closure, int32_t status,
     timing_info const * const, char const * const cmd_stdout,
     char const * const cmd_stderr, int32_t const cmd_exit_reason );
 
-typedef struct _stack
+typedef struct make_state_stack
 {
     state * stack;
 } stack;
