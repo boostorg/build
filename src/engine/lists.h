@@ -184,9 +184,9 @@ struct list_cref
 	iterator end() const;
 
 	// capacity
-	[[nodiscard]] bool empty() const noexcept;
-	[[nodiscard]] size_type length() const noexcept;
-	[[nodiscard]] size_type size() const noexcept;
+	bool empty() const noexcept;
+	size_type length() const noexcept;
+	size_type size() const noexcept;
 
 	// element access
 	value_type & operator[](size_type i) const;
@@ -327,10 +327,10 @@ end::reference[] */
 
 [source]
 ----
-[[nodiscard]] inline bool list_cref::empty() const noexcept
+inline bool list_cref::empty() const noexcept
 ----
 end::reference[] */
-[[nodiscard]] inline bool list_cref::empty() const noexcept
+inline bool list_cref::empty() const noexcept
 {
 	return list_empty(list_obj) || length() == 0;
 }
@@ -340,15 +340,15 @@ end::reference[] */
 
 [source]
 ----
-[[nodiscard]] inline list_cref::size_type list_cref::length() const noexcept
-[[nodiscard]] inline list_cref::size_type list_cref::size() const noexcept
+inline list_cref::size_type list_cref::length() const noexcept
+inline list_cref::size_type list_cref::size() const noexcept
 ----
 end::reference[] */
-[[nodiscard]] inline list_cref::size_type list_cref::length() const noexcept
+inline list_cref::size_type list_cref::length() const noexcept
 {
 	return list_length(list_obj);
 }
-[[nodiscard]] inline list_cref::size_type list_cref::size() const noexcept
+inline list_cref::size_type list_cref::size() const noexcept
 {
 	return length();
 }
@@ -616,11 +616,11 @@ struct lists
 	~lists();
 
 	// capacity
-	[[nodiscard]] bool empty() const noexcept;
-	[[nodiscard]] size_type size() const noexcept;
-	[[nodiscard]] size_type length() const noexcept;
-	[[nodiscard]] size_type max_size() const noexcept;
-	[[nodiscard]] size_type capacity() const noexcept;
+	bool empty() const noexcept;
+	size_type size() const noexcept;
+	size_type length() const noexcept;
+	size_type max_size() const noexcept;
+	size_type capacity() const noexcept;
 
 	// element access
 	list_cref operator[](size_type i) const;
@@ -664,23 +664,23 @@ inline lists::~lists() { lol_free(&lol); }
 /* tag::reference[]
 == `b2::lists` Capacity
 end::reference[] */
-[[nodiscard]] inline bool lists::empty() const noexcept
+inline bool lists::empty() const noexcept
 {
 	return length() == 0;
 }
-[[nodiscard]] inline lists::size_type lists::size() const noexcept
+inline lists::size_type lists::size() const noexcept
 {
 	return lol.count;
 }
-[[nodiscard]] inline lists::size_type lists::length() const noexcept
+inline lists::size_type lists::length() const noexcept
 {
 	return lol.count;
 }
-[[nodiscard]] inline lists::size_type lists::max_size() const noexcept
+inline lists::size_type lists::max_size() const noexcept
 {
 	return LOL_MAX;
 }
-[[nodiscard]] inline lists::size_type lists::capacity() const noexcept
+inline lists::size_type lists::capacity() const noexcept
 {
 	return LOL_MAX;
 }
