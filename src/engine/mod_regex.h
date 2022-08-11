@@ -36,8 +36,8 @@ Contains rules for string processing using regular expressions.
 * `(x)` matches `"x"` and captures it.
 * `"^"` matches the beginning of the string.
 * `"$"` matches the end of the string.
-* "\<" matches the beginning of a word.
-* "\>" matches the end of a word.
+* `"<"` matches the beginning of a word.
+* `">"` matches the end of a word.
 
 See also: link:#jam.language.rules.builtins.utility.\_match__[MATCH]
 

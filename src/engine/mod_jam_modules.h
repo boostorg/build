@@ -22,6 +22,28 @@ Distributed under the Boost Software License, Version 1.0.
 [[b2.reference.modules.modules]]
 = `modules` module.
 
+The `modules` module defines basic functionality for handling modules.
+
+A module defines a number of rules that can be used in other modules.
+Modules can contain code at the top level to initialize the module. This
+code is executed the first time the module is loaded.
+
+NOTE: A Jamfile is a special kind of module which is managed by the build
+system. Although they cannot be loaded directly by users, the other
+features of modules are still useful for Jamfiles.
+
+Each module has its own namespaces for variables and rules. If two
+modules A and B both use a variable named X, each one gets its own copy
+of X. They won't interfere with each other in any way. Similarly,
+importing rules into one module has no effect on any other module.
+
+Every module has two special variables. `$(__file__)` contains the name
+of the file that the module was loaded from and `$(__name__)` contains
+the name of the module.
+
+NOTE: `$(__file__)` does not contain the full path to the file. If you need
+this, use `modules.binding`.
+
 end::reference[] */
 
 namespace b2 { namespace jam { namespace modules {
@@ -36,7 +58,14 @@ Jam:: `rule binding ( module_name )`
 {CPP}:: `value_ref binding(std::string module_name);`
 ====
 
-Return the binding of the given module.
+Returns the filesystem binding of the given module.
+
+For example, a module can get its own location with:
+
+[source,jam]
+----
+me = [ modules.binding $(__name__) ] ;
+----
 
 end::reference[] */
 list_ref binding(std::string module_name);
@@ -74,6 +103,13 @@ Sets the module-local value of a variable. This is the most reliable way to
 set a module-local variable in a different module; it eliminates issues of
 name shadowing due to dynamic scoping.
 
+For example, to set a variable in the global module:
+
+[source,jam]
+----
+modules.poke : ZLIB_INCLUDE : /usr/local/include ;
+----
+
 end::reference[] */
 void poke(std::string module_name, list_cref variables, list_cref value);
 
@@ -90,6 +126,13 @@ Jam:: `rule peek ( module_name ? : variables + )`
 Returns the module-local value of a variable. This is the most reliable way to
 examine a module-local variable in a different module; it eliminates issues of
 name shadowing due to dynamic scoping.
+
+For example, to read a variable from the global module:
+
+[source,jam]
+----
+local ZLIB_INCLUDE = [ modules.peek : ZLIB_INCLUDE ] ;
+----
 
 end::reference[] */
 list_ref peek(std::string module_name, list_cref variables);
@@ -131,6 +174,25 @@ Call the given rule locally in the given module. Use this for rules accepting
 rule names as arguments, so that the passed rule may be invoked in the context
 of the rule's caller (for example, if the rule accesses module globals or is a
 local rule). Note that rules called this way may accept at most 18 parameters.
+
+Example:
+
+[source,jam]
+----
+rule filter ( f : values * )
+{
+	local m = [ CALLER_MODULE ] ;
+	local result ;
+	for v in $(values)
+	{
+		if [ modules.call-in $(m) : $(f) $(v) ]
+		{
+			result += $(v) ;
+		}
+	}
+	return result ;
+}
+----
 
 end::reference[] */
 list_ref call_in(value_ref module_name,
@@ -224,6 +286,16 @@ search, bind::context_ref_ context_ref);`
 
 Load the indicated module if it is not already loaded.
 
+`module-name`::
+  Name of module to load.
+
+`filename`::
+  (partial) path to file; Defaults to `$(module-name).jam`
+
+`search`::
+  Directories in which to search for filename. Defaults to
+  `$(BOOST_BUILD_PATH)`.
+
 end::reference[] */
 void load(value_ref module_name,
 	value_ref filename,
@@ -248,6 +320,18 @@ the caller's module, in place of the names they have in the imported module.
 If `rules-opt` = `*`, all rules from the indicated module are imported into the
 caller's module. If `rename-opt` is supplied, it must have the same number of
 elements as `rules-opt`.
+
+NOTE: The `import` rule is available without qualification in all modules.
+
+Examples:
+
+[source,jam]
+----
+import path ;
+import path : * ;
+import path : join ;
+import path : native make : native-path make-path ;
+----
 
 end::reference[] */
 void import(list_cref module_names,
