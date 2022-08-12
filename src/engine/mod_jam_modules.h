@@ -164,10 +164,7 @@ void clone_rules(std::tuple<std::string, std::string> source_target_modules);
 [horizontal]
 Jam:: `rule call-in ( module-name ? : rule-name args * : * )`
 {CPP}:: `list_ref call_in(value_ref module_name, std::tuple<value_ref, list_ref>
-rule_name_a1, list_cref a2, list_cref a3, list_cref a4, list_cref a5, list_cref
-a6, list_cref a7, list_cref a8, list_cref a9, list_cref a10, list_cref a11,
-list_cref a12, list_cref a13, list_cref a14, list_cref a15, list_cref a16,
-list_cref a17, bind::context_ref_ context_ref);`
+const lists & rest, bind::context_ref_ context_ref);`
 ====
 
 Call the given rule locally in the given module. Use this for rules accepting
@@ -197,23 +194,7 @@ rule filter ( f : values * )
 end::reference[] */
 list_ref call_in(value_ref module_name,
 	std::tuple<value_ref, list_ref> rule_name_a1,
-	list_cref a2,
-	list_cref a3,
-	list_cref a4,
-	list_cref a5,
-	list_cref a6,
-	list_cref a7,
-	list_cref a8,
-	list_cref a9,
-	list_cref a10,
-	list_cref a11,
-	list_cref a12,
-	list_cref a13,
-	list_cref a14,
-	list_cref a15,
-	list_cref a16,
-	list_cref a17,
-	list_cref a18,
+	const lists & rest,
 	bind::context_ref_ context_ref);
 
 /* tag::reference[]
@@ -224,10 +205,7 @@ list_ref call_in(value_ref module_name,
 [horizontal]
 Jam:: `rule call-locally ( qualified-rule-name args * : * )`
 {CPP}:: `list_ref call_locally(std::tuple<value_ref, list_ref> rule_name_a1,
-list_cref a2, list_cref a3, list_cref a4, list_cref a5, list_cref a6, list_cref
-a7, list_cref a8, list_cref a9, list_cref a10, list_cref a11, list_cref a12,
-list_cref a13, list_cref a14, list_cref a15, list_cref a16, list_cref a17, const
-bind::context_ref_ & context_ref);`
+const lists & rest, const bind::context_ref_ & context_ref);`
 ====
 
 Given a possibly qualified rule name and arguments, remove any initial module
@@ -237,23 +215,7 @@ rules called this way may accept at most 18 parameters.
 
 end::reference[] */
 list_ref call_locally(std::tuple<std::string, list_ref> rule_name_a1,
-	list_cref a2,
-	list_cref a3,
-	list_cref a4,
-	list_cref a5,
-	list_cref a6,
-	list_cref a7,
-	list_cref a8,
-	list_cref a9,
-	list_cref a10,
-	list_cref a11,
-	list_cref a12,
-	list_cref a13,
-	list_cref a14,
-	list_cref a15,
-	list_cref a16,
-	list_cref a17,
-	list_cref a18,
+	const lists & rest,
 	bind::context_ref_ context_ref);
 
 /* tag::reference[]
@@ -356,17 +318,10 @@ struct modules_module : b2::bind::module_<modules_module>
 			.def(&clone_rules, "clone-rules",
 				"source_module" * _1 + "target_module" * _1)
 			.def(&call_in, "call-in",
-				"module_name" * _01 | ("rule_name" * _1 + "a1" * _n) | "a2" * _n
-					| "a3" * _n | "a4" * _n | "a5" * _n | "a6" * _n | "a7" * _n
-					| "a8" * _n | "a9" * _n | "a10" * _n | "a11" * _n
-					| "a12" * _n | "a13" * _n | "a14" * _n | "a15" * _n
-					| "a16" * _n | "a17" * _n | "a18" * _n)
+				"module_name" * _01 | ("rule_name" * _1 + "a1" * _n)
+					| "rest" * _r)
 			.def(&call_locally, "call-locally",
-				("rule_name" * _1 + "a1" * _n) | "a2" * _n | "a3" * _n
-					| "a4" * _n | "a5" * _n | "a6" * _n | "a7" * _n | "a8" * _n
-					| "a9" * _n | "a10" * _n | "a11" * _n | "a12" * _n
-					| "a13" * _n | "a14" * _n | "a15" * _n | "a16" * _n
-					| "a17" * _n | "a18" * _n)
+				("rule_name" * _1 + "a1" * _n) | "rest" * _r)
 			.def(&b2::paths::normalize_all, "normalize-paths", "paths" * _n)
 			.def(&run_tests, "run-tests", "m" * _1)
 			.def(&load, "load",

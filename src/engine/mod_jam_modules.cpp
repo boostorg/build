@@ -77,52 +77,20 @@ void clone_rules(std::tuple<std::string, std::string> source_target_modules)
 
 list_ref call_in(value_ref module_name,
 	std::tuple<value_ref, list_ref> rule_name_a1,
-	list_cref a2,
-	list_cref a3,
-	list_cref a4,
-	list_cref a5,
-	list_cref a6,
-	list_cref a7,
-	list_cref a8,
-	list_cref a9,
-	list_cref a10,
-	list_cref a11,
-	list_cref a12,
-	list_cref a13,
-	list_cref a14,
-	list_cref a15,
-	list_cref a16,
-	list_cref a17,
-	list_cref a18,
+	const lists & rest,
 	bind::context_ref_ context_ref)
 {
 	value_ref rule_name = std::get<0>(rule_name_a1);
 	frame * outer = context_ref.get<jam_context>().frame;
 	module_scope scope(outer, module_name->str());
-	LIST * result = call_rule(rule_name, outer,
-		lists() | *std::get<1>(rule_name_a1) | a2 | a3 | a4 | a5 | a6 | a7 | a8
-			| a9 | a10 | a11 | a12 | a13 | a14 | a15 | a16 | a17 | a18);
+	lists args;
+	args | *std::get<1>(rule_name_a1) | rest;
+	LIST * result = call_rule(rule_name, outer, args);
 	return list_ref(result, true);
 }
 
 list_ref call_locally(std::tuple<std::string, list_ref> rule_name_a1,
-	list_cref a2,
-	list_cref a3,
-	list_cref a4,
-	list_cref a5,
-	list_cref a6,
-	list_cref a7,
-	list_cref a8,
-	list_cref a9,
-	list_cref a10,
-	list_cref a11,
-	list_cref a12,
-	list_cref a13,
-	list_cref a14,
-	list_cref a15,
-	list_cref a16,
-	list_cref a17,
-	list_cref a18,
+	const lists & rest,
 	bind::context_ref_ context_ref)
 {
 	std::string rule_name = std::get<0>(rule_name_a1);
@@ -135,9 +103,9 @@ list_ref call_locally(std::tuple<std::string, list_ref> rule_name_a1,
 	}
 	frame * outer = context_ref.get<jam_context>().frame;
 	module_scope scope(outer, module_name.c_str());
-	LIST * result = call_rule(value_ref(rule_name), outer,
-		lists() | *std::get<1>(rule_name_a1) | a2 | a3 | a4 | a5 | a6 | a7 | a8
-			| a9 | a10 | a11 | a12 | a13 | a14 | a15 | a16 | a17 | a18);
+	lists args;
+	args | *std::get<1>(rule_name_a1) | rest;
+	LIST * result = call_rule(value_ref(rule_name), outer, args);
 	return list_ref(result, true);
 }
 

@@ -80,7 +80,8 @@ struct param_
 		one,
 		any,
 		many,
-		optional
+		optional,
+        rest
 	};
 
 	// The symbolic name of this argument.
@@ -532,6 +533,10 @@ enum bind_param_count_optional : bool
 {
 	_01 = true
 };
+enum bind_param_count_rest : bool
+{
+	_r = true
+};
 
 inline bind::param_ operator*(const char * name, bind_param_count_one)
 {
@@ -551,6 +556,11 @@ inline bind::param_ operator*(const char * name, bind_param_count_many)
 inline bind::param_ operator*(const char * name, bind_param_count_optional)
 {
 	return bind::param_ { name, bind::param_::optional };
+}
+
+inline bind::param_ operator*(const char * name, bind_param_count_rest)
+{
+	return bind::param_ { name, bind::param_::rest };
 }
 
 } // namespace b2

@@ -330,6 +330,18 @@ struct jam_marshal_arg<N, bind::context_ref_>
 	}
 };
 
+template <std::size_t N>
+struct jam_marshal_arg<N, lists>
+{
+	template <class ArgsTuple>
+	static void convert(ArgsTuple & to_args, jam_context & context)
+	{
+		lists & to_arg = std::get<N>(to_args);
+		for (int32_t i = N; i < context.frame->args->count; ++i)
+			to_arg | lol_get(context.frame->args, i);
+	}
+};
+
 template <class ArgsTuple, std::size_t N, class Enable = void>
 struct jam_marshal_args
 {
@@ -569,6 +581,11 @@ struct jam_arg_spec
 		if (count > 0) spec[count++] = ":";
 		for (int i = 0; i < C; ++i)
 		{
+			if (arg.args[i].count == ::b2::bind::param_::rest)
+			{
+				spec[count++] = "*";
+				break;
+			}
 			spec[count++] = arg.args[i].name;
 			switch (arg.args[i].count)
 			{

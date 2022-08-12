@@ -755,6 +755,8 @@ struct lists
 	lists & operator|(LIST * l);
 	lists & operator|(list_ref && l);
 	lists & operator|=(list_ref && l);
+	lists & append(const lists & lol);
+	lists & operator|(const lists & lol);
 
 	// display
 	void print() const;
@@ -883,6 +885,13 @@ inline lists & lists::operator|=(list_ref && l)
 	push_back(std::move(l));
 	return *this;
 }
+
+inline lists & lists::append(const lists & lol)
+{
+	for (size_type i = 0; i < lol.length(); ++i) push_back(lol[i]);
+	return *this;
+}
+inline lists & lists::operator|(const lists & lol) { return append(lol); }
 
 /* tag::reference[]
 == `b2::lists` Element Access
