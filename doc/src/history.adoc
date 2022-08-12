@@ -13,7 +13,8 @@ other Jam files.
 
 * *New*: Support for Jam native variant values of string (original Jam value
   type), number (floating point numbers), and object (instances of classes).
-* *New*: Port modules `regex`, `set`, `string`, `sysinfo`, and `version` to
+  -- _René Ferdinand Rivera Morell_
+* *New*: Port modules `modules`, `regex`, `set`, `string`, and `sysinfo` to
   {CPP}.
   -- _René Ferdinand Rivera Morell_
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.

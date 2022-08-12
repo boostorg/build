@@ -62,6 +62,8 @@ include::examples.adoc[]
 
 include::bjam.adoc[]
 
+include::code_ref.adoc[]
+
 include::history.adoc[]
 
 :leveloffset: -1
