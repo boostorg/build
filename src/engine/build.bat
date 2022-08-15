@@ -178,6 +178,7 @@ set B2_SOURCES=%B2_SOURCES% pathsys.cpp pathunix.cpp regexp.cpp rules.cpp scan.c
 set B2_SOURCES=%B2_SOURCES% startup.cpp subst.cpp
 set B2_SOURCES=%B2_SOURCES% timestamp.cpp value.cpp variable.cpp w32_getreg.cpp
 set B2_SOURCES=%B2_SOURCES% mod_jam_modules.cpp
+set B2_SOURCES=%B2_SOURCES% mod_jam_class.cpp
 set B2_SOURCES=%B2_SOURCES% mod_order.cpp
 set B2_SOURCES=%B2_SOURCES% mod_path.cpp
 set B2_SOURCES=%B2_SOURCES% mod_property_set.cpp

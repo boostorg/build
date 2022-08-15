@@ -486,6 +486,7 @@ value.cpp \
 variable.cpp \
 w32_getreg.cpp \
 mod_jam_modules.cpp \
+mod_jam_class.cpp \
 mod_order.cpp \
 mod_path.cpp \
 mod_property_set.cpp \
