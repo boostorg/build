@@ -185,9 +185,9 @@ struct list_cref
 	iterator end() const;
 
 	// capacity
-	bool empty() const noexcept;
-	size_type length() const noexcept;
-	size_type size() const noexcept;
+	bool empty() const B2_NOEXCEPT;
+	size_type length() const B2_NOEXCEPT;
+	size_type size() const B2_NOEXCEPT;
 
 	// element access
 	value_type & operator[](size_type i) const;
@@ -199,8 +199,8 @@ struct list_cref
 	bool operator==(const list_ref & b) const;
 
 	// data access
-	LIST * data() const noexcept;
-	LIST * operator*() const noexcept;
+	LIST * data() const B2_NOEXCEPT;
+	LIST * operator*() const B2_NOEXCEPT;
 
 	protected:
 	friend struct iterator;
@@ -329,10 +329,10 @@ end::reference[] */
 
 [source,cpp]
 ----
-inline bool list_cref::empty() const noexcept
+inline bool list_cref::empty() const B2_NOEXCEPT
 ----
 end::reference[] */
-inline bool list_cref::empty() const noexcept
+inline bool list_cref::empty() const B2_NOEXCEPT
 {
 	return list_empty(list_obj) || length() == 0;
 }
@@ -342,15 +342,15 @@ inline bool list_cref::empty() const noexcept
 
 [source,cpp]
 ----
-inline list_cref::size_type list_cref::length() const noexcept
-inline list_cref::size_type list_cref::size() const noexcept
+inline list_cref::size_type list_cref::length() const B2_NOEXCEPT
+inline list_cref::size_type list_cref::size() const B2_NOEXCEPT
 ----
 end::reference[] */
-inline list_cref::size_type list_cref::length() const noexcept
+inline list_cref::size_type list_cref::length() const B2_NOEXCEPT
 {
 	return list_length(list_obj);
 }
-inline list_cref::size_type list_cref::size() const noexcept
+inline list_cref::size_type list_cref::size() const B2_NOEXCEPT
 {
 	return length();
 }
@@ -430,12 +430,12 @@ end::reference[] */
 
 [source,cpp]
 ----
-inline LIST * list_cref::data() const noexcept
-inline LIST * list_cref::operator*() const noexcept
+inline LIST * list_cref::data() const B2_NOEXCEPT
+inline LIST * list_cref::operator*() const B2_NOEXCEPT
 ----
 end::reference[] */
-inline LIST * list_cref::data() const noexcept { return list_obj; }
-inline LIST * list_cref::operator*() const noexcept { return data(); }
+inline LIST * list_cref::data() const B2_NOEXCEPT { return list_obj; }
+inline LIST * list_cref::operator*() const B2_NOEXCEPT { return data(); }
 
 /* tag::reference[]
 
@@ -740,11 +740,11 @@ struct lists
 	~lists();
 
 	// capacity
-	bool empty() const noexcept;
-	size_type size() const noexcept;
-	size_type length() const noexcept;
-	size_type max_size() const noexcept;
-	size_type capacity() const noexcept;
+	bool empty() const B2_NOEXCEPT;
+	size_type size() const B2_NOEXCEPT;
+	size_type length() const B2_NOEXCEPT;
+	size_type max_size() const B2_NOEXCEPT;
+	size_type capacity() const B2_NOEXCEPT;
 
 	// element access
 	list_cref operator[](size_type i) const;
@@ -764,8 +764,8 @@ struct lists
 	void print() const;
 
 	// data access
-	LOL * data() const noexcept;
-	operator LOL *() const noexcept;
+	LOL * data() const B2_NOEXCEPT;
+	operator LOL *() const B2_NOEXCEPT;
 
 	private:
 	mutable LOL lol;
@@ -808,11 +808,11 @@ inline lists::~lists() { lol_free(&lol); }
 /* tag::reference[]
 == `b2::lists` Capacity
 end::reference[] */
-inline bool lists::empty() const noexcept { return length() == 0; }
-inline lists::size_type lists::size() const noexcept { return lol.count; }
-inline lists::size_type lists::length() const noexcept { return lol.count; }
-inline lists::size_type lists::max_size() const noexcept { return LOL_MAX; }
-inline lists::size_type lists::capacity() const noexcept { return LOL_MAX; }
+inline bool lists::empty() const B2_NOEXCEPT { return length() == 0; }
+inline lists::size_type lists::size() const B2_NOEXCEPT { return lol.count; }
+inline lists::size_type lists::length() const B2_NOEXCEPT { return lol.count; }
+inline lists::size_type lists::max_size() const B2_NOEXCEPT { return LOL_MAX; }
+inline lists::size_type lists::capacity() const B2_NOEXCEPT { return LOL_MAX; }
 
 /* tag::reference[]
 == `b2::lists` Element Access
@@ -939,14 +939,14 @@ end::reference[] */
 
 [source,cpp]
 ----
-inline LOL * lists::data() const noexcept
-inline lists::operator LOL *() const noexcept
+inline LOL * lists::data() const B2_NOEXCEPT
+inline lists::operator LOL *() const B2_NOEXCEPT
 ----
 
 Returns the underlying `LOL` object.
 end::reference[] */
-inline LOL * lists::data() const noexcept { return &lol; }
-inline lists::operator LOL *() const noexcept { return data(); }
+inline LOL * lists::data() const B2_NOEXCEPT { return &lol; }
+inline lists::operator LOL *() const B2_NOEXCEPT { return data(); }
 
 } // namespace b2
 
