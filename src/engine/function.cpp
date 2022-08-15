@@ -656,7 +656,7 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 
     b2::lists args;
     for (b2::lists::size_type i = 0; i < n_args; ++i)
-        args.push_back(std::move(b2::list_ref(s->top<LIST*>( n_args - i - 1 ), true)));
+        args.push_back(b2::list_ref(s->top<LIST*>( n_args - i - 1 ), true));
     for (b2::lists::size_type i = 0; i < n_args; ++i)
         s->pop<LIST *>();
 
