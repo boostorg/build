@@ -38,10 +38,13 @@
 #include "variable.h"
 #include "output.h"
 #include "startup.h"
+#include "value.h"
 
 #include <assert.h>
 #include <stdarg.h>
 #include <string.h>
+
+#include <string>
 
 
 static void debug_compile( int which, char const * s, FRAME * );
@@ -210,6 +213,72 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, LIST * arg, ... )
     }
 
     return call_rule( rulename, caller_frame, args );
+}
+
+
+LIST * call_member_rule(
+	OBJECT * rulename, FRAME * caller_frame, b2::list_ref && self_, b2::lists && args_)
+{
+    b2::list_ref self(std::move(self_));
+    b2::lists args(std::move(args_));
+    if (self.empty())
+    {
+        backtrace_line(caller_frame);
+        out_printf("warning: object is empty\n");
+        backtrace(caller_frame);
+        return L0;
+    }
+
+    /* FIXME: handle generic case */
+    assert( self.length() == 1 );
+
+    module_ptr module = bindmodule(self[0]);
+    rule_ptr rule = nullptr;
+    b2::value_ref real_rulename;
+
+    if (module->class_module)
+    {
+        rule = bindrule(rulename, module);
+        if (rule->procedure)
+        {
+            real_rulename = b2::value_ref(function_rulename(rule->procedure));
+        }
+        else
+        {
+            real_rulename = std::string(module->name->str())+"."+rulename->str();
+        }
+    }
+    else
+    {
+        real_rulename = std::string(self[0]->str())+"."+rulename->str();
+        rule = bindrule(real_rulename, caller_frame->module);
+    }
+
+    FRAME inner[ 1 ];
+    frame_init( inner );
+    inner->prev = caller_frame;
+    inner->prev_user = caller_frame->module->user_module
+        ? caller_frame : caller_frame->prev_user;
+    inner->module = caller_frame->module;
+
+    args.swap( inner->args[0] );
+
+    if (self.length() > 1)
+    {
+        b2::list_ref trailing;
+        for (int i = 1; i < self.length(); ++i)
+            trailing.push_back(std::string(self[i]->str())+"."+rulename->str());
+        if (inner->args->count == 0)
+            lol_add(inner->args, trailing.release());
+        else
+        {
+            trailing.append(b2::list_cref(inner->args->list[0]));
+            list_free(inner->args->list[0]);
+            inner->args->list[0] = trailing.release();
+        }
+    }
+
+    return evaluate_rule(rule, real_rulename, inner);
 }
 
 

@@ -736,6 +736,7 @@ struct lists
 
 	// construct/copy/destroy
 	lists();
+	lists(lists && other);
 	~lists();
 
 	// capacity
@@ -757,6 +758,7 @@ struct lists
 	lists & operator|=(list_ref && l);
 	lists & append(const lists & lol);
 	lists & operator|(const lists & lol);
+	void swap(LOL & other);
 
 	// display
 	void print() const;
@@ -783,9 +785,15 @@ end::reference[] */
 [source,cpp]
 ----
 inline lists::lists()
+inline lists::lists(lists && other)
 ----
 end::reference[] */
 inline lists::lists() { lol_init(&lol); }
+inline lists::lists(lists && other)
+{
+	lol_init(&lol);
+	std::swap(lol, other.lol);
+}
 
 /* tag::reference[]
 === `b2::lists::~lists`
@@ -892,6 +900,18 @@ inline lists & lists::append(const lists & lol)
 	return *this;
 }
 inline lists & lists::operator|(const lists & lol) { return append(lol); }
+
+/* tag::reference[]
+=== `b2::lists::swap`
+
+[source,cpp]
+----
+inline void lists::swap(LOL & other)
+----
+
+Swaps the data from `other` with this.
+end::reference[] */
+inline void lists::swap(LOL & other) { std::swap(lol, other); }
 
 /* tag::reference[]
 == `b2::lists` Element Access

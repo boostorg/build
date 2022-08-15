@@ -645,120 +645,22 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
 
 static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame, STACK * s, int32_t n_args, OBJECT * rulename, OBJECT * file, int32_t line )
 {
-    FRAME   inner[ 1 ];
-    int32_t i;
-    LIST * first = s->pop<LIST *>();
-    LIST * result = L0;
-    RULE * rule;
-    module_t * module;
-    OBJECT * real_rulename = 0;
-
-    frame->file = file;
-    frame->line = line;
-
-    if ( list_empty( first ) )
-    {
-        backtrace_line( frame );
-        out_printf( "warning: object is empty\n" );
-        backtrace( frame );
-
-        list_free( first );
-
-        for( i = 0; i < n_args; ++i )
-        {
-            list_free( s->pop<LIST *>() );
-        }
-
-        return result;
-    }
-
-    /* FIXME: handle generic case */
-    assert( list_length( first ) == 1 );
-
-    module = bindmodule( list_front( first ) );
-    if ( module->class_module )
-    {
-        rule = bindrule( rulename, module );
-        if ( rule->procedure )
-        {
-            real_rulename = object_copy( function_rulename( rule->procedure ) );
-        }
-        else
-        {
-            string buf[ 1 ];
-            string_new( buf );
-            string_append( buf, object_str( module->name ) );
-            string_push_back( buf, '.' );
-            string_append( buf, object_str( rulename ) );
-            real_rulename = object_new( buf->value );
-            string_free( buf );
-        }
-    }
-    else
-    {
-        string buf[ 1 ];
-        string_new( buf );
-        string_append( buf, object_str( list_front( first ) ) );
-        string_push_back( buf, '.' );
-        string_append( buf, object_str( rulename ) );
-        real_rulename = object_new( buf->value );
-        string_free( buf );
-        rule = bindrule( real_rulename, frame->module );
-    }
-
-    frame_init( inner );
-
-    inner->prev = frame;
-    inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
-    inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
-
     if ( n_args > LOL_MAX )
     {
         out_printf( "ERROR: member rules are limited to %d arguments\n", LOL_MAX );
-        backtrace( inner );
+        backtrace( frame );
         b2::clean_exit( EXITBAD );
     }
 
-    for( i = 0; i < n_args; ++i )
-    {
-        lol_add( inner->args, s->top<LIST*>( n_args - i - 1 ) );
-    }
+    b2::list_ref first(s->pop<LIST *>(), true);
 
-    for( i = 0; i < n_args; ++i )
-    {
+    b2::lists args;
+    for (b2::lists::size_type i = 0; i < n_args; ++i)
+        args.push_back(std::move(b2::list_ref(s->top<LIST*>( n_args - i - 1 ), true)));
+    for (b2::lists::size_type i = 0; i < n_args; ++i)
         s->pop<LIST *>();
-    }
 
-    if ( list_length( first ) > 1 )
-    {
-        string buf[ 1 ];
-        LIST * trailing = L0;
-        LISTITER iter = list_begin( first ), end = list_end( first );
-        iter = list_next( iter );
-        string_new( buf );
-        for ( ; iter != end; iter = list_next( iter ) )
-        {
-            string_append( buf, object_str( list_item( iter ) ) );
-            string_push_back( buf, '.' );
-            string_append( buf, object_str( rulename ) );
-            trailing = list_push_back( trailing, object_new( buf->value ) );
-            string_truncate( buf, 0 );
-        }
-        string_free( buf );
-        if ( inner->args->count == 0 )
-            lol_add( inner->args, trailing );
-        else
-        {
-            LIST * * const l = &inner->args->list[ 0 ];
-            *l = list_append( trailing, *l );
-        }
-    }
-
-    list_free( first );
-    result = evaluate_rule( rule, real_rulename, inner );
-    frame_free( inner );
-    object_free( real_rulename );
-    return result;
+    return call_member_rule( rulename, frame, std::move(first), std::move(args) );
 }
 
 

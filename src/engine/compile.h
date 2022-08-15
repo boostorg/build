@@ -30,6 +30,10 @@ void compile_builtins();
 LIST * evaluate_rule(RULE * rule, OBJECT * rulename, FRAME *);
 LIST * call_rule(OBJECT * rulename, FRAME * caller_frame, LIST * arg, ...);
 LIST * call_rule(OBJECT * rulename, FRAME * caller_frame, LOL * args);
+LIST * call_member_rule(OBJECT * rulename,
+	FRAME * caller_frame,
+	b2::list_ref && self,
+	b2::lists && args);
 
 /* Flags for compile_set(), etc */
 
@@ -69,7 +73,7 @@ list_ref run_rule(FRAME * caller_frame, const char * name, Args... arg)
 {
 	lists args;
 	int _[] { 0, ((void)(args |= std::move(arg)), 0)... };
-    (void)_;
+	(void)_;
 	return list_ref(call_rule(value_ref(name), caller_frame, args), true);
 }
 

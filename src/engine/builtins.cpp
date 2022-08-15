@@ -345,12 +345,6 @@ void load_builtins()
     }
 
     {
-        char const * args[] = { "instance_module", ":", "class_module", 0 };
-        bind_builtin( "INSTANCE",
-                      builtin_instance, 0, args );
-    }
-
-    {
         char const * args[] = { "sequence", "*", 0 };
         bind_builtin( "SORT",
                       builtin_sort, 0, args );
@@ -1544,18 +1538,6 @@ LIST * builtin_imported_modules( FRAME * frame, int flags )
     LIST * const arg0 = lol_get( frame->args, 0 );
     OBJECT * const module = list_empty( arg0 ) ? 0 : list_front( arg0 );
     return imported_modules( bindmodule( module ) );
-}
-
-
-LIST * builtin_instance( FRAME * frame, int flags )
-{
-    LIST * arg1 = lol_get( frame->args, 0 );
-    LIST * arg2 = lol_get( frame->args, 1 );
-    module_t * const instance     = bindmodule( list_front( arg1 ) );
-    module_t * const class_module = bindmodule( list_front( arg2 ) );
-    instance->class_module = class_module;
-    module_set_fixed_variables( instance, class_module->num_fixed_variables );
-    return L0;
 }
 
 
