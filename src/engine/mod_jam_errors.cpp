@@ -153,11 +153,10 @@ void error_catch(const lists & messages, bind::context_ref_ context_ref)
 					last_error().clear();
 					error_skip_frames(1,
 						lists()
-							| std::move(list_ref("expected \"" + expected
+							| list_ref("expected \"" + expected
 								+ "\" in argument " + std::to_string(i + 1)
-								+ " of error"))
-							| std::move(
-								list_ref("got \"" + got + "\" instead")),
+								+ " of error")
+							| list_ref("got \"" + got + "\" instead"),
 						context_ref);
 				}
 			}
