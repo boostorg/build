@@ -759,6 +759,7 @@ struct lists
 	lists & append(const lists & lol);
 	lists & operator|(const lists & lol);
 	void swap(LOL & other);
+	void clear();
 
 	// display
 	void print() const;
@@ -912,6 +913,18 @@ inline void lists::swap(LOL & other)
 Swaps the data from `other` with this.
 end::reference[] */
 inline void lists::swap(LOL & other) { std::swap(lol, other); }
+
+/* tag::reference[]
+=== `b2::lists::clear`
+
+[source,cpp]
+----
+inline void lists::clear()
+----
+
+Deallocate any list items and resets the length to zero.
+end::reference[] */
+inline void lists::clear() { lol_free(&lol); }
 
 /* tag::reference[]
 == `b2::lists` Element Access

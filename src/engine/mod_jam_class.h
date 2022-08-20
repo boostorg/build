@@ -4,8 +4,8 @@ Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
 
-#ifndef B2_MOD_CLASS_H
-#define B2_MOD_CLASS_H
+#ifndef B2_MOD_JAM_CLASS_H
+#define B2_MOD_JAM_CLASS_H
 
 #include "config.h"
 

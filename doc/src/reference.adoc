@@ -740,6 +740,8 @@ Jamfile.
 :leveloffset: +2
 
 include::../../src/engine/mod_jam_modules.h[tag=reference]
+// include::../../src/engine/mod_jam_class.h[tag=reference]
+include::../../src/engine/mod_jam_errors.h[tag=reference]
 include::../../src/engine/mod_regex.h[tag=reference]
 include::../../src/engine/mod_set.h[tag=reference]
 include::../../src/engine/mod_string.h[tag=reference]

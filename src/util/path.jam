@@ -823,7 +823,7 @@ rule __test__ ( )
     {
         join "a" "/b" ;
     }
-    catch only first element may be rooted ;
+    catch only the first element may be rooted ;
 
     local CWD = "/home/ghost/build" ;
     assert.result : all-parents . : . : $(CWD) ;

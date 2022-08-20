@@ -21,6 +21,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "variable.h"
 
 #include "mod_jam_class.h"
+#include "mod_jam_errors.h"
 #include "mod_jam_modules.h"
 #include "mod_path.h"
 #include "mod_regex.h"
@@ -800,8 +801,12 @@ void bind_jam(FRAME * f)
 	jam_context context { f };
 	jam_binder binder;
 	binder.context_ref = context;
-	binder.bind(jam::modules::modules_module())
+	binder
+		// These have to be done in dependency order so that the init code
+		// each executes is valid.
+		.bind(jam::modules::modules_module())
 		.bind(jam::klass::class_module())
+		.bind(jam::errors::errors_module())
 		.bind(paths::paths_module())
 		.bind(regex_module())
 		.bind(set_module())
