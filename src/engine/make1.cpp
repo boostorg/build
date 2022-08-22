@@ -103,7 +103,7 @@ static void make1c_closure( void * const closure, int32_t status,
     timing_info const * const, char const * const cmd_stdout,
     char const * const cmd_stderr, int32_t const cmd_exit_reason );
 
-typedef struct _stack
+typedef struct make_state_stack
 {
     state * stack;
 } stack;
@@ -833,7 +833,7 @@ static void call_action_rule
         if ( command_output )
         {
             OBJECT * command_output_obj = object_new( command_output );
-            char * output_i = (char*)object_str(command_output_obj);
+            char * output_i = (char*)object_str(command_output_obj); // TODO: Fix this.
             /* Clean the output of control characters. */
             for (; *output_i; ++output_i)
             {
@@ -1276,7 +1276,7 @@ static CMD * make1cmds( TARGET * t )
              */
             ( ( CMD * )a0->action->first_cmd )->asynccnt = unique_targets;
 
-#if OPT_SEMAPHORE
+#ifdef OPT_SEMAPHORE
             /* Collect semaphores */
             for ( targets_iter = a0->action->targets.get(); targets_iter; targets_iter = targets_iter->next.get() )
             {

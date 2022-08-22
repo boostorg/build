@@ -345,12 +345,6 @@ void load_builtins()
     }
 
     {
-        char const * args[] = { "instance_module", ":", "class_module", 0 };
-        bind_builtin( "INSTANCE",
-                      builtin_instance, 0, args );
-    }
-
-    {
         char const * args[] = { "sequence", "*", 0 };
         bind_builtin( "SORT",
                       builtin_sort, 0, args );
@@ -476,9 +470,6 @@ void load_builtins()
 #endif
 
     /* Initialize builtin modules. */
-    init_set();
-    init_path();
-    init_regex();
     init_property_set();
     init_sequence();
     init_order();
@@ -1550,18 +1541,6 @@ LIST * builtin_imported_modules( FRAME * frame, int flags )
 }
 
 
-LIST * builtin_instance( FRAME * frame, int flags )
-{
-    LIST * arg1 = lol_get( frame->args, 0 );
-    LIST * arg2 = lol_get( frame->args, 1 );
-    module_t * const instance     = bindmodule( list_front( arg1 ) );
-    module_t * const class_module = bindmodule( list_front( arg2 ) );
-    instance->class_module = class_module;
-    module_set_fixed_variables( instance, class_module->num_fixed_variables );
-    return L0;
-}
-
-
 LIST * builtin_sort( FRAME * frame, int flags )
 {
     return list_sort( lol_get( frame->args, 0 ) );
@@ -1936,30 +1915,6 @@ LIST *builtin_debug_print_helper( FRAME * frame, int flags )
 }
 
 #endif
-
-
-void lol_build( LOL * lol, char const * * elements )
-{
-    LIST * l = L0;
-    lol_init( lol );
-
-    while ( elements && *elements )
-    {
-        if ( !strcmp( *elements, ":" ) )
-        {
-            lol_add( lol, l );
-            l = L0;
-        }
-        else
-        {
-            l = list_push_back( l, object_new( *elements ) );
-        }
-        ++elements;
-    }
-
-    if ( l != L0 )
-        lol_add( lol, l );
-}
 
 
 #ifdef HAVE_POPEN

@@ -1,165 +1,112 @@
+/*
+Copyright 2022 René Ferdinand Rivera Morell
+Distributed under the Boost Software License, Version 1.0.
+(See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
+*/
+
+#include "mod_jam_class.h"
+
+#include "bindjam.h"
+#include "compile.h"
+#include "modules.h"
+#include "variable.h"
+
+#include <unordered_set>
+
+namespace b2 { namespace jam { namespace klass {
+
+std::string make(std::tuple<value_ref, list_ref> name_arg1,
+	const lists & rest,
+	bind::context_ref_ context_ref)
+{
+	static std::size_t next_instance = 1;
+
+	std::string id = "object(";
+	id += std::get<0>(name_arg1);
+	id += ")@" + std::to_string(next_instance);
+
+	std::string type = "class@";
+	type += std::get<0>(name_arg1);
+
+	module_ptr instance = bindmodule(value_ref(id));
+	module_ptr class_module = bindmodule(value_ref(type));
+	instance->class_module = class_module;
+	module_set_fixed_variables(instance, class_module->num_fixed_variables);
+
+	variable(id, "__class__") = std::get<0>(name_arg1);
+	variable(id, "__name__") = id;
+
+	import_module(*list_ref(id), root_module());
+
+	frame * outer = context_ref.get<jam_context>().frame;
+	lists args;
+	args | *std::get<1>(name_arg1) | rest;
+	list_ref(call_member_rule(
+				 value_ref("__init__"), outer, list_ref(id), std::move(args)),
+		true);
+
+	// Bump the next unique object name.
+	next_instance += 1;
+
+	// Return the name of the new instance.
+	return id;
+}
+
+list_ref bases(std::string class_name)
+{
+	return *variable("class@" + class_name, "__bases__");
+}
+
+bool is_derived(value_ref class_name, list_cref class_bases)
+{
+	bool found = false;
+	list_ref stack(class_name);
+	std::unordered_set<value_ref, value_ref::hash_function,
+		value_ref::equal_function>
+		visited;
+	while (!found && !stack.empty())
+	{
+		value_ref top = stack[0];
+		stack.pop_front();
+		if (visited.count(top) == 0)
+		{
+			visited.insert(top);
+			stack.append(bases(top));
+
+			list_cref::size_type bases_found = 0;
+			for (auto class_base : class_bases)
+				if (visited.count(class_base) == 0)
+					break;
+				else
+					bases_found += 1;
+			found = bases_found == class_bases.length();
+		}
+	}
+	return found;
+}
+
+bool is_instance(std::string value)
+{
+	bool has_prefix = value.compare(0, 7, "object(") == 0;
+	bool has_mid = value.find(")@", 7) != std::string::npos;
+	return has_prefix && has_mid;
+}
+
+bool is_a(std::string instance, value_ref type)
+{
+	return is_instance(instance)
+		&& is_derived(
+			variable(instance, "__class__")[0], list_cref(*list_ref(type)));
+}
+
+/*
+Jam init code is:
+
 # Copyright 2001, 2002, 2003 Dave Abrahams
 # Copyright 2002, 2005 Rene Rivera
 # Copyright 2002, 2003 Vladimir Prus
-# Distributed under the Boost Software License, Version 1.0.
-# (See accompanying file LICENSE.txt or copy at
-# https://www.bfgroup.xyz/b2/LICENSE.txt)
-
-# Polymorphic class system built on top of core Jam facilities.
-#
-# Classes are defined by 'class' keywords:
-#
-#     class myclass
-#     {
-#         rule __init__ ( arg1 )     # constructor
-#         {
-#             self.attribute = $(arg1) ;
-#         }
-#
-#         rule method1 ( )           # method
-#         {
-#             return [ method2 ] ;
-#         }
-#
-#         rule method2 ( )           # method
-#         {
-#             return $(self.attribute) ;
-#         }
-#     }
-#
-# The __init__ rule is the constructor, and sets member variables.
-#
-# New instances are created by invoking [ new <class> <args...> ]:
-#
-#     local x = [ new myclass foo ] ;        # x is a new myclass object
-#     assert.result foo : [ $(x).method1 ] ; # $(x).method1 returns "foo"
-#
-# Derived class are created by mentioning base classes in the declaration::
-#
-#     class derived : myclass
-#     {
-#          rule __init__ ( arg )
-#          {
-#              myclass.__init__ $(arg) ;  # call base __init__
-#
-#          }
-#
-#          rule method2 ( )           # method override
-#          {
-#              return $(self.attribute)XXX ;
-#          }
-#     }
-#
-# All methods operate virtually, replacing behavior in the base classes. For
-# example::
-#
-#     local y = [ new derived foo ] ;            # y is a new derived object
-#     assert.result fooXXX : [ $(y).method1 ] ;  # $(y).method1 returns "foo"
-#
-# Each class instance is its own core Jam module. All instance attributes and
-# methods are accessible without additional qualification from within the class
-# instance. All rules imported in class declaration, or visible in base classes
-# are also visible. Base methods are available in qualified form:
-# base-name.method-name. By convention, attribute names are prefixed with
-# "self.".
-
-import modules ;
-import numbers ;
-
-
-rule xinit ( instance : class )
-{
-    module $(instance)
-    {
-        __class__ = $(2) ;
-        __name__ = $(1) ;
-    }
-}
-
-
-rule new ( class args * : * )
-{
-    .next-instance ?= 1 ;
-    local id = object($(class))@$(.next-instance) ;
-
-    INSTANCE $(id) : class@$(class) ;
-    xinit $(id) : $(class) ;
-    IMPORT_MODULE $(id) ;
-    $(id).__init__ $(args) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) :
-        $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17) :
-        $(18) : $(19) ;
-
-    # Bump the next unique object name.
-    .next-instance = [ numbers.increment $(.next-instance) ] ;
-
-    # Return the name of the new instance.
-    return $(id) ;
-}
-
-
-rule bases ( class )
-{
-    module class@$(class)
-    {
-        return $(__bases__) ;
-    }
-}
-
-
-rule is-derived ( class : bases + )
-{
-    local stack = $(class) ;
-    local visited found ;
-    while ! $(found) && $(stack)
-    {
-        local top = $(stack[1]) ;
-        stack = $(stack[2-]) ;
-        if ! ( $(top) in $(visited) )
-        {
-            visited += $(top) ;
-            stack += [ bases $(top) ] ;
-
-            if $(bases) in $(visited)
-            {
-                found = true ;
-            }
-        }
-    }
-    return $(found) ;
-}
-
-
-# Returns true if the 'value' is a class instance.
-#
-rule is-instance ( value )
-{
-    return [ MATCH "^(object\\()[^@]+\\)@.*" : $(value) ] ;
-}
-
-
-# Check if the given value is of the given type.
-#
-rule is-a (
-    instance  # The value to check.
-    : type  # The type to test for.
-)
-{
-    if [ is-instance $(instance) ]
-    {
-        return [ class.is-derived [ modules.peek $(instance) : __class__ ] : $(type) ] ;
-    }
-}
-
-
-local rule typecheck ( x )
-{
-    local class-name = [ MATCH "^\\[(.*)\\]$" : [ BACKTRACE 1 ] ] ;
-    if ! [ is-a $(x) : $(class-name) ]
-    {
-        return "Expected an instance of "$(class-name)" but got \""$(x)"\" for argument" ;
-    }
-}
-
+*/
+const char * class_module::init_code = R"jam(
 
 rule __test__ ( )
 {
@@ -418,3 +365,7 @@ rule __test__ ( )
     assert.true is-a $(d) : myclass ;
     assert.false is-a literal : myclass ;
 }
+
+)jam";
+
+}}} // namespace b2::jam::klass

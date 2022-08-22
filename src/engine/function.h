@@ -15,12 +15,16 @@
 #include "parse.h"
 #include "jam_strings.h"
 
+#include <functional>
+
 typedef struct _function FUNCTION;
+
+typedef std::function<LIST* (FRAME *, int32_t flags)> function_builtin_t;
 
 typedef FUNCTION* function_ptr;
 
 FUNCTION * function_compile( PARSE * parse );
-FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int32_t flags ), int32_t flags, const char * * args );
+FUNCTION * function_builtin( function_builtin_t func, int32_t flags, const char * * args );
 void function_refer( FUNCTION * );
 void function_free( FUNCTION * );
 OBJECT * function_rulename( FUNCTION * );

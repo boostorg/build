@@ -5,13 +5,58 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(mingw) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\.build\\gcc-10\\debug\\cxxstd-11-iso\\b2.exe",
+            "args": ["-v"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerPath": "C:/mingw64/bin/gdb.exe",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description":  "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "(msvc) Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\.build\\msvc-14.3\\debug\\cxxstd-11-iso\\threading-multi\\b2.exe",
+            "args": ["-v"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}\\src\\engine",
+            "environment": []
+        },
+        {
+            "name": "(msvc) Launch, Unit Tests",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}\\.build\\msvc-14.3\\debug\\cxxstd-11-iso\\threading-multi\\b2.exe",
+            "args": ["--debug", "--build-system=test/test", "-j1"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}\\test",
+            "environment": []
+        },
+        {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-11/debug/cxxstd-11-iso/b2",
+            "program": "${workspaceFolder}/.build/gcc-12/debug/cxxstd-11-iso/b2",
             "args": ["-na"],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/test/rootless/test1",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
@@ -27,7 +72,7 @@
             "name": "(gdb) Launch: ASAN",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-11/debug/address-sanitizer-on/cxxstd-11-iso/b2",
+            "program": "${workspaceFolder}/.build/gcc-12/debug/address-sanitizer-on/cxxstd-11-iso/b2",
             "args": ["-na", "toolset=gcc"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -46,11 +91,30 @@
             "name": "(gdb) Launch, Unit Tests",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-11/debug/cxxstd-11-iso/b2",
-            "args": ["--debug", "--build-system=test/test"],
+            "program": "${workspaceFolder}/.build/gcc-12/debug/cxxstd-11-iso/b2",
+            "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests", "toolset=gcc"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/test",
             "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "(gdb) Launch, Unit Tests: ASAN",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.build/gcc-12/debug/address-sanitizer-on/cxxstd-11-iso/b2",
+            "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests", "toolset=gcc"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/test",
+            "environment": [{"LSAN_OPTIONS":"verbosity=1:log_threads=1"}],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [

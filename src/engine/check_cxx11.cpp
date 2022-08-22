@@ -14,6 +14,8 @@ compiler to build the engine with.
 #include <thread>
 #include <memory>
 
+// Some basic constexpr support?
+template <int C> struct X { static constexpr int c = C; };
 
 int main()
 {

@@ -436,7 +436,8 @@ echo "
 ###
 ###
 "
-    B2_SOURCES="\
+B2_SOURCES="\
+bindjam.cpp \
 builtins.cpp \
 class.cpp \
 command.cpp \
@@ -448,8 +449,8 @@ debugger.cpp \
 execcmd.cpp \
 execnt.cpp \
 execunix.cpp \
-filesys.cpp \
 filent.cpp \
+filesys.cpp \
 fileunix.cpp \
 frames.cpp \
 function.cpp \
@@ -468,7 +469,6 @@ md5.cpp \
 mem.cpp \
 modules.cpp \
 native.cpp \
-object.cpp \
 option.cpp \
 output.cpp \
 parse.cpp \
@@ -481,17 +481,23 @@ scan.cpp \
 search.cpp \
 startup.cpp \
 subst.cpp \
-sysinfo.cpp \
 timestamp.cpp \
+value.cpp \
 variable.cpp \
 w32_getreg.cpp \
-modules/order.cpp \
-modules/path.cpp \
-modules/property-set.cpp \
-modules/regex.cpp \
-modules/sequence.cpp \
-modules/set.cpp \
-"
+mod_jam_class.cpp \
+mod_jam_errors.cpp \
+mod_jam_modules.cpp \
+mod_order.cpp \
+mod_path.cpp \
+mod_property_set.cpp \
+mod_regex.cpp \
+mod_sequence.cpp \
+mod_set.cpp \
+mod_string.cpp \
+mod_sysinfo.cpp \
+mod_version.cpp \
+ "
 
     if test_true ${B2_DEBUG_OPT} ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"
     else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} -DNDEBUG"

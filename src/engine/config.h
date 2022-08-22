@@ -20,16 +20,15 @@ https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 // Autodetect various operating systems..
 
-#if defined(_WIN32) || defined(_WIN64) || \
-    defined(__WIN32__) || defined(__TOS_WIN__) || \
-    defined(__WINDOWS__)
-    #define NT 1
+#if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) \
+	|| defined(__TOS_WIN__) || defined(__WINDOWS__)
+#define NT 1
 #endif
 
 #if defined(__VMS) || defined(__VMS_VER)
-    #if !defined(VMS)
-        #define VMS 1
-    #endif
+#if !defined(VMS)
+#define VMS 1
+#endif
 #endif
 
 // To work around QEMU failures on mixed mode situations (32 vs 64) we need to
@@ -37,7 +36,7 @@ https://www.bfgroup.xyz/b2/LICENSE.txt)
 // any system headers are included.
 
 #if !defined(NT) && !defined(VMS)
-#   define _FILE_OFFSET_BITS 64
+#define _FILE_OFFSET_BITS 64
 #endif
 
 // Correct missing types in some earlier compilers..
@@ -45,8 +44,8 @@ https://www.bfgroup.xyz/b2/LICENSE.txt)
 #include <stdint.h>
 #ifndef INT32_MIN
 
-// VS 2013 is barely C++11/C99. And opts to not provide specific sized int types.
-// Provide a generic implementation of the sizes we use.
+// VS 2013 is barely C++11/C99. And opts to not provide specific sized int
+// types. Provide a generic implementation of the sizes we use.
 #if UINT_MAX == 0xffffffff
 typedef int int32_t;
 #elif (USHRT_MAX == 0xffffffff)
@@ -55,6 +54,17 @@ typedef short int32_t;
 typedef long int32_t;
 #endif
 
+#endif
+
+// Account for incomplete C++ standard implementations.
+
+// VS 2012 doesn't implement noexcept.
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+#define B2_NOEXCEPT
+#endif
+
+#ifndef B2_NOEXCEPT
+#define B2_NOEXCEPT noexcept
 #endif
 
 #endif

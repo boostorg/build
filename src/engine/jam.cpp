@@ -108,9 +108,11 @@
 #define VERSION_MAJOR_SYM JAM_STRINGIZE(VERSION_MAJOR)
 #define VERSION_MINOR_SYM JAM_STRINGIZE(VERSION_MINOR)
 #define VERSION_PATCH_SYM JAM_STRINGIZE(VERSION_PATCH)
-#define VERSION VERSION_MAJOR_SYM "." VERSION_MINOR_SYM
+#define VERSION VERSION_MAJOR_SYM "." VERSION_MINOR_SYM "." VERSION_PATCH_SYM
 #define JAMVERSYM "JAMVERSION=" VERSION
 
+#include "bind.h"
+#include "bindjam.h"
 #include "builtins.h"
 #include "class.h"
 #include "compile.h"
@@ -134,7 +136,7 @@
 #include "timestamp.h"
 #include "variable.h"
 #include "execcmd.h"
-#include "sysinfo.h"
+#include "mod_sysinfo.h"
 
 #include <errno.h>
 #include <string.h>
@@ -329,13 +331,7 @@ int guarded_main( int argc, char * * argv )
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
     {
-        out_printf( "B2 Version %s. %s.\n", VERSION, OSMINOR );
-        out_printf( "  Copyright 1993-2002 Christopher Seiwald and Perforce Software, Inc.\n" );
-        out_printf( "  Copyright 2001 David Turner.\n" );
-        out_printf( "  Copyright 2001-2004 David Abrahams.\n" );
-        out_printf( "  Copyright 2002-2019 Rene Rivera.\n" );
-        out_printf( "  Copyright 2003-2015 Vladimir Prus.\n" );
-        out_printf( "\n  DEFAULTS: jobs = %i\n", globs.jobs);
+        out_printf( "B2 %s (%s, jobs=%i)\n\n", VERSION, OSMINOR, globs.jobs );
         return EXITOK;
     }
 
@@ -574,7 +570,13 @@ int guarded_main( int argc, char * * argv )
             }
 
             if ( !n  )
+            {
+                /* Initialize the native API bindings. */
+                b2::jam::bind_jam(frame);
+
+                /* LUnch the bootstrap to load up the build system. */
                 status = b2::startup::bootstrap(frame) ? 0 : 13;
+            }
         }
 
         /* FIXME: What shall we do if builtin_update_now,

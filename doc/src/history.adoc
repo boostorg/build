@@ -1,6 +1,25 @@
 [[b2.history]]
 = History
 
+== Version 5.0.0
+
+This is a new era in B2. The drive of this new major version is to move the
+core build system from being implemented in Jam to {CPP}. This initial release
+does is only a start in this move by having some minimal aspects implemented
+in {CPP} using a new Jam/{CPP} native binding system. Even though this is a
+major release, the goal is to still have backward compatibility for existing
+project build files. But that backward compatibility is not guaranteed for
+other Jam files.
+
+* *New*: Support for Jam native variant values of string (original Jam value
+  type), number (floating point numbers), and object (instances of classes).
+  -- _René Ferdinand Rivera Morell_
+* *New*: Port modules `class`, `errors`, `modules`, `regex`, `set`, `string`,
+  and `sysinfo` to {CPP}.
+  -- _René Ferdinand Rivera Morell_
+* Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
+  -- _Thomas Brown_
+
 == Version 4.9.2
 
 * Fix too long msvc link actions.
@@ -74,7 +93,7 @@ deprecated and will be removed in a future release.
 * *New:* Add support for LoongArch.
   -- _Zhang Na_
 * Change engine build to use static Intel libs if available instead of C++
-  runtime static libs to fix systems where the static {CPP}} runtime is not
+  runtime static libs to fix systems where the static {CPP} runtime is not
   available.
   -- _Alain Miniussi_
 * Reorder msvc `cflags` and `cxxflags`, and add `compileflags`, to fix inability
@@ -170,14 +189,14 @@ make CI scripts shorter as they don't need to handle those cases specially.
 And as usual there are many bug fixes and adjustments. Thanks to everyone who
 contributed to this release.
 
-* *New:* Allow clang toolset to be auto-configured to a specific version by using
-  `toolset=clang-xx` on the command line.
+* *New:* Allow clang toolset to be auto-configured to a specific version by
+  using `toolset=clang-xx` on the command line.
   -- _Nikita Kniazev_
-* *New:* Include pch header automatically and on-demand on gcc and msvc toolset to
-  mirror clang functionality.
+* *New:* Include pch header automatically and on-demand on gcc and msvc toolset
+  to mirror clang functionality.
   -- _Nikita Kniazev_
-* *New:* Features that are narked as 'free' and 'optional' will now be ignored when
-  the value specified on the command line is empty. Hence once can specify
+* *New:* Features that are narked as 'free' and 'optional' will now be ignored
+  when the value specified on the command line is empty. Hence once can specify
   `cxxflags=` on the command line without errors.
   -- _René Ferdinand Rivera Morell_
 * Preserve `bootstrap.sh` invoke arguments to forward to the `build.sh` script.
@@ -242,8 +261,8 @@ support for some toolsets. This means that under most circumstances, if
 supported by the toolset, response files are not generated. Instead the
 command is expanded to include the options directly.
 
-* *New:* Add `response-file` feature to control the kind of response file usage in
-  toolset action.
+* *New:* Add `response-file` feature to control the kind of response file usage
+  in toolset action.
   -- _René Ferdinand Rivera Morell_
 * *New:* Add `:O=value` variable modifier for `@()` expansion.
   -- _René Ferdinand Rivera Morell_
@@ -403,32 +422,44 @@ the features.
 
 Thank to all the users that contributed to this release with these changes:
 
-* Support for VS2019 for intel-vin 19.0. -- _Edward Diener_
-* Fix compiler warnings about `-std=gnu11` when building `b2` on Cygwin. --
-  _Andrey Semashev_
+* Support for VS2019 for intel-vin 19.0.
+  -- _Edward Diener_
+* Fix compiler warnings about `-std=gnu11` when building `b2` on Cygwin.
+  -- _Andrey Semashev_
 * Add example of creating multiple PCHs for individual headers.
   -- _René Ferdinand Rivera Morell_
-* Add QNX threading flags for GCC toolset. -- _Aurelien Chartier_
+* Add QNX threading flags for GCC toolset.
+  -- _Aurelien Chartier_
 * Fix version option for IBM and Sun compilers when building b2 engine
   -- _Juan Alday_
 * Rename `strings.h` to `jam_strings.h` in `b2` engine to avoid clash with
-  POSIX `strings.h` header. -- _Andrey Semashev_
-* Add options for `cxxstd` feature for IBM compiler. -- _Edward Diener_
-* Many fixes to intel-win toolset. -- _Edwad Diener_
-* Add z15 instruction set for gcc based toolsets. -- _Neale Ferguson_
-* Improve using MSVC from a Cygwin shell. -- _Michael Haubenwallner_
+  POSIX `strings.h` header.
+  -- _Andrey Semashev_
+* Add options for `cxxstd` feature for IBM compiler.
+  -- _Edward Diener_
+* Many fixes to intel-win toolset.
+  -- _Edwad Diener_
+* Add z15 instruction set for gcc based toolsets.
+  -- _Neale Ferguson_
+* Improve using MSVC from a Cygwin shell.
+  -- _Michael Haubenwallner_
 * Add LTO feature and corresponding support for gcc and clang toolsets.
   -- _Dmitry Arkhipov_
-* Fix errors when a source doesn't have a type. -- _Peter Dimov_
-* Add documentation for features. -- _Dmitry Arkhipov_
+* Fix errors when a source doesn't have a type.
+  -- _Peter Dimov_
+* Add documentation for features.
+  -- _Dmitry Arkhipov_
 * Enhance `stdlib` feature, and corresponding documentation, for clang, gcc,
-  and sun toolsets. -- _Dmitry Arkhipov_
+  and sun toolsets.
+  -- _Dmitry Arkhipov_
 * Install rule now makes explicit only the immediate targets it creates.
   --  _Dmitry Arkhipov_
-* Add armasm (32 and 64) support for msvc toolset. -- _Michał Janiszewski_
+* Add armasm (32 and 64) support for msvc toolset.
+  -- _Michał Janiszewski_
 * Fix errors with custom un-versioned gcc toolset specifications.
   -- _Peter Dimov_
-* Allow arflags override in gcc toolset specifications. -- _hyc_
+* Allow arflags override in gcc toolset specifications.
+  -- _hyc_
 * Fix founds libs not making it to the clang-win link command line.
   -- _Peter Dimov_
 * Updated intel-win toolset to support for Intel C++ 19.1.
@@ -459,19 +490,31 @@ engine and build system. Some changes in this start:
 
 Other changes in this release:
 
-* Add support for using prebuilt OpenSSL. -- _Damian Jarek_
-* Define the riscv architecture feature. -- _Andreas Schwab_
-* Add ARM64 as a valid architecture for MSVC. -- _Marc Sweetgall_
-* Set coverage flags, from coverage feature, for gcc and clang. -- _Damian Jarek_
-* Add s390x CPU and support in gcc/clang. -- _Neale Ferguson_
-* Support importing pkg-config packages. -- _Dmitry Arkhipov_
-* Support for leak sanitizer. -- _Damian Jarek_
+* Add support for using prebuilt OpenSSL.
+  -- _Damian Jarek_
+* Define the riscv architecture feature.
+  -- _Andreas Schwab_
+* Add ARM64 as a valid architecture for MSVC.
+  -- _Marc Sweetgall_
+* Set coverage flags, from coverage feature, for gcc and clang.
+  -- _Damian Jarek_
+* Add s390x CPU and support in gcc/clang.
+  -- _Neale Ferguson_
+* Support importing pkg-config packages.
+  -- _Dmitry Arkhipov_
+* Support for leak sanitizer.
+  -- _Damian Jarek_
 * Fix missing `/manifest` option in clang-win to fix admin elevation for exes
-  with "update" in the name. -- _Peter Dimov_
-* Add `freertos` to `os` feature. -- _Thomas Brown_
-* Default parallel jobs (`-jX`) to the available CPU threads. -- _René Ferdinand Rivera Morell_
-* Simpler coverage feature. -- _Hans Dembinski_
-* Better stacks for sanitizers. -- _James E. King III_
+  with "update" in the name.
+  -- _Peter Dimov_
+* Add `freertos` to `os` feature.
+  -- _Thomas Brown_
+* Default parallel jobs (`-jX`) to the available CPU threads.
+  -- _René Ferdinand Rivera Morell_
+* Simpler coverage feature.
+  -- _Hans Dembinski_
+* Better stacks for sanitizers.
+  -- _James E. King III_
 
 WARNING: The default number of parallel jobs has changed in this release from
 "1" to the number of cores. There are circumstances when that default can be

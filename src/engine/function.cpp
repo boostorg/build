@@ -192,7 +192,7 @@ struct _function
 typedef struct _builtin_function
 {
     FUNCTION base;
-    LIST * ( * func )( FRAME *, int32_t flags );
+    function_builtin_t func;
     int32_t flags;
 } BUILTIN_FUNCTION;
 
@@ -590,7 +590,7 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
 {
     FRAME inner;
     int32_t i;
-    b2::jam::list first( s->pop<LIST *>(), true );
+    b2::list_ref first( s->pop<LIST *>(), true );
     LIST * result = L0;
     OBJECT * rulename;
 
@@ -645,120 +645,22 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
 
 static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame, STACK * s, int32_t n_args, OBJECT * rulename, OBJECT * file, int32_t line )
 {
-    FRAME   inner[ 1 ];
-    int32_t i;
-    LIST * first = s->pop<LIST *>();
-    LIST * result = L0;
-    RULE * rule;
-    module_t * module;
-    OBJECT * real_rulename = 0;
-
-    frame->file = file;
-    frame->line = line;
-
-    if ( list_empty( first ) )
-    {
-        backtrace_line( frame );
-        out_printf( "warning: object is empty\n" );
-        backtrace( frame );
-
-        list_free( first );
-
-        for( i = 0; i < n_args; ++i )
-        {
-            list_free( s->pop<LIST *>() );
-        }
-
-        return result;
-    }
-
-    /* FIXME: handle generic case */
-    assert( list_length( first ) == 1 );
-
-    module = bindmodule( list_front( first ) );
-    if ( module->class_module )
-    {
-        rule = bindrule( rulename, module );
-        if ( rule->procedure )
-        {
-            real_rulename = object_copy( function_rulename( rule->procedure ) );
-        }
-        else
-        {
-            string buf[ 1 ];
-            string_new( buf );
-            string_append( buf, object_str( module->name ) );
-            string_push_back( buf, '.' );
-            string_append( buf, object_str( rulename ) );
-            real_rulename = object_new( buf->value );
-            string_free( buf );
-        }
-    }
-    else
-    {
-        string buf[ 1 ];
-        string_new( buf );
-        string_append( buf, object_str( list_front( first ) ) );
-        string_push_back( buf, '.' );
-        string_append( buf, object_str( rulename ) );
-        real_rulename = object_new( buf->value );
-        string_free( buf );
-        rule = bindrule( real_rulename, frame->module );
-    }
-
-    frame_init( inner );
-
-    inner->prev = frame;
-    inner->prev_user = frame->module->user_module ? frame : frame->prev_user;
-    inner->module = frame->module;  /* This gets fixed up in evaluate_rule(), below. */
-
     if ( n_args > LOL_MAX )
     {
         out_printf( "ERROR: member rules are limited to %d arguments\n", LOL_MAX );
-        backtrace( inner );
+        backtrace( frame );
         b2::clean_exit( EXITBAD );
     }
 
-    for( i = 0; i < n_args; ++i )
-    {
-        lol_add( inner->args, s->top<LIST*>( n_args - i - 1 ) );
-    }
+    b2::list_ref first(s->pop<LIST *>(), true);
 
-    for( i = 0; i < n_args; ++i )
-    {
+    b2::lists args;
+    for (b2::lists::size_type i = 0; i < n_args; ++i)
+        args.push_back(b2::list_ref(s->top<LIST*>( n_args - i - 1 ), true));
+    for (b2::lists::size_type i = 0; i < n_args; ++i)
         s->pop<LIST *>();
-    }
 
-    if ( list_length( first ) > 1 )
-    {
-        string buf[ 1 ];
-        LIST * trailing = L0;
-        LISTITER iter = list_begin( first ), end = list_end( first );
-        iter = list_next( iter );
-        string_new( buf );
-        for ( ; iter != end; iter = list_next( iter ) )
-        {
-            string_append( buf, object_str( list_item( iter ) ) );
-            string_push_back( buf, '.' );
-            string_append( buf, object_str( rulename ) );
-            trailing = list_push_back( trailing, object_new( buf->value ) );
-            string_truncate( buf, 0 );
-        }
-        string_free( buf );
-        if ( inner->args->count == 0 )
-            lol_add( inner->args, trailing );
-        else
-        {
-            LIST * * const l = &inner->args->list[ 0 ];
-            *l = list_append( trailing, *l );
-        }
-    }
-
-    list_free( first );
-    result = evaluate_rule( rule, real_rulename, inner );
-    frame_free( inner );
-    object_free( real_rulename );
-    return result;
+    return call_member_rule( rulename, frame, std::move(first), std::move(args) );
 }
 
 
@@ -3260,8 +3162,9 @@ void function_location( FUNCTION * function_, OBJECT * * file, int32_t * line )
 static struct arg_list * arg_list_compile_builtin( char const * * args,
     int32_t * num_arguments );
 
-FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int32_t flags ),
-    int32_t flags, char const * * args )
+FUNCTION * function_builtin(
+    std::function<LIST* (FRAME *, int32_t flags)> func,
+    int32_t flags, const char * * args )
 {
     BUILTIN_FUNCTION * result = (BUILTIN_FUNCTION*)BJAM_MALLOC( sizeof( BUILTIN_FUNCTION ) );
     result->base.type = FUNCTION_BUILTIN;
@@ -3269,7 +3172,7 @@ FUNCTION * function_builtin( LIST * ( * func )( FRAME * frame, int32_t flags ),
     result->base.rulename = 0;
     result->base.formal_arguments = arg_list_compile_builtin( args,
         &result->base.num_formal_arguments );
-    result->func = func;
+    new (&(result->func)) function_builtin_t(func);
     result->flags = flags;
     return (FUNCTION *)result;
 }
@@ -3374,7 +3277,7 @@ static void type_check_range( OBJECT * type_name, LISTITER iter, LISTITER end,
 
         /* Prepare the argument list */
         lol_add( frame.args, list_new( object_copy( list_item( iter ) ) ) );
-        b2::jam::list error(
+        b2::list_ref error(
             evaluate_rule(
                 bindrule( type_name, frame.module ), type_name, &frame ),
             true );
@@ -3472,7 +3375,7 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
         for ( j = 0; j < formal[ i ].size; ++j )
         {
             struct argument * formal_arg = &formal[ i ].args[ j ];
-            b2::jam::list value;
+            b2::list_ref value;
 
             switch ( formal_arg->flags )
             {
@@ -4080,6 +3983,8 @@ void function_free( FUNCTION * function_ )
     {
         assert( function_->type == FUNCTION_BUILTIN );
         if ( function_->rulename ) object_free( function_->rulename );
+        BUILTIN_FUNCTION * func = (BUILTIN_FUNCTION *)function_;
+        func->func.~function_builtin_t();
     }
 
     BJAM_FREE( function_ );
@@ -5220,32 +5125,11 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_INCLUDE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_INCLUDE);
-            b2::jam::list nt( s->pop<LIST *>(), true );
+            b2::list_ref nt( s->pop<LIST *>(), true );
             if ( !nt.empty() )
             {
-                TARGET * const t = bindtarget( *nt.begin() );
+                parse_include( *nt.begin(), frame );
 
-                /* DWA 2001/10/22 - Perforce Jam cleared the arguments here,
-                 * which prevented an included file from being treated as part
-                 * of the body of a rule. I did not see any reason to do that,
-                 * so I lifted the restriction.
-                 */
-
-                /* Bind the include file under the influence of "on-target"
-                 * variables. Though they are targets, include files are not
-                 * built with make().
-                 */
-
-                pushsettings( root_module(), t->settings );
-                /* We do not expect that a file to be included is generated by
-                 * some action. Therefore, pass 0 as third argument. If the name
-                 * resolves to a directory, let it error out.
-                 */
-                object_free( t->boundname );
-                t->boundname = search( t->name, &t->time, 0, 0 );
-                popsettings( root_module(), t->settings );
-
-                parse_file( t->boundname, frame );
 #ifdef JAM_DEBUGGER
                 frame->function = function_;
 #endif
@@ -5285,7 +5169,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             PROFILE_ENTER_LOCAL(function_run_INSTR_CLASS);
             LIST * bases = s->pop<LIST *>();
             LIST * name = s->pop<LIST *>();
-            OBJECT * class_module = make_class_module( name, bases, frame );
+            OBJECT * class_module = make_class_module( name, bases );
 
             module_t * outer_module = frame->module;
             frame->module = bindmodule( class_module );
