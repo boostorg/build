@@ -23,6 +23,11 @@ other Jam files.
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 
+== Version 4.9.2
+
+* Fix too long msvc link actions.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.9.1
 
 * Fix bad calculation of initial dev-only path to bootstrap file within the
@@ -464,6 +469,14 @@ Thank to all the users that contributed to this release with these changes:
   -- _Edward Diener_
 * Detect difference between MIPS32 and MIPS64 for OS in b2 engine.
   -- _YunQiang Su_
+
+== Version 4.0.1
+
+This patch release fixes a minor issue when trying to configure toolsets that
+override the toolset version with a non-version tag. Currently this is only
+known to be a problem if you: (a) configure a toolset version to something
+like "`tot`" (b) in Boost 1.72.0 when it creates cmake install artifacts.
+Fix for this was provided Peter Dimov.
 
 == Version 4.0.0
 
