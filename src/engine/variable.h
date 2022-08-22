@@ -109,6 +109,10 @@ struct variable
 	{
 		return *this = list_ref { value_ref { v } };
 	}
+	inline variable & operator=(const variable & other)
+	{
+		return *this = *other;
+	}
 
 	// Append to current variable value.
 	inline variable & operator+=(list_ref & v)

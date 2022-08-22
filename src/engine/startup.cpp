@@ -5,18 +5,24 @@ Distributed under the Boost Software License, Version 1.0.
 */
 
 #include "startup.h"
+#include "bindjam.h"
+#include "compile.h"
 #include "cwd.h"
 #include "filesys.h"
 #include "frames.h"
+#include "mod_jam_modules.h"
+#include "modules.h"
 #include "object.h"
 #include "output.h"
 #include "pathsys.h"
 #include "rules.h"
+#include "value.h"
 #include "variable.h"
 
 #include <algorithm>
 #include <cstdlib>
 #include <string>
+#include <vector>
 
 namespace {
 void bind_builtin(char const * name_,
@@ -51,6 +57,18 @@ LIST * b2::startup::builtin_boost_build(FRAME * frame, int flags)
 }
 
 extern char const * saved_argv0;
+
+void bootstrap_dirscan(std::vector<std::string> * dirs,
+	OBJECT * path,
+	int found,
+	timestamp const * const)
+{
+	if (file_is_file(path) == 1) return;
+	_pathname p(object_str(path));
+	std::string basename = p.base() + p.suffix();
+	if (basename == "." || basename == "..") return;
+	dirs->push_back(object_str(path));
+}
 
 bool b2::startup::bootstrap(FRAME * frame)
 {
@@ -162,56 +180,56 @@ bool b2::startup::bootstrap(FRAME * frame)
 	}
 
 	/**
-	 * Search for a bootstrap.jam file to load in various locations. The
-	 * `bootstrap.jam` is the starting point of loading the build system.
+	 * Search for a build-system.jam file to load in various locations. The
+	 * `build-system.jam` is the starting point of loading the build system.
 	 */
 
-	const std::string bootstrap_jam { "bootstrap.jam" };
-	std::string bootstrap_file;
-	std::string bootstrap_files_searched;
+	const std::string buildsystem_jam { "build-system.jam" };
+	std::string buildsystem_file;
+	std::string buildsystem_files_searched;
 
 	// Check various locations relative to executable.
-	if (bootstrap_file.empty())
+	if (buildsystem_file.empty())
 	{
 		const char * dirs[] = {
 			// Check relative to the executable for portable install location.
-			".b2/kernel/",
+			".b2/",
 			// Check relative to the exec for system install location.
-			"../share/b2/kernel/",
+			"../share/b2/",
 			// Check relative to the exec for legacy install location.
-			"../share/b2/src/kernel/",
+			"../share/b2/src/",
 			// Check development location relative to executable in src/engine.
-			"../kernel/",
+			"../",
 			// Check development location relative to executable at root.
-			"src/kernel/",
+			"src/",
 			// Check for special Boost location.
-			"tools/build/src/kernel/"
+			"tools/build/src/"
 		};
 		for (auto dir : dirs)
 		{
 			const std::string path { b2::paths::normalize(
-				b2_exe_path + "/../" + dir + bootstrap_jam) };
+				b2_exe_path + "/../" + dir + buildsystem_jam) };
 			if (b2::filesys::is_file(path))
 			{
-				bootstrap_file = path;
+				buildsystem_file = path;
 				break;
 			}
-			bootstrap_files_searched += "  " + path + "\n";
+			buildsystem_files_searched += "  " + path + "\n";
 		}
 	}
 
-	// Check the development tree for the bootstrap to support not-installed
+	// Check the development tree for the file to support not-installed
 	// b2 executable locations. I.e. when building b2 with b2 for engine
 	// development.
-	if (bootstrap_file.empty())
+	if (buildsystem_file.empty())
 	{
 		std::string work_dir(b2::paths::normalize(b2_exe_path + "/..") + "/");
-		while (bootstrap_file.empty() && !work_dir.empty())
+		while (buildsystem_file.empty() && !work_dir.empty())
 		{
-			bootstrap_files_searched
-				+= "  " + work_dir + "src/kernel/" + bootstrap_jam + "\n";
-			if (b2::filesys::is_file(work_dir + "src/kernel/" + bootstrap_jam))
-				bootstrap_file = work_dir + "src/kernel/" + bootstrap_jam;
+			buildsystem_files_searched
+				+= "  " + work_dir + "src/" + buildsystem_jam + "\n";
+			if (b2::filesys::is_file(work_dir + "src/" + buildsystem_jam))
+				buildsystem_file = work_dir + "src/" + buildsystem_jam;
 			else if (work_dir.length() == 1 && work_dir[0] == '/')
 				work_dir.clear();
 			else
@@ -226,7 +244,7 @@ bool b2::startup::bootstrap(FRAME * frame)
 	}
 
 	// Last resort, search in the directory referenced by the boost-build rule.
-	if (bootstrap_file.empty())
+	if (buildsystem_file.empty())
 	{
 		b2::list_cref dot_boost_build_dir
 			= b2::jam::variable(".boost-build-dir");
@@ -236,39 +254,79 @@ bool b2::startup::bootstrap(FRAME * frame)
 			if (!b2_file_path.empty() && !b2::paths::is_rooted(dir))
 				dir = b2_file_path + "/../" + dir;
 			const std::string path
-				= b2::paths::normalize(dir + "/" + bootstrap_jam);
-			bootstrap_files_searched += "  " + path + "\n";
-			if (b2::filesys::is_file(path)) bootstrap_file = path;
+				= b2::paths::normalize(dir + "/" + buildsystem_jam);
+			buildsystem_files_searched += "  " + path + "\n";
+			if (b2::filesys::is_file(path)) buildsystem_file = path;
 		}
 	}
 
 	// Failed to find the build files to load.
-	if (bootstrap_file.empty())
+	if (buildsystem_file.empty())
 	{
 		err_printf(
 			"Unable to load B2\n"
 			"-----------------\n"
-			"No 'bootstrap.jam' was found by searching for:\n"
+			"No '%s' was found by searching for:\n"
 			"%s\n"
 			"Please consult the documentation at "
 			"'https://www.bfgroup.xyz/b2/'.\n\n",
-			bootstrap_files_searched.c_str());
+			buildsystem_file.c_str(), buildsystem_files_searched.c_str());
 		return false;
 	}
 
 	// Show where we found the bootstrap, if asked.
-	if (!bootstrap_file.empty() && dot_OPTION__debug_configuration)
+	if (!buildsystem_file.empty() && dot_OPTION__debug_configuration)
 	{
-		out_printf("notice: loading B2 from %s\n", bootstrap_file.c_str());
+		out_printf("notice: loading B2 from %s\n", buildsystem_file.c_str());
 	}
 
-	// Set the bootstrap=file var as it's used by the build system to refer to
-	// the rest of the build system files.
-	b2::jam::variable dot_bootstrap_file { ".bootstrap-file" };
-	dot_bootstrap_file = b2::list_ref { b2::value_ref { bootstrap_file } };
+	// // Load the build system bootstrap file we found.
+	// parse_file(b2::value_ref { buildsystem_file }, frame);
 
-	// Load the build system bootstrap file we found.
-	parse_file(b2::value_ref { bootstrap_file }, frame);
+	// Add any subdirs to the build-system.jam to search for the jam files.
+	std::string buildsystem_dir
+		= b2::paths::normalize(buildsystem_file + "/..");
+	std::vector<std::string> buildsystem_subdirs;
+	file_dirscan(value_ref(buildsystem_dir), (scanback)&bootstrap_dirscan,
+		&buildsystem_subdirs);
+	b2::jam::variable boost_build_path_v("BOOST_BUILD_PATH");
+	for (auto subdir : buildsystem_subdirs) boost_build_path_v += subdir;
+	boost_build_path_v += buildsystem_dir;
+	b2::jam::variable(".ENVIRON", "BOOST_BUILD_PATH") = boost_build_path_v;
+
+	jam::jam_context context(frame);
+
+	// The modules module is required globally for everyone for the `ìmport`
+	// rule.
+	list_ref modules_imports("modules");
+	jam::modules::import(
+		list_cref(*modules_imports), list_cref(), list_cref(), context.ref());
+
+	// Process option plugins first to allow them to prevent loading the rest of
+	// the build system.
+	list_ref option_imports("option");
+	jam::modules::import(
+		list_cref(*option_imports), list_cref(), list_cref(), context.ref());
+	list_ref dont_build(jam::run_rule(context.frame, "option.process"));
+
+	// Should we skip building, i.e. loading the build system, according to the
+	// options processed?
+	if (!dont_build.empty()) return true;
+
+	// Check `--build-system` option.
+	list_ref build_system_imports;
+	for (auto arg : *jam::variable("ARGV"))
+	{
+		std::string opt = arg->str();
+		if (opt.substr(0, 15) == "--build-system=")
+			build_system_imports.push_back(opt.substr(15));
+	}
+
+	// Import the build-system module to start off the regular build process.
+	if (build_system_imports.empty())
+		build_system_imports.push_back("build-system");
+	jam::modules::import(list_cref(*build_system_imports), list_cref(),
+		list_cref(), context.ref());
 
 	return true;
 }

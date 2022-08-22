@@ -17,6 +17,9 @@ other Jam files.
 * *New*: Port modules `class`, `errors`, `modules`, `regex`, `set`, `string`,
   and `sysinfo` to {CPP}.
   -- _René Ferdinand Rivera Morell_
+* *New*: Port `bootstrap.jam` to {CPP} and instead use `build-system.jam` as
+  key file to find build files.
+  -- _René Ferdinand Rivera Morell_
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 

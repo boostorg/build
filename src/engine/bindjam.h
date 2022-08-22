@@ -23,6 +23,8 @@ struct jam_context : bind::context_
 	jam_context(FRAME * f)
 		: frame(f)
 	{}
+
+	inline bind::context_ref_ ref() { return bind::context_ref_(*this); }
 };
 
 /*
