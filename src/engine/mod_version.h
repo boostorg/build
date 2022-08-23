@@ -14,19 +14,24 @@ Distributed under the Boost Software License, Version 1.0.
 namespace b2 {
 /* tag::reference[]
 
+[[b2.reference.modules.version]]
 = `version` module.
 
 end::reference[] */
 
 /* tag::reference[]
 
-== `version_less`
+== `b2::version_less`
+
+====
+[horizontal]
+Jam:: `rule version-less ( lhs + : rhs + )`
+{CPP}:: `bool version_less(const std::vector<int> & lhs, const std::vector<int>
+& rhs);`
+====
 
 Returns `true` if the first version, `lhs`, is semantically less than the
 second version, `rhs`.
-
-Jam::
-`rule version-less ( lhs + : rhs + )`
 
 end::reference[] */
 bool version_less(const std::vector<int> & lhs, const std::vector<int> & rhs);
