@@ -52,7 +52,7 @@ struct value
 	static value * make(const char * str, std::size_t size);
 	static inline value * make(const char * str)
 	{
-		return make(str, strlen(str));
+		return make(str, str ? strlen(str) : 0);
 	}
 	static inline value * make(const char * begin, const char * end)
 	{
@@ -125,7 +125,7 @@ struct value_ref
 
 	friend inline value_ref operator+(const std::string & a, value_ref b)
 	{
-        const char * c = b.has_value() ? b->str() : "";
+		const char * c = b.has_value() ? b->str() : "";
 		return value_ref(a + c);
 	}
 

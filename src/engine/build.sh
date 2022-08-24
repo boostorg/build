@@ -485,6 +485,7 @@ timestamp.cpp \
 value.cpp \
 variable.cpp \
 w32_getreg.cpp \
+mod_jam_builtin.cpp \
 mod_jam_class.cpp \
 mod_jam_errors.cpp \
 mod_jam_modules.cpp \

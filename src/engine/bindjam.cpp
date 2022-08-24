@@ -18,8 +18,10 @@ Distributed under the Boost Software License, Version 1.0.
 #include "parse.h"
 #include "rules.h"
 #include "types.h"
+#include "value.h"
 #include "variable.h"
 
+#include "mod_jam_builtin.h"
 #include "mod_jam_class.h"
 #include "mod_jam_errors.h"
 #include "mod_jam_modules.h"
@@ -39,6 +41,19 @@ Distributed under the Boost Software License, Version 1.0.
 
 namespace b2 { namespace jam {
 
+namespace {
+inline const char * mod_cstr(const std::string & n)
+{
+	return n.empty() ? nullptr : n.c_str();
+}
+inline std::string mod_str(const char * n) { return (n == nullptr) ? "" : n; }
+inline module_ptr mod(const char * name)
+{
+	if (name == nullptr || name[0] == '\0') return root_module();
+	return bindmodule(value_ref(name));
+}
+inline module_ptr mod(const std::string & name) { return mod(mod_cstr(name)); }
+} // namespace
 /*
 Basic core types to marshal..
 */
@@ -607,9 +622,8 @@ void jam_native_bind(const string_t & module_name,
 	function_builtin_t native_rule,
 	Return (*)(Args...))
 {
-	value_ptr module_name_obj = object_new(module_name.c_str());
 	value_ptr rule_name_obj = object_new(rule_name.c_str());
-	module_t * module = bindmodule(module_name_obj);
+	module_t * module = mod(module_name);
 
 	int found = 0;
 	RULE * const rule
@@ -620,8 +634,8 @@ void jam_native_bind(const string_t & module_name,
 	rule->actions = 0;
 	rule->exported = 0;
 	// Register the function as a native jam rule.
-	declare_native_rule(
-		module_name.c_str(), rule_name.c_str(), arg_spec.spec, native_rule, 0);
+	declare_native_rule(mod_cstr(module_name), rule_name.c_str(), arg_spec.spec,
+		native_rule, 0);
 	// Note, we don't check results of not finding the existing native rule,
 	// for the obvious reason that we just created it a few lines above.
 	native_rule_t * np
@@ -632,7 +646,6 @@ void jam_native_bind(const string_t & module_name,
 	// Define the native rule in the class module.
 	new_rule_body(module, np->name, np->procedure, 1);
 
-	object_free(module_name_obj);
 	object_free(rule_name_obj);
 }
 
@@ -716,12 +729,7 @@ void jam_bind(const string_t & module_name,
 		(void (*)(Args...)) nullptr);
 }
 
-void jam_binder::bind_module(const char * module_name)
-{
-	value_ptr module_name_obj = object_new(module_name);
-	bindmodule(module_name_obj);
-	object_free(module_name_obj);
-}
+void jam_binder::bind_module(const char * module_name) { mod(module_name); }
 
 template <class Class, class... Bases>
 void jam_binder::bind_class(const char * module_name,
@@ -779,7 +787,7 @@ void jam_binder::bind_function(const char * module_name,
 	Function f)
 {
 	jam_arg_spec<A...> arg_spec { args };
-	jam_bind(module_name, function_name, arg_spec, f);
+	jam_bind(mod_str(module_name), function_name, arg_spec, f);
 }
 
 void jam_binder::eval_data(const char * module_name, const char * data)
@@ -805,6 +813,7 @@ void bind_jam(FRAME * f)
 		// These have to be done in dependency order so that the init code
 		// each executes is valid.
 		.bind(jam::modules::modules_module())
+		.bind(jam::builtin::root_module())
 		.bind(jam::klass::class_module())
 		.bind(jam::errors::errors_module())
 		.bind(paths::paths_module())

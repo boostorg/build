@@ -179,6 +179,12 @@ are not allowed.
 [[bbv2.reference.rules.test-suite]]`test-suite`::
 This rule is deprecated and equivalent to `alias`.
 
+:leveloffset: +1
+
+include::../../src/engine/mod_jam_builtin.h[tag=reference]
+
+:leveloffset: -1
+
 [[bbv2.overview.builtins.features]]
 == Builtin features
 

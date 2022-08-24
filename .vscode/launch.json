@@ -56,7 +56,7 @@
             "program": "${workspaceFolder}/.build/gcc-12/debug/cxxstd-11-iso/b2",
             "args": ["-na"],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}/test/rootless/test1",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

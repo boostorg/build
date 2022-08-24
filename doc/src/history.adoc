@@ -20,6 +20,9 @@ other Jam files.
 * *New*: Port `bootstrap.jam` to {CPP} and instead use `build-system.jam` as
   key file to find build files.
   -- _René Ferdinand Rivera Morell_
+* *New*: Add `require-b2` builtin rule to verify the B2 version a particular
+  Jam file needs.
+  -- _René Ferdinand Rivera Morell_
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 
