@@ -370,6 +370,7 @@ stages:
     displayName: 'Release Linux'
     strategy:
       matrix:
+        1.80.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.79.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.78.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.77.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
@@ -415,6 +416,7 @@ stages:
       vmImage: "${{variables.macos_latest_vm}}"
     strategy:
       matrix:
+        1.80.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.79.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.78.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.77.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
@@ -459,6 +461,7 @@ stages:
       vmImage: "${{variables.windows_latest_vm}}"
     strategy:
       matrix:
+        1.80.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: "${{variables.vc_latest}}"}
         1.79.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: "${{variables.vc_latest}}"}
         1.78.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.78.0, BOOST_VERSION_U: 1_78_0, TOOLSET: "${{variables.vc_latest}}"}
         1.77.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.77.0, BOOST_VERSION_U: 1_77_0, TOOLSET: "${{variables.vc_latest}}"}
