@@ -213,11 +213,11 @@ typedef struct _jam_function
 } JAM_FUNCTION;
 
 
+namespace
+{
 typedef struct _stack STACK;
 typedef STACK* stack_ptr;
 
-namespace
-{
     template <typename T>
     using remove_cref_t
         = typename std::remove_const<
@@ -260,7 +260,6 @@ namespace
         typename select_last_impl<(sizeof...(A) == 1), type_list<A...> >
             ::template type<A...>;
     #endif
-}
 
 struct _stack
 {
@@ -437,6 +436,8 @@ void _stack::cleanup_push( int32_t n, T*_ )
 {
     std::uninitialized_fill_n( &cleanups[cleanups_size], n, (cleanup_f)&_stack::cleanup_item<T> );
     cleanups_size += n;
+}
+
 }
 
 static STACK * stack_global()

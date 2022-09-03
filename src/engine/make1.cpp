@@ -86,6 +86,7 @@ static struct
 #define T_STATE_MAKE1B  1  /* make1b() should be called */
 #define T_STATE_MAKE1C  2  /* make1c() should be called */
 
+namespace {
 typedef struct _state state;
 struct _state
 {
@@ -94,6 +95,7 @@ struct _state
     TARGET * parent;    /* parent argument necessary for MAKE1A */
     int32_t  curstate;  /* current state */
 };
+}
 
 static void make1a( state * const );
 static void make1b( state * const );
