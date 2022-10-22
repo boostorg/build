@@ -9,15 +9,15 @@ import feature ;
 
 [[bbv2.builtin.features.cxxstd]]`cxxstd`::
 *Allowed values*: `98`, `03`, `0x`, `11`, `1y`, `14`, `1z`, `17`, `2a`, `20`,
-`latest`.
+`2b`, `23`, `2c`, `26`, `latest`.
 +
 Specifies the version of the C++ Standard Language to build with. All the
 official versions of the standard since "98" are included.  It is also possible
 to specify using the experimental, work in progress, `latest` version. Some
 compilers specified intermediate versions for the experimental versions leading
 up to the released standard version. Those are included following the GNU
-nomenclature as `0x`, `1y`, `1z`, and `2a`. Depending on the compiler `latest`
-would map to one of those.
+nomenclature as `0x`, `1y`, `1z`, `2a`, `2b` and `2c`. Depending on the compiler
+`latest` would map to one of those.
 
 NOTE: This is an `optional` feature. Hence when not specified the compiler
 default behaviour is used.
