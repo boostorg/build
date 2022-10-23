@@ -1,6 +1,11 @@
 [[b2.history]]
 = History
 
+== Version 4.9.3
+
+* Updated cxxstd for 23 and 26 versions of recent gcc and clang. (#184)
+  -- _Andrey Semashev_
+
 == Version 4.9.2
 
 * Fix too long msvc link actions.
