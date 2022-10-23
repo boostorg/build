@@ -26,6 +26,11 @@ other Jam files.
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 
+== Version 4.9.3
+
+* Updated cxxstd for 23 and 26 versions of recent gcc and clang. (#184)
+  -- _Andrey Semashev_
+
 == Version 4.9.2
 
 * Fix too long msvc link actions.
