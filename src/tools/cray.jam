@@ -223,9 +223,9 @@ rule set-cray-feature-defaults ( )
     # options.
 
     feature.set-default cxxstd-dialect : gnu ;
-    feature.set-default debug-symbols  : off ;
-    feature.set-default optimization   : default ;
-    feature.set-default inlining       : default ;
+    feature.set-default debug-symbols  : on ;
+    feature.set-default optimization   : off ;
+    feature.set-default inlining       : off ;
     feature.set-default vectorize      : default ;
 }
 
@@ -306,26 +306,26 @@ feature.extend vectorize    : default ;
 # a flag to 'compile', then that flag is applied to all children under
 # 'compile'.
 
-toolset.flags cray.compile OPTIONS <link>shared : -h pic ;
+toolset.flags cray.compile OPTIONS <link>shared : -fPIC ;
 
 toolset.flags cray.compile OPTIONS <optimization>default        ; # Blank.
-toolset.flags cray.compile OPTIONS <optimization>off     : -O 0 ;
-toolset.flags cray.compile OPTIONS <optimization>speed   : -O 3 ;
+toolset.flags cray.compile OPTIONS <optimization>off     : -O0 ;
+toolset.flags cray.compile OPTIONS <optimization>speed   : -O3 -ffast-math ;
 toolset.flags cray.compile OPTIONS <optimization>space          ; # Blank. CCE does not optimize for space.
 
 toolset.flags cray.compile OPTIONS <inlining>default           ; # Blank.
-toolset.flags cray.compile OPTIONS <inlining>off     : -h ipa0 ;
+toolset.flags cray.compile OPTIONS <inlining>off     : -fno-inline ;
 toolset.flags cray.compile OPTIONS <inlining>on                ; # Blank. CCE does inlining by default.
-toolset.flags cray.compile OPTIONS <inlining>full    : -h ipa5 ;
+toolset.flags cray.compile OPTIONS <inlining>full    :         ;
 
 toolset.flags cray.compile OPTIONS <vectorize>default              ; # Blank.
-toolset.flags cray.compile OPTIONS <vectorize>off     : -h vector0 ;
+toolset.flags cray.compile OPTIONS <vectorize>off     :            ; # FIXME
 toolset.flags cray.compile OPTIONS <vectorize>on                   ; # Blank. CCE vectorizes by default.
-toolset.flags cray.compile OPTIONS <vectorize>full    : -h vector3 ;
+toolset.flags cray.compile OPTIONS <vectorize>full    :            ; # FIXME
 
 toolset.flags cray.link FINDLIBS-SA <threading>multi : rt ; # Not sure if this is correct.
 
-toolset.flags cray.link OPTIONS <link>shared : -h pic ;
+toolset.flags cray.link OPTIONS <link>shared : -fPIC ;
 
 {
     #
