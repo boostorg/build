@@ -94,7 +94,7 @@ bool is_instance(std::string value);
 
 ====
 [horizontal]
-Jam:: `rule is-as ( instance : type )`
+Jam:: `rule is-a ( instance : type )`
 {CPP}:: `bool is_a(std::string instance, value_ref type);`
 ====
 

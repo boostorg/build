@@ -7,6 +7,14 @@
 
 require-b2 5 ;
 
+if --grep in [ modules.peek : ARGV ]
+{
+    import path ;
+    import regex ;
+    regex.grep e:/grafik/b2/src/engine : *.h : "^#include .*$" ;
+    EXIT "!" ;
+}
+
 import "class" : new ;
 import bison ;
 import errors ;

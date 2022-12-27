@@ -184,6 +184,23 @@ end::reference[] */
 list_ref regex_replace_each(
 	list_cref list, value_ref match, value_ref replacement);
 
+/* tag::reference[]
+
+== `b2::regex_grep`
+
+====
+[horizontal]
+Jam:: `rule grep ( directories + : files + : patterns + )`
+{CPP}:: `b2::list_ref regex_grep(b2::list_cref directories, b2::list_cref files,
+b2::list_cref patterns);`
+====
+
+Match any of the `patterns` against the globbed `files` in `directories`, and
+return a list of files and matched lines (file1, line1, ..., fileN, lineN).
+
+end::reference[] */
+list_ref regex_grep(list_cref directories, list_cref files, list_cref patterns);
+
 struct regex_module : b2::bind::module_<regex_module>
 {
 	const char * module_name = "regex";
@@ -204,7 +221,9 @@ struct regex_module : b2::bind::module_<regex_module>
 			.def(&regex_replace, "replace",
 				"string" * _1 + "match" * _1 + "replacement" * _1)
 			.def(&regex_replace_each, "replace-list",
-				"list" * _n | "match" * _1 | "replacement" * _1);
+				"list" * _n | "match" * _1 | "replacement" * _1)
+			.def(&regex_grep, "grep",
+				"directories" * _1n | "files" * _1n | "patterns" * _1n);
 		binder.eval(init_code);
 		binder.loaded();
 	}

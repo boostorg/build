@@ -6,30 +6,20 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "mod_regex.h"
 
+#include "filesys.h"
 #include "mem.h"
 #include "regexp.h"
+#include "tasks.h"
 
+#include <algorithm>
+#include <cstring>
 #include <memory>
 #include <numeric>
+#include <string>
+#include <vector>
 
 using namespace b2;
-
-namespace {
-using regex_ptr = std::unique_ptr<regexp, std::function<void(regexp *)>>;
-
-regex_ptr make_regex(const string_t & pattern)
-{
-	// TODO: Fix regcomp to not const-cast pattern.
-	return regex_ptr(
-		regcomp(pattern.c_str()), [](regexp * r) { BJAM_FREE(r); });
-}
-
-regex_ptr make_regex(const char * pattern)
-{
-	// TODO: Fix regcomp to not const-cast pattern.
-	return regex_ptr(regcomp(pattern), [](regexp * r) { BJAM_FREE(r); });
-}
-} // namespace
+using namespace b2::regex;
 
 list_ref b2::regex_split(
 	const std::tuple<value_ref, value_ref> & string_separator)
@@ -169,7 +159,7 @@ string_t regex_replace(
 	result.append(pos);
 	return result;
 }
-}} // namespace b2::
+}} // namespace b2
 
 value_ref b2::regex_replace(const std::tuple<value_ref, value_ref, value_ref> &
 		string_match_replacement)
@@ -191,6 +181,107 @@ list_ref b2::regex_replace_each(
 		result.push_back(
 			regex_replace(string->str(), re.get(), replacement->str()));
 	}
+	return result;
+}
+
+int glob(char const * s, char const * c);
+
+namespace b2 { namespace {
+struct regex_grep_task
+{
+	list_cref file_glob_patterns;
+	std::vector<regex_ptr> text_grep_patterns;
+	std::unique_ptr<task_group> grep_tasks;
+
+	regex_grep_task(list_cref files, list_cref patterns)
+		: file_glob_patterns(files)
+		// , text_grep_patterns(patterns)
+	{
+		text_grep_patterns.reserve(patterns.length());
+		for (auto p: patterns)
+		{
+			text_grep_patterns.emplace_back(make_regex(p->str()));
+		}
+		grep_tasks = task_executor::get().make();
+	}
+
+	static void dirscan_callback(regex_grep_task * self,
+		OBJECT * path,
+		int found,
+		timestamp const * const)
+	{
+		self->dirscan_file(path);
+	}
+
+	void dirscan_file(const value_ref & file)
+	{
+		// We only care about the filename of the path for globing. So split
+		// the path to only get the file.
+		std::string filepath = file->str();
+		PATHNAME filepathparts(file->str());
+		std::string filename(filepathparts.base() + filepathparts.suffix());
+		// Ignore meta-dir paths.
+		if (filename == "." || filename == "..") return;
+		// Match the full `path` to the set of glob patterns we are looking for.
+		for (auto glob_pattern : file_glob_patterns)
+		{
+			if (glob(glob_pattern->str(), filename.c_str()) == 0)
+			{
+				// We have a glob match for this file. We can queue it up for
+				// the possibly parallel grep.
+				grep_tasks->queue([this, filepath_local { filepath }]() {
+					file_grep(filepath_local);
+				});
+			}
+		}
+	}
+
+	void file_grep(std::string filepath)
+	{
+		out_printf(">> b2::regex_grep_task::file_grep(%s)\n", filepath.c_str());
+
+		// Load file, hopefully doing a memory map.
+		b2::filesys::file_buffer filedata(filepath);
+		if (filedata.size() > 0)
+		{
+			// We have some data to regex search in.
+		}
+	}
+
+	void wait()
+	{
+		grep_tasks->wait();
+		out_printf(">> b2::regex_grep_task::wait()\n");
+	}
+};
+
+}} // namespace b2
+
+list_ref b2::regex_grep(
+	list_cref directories, list_cref files, list_cref patterns)
+{
+	list_ref result;
+
+	// For the glob we always do a case insensitive compare. So we need
+	// the globs as lower-case.
+	list_ref globs;
+	for (auto glob : files)
+	{
+		std::string g(glob->str());
+		std::transform(g.begin(), g.end(), g.begin(),
+			[](unsigned char c) { return std::tolower(c); });
+		globs.push_back(value_ref(g));
+	}
+
+	regex_grep_task task(list_cref(*globs), patterns);
+	for (auto dir : directories)
+	{
+		file_dirscan(dir,
+			reinterpret_cast<scanback>(&regex_grep_task::dirscan_callback),
+			&task);
+	}
+	task.wait();
+
 	return result;
 }
 

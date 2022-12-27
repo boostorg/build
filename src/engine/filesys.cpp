@@ -38,7 +38,12 @@
 
 #include <assert.h>
 #include <sys/stat.h>
+#include <cstdio>
 
+#ifdef OS_NT
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#endif
 
 /* Internal OS specific implementation details - have names ending with an
  * underscore and are expected to be implemented in an OS specific fileXXX.c
@@ -706,3 +711,61 @@ file_info_t * filelist_back(  FILELIST * list )
 
     return list->tail->value;
 }
+
+namespace b2 { namespace filesys {
+
+namespace {
+std::size_t file_query_data_size_(const std::string & filepath)
+{
+    #ifndef OS_NT
+    struct stat statbuf;
+    if (stat(filepath.c_str(), &statbuf) == 0)
+    {
+        return statbuf.st_size;
+    }
+    #else
+    WIN32_FILE_ATTRIBUTE_DATA file_data;
+    if (filepath.size() < MAX_PATH)
+    {
+        if (GetFileAttributesExA(filepath.c_str(), GetFileExInfoStandard, &file_data) == 0)
+            return 0;
+    }
+    else
+    {
+        int wchar_count = MultiByteToWideChar(CP_UTF8, 0, filepath.c_str(), -1, nullptr, 0);
+        std::wstring filepathw(wchar_count, 0);
+        MultiByteToWideChar(CP_UTF8, 0, filepath.c_str(), -1, &filepathw[0],
+            wchar_count);
+        filepathw = LR"(\\?\)"+filepathw;
+        if (GetFileAttributesExW(filepathw.c_str(), GetFileExInfoStandard, &file_data) == 0)
+            return 0;
+    }
+    return (std::size_t(file_data.nFileSizeHigh)<<(sizeof(file_data.nFileSizeLow)*8))
+        | std::size_t(file_data.nFileSizeLow);
+    #endif
+    return 0;
+}
+}
+
+file_buffer::file_buffer(const std::string & filepath)
+{
+    // Totally not optimized reading of the file data into memory.
+    // TODO: Use memory mapping instead.
+    data_size = file_query_data_size_(filepath);
+    data_c.reset(new char[data_size]);
+    if (FILE* f = std::fopen(filepath.c_str(), "r"))
+    {
+        if (std::fread(data_c.get(), data_size, 1, f) != 1)
+        {
+            data_size = 0;
+            data_c.reset();
+        }
+        std::fclose(f);
+    }
+}
+
+file_buffer::~file_buffer()
+{
+}
+
+}}

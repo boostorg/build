@@ -25,6 +25,7 @@
 #include "timestamp.h"
 
 #include <string>
+#include <memory>
 
 
 typedef struct file_info_t
@@ -121,5 +122,22 @@ int filelist_empty( FILELIST * list );
 void file_query_posix_( file_info_t * const );
 
 void file_done();
+
+namespace b2 { namespace filesys {
+class file_buffer
+{
+    public:
+    file_buffer(const std::string & filepath);
+    ~file_buffer();
+
+    inline std::size_t size() const { return data_size; }
+    inline const char * begin() const { return data_c.get(); }
+    inline const char * end() const { return data_c.get()+size(); }
+
+    private:
+    std::unique_ptr<char[]> data_c;
+    std::size_t data_size = 0;
+};
+}}
 
 #endif

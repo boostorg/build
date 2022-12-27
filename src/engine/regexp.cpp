@@ -1332,3 +1332,31 @@ strcspn(
     return(count);
 }
 #endif
+
+b2::regex::program::program(const char * pattern)
+    : compiled(make_regex(pattern))
+{
+}
+
+b2::regex::program::result_iterator::result_iterator(
+    regexp  & c, const char * b, const char * e)
+    : compiled(c)
+    , match_begin(b)
+    , match_end(b)
+{
+    advance();
+}
+
+void b2::regex::program::result_iterator::advance()
+{
+    if (regexec(&compiled, match_end) == 0)
+    {
+        // No next match, reset to end.
+        match_begin = nullptr;
+        match_end = nullptr;
+    }
+    else
+    {
+        // A match means the subexpressions are filled in.
+    }
+}
