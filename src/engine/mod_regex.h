@@ -190,16 +190,21 @@ list_ref regex_replace_each(
 
 ====
 [horizontal]
-Jam:: `rule grep ( directories + : files + : patterns + )`
-{CPP}:: `b2::list_ref regex_grep(b2::list_cref directories, b2::list_cref files,
-b2::list_cref patterns);`
+Jam:: `rule grep ( directories + : files + : patterns + : result_expressions *
+)` {CPP}:: `b2::list_ref regex_grep(b2::list_cref directories, b2::list_cref
+files, b2::list_cref patterns, list_cref result_expressions);`
 ====
 
 Match any of the `patterns` against the globbed `files` in `directories`, and
-return a list of files and matched lines (file1, line1, ..., fileN, lineN).
+return a list of files and indicated `result_expressions` (file1, re1, re..,
+...). The `result_expressions` are indices from `0` to `10`. Where `0` is the
+full match.
 
 end::reference[] */
-list_ref regex_grep(list_cref directories, list_cref files, list_cref patterns);
+list_ref regex_grep(list_cref directories,
+	list_cref files,
+	list_cref patterns,
+	list_cref result_expressions);
 
 struct regex_module : b2::bind::module_<regex_module>
 {
@@ -223,7 +228,8 @@ struct regex_module : b2::bind::module_<regex_module>
 			.def(&regex_replace_each, "replace-list",
 				"list" * _n | "match" * _1 | "replacement" * _1)
 			.def(&regex_grep, "grep",
-				"directories" * _1n | "files" * _1n | "patterns" * _1n);
+				"directories" * _1n | "files" * _1n | "patterns" * _1n
+					| "result_expressions" * _n);
 		binder.eval(init_code);
 		binder.loaded();
 	}

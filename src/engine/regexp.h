@@ -58,6 +58,7 @@ inline regex_ptr make_regex(const char * pattern)
 struct program
 {
 	program(const char * pattern);
+	program(program &&) = default;
 
 	// types
 	struct result_iterator;
@@ -74,8 +75,8 @@ struct program::result_iterator
 	using iterator_category = std::forward_iterator_tag;
 	using value_type = value::str_view;
 	using difference_type = std::ptrdiff_t;
-	using pointer = value_type *;
-	using reference = value_type &;
+	using pointer = const value_type *;
+	using reference = const value_type &;
 
 	result_iterator(regexp & c, const char * b, const char * e);
 	result_iterator(const result_iterator & o) = default;
@@ -86,14 +87,19 @@ struct program::result_iterator
 		advance();
 		return *this;
 	}
-	reference operator*() const;
-	pointer operator->() const;
-	explicit inline operator bool() const { return match_begin != nullptr; }
+	inline reference operator*() const { return match; }
+	inline pointer operator->() const { return &match; }
+	explicit inline operator bool() const { return match.str != nullptr; }
+	inline value_type operator[](std::size_t i) const
+	{
+		return i <= NSUBEXP ? value_type { compiled.startp[i],
+			std::size_t(compiled.endp[i] - compiled.startp[i]) }
+							: value_type { nullptr, 0 };
+	}
 
 	private:
 	regexp & compiled;
-	const char * match_begin = nullptr;
-    const char * match_end = nullptr;
+	value_type match;
 
 	void advance();
 };

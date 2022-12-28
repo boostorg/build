@@ -11,7 +11,16 @@ if --grep in [ modules.peek : ARGV ]
 {
     import path ;
     import regex ;
-    regex.grep e:/grafik/b2/src/engine : *.h : "^#include .*$" ;
+    local mmm = [ regex.grep
+        /home/grafik/Sync/DevRoots/B2/bfg-mainline/src/engine : *.h
+        : "#(include) \"([^\"]+)\"" : 1 2 ] ;
+    ECHO "====" ;
+    while $(mmm[1])
+    {
+        ECHO $(mmm[1-3]) ;
+        mmm = $(mmm[4-]) ;
+    }
+    ECHO "====" ;
     EXIT "!" ;
 }
 

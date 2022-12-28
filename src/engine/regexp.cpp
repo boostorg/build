@@ -1341,22 +1341,25 @@ b2::regex::program::program(const char * pattern)
 b2::regex::program::result_iterator::result_iterator(
     regexp  & c, const char * b, const char * e)
     : compiled(c)
-    , match_begin(b)
-    , match_end(b)
+    , match{b,0}
 {
     advance();
 }
 
 void b2::regex::program::result_iterator::advance()
 {
-    if (regexec(&compiled, match_end) == 0)
+    // We start searching for a match at the end of the previous match.
+    if (regexec(&compiled, match.end()) == 0)
     {
-        // No next match, reset to end.
-        match_begin = nullptr;
-        match_end = nullptr;
+        // No next match, reset to end/nothing.
+        match.str = nullptr;
+        match.size = 0;
     }
     else
     {
-        // A match means the subexpressions are filled in.
+        // A match means the subexpressions are filled in and the first entry
+        // is the full match.
+        match.str = compiled.startp[0];
+        match.size = compiled.endp[0]-compiled.startp[0];
     }
 }
