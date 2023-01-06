@@ -27,20 +27,20 @@ list_ref b2::regex_split(
 {
 	list_ref result;
 	string_t string { std::get<0>(string_separator) };
-	auto re = make_regex(std::get<1>(string_separator)->str());
+	auto re = program(std::get<1>(string_separator)->str());
 	auto pos = string.c_str();
 	auto prev = pos;
-	while (regexec(re.get(), pos))
+	for (auto re_i = re.search(pos); re_i; ++re_i)
 	{
-		result.push_back(prev, re->startp[0]);
-		prev = re->endp[0];
+		result.push_back(prev, re_i->begin());
+		prev = re_i->end();
 		/* Handle empty matches */
 		if (*pos == '\0')
 			break;
-		else if (pos == re->endp[0])
+		else if (pos == re_i->end())
 			pos++;
 		else
-			pos = re->endp[0];
+			pos = re_i->end();
 	}
 	result.push_back(pos);
 	return result;
@@ -49,22 +49,22 @@ list_ref b2::regex_split(
 list_ref b2::regex_split_each(list_cref to_split, value_ref separator)
 {
 	list_ref result;
-	auto re = make_regex(separator->str());
+	auto re = program(separator->str());
 	for (auto string : to_split)
 	{
 		auto pos = string->str();
 		auto prev = pos;
-		while (regexec(re.get(), pos))
+		for (auto re_i = re.search(pos); re_i; ++re_i)
 		{
-			result.push_back(prev, re->startp[0]);
-			prev = re->endp[0];
+			result.push_back(prev, re_i->begin());
+			prev = re_i->end();
 			/* Handle empty matches */
 			if (*pos == '\0')
 				break;
-			else if (pos == re->endp[0])
+			else if (pos == re_i->end())
 				pos++;
 			else
-				pos = re->endp[0];
+				pos = re_i->end();
 		}
 		result.push_back(pos);
 	}
@@ -75,22 +75,22 @@ list_ref b2::regex_match(
 	value_ref pattern, value_ref string, const std::vector<int_t> & indices)
 {
 	list_ref result;
-	auto re = make_regex(pattern->str());
-	if (regexec(re.get(), string->str()))
+	auto re = program(pattern->str());
+	if (auto re_i = re.search(string->str()))
 	{
 		if (!indices.empty())
 		{
 			for (int_t index : indices)
 			{
 				if (index < NSUBEXP)
-					result.push_back(re->startp[index], re->endp[index]);
+					result.push_back(re_i[index].begin(), re_i[index].end());
 			}
 		}
 		else
 		{
 			for (int_t index = 1;
-				 index < NSUBEXP && re->startp[index] != nullptr; ++index)
-				result.push_back(re->startp[index], re->endp[index]);
+				 index < NSUBEXP && re_i[index].end() != nullptr; ++index)
+				result.push_back(re_i[index].begin(), re_i[index].end());
 		}
 	}
 	return result;
@@ -100,16 +100,17 @@ list_ref b2::regex_transform(
 	list_cref list, value_ref pattern, const std::vector<int_t> & indices)
 {
 	list_ref result;
-	auto re = make_regex(pattern);
+	auto re = program(pattern->str());
 	if (!indices.empty())
 	{
 		for (auto string : list)
 		{
-			if (regexec(re.get(), string->str()))
+			if (auto re_i = re.search(string->str()))
 				for (int_t index : indices)
 				{
-					if (index < NSUBEXP && re->startp[index] < re->endp[index])
-						result.push_back(re->startp[index], re->endp[index]);
+					if (index < NSUBEXP && re_i[index].end() != nullptr)
+						result.push_back(
+							re_i[index].begin(), re_i[index].end());
 				}
 		}
 	}
@@ -117,9 +118,9 @@ list_ref b2::regex_transform(
 	{
 		for (auto string : list)
 		{
-			if (regexec(re.get(), string->str()))
-				if (re->startp[1] != nullptr && re->startp[1] < re->endp[1])
-					result.push_back(re->startp[1], re->endp[1]);
+			if (auto re_i = re.search(string->str()))
+				if (re_i[1].end() != nullptr)
+					result.push_back(re_i[1].begin(), re_i[1].end());
 		}
 	}
 	return result;
@@ -141,21 +142,21 @@ value_ref b2::regex_escape(
 
 namespace b2 { namespace {
 string_t regex_replace(
-	const char * string, regex_ptr::pointer re, const char * replacement)
+	const char * string, program & re, const char * replacement)
 {
 	std::string result;
 	auto pos = string;
-	while (regexec(re, pos))
+	for (auto re_i = re.search(pos); re_i; ++re_i)
 	{
-		result.append(pos, re->startp[0]);
+		result.append(pos, re_i->begin());
 		result.append(replacement);
 		/* Handle empty matches */
 		if (*pos == '\0')
 			break;
-		else if (pos == re->endp[0])
+		else if (pos == re_i->end())
 			pos++;
 		else
-			pos = re->endp[0];
+			pos = re_i->end();
 	}
 	result.append(pos);
 	return result;
@@ -166,21 +167,19 @@ value_ref b2::regex_replace(const std::tuple<value_ref, value_ref, value_ref> &
 		string_match_replacement)
 {
 	value_ref string = std::get<0>(string_match_replacement);
-	auto re = make_regex(std::get<1>(string_match_replacement)->str());
+	auto re = program(std::get<1>(string_match_replacement)->str());
 	value_ref replacement = std::get<2>(string_match_replacement);
-	return value_ref(
-		regex_replace(string->str(), re.get(), replacement->str()));
+	return value_ref(regex_replace(string->str(), re, replacement->str()));
 }
 
 list_ref b2::regex_replace_each(
 	list_cref list, value_ref match, value_ref replacement)
 {
 	list_ref result;
-	auto re = make_regex(match->str());
+	auto re = program(match->str());
 	for (auto string : list)
 	{
-		result.push_back(
-			regex_replace(string->str(), re.get(), replacement->str()));
+		result.push_back(regex_replace(string->str(), re, replacement->str()));
 	}
 	return result;
 }
@@ -258,7 +257,8 @@ struct regex_grep_task
 		// WARNING: We need to avoid Jam operations in this. As we are getting
 		// called from different threads. And the Jam memory is not thread-safe.
 
-		// out_printf(">> b2::regex_grep_task::file_grep(%s)\n", filepath.c_str());
+		// out_printf(">> b2::regex_grep_task::file_grep(%s)\n",
+		// filepath.c_str());
 
 		// The match results are tuples of filepath+expressions. Collect all
 		// those tuples for this file here.

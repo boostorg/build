@@ -22,16 +22,17 @@
 #include "object.h"
 #include "parse.h"
 #include "pathsys.h"
+#include "regexp.h"
 #include "rules.h"
 #include "jam_strings.h"
 #include "startup.h"
-#include "subst.h"
 #include "timestamp.h"
 #include "variable.h"
 #include "output.h"
 
 #include <string>
 
+#include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
 
@@ -945,56 +946,97 @@ LIST * builtin_glob_recursive( FRAME * frame, int flags )
 }
 
 
+LIST * builtin_subst( FRAME * frame, int flags )
+{
+    LIST * result = L0;
+    LIST * const arg1 = lol_get( frame->args, 0 );
+    LISTITER iter = list_begin( arg1 );
+    LISTITER const end = list_end( arg1 );
+
+    if ( iter != end && list_next( iter ) != end && list_next( list_next( iter )
+        ) != end )
+    {
+        char const * const source = object_str( list_item( iter ) );
+        b2::regex::program re( list_item( list_next( iter ) )->str() );
+
+        if ( auto re_i = re.search(source) )
+        {
+            LISTITER subst = list_next( iter );
+
+            while ( ( subst = list_next( subst ) ) != end )
+            {
+#define BUFLEN 4096
+                char buf[ BUFLEN + 1 ];
+                char const * in = object_str( list_item( subst ) );
+                char * out = buf;
+
+                for ( ; *in && out < buf + BUFLEN; ++in )
+                {
+                    if ( *in == '\\' || *in == '$' )
+                    {
+                        ++in;
+                        if ( *in == 0 )
+                            break;
+                        if ( *in >= '0' && *in <= '9' )
+                        {
+                            unsigned int const n = *in - '0';
+                            size_t const srclen = re_i[n].size;
+                            size_t const remaining = buf + BUFLEN - out;
+                            size_t const len = srclen < remaining
+                                ? srclen
+                                : remaining;
+                            memcpy( out, re_i[ n ].begin(), len );
+                            out += len;
+                            continue;
+                        }
+                        /* fall through and copy the next character */
+                    }
+                    *out++ = *in;
+                }
+                *out = 0;
+
+                result = list_push_back( result, object_new( buf ) );
+#undef BUFLEN
+            }
+        }
+    }
+
+    return result;
+}
+
+
 /*
  * builtin_match() - MATCH rule, regexp matching
  */
 
 LIST * builtin_match( FRAME * frame, int flags )
 {
-    LIST * l;
-    LIST * r;
-    LIST * result = L0;
-    LISTITER l_iter;
-    LISTITER l_end;
-    LISTITER r_iter;
-    LISTITER r_end;
+    b2::list_ref result;
 
     string buf[ 1 ];
     string_new( buf );
 
-    /* For each pattern */
-
-    l = lol_get( frame->args, 0 );
-    l_iter = list_begin( l );
-    l_end = list_end( l );
-    for ( ; l_iter != l_end; l_iter = list_next( l_iter ) )
+    /* For each pattern, compile regex and search through strings. */
+    b2::list_cref patterns( lol_get( frame->args, 0 ) );
+    for ( auto pattern : patterns )
     {
-        /* Result is cached and intentionally never freed. */
-        regexp * re = regex_compile( list_item( l_iter ) );
+        b2::regex::program re( pattern->str() );
 
-        /* For each string to match against. */
-        r = lol_get( frame->args, 1 );
-        r_iter = list_begin( r );
-        r_end = list_end( r );
-        for ( ; r_iter != r_end; r_iter = list_next( r_iter ) )
+        /* For each text string to match against. */
+        b2::list_cref texts( lol_get( frame->args, 1 ) );
+        for ( auto text : texts )
         {
-            if ( regexec( re, object_str( list_item( r_iter ) ) ) )
+            if ( auto re_i = re.search( text->str() ) )
             {
-                int i;
-                int top;
-
                 /* Find highest parameter */
-
-                for ( top = NSUBEXP; top-- > 1; )
-                    if ( re->startp[ top ] )
-                        break;
-
+                int top = NSUBEXP-1;
+                while ( re_i[top].end() == nullptr ) top -= 1;
                 /* And add all parameters up to highest onto list. */
                 /* Must have parameters to have results! */
-                for ( i = 1; i <= top; ++i )
+                for ( int i = 1; i <= top ; ++i )
                 {
-                    string_append_range( buf, re->startp[ i ], re->endp[ i ] );
-                    result = list_push_back( result, object_new( buf->value ) );
+                    string_append_range( buf, re_i[i].begin(), re_i[i].end() );
+                    result.push_back( object_new( buf->value ) );
                     string_truncate( buf, 0 );
                 }
             }
@@ -1002,7 +1044,7 @@ LIST * builtin_match( FRAME * frame, int flags )
     }
 
     string_free( buf );
-    return result;
+    return result.release();
 }
 
 
