@@ -67,4 +67,10 @@ typedef long int32_t;
 #define B2_NOEXCEPT noexcept
 #endif
 
+// Indicate if we can use std::thread and friends.
+#ifndef B2_USE_STD_THREADS
+#define B2_USE_STD_THREADS 1
+#endif
+
+
 #endif

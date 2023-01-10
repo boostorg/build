@@ -1,5 +1,5 @@
 /*
-Copyright 2019-2022 René Ferdinand Rivera Morell
+Copyright 2019-2023 René Ferdinand Rivera Morell
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
@@ -206,12 +206,16 @@ struct regex_grep_task
 {
 	list_cref file_glob_patterns;
 	std::vector<b2::regex::program> text_grep_prog;
-	std::unique_ptr<task_group> grep_tasks;
+	std::shared_ptr<b2::task::group> grep_tasks;
 	flags<std::uint16_t> text_grep_result_expressions;
 	std::vector<std::unique_ptr<std::vector<std::string>>> intermediate;
+	mutex_t mx;
+	bool recursive_glob = false;
 
-	regex_grep_task(
-		list_cref files, list_cref patterns, flags<std::uint16_t> expressions)
+	regex_grep_task(list_cref files,
+		list_cref patterns,
+		flags<std::uint16_t> expressions,
+		list_cref options)
 		: file_glob_patterns(files)
 		, text_grep_result_expressions(expressions)
 	{
@@ -220,7 +224,12 @@ struct regex_grep_task
 		{
 			text_grep_prog.emplace_back(p->str());
 		}
-		grep_tasks = task_executor::get().make();
+		for (auto option : options)
+		{
+			std::string opt = option->str();
+			if (opt == "recursive") recursive_glob = true;
+		}
+		grep_tasks = b2::task::executor::get().make();
 	}
 
 	static void dirscan_callback(regex_grep_task * self,
@@ -240,6 +249,18 @@ struct regex_grep_task
 		std::string filename(filepathparts.base() + filepathparts.suffix());
 		// Ignore meta-dir paths.
 		if (filename == "." || filename == "..") return;
+		// If indicated, recurse scan subdirectories.
+		if (recursive_glob)
+		{
+			if (file_is_file(file) == 0)
+			{
+				file_dirscan(file,
+					reinterpret_cast<scanback>(
+						&regex_grep_task::dirscan_callback),
+					this);
+				return;
+			}
+		}
 		// Match the full `path` to the set of glob patterns we are looking for.
 		for (auto glob_pattern : file_glob_patterns)
 		{
@@ -257,9 +278,6 @@ struct regex_grep_task
 		// WARNING: We need to avoid Jam operations in this. As we are getting
 		// called from different threads. And the Jam memory is not thread-safe.
 
-		// out_printf(">> b2::regex_grep_task::file_grep(%s)\n",
-		// filepath.c_str());
-
 		// The match results are tuples of filepath+expressions. Collect all
 		// those tuples for this file here.
 		std::unique_ptr<std::vector<std::string>> result(
@@ -275,8 +293,8 @@ struct regex_grep_task
 				auto grep_i = prog.search(filedata.begin(), filedata.end());
 				for (; grep_i; ++grep_i)
 				{
-					// We need to add the file to the result (which is followed
-					// by the match expressions).
+					// We need to add the file to the result (which is
+					// followed by the match expressions).
 					result->push_back(filepath);
 					for (int i = 0; i < text_grep_result_expressions.size; ++i)
 					{
@@ -284,7 +302,6 @@ struct regex_grep_task
 						{
 							std::string m(grep_i[i].str, grep_i[i].size);
 							result->push_back(m);
-							// out_printf("    : %s\n", m.c_str());
 						}
 					}
 				}
@@ -292,14 +309,13 @@ struct regex_grep_task
 		}
 
 		// Append this file's results to the global results.
-		// TODO: Thread locking on the append as this will be a multi-thread op.
-		intermediate.push_back(std::move(result));
+		scope_lock_t lock(mx);
+		intermediate.emplace_back(result.release());
 	}
 
 	void wait()
 	{
 		grep_tasks->wait();
-		out_printf(">> b2::regex_grep_task::wait()\n");
 	}
 };
 
@@ -308,7 +324,8 @@ struct regex_grep_task
 list_ref b2::regex_grep(list_cref directories,
 	list_cref files,
 	list_cref patterns,
-	list_cref result_expressions)
+	list_cref result_expressions,
+	list_cref options)
 {
 	// For the glob we always do a case insensitive compare. So we need
 	// the globs as lower-case.
@@ -336,7 +353,7 @@ list_ref b2::regex_grep(list_cref directories,
 		}
 	}
 
-	regex_grep_task task(list_cref(*globs), patterns, sub_expr);
+	regex_grep_task task(list_cref(*globs), patterns, sub_expr, options);
 	for (auto dir : directories)
 	{
 		file_dirscan(dir,

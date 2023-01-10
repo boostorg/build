@@ -1,5 +1,5 @@
 /*
-Copyright 2019-2022 René Ferdinand Rivera Morell
+Copyright 2019-2023 René Ferdinand Rivera Morell
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
@@ -191,8 +191,10 @@ list_ref regex_replace_each(
 ====
 [horizontal]
 Jam:: `rule grep ( directories + : files + : patterns + : result_expressions *
-)` {CPP}:: `b2::list_ref regex_grep(b2::list_cref directories, b2::list_cref
-files, b2::list_cref patterns, list_cref result_expressions);`
+: options * )`
+{CPP}:: `b2::list_ref regex_grep(b2::list_cref directories, b2::list_cref
+files, b2::list_cref patterns, list_cref result_expressions,
+list_cref options);`
 ====
 
 Match any of the `patterns` against the globbed `files` in `directories`, and
@@ -204,7 +206,8 @@ end::reference[] */
 list_ref regex_grep(list_cref directories,
 	list_cref files,
 	list_cref patterns,
-	list_cref result_expressions);
+	list_cref result_expressions,
+	list_cref options);
 
 struct regex_module : b2::bind::module_<regex_module>
 {
@@ -229,7 +232,7 @@ struct regex_module : b2::bind::module_<regex_module>
 				"list" * _n | "match" * _1 | "replacement" * _1)
 			.def(&regex_grep, "grep",
 				"directories" * _1n | "files" * _1n | "patterns" * _1n
-					| "result_expressions" * _n);
+					| "result_expressions" * _n | "options" * _n);
 		binder.eval(init_code);
 		binder.loaded();
 	}
