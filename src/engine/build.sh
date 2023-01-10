@@ -480,6 +480,7 @@ rules.cpp \
 scan.cpp \
 search.cpp \
 startup.cpp \
+tasks.cpp \
 timestamp.cpp \
 value.cpp \
 variable.cpp \
