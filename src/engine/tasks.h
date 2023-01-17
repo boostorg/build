@@ -33,7 +33,7 @@ limit of their own and can be waited on collectively to complete.
 class group
 {
 	public:
-	group(executor & exec, unsigned parallelism = 0);
+	group(executor & exec, int parallelism = -1);
 	~group();
 
 	// Add a task function to execute async. The functions are executed in no
@@ -59,14 +59,14 @@ parallelism limit matches the `b2::system_info::cpu_thread_count` value.
 class executor
 {
 	public:
-	executor(unsigned parallelism = 0);
+	executor(int parallelism = -1);
 	~executor();
 
 	// The global executor instance.
 	static executor & get();
 
 	// Create a task group.
-	std::shared_ptr<group> make(unsigned parallelism = 0);
+	std::shared_ptr<group> make(int parallelism = -1);
 
 	private:
 	struct implementation;

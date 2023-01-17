@@ -12,8 +12,11 @@ if --grep in [ modules.peek : ARGV ]
     import path ;
     import regex ;
     local mmm = [ regex.grep
-        # /home/grafik/Sync/DevRoots/B2/bfg-mainline/src : bi*.h
-        /home/grafik/Sync/DevRoots/Boost/develop/boost : *.*pp
+        /home/grafik/Sync/DevRoots
+        # /home/grafik/Sync/DevRoots/B2/bfg-mainline/src
+        # /home/grafik/Sync/DevRoots/Boost/develop/boost
+        # /home/grafik/Sync/DevRoots/grafikrobot/llvm-project
+        : *.*pp *.h *.cpp
         : "#(include) \"([^\"]+)\"" "#(include) <([^>]+)>"
         : 1 2
         : recursive ] ;
