@@ -12,13 +12,13 @@ Distributed under the Boost Software License, Version 1.0.
 #include "tasks.h"
 
 #include <algorithm>
+#include <cctype>
 #include <cstdlib>
 #include <cstring>
 #include <memory>
 #include <numeric>
 #include <string>
 #include <vector>
-#include <cctype>
 
 using namespace b2;
 using namespace b2::regex;
@@ -250,27 +250,30 @@ struct regex_grep_task
 		std::string filename(filepathparts.base() + filepathparts.suffix());
 		// Ignore meta-dir paths.
 		if (filename == "." || filename == "..") return;
-		// If indicated, recurse scan subdirectories.
+		// Regular file.
+		if (file_is_file(file) != 0)
+		{
+			// Match the full `path` to the set of glob patterns we are looking
+			// for.
+			for (auto glob_pattern : file_glob_patterns)
+			{
+				if (glob(glob_pattern->str(), filename.c_str()) == 0)
+				{
+					// We have a glob match for this file. We can queue it up
+					// for the possibly parallel grep.
+					grep_tasks->queue(
+						[this, filepath]() { file_grep(filepath); });
+				}
+			}
+			return;
+		}
+		// Subdir, or equivalent. If indicated, recurse scan subdirectories.
 		if (recursive_glob)
 		{
-			if (file_is_file(file) == 0)
-			{
-				file_dirscan(file,
-					reinterpret_cast<scanback>(
-						&regex_grep_task::dirscan_callback),
-					this);
-				return;
-			}
-		}
-		// Match the full `path` to the set of glob patterns we are looking for.
-		for (auto glob_pattern : file_glob_patterns)
-		{
-			if (glob(glob_pattern->str(), filename.c_str()) == 0)
-			{
-				// We have a glob match for this file. We can queue it up for
-				// the possibly parallel grep.
-				grep_tasks->queue([this, filepath]() { file_grep(filepath); });
-			}
+			file_dirscan(file,
+				reinterpret_cast<scanback>(&regex_grep_task::dirscan_callback),
+				this);
+			return;
 		}
 	}
 
@@ -314,10 +317,7 @@ struct regex_grep_task
 		intermediate.emplace_back(result.release());
 	}
 
-	void wait()
-	{
-		grep_tasks->wait();
-	}
+	void wait() { grep_tasks->wait(); }
 };
 
 }} // namespace b2

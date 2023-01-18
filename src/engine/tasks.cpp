@@ -150,6 +150,7 @@ inline void group::implementation::call_queue(std::function<void()> f)
 	// If we don't have parallel allotment. We opt to execute the call inline.
 	if (parallelism == 0)
 	{
+		stat_total += 1;
 		f();
 		return;
 	}
@@ -317,8 +318,8 @@ group::group(executor & exec, int parallelism)
 
 group::~group()
 {
-	out_printf("b2::task::group.. MAX = %u, TOTAL = %u\n", i->stat_max_running,
-		i->stat_total);
+	// out_printf("b2::task::group.. MAX = %u, TOTAL = %u\n", i->stat_max_running,
+	// 	i->stat_total);
 }
 
 void group::queue(std::function<void()> && f) { i->call_queue(f); }
