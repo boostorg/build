@@ -8,6 +8,9 @@ Distributed under the Boost Software License, Version 1.0.
 https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
 
+// Sigh, Widows.
+#define NOMINMAX
+
 #define OPT_HEADER_CACHE_EXT 1
 #define OPT_GRAPH_DEBUG_EXT 1
 #define OPT_SEMAPHORE 1
