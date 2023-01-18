@@ -111,7 +111,8 @@ stages:
   - job: 'Linux_ASAN'
     strategy:
       matrix:
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        # Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     continueOnError: 'true'
