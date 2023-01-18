@@ -31,7 +31,7 @@ variables:
 - { name: linux_latest_vm, value: 'ubuntu-22.04' }
 - { name: linux_latest_os, value: 'focal' }
 - { name: windows_latest_vm, value: 'windows-2022' }
-- { name: clang_latest, value: '14' }
+- { name: clang_latest, value: '15' }
 - { name: gcc_latest, value: '12' }
 - { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
@@ -212,9 +212,10 @@ stages:
         GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        GCC 8: {TOOLSET: gcc-8, PACKAGES: g++-8, VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        GCC 7: {TOOLSET: gcc-7, PACKAGES: g++-7, VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        # Clang 14: {TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC 8: {TOOLSET: gcc-8, PACKAGES: g++-8, VM_IMAGE: "ubuntu-20.04"}
+        GCC 7: {TOOLSET: gcc-7, PACKAGES: g++-7, VM_IMAGE: "ubuntu-20.04"}
+        # Clang 15: {TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Clang 14: {TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 13: {TOOLSET: clang-13, PACKAGES: clang-13, LLVM_VER: 13, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 12: {TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 11: {TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
