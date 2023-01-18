@@ -183,7 +183,6 @@ void hcache_init()
 {
     FILE       * f;
     OBJECT     * version = 0;
-    int          header_count = 0;
     const char * hcachename;
 
     if ( hcachehash )
@@ -315,8 +314,6 @@ void hcache_init()
 
         c->next = hcachelist;
         hcachelist = c;
-
-        ++header_count;
 
         object_free( record_type );
         object_free( time_secs_str );
