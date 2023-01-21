@@ -194,8 +194,8 @@ stages:
         GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        GCC 8: {TOOLSET: gcc-8, PACKAGES: g++-8, VM_IMAGE: "ubuntu-20.04"}
-        GCC 7: {TOOLSET: gcc-7, PACKAGES: g++-7, VM_IMAGE: "ubuntu-20.04"}
+        # GCC 8: {TOOLSET: gcc-8, PACKAGES: g++-8, VM_IMAGE: "ubuntu-20.04"}
+        # GCC 7: {TOOLSET: gcc-7, PACKAGES: g++-7, VM_IMAGE: "ubuntu-20.04"}
         # Clang 15: {TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 14: {TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 13: {TOOLSET: clang-13, PACKAGES: clang-13, LLVM_VER: 13, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
