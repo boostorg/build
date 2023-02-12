@@ -1,6 +1,15 @@
 [[b2.history]]
 = History
 
+== Version 4.9.4
+
+* Added `common-requirements` to project declaration to shorthand as declaring
+  the same for both `requirements` and `usage-requirements`.
+  -- _René Ferdinand Rivera Morell_
+* Add to pass in targets to project `explicit` rule to reduce duplication of
+  `explicit` targets when there are many.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.9.3
 
 * Updated cxxstd for 23 and 26 versions of recent gcc and clang. (#184)
