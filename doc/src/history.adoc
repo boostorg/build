@@ -9,6 +9,12 @@
 * Add to pass in targets to project `explicit` rule to reduce duplication of
   `explicit` targets when there are many.
   -- _René Ferdinand Rivera Morell_
+* Make coverage feature non-incidental and link-incompatible.
+  -- _Thomas Brown_
+* Use PATH-based lookup for `sh`. For things such as Gentoo Prefix, we want to
+  use the Bourne shell from the prefix and not the potentially ancient version
+  from the main system.
+  -- _David Seifert_
 
 == Version 4.9.3
 
