@@ -3,6 +3,9 @@
 
 == Version 4.9.4
 
+* Don't force Windows path separators for GCC when on Windows. As it confuses
+  Cygwin GCC's relative include path handling.
+  -- _René Ferdinand Rivera Morell_
 * Added `common-requirements` to project declaration to shorthand as declaring
   the same for both `requirements` and `usage-requirements`.
   -- _René Ferdinand Rivera Morell_
