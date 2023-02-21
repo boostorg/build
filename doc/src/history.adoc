@@ -3,6 +3,8 @@
 
 == Version 4.9.4
 
+* Fix crash on some platforms/compilers from invalid garbage reads of varargs
+  end marker being an `int` instead of a `nullptr`.
 * Don't force Windows path separators for GCC when on Windows. As it confuses
   Cygwin GCC's relative include path handling.
   -- _René Ferdinand Rivera Morell_
