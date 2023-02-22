@@ -52,13 +52,12 @@ jobs:
           $env:path += ';' + "${{github.workspace}}/b2"
           b2 --debug-configuration --b2root="${{github.workspace}}/b2" windows-wix
       - name: "Upload"
-        if: ${{ github.event_name != 'release'}}
         uses: actions/upload-artifact@v3
         with:
           name: installer
-          path: "${{github.workspace}}/b2-pkg/stage/*.msi"
+          path: "${{github.workspace}}\\b2-pkg\\stage\\*.msi"
       - name: "Publish"
         uses: softprops/action-gh-release@v1
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         with:
-          files: "${{github.workspace}}/b2-pkg/stage/*.msi"
+          files: "${{github.workspace}}\\b2-pkg\\stage\\*.msi"
