@@ -44,21 +44,21 @@ jobs:
           choco install vswhere
       - name: "Bootstrap"
         run: |
-          cd "${env:GITHUB_WORKSPACE}/b2"
+          cd "${{github.workspace}}/b2"
           ./bootstrap.bat
       - name: "Build"
         run: |
-          cd "${env:GITHUB_WORKSPACE}/b2-pkg"
-          $env:path += ';' + "${env:GITHUB_WORKSPACE}/b2"
-          b2 --debug-configuration --b2root="${env:GITHUB_WORKSPACE}/b2" windows-wix
+          cd "${{github.workspace}}/b2-pkg"
+          $env:path += ';' + "${{github.workspace}}/b2"
+          b2 --debug-configuration --b2root="${{github.workspace}}/b2" windows-wix
       - name: "Upload"
         if: ${{ github.event_name != 'release'}}
         uses: actions/upload-artifact@v3
         with:
           name: installer
-          path: "${{vars.GITHUB_WORKSPACE}}/b2-pkg/stage/*.msi"
+          path: "${{github.workspace}}/b2-pkg/stage/*.msi"
       - name: "Publish"
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         run: |
-          cd "${env:GITHUB_WORKSPACE}/b2-pkg"
-          $env:path += ';' + "${env:GITHUB_WORKSPACE}/b2"
+          cd "${{github.workspace}}/b2-pkg"
+          $env:path += ';' + "${{github.workspace}}/b2"
