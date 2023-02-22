@@ -62,7 +62,7 @@ jobs:
           cd "${{github.workspace}}"
           version=`basename ${{github.ref_name}}`
           archive="${{github.workspace}}/b2-${version}.${{matrix.format}}"
-          ${{command}} "${archive}" "b2-${version}"
+          ${{matrix.command}} "${archive}" "b2-${version}"
           sha256sum "${archive}" > "${archive}.sha256sum.txt"
 
       - name: "Cleanup"
