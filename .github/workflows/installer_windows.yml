@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: installer
-          path: "${env:GITHUB_WORKSPACE}/b2-pkg/stage/*.msi"
+          path: "${{vars.GITHUB_WORKSPACE}}/b2-pkg/stage/*.msi"
       - name: "Publish"
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         run: |
