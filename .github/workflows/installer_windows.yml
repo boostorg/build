@@ -51,6 +51,12 @@ jobs:
           cd "${env:GITHUB_WORKSPACE}/b2-pkg"
           $env:path += ';' + "${env:GITHUB_WORKSPACE}/b2"
           b2 --debug-configuration --b2root="${env:GITHUB_WORKSPACE}/b2" windows-wix
+      - name: "Upload"
+        if: ${{ github.event_name != 'release'}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: installer
+          path: "${env:GITHUB_WORKSPACE}/b2-pkg/stage/*.msi"
       - name: "Publish"
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         run: |
