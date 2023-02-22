@@ -36,7 +36,7 @@ jobs:
               command: "7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on",
             }
           - { name: "BZip2", format: "tar.bz2", command: "tar -cv -j -f" }
-          - { name: "Zstd", format: "tar.zstd", command: "tar -cv --zstd -f" }
+          # - { name: "Zstd", format: "tar.zstd", command: "tar -cv --zstd -f" }
     runs-on: ubuntu-latest
     name: ${{ matrix.name }}
     steps:
