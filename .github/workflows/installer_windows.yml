@@ -11,7 +11,7 @@ on:
   release: { types: [published] }
   # And run on pushes, for main and release branches.
   push:
-    branches: ["main", "release"]
+    branches: ["main", "release", "version/*"]
     paths-ignore:
       [
         ".circleci/**",
@@ -58,7 +58,7 @@ jobs:
           name: installer
           path: "${{github.workspace}}/b2-pkg/stage/*.msi"
       - name: "Publish"
+        uses: softprops/action-gh-release@v1
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
-        run: |
-          cd "${{github.workspace}}/b2-pkg"
-          $env:path += ';' + "${{github.workspace}}/b2"
+        with:
+          files: "${{github.workspace}}/b2-pkg/stage/*.msi"
