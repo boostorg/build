@@ -45,8 +45,9 @@ jobs:
           version=`basename ${{github.ref_name}}`
           git archive --format=tar --output="${{github.workspace}}/b2-${version}.tar" "${{github.ref_name}}"
           cd "${{github.workspace}}"
-          tar -xf "${{github.workspace}}/b2-${version}.tar"
+          tar -xvf "${{github.workspace}}/b2-${version}.tar"
           rm -rf "${{github.workspace}}/b2-${version}.tar"
+          ls -laF
       - name: "Zip Archive"
         if: ${{ matrix.format == 'zip' }}
         run: |
