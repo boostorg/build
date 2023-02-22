@@ -38,7 +38,7 @@ jobs:
         with: { path: "b2" }
       - name: "Checkout"
         uses: actions/checkout@master
-        with: { repository: "bfgroup/b2-pkg", path: "${{vars.RUNNER_TEMP}}/b2-pkg" }
+        with: { repository: "bfgroup/b2-pkg", path: "b2-pkg" }
       - name: "Install"
         run: |
           choco install vswhere
@@ -48,7 +48,7 @@ jobs:
           ./bootstrap.bat
       - name: "Build"
         run: |
-          cd "${env:RUNNER_TEMP}/b2-pkg"
+          cd "${env:GITHUB_WORKSPACE}/b2-pkg"
           $env:path += ';' + "${env:GITHUB_WORKSPACE}/b2"
           b2 --debug-configuration --b2root="${env:GITHUB_WORKSPACE}/b2" windows-wix
       - name: "Upload"
@@ -56,9 +56,9 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: installer
-          path: "${{vars.RUNNER_TEMP}}/b2-pkg/stage/*.msi"
+          path: "${{vars.GITHUB_WORKSPACE}}/b2-pkg/stage/*.msi"
       - name: "Publish"
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         run: |
-          cd "${env:RUNNER_TEMP}/b2-pkg"
+          cd "${env:GITHUB_WORKSPACE}/b2-pkg"
           $env:path += ';' + "${env:GITHUB_WORKSPACE}/b2"
