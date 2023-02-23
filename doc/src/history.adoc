@@ -1,6 +1,26 @@
 [[b2.history]]
 = History
 
+== Version 4.9.4
+
+* Fix crash on some platforms/compilers from invalid garbage reads of varargs
+  end marker being an `int` instead of a `nullptr`.
+* Don't force Windows path separators for GCC when on Windows. As it confuses
+  Cygwin GCC's relative include path handling.
+  -- _René Ferdinand Rivera Morell_
+* Added `common-requirements` to project declaration to shorthand as declaring
+  the same for both `requirements` and `usage-requirements`.
+  -- _René Ferdinand Rivera Morell_
+* Add to pass in targets to project `explicit` rule to reduce duplication of
+  `explicit` targets when there are many.
+  -- _René Ferdinand Rivera Morell_
+* Make coverage feature non-incidental and link-incompatible.
+  -- _Thomas Brown_
+* Use PATH-based lookup for `sh`. For things such as Gentoo Prefix, we want to
+  use the Bourne shell from the prefix and not the potentially ancient version
+  from the main system.
+  -- _David Seifert_
+
 == Version 4.9.3
 
 * Updated cxxstd for 23 and 26 versions of recent gcc and clang. (#184)

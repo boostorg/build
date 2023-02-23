@@ -745,6 +745,11 @@ class project-attributes
         {
             self.$(attribute) = $(specification) ;
         }
+        else if $(attribute) = "common-requirements"
+        {
+            set "requirements" : $(specification) ;
+            set "usage-requirements" : $(specification) ;
+        }
         else if $(attribute) = "requirements"
         {
             local result = [ property-set.refine-from-user-input
@@ -1249,13 +1254,21 @@ module project-rules
     rule explicit ( target-names * )
     {
         import project ;
+        import "class" ;
         # If 'explicit' is used in a helper rule defined in Jamroot and
         # inherited by children, then most of the time we want 'explicit' to
         # operate on the Jamfile where the helper rule is invoked.
         local t = [ project.current ] ;
         for local n in $(target-names)
         {
-            $(t).mark-target-as-explicit $(n) ;
+            if [ class.is-instance $(n) ]
+            {
+                $(t).mark-target-as-explicit [ $(n).name ] ;
+            }
+            else
+            {
+                $(t).mark-target-as-explicit $(n) ;
+            }
         }
     }
 
