@@ -88,7 +88,7 @@ exe a : a_empty.cpp ;
 exe a : a.cpp ;
 """)
 t.run_build_system(["--no-error-backtrace"], status=None)
-t.expect_output_lines("error: No best alternative for ./a")
+t.expect_output_lines("error: No best alternative for ./a with *")
 
 # Another ambiguity test: two matches properties in one alternative are neither
 # better nor worse than a single one in another alternative.
@@ -98,7 +98,7 @@ exe a : a.cpp : <debug-symbols>on ;
 """)
 
 t.run_build_system(["--no-error-backtrace"], status=None)
-t.expect_output_lines("error: No best alternative for ./a")
+t.expect_output_lines("error: No best alternative for ./a with *")
 t.rm("bin")
 
 # Test that we can have alternative without sources.
