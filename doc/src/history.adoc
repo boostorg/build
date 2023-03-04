@@ -1,6 +1,14 @@
 [[b2.history]]
 = History
 
+== Version 4.9.5
+
+* Improve alternative match error message to include more context.
+  -- _René Ferdinand Rivera Morell_
+* Fix errors when doing `use-project` inside projects that get included from
+  another `use-project`.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.9.4
 
 * Fix crash on some platforms/compilers from invalid garbage reads of varargs
