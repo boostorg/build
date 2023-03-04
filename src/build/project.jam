@@ -1263,6 +1263,7 @@ module project-rules
     {
         # See comment in 'load' for explanation.
         import project ;
+        import path ;
         local caller = [ CALLER_MODULE ] ;
         local location = [ project.attribute $(caller) location ] ;
         modules.poke $(caller) : .used-projects : [ modules.peek $(caller) :
