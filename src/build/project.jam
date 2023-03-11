@@ -1395,4 +1395,26 @@ module project-rules
         IMPORT project : load-package-manager-build-info : $(m) : project.load-package-manager-build-info ;
         modules.call-in $(m) : project.load-package-manager-build-info ;
     }
+
+    rule call-if ( check * : rule-name args * : * )
+    {
+        import modules ;
+        local m = [ CALLER_MODULE ] ;
+        local v = ;
+        if $(check)
+        {
+            v = [ modules.call-in $(m) : $(check) ] ;
+        }
+        else if $(rule-name) in [ RULENAMES $(m) ]
+        {
+            v = 1 ;
+        }
+        if $(v)
+        {
+            return [ modules.call-in $(m)
+                : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) : $(10)
+                : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17) : $(18)
+                ] ;
+        }
+    }
 }
