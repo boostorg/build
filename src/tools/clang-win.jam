@@ -15,6 +15,7 @@ import toolset ;
 import generators ;
 import path ;
 import regex ;
+import version ;
 
 feature.extend-subfeature toolset clang : platform : win ;
 
@@ -175,11 +176,16 @@ rule init ( version ? : command * : options * )
 
             for local item in $(items)
             {
-                match = [ MATCH "\"-libpath:(.*)\\\\+Lib\\\\.*\\\\um\\\\+x(.*)\"" : $(item) ] ;
+                match = [ MATCH "\"-libpath:(.*)\\\\+Lib\\\\(.*)\\\\um\\\\+x(.*)\"" : $(item) ] ;
 
                 if $(match)
                 {
-                    local sdk-path = "$(match[1])\\bin\\x$(match[2])" ;
+                    local sdk-path = "$(match[1])\\bin\\$(match[2])\\x$(match[3])" ;
+                    if [ version.version-less [ SPLIT_BY_CHARACTERS "$(match[2])" : . ] : 10 0 14393 ]
+                    {
+                        sdk-path = "$(match[1])\\bin\\x$(match[3])" ;
+                    }
+
                     .notice "$(arch)-$(addr):" "using SDK path '$(sdk-path)'" ;
 
                     manifest-tool ?= "\"$(sdk-path)\\mt.exe\"" ;
