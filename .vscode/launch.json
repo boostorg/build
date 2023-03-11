@@ -54,7 +54,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-12/debug/cxxstd-11-iso/b2",
-            "args": ["-na"],
+            "args": ["--grep"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

@@ -75,5 +75,27 @@ typedef long int32_t;
 #define B2_USE_STD_THREADS 1
 #endif
 
+#include <cassert>
+
+namespace b2 {
+
+inline bool ensure(bool v)
+{
+#if defined(B2_DEBUG) && B2_DEBUG
+	assert(v);
+#endif
+	return v;
+}
+
+template <typename T>
+T * ensure_valid(T * v)
+{
+#if defined(B2_DEBUG) && B2_DEBUG
+	assert(v != nullptr);
+#endif
+	return v;
+}
+
+} // namespace b2
 
 #endif

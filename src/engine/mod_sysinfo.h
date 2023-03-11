@@ -12,6 +12,8 @@ Distributed under the Boost Software License, Version 1.0.
 #include "bind.h"
 #include "value.h"
 
+#include <string>
+
 namespace b2 {
 
 /*
@@ -42,6 +44,11 @@ class system_info : public object
 	private:
 	unsigned int cpu_core_count_ = 0;
 	unsigned int cpu_thread_count_ = 0;
+};
+
+struct stacktrace
+{
+	static std::string to_string();
 };
 
 struct sysinfo_module : b2::bind::module_<sysinfo_module>

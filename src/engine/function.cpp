@@ -24,6 +24,7 @@
 #include "variable.h"
 #include "output.h"
 #include "startup.h"
+#include "mod_sysinfo.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -267,9 +268,14 @@ struct _stack
 
     _stack()
     {
+        // The LIFO stack goes from start end (high/right) to (low/left).
+        // Byte size of the function stack.
         int32_t const size = 1 << 21;
+        // The beginning of the stack memory.
         start = BJAM_MALLOC( size );
+        // The current past-end/tail of the stack memory.
         end = (char *)start + size;
+        // The next available stack location.
         data = end;
     }
 
@@ -277,10 +283,12 @@ struct _stack
     {
         if ( cleanups_size > cleanups_t::size_type(0) )
         {
+            // Call any left over cleanup functions to deallocate items that
+            // reference resources.
             while ( cleanups_size > 0 )
             {
                 cleanups_size -= 1;
-                cleanups[cleanups_size]( this );
+                cleanups[cleanups_size].clean( this );
             }
         }
         BJAM_FREE( start );
@@ -305,28 +313,39 @@ struct _stack
 
     // Move "v" to a new slot in ther stack. Returns a reference to the new item.
     template <class T>
-    remove_cref_t<T> & push( T v );
+    remove_cref_t<T> & push( T v, FRAME * frame = nullptr );
 
     // Copy "v" into "n" new items at the top of the stack. Returns a pointer
-    // to the first, i.e. top most, new item.
+    // to the first, i.e. top/front most, new item.
     template <class T>
-    remove_cref_t<T> * push( T v, int32_t n );
+    remove_cref_t<T> * push( T v, int32_t n, FRAME * frame = nullptr );
 
-    // Removes the top most "T" item from the stack and returns a copy of it.
+    // Removes the top/left most "T" item from the stack and returns a copy of
+    // it.
     template <class T>
     remove_cref_t<T> pop()
     {
         using U = remove_cref_t<T>;
+        // Copy the top/left item.
         U result = top<U>();
+        // Remove the obsolete top item.
         pop<T>( 1 );
         return result;
     }
 
-    // Removes the top "n" "T" items from the stack.
+    // Removes the top/left "n" "T" items from the stack.
     template <class T>
     void pop( int32_t n )
     {
+        // Debugging validation.
+        using U = remove_cref_t<T>;
+        for (auto c = 0; c < n; ++c)
+            cleanups[cleanups_size-c-1].check<U>().~cleanup_t();
+        // The removal of the n items happens by skipping the stack pointer
+        // past the n items.
         set_data( nth<T>( n ) );
+        // We also "skip" the cleanups. As the caller has dealt with that in
+        // some form.
         cleanups_size -= n;
     }
 
@@ -336,7 +355,42 @@ struct _stack
     void * end = nullptr;
     void * data = nullptr;
     using cleanup_f = void(*)( _stack* );
-    using cleanups_t = std::array<cleanup_f, (1<<21)/sizeof(void*)>;
+    struct cleanup_t
+    {
+        cleanup_f clean = nullptr;
+        #if defined(B2_DEBUG) && B2_DEBUG
+        const char * type_name = nullptr;
+        std::string native_stack;
+        std::string jam_stack;
+        #endif
+        inline cleanup_t() = default;
+        template <class T>
+        inline cleanup_t(cleanup_f f, FRAME * frame, T*_) : clean(f)
+        {
+            #if defined(B2_DEBUG) && B2_DEBUG
+            type_name = typeid(T).name();
+            native_stack = b2::stacktrace::to_string();
+            jam_stack = b2::jam::backtrace::to_string(frame);
+            #endif
+        }
+        inline ~cleanup_t()
+        {
+            #if defined(B2_DEBUG) && B2_DEBUG
+            clean = nullptr;
+            type_name = nullptr;
+            #endif
+        }
+        template <class T>
+        inline cleanup_t & check()
+        {
+            #if defined(B2_DEBUG) && B2_DEBUG
+            static const char * type_name_c = typeid(T).name();
+            b2::ensure(type_name_c == this->type_name);
+            #endif
+            return *this;
+        }
+    };
+    using cleanups_t = std::array<cleanup_t, (1 << 21)/sizeof(void*)>;
     cleanups_t cleanups;
     cleanups_t::size_type cleanups_size = 0;
 
@@ -359,6 +413,7 @@ struct _stack
         return data;
     }
 
+    // Get a pointer from the current top/left onward to the nth item.
     template <typename T>
     remove_cref_t<T> * nth( int32_t n )
     {
@@ -405,7 +460,7 @@ struct _stack
     }
 
     template <typename T>
-    void cleanup_push(int32_t n, T*_ = nullptr);
+    void cleanup_push(int32_t n, FRAME * frame, T*_ = nullptr);
 };
 
 template <>
@@ -416,25 +471,27 @@ void _stack::cleanup_item<LIST*>(_stack * s, LIST**)
 }
 
 template <class T>
-remove_cref_t<T> & _stack::push( T v )
+remove_cref_t<T> & _stack::push( T v, FRAME * frame )
 {
-    return *push<T>( v, 1 );
+    return *push<T>( v, 1, frame );
 }
 
 template <class T>
-remove_cref_t<T> * _stack::push( T v, int32_t n )
+remove_cref_t<T> * _stack::push( T v, int32_t n, FRAME * frame )
 {
     using U = remove_cref_t<T>;
     set_data( nth<T>( -n ) );
     std::uninitialized_fill_n( nth<U>( 0 ), n, v );
-    cleanup_push<U>( n );
+    cleanup_push<U>( n, frame );
     return nth<U>( 0 );
 }
 
 template <typename T>
-void _stack::cleanup_push( int32_t n, T*_ )
+void _stack::cleanup_push( int32_t n, FRAME * frame, T*_ )
 {
-    std::uninitialized_fill_n( &cleanups[cleanups_size], n, (cleanup_f)&_stack::cleanup_item<T> );
+    using U = remove_cref_t<T>;
+    cleanup_t c((cleanup_f)&_stack::cleanup_item<T>, frame, (U*)(_));
+    std::uninitialized_fill_n( &cleanups[cleanups_size], n, c );
     cleanups_size += n;
 }
 
@@ -958,7 +1015,7 @@ static int32_t expand_modifiers( STACK * s, int32_t n )
                 iter[ i ] = list_begin( args[ i ] );
             }
         }
-        s->pop<LIST*>( n );
+        s->pop<LISTITER>( n );
     }
     return total;
 }
@@ -3416,12 +3473,12 @@ void argument_list_push( struct arg_list * formal, int32_t formal_count,
             {
                 LIST * * const old = &frame->module->fixed_variables[
                     formal_arg->index ];
-                s->push( *old );
+                s->push( *old, frame );
                 *old = value.release();
             }
             else
                 s->push( var_swap( frame->module, formal_arg->arg_name,
-                    value.release() ) );
+                    value.release() ), frame );
         }
 
         if ( actual_iter != actual_end )
@@ -4562,7 +4619,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             PROFILE_ENTER_LOCAL(function_run_INSTR_PUSH_LOCAL);
             LIST * value = s->pop<LIST *>();
             s->push( function_swap_variable( function, frame, code->arg,
-                value ) );
+                value ), frame );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_LOCAL);
             break;
         }
@@ -5149,10 +5206,10 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             LIST * const module_name = s->pop<LIST *>();
             module_t * outer_module = frame->module;
             frame->module = !list_empty( module_name )
-                ? bindmodule( list_front( module_name ) )
-                : root_module();
+                ? b2::ensure_valid(bindmodule( list_front( module_name ) ))
+                : b2::ensure_valid(root_module());
             list_free( module_name );
-            s->push( outer_module );
+            s->push( b2::ensure_valid(outer_module) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_PUSH_MODULE);
             break;
         }
@@ -5160,7 +5217,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_POP_MODULE:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_POP_MODULE);
-            frame->module = s->pop<module_t *>();
+            frame->module = b2::ensure_valid(s->pop<module_t *>());
             PROFILE_EXIT_LOCAL(function_run_INSTR_POP_MODULE);
             break;
         }
@@ -5173,10 +5230,13 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             OBJECT * class_module = make_class_module( name, bases );
 
             module_t * outer_module = frame->module;
-            frame->module = bindmodule( class_module );
+            // out_printf("function_run: OUTER-CLASS = %s, %s\n",
+            //     outer_module->name ? outer_module->name->str() : "<>",
+            //     class_module->str());
+            frame->module = b2::ensure_valid(bindmodule( class_module ));
             object_free( class_module );
 
-            s->push( outer_module );
+            s->push( b2::ensure_valid(outer_module) );
             PROFILE_EXIT_LOCAL(function_run_INSTR_CLASS);
             break;
         }
@@ -5253,4 +5313,52 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
 void function_done( void )
 {
     stack_global()->done();
+}
+
+b2::jam::module_scope_in_function::module_scope_in_function(
+    FRAME * frame_, const char * module_name_)
+    : module_frame(frame_)
+{
+    auto stack = stack_global();
+    stack->push(b2::ensure_valid(module_frame->module));
+    module_frame->module = module_name_ == nullptr
+        ? b2::ensure_valid(root_module())
+        : b2::ensure_valid(bindmodule(value_ref(module_name_)));
+}
+
+b2::jam::module_scope_in_function::~module_scope_in_function()
+{
+    auto stack = stack_global();
+    module_frame->module = b2::ensure_valid(stack->pop<module_t *>());
+}
+
+std::string b2::jam::backtrace::to_string(frame * f)
+{
+    std::string result;
+    for (auto i : backtrace::to_list(f))
+    {
+        if (!result.empty()) result += "\n";
+        result += i->str();
+    }
+    return result;
+}
+
+b2::list_ref b2::jam::backtrace::to_list(frame * f)
+{
+    b2::list_ref result;
+    for (; f != nullptr; f = f->prev)
+    {
+        std::string line;
+        if (f->module->name != nullptr)
+        {
+            line += f->module->name->str();
+            line += ".";
+        }
+        line += f->rulename == nullptr ? "???" : f->rulename;
+        line += " at ";
+        line += f->file == nullptr ? "(builtin)" : f->file->str();
+        line += ":" + std::to_string(f->line);
+        result.push_back(line);
+    }
+    return result;
 }

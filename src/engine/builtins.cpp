@@ -980,7 +980,7 @@ LIST * builtin_subst( FRAME * frame, int flags )
                         if ( *in >= '0' && *in <= '9' )
                         {
                             unsigned int const n = *in - '0';
-                            size_t const srclen = re_i[n].size;
+                            size_t const srclen = re_i[n].size();
                             size_t const remaining = buf + BUFLEN - out;
                             size_t const len = srclen < remaining
                                 ? srclen
@@ -1030,7 +1030,7 @@ LIST * builtin_match( FRAME * frame, int flags )
             {
                 /* Find highest parameter */
                 int top = NSUBEXP-1;
-                while ( re_i[top].end() == nullptr ) top -= 1;
+                while ( re_i[top].empty() ) top -= 1;
                 /* And add all parameters up to highest onto list. */
                 /* Must have parameters to have results! */
                 for ( int i = 1; i <= top ; ++i )

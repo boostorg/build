@@ -11,23 +11,28 @@ Distributed under the Boost Software License, Version 1.0.
 #include <thread>
 
 #if defined(OS_MACOSX)
-#	include <sys/sysctl.h>
-#	include <sys/types.h>
+#include <sys/sysctl.h>
+#include <sys/types.h>
 #endif
 
 #if !defined(OS_NT)
-#	include <unistd.h>
+#include <unistd.h>
 #else
-#	include <windows.h>
+#include <windows.h>
 #endif
 
 #if defined(OS_LINUX) || defined(__GLIBC__)
 // Need to define this in case it's not as that's the only way to get the
 // sched_* APIs.
-#	ifndef _GNU_SOURCE
-#		define _GNU_SOURCE
-#	endif
-#	include <sched.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
+#include <sched.h>
+#endif
+
+#if defined(OS_LINUX) && defined(__GLIBC__)
+// For backtrace_symbols() call.
+#include <execinfo.h>
 #endif
 
 b2::system_info::system_info() {}
@@ -163,4 +168,25 @@ unsigned int b2::system_info::cpu_thread_count()
 		cpu_thread_count_ = cpu_core_count();
 	}
 	return cpu_thread_count_;
+}
+
+std::string b2::stacktrace::to_string()
+{
+	std::string result;
+
+#if defined(OS_LINUX) && defined(__GLIBC__)
+	;
+	void * frame_buffer[2048];
+	auto frame_count = ::backtrace(frame_buffer, 2048);
+	if (auto frame_strings = ::backtrace_symbols(frame_buffer, frame_count))
+	{
+		for (decltype(frame_count) i = 0; i < frame_count; ++i)
+		{
+			if (i > 0) result += "\n";
+			result += frame_strings[i];
+		}
+	}
+#endif
+
+	return result;
 }

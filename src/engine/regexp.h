@@ -10,6 +10,7 @@
 #include "config.h"
 
 #include "mem.h"
+#include "strview.h"
 #include "types.h"
 #include "value.h"
 
@@ -24,8 +25,7 @@ namespace b2 { namespace regex {
 // And expressions [1,NSUBEXP] are the subexpressions matched.
 struct regex_expr
 {
-	char const * startp[NSUBEXP] = { nullptr };
-	char const * endp[NSUBEXP] = { nullptr };
+	string_view sub[NSUBEXP];
 };
 
 // The compiled regex program to match with.
@@ -43,6 +43,7 @@ struct program
 
 	void reset(const char * pattern);
 
+	result_iterator search(const string_view & str);
 	result_iterator search(const char * str_begin, const char * str_end);
 	result_iterator search(const char * str_begin);
 
@@ -55,12 +56,12 @@ struct program
 struct program::result_iterator
 {
 	using iterator_category = std::forward_iterator_tag;
-	using value_type = value::str_view;
+	using value_type = string_view;
 	using difference_type = std::ptrdiff_t;
 	using pointer = const value_type *;
 	using reference = const value_type &;
 
-	result_iterator(const regex_prog & c, const char * b, const char * e);
+	result_iterator(const regex_prog & c, const string_view & s);
 	result_iterator(const result_iterator & o) = default;
 	result_iterator(result_iterator && o) = default;
 
@@ -69,34 +70,37 @@ struct program::result_iterator
 		advance();
 		return *this;
 	}
-	inline reference operator*() const { return match; }
-	inline pointer operator->() const { return &match; }
-	explicit inline operator bool() const { return match.str != nullptr; }
-	inline value_type operator[](std::size_t i) const
+	inline reference operator*() const { return (*this)[0]; }
+	inline pointer operator->() const { return &(*this)[0]; }
+	explicit inline operator bool() const { return !(*this)[0].empty(); }
+	inline reference operator[](std::size_t i) const
 	{
-		return i <= NSUBEXP ? value_type { expressions.startp[i],
-			std::size_t(expressions.endp[i] - expressions.startp[i]) }
-							: value_type { nullptr, 0 };
+		static const value_type invalid { nullptr, 0 };
+		return i <= NSUBEXP ? expressions.sub[i] : invalid;
 	}
 
 	private:
 	const regex_prog * compiled = nullptr;
 	regex_expr expressions;
-	value_type match;
 	value_type rest;
 
 	void advance();
 };
 
+inline program::result_iterator program::search(const string_view & str)
+{
+	return result_iterator(*compiled, str);
+}
+
 inline program::result_iterator program::search(
 	const char * str_begin, const char * str_end)
 {
-	return result_iterator(*compiled, str_begin, str_end);
+	return this->search(string_view(str_begin, str_end));
 }
 
 inline program::result_iterator program::search(const char * str_begin)
 {
-	return this->search(str_begin, str_begin + std::strlen(str_begin));
+	return this->search(string_view(str_begin, std::strlen(str_begin)));
 }
 
 }} // namespace b2::regex

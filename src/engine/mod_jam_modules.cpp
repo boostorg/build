@@ -18,6 +18,8 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "mod_path.h"
 
+#include <cassert>
+
 namespace b2 { namespace jam { namespace modules {
 
 list_ref binding(std::string module_name)
@@ -194,15 +196,18 @@ void load(value_ref module_name,
 				// Set the binding rule.
 				module_target_r.on_set("BINDRULE", "modules.record-binding");
 				// Do the load, in the module.
-				module_scope load_scope(context.frame, module_name->str());
-				parse_include(module_target, load_scope.frame());
-				// Allow the module to see its own names with full
-				// qualification.
-				list_ref to_import(module_rules(load_scope), true);
-				for (auto rule : to_import)
 				{
-					import_rule(find_rule(rule, load_scope), load_scope,
-						module_name + "." + rule);
+					module_scope_in_function in_module(
+						context.frame, module_name->str());
+					parse_include(module_target, in_module.frame());
+					// Allow the module to see its own names with full
+					// qualification.
+					list_ref to_import(module_rules(in_module), true);
+					for (auto rule : to_import)
+					{
+						import_rule(find_rule(rule, in_module), in_module,
+							module_name + "." + rule);
+					}
 				}
 			}
 			// Did the include succeed?
@@ -251,6 +256,14 @@ void load(value_ref module_name,
 	}
 }
 
+namespace detail {
+value_ref caller_module(FRAME * frame, int levels = 0)
+{
+	for (; levels >= 0; --levels) frame = frame->prev ? frame->prev : frame;
+	return frame->module == root_module() ? nullptr : frame->module->name;
+}
+} // namespace detail
+
 void import(list_cref module_names,
 	list_cref rules_opt,
 	list_cref rename_opt,
@@ -278,11 +291,7 @@ void import(list_cref module_names,
 				+ "When loading multiple modules, no specific rules or renaming is allowed.");
 	}
 
-	FRAME * caller_frame
-		= context.frame->prev ? context.frame->prev : context.frame;
-	value_ref caller_module = caller_frame->module == root_module()
-		? nullptr
-		: caller_frame->module->name;
+	value_ref caller_module = detail::caller_module(context.frame);
 
 	// Import each specified module
 	for (value_ref m : module_names)
@@ -324,7 +333,19 @@ void import(list_cref module_names,
 		}
 
 		if (!(*loaded_v).contains(module_basename))
+		{
+			auto grand_caller = detail::caller_module(context.frame, 1);
+			out_printf(
+				"b2::jam::modules::import: GRAND-CALLER-CURRENT-NEXT modules = %s, %s, %s, %s\n",
+				grand_caller.has_value() ? grand_caller->str() : "<>",
+				caller_module.has_value() ? caller_module->str() : "<>",
+				context.frame->module->name ? context.frame->module->name->str()
+											: "<root>",
+				module_basename.c_str());
 			load(module_basename, value_ref(), list_cref(*search), context_ref);
+			// run_rule(context.frame, "modules.load",
+			// list_ref(module_basename));
+		}
 		else if (!(*tested_v).contains(m))
 		{
 			// Native modules are pre-loaded but can be untested. In that case

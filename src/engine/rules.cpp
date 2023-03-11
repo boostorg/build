@@ -109,7 +109,7 @@ static rule_ptr enter_rule( b2::value_ptr rulename, module_ptr target_module )
         r->module = 0;
         r->actions = 0;
         r->exported = 0;
-        r->module = target_module;
+        r->module = b2::ensure_valid(target_module);
     }
     return r;
 }
@@ -131,7 +131,7 @@ static rule_ptr define_rule( module_ptr src_module, b2::value_ptr rulename,
         set_rule_body( r, 0 );
         set_rule_actions( r, 0 );
         /* r will be executed in the source module. */
-        r->module = src_module;
+        r->module = b2::ensure_valid(src_module);
     }
     return r;
 }

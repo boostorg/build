@@ -66,13 +66,13 @@ namespace b2 { namespace jam {
 struct module_scope
 {
 	inline module_scope(FRAME * frame_, const char * module_name_)
-		: module_name(module_name_)
-		, module_frame(frame_)
+		: module_frame(frame_)
 	{
 		if (module_frame)
 		{
 			module_saved = module_frame->module;
-			module_frame->module = bindmodule(module_name);
+			module_frame->module
+				= b2::ensure_valid(bindmodule(value_ref(module_name_)));
 		}
 	}
 
@@ -80,18 +80,29 @@ struct module_scope
 	{
 		if (module_frame && module_saved)
 		{
-			module_frame->module = module_saved;
+			module_frame->module = b2::ensure_valid(module_saved);
 		}
 	}
 
-	inline const value_ref & name() const { return module_name; }
+	inline value_ref name() const { return module_frame->module->name; }
 	inline FRAME * frame() const { return module_frame; }
 	inline operator module_ptr() const { return module_frame->module; }
 
 	private:
-	value_ref module_name;
 	FRAME * module_frame = nullptr;
 	module_t * module_saved = nullptr;
+};
+
+struct module_scope_in_function
+{
+	module_scope_in_function(FRAME * frame_, const char * module_name_);
+	~module_scope_in_function();
+	inline value_ref name() const { return module_frame->module->name; }
+	inline FRAME * frame() const { return module_frame; }
+	inline operator module_ptr() const { return module_frame->module; }
+
+	private:
+	FRAME * module_frame = nullptr;
 };
 
 }} // namespace b2::jam

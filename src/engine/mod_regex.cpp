@@ -304,8 +304,7 @@ struct regex_grep_task
 					{
 						if (text_grep_result_expressions.get(i))
 						{
-							std::string m(grep_i[i].str, grep_i[i].size);
-							result->push_back(m);
+							result->push_back(grep_i[i]);
 						}
 					}
 				}

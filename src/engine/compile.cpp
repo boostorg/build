@@ -90,7 +90,7 @@ LIST * evaluate_rule( RULE * rule, OBJECT * rulename, FRAME * frame )
     if ( rule->procedure && rule->module != prev_module )
     {
         /* Propagate current module to nested rule invocations. */
-        frame->module = rule->module;
+        frame->module = b2::ensure_valid(rule->module);
     }
 
     /* Record current rule name in frame. */
@@ -180,7 +180,7 @@ LIST * call_rule( OBJECT * rulename, FRAME * caller_frame, LOL * args )
     inner->prev_user = caller_frame->module->user_module
         ? caller_frame
         : caller_frame->prev_user;
-    inner->module = caller_frame->module;
+    inner->module = b2::ensure_valid(caller_frame->module);
 
     for ( int32_t a = 0; a < args->count; ++a)
     {
@@ -259,7 +259,7 @@ LIST * call_member_rule(
     inner->prev = caller_frame;
     inner->prev_user = caller_frame->module->user_module
         ? caller_frame : caller_frame->prev_user;
-    inner->module = caller_frame->module;
+    inner->module = b2::ensure_valid(caller_frame->module);
 
     args.swap( inner->args[0] );
 
