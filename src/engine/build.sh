@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 #~ Copyright 2002-2020 Rene Rivera.
 #~ Distributed under the Boost Software License, Version 1.0.

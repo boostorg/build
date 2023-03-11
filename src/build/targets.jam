@@ -343,6 +343,18 @@ class project-target : abstract-target
         }
     }
 
+    # Empties the project alternatives if they have already been built.
+    #
+    rule reset-alternatives ( )
+    {
+        if $(self.built-main-targets)
+        {
+            self.alternatives = ;
+            self.alternative-names = ;
+            self.built-main-targets = ;
+        }
+    }
+
     # Checks if an alternative was declared for the target.
     # Unlike checking for a main target this does not require
     # building the main targets. And hence can be used in/directly
@@ -810,7 +822,7 @@ class main-target : abstract-target
         local best-alternatives = [ select-alternatives $(property-set) ] ;
         if ! $(best-alternatives)
         {
-            ECHO "error: No best alternative for" [ full-name ] ;
+            ECHO "error: No best alternative for" [ full-name ] "with" [ $(property-set).raw ] ;
             select-alternatives $(property-set) debug ;
             return [ property-set.empty ] ;
         }
@@ -1243,17 +1255,12 @@ class basic-target : abstract-target
         local ccondition = [ $(self.requirements).conditional ] ;
         local condition = [ set.difference $(bcondition) : $(ccondition) ] ;
         condition = [ feature.expand-subfeatures $(condition) : unchecked ] ;
-        if $(debug)
-        {
-            ECHO "    next alternative: required properties:"
-                $(condition:E=(empty)) ;
-        }
 
         if $(condition) in [ $(property-set).raw ]
         {
             if $(debug)
             {
-                ECHO "        matched" ;
+                ECHO "    matched:" $(condition:E=(empty)) ;
             }
             return $(condition) ;
         }
@@ -1261,7 +1268,7 @@ class basic-target : abstract-target
         {
             if $(debug)
             {
-                ECHO "        not matched" ;
+                ECHO "    no match:" $(condition:E=(empty)) ;
             }
             return no-match ;
         }

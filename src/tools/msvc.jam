@@ -170,6 +170,9 @@ accepted only by AMD64 targeting compilers, cause the generated code to
 be tuned to a specific flavor of 64-bit x86. B2 will make use
 of those options depending on the value of the`instruction-set` feature.
 
+Starting with version 14.0, Microsoft Visual Studio can generate binaries
+using native arm64 tools to compile for x86, x86_64, and arm64.
+
 [[bbv2.reference.tools.compiler.msvc.winrt]]
 == Windows Runtime support
 
@@ -737,12 +740,12 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #
 actions compile-c-c++ bind PDB_NAME PCH_HEADER
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -I"$(PCH_HEADER:D)" -FI"$(PCH_HEADER:D=)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
 }
 
 actions preprocess-c-c++ bind PDB_NAME PCH_HEADER
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -P -Fi"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -P -Fi"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -I"$(PCH_HEADER:D)" -FI"$(PCH_HEADER:D=)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -769,7 +772,7 @@ rule preprocess-c-c++ ( targets + : sources * )
 # syntax highlighting in the messy N-quoted code below.
 actions compile-c-c++-pch
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) @($(<[1]:W).cpp:<=":>=":E=$(.hash)include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -I"$(>[1]:D)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) @($(<[1]:W).cpp:<=":>=":E=$(.hash)include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl)) $(.CC.FILTER)
 }
 
 
@@ -778,7 +781,7 @@ actions compile-c-c++-pch
 # given as one of the source parameters.
 actions compile-c-c++-pch-s
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -I"$(>[1]:D)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
 }
 
 
@@ -1002,14 +1005,13 @@ class msvc-pch-generator : pch-generator
 
         # If we do not have the PCH source - that is fine. We will just create a
         # temporary .cpp file in the action.
-        local pch-header-dir = [ $(pch-header).path ] ;
         local generated = [ generator.run $(project) $(name)
             : [ property-set.create
                 # Passing of <pch-source> is a dirty trick, needed because
                 # non-composing generators with multiple inputs are subtly
                 # broken. For more detailed information see:
                 # https://zigzag.cs.msu.su:7813/boost.build/ticket/111
-                <pch-source>$(pch-source) "<include>$(pch-header-dir)"
+                <pch-source>$(pch-source)
                 [ $(property-set).raw ] ]
             : $(pch-header) ] ;
 
@@ -1509,6 +1511,14 @@ local rule configure-really ( version ? : options * )
             else if $(somehow-detect-the-itanium-platform)
             {
                 default-global-setup-options-ia64 = ia64 ;
+            }
+            # When using ARM64 Windows, it is possible to use native compilers,
+            # selected by the parameters to vcvarsall.bat.
+            if [ MATCH ^(ARM64) : [ os.environ PROCESSOR_ARCHITECTURE ] ]
+            {
+                default-global-setup-options-arm64 = arm64 ;
+                default-global-setup-options-amd64 = arm64_x64 ;
+                default-global-setup-options-i386 = arm64_x86 ;
             }
 
             for local c in $(cpu)
@@ -2118,6 +2128,7 @@ switch $(.default-cpu-arch)
 {
     case x86   : .default-cpu-arch = i386 ;
     case em64t : .default-cpu-arch = amd64 ;
+    case arm64 : .default-cpu-arch = arm64 ;
 }
 
 for local cpu in $(.cpus-on-$(.cpu-arch-info-$(.default-cpu-arch)[1]))

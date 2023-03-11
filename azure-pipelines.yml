@@ -190,10 +190,7 @@ stages:
         versionSpec: '3.x'
     - task: UseRubyVersion@0
     - bash: |
-        pip install --user Pygments
-        pip install --user "https://github.com/bfgroup/jam_pygments/archive/master.zip"
         gem install asciidoctor
-        gem install pygments.rb
         echo "using asciidoctor ;" >> project-config.jam
         ./bootstrap.sh
         pushd doc

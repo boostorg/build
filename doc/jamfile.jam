@@ -20,11 +20,8 @@ b2 --website-dir=website --website-doc-dir=manual/develop website
 Building documentation has only been tested on Posix systems and requires:
 
 * Ruby
-* Python 2
+* Python 3
 * gem install asciidoctor
-* gem install pygments.rb
-* pip install --user Pygments
-* pip install --user https://github.com/bfgroup/jam_pygments/archive/master.zip
 |#
 
 import asciidoctor ;
@@ -34,7 +31,6 @@ import path ;
 project b2doc
     ;
 
-path-constant PYGMENTS_DIR : src/pygments ;
 path-constant STYLES_DIR : src/styles ;
 
 doc-dir = [ MATCH "--doc-dir=(.*)" : [ modules.peek : ARGV ] ] ;
@@ -53,10 +49,8 @@ if $(website)
 
 html index : src/standalone.adoc :
     :
-        # <flags>--require=$(PYGMENTS_DIR)/pygments_init.rb
         <flags>--trace
         <flags>--verbose
-        # <dependency>$(PYGMENTS_DIR)/pygments_init.rb
         # <flags>"-a stylesheet=amber.css"
         # <flags>"-a stylesdir=$(STYLES_DIR)"
         # <asciidoctor-attribute>linkcss

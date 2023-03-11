@@ -15,6 +15,7 @@ import toolset ;
 import generators ;
 import path ;
 import regex ;
+import version ;
 
 feature.extend-subfeature toolset clang : platform : win ;
 
@@ -67,7 +68,8 @@ local rule get-option ( option : addr : options * )
 
 rule init ( version ? : command * : options * )
 {
-    command = [ common.get-invocation-command-nodefault clang-win : clang-cl.exe : $(command) ] ;
+    local ProgramFiles = [ os.environ "ProgramFiles" ] [ os.environ "ProgramFiles(x86)" ] ;
+    command = [ common.get-invocation-command-nodefault clang-win : clang-cl.exe : $(command) : "$(ProgramFiles)\\LLVM\\bin" ] ;
 
     if ! $(command)
     {
@@ -174,11 +176,16 @@ rule init ( version ? : command * : options * )
 
             for local item in $(items)
             {
-                match = [ MATCH "\"-libpath:(.*)\\\\+Lib\\\\.*\\\\um\\\\+x(.*)\"" : $(item) ] ;
+                match = [ MATCH "\"-libpath:(.*)\\\\+Lib\\\\(.*)\\\\um\\\\+x(.*)\"" : $(item) ] ;
 
                 if $(match)
                 {
-                    local sdk-path = "$(match[1])\\bin\\x$(match[2])" ;
+                    local sdk-path = "$(match[1])\\bin\\$(match[2])\\x$(match[3])" ;
+                    if [ version.version-less [ SPLIT_BY_CHARACTERS "$(match[2])" : . ] : 10 0 14393 ]
+                    {
+                        sdk-path = "$(match[1])\\bin\\x$(match[3])" ;
+                    }
+
                     .notice "$(arch)-$(addr):" "using SDK path '$(sdk-path)'" ;
 
                     manifest-tool ?= "\"$(sdk-path)\\mt.exe\"" ;

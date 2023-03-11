@@ -15,9 +15,9 @@ t = BoostBuild.Tester()
 t.write("jamroot.jam", """
 import pch ;
 project : requirements <warnings-as-errors>on ;
-cpp-pch pch : pch.hpp ;
-cpp-pch pch-afx : pch.hpp : <define>HELLO ;
-cpp-pch pch-msvc-source : pch.hpp : <toolset>msvc:<source>pch.cpp ;
+cpp-pch pch : a/pch.hpp ;
+cpp-pch pch-afx : a/pch.hpp : <define>HELLO ;
+cpp-pch pch-msvc-source : a/pch.hpp : <toolset>msvc:<source>a/pch.cpp ;
 exe hello : hello.cpp pch ;
 exe hello-afx : hello-afx.cpp pch-afx : <define>HELLO ;
 exe hello-msvc-source : hello-msvc-source.cpp pch-msvc-source ;
@@ -31,9 +31,9 @@ public:
     TestClass( int, int ) {}
 };
 """
-t.write("pch.hpp", pch_content)
+t.write("a/pch.hpp", pch_content)
 
-t.write("pch.cpp", """#include <pch.hpp>
+t.write("a/pch.cpp", """#include <pch.hpp>
 """)
 
 toolset = BoostBuild.get_toolset()
@@ -52,10 +52,10 @@ t.expect_addition("bin/$toolset/debug*/hello-msvc-source.exe")
 # B2 will not recreate PCH, and compiler will happily use pre-compiled
 # header, not noticing that the real header is bad.
 
-t.rename("pch.hpp", "pch.hpp.orig")
+t.rename("a/pch.hpp", "a/pch.hpp.orig")
 s = "THIS WILL NOT COMPILE. "
-t.write("pch.hpp", s + (len(pch_content) - len(s)) * 'x')
-t.copy_timestamp("pch.hpp.orig", "pch.hpp")
+t.write("a/pch.hpp", s + (len(pch_content) - len(s)) * 'x')
+t.copy_timestamp("a/pch.hpp.orig", "a/pch.hpp")
 
 t.rm("bin/$toolset/debug*/hello.obj")
 t.rm("bin/$toolset/debug*/hello-afx.obj")
