@@ -26,6 +26,44 @@ other Jam files.
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 
+== Version 4.9.5
+
+* Improve alternative match error message to include more context.
+  -- _René Ferdinand Rivera Morell_
+* Fix errors when doing `use-project` inside projects that get included from
+  another `use-project`.
+  -- _René Ferdinand Rivera Morell_
+* Support native msvc compilers on ARM64.
+  -- _Stephen Just_
+* PCH fixes: fix msvc pch include dir; fix msvc pch header name; fix missing
+  gcc `-ftemplate-depth` when building pch.
+  -- _Nikita Kniazev_
+* *New*: `clang-win` search for compiler executable in default install locations
+  when it is not on found in `PATH`.
+  -- _Nikita Kniazev_
+* Fix `clang-win` to support versioned winsdk bin location.
+  -- _Nikita Kniazev_
+
+== Version 4.9.4
+
+* Fix crash on some platforms/compilers from invalid garbage reads of varargs
+  end marker being an `int` instead of a `nullptr`.
+* Don't force Windows path separators for GCC when on Windows. As it confuses
+  Cygwin GCC's relative include path handling.
+  -- _René Ferdinand Rivera Morell_
+* Added `common-requirements` to project declaration to shorthand as declaring
+  the same for both `requirements` and `usage-requirements`.
+  -- _René Ferdinand Rivera Morell_
+* Add to pass in targets to project `explicit` rule to reduce duplication of
+  `explicit` targets when there are many.
+  -- _René Ferdinand Rivera Morell_
+* Make coverage feature non-incidental and link-incompatible.
+  -- _Thomas Brown_
+* Use PATH-based lookup for `sh`. For things such as Gentoo Prefix, we want to
+  use the Bourne shell from the prefix and not the potentially ancient version
+  from the main system.
+  -- _David Seifert_
+
 == Version 4.9.3
 
 * Updated cxxstd for 23 and 26 versions of recent gcc and clang. (#184)
