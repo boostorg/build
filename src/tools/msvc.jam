@@ -170,6 +170,9 @@ accepted only by AMD64 targeting compilers, cause the generated code to
 be tuned to a specific flavor of 64-bit x86. B2 will make use
 of those options depending on the value of the`instruction-set` feature.
 
+Starting with version 14.0, Microsoft Visual Studio can generate binaries
+using native arm64 tools to compile for x86, x86_64, and arm64.
+
 [[bbv2.reference.tools.compiler.msvc.winrt]]
 == Windows Runtime support
 
@@ -1510,6 +1513,14 @@ local rule configure-really ( version ? : options * )
             {
                 default-global-setup-options-ia64 = ia64 ;
             }
+            # When using ARM64 Windows, it is possible to use native compilers,
+            # selected by the parameters to vcvarsall.bat.
+            if [ MATCH ^(ARM64) : [ os.environ PROCESSOR_ARCHITECTURE ] ]
+            {
+                default-global-setup-options-arm64 = arm64 ;
+                default-global-setup-options-amd64 = arm64_x64 ;
+                default-global-setup-options-i386 = arm64_x86 ;
+            }
 
             for local c in $(cpu)
             {
@@ -2118,6 +2129,7 @@ switch $(.default-cpu-arch)
 {
     case x86   : .default-cpu-arch = i386 ;
     case em64t : .default-cpu-arch = amd64 ;
+    case arm64 : .default-cpu-arch = arm64 ;
 }
 
 for local cpu in $(.cpus-on-$(.cpu-arch-info-$(.default-cpu-arch)[1]))
