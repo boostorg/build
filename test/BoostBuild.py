@@ -259,7 +259,7 @@ class Tester(TestCmd.TestCmd):
         if not executable:
             executable = os.getenv('B2')
         if not executable:
-            executable = 'b2'
+            executable = 'b2' if os.name != 'nt' else 'b2.exe'
 
         assert arguments.__class__ is not str
         self.original_workdir = os.path.dirname(__file__)

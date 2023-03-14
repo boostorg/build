@@ -237,6 +237,7 @@ rule boost_std ( inc ? lib ? )
     boost_lib_std thread              : BOOST_THREAD_DYN_DLL  ;
     boost_lib_std timer               : BOOST_TIMER_DYN_DLL  ;
     boost_lib_std unit_test_framework : BOOST_TEST_DYN_LINK  ;
+    boost_lib_std url                 : BOOST_URL_DYN_LINK  ;
     boost_lib_std wave                : BOOST_WAVE_DYN_LINK  ;
     boost_lib_std wserialization      : BOOST_SERIALIZATION_DYN_LINK ;
 }

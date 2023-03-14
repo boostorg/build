@@ -48,9 +48,9 @@ jobs:
           ./bootstrap.bat
       - name: "Build"
         run: |
-          cd "${{github.workspace}}/b2-pkg"
           $env:path += ';' + "${{github.workspace}}/b2"
-          b2 --debug-configuration --b2root="${{github.workspace}}/b2" windows-wix
+          cd "${{github.workspace}}/b2-pkg/windows-wix"
+          b2 --debug-configuration --b2root="${{github.workspace}}/b2"
       - name: "Upload"
         uses: actions/upload-artifact@v3
         with:

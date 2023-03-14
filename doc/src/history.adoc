@@ -1,6 +1,24 @@
 [[b2.history]]
 = History
 
+== Version 4.9.5
+
+* Improve alternative match error message to include more context.
+  -- _René Ferdinand Rivera Morell_
+* Fix errors when doing `use-project` inside projects that get included from
+  another `use-project`.
+  -- _René Ferdinand Rivera Morell_
+* Support native msvc compilers on ARM64.
+  -- _Stephen Just_
+* PCH fixes: fix msvc pch include dir; fix msvc pch header name; fix missing
+  gcc `-ftemplate-depth` when building pch.
+  -- _Nikita Kniazev_
+* *New*: `clang-win` search for compiler executable in default install locations
+  when it is not on found in `PATH`.
+  -- _Nikita Kniazev_
+* Fix `clang-win` to support versioned winsdk bin location.
+  -- _Nikita Kniazev_
+
 == Version 4.9.4
 
 * Fix crash on some platforms/compilers from invalid garbage reads of varargs

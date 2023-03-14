@@ -78,16 +78,41 @@ rule load ( jamfile-location : synthesize ? )
 }
 
 
+.load-used-project-current = ;
+
 rule load-used-projects ( module-name )
 {
-    local used = [ modules.peek $(module-name) : .used-projects ] ;
     local location = [ attribute $(module-name) location ] ;
-    while $(used)
+    if $(.load-used-project-current)
     {
-        local id = $(used[1]) ;
-        local where = [ path.make $(used[2]) ] ;
-        register-id $(id) : [ load [ path.root $(where) $(location) ] ] ;
-        used = $(used[3-]) ;
+        local used = [ modules.peek $(module-name) : .used-projects ] ;
+        modules.poke $(.load-used-project-current)
+            : .used-projects
+            : [ modules.peek $(.load-used-project-current) : .used-projects ]
+                $(used) ;
+        modules.poke $(module-name) : .used-projects ;
+    }
+    else
+    {
+        .load-used-project-current = $(module-name) ;
+        while true
+        {
+            local used = [ modules.peek $(module-name) : .used-projects ] ;
+            if $(used)
+            {
+                local id = $(used[1]) ;
+                local where = [ path.make $(used[2]) ] ;
+                register-id $(id) : [ load $(where) ] ;
+                used = [ modules.peek $(module-name) : .used-projects ] ;
+                used = $(used[3-]) ;
+                modules.poke $(module-name) : .used-projects : $(used) ;
+            }
+            else
+            {
+                break ;
+            }
+        }
+        .load-used-project-current = ;
     }
 }
 
@@ -1237,9 +1262,12 @@ module project-rules
     rule use-project ( id : where )
     {
         # See comment in 'load' for explanation.
+        import project ;
+        import path ;
         local caller = [ CALLER_MODULE ] ;
+        local location = [ project.attribute $(caller) location ] ;
         modules.poke $(caller) : .used-projects : [ modules.peek $(caller) :
-            .used-projects ] $(id) $(where) ;
+            .used-projects ] $(id) [ path.root $(where) $(location) ] ;
     }
 
     rule build-project ( dir )
@@ -1366,5 +1394,27 @@ module project-rules
         modules.call-in $(m) : constant PACKAGE_MANAGER_BUILD_INFO : $(glob-pattern) ;
         IMPORT project : load-package-manager-build-info : $(m) : project.load-package-manager-build-info ;
         modules.call-in $(m) : project.load-package-manager-build-info ;
+    }
+
+    rule call-if ( check * : rule-name args * : * )
+    {
+        import modules ;
+        local m = [ CALLER_MODULE ] ;
+        local v = ;
+        if $(check)
+        {
+            v = [ modules.call-in $(m) : $(check) ] ;
+        }
+        else if $(rule-name) in [ RULENAMES $(m) ]
+        {
+            v = 1 ;
+        }
+        if $(v)
+        {
+            return [ modules.call-in $(m)
+                : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) : $(10)
+                : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17) : $(18)
+                ] ;
+        }
     }
 }
