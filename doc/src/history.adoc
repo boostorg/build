@@ -1,6 +1,8 @@
 [[b2.history]]
 = History
 
+== Version 4.9.6
+
 == Version 4.9.5
 
 * Improve alternative match error message to include more context.
