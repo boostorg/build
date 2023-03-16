@@ -118,7 +118,7 @@ rule init ( version ? : command * : options * )
 
                 if $(match)
                 {
-                    items += $(match[1]) ;
+                    items += [ regex.replace $(match[1]) "\\\\+" "\\" ] ;
                     config = $(match[2]) ;
                 }
             }
@@ -127,10 +127,10 @@ rule init ( version ? : command * : options * )
 
             if $(items)
             {
-                asm = [ regex.replace $(items[1]) "x64\\\\+link\\.exe" "x64\\ml64.exe" ] ;
-                asm = [ regex.replace $(asm) "x86\\\\+link\\.exe" "x86\\ml.exe" ] ;
-                asm = [ regex.replace $(asm) "arm64\\\\+link\\.exe" "arm64\\armasm64.exe" ] ;
-                asm = [ regex.replace $(asm) "arm\\\\+link\\.exe" "arm\\armasm.exe" ] ;
+                asm = [ regex.replace $(items[1]) "x64\\\\link\\.exe" "x64\\ml64.exe" ] ;
+                asm = [ regex.replace $(asm) "x86\\\\link\\.exe" "x86\\ml.exe" ] ;
+                asm = [ regex.replace $(asm) "arm64\\\\link\\.exe" "arm64\\armasm64.exe" ] ;
+                asm = [ regex.replace $(asm) "arm\\\\link\\.exe" "arm\\armasm.exe" ] ;
 
                 if ! [ MATCH "(ml\\.exe)" "(ml64\\.exe)" "(armasm64\\.exe)" "(armasm\\.exe)" : $(asm) ]
                 {
@@ -153,7 +153,7 @@ rule init ( version ? : command * : options * )
 
             if $(items)
             {
-                linker = [ regex.replace $(items[1]) "\\\\+HostX64\\\\+x86\\\\+" "\\HostX86\\x86\\" ] ;
+                linker = [ regex.replace $(items[1]) "\\\\HostX64\\\\x86\\\\" "\\HostX86\\x86\\" ] ;
             }
 
             .notice "$(arch)-$(addr):" "using linker '$(linker)'" ;
@@ -176,12 +176,12 @@ rule init ( version ? : command * : options * )
 
             for local item in $(items)
             {
-                match = [ MATCH "\"-libpath:(.*)\\\\+Lib\\\\(.*)\\\\um\\\\+x(.*)\"" : $(item) ] ;
+                match = [ MATCH "\"-libpath:(.*)\\\\Lib\\\\(.*)\\\\um\\\\x(.*)\"" : $(item) ] ;
 
                 if $(match)
                 {
                     local sdk-path = "$(match[1])\\bin\\$(match[2])\\x$(match[3])" ;
-                    if [ version.version-less [ SPLIT_BY_CHARACTERS "$(match[2])" : . ] : 10 0 14393 ]
+                    if ! [ path.exists $(sdk-path) ]
                     {
                         sdk-path = "$(match[1])\\bin\\x$(match[3])" ;
                     }
