@@ -351,7 +351,7 @@ local rule load-jamfile ( dir : jamfile-module : synthesize ? )
     {
         import errors ;
         errors.error "Multiple Jamfiles found at '$(dir)'" :
-            "Filenames are: " $(jamfile-to-load:D=) ;
+            "Filenames are:" $(jamfile-to-load:D=) ;
     }
 
     if ! $(jamfile-to-load) && $(synthesize)
@@ -880,7 +880,7 @@ class project-attributes
         print.section $(id:E=(none)) ;
         print.list-start ;
         print.list-item "Parent project:" $(self.parent:E=(none)) ;
-        print.list-item "Requirements:" [ $(self.requirements).raw ] ;
+        print.list-item "Requirements:" [ $(self.requirements).str ] ;
         print.list-item "Default build:" $(self.default-build) ;
         print.list-item "Source location:" $(self.source-location) ;
         print.list-item "Projects to build:" [ sequence.insertion-sort
