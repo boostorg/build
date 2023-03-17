@@ -27,6 +27,11 @@ environment:
     TOOLSET: vc12
     TEST_TOOLSET: msvc-12.0
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+  - job_name: 'Clang 9 (VS2015), Test'
+    job_group: 'Test'
+    TOOLSET: clang-win
+    TEST_TOOLSET: clang-win
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
   - job_name: 'Cygwin 3.1.7 x64, Test'
     job_group: 'TestCygwin'
     TOOLSET: gcc

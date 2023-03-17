@@ -94,6 +94,7 @@ stages:
     strategy:
       matrix:
         VS ${{variables.vs_latest}}: {TOOLSET: "${{variables.vc_latest}}", TEST_TOOLSET: msvc, VM_IMAGE: "${{variables.windows_latest_vm}}"}
+        Clang ${{variables.clang_latest}} (VS${{variables.vs_latest}}): {TOOLSET: clang-win, TEST_TOOLSET: clang-win, VM_IMAGE: "${{variables.windows_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     steps:

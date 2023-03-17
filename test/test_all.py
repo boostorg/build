@@ -351,7 +351,7 @@ if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswit
         tests.append("feature_force_include")
 
 # Clang includes Objective-C driver everywhere, but GCC usually in a separate gobj package
-if toolset.startswith("clang") or "darwin" in toolset:
+if toolset.startswith("clang") and "-win" not in toolset or "darwin" in toolset:
     tests.append("lang_objc")
 
 # Disable on OSX as it doesn't seem to work for unknown reasons.
