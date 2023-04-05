@@ -141,9 +141,6 @@ import errors ;
 feature.extend toolset : embarcadero ;
 
 toolset.inherit-generators embarcadero : clang-linux ;
-generators.override embarcadero.prebuilt : builtin.lib-generator ;
-generators.override embarcadero.prebuilt : builtin.prebuilt ;
-generators.override embarcadero.searched-lib-generator : searched-lib-generator ;
 
 toolset.inherit-rules embarcadero : clang-linux ;
 toolset.inherit-flags embarcadero

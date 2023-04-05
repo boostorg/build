@@ -834,6 +834,24 @@ rule generators-for-toolset ( toolset )
 }
 
 
+# Adds generator overrides from 'base' to 'toolset'.
+# Intended for use in toolset.inherit-generators.
+#
+rule inherit-overrides ( toolset : base : generators-to-ignore * )
+{
+    for local overrider-id in [ MATCH "^\\.override\\.$(base)\\.(.*)" : [ VARNAMES $(__name__) ] ]
+    {
+        if ! $(overrider-id) in $(generators-to-ignore)
+        {
+            for local overridee-id in $(.override.$(base).$(overrider-id))
+            {
+                override $(toolset).$(overrider-id) : $(overridee-id) ;
+            }
+        }
+    }
+}
+
+
 # Make generator 'overrider-id' be preferred to 'overridee-id'. If, when
 # searching for generators that could produce a target of a certain type, both
 # those generators are among viable generators, the overridden generator is

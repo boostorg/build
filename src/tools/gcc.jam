@@ -131,9 +131,6 @@ toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags gcc : unix ;
 toolset.inherit-rules gcc : unix ;
 
-generators.override gcc.prebuilt : builtin.prebuilt ;
-generators.override gcc.searched-lib-generator : searched-lib-generator ;
-
 # Make gcc toolset object files use the "o" suffix on all platforms.
 type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
 type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>windows : o ;

@@ -212,9 +212,6 @@ generators.register [ new qcc-linking-generator qcc.link : LIB OBJ : EXE
 generators.register [ new qcc-linking-generator qcc.link.dll : LIB OBJ
     : SHARED_LIB : <toolset>qcc ] ;
 
-generators.override qcc.prebuilt : builtin.prebuilt ;
-generators.override qcc.searched-lib-generator : searched-lib-generator ;
-
 
 # Declare flags for linking.
 # First, the common flags.
