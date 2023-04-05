@@ -1,4 +1,12 @@
 # Copyright Craig Rodrigues 2005. Distributed under the Boost
 # Software License, Version 1.0. (See accompanying
 # file LICENSE.txt or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
+import scanner ;
+import type ;
+import types/cpp ;
+
 type ASM : s S asm ;
+
+# .S files are GNU Assembler with C Preprocessor (B2 treats any asm like that)
+# FIXME: Scan for MASM/ARMASM includes
+type.set-scanner ASM : c-scanner ;
