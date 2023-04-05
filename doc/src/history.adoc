@@ -26,6 +26,11 @@ other Jam files.
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 
+== Version 4.9.6
+
+* Fix version check for winsdk on `clang-win` toolset.
+  -- _Nikita Kniazev_
+
 == Version 4.9.5
 
 * Improve alternative match error message to include more context.
