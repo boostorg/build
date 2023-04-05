@@ -576,6 +576,7 @@ rule inherit-generators ( toolset properties * : base : generators-to-ignore * )
             generators.register [ $(g).clone $(new-id) : $(properties) ] ;
         }
     }
+    generators.inherit-overrides $(toolset) : $(base) : $(generators-to-ignore) ;
 }
 
 

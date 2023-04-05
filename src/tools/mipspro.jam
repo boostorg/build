@@ -14,8 +14,6 @@ import common ;
 
 feature.extend toolset : mipspro ;
 toolset.inherit mipspro : unix ;
-generators.override mipspro.prebuilt : builtin.lib-generator ;
-generators.override mipspro.searched-lib-generator : searched-lib-generator ;
 
 #  Documentation and toolchain description located
 #  http://www.sgi.com/products/software/irix/tools/

@@ -16,8 +16,6 @@ import gcc ;
 
 feature.extend toolset : pgi ;
 toolset.inherit pgi : unix ;
-generators.override pgi.prebuilt : builtin.lib-generator ;
-generators.override pgi.searched-lib-generator : searched-lib-generator ;
 
 # Documentation and toolchain description located
 # http://www.pgroup.com/resources/docs.htm

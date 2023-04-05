@@ -17,8 +17,6 @@ import os ;
 
 feature.extend toolset : xlcpp ;
 toolset.inherit xlcpp : unix ;
-generators.override xlcpp.prebuilt : builtin.prebuilt ;
-generators.override xlcpp.searched-lib-generator : searched-lib-generator ;
 
 # Configure the xlcpp toolset
 rule init ( version ? : command * : options * )

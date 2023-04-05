@@ -894,13 +894,6 @@ generators.register [ new cray-linking-generator
                         : SHARED_LIB
                         : <toolset>cray ] ;
 
-# Tell B2 to prefer 'cray' generators over other valid
-# generators. This is used to resolve a tie when B2 finds that
-# there is more than one viable generator for a particular build request.
-
-generators.override cray.prebuilt : builtin.prebuilt ;
-generators.override cray.searched-lib-generator : searched-lib-generator ;
-
 type.set-generated-target-suffix PREPROCESSED_CPP : <toolset>cray : i ;
 type.set-generated-target-suffix PREPROCESSED_C : <toolset>cray : i ;
 

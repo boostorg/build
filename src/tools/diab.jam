@@ -15,10 +15,6 @@ feature.extend toolset : diab ;
 # Inherit from Unix toolset to get library ordering magic.
 toolset.inherit  diab : unix ;
 
-generators.override diab.prebuilt : builtin.lib-generator ;
-generators.override diab.prebuilt : builtin.prebuilt ;
-generators.override diab.searched-lib-generator : searched-lib-generator ;
-
 
 rule init ( version ? : command * : options * )
 {

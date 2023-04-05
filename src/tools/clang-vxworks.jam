@@ -24,11 +24,6 @@ toolset.inherit-generators clang-vxworks
   : gcc.mingw.link gcc.mingw.link.dll gcc.compile.c.pch gcc.compile.c++.pch
   ;
 
-generators.override clang-vxworks.prebuilt : builtin.lib-generator ;
-generators.override clang-vxworks.prebuilt : builtin.prebuilt ;
-generators.override clang-vxworks.searched-lib-generator : searched-lib-generator ;
-
-
 toolset.inherit-rules clang-vxworks : gcc ;
 toolset.inherit-flags clang-vxworks : gcc
         : <inlining>full

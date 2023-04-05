@@ -39,8 +39,6 @@ import os ;
 
 feature.extend toolset : vacpp ;
 toolset.inherit vacpp : unix ;
-generators.override vacpp.prebuilt : builtin.prebuilt ;
-generators.override vacpp.searched-lib-generator : searched-lib-generator ;
 
 # Configure the vacpp toolset
 rule init ( version ? : command * : options * )
