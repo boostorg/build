@@ -650,6 +650,9 @@ toolset.flags gcc.compile OPTIONS <local-visibility>global : -fvisibility=defaul
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
 toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
 
+toolset.flags gcc.compile.c.preprocess OPTIONS <linemarkers>off : -P ;
+toolset.flags gcc.compile.c++.preprocess OPTIONS <linemarkers>off : -P ;
+
 # sanitizers
 toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>on : -fsanitize=address -fno-omit-frame-pointer ;
 toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>norecover : -fsanitize=address -fno-sanitize-recover=address -fno-omit-frame-pointer ;
