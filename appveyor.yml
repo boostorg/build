@@ -9,6 +9,7 @@ branches:
     - /main/
     - /release/
     - /feature\/.*/
+    - /backport-.*/
 
 environment:
   matrix:
