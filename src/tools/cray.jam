@@ -323,6 +323,9 @@ toolset.flags cray.compile OPTIONS <vectorize>off     : -h vector0 ;
 toolset.flags cray.compile OPTIONS <vectorize>on                   ; # Blank. CCE vectorizes by default.
 toolset.flags cray.compile OPTIONS <vectorize>full    : -h vector3 ;
 
+toolset.flags cray.compile.c.preprocess OPTIONS <linemarkers>off : -P ;
+toolset.flags cray.compile.c++.preprocess OPTIONS <linemarkers>off : -P ;
+
 toolset.flags cray.link FINDLIBS-SA <threading>multi : rt ; # Not sure if this is correct.
 
 toolset.flags cray.link OPTIONS <link>shared : -h pic ;

@@ -94,6 +94,9 @@ flags vmsdecc.compile OPTIONS <warnings>pedantic : /WARN=ENABLE=ALL ;
 
 flags vmsdecc.compile.c++ OPTIONS <inlining>off : /OPT=NOINLINE ;
 
+flags vmsdecc.compile.c.preprocess OPTIONS <linemarkers>off : /NOLINE_DIRECTIVES ;
+flags vmsdecc.compile.c++.preprocess OPTIONS <linemarkers>off : /NOLINE_DIRECTIVES ;
+
 flags vmsdecc OPTIONS <address-model>32 : /POINTER=32 ;
 flags vmsdecc OPTIONS <address-model>64 : /POINTER=64 ; ## /POINTER=64=ARGV argv-64
 
