@@ -38,7 +38,7 @@ toolset.inherit-rules qcc : unix ;
 rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters qcc : version $(version) ] ;
-    local command = [ common.get-invocation-command qcc : QCC : $(command) ] ;
+    local command = [ common.get-invocation-command qcc : qcc : $(command) ] ;
     common.handle-options qcc : $(condition) : $(command) : $(options) ;
 }
 
