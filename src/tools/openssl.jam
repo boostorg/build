@@ -43,8 +43,10 @@ if --debug-configuration in [ modules.peek : ARGV ]
 #
 #   <search>
 #       The directory containing the openssl binaries.
-#   <name>
-#       Overrides the default library name.
+#   <ssl-name>
+#       Overrides the default name of ssl library.
+#   <crypto-name>
+#       Overrides the default name of crypto library.
 #   <include>
 #       The directory containing the openssl headers.
 #
@@ -86,9 +88,10 @@ rule init (
 
     local library-path = [ feature.get-values <search> : $(options) ] ;
     local include-path = [ feature.get-values <include> : $(options) ] ;
-    local library-name = [ feature.get-values <name> : $(options) ] ;
+    local ssl-name = [ feature.get-values <ssl-name> : $(options) ] ;
+    local crypto-name = [ feature.get-values <crypto-name> : $(options) ] ;
 
-    if ! $(library-path) && ! $(include-path) && ! $(source-path) && ! $(library-name)
+    if ! $(library-path) && ! $(include-path) && ! $(source-path) && ! $(ssl-name) && ! $(crypto-name)
     {
         is-default = true ;
     }
@@ -122,15 +125,18 @@ rule init (
             }
         }
 
+        ssl-name ?= $(ssl_names) ;
+        crypto-name ?= $(crypto_names) ;
+
         local ssl_lib = [ new ac-library ssl : $(.project) : $(condition) :
-            $(include-path) : $(library-path) : ssl ] ;
+            $(include-path) : $(library-path) ] ;
         $(ssl_lib).set-header openssl/ssl.h ;
-        $(ssl_lib).set-default-names $(ssl_names) ;
+        $(ssl_lib).set-default-names $(ssl-name) ;
 
         local crypto_lib = [ new ac-library crypto : $(.project) : $(condition) :
-            $(include-path) : $(library-path) : crypto ] ;
+            $(include-path) : $(library-path) ] ;
         $(crypto_lib).set-header openssl/crypto.h ;
-        $(crypto_lib).set-default-names $(crypto_names) ;
+        $(crypto_lib).set-default-names $(crypto-name) ;
 
         targets.main-target-alternative $(ssl_lib) ;
         targets.main-target-alternative $(crypto_lib) ;
