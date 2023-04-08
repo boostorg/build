@@ -35,6 +35,10 @@ toolset.inherit-flags clang-linux : gcc
     <threading>multi/<target-os>windows
     <lto>on/<lto-mode>full
     <lto>on/<lto-mode>fat
+  : INCLUDE-GCH
+    SONAME_OPTION
+    RPATH_OPTION
+    .IMPLIB-COMMAND
   ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
@@ -113,6 +117,8 @@ rule get-short-version ( command-string : single-digit-since ? )
 
 local all-os = [ feature.values <target-os> ] ;
 
+toolset.flags clang-linux.compile INCLUDE-PCH : -include-pch ;
+
 # note: clang silently ignores some of these inlining options
 # For clang, 'on' and 'full' are identical.
 toolset.flags clang-linux.compile OPTIONS <inlining>full : -Wno-inline ;
@@ -134,45 +140,8 @@ toolset.flags clang-linux.link OPTIONS <stdlib>gnu <stdlib>gnu11 : -stdlib=libst
 toolset.flags clang-linux.compile OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
 toolset.flags clang-linux.link OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
 
-# Enable response file control
-toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>auto : a ;
-toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>file : f ;
-toolset.flags clang-linux RESPONSE_FILE_SUB <response-file>contents : c ;
-
-# Used in actions for multi argument options
-_ = " " ;
-###############################################################################
-# C and C++ compilation
-
-rule compile.c++ ( targets * : sources * : properties * ) {
-  DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
-}
-
-actions compile.c++ bind PCH_FILE
-{
-  "$(CONFIG_COMMAND)" -c -x c++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang$(_)-include-pch$(_)-Xclang$(_)"$(PCH_FILE)" -include"$(FORCE_INCLUDES)" -o "$(<)" "$(>)"
-}
-
-rule compile.c ( targets * : sources * : properties * )
-{
-  DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
-}
-
-actions compile.c bind PCH_FILE
-{
-  "$(CONFIG_COMMAND)" -c -x c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -Xclang$(_)-include-pch$(_)-Xclang$(_)"$(PCH_FILE)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
 ###############################################################################
 # Linking
 
 local soname-os = [ set.difference $(all-os) : windows ] ;
-toolset.flags clang-linux.link SONAME_OPT <target-os>$(soname-os) : "-Wl,-soname -Wl," ;
-
-actions link bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @($(<[1]:T).rsp:O=FC:<=@":>=":E=-Wl,-R$(_)-Wl,$(RPATH) -Wl,-rpath-link$(_)-Wl,"$(RPATH_LINK)" $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
-}
-
-actions link.dll bind LIBRARIES {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @($(<[1]:T).rsp:O=FC:<=@":>=":E=-Wl,-R$(_)-Wl,$(RPATH) $(SONAME_OPT)$(<[1]:D=) -shared $(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
-}
+toolset.flags clang-linux.link SONAME_OPTION <target-os>$(soname-os) : -soname ;
