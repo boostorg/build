@@ -298,29 +298,27 @@ class generator
         # feature name in requirements (i.e. grist-only element), as matching
         # any value of the feature.
 
-        if [ $(property-set-to-match).contains-raw $(self.property-requirements) ] &&
-            [ $(property-set-to-match).contains-features $(self.feature-requirements) ]
-        {
-            return true ;
-        }
-        else
-        {
+        if ! [ $(property-set-to-match).contains-raw $(self.property-requirements) ] {
+            generators.dout [ indent ] "    property-requirements are not met:" $(self.property-requirements) ;
             return ;
         }
+        if ! [ $(property-set-to-match).contains-features $(self.feature-requirements) ] {
+            generators.dout [ indent ] "    feature-requirements are not met:" $(self.feature-requirements) ;
+            return ;
+        }
+        return true ;
     }
 
     # Returns another generator which differs from $(self) in
     #   - id
-    #   - value to <toolset> feature in properties
+    #   - requirements, which are refined with the new ones
     #
     rule clone ( new-id : new-toolset-properties + )
     {
         local g = [ new $(__class__) $(new-id) $(self.composing) :
             $(self.source-types) : $(self.target-types-and-names) :
-            # Note: this does not remove any subfeatures of <toolset> which
-            # might cause problems.
-            [ property.change $(self.requirements) : <toolset> ]
-            $(new-toolset-properties) ] ;
+            [ property.refine $(self.requirements) : $(new-toolset-properties) ]
+            ] ;
         return $(g) ;
     }
 
