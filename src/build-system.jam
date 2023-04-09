@@ -811,6 +811,25 @@ local rule should-clean-project ( project )
         }
     }
 
+    local durations = [ MATCH "(--durations(=([0-9]+))?)" : $(.argv) ] ;
+    if $(durations) {
+        durations = $(durations[3]) ;
+        durations ?= 10 ;
+
+        .target-times = ;
+        rule record-time ( : target : start end user system clock )
+        {
+            # limit precision to milliseconds
+            clock = [ MATCH "^([0-9]+[.][0-9][0-9][0-9])" : $(clock) ] ;
+
+            .target-times += "$(clock):::$(target)" ;
+        }
+        IMPORT build-system : record-time : : build-system.record-time ;
+
+        # When no __TIMING_RULE__ is set "on" a target, the search falls back to
+        # the global module.
+        module { __TIMING_RULE__ = build-system.record-time ; }
+    }
 
     # Convert collected virtual targets into actual raw Jam targets.
     for t in $(virtual-targets)
@@ -1082,6 +1101,20 @@ local rule should-clean-project ( project )
         else
         {
             UPDATE all $(.out-xml) ;
+        }
+        if $(durations) {
+            ECHO "============================= slowest $(durations) durations =============================" ;
+            local sorted-durations = [ SORT $(.target-times) ] ;
+            for local t in [ sequence.reverse $(sorted-durations[-$(durations)--1]) ] {
+                t = [ SPLIT_BY_CHARACTERS $(t) : ":::" ] ;
+                local action = [ on $(t[-1]) return $(.action) ] ;
+                if $(action) {
+                    ECHO $(t[1])s [ indirect.get-rule [ $(action).action-name ] ] $(t[-1]) ;
+                }
+                else {
+                    ECHO $(t[1])s $(t[-1]) ;
+                }
+            }
         }
     }
 }
