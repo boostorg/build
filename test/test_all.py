@@ -347,8 +347,7 @@ if toolset.startswith("gcc") and os.name != "nt":
 
 if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswith("msvc"):
     tests.append("pch")
-    if sys.platform != "darwin": # clang-darwin does not yet support
-        tests.append("feature_force_include")
+    tests.append("feature_force_include")
 
 # Clang includes Objective-C driver everywhere, but GCC usually in a separate gobj package
 if toolset.startswith("clang") and "-win" not in toolset or "darwin" in toolset:
