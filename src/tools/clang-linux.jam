@@ -37,7 +37,6 @@ toolset.inherit-flags clang-linux : gcc
     <lto>on/<lto-mode>fat
   : INCLUDE-GCH
     SONAME_OPTION
-    RPATH_OPTION
     .IMPLIB-COMMAND
   ;
 
