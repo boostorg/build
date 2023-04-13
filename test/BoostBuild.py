@@ -79,11 +79,11 @@ def set_defer_annotations(n):
     defer_annotations = n
 
 
-def annotate_stack_trace(tb=None):
+def annotate_stack_trace(tb=None, level=None):
     if tb:
-        trace = TestCmd.caller(traceback.extract_tb(tb), 0)
+        trace = TestCmd.caller(traceback.extract_tb(tb), level or 0)
     else:
-        trace = TestCmd.caller(traceback.extract_stack(), 1)
+        trace = TestCmd.caller(traceback.extract_stack(), level or 1)
     annotation("stacktrace", trace)
 
 
@@ -377,10 +377,7 @@ class Tester(TestCmd.TestCmd):
         os.rename(src_name, dst_name)
 
     def copy(self, src, dst):
-        try:
-            self.write(dst, self.read(src, binary=True))
-        except:
-            self.fail_test(1)
+        self.write(dst, self.read(src, binary=True))
 
     def copy_timestamp(self, src, dst):
         src_name = self.native_file_name(src)
@@ -579,14 +576,15 @@ class Tester(TestCmd.TestCmd):
             openMode = "r"
             if binary:
                 openMode += "b"
-            else:
+            elif sys.version_info[0] < 3:
                 openMode += "U"
             f = open(name, openMode)
             result = f.read()
             f.close()
             return result
-        except:
-            annotation("failure", "Could not open '%s'" % name)
+        except Exception as e:
+            annotation("failure", "Could not open '%s': %s" % (name, e))
+            annotate_stack_trace(level=3)
             self.fail_test(1)
             return ""
 
@@ -633,7 +631,7 @@ class Tester(TestCmd.TestCmd):
             print(" ".join(self.last_program_invocation))
 
         if dump_stack:
-            annotate_stack_trace()
+            annotate_stack_trace(level=2)
         sys.exit(1)
 
     # A number of methods below check expectations with actual difference
