@@ -105,6 +105,34 @@ obj bar : foo.cpp :
 
     t.cleanup()
 
+
+def test_build_no_short_circuits():
+    t = BoostBuild.Tester(use_test_config=0)
+    t.write("Jamroot", """\
+import configure ;
+obj fail : fail.cpp ;
+obj should-not-be-even-tried : pass.cpp ;
+explicit fail should-not-be-even-tried ;
+obj conditional : pass.cpp :
+  <cxxflags> <variant>debug:<build>no <variant>debug:<cxxflags>
+  [ configure.check-target-builds should-not-be-even-tried "conditional" ]
+  ;
+obj indirect-conditional : pass.cpp :
+  [ configure.check-target-builds fail : : <cxxflags> <build>no <variant>debug:<cxxflags> ]
+  [ configure.check-target-builds should-not-be-even-tried "indirect-conditional" ]
+  ;
+obj indirect-conditional : pass.cpp :
+  [ configure.check-target-builds fail : : <cxxflags> <variant>debug:<build>no <variant>debug:<cxxflags> ]
+  [ configure.check-target-builds should-not-be-even-tried "conditional-in-indirect-conditional" ]
+  ;
+""")
+    t.write("pass.cpp", "void f() {}\n")
+    t.write("fail.cpp", "#error fail.cpp\n")
+    t.run_build_system()
+    t.expect_nothing_more()
+    t.cleanup()
+
+
 def test_choose():
     t = BoostBuild.Tester(use_test_config=0)
     t.write("Jamroot", """
@@ -262,6 +290,7 @@ obj foo : foo.cpp :
     t.cleanup()
 
 test_check_target_builds()
+test_build_no_short_circuits()
 test_choose()
 test_translation()
 test_choose_none()
