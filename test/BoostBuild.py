@@ -99,7 +99,16 @@ def get_toolset():
     for arg in sys.argv[1:]:
         if not arg.startswith("-"):
             toolset = arg
-    return toolset or "gcc"
+
+    if toolset:
+        return toolset
+
+    if sys.platform == "win32":
+        return "msvc"
+    if sys.platform == "darwin" or sys.platform.startswith("freebsd"):
+        return "clang"
+
+    return "gcc"
 
 
 # Detect the host OS.
