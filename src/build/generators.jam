@@ -47,6 +47,7 @@ import "class" : new ;
 import property-set ;
 import sequence ;
 import set ;
+import regex ;
 import type ;
 import utility ;
 import virtual-target ;
@@ -839,9 +840,10 @@ rule inherit-overrides ( toolset : base : generators-to-ignore * )
 {
     for local overrider-id in [ MATCH "^\\.override\\.$(base)\\.(.*)" : [ VARNAMES $(__name__) ] ]
     {
-        if ! $(overrider-id) in $(generators-to-ignore)
+        if ! $(base).$(overrider-id) in $(generators-to-ignore)
         {
-            for local overridee-id in $(.override.$(base).$(overrider-id))
+            for local overridee-id in [ regex.replace-list $(.override.$(base).$(overrider-id))
+                                      : ^$(base)\\. : $(toolset). ]
             {
                 override $(toolset).$(overrider-id) : $(overridee-id) ;
             }
