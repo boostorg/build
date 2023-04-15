@@ -5,8 +5,10 @@ import scanner ;
 import type ;
 import types/cpp ;
 
-type ASM : s S asm ;
+type ASM_CPP : s S asm ;
+type ASM : : ASM_CPP ;
 
-# .S files are GNU Assembler with C Preprocessor (B2 treats any asm like that)
 # FIXME: Scan for MASM/ARMASM includes
-type.set-scanner ASM : c-scanner ;
+type.set-scanner ASM_CPP : c-scanner ;
+
+type.set-generated-target-suffix ASM : <target-os>windows : asm ;

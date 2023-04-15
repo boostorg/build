@@ -562,9 +562,12 @@ class generator
         }
 
         # Assign an action for each target.
-        local action = [ action-class ] ;
-        local a = [ class.new $(action) $(sources) : $(self.rule-name) :
-                    $(property-set) ] ;
+        local a = [ action $(sources) : $(property-set)
+                    : $(project) $(name) ] ;
+        if ! $(a)
+        {
+            return ;
+        }
 
         # Create generated target for each target type.
         local targets ;
@@ -734,6 +737,16 @@ class generator
     rule action-class ( )
     {
         return "action" ;
+    }
+
+    # Returns action to be used to generate targets. Default implementation
+    # returns instantiated class returned by "action-class" member rule.
+    #
+    rule action ( sources + : property-set : project name )
+    {
+        local action = [ action-class ] ;
+        return [ class.new $(action) $(sources) : $(self.rule-name) :
+                    $(property-set) ] ;
     }
 }
 
