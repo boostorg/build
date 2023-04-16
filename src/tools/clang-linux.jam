@@ -36,7 +36,6 @@ toolset.inherit-flags clang-linux : gcc
     <lto>on/<lto-mode>full
     <lto>on/<lto-mode>fat
   : INCLUDE-GCH
-    SONAME_OPTION
     .IMPLIB-COMMAND
   ;
 
@@ -114,8 +113,6 @@ rule get-short-version ( command-string : single-digit-since ? )
 ###############################################################################
 # Flags
 
-local all-os = [ feature.values <target-os> ] ;
-
 toolset.flags clang-linux.compile INCLUDE-PCH : -include-pch ;
 
 # note: clang silently ignores some of these inlining options
@@ -138,9 +135,3 @@ toolset.flags clang-linux.link OPTIONS <stdlib>gnu <stdlib>gnu11 : -stdlib=libst
 
 toolset.flags clang-linux.compile OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
 toolset.flags clang-linux.link OPTIONS <stdlib>libc++ : -stdlib=libc++ ;
-
-###############################################################################
-# Linking
-
-local soname-os = [ set.difference $(all-os) : windows ] ;
-toolset.flags clang-linux.link SONAME_OPTION <target-os>$(soname-os) : -soname ;
