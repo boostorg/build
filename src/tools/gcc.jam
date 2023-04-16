@@ -452,7 +452,7 @@ generators.register-c-compiler gcc.compile.c++.preprocess : CPP : PREPROCESSED_C
 generators.register-c-compiler gcc.compile.c.preprocess   : C   : PREPROCESSED_C   : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
-generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.asm : ASM_CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.m   : OBJECTIVE_C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.mm  : OBJECTIVE_CPP : OBJ : <toolset>gcc ;
 
