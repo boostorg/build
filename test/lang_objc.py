@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright Nikita Kniazev 2021.
 # Distributed under the Boost Software License, Version 1.0. (See

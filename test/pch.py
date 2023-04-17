@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2006 Vladimir Prus.
 # Copyright Nikita Kniazev 2020.

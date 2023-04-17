@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copy-paste-modify from zlib.py
 # Copyright (C) 2013 Steven Watanabe

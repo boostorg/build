@@ -15,7 +15,7 @@ steps:
 - bash: |
     set -e
     cd test
-    python test_all.py ${TOOLSET}
+    ./test_all.py ${TOOLSET}
     cd ..
   displayName: Test
 - bash: |
