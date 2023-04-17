@@ -947,8 +947,9 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     toolset.flags gcc.link FINDLIBS-SA-PFX <target-os>windows/<runtime-link>static : -Wl,-Bdynamic ;
     toolset.flags gcc.link OPTIONS <target-os>windows/<runtime-link>static : -Wl,-Bstatic ;
 
-    toolset.flags gcc.link HAVE_SONAME <target-os>$(generic-os) : "" ;
-    toolset.flags gcc.link SONAME_OPTION <target-os>$(generic-os) : -h ;
+    local soname-os = [ set.difference $(generic-os) : windows ] ;
+    toolset.flags gcc.link HAVE_SONAME <target-os>$(soname-os) : "" ;
+    toolset.flags gcc.link SONAME_OPTION <target-os>$(soname-os) : -soname ;
 
     # See note [1]
     toolset.flags gcc.link OPTIONS <target-os>$(generic-os)/<runtime-link>static : -static ;
