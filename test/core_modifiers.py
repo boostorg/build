@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.

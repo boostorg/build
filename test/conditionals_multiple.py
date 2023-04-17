@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2008 Jurko Gospodnetic
 # Distributed under the Boost Software License, Version 1.0.
