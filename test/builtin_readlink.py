@@ -7,12 +7,14 @@
 import BoostBuild
 import os
 import sys
+from unittest.mock import patch
 
 t = BoostBuild.Tester(pass_toolset=0)
 
 t.write("link-target", "")
 try:
-    os.symlink("link-target", "link")
+    with patch.dict(os.environ, {var: "winsymlinks:nativestrict" for var in ["MSYS", "CYGWIN"]}):
+        os.symlink("link-target", "link")
 except (AttributeError, OSError) as e:
     # Either OS does not support symlinks or not enough privilege
     print("XFAIL: %s" % e)

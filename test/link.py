@@ -8,6 +8,8 @@
 # common boost/ directory in the new git layout.
 
 import BoostBuild
+import os
+from unittest.mock import patch
 
 def ignore_config(t):
     """These files are created by the configuration logic in link.jam
@@ -339,12 +341,14 @@ def test_error_duplicate():
 
     t.cleanup()
 
-test_basic()
-test_merge_two()
-test_merge_existing_all()
-test_merge_recursive()
-test_merge_recursive_existing_all()
-test_include_scan()
-test_include_scan_merge_existing()
-test_update_file_link_all()
-test_error_duplicate()
+
+with patch.dict(os.environ, {var: "winsymlinks:nativestrict" for var in ["MSYS", "CYGWIN"]}):
+    test_basic()
+    test_merge_two()
+    test_merge_existing_all()
+    test_merge_recursive()
+    test_merge_recursive_existing_all()
+    test_include_scan()
+    test_include_scan_merge_existing()
+    test_update_file_link_all()
+    test_error_duplicate()

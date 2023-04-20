@@ -119,7 +119,7 @@ def test_toolset(toolset, version, property_sets):
         t.run_build_system(["--user-config=", "-sPYTHON_CMD=%s" % sys.executable] + properties)
         t.expect_addition("bin/%s/lib.obj" % (path("obj")))
         if "link=static" not in properties:
-            if get_target_os(properties) in ["cygwin", "windows"] and toolset != "clang-linux":
+            if t.is_implib_expected():
                 t.expect_addition("bin/%s/l1.implib" % (path("dll")))
             t.expect_addition("bin/%s/l1.dll" % (path("dll")))
             t.ignore_addition("bin/%s/*l1.*.rsp" % (path("dll")))

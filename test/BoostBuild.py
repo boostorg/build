@@ -112,12 +112,9 @@ def get_toolset():
 
 
 # Detect the host OS.
-cygwin = hasattr(os, "uname") and os.uname()[0].lower().startswith("cygwin")
-windows = cygwin or os.environ.get("OS", "").lower().startswith("windows")
-
-if cygwin:
+if sys.platform == "cygwin":
     default_os = "cygwin"
-elif windows:
+elif sys.platform == "win32":
     default_os = "windows"
 elif hasattr(os, "uname"):
     default_os = os.uname()[0].lower()
@@ -158,7 +155,7 @@ def prepare_suffix_map(toolset, target_os=default_os):
     if target_os == "cygwin":
         suffixes[".lib"] = ".a"
         suffixes[".obj"] = ".o"
-        suffixes[".implib"] = ".lib.a"
+        suffixes[".implib"] = ".dll.a"
     elif target_os == "windows":
         if toolset == "gcc":
             # MinGW
@@ -195,6 +192,11 @@ def prepare_library_prefix(toolset, target_os=default_os):
         dll_prefix = None
     else:
         dll_prefix = "lib"
+
+    global implib_prefix
+    implib_prefix = None
+    if toolset == "gcc":
+        implib_prefix = "lib"
 
 
 def re_remove(sequence, regex):
@@ -268,7 +270,7 @@ class Tester(TestCmd.TestCmd):
         if not executable:
             executable = os.getenv('B2')
         if not executable:
-            executable = 'b2' if os.name != 'nt' else 'b2.exe'
+            executable = 'b2' if sys.platform not in ['win32', 'cygwin'] else 'b2.exe'
 
         assert arguments.__class__ is not str
         self.original_workdir = os.path.dirname(__file__)
@@ -280,6 +282,7 @@ class Tester(TestCmd.TestCmd):
         self.translate_suffixes = translate_suffixes
         self.use_test_config = use_test_config
 
+        self.target_os = default_os
         self.toolset = get_toolset()
         self.expanded_toolset = expand_toolset(self.toolset)
         self.pass_toolset = pass_toolset
@@ -341,11 +344,14 @@ class Tester(TestCmd.TestCmd):
             pass
 
     def set_toolset(self, toolset, target_os=default_os):
+        self.target_os = target_os
         self.toolset = toolset
         self.expanded_toolset = expand_toolset(toolset, target_os)
         self.pass_toolset = True
         prepare_prefixes_and_suffixes(toolset, target_os)
 
+    def is_implib_expected(self):
+        return self.target_os in ["windows", "cygwin"] and not self.toolset.startswith("clang-linux")
 
     #
     # Methods that change the working directory's content.
@@ -741,7 +747,7 @@ class Tester(TestCmd.TestCmd):
     def __ignore_junk(self):
         # Not totally sure about this change, but I do not see a good
         # alternative.
-        if windows:
+        if self.target_os == "windows":
             self.ignore("*.ilk")       # MSVC incremental linking files.
             self.ignore("*.pdb")       # MSVC program database files.
             self.ignore("*.rsp")       # Response files.
@@ -838,21 +844,21 @@ class Tester(TestCmd.TestCmd):
     def adjust_lib_name(self, name):
         global lib_prefix
         global dll_prefix
+        global implib_prefix
         result = name
 
         pos = name.rfind(".")
         if pos != -1:
             suffix = name[pos:]
-            if suffix == ".lib":
-                (head, tail) = os.path.split(name)
-                if lib_prefix:
-                    tail = lib_prefix + tail
-                    result = os.path.join(head, tail)
-            elif suffix == ".dll" or suffix == ".implib":
-                (head, tail) = os.path.split(name)
-                if dll_prefix:
-                    tail = dll_prefix + tail
-                    result = os.path.join(head, tail)
+            prefix = {
+                 ".lib": lib_prefix,
+                 ".dll": dll_prefix,
+                 ".implib": implib_prefix,
+            }.get(suffix)
+            (head, tail) = os.path.split(name)
+            if prefix:
+                tail = prefix + tail
+                result = os.path.join(head, tail)
         # If we want to use this name in a Jamfile, we better convert \ to /,
         # as otherwise we would have to quote \.
         result = result.replace("\\", "/")
