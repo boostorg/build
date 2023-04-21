@@ -105,8 +105,8 @@ def test_toolset(toolset, version, property_sets):
 
     t.set_tree("toolset-mock")
 
-    # Build necessary tools
-    t.run_build_system(["-sPYTHON_CMD=%s" % sys.executable], subdir="src")
+    # Extract default target-os value
+    t.run_build_system(subdir="src")
     set_default_target_os(t.read("src/bin/target-os.txt").strip())
 
     for properties in property_sets:
