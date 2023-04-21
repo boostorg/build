@@ -117,7 +117,7 @@ void a() {}
 t.run_build_system(subdir="a")
 t.expect_addition("a/dist/a.dll")
 
-if sys.platform == 'win32':
+if t.is_implib_expected():
     # This is a Windows import library.
     file = t.adjust_name("a.implib")
 else:

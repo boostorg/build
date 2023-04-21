@@ -229,8 +229,8 @@ class symlink-target-class : basic-target
 
 rule do-file-link
 {
-    local target = [ path.native [ path.relative-to [ path.pwd ] $(<) ] ] ;
-    local source = [ path.native [ path.relative-to [ path.pwd ] $(>) ] ] ;
+    local target = [ path.relative-to [ path.pwd ] $(<) ] ;
+    local source = [ path.relative-to [ path.pwd ] $(>) ] ;
     local old-source = [ on $(target) return $(LINK-SOURCE) ] ;
     if $(old-source)
     {
@@ -240,6 +240,8 @@ rule do-file-link
             Link previously defined to another file, $(old-source[1]). ;
     }
     LINK-SOURCE on $(target) = $(source) $(.current-target) ;
+    target = [ path.native $(target) ] ;
+    source = [ path.native $(source) ] ;
     LOCATE on $(target) = . ;
     DEPENDS $(.current-target) : $(target) ;
     if $(.can-symlink) = true

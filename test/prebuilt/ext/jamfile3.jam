@@ -22,7 +22,7 @@ if [ os.name ] in NT
 }
 else if [ os.name ] in CYGWIN
 {
-    dll-suffix = dll ;
+    dll-suffix = dll.a ;
 }
 else if [ os.name ] in MACOSX
 {
