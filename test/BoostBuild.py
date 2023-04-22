@@ -28,7 +28,7 @@ import time
 import traceback
 import tree
 import types
-
+from difflib import ndiff
 from xml.sax.saxutils import escape
 
 try:
@@ -544,7 +544,7 @@ class Tester(TestCmd.TestCmd):
             stderr = self.stderr()
             if stderr:
                 annotation("STDERR", stderr)
-            self.maybe_do_diff(self.stdout(), stdout, stdout_test)
+            self.do_diff(self.stdout(), stdout)
             self.fail_test(1, dump_stdio=False)
 
         # Intel tends to produce some messages to stderr which make tests fail.
@@ -557,7 +557,7 @@ class Tester(TestCmd.TestCmd):
             annotation("Expected STDERR", stderr)
             annotation("Actual STDERR", self.stderr())
             annotation("STDOUT", self.stdout())
-            self.maybe_do_diff(actual_stderr, stderr, stderr_test)
+            self.do_diff(actual_stderr, stderr)
             self.fail_test(1, dump_stdio=False)
 
         if expected_duration is not None:
@@ -814,31 +814,10 @@ class Tester(TestCmd.TestCmd):
             print(actual)
             self.fail_test(1)
 
-    def maybe_do_diff(self, actual, expected, result=None):
-        if os.environ.get("DO_DIFF"):
-            e = tempfile.mktemp("expected")
-            a = tempfile.mktemp("actual")
-            f = open(e, "w")
-            f.write(expected)
-            f.close()
-            f = open(a, "w")
-            f.write(actual)
-            f.close()
-            print("DIFFERENCE")
-            # Current diff should return 1 to indicate 'different input files'
-            # but some older diff versions may return 0 and depending on the
-            # exact Python/OS platform version, os.system() call may gobble up
-            # the external process's return code and return 0 itself.
-            if os.system('diff -u "%s" "%s"' % (e, a)) not in [0, 1]:
-                print('Unable to compute difference: diff -u "%s" "%s"' % (e, a
-                    ))
-            os.unlink(e)
-            os.unlink(a)
-        elif type(result) is TestCmd.MatchError:
-            print(result.message)
-        else:
-            print("Set environmental variable 'DO_DIFF' to examine the "
-                "difference.")
+    def do_diff(self, actual, expected):
+        actual = actual.splitlines(keepends=True)
+        expected = expected.splitlines(keepends=True)
+        annotation("DIFFERENCE", "".join(ndiff(actual, expected)))
 
     # Internal methods.
     def adjust_lib_name(self, name):
