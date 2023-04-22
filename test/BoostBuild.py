@@ -353,6 +353,9 @@ class Tester(TestCmd.TestCmd):
     def is_implib_expected(self):
         return self.target_os in ["windows", "cygwin"] and not self.toolset.startswith("clang-linux")
 
+    def is_pdb_expected(self):
+        return self.toolset == "msvc" or "-win" in self.toolset
+
     #
     # Methods that change the working directory's content.
     #
@@ -568,8 +571,6 @@ class Tester(TestCmd.TestCmd):
                     expected_duration))
                 self.fail_test(1, dump_stdio=False)
 
-        self.__ignore_junk()
-
     def glob_file(self, name):
         name = self.adjust_name(name)
         result = None
@@ -771,6 +772,7 @@ class Tester(TestCmd.TestCmd):
         self.ignore("*.dSYM/*")
 
     def expect_nothing_more(self):
+        self.__ignore_junk()
         if not self.unexpected_difference.empty():
             annotation("failure", "Unexpected changes found")
             output = StringIO()
