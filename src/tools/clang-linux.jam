@@ -36,7 +36,6 @@ toolset.inherit-flags clang-linux : gcc
     <lto>on/<lto-mode>full
     <lto>on/<lto-mode>fat
   : INCLUDE-GCH
-    .IMPLIB-COMMAND
   ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
