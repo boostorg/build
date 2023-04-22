@@ -584,7 +584,18 @@ class generator
                 $(project) : $(a) ] ;
         }
 
+        targets += [ additional-targets-produced $(sources) : $(property-set)
+                   : $(project) $(name) $(a) : $(targets) ] ;
+
         return [ sequence.transform virtual-target.register : $(targets) ] ;
+    }
+
+    # Hook to produce additional targets for cases which could not be (easily)
+    # solved by registering multiple constrained generators.
+    #
+    rule additional-targets-produced ( sources + : property-set
+                                     : project name action : targets + )
+    {
     }
 
     # Attempts to convert 'sources' to targets of types that this generator can

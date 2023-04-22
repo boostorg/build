@@ -7,6 +7,8 @@
 
 import BoostBuild
 
+import re
+from functools import reduce
 
 ###############################################################################
 #
@@ -79,24 +81,26 @@ stage c : a ;
 
     t.write("a.cpp", """\
 int main() {}
-#ifdef _MSC_VER
-__declspec (dllexport) void x () {}
-#endif
 """)
 
-    file_list = (
-        BoostBuild.List("bin/$toolset/debug*/a_ds.exe") +
-        BoostBuild.List("bin/$toolset/debug*/b_ds.dll") +
-        BoostBuild.List("c/a_ds.exe") +
-        BoostBuild.List("bin/$toolset/release*/a_rs.exe") +
-        BoostBuild.List("bin/$toolset/release*/b_rs.dll") +
-        BoostBuild.List("c/a_rs.exe") +
-        BoostBuild.List("bin/$toolset/debug*/a_dt.exe") +
-        BoostBuild.List("bin/$toolset/debug*/b_dt.lib") +
-        BoostBuild.List("c/a_dt.exe") +
-        BoostBuild.List("bin/$toolset/release*/a_rt.exe") +
-        BoostBuild.List("bin/$toolset/release*/b_rt.lib") +
-        BoostBuild.List("c/a_rt.exe"))
+    file_list = {
+        "bin/$toolset/debug*/a_ds.exe",
+        "bin/$toolset/debug*/b_ds.dll",
+        "c/a_ds.exe",
+        "bin/$toolset/release*/a_rs.exe",
+        "bin/$toolset/release*/b_rs.dll",
+        "c/a_rs.exe",
+        "bin/$toolset/debug*/a_dt.exe",
+        "bin/$toolset/debug*/b_dt.lib",
+        "c/a_dt.exe",
+        "bin/$toolset/release*/a_rt.exe",
+        "bin/$toolset/release*/b_rt.lib",
+        "c/a_rt.exe",
+    }
+    if t.is_pdb_expected():
+        file_list |= {re.sub(r'(_\w*d\w*)\.(exe|dll)$', r'\1.pdb', file)
+                      for file in file_list}
+    file_list = list(reduce(lambda x, y: x+y, map(BoostBuild.List, file_list)))
 
     variants = ["debug", "release", "link=static,shared"]
 
