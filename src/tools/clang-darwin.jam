@@ -70,21 +70,3 @@ rule get-short-version ( command-string )
     import clang-linux ;
     return [ clang-linux.get-short-version $(command-string) ] ;
 }
-
-SPACE = " " ;
-
-# Declare actions for linking
-rule link ( targets * : sources * : properties * )
-{
-  SPACE on $(targets) = " " ;
-}
-
-actions link bind LIBRARIES
-{
-    "$(CONFIG_COMMAND)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" $(START-GROUP) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS)
-}
-
-actions link.dll bind LIBRARIES
-{
-    "$(CONFIG_COMMAND)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" -single_module -dynamiclib -install_name "@rpath/$(<[1]:D=)" "$(>)"  "$(LIBRARIES)" $(START-GROUP) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS)
-}
