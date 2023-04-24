@@ -67,9 +67,11 @@ def expand_properties(properties, toolset):
         result += ["target-os=" + default_target_os]
     if not has_property("windows-api", properties):
         result += ["windows-api=desktop"]
+    if get_target_os(properties) == "windows":
+        result += ["threadapi=win32"]
     return result
 
-def compute_path(properties, target_type):
+def compute_path(properties, toolset, target_type):
     path = ""
     if "variant=release" in properties:
         path += "/release"
@@ -93,6 +95,8 @@ def compute_path(properties, target_type):
         path += "/strip-on"
     if get_target_os(properties) != default_target_os:
         path += "/target-os-" + get_target_os(properties)
+    if "threadapi=win32" in properties and (toolset != "msvc" or "-win" in toolset):
+        path += "/threadapi-win32"
     if "threading=multi" in properties:
       if "runtime-link=static" not in properties: # TODO: I don't think this it's intended to work this way though
         path += "/threading-multi"
@@ -114,7 +118,7 @@ def test_toolset(toolset, version, property_sets):
         properties = adjust_properties(properties)
         expanded_properties = expand_properties(properties, toolset)
         def path(t):
-            return toolset.split("-")[0] + "-*" + version + compute_path(expanded_properties, t)
+            return toolset.split("-")[0] + "-*" + version + compute_path(expanded_properties, toolset, t)
         os.environ["B2_PROPERTIES"] = " ".join(expanded_properties)
         t.run_build_system(["--user-config=", "-sPYTHON_CMD=%s" % sys.executable] + properties)
         t.expect_addition("bin/%s/lib.obj" % (path("obj")))
