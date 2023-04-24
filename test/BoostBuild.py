@@ -351,7 +351,7 @@ class Tester(TestCmd.TestCmd):
         prepare_prefixes_and_suffixes(toolset, target_os)
 
     def is_implib_expected(self):
-        return self.target_os in ["windows", "cygwin"] and not self.toolset.startswith("clang-linux")
+        return self.target_os in ["windows", "cygwin"] and not re.match(r'^clang(-linux)?(-[\d.]+)?$', self.toolset)
 
     def is_pdb_expected(self):
         return self.toolset == "msvc" or "-win" in self.toolset

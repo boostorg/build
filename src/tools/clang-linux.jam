@@ -32,7 +32,6 @@ toolset.inherit-generators clang-linux
 toolset.inherit-rules clang-linux : gcc ;
 toolset.inherit-flags clang-linux : gcc
   : <inlining>full
-    <threading>multi/<target-os>windows
     <lto>on/<lto-mode>full
     <lto>on/<lto-mode>fat
   : INCLUDE-GCH
@@ -117,9 +116,6 @@ toolset.flags clang-linux.compile INCLUDE-PCH : -include-pch ;
 # note: clang silently ignores some of these inlining options
 # For clang, 'on' and 'full' are identical.
 toolset.flags clang-linux.compile OPTIONS <inlining>full : -Wno-inline ;
-
-toolset.flags clang-linux.compile OPTIONS <threading>multi/<target-os>windows : -pthread ;
-toolset.flags clang-linux.link OPTIONS <threading>multi/<target-os>windows : -pthread ;
 
 # LTO
 toolset.flags clang-linux.compile OPTIONS <lto>on/<lto-mode>thin : -flto=thin ;
