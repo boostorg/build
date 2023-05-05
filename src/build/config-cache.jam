@@ -22,7 +22,7 @@ rule set ( name : value * )
 
 rule save ( )
 {
-    if $(.cache-file)
+    if $(.cache-file) && $(.all-vars)
     {
         local cache-file-native = [ path.native $(.cache-file) ] ;
         local target = <new-cache-file>$(cache-file-native) ;
@@ -41,7 +41,8 @@ rule save ( )
         FILE_CONTENTS on $(target) = $(contents) ;
         ALWAYS $(target) ;
         config-cache.write $(target) ;
-        UPDATE_NOW $(target) : [ modules.peek configure : .log-fd ] : ignore-minus-n ;
+        import configure ;
+        UPDATE_NOW $(target) : [ configure.get-log-fd ] : ignore-minus-n ;
         import common ;
         common.Clean clean-all : $(target) ;
     }
@@ -71,7 +72,8 @@ rule load ( cache-file )
     {
         FILE_CONTENTS on <old-cache-file>$(cache-file) = "" ;
         config-cache.write <old-cache-file>$(cache-file) ;
-        UPDATE_NOW <old-cache-file>$(cache-file) : [ modules.peek configure : .log-fd ] ;
+        import configure ;
+        UPDATE_NOW <old-cache-file>$(cache-file) : [ configure.get-log-fd ] ;
         include <old-cache-file>$(cache-file) ;
     }
     .cache-file = $(cache-file) ;

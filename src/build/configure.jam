@@ -225,7 +225,7 @@ rule try-build ( targets * : ps : what : retry ? )
     {
         x = [ PAD "    - $(what)" : $(.width) ] ;
         if [ UPDATE_NOW $(jam-targets) :
-             $(.log-fd) : ignore-minus-n : ignore-minus-q ]
+             [ get-log-fd ] : ignore-minus-n : ignore-minus-q ]
         {
             .$(what)-supported.$(ps) = yes ;
             result = true ;
@@ -310,7 +310,7 @@ rule try-find-build ( ps : what : * )
                 jam-targets += [ $(t).actualize ] ;
             }
             if [ UPDATE_NOW $(jam-targets) :
-                $(.log-fd) : ignore-minus-n : ignore-minus-q ]
+                [ get-log-fd ] : ignore-minus-n : ignore-minus-q ]
             {
                 result = [ CALC $(i) - 2 ] ;
                 log-check-result "$(x) : $($(i)[1])" "$(cache-min:J= )" ;
@@ -476,12 +476,26 @@ rule find-builds ( what : properties * : * )
 #
 rule set-log-file ( log-file )
 {
-    path.makedirs [ path.parent $(log-file) ] ;
-    .log-fd = [ FILE_OPEN [ path.native $(log-file) ] : "w" ] ;
+    .log-file = $(log-file) ;
+}
+
+rule get-log-fd ( )
+{
+    if $(.log-fd) {
+        return $(.log-fd) ;
+    }
+    if ! $(.log-file) {
+        import errors : error ;
+        error "Log file was not set" ;
+    }
+
+    path.makedirs [ path.parent $(.log-file) ] ;
+    .log-fd = [ FILE_OPEN [ path.native $(.log-file) ] : "w" ] ;
     if ! $(.log-fd)
     {
-        ECHO "warning:" failed to open log file $(log-file) for writing ;
+        ECHO "warning:" failed to open log file $(.log-file) for writing ;
     }
+    return $(.log-fd) ;
 }
 
 
