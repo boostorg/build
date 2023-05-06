@@ -1407,6 +1407,12 @@ class basic-target : abstract-target
                     local result = [ construct $(self.name) : $(source-targets) :
                         $(rproperties) ] ;
 
+                    if $(result) && [ $(result[1]).get <build> ] = no
+                    {
+                        result = ;
+                        skip = true ;
+                    }
+
                     if $(result)
                     {
                         local gur = $(result[1]) ;
