@@ -1819,10 +1819,17 @@ class msvc-linking-generator : linking-generator
                                      : project name action : targets + )
     {
         local result ;
+        local name-main = [ $(targets[1]).name ] ;
 
         if [ $(property-set).get <debug-symbols> ] = "on"
         {
-            result += [ class.new file-target $(name)
+            # We force the exact name on PDB. The reason is tagging -- the
+            # tag rule may reasonably special case some target types, like
+            # SHARED_LIB. The tag rule will not catch PDBs, and it cannot
+            # even easily figure out if a PDB is paired with a SHARED_LIB,
+            # EXE or something else. Because PDBs always get the same name
+            # as the main target, with .pdb as extension, just force it.
+            result += [ class.new file-target $(name-main:S=.pdb) exact
                 : PDB : $(project) : $(action) ] ;
         }
 
@@ -1832,7 +1839,6 @@ class msvc-linking-generator : linking-generator
             # name of the main target, including extension, e.g.
             # a.exe.manifest. We use the 'exact' name to achieve this
             # effect.
-            local name-main = [ $(targets[1]).name ] ;
             result += [ class.new file-target $(name-main).manifest exact
                 : MANIFEST : $(project) : $(action) ] ;
         }

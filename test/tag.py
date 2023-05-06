@@ -66,6 +66,12 @@ rule tag ( name : type ? : property-set )
         case shared : tags += s ;
         case static : tags += t ;
     }
+    switch $(type)
+    {
+        case SHARED_LIB : tags += _dll ;
+        case STATIC_LIB : tags += _lib ;
+        case EXE        : tags += _exe ;
+    }
     if $(tags)
     {
         return [ virtual-target.add-prefix-and-suffix $(name)_$(tags:J="")
@@ -84,25 +90,25 @@ int main() {}
 """)
 
     file_list = {
-        "bin/$toolset/debug*/a_ds.exe",
-        "bin/$toolset/debug*/b_ds.dll",
-        "c/a_ds.exe",
-        "bin/$toolset/release*/a_rs.exe",
-        "bin/$toolset/release*/b_rs.dll",
-        "c/a_rs.exe",
-        "bin/$toolset/debug*/a_dt.exe",
-        "bin/$toolset/debug*/b_dt.lib",
-        "c/a_dt.exe",
-        "bin/$toolset/release*/a_rt.exe",
-        "bin/$toolset/release*/b_rt.lib",
-        "c/a_rt.exe",
+        "bin/$toolset/debug*/a_ds_exe.exe",
+        "bin/$toolset/debug*/b_ds_dll.dll",
+        "c/a_ds_exe.exe",
+        "bin/$toolset/release*/a_rs_exe.exe",
+        "bin/$toolset/release*/b_rs_dll.dll",
+        "c/a_rs_exe.exe",
+        "bin/$toolset/debug*/a_dt_exe.exe",
+        "bin/$toolset/debug*/b_dt_lib.lib",
+        "c/a_dt_exe.exe",
+        "bin/$toolset/release*/a_rt_exe.exe",
+        "bin/$toolset/release*/b_rt_lib.lib",
+        "c/a_rt_exe.exe",
     }
     if t.is_pdb_expected():
         file_list |= {re.sub(r'(_\w*d\w*)\.(exe|dll)$', r'\1.pdb', file)
                       for file in file_list}
     file_list = list(reduce(lambda x, y: x+y, map(BoostBuild.List, file_list)))
 
-    variants = ["debug", "release", "link=static,shared"]
+    variants = ["debug", "release", "link=static,shared", "debug-symbols=on"]
 
     t.run_build_system(variants)
     t.expect_addition(file_list)
