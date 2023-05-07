@@ -275,7 +275,7 @@ class project-target : abstract-target
             targets += $(g[2-]) ;
         }
         targets.decrease-indent ;
-        return $(usage-requirements) [ sequence.unique $(targets) ] ;
+        return $(usage-requirements) [ sequence.unique $(targets) : stable ] ;
     }
 
     # Computes and returns a list of abstract-target instances which must be
@@ -809,7 +809,7 @@ class main-target : abstract-target
             }
         }
         end-building $(__name__) ;
-        return $(usage-requirements) [ sequence.unique $(result) ] ;
+        return $(usage-requirements) [ sequence.unique $(result) : stable ] ;
     }
 
     # Generates the main target with the given property set and returns a list
