@@ -58,7 +58,7 @@ LIST * b2::startup::builtin_boost_build(FRAME * frame, int flags)
 
 extern char const * saved_argv0;
 
-void bootstrap_dirscan(std::vector<std::string> * dirs,
+void bootstrap_dirscan(void * dirs,
 	OBJECT * path,
 	int found,
 	timestamp const * const)
@@ -67,7 +67,7 @@ void bootstrap_dirscan(std::vector<std::string> * dirs,
 	_pathname p(object_str(path));
 	std::string basename = p.base() + p.suffix();
 	if (basename == "." || basename == "..") return;
-	dirs->push_back(object_str(path));
+	static_cast<std::vector<std::string> *>(dirs)->push_back(object_str(path));
 }
 
 bool b2::startup::bootstrap(FRAME * frame)
@@ -287,7 +287,7 @@ bool b2::startup::bootstrap(FRAME * frame)
 	std::string buildsystem_dir
 		= b2::paths::normalize(buildsystem_file + "/..");
 	std::vector<std::string> buildsystem_subdirs;
-	file_dirscan(value_ref(buildsystem_dir), (scanback)&bootstrap_dirscan,
+	file_dirscan(value_ref(buildsystem_dir), &bootstrap_dirscan,
 		&buildsystem_subdirs);
 	b2::jam::variable boost_build_path_v("BOOST_BUILD_PATH");
 	for (auto subdir : buildsystem_subdirs) boost_build_path_v += subdir;
