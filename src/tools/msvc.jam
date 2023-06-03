@@ -1075,6 +1075,10 @@ local rule auto-detect-toolset-versions ( )
                     register-configuration $(i) : [ path.native $(vc-path[1]) ] ;
                 }
             }
+            else
+            {
+                register-configuration $(i) : [ default-path $(i) ] ;
+            }
         }
     }
 
