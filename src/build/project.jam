@@ -1266,8 +1266,9 @@ module project-rules
         import path ;
         local caller = [ CALLER_MODULE ] ;
         local location = [ project.attribute $(caller) location ] ;
-        modules.poke $(caller) : .used-projects : [ modules.peek $(caller) :
-            .used-projects ] $(id) [ path.root $(where) $(location) ] ;
+        where = [ path.root [ path.make $(where) ] $(location) ] ;
+        modules.poke $(caller) : .used-projects
+            : [ modules.peek $(caller) : .used-projects ] $(id) $(where) ;
     }
 
     rule build-project ( dir )
