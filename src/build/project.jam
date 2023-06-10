@@ -36,13 +36,16 @@
 
 import "class" : new ;
 import modules ;
+import os ;
 import path ;
 import print ;
 import property-set ;
+import regex ;
 import sequence ;
 
 
 .debug-loading = [ MATCH ^(--debug-loading)$ : [ modules.peek : ARGV ] ] ;
+.debug-project-search = [ MATCH ^(--debug-project-search)$ : [ modules.peek : ARGV ] ] ;
 
 
 # Loads the Jamfile at the given location. After loading, project global file
@@ -141,12 +144,42 @@ rule load-parent ( location )
 #
 rule find ( name : current-location )
 {
+    name = [ path.normalize-all $(name) ] ;
     local project-module ;
 
     # Try interpreting name as project id.
     if [ path.is-rooted $(name) ]
     {
         project-module = $($(name).jamfile-module) ;
+        if ! $(project-module)
+        {
+            # Not immediately found as a project. Try and search for a project
+            # we can import.
+            local root-and-jamfile = [ search $(name) ] ;
+            local root = $(root-and-jamfile[1]) ;
+            local jamfile = $(root-and-jamfile[2]) ;
+            if $(root)
+            {
+                local caller-project = [ CALLER_MODULE ] ;
+                local caller-module = [ $(caller-project).project-module ] ;
+                if $(jamfile)
+                {
+                    modules.call-in $(caller-module)
+                        : use-packages $(jamfile) ;
+                }
+                else
+                {
+                    if $(.debug-project-search)
+                    {
+                        ECHO Using project '$(name)' from '$(root)' ;
+                    }
+                    modules.call-in $(caller-module)
+                        : use-project $(name) : $(root) ;
+                    load-used-projects $(caller-module) ;
+                }
+            }
+            project-module = $($(name).jamfile-module) ;
+        }
     }
 
     if ! $(project-module)
@@ -174,6 +207,96 @@ rule find ( name : current-location )
     }
 
     return $(project-module) ;
+}
+
+
+B2_PROJECT_PATH = [ modules.peek : B2_PROJECT_PATH ]
+    [ regex.split-list
+        [ MATCH ^--project-search=(.*)$ : [ modules.peek : ARGV ] ]
+            : [ os.path-separator ] ] ;
+{
+    while $(B2_PROJECT_PATH)
+    {
+        local root = $(B2_PROJECT_PATH[1]) ;
+        local path = [ path.make $(B2_PROJECT_PATH[2]) ] ;
+        B2_PROJECT_PATH = $(B2_PROJECT_PATH[3-]) ;
+        if $(root) && $(path)
+        {
+            path = [ path.root $(path) [ path.pwd ] ] ;
+            .search-path.$(root) += $(path) ;
+        }
+    }
+}
+
+
+rule add-project-search ( root : search-paths + )
+{
+    for local search-path in $(search-paths)
+    {
+        if ! [ path.is-rooted $(search-path) ]
+        {
+            local prj = [ current ] ;
+            search-path = [ path.join [ $(prj).location ] $(search-path) ] ;
+            search-path = [ path.root $(search-path) [ path.pwd ] ] ;
+        }
+        .search-path.$(root) += $(search-path) ;
+    }
+}
+
+
+local rule search ( name )
+{
+    if [ path.is-rooted $(name) ]
+    {
+        # Check for a regular B2 project relative to the search path and
+        # project subdir.
+        for local dir in "$(.search-path./)"
+        {
+            dir = $(dir)$(name) ;
+            local jamfile = [ path.glob $(dir) : $(JAMROOT) $(JAMFILE) ] ;
+            if $(jamfile)
+            {
+                return $(dir) ;
+            }
+        }
+        # Do searching for various dir names and jamfiles based on the built
+        # basename <a>_<b>_<c>[.jam].
+        local base = [ path.basename $(name) ] ;
+        local root = [ path.parent $(name) ] ;
+        while $(base)
+        {
+            # Check for a regular B2 project in the search path and subdir base.
+            for local dir in $(.search-path.$(root))
+            {
+                dir = [ path.join $(dir) $(base) ] ;
+                local jamfile = [ path.glob $(dir) : $(JAMROOT) $(JAMFILE) ] ;
+                if $(jamfile)
+                {
+                    return $(dir) ;
+                }
+            }
+            # Check for a <base>.jam to include.
+            for local dir in $(.search-path.$(root))
+            {
+                local jamfile = [ path.glob $(dir) : $(base:L).jam ] ;
+                if $(jamfile)
+                {
+                    return $(dir) $(jamfile[1]) ;
+                }
+            }
+            if [ path.has-parent $(root) ]
+            {
+                base = [ path.basename $(root) ] $(base) ;
+                base = $(base:L:J=_) ;
+                root = [ path.parent $(root) ] ;
+            }
+            else
+            {
+                base = ;
+                root = ;
+            }
+        }
+    }
 }
 
 
@@ -322,7 +445,7 @@ rule load-package-manager-build-info ( )
         if $(pm) && ! ( $(pm-tag) in $(.package-manager-build-info) )
         {
             .package-manager-build-info += $(pm-tag) ;
-            # We found a matching builf info to load, but we have to be careful
+            # We found a matching build info to load, but we have to be careful
             # as the loading can affect the current project since it can define
             # sub-projects. Hence we save and restore the current project.
             local saved-project = $(.current-project) ;
@@ -619,6 +742,9 @@ rule initialize (
             {
                 .first-project-root = $(module-name) ;
             }
+            # Set the default build-dir so that we don't get build results
+            # spread out everywhere.
+            # $(attributes).set build-dir : ".b2/bin" ;
         }
 
         local parent ;
@@ -1417,5 +1543,13 @@ module project-rules
                 : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17) : $(18)
                 ] ;
         }
+    }
+
+    # Defines search paths for resolving global, i.e. rooted, project references.
+    rule project-search ( root : search-paths + )
+    {
+        import path ;
+        import project ;
+        project.add-project-search $(root) : $(search-paths) ;
     }
 }
