@@ -3,6 +3,9 @@
 
 == Version 4.10.0
 
+This release contains many bug fixes but along the way also cleanup and
+refactoring of many toolsets, thanks to Nikita.
+
 * *New*: Scan assembler files for C Preprocessor includes.
   -- _Nikita Kniazev_
 * Fix: Inherit generator overrides from a base toolset.
@@ -61,6 +64,9 @@
   -- _René Ferdinand Rivera Morell_
 * Fix msvc auto config version priority. Now msvc toolsets are configured in
   correct newest to oldest regardless of being found from the registry or not.
+  -- _René Ferdinand Rivera Morell_
+* *New*: Add support for automatic searching of external projects for global
+  target and project references.
   -- _René Ferdinand Rivera Morell_
 
 == Version 4.9.6
