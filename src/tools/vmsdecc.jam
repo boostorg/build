@@ -30,10 +30,6 @@ toolset.inherit-generators  vmsdecc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags vmsdecc : unix ;
 toolset.inherit-rules vmsdecc : unix ;
 
-generators.override vmsdecc.archive-generator : builtin.archive-generator ;
-generators.override vmsdecc.prebuilt : builtin.prebuilt ;
-generators.override vmsdecc.searched-lib-generator : searched-lib-generator ;
-
 type.set-generated-target-suffix EXE : <toolset>vmsdecc <target-os>vms : exe ;
 type.set-generated-target-suffix OBJ : <toolset>vmsdecc <target-os>vms : obj ;
 type.set-generated-target-suffix PREPROCESSED_C : <toolset>vmsdecc <target-os>vms : i ;
@@ -97,6 +93,9 @@ flags vmsdecc.compile OPTIONS <warnings>extra : /WARN=ENABLE=ALL ;
 flags vmsdecc.compile OPTIONS <warnings>pedantic : /WARN=ENABLE=ALL ;
 
 flags vmsdecc.compile.c++ OPTIONS <inlining>off : /OPT=NOINLINE ;
+
+flags vmsdecc.compile.c.preprocess OPTIONS <linemarkers>off : /NOLINE_DIRECTIVES ;
+flags vmsdecc.compile.c++.preprocess OPTIONS <linemarkers>off : /NOLINE_DIRECTIVES ;
 
 flags vmsdecc OPTIONS <address-model>32 : /POINTER=32 ;
 flags vmsdecc OPTIONS <address-model>64 : /POINTER=64 ; ## /POINTER=64=ARGV argv-64

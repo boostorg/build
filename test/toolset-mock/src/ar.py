@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # coding: utf-8
 #
 # Copyright 2017-2018 Steven Watanabe
@@ -20,8 +20,8 @@ command('ar', 'rsc', output_file('bin/intel-darwin-10.2/debug/link-static/target
 command('ar', 'rsc', output_file('bin/intel-darwin-10.2/debug/link-static/runtime-link-static/target-os-darwin/libl1.a'), input_file('bin/intel-darwin-10.2/debug/link-static/runtime-link-static/target-os-darwin/lib.o'))
 command('ar', 'rsc', output_file('bin/clang-linux-3.9.0/debug/link-static/libl1.a'), input_file('bin/clang-linux-3.9.0/debug/link-static/lib.o'))
 command('ar', 'rsc', output_file('bin/clang-linux-3.9.0/debug/link-static/runtime-link-static/libl1.a'), input_file('bin/clang-linux-3.9.0/debug/link-static/runtime-link-static/lib.o'))
-command('ar', 'rcu', output_file('bin/clang-vxworks-4.0.1/debug/link-static/libl1.a'), input_file('bin/clang-vxworks-4.0.1/debug/link-static/lib.o'))
-command('ar', 'rcu', output_file('bin/clang-vxworks-4.0.1/debug/link-static/runtime-link-static/libl1.a'), input_file('bin/clang-vxworks-4.0.1/debug/link-static/runtime-link-static/lib.o'))
+command('ar', 'rsc', output_file('bin/clang-vxworks-4.0.1/debug/link-static/libl1.a'), input_file('bin/clang-vxworks-4.0.1/debug/link-static/lib.o'))
+command('ar', 'rsc', output_file('bin/clang-vxworks-4.0.1/debug/link-static/runtime-link-static/libl1.a'), input_file('bin/clang-vxworks-4.0.1/debug/link-static/runtime-link-static/lib.o'))
 command('ar', 'rsc', output_file('bin/clang-linux-3.9.0/debug/link-static/target-os-windows/libl1.lib'), input_file('bin/clang-linux-3.9.0/debug/link-static/target-os-windows/lib.obj'))
 
 main()

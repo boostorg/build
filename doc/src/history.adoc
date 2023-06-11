@@ -1,6 +1,74 @@
 [[b2.history]]
 = History
 
+== Version 4.10.0
+
+This release contains many bug fixes but along the way also cleanup and
+refactoring of many toolsets, thanks to Nikita.
+
+* *New*: Scan assembler files for C Preprocessor includes.
+  -- _Nikita Kniazev_
+* Fix: Inherit generator overrides from a base toolset.
+  -- _Nikita Kniazev_
+* *New*: Add linemarkers feature that on preprocessing targets changes behavior to
+  emit/omit line directives like `+#line+` and `+#<linenum>+`.
+  -- _Nikita Kniazev_
+* Fix compiler name for QNX.
+  -- _James Choi_
+* Fix openssl name handling.
+  -- _Dmitry Arkhipov_
+* Fix clang-win assembler path deduction.
+  -- _Nikita Kniazev_
+* Fix toolset sub-feature requirements inheritance.
+  -- _Nikita Kniazev_
+* Unify compile and link of clang-linux toolset with gcc toolset.
+  -- _Nikita Kniazev_
+* Fix same directory pch header generation for msvc toolset.
+  -- _Nikita Kniazev_
+* Implement `--durations` which reports top targets by execution time.
+  -- _Nikita Kniazev_
+* Change clang-darwin to inherit from clang-linux and unify compile commands.
+  -- _Nikita Kniazev_
+* Fix clang-linux to not override RPATH_OPTION.
+  -- _Nikita Kniazev_
+* Fix inadvertently running configuration checks that shouldn't (as reported by
+  Alexander Grund). By changing `<build>no` conditionals evaluation to short
+  circuit.
+  -- _Nikita Kniazev_
+* Fix same toolset overrides (inherit-overrides).
+  -- _Nikita Kniazev_
+* *New*: Add using the C processors for assembly source files.
+  -- _Nikita Kniazev_
+* Many improvements and cleanup of internal testing.
+  -- _Nikita Kniazev_
+* Unify gcc and clang-linux soname option handling and disable it on Windows.
+  -- _Nikita Kniazev_
+* Unity gcc/mingw linking of shared and import libs.
+  -- _Nikita Kniazev_
+* Fix pdb generation ordering and naming issues.
+  -- _Nikita Kniazev_
+* Unify clang-darwin linking with gcc.
+  -- _Nikita Kniazev_
+* Fix mingw/msys/cygwin, winthreads/pthread inconsistencies to correct compiler
+  flags.
+  -- _Nikita Kniazev_
+* Unify clang-vxworks by inheriting from clang-linux.
+  -- _Nikita Kniazev_
+* Don't store empty config cache and log.
+  -- _Nikita Kniazev_
+* Fix generator custom rule name inheritance. This affects cygwin/mingw linking.
+  -- _Nikita Kniazev_
+* Fix testing.execute=off to correct run-fail behavior.
+  -- _Nikita Kniazev_
+* Fix use-project with native paths.
+  -- _René Ferdinand Rivera Morell_
+* Fix msvc auto config version priority. Now msvc toolsets are configured in
+  correct newest to oldest regardless of being found from the registry or not.
+  -- _René Ferdinand Rivera Morell_
+* *New*: Add support for automatic searching of external projects for global
+  target and project references.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.9.6
 
 * Fix version check for winsdk on `clang-win` toolset.

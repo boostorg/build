@@ -119,6 +119,9 @@ import virtual-target ;
 import errors ;
 
 
+# Used in actions for multi argument options
+_ = " " ;
+
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
     .debug-configuration = true ;
@@ -130,9 +133,6 @@ feature.extend toolset : gcc ;
 toolset.inherit-generators gcc : unix : unix.link unix.link.dll ;
 toolset.inherit-flags gcc : unix ;
 toolset.inherit-rules gcc : unix ;
-
-generators.override gcc.prebuilt : builtin.prebuilt ;
-generators.override gcc.searched-lib-generator : searched-lib-generator ;
 
 # Make gcc toolset object files use the "o" suffix on all platforms.
 type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
@@ -385,8 +385,10 @@ local rule compile-link-flags ( * )
         }
     }
 
-    threading-flags <target-os>windows : -mthreads ;
-    threading-flags <target-os>cygwin  : -mthreads ;
+    # -mthreads is obsolete at least since mingw-w64 fork ~2011 and is not presented in clang
+    threading-flags <target-os>windows/<toolset>gcc : -mthreads ;
+    threading-flags <target-os>windows/<threadapi>pthread : -pthread ;
+    threading-flags <target-os>cygwin/<threadapi>pthread : -pthread ;
     threading-flags <target-os>solaris  : -pthreads : rt ;
     threading-flags <target-os>qnx : -pthread ;
 
@@ -452,7 +454,7 @@ generators.register-c-compiler gcc.compile.c++.preprocess : CPP : PREPROCESSED_C
 generators.register-c-compiler gcc.compile.c.preprocess   : C   : PREPROCESSED_C   : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
-generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.asm : ASM_CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.m   : OBJECTIVE_C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.mm  : OBJECTIVE_CPP : OBJ : <toolset>gcc ;
 
@@ -511,27 +513,27 @@ rule compile.fortran ( targets * : sources * : properties * )
 
 actions compile.c++ bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>:T)"
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) $(INCLUDE-GCH)$(_)"$(PCH_FILE:S=)" $(INCLUDE-PCH)$(_)"$(PCH_FILE)" -I"$(INCLUDES)" -include$(_)"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>:T)"
 }
 
 actions compile.c bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>:T)"
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) $(INCLUDE-GCH)$(_)"$(PCH_FILE:S=)" $(INCLUDE-PCH)$(_)"$(PCH_FILE)" -I"$(INCLUDES)" -include$(_)"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>:T)"
 }
 
 actions compile.c++.preprocess bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" "$(>:T)" -E >"$(<)"
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) $(INCLUDE-GCH)$(_)"$(PCH_FILE:S=)" $(INCLUDE-PCH)$(_)"$(PCH_FILE)" -I"$(INCLUDES)" -include$(_)"$(FORCE_INCLUDES)" "$(>:T)" -E >"$(<)"
 }
 
 actions compile.c.preprocess bind PCH_FILE
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" "$(>:T)" -E >$(<)
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) $(INCLUDE-GCH)$(_)"$(PCH_FILE:S=)" $(INCLUDE-PCH)$(_)"$(PCH_FILE)" -I"$(INCLUDES)" -include$(_)"$(FORCE_INCLUDES)" "$(>:T)" -E >$(<)
 }
 
 actions compile.fortran
 {
-    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -include"$(PCH_FILE:S=)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) $(INCLUDE-GCH)$(_)"$(PCH_FILE:S=)" $(INCLUDE-PCH)$(_)"$(PCH_FILE)" -I"$(INCLUDES)" -include$(_)"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 rule compile.asm ( targets * : sources * : properties * )
@@ -608,15 +610,16 @@ generators.override gcc.compile.c.pch   : pch.default-c-pch-generator   ;
 generators.override gcc.compile.c++.pch : pch.default-cpp-pch-generator ;
 
 toolset.flags gcc.compile PCH_FILE <pch>on : <pch-file> ;
+toolset.flags gcc.compile INCLUDE-GCH : -include ;
 
 actions compile.c++.pch
 {
-    "$(CONFIG_COMMAND)" -x c++-header -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>:T)"
+    "$(CONFIG_COMMAND)" -x c++-header -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include$(_)"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>:T)"
 }
 
 actions compile.c.pch
 {
-    "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>:T)"
+    "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include$(_)"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>:T)"
 }
 
 ###
@@ -652,6 +655,9 @@ toolset.flags gcc.compile OPTIONS <local-visibility>global : -fvisibility=defaul
 
 toolset.flags gcc.compile.c++ OPTIONS <exception-handling>off : -fno-exceptions ;
 toolset.flags gcc.compile.c++ OPTIONS <rtti>off : -fno-rtti ;
+
+toolset.flags gcc.compile.c.preprocess OPTIONS <linemarkers>off : -P ;
+toolset.flags gcc.compile.c++.preprocess OPTIONS <linemarkers>off : -P ;
 
 # sanitizers
 toolset.flags gcc.compile.c++ OPTIONS <address-sanitizer>on : -fsanitize=address -fno-omit-frame-pointer ;
@@ -758,14 +764,14 @@ g = [ new gcc-linking-generator gcc.mingw.link
       : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
       : EXE
       : <toolset>gcc <target-os>windows ] ;
-$(g).set-rule-name gcc.link.mingw ;
+$(g).set-rule-name gcc.link ;
 generators.register $(g) ;
 
 g = [ new gcc-linking-generator gcc.mingw.link.dll
       : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
-      : IMPORT_LIB SHARED_LIB
+      : SHARED_LIB IMPORT_LIB
       : <toolset>gcc <target-os>windows ] ;
-$(g).set-rule-name gcc.link.dll.mingw ;
+$(g).set-rule-name gcc.link.dll ;
 generators.register $(g) ;
 
 generators.register
@@ -795,7 +801,7 @@ generators.register $(g) ;
 
 g = [ new gcc-linking-generator gcc.cygwin.link.dll
       : OBJ SEARCHED_LIB STATIC_LIB IMPORT_LIB
-      : IMPORT_LIB SHARED_LIB
+      : SHARED_LIB IMPORT_LIB
       : <toolset>gcc <target-os>cygwin ] ;
 $(g).set-rule-name gcc.link.dll ;
 generators.register $(g) ;
@@ -830,9 +836,6 @@ toolset.flags gcc.link OPTIONS <undefined-sanitizer>on : -fsanitize=undefined -f
 toolset.flags gcc.link OPTIONS <undefined-sanitizer>norecover : -fsanitize=undefined -fno-sanitize-recover=undefined -fno-omit-frame-pointer ;
 
 toolset.flags gcc.link OPTIONS <coverage>on : --coverage ;
-
-toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>windows : "-Wl,--out-implib," ;
-toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib," ;
 
 # target specific link flags
 {
@@ -871,6 +874,10 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     # This does not support -R.
     toolset.flags gcc.link RPATH_OPTION <target-os>darwin : -rpath ;
     # -rpath-link is not supported at all.
+    toolset.flags gcc.link SHARED_OPTION <target-os>darwin : -dynamiclib -single_module ;
+    toolset.flags gcc.link HAVE_SONAME <target-os>darwin : "" ;
+    toolset.flags gcc.link SONAME_OPTION <target-os>darwin : -install_name ;
+    toolset.flags gcc.link SONAME_PREFIX <target-os>darwin : @rpath/ ;
 
     # See note [1]
     toolset.flags gcc.link OPTIONS <target-os>darwin/<runtime-link>static : -static ;
@@ -943,8 +950,9 @@ toolset.flags gcc.link.dll .IMPLIB-COMMAND <target-os>cygwin : "-Wl,--out-implib
     toolset.flags gcc.link FINDLIBS-SA-PFX <target-os>windows/<runtime-link>static : -Wl,-Bdynamic ;
     toolset.flags gcc.link OPTIONS <target-os>windows/<runtime-link>static : -Wl,-Bstatic ;
 
-    toolset.flags gcc.link HAVE_SONAME <target-os>$(generic-os) : "" ;
-    toolset.flags gcc.link SONAME_OPTION <target-os>$(generic-os) : -h ;
+    local soname-os = [ set.difference $(generic-os) : windows ] ;
+    toolset.flags gcc.link HAVE_SONAME <target-os>$(soname-os) : "" ;
+    toolset.flags gcc.link SONAME_OPTION <target-os>$(soname-os) : -soname ;
 
     # See note [1]
     toolset.flags gcc.link OPTIONS <target-os>$(generic-os)/<runtime-link>static : -static ;
@@ -1025,34 +1033,14 @@ rule link.dll ( targets * : sources * : properties * )
     quote-rpath $(targets) ;
 }
 
-rule link.mingw ( targets * : sources * : properties * )
-{
-    SPACE on $(targets) = " " ;
-}
-
-rule link.dll.mingw ( targets * : sources * : properties * )
-{
-    SPACE on $(targets) = " " ;
-}
-
-actions link.mingw bind LIBRARIES
-{
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -o "$(<)" @($(<:T).rsp:O=FC:<=@":>=":E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
-}
-
-actions link.dll.mingw bind LIBRARIES
-{
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" -shared @($(<[-1]:T).rsp:O=FC:<=@":>=":E=$(START-GROUP) "$(>:T)" "$(LIBRARIES:T)" $(FINDLIBS-ST-PFX:T) -l$(FINDLIBS-ST:T) $(FINDLIBS-SA-PFX:T) -l$(FINDLIBS-SA:T) $(END-GROUP)) $(OPTIONS) $(USER_OPTIONS)
-}
-
 actions link bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>:T)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" @($(<[1]:T).rsp:O=FC:<=@":>=":E=-L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) -Wl,-rpath-link$(SPACE)-Wl,"$(RPATH_LINK)" -o "$(<)" $(START-GROUP) "$(>:T)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS))
 }
 
 actions link.dll bind LIBRARIES
 {
-    "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) "$(.IMPLIB-COMMAND)$(<[1])" -o "$(<[-1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,$(<[-1]:D=) -shared $(START-GROUP) "$(>:T)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS)
+    "$(CONFIG_COMMAND)" @($(<[1]:T).rsp:O=FC:<=@":>=":E=-L"$(LINKPATH)" -Wl,$(RPATH_OPTION:E=-R)$(SPACE)-Wl,$(RPATH) -Wl,$(IMPLIB_OPTION:E=--out-implib),"$(<[2])" -o "$(<[1])" $(HAVE_SONAME)-Wl,$(SONAME_OPTION)$(SPACE)-Wl,"$(SONAME_PREFIX:E=)$(<[1]:D=)" $(SHARED_OPTION:E=-shared) $(START-GROUP) "$(>:T)" "$(LIBRARIES)" $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) $(USER_OPTIONS))
 }
 
 ###

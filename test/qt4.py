@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # (c) Copyright Juergen Hunold 2008
 # Use, modification, and distribution are subject to the

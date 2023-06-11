@@ -323,6 +323,9 @@ toolset.flags cray.compile OPTIONS <vectorize>off     : -h vector0 ;
 toolset.flags cray.compile OPTIONS <vectorize>on                   ; # Blank. CCE vectorizes by default.
 toolset.flags cray.compile OPTIONS <vectorize>full    : -h vector3 ;
 
+toolset.flags cray.compile.c.preprocess OPTIONS <linemarkers>off : -P ;
+toolset.flags cray.compile.c++.preprocess OPTIONS <linemarkers>off : -P ;
+
 toolset.flags cray.link FINDLIBS-SA <threading>multi : rt ; # Not sure if this is correct.
 
 toolset.flags cray.link OPTIONS <link>shared : -h pic ;
@@ -893,13 +896,6 @@ generators.register [ new cray-linking-generator
                         : LIB OBJ
                         : SHARED_LIB
                         : <toolset>cray ] ;
-
-# Tell B2 to prefer 'cray' generators over other valid
-# generators. This is used to resolve a tie when B2 finds that
-# there is more than one viable generator for a particular build request.
-
-generators.override cray.prebuilt : builtin.prebuilt ;
-generators.override cray.searched-lib-generator : searched-lib-generator ;
 
 type.set-generated-target-suffix PREPROCESSED_CPP : <toolset>cray : i ;
 type.set-generated-target-suffix PREPROCESSED_C : <toolset>cray : i ;

@@ -9,6 +9,7 @@ branches:
     - /main/
     - /release/
     - /feature\/.*/
+    - /backport-.*/
 
 environment:
   matrix:
@@ -55,7 +56,7 @@ for:
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TEST"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
           cd test
-          python test_all.py %TEST_TOOLSET%
+          py test_all.py %TEST_TOOLSET%
           cd ..
       - cmd: |
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"

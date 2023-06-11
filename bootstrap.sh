@@ -17,7 +17,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 cd "$pwd"
-cp "./src/engine/b2" .
+cp "./src/engine/b2" . 2>/dev/null
+cp "./src/engine/b2.exe" . 2>/dev/null
 
 cat << EOF
 

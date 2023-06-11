@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2011 Steven Watanabe
 # Copyright 2020 Rene Ferdinand Rivera Morell
