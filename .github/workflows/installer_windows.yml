@@ -49,8 +49,8 @@ jobs:
       - name: "Build"
         run: |
           $env:path += ';' + "${{github.workspace}}/b2"
-          cd "${{github.workspace}}/b2-pkg/windows-wix"
-          b2 --debug-configuration --b2root="${{github.workspace}}/b2"
+          cd "${{github.workspace}}/b2-pkg"
+          b2 --debug-configuration --b2root="${{github.workspace}}/b2" -j1 -d+2 windows-wix
       - name: "Upload"
         uses: actions/upload-artifact@v3
         with:
