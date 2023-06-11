@@ -31,6 +31,7 @@ project b2
         <toolset>msvc:<define>_CRT_NONSTDC_NO_DEPRECATE=1
         <toolset>clang-win:<define>_CRT_SECURE_NO_WARNINGS=1
         <toolset>clang-win:<define>_CRT_NONSTDC_NO_DEPRECATE=1
+        <toolset>clang:<cxxflags>-Wno-deprecated-declarations
     ;
 
 #|

@@ -144,7 +144,7 @@ rule load-parent ( location )
 #
 rule find ( name : current-location )
 {
-    name = [ path.normalize-all $(name) ] ;
+    name = [ NORMALIZE_PATH $(name) ] ;
     local project-module ;
 
     # Try interpreting name as project id.
