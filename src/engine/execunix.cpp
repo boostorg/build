@@ -461,7 +461,7 @@ void exec_wait()
     while ( !finished )
     {
         int i;
-        int select_timeout = globs.timeout;
+        long select_timeout = globs.timeout;
 
         /* Check for timeouts:
          *   - kill children that already timed out
@@ -474,7 +474,7 @@ void exec_wait()
             for ( i = 0; i < globs.jobs; ++i )
                 if ( cmdtab[ i ].pid )
                 {
-                    clock_t const consumed =
+                    long const consumed = (long)
                         ( current - cmdtab[ i ].start_time ) / tps;
                     if ( consumed >= globs.timeout )
                     {

@@ -16,6 +16,7 @@ if "_%B2_TOOLSET%_" == "_borland_" call :Config_BORLAND
 if "_%B2_TOOLSET%_" == "_como_" call :Config_COMO
 if "_%B2_TOOLSET%_" == "_gcc_" call :Config_GCC
 if "_%B2_TOOLSET%_" == "_clang_" call :Config_CLANG
+if "_%B2_TOOLSET%_" == "_clang-win_" call :Config_CLANG_WIN
 if "_%B2_TOOLSET%_" == "_gcc-nocygwin_" call :Config_GCC_NOCYGWIN
 if "_%B2_TOOLSET%_" == "_intel-win32_" call :Config_INTEL_WIN32
 if "_%B2_TOOLSET%_" == "_mingw_" call :Config_MINGW
@@ -213,6 +214,18 @@ goto :eof
 :Config_CLANG
 if not defined CXX ( set "CXX=clang++" )
 set "B2_CXX="%CXX%" -x c++ -std=c++11 -s -O3 -o b2.exe"
+set "_known_=1"
+goto :eof
+
+:Config_CLANG_WIN
+if not defined CXX ( set "CXX=clang-cl" )
+if "_%ProgramFiles(x86)%_" == "__" (
+    set "PATH=%PATH%;%ProgramFiles%\LLVM\bin"
+) else (
+    set "PATH=%PATH%;%ProgramFiles%\LLVM\bin;%ProgramFiles(x86)%\LLVM\bin"
+)
+set "B2_CXX="%CXX%" /MT /TP /Feb2 /wd4996 /O2 /EHsc /Gw /Zc:inline"
+set "B2_CXX_LINK=/link kernel32.lib advapi32.lib user32.lib"
 set "_known_=1"
 goto :eof
 

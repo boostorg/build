@@ -38,6 +38,8 @@
  * BINDING - all known files
  */
 
+namespace {
+
 typedef struct _binding
 {
     OBJECT * name;
@@ -56,6 +58,8 @@ typedef struct _binding
     /* update time - cleared if the there is nothing to bind */
     timestamp time;
 } BINDING;
+
+}
 
 static struct hash * bindhash = 0;
 

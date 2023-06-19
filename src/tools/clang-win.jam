@@ -23,12 +23,6 @@ toolset.inherit-generators clang-win <toolset>clang <toolset-clang:platform>win 
 toolset.inherit-flags clang-win : msvc : : YLOPTION ;
 toolset.inherit-rules clang-win : msvc ;
 
-# Override default do-nothing generators.
-generators.override clang-win.compile.rc : rc.compile.resource ;
-generators.override clang-win.compile.mc : mc.compile ;
-generators.override clang-win.compile.c.pch   : pch.default-c-pch-generator   ;
-generators.override clang-win.compile.c++.pch : pch.default-cpp-pch-generator ;
-
 
 if [ MATCH (--debug-(clang-(win-)?)?configuration) : [ modules.peek : ARGV ] ]
 {
@@ -84,10 +78,16 @@ rule init ( version ? : command * : options * )
     version ?= [ MATCH "version ([0-9.]+)" : $(version-output) ] ;
     local target = [ MATCH "Target: ([A-Za-z0-9_]+)" : $(version-output) ] ;
 
-    local default-addr = 32 ;
-    if $(target) = x86_64 { default-addr = 64 ; }
+    local default-addr ;
+    local default-arch ;
+    switch $(target) {
+    case x86_64  : default-arch = x86 ; default-addr = 64 ;
+    case i386    : default-arch = x86 ; default-addr = 32 ;
+    case aarch64 : default-arch = arm ; default-addr = 64 ;
+    case arm     : default-arch = arm ; default-addr = 32 ;
+    }
 
-    .notice "using compiler '$(compiler)', version '$(version)', target '$(target)', default address-model=$(default-addr)" ;
+    .notice "using compiler '$(compiler)', version '$(version)', target '$(target)', default architecture=$(default-arch) address-model=$(default-addr)" ;
 
     local condition = [ common.check-init-parameters clang-win : version $(version) ] ;
 
@@ -98,13 +98,13 @@ rule init ( version ? : command * : options * )
         for local arch in x86 arm
         {
             local clang-arch ;
-            if $(arch) = x86
-            {
-                if $(addr) = 32 { clang-arch = i386 ; } else { clang-arch = x86_64 ; }
-            }
-            else if $(arch) = arm
-            {
-                if $(addr) = 32 { clang-arch = arm ; } else { clang-arch = aarch64 ; }
+            local target-assembler ;
+
+            switch $(arch)-$(addr) {
+            case x86-64 : clang-arch = x86_64  ; target-assembler = ml64 ;
+            case x86-32 : clang-arch = i386    ; target-assembler = ml ;
+            case arm-64 : clang-arch = aarch64 ; target-assembler = armasm64 ;
+            case arm-32 : clang-arch = arm     ; target-assembler = armasm ;
             }
 
             local config = [ SPLIT_BY_CHARACTERS [ SHELL "$(compiler) --target=$(clang-arch)-pc-windows-msvc -### foo.obj /link 2>&1" ] : "\n" ] ;
@@ -118,43 +118,22 @@ rule init ( version ? : command * : options * )
 
                 if $(match)
                 {
-                    items += $(match[1]) ;
+                    items += [ regex.replace $(match[1]) "\\\\+" "\\" ] ;
                     config = $(match[2]) ;
                 }
             }
 
-            local asm ;
-
-            if $(items)
-            {
-                asm = [ regex.replace $(items[1]) "x64\\\\+link\\.exe" "x64\\ml64.exe" ] ;
-                asm = [ regex.replace $(asm) "x86\\\\+link\\.exe" "x86\\ml.exe" ] ;
-                asm = [ regex.replace $(asm) "arm64\\\\+link\\.exe" "arm64\\armasm64.exe" ] ;
-                asm = [ regex.replace $(asm) "arm\\\\+link\\.exe" "arm\\armasm.exe" ] ;
-
-                if ! [ MATCH "(ml\\.exe)" "(ml64\\.exe)" "(armasm64\\.exe)" "(armasm\\.exe)" : $(asm) ]
-                {
-                    asm = ;
-                }
-            }
-
             local assembler = [ get-option "assembler" : $(addr) : $(options) ] ;
-            assembler ?= $(asm) ;
-            if $(arch) = x86
-            {
-                if $(addr) = 32 { assembler ?= ml.exe ; } else { assembler ?= ml64.exe ; }
-            }
-            else if $(arch) = arm
-            {
-                if $(addr) = 32 { assembler ?= armasm.exe ; } else { assembler ?= armasm64.exe ; }
-            }
-
             local linker ;
 
             if $(items)
             {
-                linker = [ regex.replace $(items[1]) "\\\\+HostX64\\\\+x86\\\\+" "\\HostX86\\x86\\" ] ;
+                linker = [ regex.replace $(items[1]) "\\\\HostX64\\\\x86\\\\" "\\HostX86\\x86\\" ] ;
             }
+            if $(linker) {
+                assembler ?= $(linker:B=$(target-assembler)) ;
+            }
+            assembler ?= $(target-assembler) ;
 
             .notice "$(arch)-$(addr):" "using linker '$(linker)'" ;
 
@@ -176,12 +155,12 @@ rule init ( version ? : command * : options * )
 
             for local item in $(items)
             {
-                match = [ MATCH "\"-libpath:(.*)\\\\+Lib\\\\(.*)\\\\um\\\\+x(.*)\"" : $(item) ] ;
+                match = [ MATCH "\"-libpath:(.*)\\\\Lib\\\\(.*)\\\\um\\\\x(.*)\"" : $(item) ] ;
 
                 if $(match)
                 {
                     local sdk-path = "$(match[1])\\bin\\$(match[2])\\x$(match[3])" ;
-                    if [ version.version-less [ SPLIT_BY_CHARACTERS "$(match[2])" : . ] : 10 0 14393 ]
+                    if ! [ path.exists $(sdk-path) ]
                     {
                         sdk-path = "$(match[1])\\bin\\x$(match[3])" ;
                     }
@@ -216,11 +195,17 @@ rule init ( version ? : command * : options * )
             }
 
             local cond = "$(condition)/<architecture>$(arch)/<address-model>$(addr)" ;
-            if $(addr) = $(default-addr) && $(arch) = x86
+            if $(addr) = $(default-addr)
+            {
+                cond += "$(condition)/<architecture>$(arch)/<address-model>" ;
+            }
+            if $(arch) = $(default-arch)
+            {
+                cond += "$(condition)/<architecture>/<address-model>$(addr)" ;
+            }
+            if $(addr) = $(default-addr) && $(arch) = $(default-arch)
             {
                 cond += "$(condition)/<architecture>/<address-model>" ;
-                cond += "$(condition)/<architecture>/<address-model>$(addr)" ;
-                cond += "$(condition)/<architecture>$(arch)/<address-model>" ;
             }
 
             toolset.flags clang-win.compile .CC $(cond) : $(compiler) --target=$(clang-arch)-pc-windows-msvc ;
@@ -234,7 +219,7 @@ rule init ( version ? : command * : options * )
             }
             else if $(arch) = arm
             {
-                toolset.flags clang-win.compile .ASM $(cond) : $(assembler) -machine $(arch) ;
+                toolset.flags clang-win.compile .ASM $(cond) : $(assembler) -nologo ;
                 toolset.flags clang-win.compile .ASM_OUTPUT $(cond) : -o ;
             }
             toolset.flags clang-win.archive .LD $(cond) : $(archiver) /nologo ;

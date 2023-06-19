@@ -38,7 +38,7 @@ toolset.inherit-rules qcc : unix ;
 rule init ( version ? : command * : options * )
 {
     local condition = [ common.check-init-parameters qcc : version $(version) ] ;
-    local command = [ common.get-invocation-command qcc : QCC : $(command) ] ;
+    local command = [ common.get-invocation-command qcc : qcc : $(command) ] ;
     common.handle-options qcc : $(condition) : $(command) : $(options) ;
 }
 
@@ -211,9 +211,6 @@ generators.register [ new qcc-linking-generator qcc.link : LIB OBJ : EXE
 
 generators.register [ new qcc-linking-generator qcc.link.dll : LIB OBJ
     : SHARED_LIB : <toolset>qcc ] ;
-
-generators.override qcc.prebuilt : builtin.prebuilt ;
-generators.override qcc.searched-lib-generator : searched-lib-generator ;
 
 
 # Declare flags for linking.

@@ -279,6 +279,10 @@ struct _stack
         data = end;
     }
 
+    #ifdef __clang__
+    // This function calls not properly type-erased callbacks
+    __attribute__((no_sanitize("undefined")))
+    #endif
     void done()
     {
         if ( cleanups_size > cleanups_t::size_type(0) )

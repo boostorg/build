@@ -46,13 +46,6 @@ feature.extend toolset : darwin ;
 import gcc ;
 toolset.inherit-generators darwin : gcc : gcc.mingw.link gcc.mingw.link.dll ;
 
-generators.override darwin.prebuilt : builtin.prebuilt ;
-generators.override darwin.searched-lib-generator : searched-lib-generator ;
-
-# Override default do-nothing generators.
-generators.override darwin.compile.c.pch   : pch.default-c-pch-generator   ;
-generators.override darwin.compile.c++.pch : pch.default-cpp-pch-generator ;
-
 type.set-generated-target-suffix PCH : <toolset>darwin : gch ;
 
 toolset.inherit-rules darwin : gcc : localize ;

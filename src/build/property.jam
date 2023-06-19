@@ -84,6 +84,10 @@ rule evaluate-conditionals-in-context ( properties * : context * )
             {
                 indirect += $(p) ;
             }
+            else if $(p) = <build>no
+            {
+                return <build>no ;
+            }
             else
             {
                 result += $(p) ;
@@ -125,6 +129,10 @@ rule evaluate-conditionals-in-context ( properties * : context * )
                     properties += $(s[2]) ;
                 }
             }
+            if <build>no = $(properties[-1])
+            {
+                return <build>no ;
+            }
         }
         for local i in [ MATCH "^@(.*)" : $(indirect:G=) ]
         {
@@ -138,13 +146,14 @@ rule evaluate-conditionals-in-context ( properties * : context * )
                 local location = [ $(p).location ] ;
                 local project-id = [ project.attribute $(m) id ] ;
                 project-id ?= [ path.root $(location) [ path.pwd ] ] ;
-                properties +=
+                new =
                     [ translate $(new) : $(project-id) : $(location) : $(m) ] ;
             }
-            else
+            if <build>no in $(new)
             {
-                properties += $(new) ;
+                return <build>no ;
             }
+            properties += $(new) ;
         }
     }
     return $(result) ;
@@ -764,6 +773,12 @@ rule translate-dependencies ( specification * : project-id : location )
         }
     }
     return $(result) ;
+}
+
+rule str ( property )
+{
+    local value = [ utility.str $(property:G=) ] ;
+    return $(property:G)$(value) ;
 }
 
 

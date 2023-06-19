@@ -689,7 +689,7 @@ rule compile.c ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets) : -TC CFLAGS  ;
-    compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+    compile-c-c++ $(<) : $(>) ;
 }
 
 
@@ -697,7 +697,7 @@ rule compile.c.preprocess ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets) : -TC CFLAGS ;
-    preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+    preprocess-c-c++ $(<) : $(>) ;
 }
 
 
@@ -706,6 +706,8 @@ rule compile.c.pch ( targets + : sources * : properties * )
     set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets[1]) : -TC CFLAGS ;
     get-rspline $(targets[2]) : -TC CFLAGS ;
+    local pch-header = [ on $(<) return $(PCH_HEADER) ] ;
+    PCH_HEADER_AS_SPELLED on $(<) = $(sources:G=) ;
     local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
     if $(pch-source)
     {
@@ -738,14 +740,14 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #    for each source file by rule archive, as in this case compiler must be used
 #    to create a single PDB for our library.
 #
-actions compile-c-c++ bind PDB_NAME PCH_HEADER
+actions compile-c-c++ bind PDB_NAME PCH_HEADER_AS_SPELLED PCH_FILE
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -I"$(PCH_HEADER:D)" -FI"$(PCH_HEADER:D=)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -c -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER_AS_SPELLED:T)" -Yu"$(PCH_HEADER_AS_SPELLED:T)" -Fp"$(PCH_FILE:W)" $(CC_RSPLINE)) $(.CC.FILTER)
 }
 
-actions preprocess-c-c++ bind PDB_NAME PCH_HEADER
+actions preprocess-c-c++ bind PDB_NAME PCH_HEADER_AS_SPELLED PCH_FILE
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -P -Fi"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -I"$(PCH_HEADER:D)" -FI"$(PCH_HEADER:D=)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[1]:W)" -P -Fi"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -FI"$(PCH_HEADER_AS_SPELLED:T)" -Yu"$(PCH_HEADER_AS_SPELLED:T)" -Fp"$(PCH_FILE:W)" $(CC_RSPLINE))
 }
 
 rule compile-c-c++ ( targets + : sources * )
@@ -754,6 +756,8 @@ rule compile-c-c++ ( targets + : sources * )
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
     PDB_NAME on $(<) = $(<[1]:S=.pdb) ;
     LOCATE on $(<[1]:S=.pdb) = [ on $(<[1]) return $(LOCATE) ] ;
+    local pch-header = [ on $(<[1]) return $(PCH_HEADER) ] ;
+    PCH_HEADER_AS_SPELLED on $(<[1]) = $(pch-header:G=) ;
 }
 
 rule preprocess-c-c++ ( targets + : sources * )
@@ -762,6 +766,8 @@ rule preprocess-c-c++ ( targets + : sources * )
     DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
     PDB_NAME on $(<) = $(<:S=.pdb) ;
     LOCATE on $(<[1]:S=.pdb) = [ on $(<[1]) return $(LOCATE) ] ;
+    local pch-header = [ on $(<[1]) return $(PCH_HEADER) ] ;
+    PCH_HEADER_AS_SPELLED on $(<[1]) = $(pch-header:G=) ;
 }
 
 # Action for running the C/C++ compiler using precompiled headers. In addition
@@ -770,18 +776,18 @@ rule preprocess-c-c++ ( targets + : sources * )
 #
 # The global .escaped-double-quote variable is used to avoid messing up Emacs
 # syntax highlighting in the messy N-quoted code below.
-actions compile-c-c++-pch
+actions compile-c-c++-pch bind PCH_HEADER_AS_SPELLED
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -I"$(>[1]:D)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) @($(<[1]:W).cpp:<=":>=":E=$(.hash)include $(.escaped-double-quote)$(>[1]:D=)$(.escaped-double-quote)$(.nl)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(PCH_HEADER_AS_SPELLED:T)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) @($(<[1]:W).cpp:<=":>=":E=$(.hash)include $(.escaped-double-quote)$(PCH_HEADER_AS_SPELLED:T)$(.escaped-double-quote)$(.nl)) $(.CC.FILTER)
 }
 
 
 # Action for running the C/C++ compiler using precompiled headers. An already
 # built source file for compiling the precompiled headers is expected to be
 # given as one of the source parameters.
-actions compile-c-c++-pch-s
+actions compile-c-c++-pch-s bind PCH_HEADER_AS_SPELLED
 {
-    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -I"$(>[1]:D)" -Yc"$(>[1]:D=)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
+    $(.SETUP) $(.CC) @($(<[1]:W).rsp:O=FC:<=@":>=":E="$(>[2]:W)" -c -Fo"$(<[2]:W)" -Yc"$(PCH_HEADER_AS_SPELLED:T)" $(YLOPTION)"__bjam_pch_symbol_$(>[1]:D=)" -Fp"$(<[1]:W)" $(CC_RSPLINE)) $(.CC.FILTER)
 }
 
 
@@ -789,14 +795,14 @@ rule compile.c++ ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets) : -TP C++FLAGS ;
-    compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+    compile-c-c++ $(<) : $(>) ;
 }
 
 rule compile.c++.preprocess ( targets + : sources * : properties * )
 {
     set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets) : -TP C++FLAGS ;
-    preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+    preprocess-c-c++ $(<) : $(>) ;
 }
 
 
@@ -805,6 +811,8 @@ rule compile.c++.pch ( targets + : sources * : properties * )
     set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets[1]) : -TP C++FLAGS ;
     get-rspline $(targets[2]) : -TP C++FLAGS ;
+    local pch-header = [ on $(<) return $(PCH_HEADER) ] ;
+    PCH_HEADER_AS_SPELLED on $(<) = $(sources:G=) ;
     local pch-source = [ on $(<) return $(PCH_SOURCE) ] ;
     if $(pch-source)
     {
@@ -1005,6 +1013,7 @@ class msvc-pch-generator : pch-generator
 
         # If we do not have the PCH source - that is fine. We will just create a
         # temporary .cpp file in the action.
+        local pch-header-root = [ $(pch-header).path ] ;
         local generated = [ generator.run $(project) $(name)
             : [ property-set.create
                 # Passing of <pch-source> is a dirty trick, needed because
@@ -1012,6 +1021,8 @@ class msvc-pch-generator : pch-generator
                 # broken. For more detailed information see:
                 # https://zigzag.cs.msu.su:7813/boost.build/ticket/111
                 <pch-source>$(pch-source)
+                <pch-header>$(pch-header)
+                <include>$(pch-header-root)
                 [ $(property-set).raw ] ]
             : $(pch-header) ] ;
 
@@ -1025,6 +1036,7 @@ class msvc-pch-generator : pch-generator
         }
 
         return [ $(generated[1]).add-raw <pch-header>$(pch-header)
+            <include>$(pch-header-root)
             <pch-file>$(pch-file) ] $(generated[2-]) ;
     }
 }
@@ -1062,6 +1074,10 @@ local rule auto-detect-toolset-versions ( )
                     vc-path = [ path.join [ path.make-NT $(vc-path[1]) ] "bin" ] ;
                     register-configuration $(i) : [ path.native $(vc-path[1]) ] ;
                 }
+            }
+            else
+            {
+                register-configuration $(i) : [ default-path $(i) ] ;
             }
         }
     }
@@ -1801,56 +1817,36 @@ rule get-rspline ( target : lang-opt lang-flags )
 
 class msvc-linking-generator : linking-generator
 {
-    # Calls the base version.  If necessary, also create a target for the
-    # manifest file.specifying source's name as the name of the created
-    # target. As result, the PCH will be named whatever.hpp.gch, and not
-    # whatever.gch.
-    rule generated-targets ( sources + : property-set : project name ? )
+    # Linking may produce additional targets which needs registration
+    # to be copied by stage (install) step.
+    rule additional-targets-produced ( sources + : property-set
+                                     : project name action : targets + )
     {
-        local result = [ linking-generator.generated-targets $(sources)
-          : $(property-set) : $(project) $(name) ] ;
+        local result ;
+        local name-main = [ $(targets[1]).name ] ;
 
-        if $(result)
+        if [ $(property-set).get <debug-symbols> ] = "on"
         {
-            local name-main = [ $(result[1]).name ] ;
-            local action = [ $(result[1]).action ] ;
-
-            if [ $(property-set).get <debug-symbols> ] = "on"
-            {
-                # We force the exact name on PDB. The reason is tagging -- the
-                # tag rule may reasonably special case some target types, like
-                # SHARED_LIB. The tag rule will not catch PDBs, and it cannot
-                # even easily figure out if a PDB is paired with a SHARED_LIB,
-                # EXE or something else. Because PDBs always get the same name
-                # as the main target, with .pdb as extension, just force it.
-                local target = [ class.new file-target $(name-main:S=.pdb) exact
-                    : PDB : $(project) : $(action) ] ;
-                local registered-target = [ virtual-target.register $(target) ]
-                    ;
-                if $(target) != $(registered-target)
-                {
-                    $(action).replace-targets $(target) : $(registered-target) ;
-                }
-                result += $(registered-target) ;
-            }
-
-            if [ $(property-set).get <embed-manifest> ] = "off"
-            {
-                # Manifest is an evil target. It has .manifest appened to the
-                # name of the main target, including extension, e.g.
-                # a.exe.manifest. We use the 'exact' name to achieve this
-                # effect.
-                local target = [ class.new file-target $(name-main).manifest
-                    exact : MANIFEST : $(project) : $(action) ] ;
-                local registered-target = [ virtual-target.register $(target) ]
-                    ;
-                if $(target) != $(registered-target)
-                {
-                    $(action).replace-targets $(target) : $(registered-target) ;
-                }
-                result += $(registered-target) ;
-            }
+            # We force the exact name on PDB. The reason is tagging -- the
+            # tag rule may reasonably special case some target types, like
+            # SHARED_LIB. The tag rule will not catch PDBs, and it cannot
+            # even easily figure out if a PDB is paired with a SHARED_LIB,
+            # EXE or something else. Because PDBs always get the same name
+            # as the main target, with .pdb as extension, just force it.
+            result += [ class.new file-target $(name-main:S=.pdb) exact
+                : PDB : $(project) : $(action) ] ;
         }
+
+        if [ $(property-set).get <embed-manifest> ] = "off"
+        {
+            # Manifest is an evil target. It has .manifest appened to the
+            # name of the main target, including extension, e.g.
+            # a.exe.manifest. We use the 'exact' name to achieve this
+            # effect.
+            result += [ class.new file-target $(name-main).manifest exact
+                : MANIFEST : $(project) : $(action) ] ;
+        }
+
         return $(result) ;
     }
 }
@@ -1960,6 +1956,9 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : "/std:c++17" ;
     toolset.flags msvc.compile C++FLAGS  <cxxstd>20 : "/std:c++20" ;
     toolset.flags msvc.compile C++FLAGS  <cxxstd>latest : "/std:c++latest" ;
+
+    toolset.flags msvc.compile.c.preprocess OPTIONS <linemarkers>off : -EP ;
+    toolset.flags msvc.compile.c++.preprocess OPTIONS <linemarkers>off : -EP ;
 
     # By default 8.0 enables rtti support while prior versions disabled it. We
     # simply enable or disable it explicitly so we do not have to depend on this

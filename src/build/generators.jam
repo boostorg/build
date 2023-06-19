@@ -47,6 +47,7 @@ import "class" : new ;
 import property-set ;
 import sequence ;
 import set ;
+import regex ;
 import type ;
 import utility ;
 import virtual-target ;
@@ -298,29 +299,27 @@ class generator
         # feature name in requirements (i.e. grist-only element), as matching
         # any value of the feature.
 
-        if [ $(property-set-to-match).contains-raw $(self.property-requirements) ] &&
-            [ $(property-set-to-match).contains-features $(self.feature-requirements) ]
-        {
-            return true ;
-        }
-        else
-        {
+        if ! [ $(property-set-to-match).contains-raw $(self.property-requirements) ] {
+            generators.dout [ indent ] "    property-requirements are not met:" $(self.property-requirements) ;
             return ;
         }
+        if ! [ $(property-set-to-match).contains-features $(self.feature-requirements) ] {
+            generators.dout [ indent ] "    feature-requirements are not met:" $(self.feature-requirements) ;
+            return ;
+        }
+        return true ;
     }
 
     # Returns another generator which differs from $(self) in
     #   - id
-    #   - value to <toolset> feature in properties
+    #   - requirements, which are refined with the new ones
     #
     rule clone ( new-id : new-toolset-properties + )
     {
         local g = [ new $(__class__) $(new-id) $(self.composing) :
             $(self.source-types) : $(self.target-types-and-names) :
-            # Note: this does not remove any subfeatures of <toolset> which
-            # might cause problems.
-            [ property.change $(self.requirements) : <toolset> ]
-            $(new-toolset-properties) ] ;
+            [ property.refine $(self.requirements) : $(new-toolset-properties) ]
+            ] ;
         return $(g) ;
     }
 
@@ -420,7 +419,7 @@ class generator
 
         if $(result)
         {
-            generators.dout [ indent ] "  SUCCESS: " $(result) ;
+            generators.dout [ indent ] "  SUCCESS:" $(result) ;
         }
         else
         {
@@ -563,9 +562,12 @@ class generator
         }
 
         # Assign an action for each target.
-        local action = [ action-class ] ;
-        local a = [ class.new $(action) $(sources) : $(self.rule-name) :
-                    $(property-set) ] ;
+        local a = [ action $(sources) : $(property-set)
+                    : $(project) $(name) ] ;
+        if ! $(a)
+        {
+            return ;
+        }
 
         # Create generated target for each target type.
         local targets ;
@@ -582,7 +584,18 @@ class generator
                 $(project) : $(a) ] ;
         }
 
+        targets += [ additional-targets-produced $(sources) : $(property-set)
+                   : $(project) $(name) $(a) : $(targets) ] ;
+
         return [ sequence.transform virtual-target.register : $(targets) ] ;
+    }
+
+    # Hook to produce additional targets for cases which could not be (easily)
+    # solved by registering multiple constrained generators.
+    #
+    rule additional-targets-produced ( sources + : property-set
+                                     : project name action : targets + )
+    {
     }
 
     # Attempts to convert 'sources' to targets of types that this generator can
@@ -736,6 +749,16 @@ class generator
     {
         return "action" ;
     }
+
+    # Returns action to be used to generate targets. Default implementation
+    # returns instantiated class returned by "action-class" member rule.
+    #
+    rule action ( sources + : property-set : project name )
+    {
+        local action = [ action-class ] ;
+        return [ class.new $(action) $(sources) : $(self.rule-name) :
+                    $(property-set) ] ;
+    }
 }
 
 
@@ -831,6 +854,25 @@ rule register-composing ( id : source-types * : target-types + : requirements *
 rule generators-for-toolset ( toolset )
 {
     return $(.generators-for-toolset.$(toolset)) ;
+}
+
+
+# Adds generator overrides from 'base' to 'toolset'.
+# Intended for use in toolset.inherit-generators.
+#
+rule inherit-overrides ( toolset : base : generators-to-ignore * )
+{
+    for local overrider-id in [ MATCH "^\\.override\\.$(base)\\.(.*)" : [ VARNAMES $(__name__) ] ]
+    {
+        if ! $(base).$(overrider-id) in $(generators-to-ignore)
+        {
+            for local overridee-id in [ regex.replace-list $(.override.$(base).$(overrider-id))
+                                      : ^$(base)\\. : $(toolset). ]
+            {
+                override $(toolset).$(overrider-id) : $(overridee-id) ;
+            }
+        }
+    }
 }
 
 
@@ -1404,7 +1446,7 @@ rule construct ( project name ? : target-type : property-set * : sources * : top
         {
             generators.dout [ indent ] "    from" $(s) ;
         }
-        generators.dout [ indent ] "    properties:" [ $(property-set).raw ] ;
+        generators.dout [ indent ] "    properties:" [ $(property-set).str ] ;
     }
 
     local result = [ construct-really $(project) $(name) : $(target-type) :

@@ -24,10 +24,6 @@ toolset.inherit-generators intel-darwin
   : gcc.mingw.link gcc.mingw.link.dll gcc.compile.c.pch gcc.compile.c++.pch
   ;
 
-generators.override intel-darwin.prebuilt : builtin.lib-generator ;
-generators.override intel-darwin.prebuilt : builtin.prebuilt ;
-generators.override intel-darwin.searched-lib-generator : searched-lib-generator ;
-
 toolset.inherit-rules intel-darwin : gcc ;
 toolset.inherit-flags intel-darwin : gcc
         : <inlining>off <inlining>on <inlining>full <optimization>space

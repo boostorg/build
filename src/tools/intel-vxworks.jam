@@ -23,10 +23,6 @@ toolset.inherit-generators intel-vxworks
   : gcc.mingw.link gcc.mingw.link.dll gcc.compile.c.pch gcc.compile.c++.pch
   ;
 
-generators.override intel-vxworks.prebuilt : builtin.lib-generator ;
-generators.override intel-vxworks.prebuilt : builtin.prebuilt ;
-generators.override intel-vxworks.searched-lib-generator : searched-lib-generator ;
-
 toolset.inherit-rules intel-vxworks : gcc ;
 toolset.inherit-flags intel-vxworks : gcc
         : <inlining>off <inlining>on <inlining>full <optimization>space

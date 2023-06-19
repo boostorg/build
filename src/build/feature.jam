@@ -1316,16 +1316,16 @@ rule __test__ ( )
 
     assert.result optional : attributes <fu> ;
 
-    assert.result [ SORT <define>_DEBUG <runtime-link>static
+    assert.result-set-equal <define>_DEBUG <runtime-link>static
         <define>foobar <optimization>on
         <toolset>gcc <variant>debug <stdlib>native
-        <dummy>dummy1 <toolset-gcc:version>2.95.2 ]
+        <dummy>dummy1 <toolset-gcc:version>2.95.2
         : add-defaults <runtime-link>static <define>foobar <optimization>on ;
 
-    assert.result [ SORT <define>_DEBUG <runtime-link>static
+    assert.result-set-equal <define>_DEBUG <runtime-link>static
         <define>foobar <optimization>on
         <fu>fu1 <toolset>gcc <variant>debug
-        <stdlib>native <dummy>dummy1 <fu-subfu2>q <toolset-gcc:version>2.95.2 ]
+        <stdlib>native <dummy>dummy1 <fu-subfu2>q <toolset-gcc:version>2.95.2
         : add-defaults <runtime-link>static <define>foobar <optimization>on
           <fu>fu1 ;
 

@@ -46,6 +46,9 @@ project b2
         <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS=1
         <toolset>msvc:<define>_CRT_NONSTDC_NO_DEPRECATE=1
         <variant>debug:<define>B2_DEBUG=1
+        <toolset>clang-win:<define>_CRT_SECURE_NO_WARNINGS=1
+        <toolset>clang-win:<define>_CRT_NONSTDC_NO_DEPRECATE=1
+        <toolset>clang:<cxxflags>-Wno-deprecated-declarations
     ;
 
 #|
@@ -161,6 +164,9 @@ exe b2
         <toolset>msvc:<find-static-library>kernel32
         <toolset>msvc:<find-static-library>advapi32
         <toolset>msvc:<find-static-library>user32
+        <toolset>clang-win:<find-static-library>kernel32
+        <toolset>clang-win:<find-static-library>advapi32
+        <toolset>clang-win:<find-static-library>user32
     ;
 explicit b2 ;
 

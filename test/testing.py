@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2008 Jurko Gospodnetic
 # Copyright 2017 Steven Watanabe
@@ -81,6 +81,62 @@ run-fail fail-run.cpp ;
     t.expect_nothing_more()
 
     t.cleanup()
+
+
+def test_run_execute_off():
+    t = BoostBuild.Tester(use_test_config=False)
+
+    t.write("pass.cpp", "int main() {}\n")
+    t.write("fail-run.cpp", "int main() { return 1; }\n")
+    t.write("Jamroot.jam", """\
+import testing ;
+import notfile ;
+
+rule check ( target : source : properties * )
+{
+    ECHO executed $(target:G=) $(source:G=) ;
+}
+
+run pass.cpp ;
+run-fail fail-run.cpp ;
+notfile a : @check : pass ;
+notfile b : @check : fail-run ;
+""")
+
+    t.run_build_system(["testing.execute=off"])
+    t.expect_addition([
+        "bin/pass.test/$toolset/debug*/pass.obj",
+        "bin/pass.test/$toolset/debug*/pass.exe",
+        "bin/fail-run.test/$toolset/debug*/fail-run.obj",
+        "bin/fail-run.test/$toolset/debug*/fail-run.exe",
+    ])
+    t.fail_test("executed" in t.stdout())
+    t.expect_nothing_more()
+
+    t.run_build_system()
+    t.expect_addition([
+        "bin/pass.test/$toolset/debug*/pass.output",
+        "bin/pass.test/$toolset/debug*/pass.run",
+        "bin/pass.test/$toolset/debug*/pass.test",
+        "bin/fail-run.test/$toolset/debug*/fail-run.output",
+        "bin/fail-run.test/$toolset/debug*/fail-run.run",
+        "bin/fail-run.test/$toolset/debug*/fail-run.test",
+    ])
+    t.expect_output_lines([
+        "executed a pass.test",
+        "executed b fail-run.test",
+    ])
+    t.expect_nothing_more()
+
+    t.run_build_system()
+    t.expect_nothing_more()
+
+    t.run_build_system(["testing.execute=off"])
+    t.fail_test("executed" in t.stdout())
+    t.expect_nothing_more()
+
+    t.cleanup()
+
 
 def test_run_change():
     """Tests that the test file is removed when a test fails after it
@@ -541,6 +597,7 @@ testing.compile-fail "invalid source.cpp" ;
 
 test_run()
 test_run_fail()
+test_run_execute_off()
 test_run_change()
 test_run_path()
 test_run_args()

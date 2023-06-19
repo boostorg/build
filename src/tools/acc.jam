@@ -58,8 +58,6 @@ import common ;
 
 feature.extend toolset : acc ;
 toolset.inherit acc : unix ;
-generators.override builtin.lib-generator : acc.prebuilt ;
-generators.override acc.searched-lib-generator : searched-lib-generator ;
 
 # Configures the acc toolset.
 rule init ( version ? : user-provided-command * : options * )

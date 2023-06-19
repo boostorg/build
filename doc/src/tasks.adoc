@@ -670,7 +670,7 @@ for details.
 [[bbv2.tasks.packagemanagers]]
 == Package Managers
 
-B2 support automatic, or manual, loading of generated build files
+B2 supports automatic, or manual, loading of generated build files
 from package managers. For example using the Conan package manager which
 generates `conanbuildinfo.jam` files B2 will load that files automatically
 when it loads the project at the same location. The included file can
@@ -726,3 +726,98 @@ managers. Currently the supported ones are:
 
 * Conan (`conan`): currently supports the
   link:https://docs.conan.io/en/latest/reference/generators/b2.html[`b2 generator`].
+
+[[bbv2.tasks.projectsearch]]
+== Searching For Projects
+
+B2 supports automatic searching for referenced global projects. For example,
+if you have references to `/boost/predef` with some minimal configuration B2
+can find the B2 project for it and automatically resolve the reference. The
+searching supports two modes: finding regular B2 project directories, and
+package/config style loading of single jam files.
+
+[[bbv2.tasks.projectsearch.path]]
+=== Search Path
+
+To control which and where projects are found one can use different methods:
+
+* `B2_PROJECT_PATH` environment variable.
+* `--project-search` command line argument.
+* `rule project-search` project rule.
+
+The search path in both `B2_PROJECT_PATH` and `--project-search` specifies a
+key-value list of _project-id_ and _path_. The parts of that key-value list, as
+the name indicates, is a path delimiter separated list. For example if we had
+these two projects we wanted to find: `/zlib` and `/boost/asio` the search paths
+could look like:
+
+[horizontal]
+Linux::
+`/zlib:/usr/local/share/zlib:/boost/asio:/home/user/external/boost-1.81/libs/asio`
+Windows, VxWorks::
+`/zlib;C:/Dev/zlib;/boost/asio;C:Dev/boost-1.81/libs/asio`
+VMS::
+`/zlib,X:external.zlib,/boost/asio,X:external.boost181.libs.asio`
+
+The _project-id_ in the search path specification maps that project root to the
+indicated _path_. Which B2 will use to search for any projects and sub-projects
+with that _project-id_ root.
+
+[[bbv2.tasks.projectsearch.process]]
+=== Search Process
+
+Regardless of how the search path is specified, how the search happens is the
+same. Searching involves either searching for a B2 project directory, i.e.
+a directory containing a jamfile, or searching for a specially named `*.jam`
+file to include (similar to how the <<Package Managers>> support includes
+jam files).
+
+For a given _project-id_ of the form `/d1/d2/../dn` we search for the following,
+in this order:
+
+. The project at `d1/d2/../dn` in any path registered for the `/` root.
+. The project at `dn` in any path registered for the `/d1/d2/../dn-1` root.
+. The jamfile `dn.jam` in any path registered for the `/d1/d2/../dn-1` root.
+. The project at `dn-1_dn` in any path registered for the `/d1/d2/../dn-2` root.
+. The jamfile `dn-1_dn.jam` in any path registered for the `/d1/d2/../dn-2`
+  root.
+. And so on until it searches for the project `d1_d2_.._dn` in any path
+  registered for the `/` root.
+. And for the jamfile `d1_d2_.._dn.jam` in any path registered for the `/` root.
+
+For example, with this search paths:
+
+* `/boost`: `/usr/share/boost-1.81.0`, `/home/user/boost-dev/libs`
+* `/`: `/usr/share/b2/external`
+
+And given the `/boost/core` _project-id_ to resolve, we search for:
+
+. `/usr/share/b2/external/boost/core/<jamfile>`
+. `/usr/share/boost-1.81.0/core/<jamfile>`
+. `/home/user/boost-dev/libs/core/<jamfile>`
+. `/usr/share/boost-1.81.0/core.jam`
+. `/home/user/boost-dev/libs/core.jam`
+. `/usr/share/boost-1.81.0/boost_core/<jamfile>`
+. `/home/user/boost-dev/libs/boost_core/<jamfile>`
+. `/usr/share/boost-1.81.0/boost_core.jam`
+. `/home/user/boost-dev/libs/boost_core.jam`
+. `/usr/share/b2/external/boost_core.jam`
+
+The first project jamfile will be assigned to the _project-id_. Or the first
+`*.jam` file found will be loaded.
+
+[[bbv2.tasks.projectsearch.loading]]
+=== Loading Process
+
+Depending on whether a project jamfile or `*.jam` file determines how the
+project is loaded.
+
+When loading a project jamfile with a _project-id_ and _path_ it is equivalent
+to calling `use-project _project-id_ : _path_ ;` from the context of the project
+that has the reference.
+
+When loading a `*.jam` file as the _path_ it is equivalent to calling:
+`use-packages _path_ ;` from the context of the project that has the reference.
+In this case it means that the file will be loaded as part of the referenced
+project and hence any bare targets or information it declares will be part of
+the project.

@@ -17,6 +17,6 @@ steps:
     set -e
     export B2=`ls -1 ${PWD}/.build/*/debug/address-sanitizer-on/cxxstd-11-iso/b2`
     cd test
-    python test_all.py ${TOOLSET}
+    ./test_all.py ${TOOLSET}
     cd ..
   displayName: Test

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2003 Dave Abrahams
 # Copyright 2003, 2004, 2005, 2006 Vladimir Prus
@@ -31,8 +31,8 @@ t.expect_addition("lib/bin/$toolset/debug*/test_lib.dll")
 
 # Auto adjusting of suffixes does not work, since we need to
 # change dll to lib.
-if ( ( os.name == "nt" ) or os.uname()[0].lower().startswith("cygwin") ) and \
-    ( BoostBuild.get_toolset() != "gcc" ):
+if t.is_implib_expected():
+    t.expect_addition("lib/bin/$toolset/debug*/test_lib.implib")
     t.copy("lib/bin/$toolset/debug*/test_lib.implib", "lib/test_lib.implib")
     t.copy("lib/bin/$toolset/debug*/test_lib.dll", "lib/test_lib.dll")
 else:

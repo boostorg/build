@@ -11,6 +11,10 @@
 #include "compile.h"
 
 #include <stdlib.h>
+#include <algorithm>
+#include <iterator>
+#include <unordered_set>
+#include <set>
 
 
 #ifndef max
@@ -81,6 +85,72 @@ LIST * sequence_transform( FRAME * frame, int flags )
     return result;
 }
 
+namespace {
+
+using list_value_ref = b2::list_cref::value_type;
+using list_value_cref = const b2::list_cref::value_type;
+
+struct hash_functor
+{
+	inline std::size_t operator()(list_value_cref a) const
+	{
+		return std::size_t(-1) & a->hash64;
+	}
+};
+
+struct equal_functor
+{
+	inline bool operator()(list_value_cref a, list_value_cref b) const
+	{
+		return (a->hash64 == b->hash64) && a->equal_to(*b);
+	}
+};
+
+struct less_functor
+{
+	inline bool operator()(list_value_cref a, list_value_cref b) const
+	{
+		return std::strcmp(a->str(), b->str()) < 0;
+	}
+};
+
+} // namespace
+
+static b2::list_ref sorted_unique(b2::list_cref values)
+{
+	std::set<list_value_ref, less_functor> unique_values { values.begin(),
+		values.end() };
+	b2::list_ref result;
+	// result.reserve(unique_values.size()); // TODO: no reserve in list_ref
+	for (auto & v : unique_values) result.push_back(v);
+	return result;
+}
+
+static b2::list_ref stable_unique(b2::list_cref values)
+{
+	b2::list_ref result;
+	// result.reserve(values.size()); // TODO: no reserve in list_ref
+	std::unordered_set<list_value_ref, hash_functor, equal_functor>
+		unique_values(values.size());
+	std::copy_if(values.begin(), values.end(), std::back_inserter(result),
+		[&unique_values](
+			list_value_cref ptr) { return unique_values.insert(ptr).second; });
+	return result;
+}
+
+static LIST * sequence_unique(FRAME * frame, int /*flags*/)
+{
+	b2::list_cref values(lol_get(frame->args, 0));
+	LIST * stable = lol_get(frame->args, 1);
+
+	if (!list_empty(stable))
+		return stable_unique(values).release();
+	else
+		// Sorting is done because Boost unintentionally relies on it :-(
+		// See https://github.com/boostorg/fiber/issues/305
+		return sorted_unique(values).release();
+}
+
 void init_sequence()
 {
     {
@@ -92,5 +162,10 @@ void init_sequence()
         char const * args[] = { "function", "+", ":", "sequence", "*", 0 };
         declare_native_rule( "sequence", "transform", args,
                             sequence_transform, 1 );
+    }
+    {
+        char const * args[] = { "list", "*", ":", "stable", "?", 0 };
+        declare_native_rule( "sequence", "unique", args,
+                            sequence_unique, 1 );
     }
 }

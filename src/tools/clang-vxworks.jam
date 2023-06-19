@@ -12,29 +12,20 @@ import gcc ;
 import common ;
 import errors ;
 import generators ;
+import numbers ;
 
 
 feature.extend-subfeature toolset clang : platform : vxworks ;
+# FIXME: import order affects default value for 'platform' subfeature
+import clang-linux ;
 
 toolset.inherit-generators clang-vxworks
   <toolset>clang <toolset-clang:platform>vxworks
-  : gcc
-  # Don't inherit PCH generators. They were not tested, and probably
-  # don't work for this compiler.
-  : gcc.mingw.link gcc.mingw.link.dll gcc.compile.c.pch gcc.compile.c++.pch
+  : clang-linux
   ;
 
-generators.override clang-vxworks.prebuilt : builtin.lib-generator ;
-generators.override clang-vxworks.prebuilt : builtin.prebuilt ;
-generators.override clang-vxworks.searched-lib-generator : searched-lib-generator ;
-
-
-toolset.inherit-rules clang-vxworks : gcc ;
-toolset.inherit-flags clang-vxworks : gcc
-        : <inlining>full
-          <architecture>x86/<address-model>32
-          <architecture>x86/<address-model>64
-        ;
+toolset.inherit-rules clang-vxworks : clang-linux ;
+toolset.inherit-flags clang-vxworks : clang-linux ;
 
 if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 {
@@ -49,7 +40,6 @@ rule init ( version ? :  command * : options * )
         : $(command) ] ;
 
     linker = [ get-values <linker> : $(options) ] ;
-    linker   ?= ld ;
 
     # Determine the version
     local command-string = $(command:J=" ") ;
@@ -64,60 +54,17 @@ rule init ( version ? :  command * : options * )
 
     common.handle-options clang-vxworks : $(condition) : $(command) : $(options) ;
 
-    toolset.flags clang-vxworks.link      .LD  : $(linker) ;
+    if ! $(linker) {
+        # use default linker
+    }
+    else if ! [ numbers.less [ MATCH "^([0-9]+)" : 0$(version:E=12) ] 12 ] {
+        toolset.flags clang-vxworks.link OPTIONS $(condition) : --ld-path=$(linker) ;
+    }
+    else {
+        toolset.flags clang-vxworks.link OPTIONS $(condition) : -fuse-ld=$(linker) ;
+    }
 
     # - Archive builder.
     local archiver = [ feature.get-values <archiver> : $(options) ] ;
     toolset.flags clang-vxworks.archive .AR $(condition) : $(archiver[1]) ;
-}
-
-SPACE = " " ;
-
-toolset.flags clang-vxworks.compile OPTIONS <cflags> ;
-toolset.flags clang-vxworks.compile.c++ OPTIONS <cxxflags> ;
-toolset.flags clang-vxworks.compile INCLUDES <include> ;
-
-# For clang, 'on' and 'full' are identical
-toolset.flags clang-vxworks.compile OPTIONS <inlining>full : -Wno-inline ;
-
-
-actions compile.c
-{
-    "$(CONFIG_COMMAND)" -x c $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-actions compile.c++
-{
-    "$(CONFIG_COMMAND)" -x c++ $(OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -include"$(FORCE_INCLUDES)" -c -o "$(<)" "$(>)"
-}
-
-
-
-# Default value. Mostly for the sake of clang-linux
-# that inherits from gcc, but does not has the same
-# logic to set the .AR variable. We can put the same
-# logic in clang-linux, but that's hardly worth the trouble
-# as on Linux, 'ar' is always available.
-.AR = ar ;
-
-
-actions piecemeal archive
-{
-  "$(.AR)" $(AROPTIONS) rcu "$(<)" "$(>)"
-}
-
-# Declare actions for linking
-rule link ( targets * : sources * : properties * )
-{
-  SPACE on $(targets) = " " ;
-}
-
-actions link bind LIBRARIES
-{
-    "$(.LD)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" $(START-GROUP) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS)
-    }
-
-actions link.dll bind LIBRARIES
-{
-    "$(.LD)" $(USER_OPTIONS) -L"$(LINKPATH)" -o "$(<)" "$(>)" "$(LIBRARIES)" $(START-GROUP) $(FINDLIBS-ST-PFX) -l$(FINDLIBS-ST) $(FINDLIBS-SA-PFX) -l$(FINDLIBS-SA) $(END-GROUP) $(OPTIONS) -fpic -shared -non-static
 }

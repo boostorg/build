@@ -756,12 +756,6 @@ class action
         self.targets += $(targets) ;
     }
 
-    rule replace-targets ( old-targets * : new-targets * )
-    {
-        self.targets = [ set.difference $(self.targets) : $(old-targets) ] ;
-        self.targets += $(new-targets) ;
-    }
-
     rule targets ( )
     {
         return $(self.targets) ;

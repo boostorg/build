@@ -1,4 +1,4 @@
-# Copyright 2022 René Ferdinand Rivera Morell
+# Copyright 2022-2023 René Ferdinand Rivera Morell
 # Use, modification, and distribution are subject to the
 # Boost Software License, Version 1.0. (See accompanying file LICENSE.txt)
 
@@ -49,15 +49,15 @@ jobs:
       - name: "Build"
         run: |
           $env:path += ';' + "${{github.workspace}}/b2"
-          cd "${{github.workspace}}/b2-pkg/windows-wix"
-          b2 --debug-configuration --b2root="${{github.workspace}}/b2"
+          cd "${{github.workspace}}/b2-pkg"
+          b2 --debug-configuration --b2root="${{github.workspace}}/b2" -j1 -d+2 windows-wix
       - name: "Upload"
         uses: actions/upload-artifact@v3
         with:
           name: installer
-          path: "${{github.workspace}}\\b2-pkg\\stage\\*.msi"
+          path: "${{github.workspace}}\\b2-pkg\\stage\\*.msi*"
       - name: "Publish"
         uses: softprops/action-gh-release@v1
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         with:
-          files: "${{github.workspace}}\\b2-pkg\\stage\\*.msi"
+          files: "${{github.workspace}}\\b2-pkg\\stage\\*.msi*"

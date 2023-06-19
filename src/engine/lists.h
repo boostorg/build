@@ -259,6 +259,14 @@ struct list_cref::iterator
 	{
 		return list_i - b.list_i;
 	}
+	inline iterator operator+(difference_type count) const
+	{
+		return iterator(list_i + count);
+	}
+	inline iterator operator-(difference_type count) const
+	{
+		return iterator(list_i - count);
+	}
 
 	private:
 	LISTITER list_i;

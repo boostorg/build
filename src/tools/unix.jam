@@ -138,7 +138,7 @@ generators.register
   [ new unix-prebuilt-lib-generator unix.prebuilt : : LIB
       : <file> <toolset>unix ] ;
 
-generators.override unix.prebuilt : builtin.lib-generator ;
+generators.override unix.prebuilt : builtin.prebuilt ;
 
 
 # Declare generators
@@ -153,6 +153,8 @@ generators.register [ new unix-linking-generator unix.link.dll : LIB OBJ : SHARE
 
 generators.register [ new unix-searched-lib-generator
    unix.searched-lib-generator : : SEARCHED_LIB : <toolset>unix ] ;
+
+generators.override unix.searched-lib-generator : searched-lib-generator ;
 
 
 # The derived toolset must specify their own actions.

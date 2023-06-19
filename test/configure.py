@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
 # Copyright 2017 Steven Watanabe
 # Distributed under the Boost Software License, Version 1.0.
@@ -8,6 +8,17 @@
 # Tests configure.check-target-builds and friends
 
 import BoostBuild
+
+
+def test_check_empty_config():
+    """Check no empty cache and log files are generated"""
+    t = BoostBuild.Tester(use_test_config=0)
+    t.write("Jamroot", "")
+    t.run_build_system()
+    t.expect_nothing(["bin/config.log", "bin/project-cache.jam"])
+    t.expect_nothing_more()
+    t.cleanup()
+
 
 def test_check_target_builds():
     t = BoostBuild.Tester(use_test_config=0)
@@ -38,6 +49,8 @@ obj bar : foo.cpp :
     t.expect_addition("bin/$toolset/debug*/pass.obj")
     t.expect_addition("bin/$toolset/debug*/foo.obj")
     t.expect_addition("bin/$toolset/debug*/bar.obj")
+    t.expect_addition("bin/config.log")
+    t.expect_addition("bin/project-cache.jam")
     t.expect_nothing_more()
 
     # An up-to-date build should use the cache
@@ -104,6 +117,34 @@ obj bar : foo.cpp :
     t.expect_nothing_more()
 
     t.cleanup()
+
+
+def test_build_no_short_circuits():
+    t = BoostBuild.Tester(use_test_config=0)
+    t.write("Jamroot", """\
+import configure ;
+obj fail : fail.cpp ;
+obj should-not-be-even-tried : pass.cpp ;
+explicit fail should-not-be-even-tried ;
+obj conditional : pass.cpp :
+  <cxxflags> <variant>debug:<build>no <variant>debug:<cxxflags>
+  [ configure.check-target-builds should-not-be-even-tried "conditional" ]
+  ;
+obj indirect-conditional : pass.cpp :
+  [ configure.check-target-builds fail : : <cxxflags> <build>no <variant>debug:<cxxflags> ]
+  [ configure.check-target-builds should-not-be-even-tried "indirect-conditional" ]
+  ;
+obj indirect-conditional : pass.cpp :
+  [ configure.check-target-builds fail : : <cxxflags> <variant>debug:<build>no <variant>debug:<cxxflags> ]
+  [ configure.check-target-builds should-not-be-even-tried "conditional-in-indirect-conditional" ]
+  ;
+""")
+    t.write("pass.cpp", "void f() {}\n")
+    t.write("fail.cpp", "#error fail.cpp\n")
+    t.run_build_system()
+    t.expect_nothing_more()
+    t.cleanup()
+
 
 def test_choose():
     t = BoostBuild.Tester(use_test_config=0)
@@ -261,7 +302,10 @@ obj foo : foo.cpp :
     t.expect_nothing_more()
     t.cleanup()
 
+
+test_check_empty_config()
 test_check_target_builds()
+test_build_no_short_circuits()
 test_choose()
 test_translation()
 test_choose_none()
