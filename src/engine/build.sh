@@ -389,8 +389,8 @@ case "${B2_TOOLSET}" in
 
     clang|clang-*)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
-        B2_CXXFLAGS_RELEASE="-O3 -s"
-        B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g"
+        B2_CXXFLAGS_RELEASE="-O3 -s -Wno-deprecated-declarations"
+        B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g -Wno-deprecated-declarations"
     ;;
 
     tru64cxx)
