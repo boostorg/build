@@ -26,6 +26,12 @@ other Jam files.
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 
+== Version 4.10.1
+
+* Silence warnings for using standard deprecated functions by Apple clang
+  toolset in b2 build.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 4.10.0
 
 This release contains many bug fixes but along the way also cleanup and
