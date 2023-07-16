@@ -114,6 +114,7 @@ void error_skip_frames(std::tuple<int, list_ref> skip_messages,
 {
 	lists messages;
 	messages.push_back(std::move(std::get<1>(skip_messages)));
+	messages.append(rest);
 	error_skip_frames(std::get<0>(skip_messages), messages, context_ref);
 }
 
@@ -195,7 +196,9 @@ void warning(const lists & rest, bind::context_ref_ context_ref)
 list_ref lol_to_list(const lists & rest)
 {
 	list_ref result;
-	for (lists::size_type i = 0; i < rest.length(); ++i)
+	lists::size_type size = rest.length();
+	while (size > 0 && rest[size - 1].empty()) --size;
+	for (lists::size_type i = 0; i < size; ++i)
 	{
 		if (i != 0) result.push_back(":");
 		for (auto l : rest[i])
@@ -230,6 +233,10 @@ if --no-error-backtrace in [ modules.peek : ARGV ]
 
 rule __test__ ( )
 {
+    import assert ;
+
+    assert.result \"a\" \"b\" \"c\" ":" \"d\" : lol->list a b c : d ; 
+
     # Show that we can correctly catch an expected error.
     try ;
     {

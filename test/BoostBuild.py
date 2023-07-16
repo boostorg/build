@@ -458,7 +458,7 @@ class Tester(TestCmd.TestCmd):
         annotation("STDERR", self.stderr())
 
     def run_build_system(self, extra_args=None, subdir="", stdout=None,
-        stderr="", status=0, match=None, pass_toolset=None,
+        stderr="", status=0, match=None, match_filter=None, pass_toolset=None,
         use_test_config=None, ignore_toolset_requirements=None,
         expected_duration=None, **kw):
 
@@ -539,29 +539,15 @@ class Tester(TestCmd.TestCmd):
             annotation("reason", "unexpected status returned by bjam")
             self.fail_test(1)
 
-        if stdout is not None and not match(self.stdout(), stdout):
-            stdout_test = match(self.stdout(), stdout)
-            annotation("failure", "Unexpected stdout")
-            annotation("Expected STDOUT", stdout)
-            annotation("Actual STDOUT", self.stdout())
-            stderr = self.stderr()
-            if stderr:
-                annotation("STDERR", stderr)
-            self.do_diff(self.stdout(), stdout)
-            self.fail_test(1, dump_stdio=False)
+        if stdout is not None:
+            self.do_diff('STDOUT', self.stdout(), stdout, match, match_filter)
 
         # Intel tends to produce some messages to stderr which make tests fail.
         intel_workaround = re.compile("^xi(link|lib): executing.*\n", re.M)
         actual_stderr = re.sub(intel_workaround, "", self.stderr())
 
-        if stderr is not None and not match(actual_stderr, stderr):
-            stderr_test = match(actual_stderr, stderr)
-            annotation("failure", "Unexpected stderr")
-            annotation("Expected STDERR", stderr)
-            annotation("Actual STDERR", self.stderr())
-            annotation("STDOUT", self.stdout())
-            self.do_diff(actual_stderr, stderr)
-            self.fail_test(1, dump_stdio=False)
+        if stderr is not None:
+            self.do_diff('STDERR', actual_stderr, stderr, match, match_filter)
 
         if expected_duration is not None:
             actual_duration = build_time_finish - build_time_start
@@ -570,6 +556,27 @@ class Tester(TestCmd.TestCmd):
                     "finish in under %f seconds." % (actual_duration,
                     expected_duration))
                 self.fail_test(1, dump_stdio=False)
+
+    def do_diff(self, what, actual, expected, matcher, match_filter):
+        actual_lines = actual.splitlines(keepends=True)
+        expected_lines = expected.splitlines(keepends=True)
+        if match_filter is not None:
+            actual_lines = list(filter(match_filter, actual_lines))
+            expected_lines = list(filter(match_filter, expected_lines))
+            match = matcher("".join(actual_lines), "".join(expected_lines))
+            filtered = " (filtered)"
+        else:
+            match = matcher(actual, expected)
+            filtered = ""
+        if match:
+            return
+        diff = "".join(ndiff(expected_lines, actual_lines))
+        annotation(f"Expected {what}", expected)
+        annotation(f"Actual {what}", actual)
+        if what.lower() == "stdout":
+            annotation("STDERR", self.stderr())
+        annotation(f"Difference in {what}{filtered}", diff)
+        self.fail_test(True, dump_stdio=False)
 
     def glob_file(self, name):
         name = self.adjust_name(name)
@@ -815,11 +822,6 @@ class Tester(TestCmd.TestCmd):
             print("Got:\n")
             print(actual)
             self.fail_test(1)
-
-    def do_diff(self, actual, expected):
-        actual = actual.splitlines(keepends=True)
-        expected = expected.splitlines(keepends=True)
-        annotation("DIFFERENCE", "".join(ndiff(actual, expected)))
 
     # Internal methods.
     def adjust_lib_name(self, name):
