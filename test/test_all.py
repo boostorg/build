@@ -48,7 +48,9 @@ def run_test(test):
         __import__(test)
     except BaseException as e:
         exc = e
-    return test, time.perf_counter() - ts, exc, BoostBuild.annotations
+    annotations = BoostBuild.annotations.copy()
+    BoostBuild.annotations.clear()
+    return test, time.perf_counter() - ts, exc, annotations
 
 
 def run_tests(critical_tests, other_tests):
