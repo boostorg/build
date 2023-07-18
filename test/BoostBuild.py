@@ -113,14 +113,14 @@ def get_toolset():
 
 # Detect the host OS.
 if sys.platform == "cygwin":
-    default_os = "cygwin"
+    host_os = "cygwin"
 elif sys.platform == "win32":
-    default_os = "windows"
+    host_os = "windows"
 elif hasattr(os, "uname"):
-    default_os = os.uname()[0].lower()
+    host_os = os.uname()[0].lower()
 
 
-def expand_toolset(toolset, target_os=default_os):
+def expand_toolset(toolset, target_os):
     match = re.match(r'^(clang|intel)(-[\d\.]+|)$', toolset)
     if match:
         if match.group(1) == "intel" and target_os == "windows":
@@ -133,7 +133,7 @@ def expand_toolset(toolset, target_os=default_os):
     return toolset
 
 
-def prepare_prefixes_and_suffixes(toolset, target_os=default_os):
+def prepare_prefixes_and_suffixes(toolset, target_os):
     ind = toolset.find('-')
     if ind == -1:
         rtoolset = toolset
@@ -143,7 +143,7 @@ def prepare_prefixes_and_suffixes(toolset, target_os=default_os):
     prepare_library_prefix(rtoolset, target_os)
 
 
-def prepare_suffix_map(toolset, target_os=default_os):
+def prepare_suffix_map(toolset, target_os):
     """
       Set up suffix translation performed by the Boost Build testing framework
     to accommodate different toolsets generating targets of the same type using
@@ -175,8 +175,12 @@ def prepare_suffix_map(toolset, target_os=default_os):
         if target_os == "darwin":
             suffixes[".dll"] = ".dylib"
 
+        if toolset == "emscripten":
+            suffixes[".exe"] = ".js" # or .wasm?
+            suffixes[".dll"] = ".so" # .wasn doesn't work for searched libs
 
-def prepare_library_prefix(toolset, target_os=default_os):
+
+def prepare_library_prefix(toolset, target_os):
     """
       Setup whether Boost Build is expected to automatically prepend prefixes
     to its built library targets.
@@ -282,13 +286,8 @@ class Tester(TestCmd.TestCmd):
         self.translate_suffixes = translate_suffixes
         self.use_test_config = use_test_config
 
-        self.target_os = default_os
-        self.toolset = get_toolset()
-        self.expanded_toolset = expand_toolset(self.toolset)
-        self.pass_toolset = pass_toolset
+        self.set_toolset(get_toolset(), _pass_toolset=pass_toolset)
         self.ignore_toolset_requirements = ignore_toolset_requirements
-
-        prepare_prefixes_and_suffixes(pass_toolset and self.toolset or "gcc")
 
         use_default_bjam = "--default-bjam" in sys.argv
 
@@ -343,12 +342,14 @@ class Tester(TestCmd.TestCmd):
             # this case.
             pass
 
-    def set_toolset(self, toolset, target_os=default_os):
-        self.target_os = target_os
-        self.toolset = toolset
-        self.expanded_toolset = expand_toolset(toolset, target_os)
-        self.pass_toolset = True
-        prepare_prefixes_and_suffixes(toolset, target_os)
+    def set_toolset(self, toolset, target_os=None, _pass_toolset=True):
+        self.toolset = _pass_toolset and toolset or "gcc"
+        if not target_os and self.toolset.startswith("emscripten"):
+            target_os = "unknown"
+        self.target_os = target_os or host_os
+        self.expanded_toolset = expand_toolset(self.toolset, self.target_os)
+        self.pass_toolset = _pass_toolset
+        prepare_prefixes_and_suffixes(self.toolset, self.target_os)
 
     def is_implib_expected(self):
         return self.target_os in ["windows", "cygwin"] and not re.match(r'^clang(-linux)?(-[\d.]+)?$', self.toolset)
@@ -762,6 +763,9 @@ class Tester(TestCmd.TestCmd):
             self.ignore("*.tds")       # Borland debug symbols.
             self.ignore("*.manifest")  # MSVC DLL manifests.
             self.ignore("bin/standalone/msvc/*/msvc-setup.bat")
+
+        # emscripten 'exe' is .js which is a laucnher for .wasm file
+        self.ignore("*.wasm")
 
         # Debug builds of bjam built with gcc produce this profiling data.
         self.ignore("gmon.out")
