@@ -32,6 +32,7 @@ environment:
     job_group: 'Test'
     TOOLSET: clang-win
     TEST_TOOLSET: clang-win
+    B2_DONT_EMBED_MANIFEST: true  # lld-link: error: unable to find mt.exe in PATH: no such file or directory
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
   - job_name: 'Cygwin 3.1.7 x64, Test'
     job_group: 'TestCygwin'
@@ -61,7 +62,7 @@ for:
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> TEST"
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
           cd test
-          py test_all.py %TEST_TOOLSET%
+          py -X utf8 test_all.py %TEST_TOOLSET%
           cd ..
       - cmd: |
           echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"

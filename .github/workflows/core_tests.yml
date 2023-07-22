@@ -65,6 +65,7 @@ jobs:
 
       - name: Test
         working-directory: test
+        env: { PYTHONUTF8: 1 }
         run: ./test_all.py ${{matrix.toolset}}
 
       - name: 'No Warnings'

@@ -152,6 +152,11 @@
 # include <signal.h>
 #endif
 
+#ifdef WIN32
+# define WIN32_LEAN_AND_MEAN
+# include <windows.h>
+#endif
+
 struct globs globs =
 {
     0,          /* noexec */
@@ -613,6 +618,44 @@ int guarded_main( int argc, char * * argv )
 
     return status ? EXITBAD : EXITOK;
 }
+
+#ifdef WIN32
+namespace {
+
+struct SetConsoleCodepage
+{
+    SetConsoleCodepage()
+    {
+        // Check whether UTF-8 is actually the default encoding for this process
+        if (GetACP() != CP_UTF8)
+            return;
+
+        orig_console_cp = GetConsoleCP();
+        if (orig_console_cp != 0 && orig_console_cp != CP_UTF8)
+            SetConsoleCP(CP_UTF8);
+        orig_console_output_cp = GetConsoleOutputCP();
+        if (orig_console_output_cp != 0 && orig_console_output_cp != CP_UTF8)
+            SetConsoleOutputCP(CP_UTF8);
+    }
+
+    ~SetConsoleCodepage()
+    {
+        // Restore original console codepage
+        if (orig_console_cp != 0 && orig_console_cp != CP_UTF8)
+            SetConsoleCP(orig_console_cp);
+        if (orig_console_output_cp != 0 && orig_console_output_cp != CP_UTF8)
+            SetConsoleOutputCP(orig_console_output_cp);
+    }
+
+private:
+    UINT orig_console_cp = 0;
+    UINT orig_console_output_cp = 0;
+};
+
+static const SetConsoleCodepage g_console_codepage_setter{};
+
+}
+#endif
 
 int main( int argc, char * * argv )
 {

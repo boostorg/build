@@ -332,6 +332,12 @@ class Tester(TestCmd.TestCmd):
 
         os.chdir(self.workdir)
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.cleanup()
+
     def cleanup(self):
         try:
             TestCmd.TestCmd.cleanup(self)
@@ -383,11 +389,13 @@ class Tester(TestCmd.TestCmd):
         self.__makedirs(os.path.dirname(nfile), wait)
         if not type(content) == bytes:
             content = content.encode()
-        f = open(nfile, "wb")
         try:
-            f.write(content)
-        finally:
-            f.close()
+            with open(nfile, "wb") as f:
+                f.write(content)
+        except Exception as e:
+            annotation("failure", f"Could not create file '{nfile}': {e}")
+            annotate_stack_trace(level=3)
+            self.fail_test(1)
         self.__ensure_newer_than_last_build(nfile)
 
     def rename(self, src, dst):
@@ -1049,9 +1057,11 @@ class Tester(TestCmd.TestCmd):
                     os.mkdir(path)
                     self.__ensure_newer_than_last_build(path)
             else:
-                os.makedirs(path)
-        except Exception:
-            pass
+                os.makedirs(path, exist_ok=True)
+        except Exception as e:
+            annotation("failure", f"Could not create path '{path}': {e}")
+            annotate_stack_trace(level=3)
+            self.fail_test(1)
 
     def __python_timestamp_resolution(self, path, minimum_resolution):
         """
