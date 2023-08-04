@@ -1030,7 +1030,7 @@ LIST * builtin_match( FRAME * frame, int flags )
             {
                 /* Find highest parameter */
                 int top = NSUBEXP-1;
-                while ( re_i[top].empty() ) top -= 1;
+                while ( !re_i[top].begin() ) top -= 1;
                 /* And add all parameters up to highest onto list. */
                 /* Must have parameters to have results! */
                 for ( int i = 1; i <= top ; ++i )
