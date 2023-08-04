@@ -334,14 +334,6 @@ void import(list_cref module_names,
 
 		if (!(*loaded_v).contains(module_basename))
 		{
-			auto grand_caller = detail::caller_module(context.frame, 1);
-			out_printf(
-				"b2::jam::modules::import: GRAND-CALLER-CURRENT-NEXT modules = %s, %s, %s, %s\n",
-				grand_caller.has_value() ? grand_caller->str() : "<>",
-				caller_module.has_value() ? caller_module->str() : "<>",
-				context.frame->module->name ? context.frame->module->name->str()
-											: "<root>",
-				module_basename.c_str());
 			load(module_basename, value_ref(), list_cref(*search), context_ref);
 			// run_rule(context.frame, "modules.load",
 			// list_ref(module_basename));
