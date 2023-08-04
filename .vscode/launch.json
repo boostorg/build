@@ -53,7 +53,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-12/debug/cxxstd-11-iso/b2",
+            "program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/b2",
             "args": ["--grep"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -72,7 +72,7 @@
             "name": "(gdb) Launch: ASAN",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-12/debug/address-sanitizer-on/cxxstd-11-iso/b2",
+            "program": "${workspaceFolder}/.build/gcc-13/debug/address-sanitizer-on/cxxstd-11-iso/b2",
             "args": ["-na", "toolset=gcc"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -91,7 +91,7 @@
             "name": "(gdb) Launch, Unit Tests",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-12/debug/cxxstd-11-iso/b2",
+            "program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/b2",
             "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests", "toolset=gcc"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/test",
@@ -110,7 +110,7 @@
             "name": "(gdb) Launch, Unit Tests: ASAN",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/.build/gcc-12/debug/address-sanitizer-on/cxxstd-11-iso/b2",
+            "program": "${workspaceFolder}/.build/gcc-13/debug/address-sanitizer-on/cxxstd-11-iso/b2",
             "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests", "toolset=gcc"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/test",
@@ -118,6 +118,33 @@
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "(rr) Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/b2",
+            "args": ["--grep"],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "gdb",
+            "miDebuggerServerAddress": "localhost:50505",
+            // "miDebuggerPath": "rr",
+            // "miDebuggerArgs": "replay -s 50505",
+            "setupCommands": [
+                {
+                    "description": "Setup to resolve symbols",
+                    "text": "set sysroot /",
+                    "ignoreFailures": false
+                },
                 {
                     "description": "Enable pretty-printing for gdb",
                     "text": "-enable-pretty-printing",

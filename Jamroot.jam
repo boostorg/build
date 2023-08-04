@@ -20,6 +20,7 @@ if --grep in [ modules.peek : ARGV ]
         : "#(include) \"([^\"]+)\"" "#(include) <([^>]+)>"
         : 1 2
         : recursive ] ;
+    ECHO $(mmm[1-10]) ;
     EXIT "!" ;
 }
 
@@ -49,6 +50,7 @@ project b2
         <toolset>clang-win:<define>_CRT_SECURE_NO_WARNINGS=1
         <toolset>clang-win:<define>_CRT_NONSTDC_NO_DEPRECATE=1
         <toolset>clang:<cxxflags>-Wno-deprecated-declarations
+        <toolset>gcc,<variant>debug:<linkflags>-rdynamic
     ;
 
 #|
