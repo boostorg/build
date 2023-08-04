@@ -854,11 +854,10 @@ struct executor
 			}
 		else
 			/* We do not -- general case. */
-			do
+			for (; !s.empty(); s = s.substr(1))
 			{
 				if (regtry(prog, expr, s)) return true;
 			}
-			while (!(s = s.substr(1)).empty());
 
 		/* Failure. */
 		return false;
@@ -982,8 +981,9 @@ struct executor
 						 * invocation of the same parentheses
 						 * already has.
 						 */
-						if (expr.sub[no].begin() == nullptr)
-							expr.sub[no] = string_view(save.begin(), 0);
+						if (expr.sub[no].begin() != nullptr)
+							expr.sub[no] = string_view(
+								save.begin(), expr.sub[no].begin());
 						return true;
 					}
 					else
@@ -1012,9 +1012,8 @@ struct executor
 						 * invocation of the same parentheses
 						 * already has.
 						 */
-						if (expr.sub[no].begin() && expr.sub[no].empty())
-							expr.sub[no] = string_view(
-								expr.sub[no].begin(), save.begin());
+						if (expr.sub[no].begin() == nullptr)
+							expr.sub[no] = string_view(save.begin(), 0);
 						return true;
 					}
 					else
@@ -1059,11 +1058,12 @@ struct executor
 					while (no >= min)
 					{
 						/* If it could work, try it. */
-						if (nextch == '\0' || reg_in[0] == nextch)
+						if (nextch == '\0' ||
+							(reg_in.empty() ? '\0' : reg_in[0]) == nextch)
 							if (regmatch(next, expr)) return true;
 						/* Couldn't or didn't -- back up. */
 						no--;
-						reg_in = save.substr(no);
+						reg_in = save.substr((std::max)(no, 0));
 					}
 					return false;
 				}
@@ -1177,6 +1177,12 @@ void program::result_iterator::advance()
 		// A match means the subexpressions are filled in and the first entry
 		// is the full match. Advance `rest` to follow the match.
 		rest = string_view(expressions.sub[0].end(), rest.end());
+	}
+	else
+	{
+		// No next match, reset to end/nothing.
+		rest = string_view{};
+		expressions = regex_expr{};
 	}
 }
 
