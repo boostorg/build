@@ -344,7 +344,7 @@ struct _stack
         // Debugging validation.
         using U = remove_cref_t<T>;
         for (auto c = 0; c < n; ++c)
-            cleanups[cleanups_size-c-1].check<U>().~cleanup_t();
+            cleanups[cleanups_size-c-1].check<U>().reset();
         // The removal of the n items happens by skipping the stack pointer
         // past the n items.
         set_data( nth<T>( n ) );
@@ -352,6 +352,51 @@ struct _stack
         // some form.
         cleanups_size -= n;
     }
+
+    //
+    template <class T>
+    void swap( int32_t a, int32_t b )
+    {
+        std::swap( this->top<T>(a), this->top<T>(b) );
+        std::swap(
+            this->cleanups[cleanups_size-a-1],
+            this->cleanups[cleanups_size-b-1] );
+    }
+
+    // RAII checks that the stack returns to a starting point at the end of a
+    // scope.
+    struct check
+    {
+        #if defined(B2_DEBUG) && B2_DEBUG
+
+        check(FRAME * f, STACK * s)
+            : frame(f), stack(s), saved(s->get<char>())
+        {}
+
+        check & operator()()
+        {
+            if (stack->get<char>() != saved)
+            {
+                backtrace_line( frame );
+                err_printf( "error: stack check failed.\n" );
+                backtrace( frame );
+                b2::ensure( false );
+            }
+            return *this;
+        }
+
+        private:
+        FRAME * frame = nullptr;
+        STACK * stack = nullptr;
+        char * saved = nullptr;
+
+        #else
+
+        check(FRAME *, STACK *) {}
+        check & operator()() { return *this; }
+
+        #endif
+    };
 
     private:
 
@@ -377,18 +422,33 @@ struct _stack
             jam_stack = b2::jam::backtrace::to_string(frame);
             #endif
         }
-        inline ~cleanup_t()
+        inline cleanup_t & reset()
         {
-            #if defined(B2_DEBUG) && B2_DEBUG
             clean = nullptr;
+            #if defined(B2_DEBUG) && B2_DEBUG
             type_name = nullptr;
+            native_stack = "";
+            jam_stack = "";
             #endif
+            return *this;
         }
         template <class T>
         inline cleanup_t & check()
         {
             #if defined(B2_DEBUG) && B2_DEBUG
             static const char * type_name_c = typeid(T).name();
+            if (type_name_c != this->type_name)
+            {
+                err_printf(
+                    "Stack type mismatch, trying to pop '%s' have '%s'"
+                    " originally from:\n"
+                    "(jam, recent first)\n"
+                    "%s\n"
+                    "(native, recent first)\n"
+                    "%s\n",
+                    type_name_c, this->type_name, jam_stack.c_str(),
+                    native_stack.c_str());
+            }
             b2::ensure(type_name_c == this->type_name);
             #endif
             return *this;
@@ -491,10 +551,10 @@ remove_cref_t<T> * _stack::push( T v, int32_t n, FRAME * frame )
 }
 
 template <typename T>
-void _stack::cleanup_push( int32_t n, FRAME * frame, T*_ )
+void _stack::cleanup_push( int32_t n, FRAME * frame, T*t )
 {
     using U = remove_cref_t<T>;
-    cleanup_t c((cleanup_f)&_stack::cleanup_item<T>, frame, (U*)(_));
+    cleanup_t c((cleanup_f)&_stack::cleanup_item<T>, frame, (U*)(t));
     std::uninitialized_fill_n( &cleanups[cleanups_size], n, c );
     cleanups_size += n;
 }
@@ -4237,15 +4297,14 @@ LIST * function_execute_write_file(
 
 LIST * function_run( FUNCTION * function_, FRAME * frame )
 {
+    _stack::check check_stack(frame, stack_global());
+
     STACK * s = stack_global();
     JAM_FUNCTION * function;
     instruction * code;
     LIST * l;
     LIST * r;
     LIST * result = L0;
-#ifndef NDEBUG
-    char * saved_stack = s->get<char>();
-#endif
 
     PROFILE_ENTER_LOCAL(function_run);
 
@@ -4359,7 +4418,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
         case INSTR_SWAP:
         {
             PROFILE_ENTER_LOCAL(function_run_INSTR_SWAP);
-            std::swap( s->top<LIST*>(), s->top<LIST*>( code->arg ) );
+            s->swap<LIST*>( 0, code->arg );
             PROFILE_EXIT_LOCAL(function_run_INSTR_SWAP);
             break;
         }
@@ -4596,18 +4655,7 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
             if ( function_->formal_arguments )
                 argument_list_pop( function_->formal_arguments,
                     function_->num_formal_arguments, frame, s );
-#ifndef NDEBUG
-            if ( !( saved_stack == s->get<char>() ) )
-            {
-                frame->file = function->file;
-                frame->line = function->line;
-                backtrace_line( frame );
-                out_printf( "error: stack check failed.\n" );
-                backtrace( frame );
-                assert( saved_stack == s->get<char>() );
-            }
-            assert( saved_stack == s->get<char>() );
-#endif
+            check_stack();
             debug_on_exit_function( function->base.rulename );
             PROFILE_EXIT_LOCAL(function_run_INSTR_RETURN);
             PROFILE_EXIT_LOCAL(function_run);
@@ -5311,6 +5359,8 @@ LIST * function_run( FUNCTION * function_, FRAME * frame )
     }
 
     PROFILE_EXIT_LOCAL(function_run);
+
+    return L0;
 }
 
 
