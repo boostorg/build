@@ -14,7 +14,7 @@ steps:
     $env:path += ';' + $env:CXX_PATH
     cd test
     echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > ${env:HOME}/user-config.jam
-    py test_all.py $env:TEST_TOOLSET
+    py -X utf8 test_all.py $env:TEST_TOOLSET
     cd ..
   displayName: Test
 - powershell: |

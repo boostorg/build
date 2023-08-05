@@ -389,8 +389,8 @@ case "${B2_TOOLSET}" in
 
     clang|clang-*)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
-        B2_CXXFLAGS_RELEASE="-O3 -s"
-        B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g"
+        B2_CXXFLAGS_RELEASE="-O3 -s -Wno-deprecated-declarations"
+        B2_CXXFLAGS_DEBUG="-O0 -fno-inline -g -Wno-deprecated-declarations"
     ;;
 
     tru64cxx)
@@ -502,6 +502,10 @@ mod_version.cpp \
 
     if test_true ${B2_DEBUG_OPT} ; then B2_CXXFLAGS="${B2_CXXFLAGS_DEBUG}"
     else B2_CXXFLAGS="${B2_CXXFLAGS_RELEASE} -DNDEBUG"
+    fi
+    if [ -z "$B2_DONT_EMBED_MANIFEST" ] && [ -x "$(command -v windres)" ] ; then
+        B2_CXXFLAGS="${B2_CXXFLAGS} -Wl,res.o"
+        ( B2_VERBOSE_OPT=${TRUE} echo_run windres --input res.rc --output res.o )
     fi
     ( B2_VERBOSE_OPT=${TRUE} echo_run ${B2_CXX} ${B2_CXXFLAGS} ${B2_SOURCES} -o b2 )
 }
