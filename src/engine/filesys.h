@@ -127,6 +127,8 @@ namespace b2 { namespace filesys {
 class file_buffer
 {
     public:
+    bool is_memory_mapped = false;
+
     file_buffer(const std::string & filepath);
     ~file_buffer();
 
@@ -135,7 +137,6 @@ class file_buffer
     inline const char * end() const { return data_c.get()+size(); }
 
     private:
-    bool is_memory_mapped = false;
     std::unique_ptr<char[]> data_c;
     std::size_t data_size = 0;
     FILE * file = nullptr;
