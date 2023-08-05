@@ -45,6 +45,13 @@
 #include <windows.h>
 #endif
 
+#if !defined(OS_NT)
+#include <sys/mman.h>
+#define USE_MMAP 0
+#else
+#define USE_MMAP 0
+#endif
+
 /* Internal OS specific implementation details - have names ending with an
  * underscore and are expected to be implemented in an OS specific fileXXX.c
  * module.
@@ -749,23 +756,43 @@ std::size_t file_query_data_size_(const std::string & filepath)
 
 file_buffer::file_buffer(const std::string & filepath)
 {
-    // Totally not optimized reading of the file data into memory.
-    // TODO: Use memory mapping instead.
     data_size = file_query_data_size_(filepath);
-    data_c.reset(new char[data_size]);
-    if (FILE* f = std::fopen(filepath.c_str(), "r"))
+    file = std::fopen(filepath.c_str(), "r");
+    #if USE_MMAP
+    if (file)
     {
-        if (std::fread(data_c.get(), data_size, 1, f) != 1)
+        is_memory_mapped = true;
+        auto p = mmap(
+            nullptr, data_size, PROT_READ, MAP_PRIVATE, fileno(file), 0);
+        if (p != MAP_FAILED)
+        {
+            data_c.reset(static_cast<char*>(p));
+            // madvise(data_c.get(), data_size, MADV_SEQUENTIAL);
+        }
+    }
+    #endif
+    if (!data_c && file)
+    {
+        data_c.reset(new char[data_size]);
+        if (std::fread(data_c.get(), data_size, 1, file) != 1)
         {
             data_size = 0;
             data_c.reset();
         }
-        std::fclose(f);
+        std::fclose(file);
+        file = nullptr;
     }
 }
 
 file_buffer::~file_buffer()
 {
+    #if USE_MMAP
+    if (is_memory_mapped && data_c)
+    {
+        munmap(data_c.release(), data_size);
+        std::fclose(file);
+    }
+    #endif
 }
 
 }}
