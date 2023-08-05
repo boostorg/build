@@ -261,8 +261,10 @@ struct regex_grep_task
 				{
 					// We have a glob match for this file. We can queue it up
 					// for the possibly parallel grep.
-					grep_tasks->queue(
-						[this, filepath]() { file_grep(filepath); });
+					grep_tasks->queue([this, filepath] {
+						auto filedata = file_preload(filepath);
+						file_grep(filepath, *filedata);
+					});
 				}
 			}
 			return;
@@ -277,7 +279,13 @@ struct regex_grep_task
 		}
 	}
 
-	void file_grep(std::string filepath)
+	std::unique_ptr<b2::filesys::file_buffer> file_preload(std::string filepath)
+	{
+		return std::unique_ptr<b2::filesys::file_buffer>(
+			new b2::filesys::file_buffer(filepath));
+	}
+
+	void file_grep(std::string filepath, b2::filesys::file_buffer & filedata)
 	{
 		// WARNING: We need to avoid Jam operations in this. As we are getting
 		// called from different threads. And the Jam memory is not thread-safe.
@@ -287,8 +295,6 @@ struct regex_grep_task
 		std::unique_ptr<std::vector<std::string>> result(
 			new std::vector<std::string>);
 
-		// Load file, hopefully doing a memory map.
-		b2::filesys::file_buffer filedata(filepath);
 		if (filedata.size() > 0)
 		{
 			// We have some data to regex search in.
