@@ -40,6 +40,13 @@
 #include <vector>
 #include <array>
 
+#if defined(B2_DEBUG) && B2_DEBUG
+// #define B2_FUNCTION_STACK_VALIDATE 1
+#define B2_FUNCTION_STACK_VALIDATE 0
+#else
+#define B2_FUNCTION_STACK_VALIDATE 0
+#endif
+
 /*
 #define FUNCTION_DEBUG_PROFILE
 */
@@ -367,14 +374,18 @@ struct _stack
     // scope.
     struct check
     {
-        #if defined(B2_DEBUG) && B2_DEBUG
-
         check(FRAME * f, STACK * s)
-            : frame(f), stack(s), saved(s->get<char>())
-        {}
+        {
+            #if B2_FUNCTION_STACK_VALIDATE
+            frame = f;
+            stack = s;
+            saved = s->get<char>();
+            #endif
+        }
 
         check & operator()()
         {
+            #if B2_FUNCTION_STACK_VALIDATE
             if (stack->get<char>() != saved)
             {
                 backtrace_line( frame );
@@ -382,19 +393,15 @@ struct _stack
                 backtrace( frame );
                 b2::ensure( false );
             }
+            #endif
             return *this;
         }
 
         private:
+        #if B2_FUNCTION_STACK_VALIDATE
         FRAME * frame = nullptr;
         STACK * stack = nullptr;
         char * saved = nullptr;
-
-        #else
-
-        check(FRAME *, STACK *) {}
-        check & operator()() { return *this; }
-
         #endif
     };
 
@@ -407,7 +414,7 @@ struct _stack
     struct cleanup_t
     {
         cleanup_f clean = nullptr;
-        #if defined(B2_DEBUG) && B2_DEBUG
+        #if B2_FUNCTION_STACK_VALIDATE
         const char * type_name = nullptr;
         std::string native_stack;
         std::string jam_stack;
@@ -416,7 +423,7 @@ struct _stack
         template <class T>
         inline cleanup_t(cleanup_f f, FRAME * frame, T*_) : clean(f)
         {
-            #if defined(B2_DEBUG) && B2_DEBUG
+            #if B2_FUNCTION_STACK_VALIDATE
             type_name = typeid(T).name();
             native_stack = b2::stacktrace::to_string();
             jam_stack = b2::jam::backtrace::to_string(frame);
@@ -425,7 +432,7 @@ struct _stack
         inline cleanup_t & reset()
         {
             clean = nullptr;
-            #if defined(B2_DEBUG) && B2_DEBUG
+            #if B2_FUNCTION_STACK_VALIDATE
             type_name = nullptr;
             native_stack = "";
             jam_stack = "";
@@ -435,7 +442,7 @@ struct _stack
         template <class T>
         inline cleanup_t & check()
         {
-            #if defined(B2_DEBUG) && B2_DEBUG
+            #if B2_FUNCTION_STACK_VALIDATE
             static const char * type_name_c = typeid(T).name();
             if (type_name_c != this->type_name)
             {
