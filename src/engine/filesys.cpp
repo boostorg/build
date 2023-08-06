@@ -39,6 +39,7 @@
 #include <assert.h>
 #include <sys/stat.h>
 #include <cstdio>
+#include <cstdint>
 
 #ifdef OS_NT
 #define WIN32_LEAN_AND_MEAN
@@ -747,8 +748,10 @@ std::size_t file_query_data_size_(const std::string & filepath)
         if (GetFileAttributesExW(filepathw.c_str(), GetFileExInfoStandard, &file_data) == 0)
             return 0;
     }
-    return (std::size_t(file_data.nFileSizeHigh)<<(sizeof(file_data.nFileSizeLow)*8))
-        | std::size_t(file_data.nFileSizeLow);
+    auto file_size =
+        (std::uint64_t(file_data.nFileSizeHigh)<<(sizeof(file_data.nFileSizeLow)*8))
+        | std::uint64_t(file_data.nFileSizeLow);
+    return std::size_t(file_size);
     #endif
     return 0;
 }
