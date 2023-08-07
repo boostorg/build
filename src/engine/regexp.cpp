@@ -1105,7 +1105,7 @@ struct executor
 				scan = scan.substr(count);
 				break;
 			case EXACTLY:
-				while (*opnd == scan[0])
+				while (!scan.empty() && *opnd == scan[0])
 				{
 					count++;
 					scan = scan.substr(1);
