@@ -26,6 +26,11 @@
 #include <type_traits>
 #include <cassert>
 
+#define BOOST_CXX14_CONSTEXPR
+#define BOOST_NOEXCEPT
+#define BOOST_CONSTEXPR constexpr
+#define BOOST_STATIC_CONSTEXPR static const
+
 namespace boost
 {
 
@@ -49,7 +54,7 @@ template<> struct sv_to_uchar<char>
 # pragma GCC diagnostic ignored "-Wtype-limits"
 #endif
 
-template<class Ch> std::size_t find_first_of( Ch const* p_, std::size_t n_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
+template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_first_of( Ch const* p_, std::size_t n_, Ch const* s, std::size_t pos, std::size_t n ) BOOST_NOEXCEPT
 {
     typedef typename sv_to_uchar<Ch>::type UCh;
 
@@ -104,7 +109,7 @@ template<class Ch> std::size_t find_first_of( Ch const* p_, std::size_t n_, Ch c
     return static_cast<std::size_t>( -1 );
 }
 
-template<class Ch> std::size_t find_last_of( Ch const* p_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
+template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_last_of( Ch const* p_, Ch const* s, std::size_t pos, std::size_t n ) BOOST_NOEXCEPT
 {
     typedef typename sv_to_uchar<Ch>::type UCh;
 
@@ -174,7 +179,7 @@ template<class Ch> std::size_t find_last_of( Ch const* p_, Ch const* s, std::siz
     return npos;
 }
 
-template<class Ch> std::size_t find_first_not_of( Ch const* p_, std::size_t n_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
+template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_first_not_of( Ch const* p_, std::size_t n_, Ch const* s, std::size_t pos, std::size_t n ) BOOST_NOEXCEPT
 {
     typedef typename sv_to_uchar<Ch>::type UCh;
 
@@ -237,7 +242,7 @@ template<class Ch> std::size_t find_first_not_of( Ch const* p_, std::size_t n_, 
     return static_cast<std::size_t>( -1 );
 }
 
-template<class Ch> std::size_t find_last_not_of( Ch const* p_, Ch const* s, std::size_t pos, std::size_t n ) noexcept
+template<class Ch> BOOST_CXX14_CONSTEXPR std::size_t find_last_not_of( Ch const* p_, Ch const* s, std::size_t pos, std::size_t n ) BOOST_NOEXCEPT
 {
     typedef typename sv_to_uchar<Ch>::type UCh;
 
@@ -326,7 +331,7 @@ template<class Ch> class basic_string_view
 private:
 
     Ch const* p_;
-    mutable std::size_t n_; // mutable to allow mod within C++11 constexpr rules
+    std::size_t n_;
 
 public:
 
@@ -347,36 +352,36 @@ public:
 
     // npos
 
-    static constexpr size_type npos = static_cast<size_type>( -1 );
+    BOOST_STATIC_CONSTEXPR size_type npos = static_cast<size_type>( -1 );
 
 public:
 
     // construction and assignment
 
-    constexpr basic_string_view() noexcept: p_(), n_()
+    BOOST_CONSTEXPR basic_string_view() BOOST_NOEXCEPT: p_(), n_()
     {
     }
 
-    constexpr basic_string_view( Ch const* str ) noexcept: p_( str ), n_( traits_type::length( str ) )
+    BOOST_CONSTEXPR basic_string_view( Ch const* str ) BOOST_NOEXCEPT: p_( str ), n_( traits_type::length( str ) )
     {
     }
 
-    constexpr basic_string_view( Ch const* str, size_type len ) noexcept: p_( str ), n_( len )
+    BOOST_CONSTEXPR basic_string_view( Ch const* str, size_type len ) BOOST_NOEXCEPT: p_( str ), n_( len )
     {
     }
 
-    template<class End> constexpr basic_string_view( Ch const* first, End last,
-        typename std::enable_if<std::is_same<End, Ch const*>::value, void >::type* = 0 ) noexcept: p_( first ), n_( last - first )
+    template<class End> BOOST_CXX14_CONSTEXPR basic_string_view( Ch const* first, End last,
+        typename std::enable_if<std::is_same<End, Ch const*>::value, void >::type* = 0 ) BOOST_NOEXCEPT: p_( first ), n_( last - first )
     {
     }
 
-    template<class A> basic_string_view( std::basic_string<Ch, std::char_traits<Ch>, A> const& str ) noexcept: p_( str.data() ), n_( str.size() )
+    template<class A> basic_string_view( std::basic_string<Ch, std::char_traits<Ch>, A> const& str ) BOOST_NOEXCEPT: p_( str.data() ), n_( str.size() )
     {
     }
 
     basic_string_view( std::nullptr_t ) = delete;
 
-    // constexpr basic_string_view& operator=( basic_string_view const& ) noexcept & = default;
+    // BOOST_CONSTEXPR basic_string_view& operator=( basic_string_view const& ) BOOST_NOEXCEPT & = default;
 
     // conversions
 
@@ -387,77 +392,77 @@ public:
 
     // iterator support
 
-    constexpr const_iterator begin() const noexcept
+    BOOST_CONSTEXPR const_iterator begin() const BOOST_NOEXCEPT
     {
         return p_;
     }
 
-    constexpr const_iterator end() const noexcept
+    BOOST_CONSTEXPR const_iterator end() const BOOST_NOEXCEPT
     {
         return p_ + n_;
     }
 
-    constexpr const_iterator cbegin() const noexcept
+    BOOST_CONSTEXPR const_iterator cbegin() const BOOST_NOEXCEPT
     {
         return p_;
     }
 
-    constexpr const_iterator cend() const noexcept
+    BOOST_CONSTEXPR const_iterator cend() const BOOST_NOEXCEPT
     {
         return p_ + n_;
     }
 
-    constexpr const_reverse_iterator rbegin() const noexcept
+    BOOST_CONSTEXPR const_reverse_iterator rbegin() const BOOST_NOEXCEPT
     {
         return const_reverse_iterator( end() );
     }
 
-    constexpr const_reverse_iterator rend() const noexcept
+    BOOST_CONSTEXPR const_reverse_iterator rend() const BOOST_NOEXCEPT
     {
         return const_reverse_iterator( begin() );
     }
 
-    constexpr const_reverse_iterator crbegin() const noexcept
+    BOOST_CONSTEXPR const_reverse_iterator crbegin() const BOOST_NOEXCEPT
     {
         return const_reverse_iterator( end() );
     }
 
-    constexpr const_reverse_iterator crend() const noexcept
+    BOOST_CONSTEXPR const_reverse_iterator crend() const BOOST_NOEXCEPT
     {
         return const_reverse_iterator( begin() );
     }
 
     // capacity
 
-    constexpr size_type size() const noexcept
+    BOOST_CONSTEXPR size_type size() const BOOST_NOEXCEPT
     {
         return n_;
     }
 
-    constexpr size_type length() const noexcept
+    BOOST_CONSTEXPR size_type length() const BOOST_NOEXCEPT
     {
         return n_;
     }
 
-    constexpr size_type max_size() const noexcept
+    BOOST_CONSTEXPR size_type max_size() const BOOST_NOEXCEPT
     {
         return npos / sizeof( Ch );
     }
 
-    constexpr bool empty() const noexcept
+    BOOST_CONSTEXPR bool empty() const BOOST_NOEXCEPT
     {
         return n_ == 0;
     }
 
     // element access
 
-    const_reference operator[]( size_type pos ) const noexcept
+    BOOST_CXX14_CONSTEXPR const_reference operator[]( size_type pos ) const BOOST_NOEXCEPT
     {
         assert( pos < size() );
         return p_[ pos ];
     }
 
-    const_reference at( size_type pos ) const
+    BOOST_CXX14_CONSTEXPR const_reference at( size_type pos ) const
     {
         if( pos >= size() )
         {
@@ -467,26 +472,26 @@ public:
         return p_[ pos ];
     }
 
-    const_reference front() const noexcept
+    BOOST_CXX14_CONSTEXPR const_reference front() const BOOST_NOEXCEPT
     {
         assert( !empty() );
         return p_[ 0 ];
     }
 
-    const_reference back() const noexcept
+    BOOST_CXX14_CONSTEXPR const_reference back() const BOOST_NOEXCEPT
     {
         assert( !empty() );
         return p_[ n_ - 1 ];
     }
 
-    constexpr const_pointer data() const noexcept
+    BOOST_CONSTEXPR const_pointer data() const BOOST_NOEXCEPT
     {
         return p_;
     }
 
     // modifiers
 
-    void remove_prefix( size_type n ) noexcept
+    BOOST_CXX14_CONSTEXPR void remove_prefix( size_type n ) BOOST_NOEXCEPT
     {
         assert( n <= size() );
 
@@ -494,14 +499,14 @@ public:
         n_ -= n;
     }
 
-    void remove_suffix( size_type n ) noexcept
+    BOOST_CXX14_CONSTEXPR void remove_suffix( size_type n ) BOOST_NOEXCEPT
     {
         assert( n <= size() );
 
         n_ -= n;
     }
 
-    void swap( basic_string_view& s ) noexcept
+    BOOST_CXX14_CONSTEXPR void swap( basic_string_view& s ) BOOST_NOEXCEPT
     {
         std::swap( p_, s.p_ );
         std::swap( n_, s.n_ );
@@ -509,7 +514,7 @@ public:
 
     // string operations
 
-    size_type copy( Ch* s, size_type n, size_type pos = 0 ) const
+    BOOST_CXX14_CONSTEXPR size_type copy( Ch* s, size_type n, size_type pos = 0 ) const
     {
         if( pos > size() )
         {
@@ -523,7 +528,7 @@ public:
         return rlen;
     }
 
-    basic_string_view substr( size_type pos = 0, size_type n = npos ) const
+    BOOST_CXX14_CONSTEXPR basic_string_view substr( size_type pos = 0, size_type n = npos ) const
     {
         if( pos > size() )
         {
@@ -537,7 +542,7 @@ public:
 
     // compare
 
-    int compare( basic_string_view str ) const noexcept
+    BOOST_CXX14_CONSTEXPR int compare( basic_string_view str ) const BOOST_NOEXCEPT
     {
         std::size_t rlen = (std::min)( size(), str.size() );
 
@@ -550,73 +555,73 @@ public:
         return size() < str.size()? -1: +1;
     }
 
-    constexpr int compare( size_type pos1, size_type n1, basic_string_view str ) const
+    BOOST_CONSTEXPR int compare( size_type pos1, size_type n1, basic_string_view str ) const
     {
         return substr( pos1, n1 ).compare( str );
     }
 
-    constexpr int compare( size_type pos1, size_type n1, basic_string_view str, size_type pos2, size_type n2 ) const
+    BOOST_CONSTEXPR int compare( size_type pos1, size_type n1, basic_string_view str, size_type pos2, size_type n2 ) const
     {
         return substr( pos1, n1 ).compare( str.substr( pos2, n2 ) );
     }
 
-    constexpr int compare( Ch const* s ) const noexcept
+    BOOST_CONSTEXPR int compare( Ch const* s ) const BOOST_NOEXCEPT
     {
         return compare( basic_string_view( s ) );
     }
 
-    constexpr int compare( size_type pos1, size_type n1, Ch const* s ) const
+    BOOST_CONSTEXPR int compare( size_type pos1, size_type n1, Ch const* s ) const
     {
         return substr( pos1, n1 ).compare( basic_string_view( s ) );
     }
 
-    constexpr int compare( size_type pos1, size_type n1, Ch const* s, size_type n2 ) const
+    BOOST_CONSTEXPR int compare( size_type pos1, size_type n1, Ch const* s, size_type n2 ) const
     {
         return substr( pos1, n1 ).compare( basic_string_view( s, n2 ) );
     }
 
     // starts_with
 
-    constexpr bool starts_with( basic_string_view x ) const noexcept
+    BOOST_CONSTEXPR bool starts_with( basic_string_view x ) const BOOST_NOEXCEPT
     {
         return size() >= x.size() && traits_type::compare( data(), x.data(), x.size() ) == 0;
     }
 
-    constexpr bool starts_with( Ch x ) const noexcept
+    BOOST_CONSTEXPR bool starts_with( Ch x ) const BOOST_NOEXCEPT
     {
         return !empty() && front() == x;
     }
 
-    constexpr bool starts_with( Ch const* x ) const noexcept
+    BOOST_CONSTEXPR bool starts_with( Ch const* x ) const BOOST_NOEXCEPT
     {
         return starts_with( basic_string_view( x ) );
     }
 
     // ends_with
 
-    constexpr bool ends_with( basic_string_view x ) const noexcept
+    BOOST_CONSTEXPR bool ends_with( basic_string_view x ) const BOOST_NOEXCEPT
     {
         return size() >= x.size() && traits_type::compare( data() + size() - x.size(), x.data(), x.size() ) == 0;
     }
 
-    constexpr bool ends_with( Ch x ) const noexcept
+    BOOST_CONSTEXPR bool ends_with( Ch x ) const BOOST_NOEXCEPT
     {
         return !empty() && back() == x;
     }
 
-    constexpr bool ends_with( Ch const* x ) const noexcept
+    BOOST_CONSTEXPR bool ends_with( Ch const* x ) const BOOST_NOEXCEPT
     {
         return ends_with( basic_string_view( x ) );
     }
 
     // find
 
-    constexpr size_type find( basic_string_view str, size_type pos = 0 ) const noexcept
+    BOOST_CONSTEXPR size_type find( basic_string_view str, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         return find( str.data(), pos, str.size() );
     }
 
-    size_type find( Ch c, size_type pos = 0 ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find( Ch c, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         if( pos >= size() ) return npos;
 
@@ -625,7 +630,7 @@ public:
         return r? r - data(): npos;
     }
 
-    size_type find( Ch const* s, size_type pos, size_type n ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find( Ch const* s, size_type pos, size_type n ) const BOOST_NOEXCEPT
     {
         if( n == 1 ) return find( s[0], pos );
 
@@ -649,19 +654,19 @@ public:
         return npos;
     }
 
-    constexpr size_type find( Ch const* s, size_type pos = 0 ) const noexcept
+    BOOST_CONSTEXPR size_type find( Ch const* s, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         return find( s, pos, traits_type::length( s ) );
     }
 
     // rfind
 
-    constexpr size_type rfind( basic_string_view str, size_type pos = npos ) const noexcept
+    BOOST_CONSTEXPR size_type rfind( basic_string_view str, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         return rfind( str.data(), pos, str.size() );
     }
 
-    size_type rfind( Ch c, size_type pos = npos ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type rfind( Ch c, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         size_type n = size();
 
@@ -685,7 +690,7 @@ public:
         return npos;
     }
 
-    size_type rfind( Ch const* s, size_type pos, size_type n ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type rfind( Ch const* s, size_type pos, size_type n ) const BOOST_NOEXCEPT
     {
         if( n > size() ) return npos;
 
@@ -710,24 +715,24 @@ public:
         }
     }
 
-    constexpr size_type rfind( Ch const* s, size_type pos = npos ) const noexcept
+    BOOST_CONSTEXPR size_type rfind( Ch const* s, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         return rfind( s, pos, traits_type::length( s ) );
     }
 
     // find_first_of
 
-    constexpr size_type find_first_of( basic_string_view str, size_type pos = 0 ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_first_of( basic_string_view str, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         return find_first_of( str.data(), pos, str.size() );
     }
 
-    constexpr size_type find_first_of( Ch c, size_type pos = 0 ) const noexcept
+    BOOST_CONSTEXPR size_type find_first_of( Ch c, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         return find( c, pos );
     }
 
-    size_type find_first_of( Ch const* s, size_type pos, size_type n ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_first_of( Ch const* s, size_type pos, size_type n ) const BOOST_NOEXCEPT
     {
         if( n == 0 || pos >= size() ) return npos;
         if( n == 1 ) return find( s[0], pos );
@@ -735,24 +740,24 @@ public:
         return detail::find_first_of( data(), size(), s, pos, n );
     }
 
-    constexpr size_type find_first_of( Ch const* s, size_type pos = 0 ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_first_of( Ch const* s, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         return find_first_of( s, pos, traits_type::length( s ) );
     }
 
     // find_last_of
 
-    constexpr size_type find_last_of( basic_string_view str, size_type pos = npos ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_last_of( basic_string_view str, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         return find_last_of( str.data(), pos, str.size() );
     }
 
-    constexpr size_type find_last_of( Ch c, size_type pos = npos ) const noexcept
+    BOOST_CONSTEXPR size_type find_last_of( Ch c, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         return rfind( c, pos );
     }
 
-    size_type find_last_of( Ch const* s, size_type pos, size_type n ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_last_of( Ch const* s, size_type pos, size_type n ) const BOOST_NOEXCEPT
     {
         if( n == 1 )
         {
@@ -774,19 +779,19 @@ public:
         return detail::find_last_of( data(), s, pos, n );
     }
 
-    constexpr size_type find_last_of( Ch const* s, size_type pos = npos ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_last_of( Ch const* s, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         return find_last_of( s, pos, traits_type::length( s ) );
     }
 
     // find_first_not_of
 
-    constexpr size_type find_first_not_of( basic_string_view str, size_type pos = 0 ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_first_not_of( basic_string_view str, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         return find_first_not_of( str.data(), pos, str.size() );
     }
 
-    size_type find_first_not_of( Ch c, size_type pos = 0 ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_first_not_of( Ch c, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         for( std::size_t i = pos; i < n_; ++i )
         {
@@ -796,7 +801,7 @@ public:
         return npos;
     }
 
-    size_type find_first_not_of( Ch const* s, size_type pos, size_type n ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_first_not_of( Ch const* s, size_type pos, size_type n ) const BOOST_NOEXCEPT
     {
         if( pos >= size() ) return npos;
         if( n == 1 ) return find_first_not_of( s[0], pos );
@@ -804,19 +809,19 @@ public:
         return detail::find_first_not_of( data(), size(), s, pos, n );
     }
 
-    constexpr size_type find_first_not_of( Ch const* s, size_type pos = 0 ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_first_not_of( Ch const* s, size_type pos = 0 ) const BOOST_NOEXCEPT
     {
         return find_first_not_of( s, pos, traits_type::length( s ) );
     }
 
     // find_last_not_of
 
-    constexpr size_type find_last_not_of( basic_string_view str, size_type pos = npos ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_last_not_of( basic_string_view str, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         return find_last_not_of( str.data(), pos, str.size() );
     }
 
-    size_type find_last_not_of( Ch c, size_type pos = npos ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_last_not_of( Ch c, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         size_type m = size();
 
@@ -840,7 +845,7 @@ public:
         return npos;
     }
 
-    size_type find_last_not_of( Ch const* s, size_type pos, size_type n ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_last_not_of( Ch const* s, size_type pos, size_type n ) const BOOST_NOEXCEPT
     {
         if( n == 1 )
         {
@@ -862,19 +867,19 @@ public:
         return detail::find_last_not_of( data(), s, pos, n );
     }
 
-    constexpr size_type find_last_not_of( Ch const* s, size_type pos = npos ) const noexcept
+    BOOST_CXX14_CONSTEXPR size_type find_last_not_of( Ch const* s, size_type pos = npos ) const BOOST_NOEXCEPT
     {
         return find_last_not_of( s, pos, traits_type::length( s ) );
     }
 
     // contains
 
-    constexpr bool contains( basic_string_view sv ) const noexcept
+    BOOST_CONSTEXPR bool contains( basic_string_view sv ) const BOOST_NOEXCEPT
     {
         return find( sv ) != npos;
     }
 
-    bool contains( Ch c ) const noexcept
+    BOOST_CXX14_CONSTEXPR bool contains( Ch c ) const BOOST_NOEXCEPT
     {
         Ch const* p = data();
         size_type n = size();
@@ -894,42 +899,45 @@ public:
         }
     }
 
-    constexpr bool contains( Ch const* s ) const noexcept
+    BOOST_CONSTEXPR bool contains( Ch const* s ) const BOOST_NOEXCEPT
     {
         return find( s ) != npos;
     }
 
     // relational operators
 
-    constexpr friend bool operator==( basic_string_view sv1, basic_string_view sv2 ) noexcept
+    BOOST_CXX14_CONSTEXPR friend bool operator==( basic_string_view sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
     {
         return sv1.size() == sv2.size() && traits_type::compare( sv1.data(), sv2.data(), sv1.size() ) == 0;
     }
 
-    constexpr friend bool operator!=( basic_string_view sv1, basic_string_view sv2 ) noexcept
+    BOOST_CXX14_CONSTEXPR friend bool operator!=( basic_string_view sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
     {
         return !( sv1 == sv2 );
     }
 
-    constexpr friend bool operator<( basic_string_view sv1, basic_string_view sv2 ) noexcept
+    BOOST_CXX14_CONSTEXPR friend bool operator<( basic_string_view sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
     {
         return sv1.compare( sv2 ) < 0;
     }
 
-    constexpr friend bool operator<=( basic_string_view sv1, basic_string_view sv2 ) noexcept
+    BOOST_CXX14_CONSTEXPR friend bool operator<=( basic_string_view sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
     {
         return sv1.compare( sv2 ) <= 0;
     }
 
-    constexpr friend bool operator>( basic_string_view sv1, basic_string_view sv2 ) noexcept
+    BOOST_CXX14_CONSTEXPR friend bool operator>( basic_string_view sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
     {
         return sv1.compare( sv2 ) > 0;
     }
 
-    constexpr friend bool operator>=( basic_string_view sv1, basic_string_view sv2 ) noexcept
+    BOOST_CXX14_CONSTEXPR friend bool operator>=( basic_string_view sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
     {
         return sv1.compare( sv2 ) >= 0;
     }
+
+#if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
+#endif
 };
 
 // stream inserter
@@ -965,7 +973,7 @@ template<class Ch> std::basic_ostream<Ch>& operator<<( std::basic_ostream<Ch>& o
 }
 
 #if defined(BOOST_NO_CXX17_INLINE_VARIABLES)
-template<class Ch> constexpr_OR_CONST std::size_t basic_string_view<Ch>::npos;
+template<class Ch> BOOST_CONSTEXPR_OR_CONST std::size_t basic_string_view<Ch>::npos;
 #endif
 
 // typedef names
