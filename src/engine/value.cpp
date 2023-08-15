@@ -1,5 +1,5 @@
 /*
-Copyright 2022 René Ferdinand Rivera Morell
+Copyright 2022-2023 René Ferdinand Rivera Morell
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
@@ -17,6 +17,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 #include <vector>
 
@@ -199,9 +200,41 @@ struct value_eq_f
 	}
 };
 
-using value_cache_t = std::unordered_set<value *, value_hash_f, value_eq_f>;
+struct safe_value_cache
+{
+	template <typename Test, typename Val, typename... Args>
+	value_ptr save(Args... args)
+	{
+		Test test_val(args...);
+		std::lock_guard<std::mutex> guard(mutex);
+		auto existing = cache.find(&test_val);
+		if (existing != cache.end()) return *existing;
+		value_ptr result = Val::make(args...);
+		cache.insert(result);
+		return result;
+	}
 
-static value_cache_t value_cache;
+	void reset()
+	{
+		std::lock_guard<std::mutex> guard(mutex);
+		for (value * o : cache)
+		{
+			b2::jam::free_ptr(o);
+		}
+		cache.clear();
+	}
+
+	private:
+	using value_cache_t = std::unordered_set<value *, value_hash_f, value_eq_f>;
+	value_cache_t cache;
+	std::mutex mutex;
+};
+
+static safe_value_cache & value_cache()
+{
+	static safe_value_cache c;
+	return c;
+}
 
 value_ptr value::make(const char * string, std::size_t size)
 {
@@ -210,41 +243,22 @@ value_ptr value::make(const char * string, std::size_t size)
 		string = "";
 		size = 0;
 	}
-	value_str_view test_val(string, size);
-	auto existing = value_cache.find(&test_val);
-	if (existing != value_cache.end()) return *existing;
-	value_ptr result = value_str::make(string, size);
-	value_cache.insert(result);
-	return result;
+	return value_cache().save<value_str_view, value_str>(string, size);
 }
 
 value_ptr value::make(object * obj)
 {
-	value_object test_val(obj);
-	auto existing = value_cache.find(&test_val);
-	if (existing != value_cache.end()) return *existing;
-	value_ptr result = value_object::make(test_val.value.release());
-	value_cache.insert(result);
-	return result;
+	return value_cache().save<value_object, value_object>(obj);
 }
 
 value_ptr value::make(double v)
 {
-	value_number test_val(v);
-	auto existing = value_cache.find(&test_val);
-	if (existing != value_cache.end()) return *existing;
-	value_ptr result = value_number::make(v);
-	value_cache.insert(result);
-	return result;
+	return value_cache().save<value_number, value_number>(v);
 }
 
 void value::done(void)
 {
-	for (value * o : value_cache)
-	{
-		b2::jam::free_ptr(o);
-	}
-	value_cache.clear();
+	value_cache().reset();
 }
 
 } // namespace b2
