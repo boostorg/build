@@ -103,6 +103,7 @@ struct module_scope_in_function
 
 	private:
 	FRAME * module_frame = nullptr;
+    module_t * saved_module = nullptr;
 };
 
 }} // namespace b2::jam
