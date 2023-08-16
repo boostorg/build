@@ -9,6 +9,8 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "config.h"
 
+#include "strview.h"
+
 #include <cstdint>
 #include <cstring>
 #include <limits>
@@ -61,6 +63,10 @@ struct value
 	static inline value * make(const std::string & str)
 	{
 		return make(str.c_str(), str.size());
+	}
+	static inline value * make(string_view str)
+	{
+		return make(str.data(), str.length());
 	}
 	static value * make(object * obj);
 	static value * make(double v);

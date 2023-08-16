@@ -214,6 +214,18 @@ struct safe_value_cache
 		return result;
 	}
 
+	template <typename Test, typename Val>
+	value_ptr save(object * obj)
+	{
+		value_object test_val(obj);
+		std::lock_guard<std::mutex> guard(mutex);
+		auto existing = cache.find(&test_val);
+		if (existing != cache.end()) return *existing;
+		value_ptr result = value_object::make(test_val.value.release());
+		cache.insert(result);
+		return result;
+	}
+
 	void reset()
 	{
 		std::lock_guard<std::mutex> guard(mutex);
@@ -256,9 +268,6 @@ value_ptr value::make(double v)
 	return value_cache().save<value_number, value_number>(v);
 }
 
-void value::done(void)
-{
-	value_cache().reset();
-}
+void value::done(void) { value_cache().reset(); }
 
 } // namespace b2
