@@ -50,7 +50,7 @@
             "environment": []
         },
         {
-            "name": "(gdb) Launch",
+            "name": "(gcc) Launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/b2",
@@ -69,7 +69,7 @@
             ]
         },
         {
-            "name": "(gdb) Launch: ASAN",
+            "name": "(gcc) Launch: ASAN",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/address-sanitizer-on/cxxstd-11-iso/b2",
@@ -88,7 +88,7 @@
             ]
         },
         {
-            "name": "(gdb) Launch, Unit Tests",
+            "name": "(gcc) Launch, Unit Tests",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/b2",
@@ -107,7 +107,7 @@
             ]
         },
         {
-            "name": "(gdb) Launch, Unit Tests: ASAN",
+            "name": "(gcc) Launch, Unit Tests: ASAN",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/address-sanitizer-on/cxxstd-11-iso/b2",
