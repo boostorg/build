@@ -76,6 +76,7 @@ struct group::implementation
 	std::queue<std::function<void()>> pending;
 	unsigned stat_max_running = 0;
 	unsigned stat_total = 0;
+	unsigned stat_max_pending = 0;
 
 #if B2_USE_STD_THREADS
 	std::mutex mx;
@@ -176,6 +177,7 @@ inline void group::implementation::call_queue(std::function<void()> f)
 	{
 		std::unique_lock<std::mutex> lock(mx);
 		pending.push(std::move(the_call));
+		stat_max_pending = std::max(unsigned(pending.size()), stat_max_pending);
 	}
 	// Signal the executor that there are tasks to run.
 	exec.i->call_signal();
@@ -318,8 +320,8 @@ group::group(executor & exec, int parallelism)
 
 group::~group()
 {
-	// out_printf("b2::task::group.. MAX = %u, TOTAL = %u\n", i->stat_max_running,
-	// 	i->stat_total);
+	// out_printf("b2::task::group.. MAX = %u, TOTAL = %u, MAX PENDING = %u\n",
+	// 	i->stat_max_running, i->stat_total, i->stat_max_pending);
 }
 
 void group::queue(std::function<void()> && f) { i->call_queue(f); }
