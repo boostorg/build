@@ -47,9 +47,9 @@
 
 struct path_key_entry
 {
-    std::atomic<OBJECT*> path = nullptr;
-    std::atomic<OBJECT*> key = nullptr;
-    std::atomic<bool> exists = false;
+    std::atomic<OBJECT*> path;
+    std::atomic<OBJECT*> key;
+    std::atomic<bool> exists;
     inline path_key_entry() : path(nullptr), key(nullptr), exists(false) {}
     inline ~path_key_entry()
     {
