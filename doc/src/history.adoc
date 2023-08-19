@@ -23,6 +23,12 @@ other Jam files.
 * *New*: Add `require-b2` builtin rule to verify the B2 version a particular
   Jam file needs.
   -- _René Ferdinand Rivera Morell_
+* *New*: Add `regex.grep` builtin that does parallel (where available) file
+  content search with regex matching.
+  -- _René Ferdinand Rivera Morell_
+* *New*: Make parts of internals thread safe to support parallel built-ins.
+  Currently includes Jam values, hash tables, and filesystem.
+  -- _René Ferdinand Rivera Morell_
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 
