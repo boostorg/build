@@ -11,18 +11,20 @@ t = BoostBuild.Tester(pass_toolset=False)
 
 t.write("Jamroot", """
 import regex ;
+local r ;
 local a = [ regex.grep . : *.*pp : "#(include) <([^>]+)>" ] ;
 while $(a)
 {
-    ECHO $(a[1]:D=) $(a[2]) ;
+    r += "$(a[1]:D=) $(a[2])" ;
     a = $(a[3-]) ;
 }
 local b = [ regex.grep . : *.*pp : "#(include) <([^>]+)>" : 1 2 ] ;
 while $(b)
 {
-    ECHO $(b[1]:D=) $(b[2-3]) ;
+    r += "$(b[1]:D=) $(b[2]) $(b[3])" ;
     b = $(b[4-]) ;
 }
+for local s in [ SORT $(r) ] { ECHO $(s) ; }
 EXIT : 0 ;
 """)
 t.write("a.cpp", """
@@ -35,8 +37,8 @@ t.write("b.hpp", """
 t.run_build_system()
 t.expect_output_lines([
     "a.cpp #include <b.hpp>",
-    "b.hpp #include <a>",
     "a.cpp include b.hpp",
+    "b.hpp #include <a>",
     "b.hpp include a",
 ])
 t.expect_nothing_more()
