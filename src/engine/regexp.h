@@ -34,7 +34,9 @@ struct regex_prog;
 struct program
 {
 	program() = default;
-	program(program &&) = default;
+	program(program && o)
+		: compiled(std::move(o.compiled))
+	{}
 	program(const program &) = default;
 	explicit program(const char * pattern);
 
@@ -63,7 +65,11 @@ struct program::result_iterator
 
 	result_iterator(const regex_prog & c, const string_view & s);
 	result_iterator(const result_iterator & o) = default;
-	result_iterator(result_iterator && o) = default;
+	result_iterator(result_iterator && o)
+		: compiled(std::move(o.compiled))
+		, expressions(std::move(o.expressions))
+		, rest(std::move(o.rest))
+	{}
 
 	inline result_iterator & operator++()
 	{

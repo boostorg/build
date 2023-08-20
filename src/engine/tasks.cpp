@@ -39,9 +39,10 @@ struct sync
 #if B2_USE_STD_THREADS
 
 inline sync::sync()
-	: wait_arrived(false)
-	, signal_arrived(false)
-{}
+{
+	wait_arrived = false;
+	signal_arrived = false;
+}
 
 inline void sync::wait()
 {
