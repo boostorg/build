@@ -310,7 +310,7 @@ unsigned get_parallelism(int parallelism)
 {
 	return parallelism >= 0
 		? parallelism
-		: std::min(unsigned(globs.jobs), system_info().cpu_thread_count()) - 1;
+		: std::min(unsigned(globs.jobs), system_info().cpu_thread_count());
 }
 } // namespace
 
