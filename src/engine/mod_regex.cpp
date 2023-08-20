@@ -193,7 +193,7 @@ template <typename Int>
 struct flags
 {
 	using value_type = Int;
-	static constexpr int size = sizeof(value_type) * 8;
+	static const int size = sizeof(value_type) * 8;
 
 	value_type value = 0;
 	inline bool get(int i) const { return (value & (1 << i)) != 0; };
