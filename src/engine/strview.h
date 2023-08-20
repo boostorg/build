@@ -26,10 +26,21 @@
 #include <type_traits>
 #include <cassert>
 
+// RFRM: -begin- Hardwire C++11
 #define BOOST_CXX14_CONSTEXPR
 #define BOOST_NOEXCEPT
+#if (defined(_MSC_FULL_VER) && _MSC_FULL_VER < 190024210)
+#define BOOST_NO_CXX11_CONSTEXPR
+#endif
+#if defined(BOOST_NO_CXX11_CONSTEXPR)
+#define BOOST_CONSTEXPR
+#else
 #define BOOST_CONSTEXPR constexpr
+#endif
 #define BOOST_STATIC_CONSTEXPR static const
+#define BOOST_NO_CXX17_HDR_STRING_VIEW
+#define BOOST_NO_CXX20_HDR_CONCEPTS
+// RFRM: -end- Hardwire C++11
 
 namespace boost
 {
@@ -379,7 +390,29 @@ public:
     {
     }
 
+#if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
+
+    basic_string_view( std::basic_string_view<Ch, std::char_traits<Ch> > const& str ) BOOST_NOEXCEPT: p_( str.data() ), n_( str.size() )
+    {
+    }
+
+#endif
+
+#if !defined(BOOST_NO_CXX11_NULLPTR)
+# if !defined(BOOST_NO_CXX11_DELETED_FUNCTIONS)
+
     basic_string_view( std::nullptr_t ) = delete;
+
+# else
+
+private:
+
+    basic_string_view( std::nullptr_t );
+
+public:
+
+# endif
+#endif
 
     // BOOST_CONSTEXPR basic_string_view& operator=( basic_string_view const& ) BOOST_NOEXCEPT & = default;
 
@@ -389,6 +422,16 @@ public:
     {
         return std::basic_string<Ch, std::char_traits<Ch>, A>( data(), size() );
     }
+
+#if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
+
+    template<class Ch2, class En = typename boost::enable_if<boost::core::detail::is_same<Ch2, Ch> >::type>
+    operator std::basic_string_view<Ch2>() const BOOST_NOEXCEPT
+    {
+        return std::basic_string_view<Ch>( data(), size() );
+    }
+
+#endif
 
     // iterator support
 
@@ -937,6 +980,195 @@ public:
     }
 
 #if !defined(BOOST_NO_CXX17_HDR_STRING_VIEW)
+
+    // "sufficient number of additional overloads"
+
+    // against std::string_view
+
+    BOOST_CXX14_CONSTEXPR friend bool operator==( basic_string_view sv1, std::basic_string_view<Ch> sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.size() == sv2.size() && traits_type::compare( sv1.data(), sv2.data(), sv1.size() ) == 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator==( std::basic_string_view<Ch> sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.size() == sv2.size() && traits_type::compare( sv1.data(), sv2.data(), sv1.size() ) == 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator!=( basic_string_view sv1, std::basic_string_view<Ch> sv2 ) BOOST_NOEXCEPT
+    {
+        return !( sv1 == sv2 );
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator!=( std::basic_string_view<Ch> sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return !( sv1 == sv2 );
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator<( basic_string_view sv1, std::basic_string_view<Ch> sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) < 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator<( std::basic_string_view<Ch> sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) < 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator<=( basic_string_view sv1, std::basic_string_view<Ch> sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) <= 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator<=( std::basic_string_view<Ch> sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) <= 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator>( basic_string_view sv1, std::basic_string_view<Ch> sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) > 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator>( std::basic_string_view<Ch> sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) > 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator>=( basic_string_view sv1, std::basic_string_view<Ch> sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) >= 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator>=( std::basic_string_view<Ch> sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) >= 0;
+    }
+
+    // against Ch const*
+
+    BOOST_CXX14_CONSTEXPR friend bool operator==( basic_string_view sv1, Ch const* sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1 == basic_string_view( sv2 );
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator==( Ch const* sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return basic_string_view( sv1 ) == sv2;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator!=( basic_string_view sv1, Ch const* sv2 ) BOOST_NOEXCEPT
+    {
+        return !( sv1 == sv2 );
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator!=( Ch const* sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return !( sv1 == sv2 );
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator<( basic_string_view sv1, Ch const* sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) < 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator<( Ch const* sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv2.compare( sv1 ) > 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator<=( basic_string_view sv1, Ch const* sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) <= 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator<=( Ch const* sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv2.compare( sv1 ) >= 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator>( basic_string_view sv1, Ch const* sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) > 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator>( Ch const* sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv2.compare( sv1 ) < 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator>=( basic_string_view sv1, Ch const* sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) >= 0;
+    }
+
+    BOOST_CXX14_CONSTEXPR friend bool operator>=( Ch const* sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv2.compare( sv1 ) <= 0;
+    }
+
+    // against std::string
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator==( basic_string_view sv1, std::basic_string<Ch, std::char_traits<Ch>, A> const& sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.size() == sv2.size() && traits_type::compare( sv1.data(), sv2.data(), sv1.size() ) == 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator==( std::basic_string<Ch, std::char_traits<Ch>, A> const& sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.size() == sv2.size() && traits_type::compare( sv1.data(), sv2.data(), sv1.size() ) == 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator!=( basic_string_view sv1, std::basic_string<Ch, std::char_traits<Ch>, A> const& sv2 ) BOOST_NOEXCEPT
+    {
+        return !( sv1 == sv2 );
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator!=( std::basic_string<Ch, std::char_traits<Ch>, A> const& sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return !( sv1 == sv2 );
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator<( basic_string_view sv1, std::basic_string<Ch, std::char_traits<Ch>, A> const& sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) < 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator<( std::basic_string<Ch, std::char_traits<Ch>, A> const& sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv2.compare( sv1 ) > 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator<=( basic_string_view sv1, std::basic_string<Ch, std::char_traits<Ch>, A> const& sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) <= 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator<=( std::basic_string<Ch, std::char_traits<Ch>, A> const& sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv2.compare( sv1 ) >= 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator>( basic_string_view sv1, std::basic_string<Ch, std::char_traits<Ch>, A> const& sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) > 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator>( std::basic_string<Ch, std::char_traits<Ch>, A> const& sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv2.compare( sv1 ) < 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator>=( basic_string_view sv1, std::basic_string<Ch, std::char_traits<Ch>, A> const& sv2 ) BOOST_NOEXCEPT
+    {
+        return sv1.compare( sv2 ) >= 0;
+    }
+
+    template<class A> BOOST_CXX14_CONSTEXPR friend bool operator>=( std::basic_string<Ch, std::char_traits<Ch>, A> const& sv1, basic_string_view sv2 ) BOOST_NOEXCEPT
+    {
+        return sv2.compare( sv1 ) <= 0;
+    }
+
 #endif
 };
 
@@ -980,8 +1212,14 @@ template<class Ch> BOOST_CONSTEXPR_OR_CONST std::size_t basic_string_view<Ch>::n
 
 typedef basic_string_view<char> string_view;
 typedef basic_string_view<wchar_t> wstring_view;
+
+#if !defined(BOOST_NO_CXX11_CHAR16_T)
 typedef basic_string_view<char16_t> u16string_view;
+#endif
+
+#if !defined(BOOST_NO_CXX11_CHAR32_T)
 typedef basic_string_view<char32_t> u32string_view;
+#endif
 
 #if defined(__cpp_char8_t) && __cpp_char8_t >= 201811L
 typedef basic_string_view<char8_t> u8string_view;
@@ -989,6 +1227,31 @@ typedef basic_string_view<char8_t> u8string_view;
 
 } // namespace core
 } // namespace boost
+
+// std::common_reference support
+// needed for iterators that have reference=string_view and value_type=std::string
+
+#if !defined(BOOST_NO_CXX20_HDR_CONCEPTS)
+
+template<class Ch, class A, template<class> class Q1, template<class> class Q2>
+struct std::basic_common_reference<
+    boost::core::basic_string_view<Ch>,
+    std::basic_string<Ch, std::char_traits<Ch>, A>,
+    Q1, Q2>
+{
+    using type = boost::core::basic_string_view<Ch>;
+};
+
+template<class Ch, class A, template<class> class Q1, template<class> class Q2>
+struct std::basic_common_reference<
+    std::basic_string<Ch, std::char_traits<Ch>, A>,
+    boost::core::basic_string_view<Ch>,
+    Q1, Q2>
+{
+    using type = boost::core::basic_string_view<Ch>;
+};
+
+#endif
 
 namespace b2 {
 
