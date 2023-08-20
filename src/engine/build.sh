@@ -116,7 +116,7 @@ test_compiler ()
     CMD="${EXE} $@ ${B2_CXXFLAGS_OPT:-}"
     SETUP=${B2_SETUP:-true}
     if test_true ${B2_VERBOSE_OPT} ; then
-        echo "> ${CMD} check_cxx11.cpp"
+        echo "> ${CMD} check_clib.cpp check_cxx11.cpp"
         ( ${SETUP} ; ${CMD} check_clib.cpp check_cxx11.cpp )
     else
         ( ${SETUP} ; ${CMD} check_clib.cpp check_cxx11.cpp ) 1>/dev/null 2>/dev/null
@@ -125,7 +125,7 @@ test_compiler ()
     if test_true ${CHECK_RESULT} ; then
         B2_CXX=${CMD}
     fi
-    rm -rf check_cxx11.o* a.out a.exe 1>/dev/null 2>/dev/null
+    rm -rf check_clib.o* check_cxx11.o* a.out a.exe 1>/dev/null 2>/dev/null
     return ${CHECK_RESULT}
 }
 
@@ -159,12 +159,12 @@ check_toolset ()
     # GCC (gcc)..
     if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -D_GNU_SOURCE ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
-    # GCC (gcc) with -pthread arg (for AIX)..
+    # GCC (gcc) with -pthread arg (for AIX and others)..
     if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
-    # Clang (clang) on FreeBSD needs -pthread arg..
-    if test_toolset clang && test_uname FreeBSD && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # Clang (clang)..
     if test_toolset clang && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
+    # Clang (clang) with -pthread arg (for FreeBSD and others)..
+    if test_toolset clang && test_uname FreeBSD && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # Intel macOS (intel-darwin)
     if test_toolset intel-darwin && test -r "${HOME}/intel/oneapi/setvars.sh" && test_uname Darwin ; then
         B2_SETUP="source ${HOME}/intel/oneapi/setvars.sh"

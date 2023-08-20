@@ -36,6 +36,8 @@ int main()
 	{
 		std::mutex m;
 		std::lock_guard<std::mutex> l(m);
+		std::thread t([]() {});
+		t.join();
 	}
 #endif
 
