@@ -7,30 +7,6 @@
 
 require-b2 5 ;
 
-if --grep in [ modules.peek : ARGV ]
-{
-    import path ;
-    import regex ;
-    local mmm = [ regex.grep
-        /home/grafik/Sync/DevRoots
-        # /home/grafik/Sync/DevRoots/B2/bfg-mainline/src
-        # /home/grafik/Sync/DevRoots/Boost/develop/boost
-        # /home/grafik/Sync/DevRoots/grafikrobot/llvm-project
-        : *.*pp *.h
-        : "#(include) \"([^\"]+)\"" "#(include) <([^>]+)>"
-        : 1 2
-        : recursive ] ;
-    mmm = $(mmm[1-30]) ;
-    while $(mmm)
-    {
-        ECHO ">" $(mmm[1]) $(mmm[2]) $(mmm[3]) ;
-        mmm = $(mmm[4-]) ;
-    }
-    EXIT "!" ;
-    # time ( rg -j 11 --mmap -U --files-without-match --include-zero -I -c -g "*.*pp" -g "*.h" -e "#(include) \"([^\"]+)\"" -e "#(include) <([^>]+)>" /home/grafik/Sync/DevRoots | wc -l )
-    # --no-mmap
-}
-
 import "class" : new ;
 import bison ;
 import errors ;
