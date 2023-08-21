@@ -71,6 +71,9 @@ typedef long int32_t;
 #endif
 
 // Indicate if we can use std::thread and friends.
+#if defined(_MSC_VER) && _MSC_VER <= 1800
+#define B2_USE_STD_THREADS 0
+#endif
 #ifndef B2_USE_STD_THREADS
 #define B2_USE_STD_THREADS 1
 #endif

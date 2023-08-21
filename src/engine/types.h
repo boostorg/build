@@ -21,8 +21,18 @@ using int_t = int;
 using uint_t = unsigned int;
 
 #if B2_USE_STD_THREADS
+
 using mutex_t = std::mutex;
 using scope_lock_t = std::unique_lock<std::mutex>;
+
+#else
+
+struct mutex_t {};
+struct scope_lock_t
+{
+    inline scope_lock_t(mutex_t &) {}
+};
+
 #endif
 
 } // namespace b2
