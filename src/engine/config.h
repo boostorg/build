@@ -2,7 +2,7 @@
 #define B2_CONFIG_H
 
 /*
-Copyright 2002-2021 Rene Rivera.
+Copyright 2002-2023 Rene Rivera.
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.txt or copy at
 https://www.bfgroup.xyz/b2/LICENSE.txt)
@@ -42,38 +42,13 @@ https://www.bfgroup.xyz/b2/LICENSE.txt)
 #define _FILE_OFFSET_BITS 64
 #endif
 
-// Correct missing types in some earlier compilers..
-
-#include <stdint.h>
-#ifndef INT32_MIN
-
-// VS 2013 is barely C++11/C99. And opts to not provide specific sized int
-// types. Provide a generic implementation of the sizes we use.
-#if UINT_MAX == 0xffffffff
-typedef int int32_t;
-#elif (USHRT_MAX == 0xffffffff)
-typedef short int32_t;
-#elif ULONG_MAX == 0xffffffff
-typedef long int32_t;
-#endif
-
-#endif
-
 // Account for incomplete C++ standard implementations.
-
-// VS 2012 doesn't implement noexcept.
-#if defined(_MSC_VER) && (_MSC_VER < 1900)
-#define B2_NOEXCEPT
-#endif
 
 #ifndef B2_NOEXCEPT
 #define B2_NOEXCEPT noexcept
 #endif
 
 // Indicate if we can use std::thread and friends.
-#if defined(_MSC_VER) && _MSC_VER <= 1800
-#define B2_USE_STD_THREADS 0
-#endif
 #ifndef B2_USE_STD_THREADS
 #define B2_USE_STD_THREADS 1
 #endif

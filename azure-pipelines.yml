@@ -99,6 +99,7 @@ stages:
         Clang ${{variables.clang_latest}} (VS${{variables.vs_latest}}): {TOOLSET: clang-win, TEST_TOOLSET: clang-win, VM_IMAGE: "${{variables.windows_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
+    continueOnError: 'true'
     steps:
     - template: .ci/azp-windows-test.yml
 

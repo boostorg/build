@@ -39,32 +39,32 @@ struct sync
 
 inline sync::sync()
 {
-	#if B2_USE_STD_THREADS
+#if B2_USE_STD_THREADS
 	wait_arrived = false;
 	signal_arrived = false;
-	#endif
+#endif
 }
 
 inline void sync::wait()
 {
-	#if B2_USE_STD_THREADS
+#if B2_USE_STD_THREADS
 	// Indicate that we waiting.
 	wait_arrived = true;
 	// Wait for the signal that we can proceed.
 	std::unique_lock<std::mutex> lock(arrived_mx);
 	arrived_cv.wait(lock, [this]() { return signal_arrived.load(); });
-	#endif
+#endif
 }
 
 inline bool sync::signal()
 {
-	#if B2_USE_STD_THREADS
+#if B2_USE_STD_THREADS
 	// Wait for wait() to get called.
 	if (!wait_arrived.load()) return false;
 	// Tell the waiter that we arrived.
 	signal_arrived = true;
 	arrived_cv.notify_one();
-	#endif
+#endif
 	return true;
 }
 
@@ -218,14 +218,14 @@ inline executor::implementation::implementation(unsigned parallelism)
 	if (parallelism == 0) return;
 	// Launch the threads to cover the expected parallelism.
 	scope_lock_t lock(mx);
-	#if B2_USE_STD_THREADS
+#if B2_USE_STD_THREADS
 	runners.reserve(parallelism);
 	for (; parallelism > 0; --parallelism)
 	{
 		running_count += 1;
 		runners.emplace_back([this]() { runner(); });
 	}
-	#endif
+#endif
 }
 
 inline void executor::implementation::push_group(std::shared_ptr<group> g)
@@ -236,16 +236,16 @@ inline void executor::implementation::push_group(std::shared_ptr<group> g)
 
 inline void executor::implementation::call_signal()
 {
-	#if B2_USE_STD_THREADS
+#if B2_USE_STD_THREADS
 	call_cv.notify_one();
-	#endif
+#endif
 }
 
 inline std::function<void()> executor::implementation::call_get()
 {
 	std::function<void()> result;
 	scope_lock_t lock(mx);
-	#if B2_USE_STD_THREADS
+#if B2_USE_STD_THREADS
 	// We only dequeue task calls when we have a thread to run them.
 	if (call_count < runners.size())
 	{
@@ -261,7 +261,7 @@ inline std::function<void()> executor::implementation::call_get()
 	}
 	// We don't have tasks to run, wait for some to become available.
 	call_cv.wait(lock);
-	#endif
+#endif
 	return result;
 }
 
@@ -279,7 +279,7 @@ inline bool executor::implementation::is_running()
 
 inline void executor::implementation::stop()
 {
-	#if B2_USE_STD_THREADS
+#if B2_USE_STD_THREADS
 	// Stop all the runner threads (i.e. signal and wait).
 	std::vector<std::thread> to_join;
 	{
@@ -292,7 +292,7 @@ inline void executor::implementation::stop()
 		call_cv.notify_all();
 		t.join();
 	}
-	#endif
+#endif
 }
 
 void executor::implementation::runner()
@@ -316,13 +316,13 @@ void executor::implementation::runner()
 namespace {
 unsigned get_parallelism(int parallelism)
 {
-	#if B2_USE_STD_THREADS
+#if B2_USE_STD_THREADS
 	return parallelism >= 0
 		? parallelism
 		: std::min(unsigned(globs.jobs), system_info().cpu_thread_count()) - 1;
-	#else
+#else
 	return 0;
-	#endif
+#endif
 }
 } // namespace
 

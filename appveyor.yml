@@ -2,7 +2,7 @@
 # subject to the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
-# Copyright Rene Ferdinand Rivera Morell 2015-2020.
+# Copyright Rene Ferdinand Rivera Morell 2015-2023.
 
 branches:
   only:
@@ -10,6 +10,15 @@ branches:
     - /release/
     - /feature\/.*/
     - /backport-.*/
+
+skip_commits:
+  files:
+    - ".circleci/*"
+    - ".cirrus.yml"
+    - ".drone.star"
+    - ".github/workflows/*"
+    - ".semaphore/*"
+    - "azure-pipelines.yml"
 
 environment:
   matrix:
@@ -22,11 +31,6 @@ environment:
     job_group: 'Test'
     TOOLSET: vc14
     TEST_TOOLSET: msvc-14.0
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-  - job_name: 'Visual Studio 2013, Test'
-    job_group: 'Test'
-    TOOLSET: vc12
-    TEST_TOOLSET: msvc-12.0
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
   - job_name: 'Clang 9 (VS2015), Test'
     job_group: 'Test'

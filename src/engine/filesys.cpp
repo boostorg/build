@@ -397,7 +397,6 @@ static void file_archivescan_impl( OBJECT * path, archive_scanback func, void * 
     {
         FILELISTITER iter = filelist_begin( archive->members );
         FILELISTITER const end = filelist_end( archive->members );
-        char buf[ MAXJPATH ];
 
         for ( ; iter != end ; iter = filelist_next( iter ) )
         {
@@ -406,12 +405,10 @@ static void file_archivescan_impl( OBJECT * path, archive_scanback func, void * 
 
             /* Construct member path: 'archive-path(member-name)'
              */
-            sprintf( buf, "%s(%s)",
-                object_str( archive->file->name ),
-                object_str( member_file->name ) );
-
             {
-                OBJECT * member = object_new( buf );
+                OBJECT * member = b2::value::format( "%s(%s)",
+                    object_str( archive->file->name ),
+                    object_str( member_file->name ) );
                 (*func)( closure, member, symbols, 1, &member_file->time );
                 object_free( member );
             }

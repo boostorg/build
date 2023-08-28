@@ -1,5 +1,5 @@
 /*
-Copyright 2022 René Ferdinand Rivera Morell
+Copyright 2022-2023 René Ferdinand Rivera Morell
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
@@ -12,8 +12,10 @@ Distributed under the Boost Software License, Version 1.0.
 #include "strview.h"
 
 #include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <limits>
+#include <memory>
 #include <string>
 
 namespace b2 {
@@ -75,6 +77,21 @@ struct value
 	static void done();
 
 	inline bool has_value() const { return get_type() == type::null; }
+
+	template <typename T>
+	static inline value * as_string(T v)
+	{
+		return value::make(std::to_string(v));
+	}
+
+	template <typename... Args>
+	static inline value * format(const char * f, Args... args)
+	{
+		auto size = std::snprintf(nullptr, 0, f, args...);
+		std::unique_ptr<char[]> s(new char[size + 1]);
+		std::snprintf(s.get(), size + 1, f, args...);
+		return value::make(s.get(), size);
+	}
 };
 
 typedef value * value_ptr;

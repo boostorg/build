@@ -20,7 +20,7 @@ Continuously tested on:
 * Linux GCC 9, 10, 11, 12
 * macOS Xcode 11.7, 12.4, 12.5.1, 13.4.1, 14.0.1, 14.1, 14.2
 * Windows MinGW 8.1.0
-* Windows VS 2013, 2015, 2017, 2019, 2022
+* Windows 2015, 2017, 2019, 2022
 * Cygwin 3.1.7 x64
 * Ubuntu 20.04 GCC 9 (armhf, arm64, ppc64el)
 * Debian 11 GCC 10 (armhf)

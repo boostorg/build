@@ -491,7 +491,6 @@ LIST * builtin_calc( FRAME * frame, int flags )
     long lhs_value;
     long rhs_value;
     long result_value;
-    char buffer[ 16 ];
     char const * lhs;
     char const * op;
     char const * rhs;
@@ -519,8 +518,7 @@ LIST * builtin_calc( FRAME * frame, int flags )
     else
         return L0;
 
-    sprintf( buffer, "%ld", result_value );
-    result = list_push_back( result, object_new( buffer ) );
+    result = list_push_back( result, b2::value::as_string(result_value) );
     return result;
 }
 
@@ -1408,10 +1406,8 @@ LIST * builtin_backtrace( FRAME * frame, int flags )
     {
         char const * file;
         int line;
-        char buf[ 32 ];
         string module_name[ 1 ];
         get_source_line( frame, &file, &line );
-        sprintf( buf, "%d", line );
         string_new( module_name );
         if ( frame->module->name )
         {
@@ -1419,7 +1415,7 @@ LIST * builtin_backtrace( FRAME * frame, int flags )
             string_append( module_name, "." );
         }
         result = list_push_back( result, object_new( file ) );
-        result = list_push_back( result, object_new( buf ) );
+        result = list_push_back( result, b2::value::as_string(line) );
         result = list_push_back( result, object_new( module_name->value ) );
         result = list_push_back( result, object_new( frame->rulename ) );
         string_free( module_name );
@@ -1695,12 +1691,10 @@ LIST * builtin_nearest_user_location( FRAME * frame, int flags )
         LIST * result = L0;
         char const * file;
         int line;
-        char buf[ 32 ];
 
         get_source_line( nearest_user_frame, &file, &line );
-        sprintf( buf, "%d", line );
         result = list_push_back( result, object_new( file ) );
-        result = list_push_back( result, object_new( buf ) );
+        result = list_push_back( result, b2::value::as_string(line) );
         return result;
     }
 }
@@ -1730,8 +1724,13 @@ LIST * builtin_md5( FRAME * frame, int flags )
     md5_append( &state, (md5_byte_t const *)s, strlen( s ) );
     md5_finish( &state, digest );
 
+    static const char hex_digit[] = "0123456789abcdef";
     for ( di = 0; di < 16; ++di )
-        sprintf( hex_output + di * 2, "%02x", digest[ di ] );
+    {
+        hex_output[di*2+0] = hex_digit[digest[di]>>4];
+        hex_output[di*2+1] = hex_digit[digest[di]&0xF];
+    }
+    hex_output[16*2] = '\0';
 
     return list_new( object_new( hex_output ) );
 }
@@ -1742,7 +1741,6 @@ LIST * builtin_file_open( FRAME * frame, int flags )
     char const * name = object_str( list_front( lol_get( frame->args, 0 ) ) );
     char const * mode = object_str( list_front( lol_get( frame->args, 1 ) ) );
     int fd;
-    char buffer[ sizeof( "4294967295" ) ];
 
     if ( strcmp(mode, "t") == 0 )
     {
@@ -1772,8 +1770,7 @@ LIST * builtin_file_open( FRAME * frame, int flags )
 
     if ( fd != -1 )
     {
-        sprintf( buffer, "%d", fd );
-        return list_new( object_new( buffer ) );
+        return list_new( b2::value::as_string(fd) );
     }
     return L0;
 }
@@ -2114,8 +2111,7 @@ LIST * builtin_shell( FRAME * frame, int flags )
         /* Harmonize VMS success status with POSIX */
         if ( exit_status == 1 ) exit_status = EXIT_SUCCESS;
 #endif
-        sprintf( buffer, "%d", exit_status );
-        result = list_push_back( result, object_new( buffer ) );
+        result = list_push_back( result, b2::value::as_string(exit_status) );
     }
 
     return result;
