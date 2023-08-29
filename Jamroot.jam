@@ -27,6 +27,7 @@ project b2
     : build-dir .build
     : requirements
         <cxxstd>11
+        <threading>multi
         <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS=1
         <toolset>msvc:<define>_CRT_NONSTDC_NO_DEPRECATE=1
         <variant>debug:<define>B2_DEBUG=1

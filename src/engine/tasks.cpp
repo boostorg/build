@@ -319,7 +319,7 @@ unsigned get_parallelism(int parallelism)
 #if B2_USE_STD_THREADS
 	return parallelism >= 0
 		? parallelism
-		: std::min(unsigned(globs.jobs), system_info().cpu_thread_count()) - 1;
+		: std::min(unsigned(globs.jobs), system_info().cpu_thread_count());
 #else
 	return 0;
 #endif

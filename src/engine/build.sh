@@ -156,11 +156,11 @@ check_toolset ()
 
     # Prefer Clang (clang) on macOS..
     if test_toolset clang && test_uname Darwin && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
+    # GCC (gcc) with -pthread arg (for AIX and others)..
+    if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # GCC (gcc)..
     if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -D_GNU_SOURCE ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
-    # GCC (gcc) with -pthread arg (for AIX and others)..
-    if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # Clang (clang)..
     if test_toolset clang && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # Clang (clang) with -pthread arg (for FreeBSD and others)..
