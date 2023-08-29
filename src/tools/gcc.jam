@@ -385,8 +385,6 @@ local rule compile-link-flags ( * )
         }
     }
 
-    # -mthreads is obsolete at least since mingw-w64 fork ~2011 and is not presented in clang
-    threading-flags <target-os>windows/<toolset>gcc : -mthreads ;
     threading-flags <target-os>windows/<threadapi>pthread : -pthread ;
     threading-flags <target-os>cygwin/<threadapi>pthread : -pthread ;
     threading-flags <target-os>solaris  : -pthreads : rt ;
