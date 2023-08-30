@@ -20,6 +20,7 @@ trigger:
     - .semaphore/*
     - .travis.yml
     - appveyor.yml
+    - README.*
 pr:
   branches:
     include:
@@ -33,8 +34,8 @@ variables:
 - { name: linux_latest_vm, value: 'ubuntu-22.04' }
 - { name: linux_latest_os, value: 'focal' }
 - { name: windows_latest_vm, value: 'windows-2022' }
-- { name: clang_latest, value: '15' }
-- { name: gcc_latest, value: '12' }
+- { name: clang_latest, value: '16' }
+- { name: gcc_latest, value: '13' }
 - { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
 - { name: xc_latest, value: '14.2' }
@@ -208,13 +209,15 @@ stages:
   - job: 'Linux'
     strategy:
       matrix:
-        # GCC 12: {TOOLSET: gcc-12, PACKAGES: g++-12, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        # GCC 13: {TOOLSET: gcc-13, PACKAGES: g++-13, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC 12: {TOOLSET: gcc-12, PACKAGES: g++-12, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         # GCC 8: {TOOLSET: gcc-8, PACKAGES: g++-8, VM_IMAGE: "ubuntu-20.04"}
         # GCC 7: {TOOLSET: gcc-7, PACKAGES: g++-7, VM_IMAGE: "ubuntu-20.04"}
-        # Clang 15: {TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        # Clang 16: {TOOLSET: clang-16, PACKAGES: clang-16, LLVM_VER: 16, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Clang 15: {TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 14: {TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 13: {TOOLSET: clang-13, PACKAGES: clang-13, LLVM_VER: 13, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 12: {TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
@@ -374,6 +377,8 @@ stages:
     displayName: 'Release Linux'
     strategy:
       matrix:
+        1.83.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.82.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.81.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.80.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.79.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
@@ -421,6 +426,8 @@ stages:
       vmImage: "${{variables.macos_latest_vm}}"
     strategy:
       matrix:
+        1.83.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
+        1.82.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.81.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.80.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.79.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
@@ -467,6 +474,8 @@ stages:
       vmImage: "${{variables.windows_latest_vm}}"
     strategy:
       matrix:
+        1.83.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: "${{variables.vc_latest}}"}
+        1.82.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: "${{variables.vc_latest}}"}
         1.81.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: "${{variables.vc_latest}}"}
         1.80.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.80.0, BOOST_VERSION_U: 1_80_0, TOOLSET: "${{variables.vc_latest}}"}
         1.79.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.79.0, BOOST_VERSION_U: 1_79_0, TOOLSET: "${{variables.vc_latest}}"}
