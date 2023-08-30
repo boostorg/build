@@ -229,7 +229,7 @@ inline executor::implementation::implementation(unsigned parallelism)
 		}
 		catch (const std::system_error & e)
 		{
-			err_printf("Task execution error: %s");
+			err_printf("Task execution error: %s", e.what());
 		}
 	}
 #endif
