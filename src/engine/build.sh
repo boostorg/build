@@ -161,10 +161,10 @@ check_toolset ()
     # GCC (gcc)..
     if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -D_GNU_SOURCE ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
+    # Clang (clang) with -pthread arg (for FreeBSD and others)..
+    if test_toolset clang && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # Clang (clang)..
     if test_toolset clang && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
-    # Clang (clang) with -pthread arg (for FreeBSD and others)..
-    if test_toolset clang && test_uname FreeBSD && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # Intel macOS (intel-darwin)
     if test_toolset intel-darwin && test -r "${HOME}/intel/oneapi/setvars.sh" && test_uname Darwin ; then
         B2_SETUP="source ${HOME}/intel/oneapi/setvars.sh"
