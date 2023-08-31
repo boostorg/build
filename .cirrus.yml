@@ -5,6 +5,7 @@
 # Copyright René Ferdinand Rivera Morell 2020-2021.
 
 freebsd_task:
+  skip: "changesIncludeOnly('.ci/azp-*', 'appveyor.yml', 'azure-pipelines.yml', '*.adoc')"
   # All the GCC's and Clang's currently supported by FreeBSD ports.
   matrix:
     - { name: 'FreeBSD, GCC 13', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++13', PACKAGE: 'gcc13' }, freebsd_instance: { image_family: 'freebsd-13-1' } }
