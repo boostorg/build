@@ -229,7 +229,7 @@ inline executor::implementation::implementation(unsigned parallelism)
 		}
 		catch (const std::system_error & e)
 		{
-			err_printf("Task execution error: %s", e.what());
+			err_printf("Task startup error: %s", e.what());
 		}
 	}
 #endif
@@ -313,8 +313,10 @@ void executor::implementation::runner()
 			{
 				f();
 			}
-			catch (const std::exception &)
-			{}
+			catch (const std::exception & e)
+			{
+				err_printf("Task runner function error: %s", e.what());
+			}
 			call_done();
 		}
 	}
