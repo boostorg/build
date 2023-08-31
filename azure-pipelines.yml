@@ -108,7 +108,7 @@ stages:
     strategy:
       matrix:
         Xcode ${{variables.xc_latest}}: {XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
-        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
+        # GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app", VM_IMAGE: "${{variables.macos_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
