@@ -6,6 +6,7 @@
 import feature ;
 import os ;
 import toolset ;
+import generators ;
 import common ;
 import gcc ;
 import type ;
@@ -50,6 +51,9 @@ toolset.inherit-flags emscripten : gcc
         <debug-symbols>off <debug-symbols>on
         <rtti>off <rtti>on
         ;
+
+generators.override builtin.lib-generator : emscripten.prebuilt ;
+generators.override emscripten.searched-lib-generator : searched-lib-generator ;
 
 type.set-generated-target-suffix EXE : <toolset>emscripten : "js" ;
 type.set-generated-target-suffix OBJ : <toolset>emscripten : "bc" ;
