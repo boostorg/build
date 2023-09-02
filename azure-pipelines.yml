@@ -114,16 +114,17 @@ stages:
     steps:
     - template: .ci/azp-macos-test.yml
 
-  - job: 'Linux_ASAN'
+  - job: 'Linux_Sanitzer'
     strategy:
       matrix:
-        # Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Address (GCC ${{variables.gcc_latest}}): {SANITIZER: "address-sanitizer", TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Thread (GCC ${{variables.gcc_latest}}): {SANITIZER: "thread-sanitizer", TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        UB (GCC ${{variables.gcc_latest}}): {SANITIZER: "undefined-sanitizer", TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     continueOnError: 'true'
     steps:
-    - template: .ci/azp-linux-asan-test.yml
+    - template: .ci/azp-linux-sanitizer-test.yml
 
 - stage: Extra
   dependsOn: []

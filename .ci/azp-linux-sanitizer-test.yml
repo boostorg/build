@@ -11,11 +11,11 @@ steps:
     ./build.sh ${TOOLSET}
     ./b2 -v
     cd ../..
-    ./src/engine/b2 -a address-sanitizer=on toolset=${TOOLSET} b2
+    ./src/engine/b2 -a ${SANITIZER}=on optimization=debug toolset=${TOOLSET} b2
   displayName: Build
 - bash: |
     set -e
-    export B2=`ls -1 ${PWD}/.build/*/debug/address-sanitizer-on/cxxstd-11-iso/threading-multi/b2`
+    export B2=`find ${PWD}/.build -name b2b2`
     cd test
     ./test_all.py ${TOOLSET}
     cd ..
