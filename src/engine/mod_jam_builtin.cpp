@@ -23,7 +23,8 @@ inline int get_version(const char *& s)
 	{
 		std::size_t len = 0;
 		auto val = std::stoi(s, &len);
-		s += len + 1;
+		s += len;
+		if (*s == '.') s += 1;
 		return val < 0 ? 0 : val;
 	}
 	catch (...)
