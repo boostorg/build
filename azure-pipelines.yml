@@ -224,7 +224,6 @@ stages:
         Clang 12: {TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 11: {TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 10: {TOOLSET: clang-10, PACKAGES: clang-10, LLVM_VER: 10, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 9: {TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
