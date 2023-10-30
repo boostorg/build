@@ -244,7 +244,7 @@ rule add-project-search ( root : search-paths + )
 }
 
 
-local rule search ( name )
+rule search ( name )
 {
     if [ path.is-rooted $(name) ]
     {
@@ -261,14 +261,25 @@ local rule search ( name )
         }
         # Do searching for various dir names and jamfiles based on the built
         # basename <a>_<b>_<c>[.jam].
-        local base = [ path.basename $(name) ] ;
         local root = [ path.parent $(name) ] ;
+        local base = [ path.basename $(name) ] ;
+        local sub = $(base) ;
         while $(base)
         {
             # Check for a regular B2 project in the search path and subdir base.
             for local dir in $(.search-path.$(root))
             {
                 dir = [ path.join $(dir) $(base) ] ;
+                local jamfile = [ path.glob $(dir) : $(JAMROOT) $(JAMFILE) ] ;
+                if $(jamfile)
+                {
+                    return $(dir) ;
+                }
+            }
+            # Check for a regular B2 project in the search path and subdir subpath.
+            for local dir in $(.search-path.$(root))
+            {
+                dir = [ path.join $(dir) $(sub) ] ;
                 local jamfile = [ path.glob $(dir) : $(JAMROOT) $(JAMFILE) ] ;
                 if $(jamfile)
                 {
@@ -286,12 +297,14 @@ local rule search ( name )
             }
             if [ path.has-parent $(root) ]
             {
+                sub = [ path.join [ path.basename $(root) ] $(sub) ] ;
                 base = [ path.basename $(root) ] $(base) ;
                 base = $(base:L:J=_) ;
                 root = [ path.parent $(root) ] ;
             }
             else
             {
+                sub = ;
                 base = ;
                 root = ;
             }
@@ -1548,8 +1561,26 @@ module project-rules
     # Defines search paths for resolving global, i.e. rooted, project references.
     rule project-search ( root : search-paths + )
     {
-        import path ;
         import project ;
         project.add-project-search $(root) : $(search-paths) ;
+    }
+
+    # Adds the project, or subdirectory of the project, location to the search
+    # of importing modules.
+    rule import-search ( name )
+    {
+        import modules ;
+        import project ;
+        local dir = [ project.search $(name) ] ;
+        if $(dir)
+        {
+            modules.poke : BOOST_BUILD_PATH
+                : $(dir) [ modules.peek : BOOST_BUILD_PATH ] ;
+        }
+        else
+        {
+            import errors ;
+            errors.error Unable find project reference '$(name)'. ;
+        }
     }
 }

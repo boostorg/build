@@ -29,6 +29,9 @@ other Jam files.
 * *New*: Make parts of internals thread safe to support parallel built-ins.
   Currently includes Jam values, hash tables, and filesystem.
   -- _René Ferdinand Rivera Morell_
+* *New*: Add `import-search` project rule to declare additional search paths
+  for `import` that refer to searched project locations.
+  -- _René Ferdinand Rivera Morell_
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
 
