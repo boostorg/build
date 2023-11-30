@@ -1232,10 +1232,10 @@ class List:
         elements = []
         if isstr(s):
             # Have to handle escaped spaces correctly.
-            elements = s.replace("\ ", "\001").split()
+            elements = s.replace("\\ ", "\001").split()
         else:
             elements = s
-        self.l = [e.replace("\001", " ") for e in elements]
+        self.l = [e.replace("\001", "\\ ") for e in elements]
 
     def __len__(self):
         return len(self.l)
