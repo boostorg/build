@@ -470,7 +470,8 @@ class abstract-file-target : virtual-target
                 {
                     import errors : error : errors.error ;
                     errors.error <tag>@rulename is present but is not the only
-                        <tag> feature. ;
+                        <tag> feature. Tags present..
+                        : $(tag) ;
                 }
 
                 self.name = [ indirect.call $(rule-name) $(specified-name)

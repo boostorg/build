@@ -1567,20 +1567,43 @@ module project-rules
 
     # Adds the project, or subdirectory of the project, location to the search
     # of importing modules.
-    rule import-search ( name )
+    rule import-search ( reference )
     {
         import modules ;
+        import path ;
         import project ;
-        local dir = [ project.search $(name) ] ;
+        local dir ;
+        if ! $(dir)
+        {
+            local project-dir = [ project.search $(reference) ] ;
+            if $(project-dir)
+            {
+                # Resolved it as a project reference.
+                dir = $(project-dir) ;
+            }
+        }
+        if ! $(dir)
+        {
+            local os-dir = [ path.root $(reference) [ path.pwd ] ] ;
+            if ! [ CHECK_IF_FILE [ path.native $(os-dir) ] ]
+            {
+                # It's not a file, i.e. it's a directory.
+                dir = $(os-dir) ;
+            }
+        }
         if $(dir)
         {
-            modules.poke : BOOST_BUILD_PATH
-                : $(dir) [ modules.peek : BOOST_BUILD_PATH ] ;
+            local b2-path = [ modules.peek : BOOST_BUILD_PATH ] ;
+            if ! $(dir) in $(b2-path)
+            {
+                modules.poke : BOOST_BUILD_PATH : $(dir) $(b2-path) ;
+            }
         }
         else
         {
             import errors ;
-            errors.error Unable find project reference '$(name)'. ;
+            errors.error Unable find project reference '$(reference)'. ;
+            return ;
         }
     }
 }

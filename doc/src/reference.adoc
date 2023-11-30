@@ -179,6 +179,25 @@ are not allowed.
 [[bbv2.reference.rules.test-suite]]`test-suite`::
 This rule is deprecated and equivalent to `alias`.
 
+[[bbv2.reference.rules.import-search]]`import-search`::
++
+====
+[horizontal]
+Jam:: `rule import-search ( reference )`
+====
++
+Adds the given `reference` path to the set of directories that an `import` will
+search. The `reference` can be a plain directory or a known project path. If a
+project path is given it will be searched for and resolved to include any
+sub-project path in the reference. If a directory is given it will be rooted
+relative to the current project location. Example project path usage:
++
+----
+import-search /boost/config/checks ;
+import-search /boost/predef/tools/checks ;
+----
++
+
 :leveloffset: +1
 
 include::../../src/engine/mod_jam_builtin.h[tag=reference]
