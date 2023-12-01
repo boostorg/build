@@ -1,7 +1,7 @@
 [[bbv2.tutorial]]
 = Tutorial
 
-This section will guide you though the most basic features of
+This section will guide you through the most basic features of
 B2. We will start with the “Hello, world” example, learn how to
 use libraries, and finish with testing and installing features.
 
