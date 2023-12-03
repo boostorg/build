@@ -94,8 +94,8 @@
     <h2><a name="sec-intro">Introduction for users</a></h2>
 
     <p>The testing system for B2 is a small set of Python modules and
-    scripts for automatically testing user-obversable behaviour. It uses
-    components from testing systems of <a href="http://www.scons.org">Scons</a>
+    scripts for automatically testing user-observable behaviour. It uses
+    components from testing systems of <a href="http://www.scons.org">SCons</a>
     and <a href="http://subversion.tigris.org">Subversion</a>, together with
     some additional functionality.</p>
 
@@ -105,8 +105,8 @@
       <li>Get the source tree of B2 (located at <tt>tools/build</tt>
       in Boost)</li>
 
-      <li>Have <a href="http://www.python.org">Python</a> installed. Version
-      2.1 is known to work.</li>
+      <li>Have <a href="http://www.python.org">Python 3</a> installed. Prior
+      versions are no longer compatible.</li>
 
       <li>Build Boost.Jam. See <a href=
       "../engine/index.html">$boost_build_root/engine/index.html</a> for
@@ -131,8 +131,13 @@
     <p>Examples:</p>
 
 <pre class="code">
-python test_all.py
-python generators_test.py
+./test_all.py
+./generators_test.py
+</pre>
+or
+<pre class="code">
+python3 test_all.py
+python3 generators_test.py
 </pre>
 
     <p>If everything is OK, you will see a list of passed tests. Otherwise, a
@@ -144,8 +149,8 @@ python generators_test.py
     you can specify a specific one on the command line:</p>
 
 <pre class="code">
-python test_all.py borland
-python generators_test.py msvc-7.1
+python3 test_all.py borland
+python3 generators_test.py msvc-7.1
 </pre>
 
     <p>Other test script flags you can specify on the command line are:</p>
@@ -173,7 +178,7 @@ python generators_test.py msvc-7.1
 
     <ul>
       <li>For an interpreted language like Jam, without any static checks,
-      testing is simply the only sefeguard we can have.</li>
+      testing is simply the only safeguard we can have.</li>
 
       <li>Good tests allow us to change internal design much more safely, and we
       have not gotten everything nailed down yet.</li>
