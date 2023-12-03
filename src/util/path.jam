@@ -54,7 +54,7 @@ rule native ( path )
 #
 rule is-rooted ( path )
 {
-    return [ MATCH "^(/)" : $(path) ] ;
+    return [ MATCH "^(/|@)" : $(path) ] ;
 }
 
 
