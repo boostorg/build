@@ -19,7 +19,7 @@
 = Microsoft Visual C++
 
 The `msvc` module supports the
-http://msdn.microsoft.com/visualc/[Microsoft Visual C++] command-line
+https://docs.microsoft.com/en-us/cpp/[Microsoft Visual C++] command-line
 tools on Microsoft Windows. The supported products and versions of
 command line tools are listed below:
 
