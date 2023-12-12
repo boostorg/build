@@ -426,7 +426,7 @@ exe app : app.cpp core ;
 This works no matter what kind of linking is used. When `core` is built as a
 shared library, links `utils` directly into it. Static libraries can't link
 to other libraries, so when `core` is built as a static library, its
-dependency on `utils` is passed along to `core`'s dependents, causing `app`
+dependency on `utils` is passed along to ``core``'s dependents, causing `app`
 to be linked with both `core` and `utils`.
 ====
 
@@ -515,7 +515,7 @@ exe app : app.cpp ../util/lib2//lib2 ;
 ----
 
 As with any target, the alternative selected depends on the properties
-propagated from `lib2`'s dependents. If we build the release and debug
+propagated from ``lib2``'s dependents. If we build the release and debug
 versions of `app` it will be linked with `lib2_release.a` and
 `lib2_debug.a`, respectively.
 
