@@ -1091,7 +1091,7 @@ rule archive ( targets * : sources * : properties * )
 #
 actions piecemeal archive
 {
-    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" @($(<[-1]:T).rsp:O=FC:<=@":>=":E="$(>)")
+    "$(.AR)" $(AROPTIONS) $(.ARFLAGS) "$(<)" @($(<[-1]:T).rsp:O=FC:<=@":>=":E="$(>:T)")
 }
 
 ###
