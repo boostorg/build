@@ -5,11 +5,44 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(gdb) Pipe Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/root/b2/.build/gcc-12/debug/cxxstd-11-iso/threading-multi/b2",
+            "args": [],
+            "stopAtEntry": true,
+            "cwd": "/root/b2/test/grep",
+            "environment": [],
+            "externalConsole": true,
+            "pipeTransport": {
+                "debuggerPath": "/usr/local/bin/gdb",
+                "pipeProgram": "/usr/bin/ssh",
+                "pipeArgs": [
+                    "-v",
+                    "root@192.168.13.163"
+                ],
+                "pipeCwd": ""
+            },
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "sourceFileMap": {
+                "/root/b2": "${workspaceFolder}"
+            }
+        },
+        {
             "name": "(mingw) Launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}\\.build\\gcc-10\\debug\\cxxstd-11-iso\\b2.exe",
-            "args": ["-v"],
+            "args": [
+                "-v"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -23,7 +56,7 @@
                     "ignoreFailures": true
                 },
                 {
-                    "description":  "Set Disassembly Flavor to Intel",
+                    "description": "Set Disassembly Flavor to Intel",
                     "text": "-gdb-set disassembly-flavor intel",
                     "ignoreFailures": true
                 }
@@ -34,7 +67,9 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}\\.build\\msvc-14.3\\debug\\cxxstd-11-iso\\threading-multi\\b2.exe",
-            "args": ["-v"],
+            "args": [
+                "-v"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}\\src\\engine",
             "environment": []
@@ -44,7 +79,11 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}\\.build\\msvc-14.3\\debug\\cxxstd-11-iso\\threading-multi\\b2.exe",
-            "args": ["--debug", "--build-system=test/test", "-j1"],
+            "args": [
+                "--debug",
+                "--build-system=test/test",
+                "-j1"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}\\test",
             "environment": []
@@ -54,7 +93,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/b2",
-            "args": ["--grep"],
+            "args": [
+                "--grep"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -73,7 +114,10 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/address-sanitizer-on/cxxstd-11-iso/b2",
-            "args": ["-na", "toolset=gcc"],
+            "args": [
+                "-na",
+                "toolset=gcc"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
@@ -92,7 +136,13 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/b2",
-            "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests", "toolset=gcc"],
+            "args": [
+                "--debug",
+                "--build-system=test/test",
+                "-j1",
+                "--debug-tests",
+                "toolset=gcc"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/test",
             "environment": [],
@@ -111,10 +161,20 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/address-sanitizer-on/cxxstd-11-iso/b2",
-            "args": ["--debug", "--build-system=test/test", "-j1", "--debug-tests", "toolset=gcc"],
+            "args": [
+                "--debug",
+                "--build-system=test/test",
+                "-j1",
+                "--debug-tests",
+                "toolset=gcc"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/test",
-            "environment": [{"LSAN_OPTIONS":"verbosity=1:log_threads=1"}],
+            "environment": [
+                {
+                    "LSAN_OPTIONS": "verbosity=1:log_threads=1"
+                }
+            ],
             "externalConsole": false,
             "MIMode": "gdb",
             "setupCommands": [
@@ -130,7 +190,9 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/b2",
-            "args": ["--grep"],
+            "args": [
+                "--grep"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
