@@ -5,7 +5,7 @@
 
 This is a new era in B2. The drive of this new major version is to move the
 core build system from being implemented in Jam to {CPP}. This initial release
-does is only a start in this move by having some minimal aspects implemented
+is only a start in this move by having some minimal aspects implemented
 in {CPP} using a new Jam/{CPP} native binding system. Even though this is a
 major release, the goal is to still have backward compatibility for existing
 project build files. But that backward compatibility is not guaranteed for
@@ -34,6 +34,8 @@ other Jam files.
   -- _René Ferdinand Rivera Morell_
 * Fix consistent use of `OPT_SEMAPHORE` and documentation of `JAM_SEMAPHORE`.
   -- _Thomas Brown_
+* Fix archive actions failing for mingw.
+  -- _René Ferdinand Rivera Morell_
 
 IMPORTANT: Building B2 with VisualStudio 2013, i.e. MSVC 12, is no longer
 supported or tested. The effort to engineer workarounds for the missing {CPP}11
