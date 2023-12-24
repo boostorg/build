@@ -5,6 +5,8 @@
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
+require-b2 5 ;
+
 import "class" : new ;
 import bison ;
 import errors ;
@@ -25,9 +27,14 @@ project b2
     : build-dir .build
     : requirements
         <cxxstd>11
+        <threading>multi
         <toolset>msvc:<define>_CRT_SECURE_NO_WARNINGS=1
         <toolset>msvc:<define>_CRT_NONSTDC_NO_DEPRECATE=1
+        <variant>debug:<define>B2_DEBUG=1
+        <toolset>clang-win:<define>_CRT_SECURE_NO_WARNINGS=1
+        <toolset>clang-win:<define>_CRT_NONSTDC_NO_DEPRECATE=1
         <toolset>clang:<cxxflags>-Wno-deprecated-declarations
+        <toolset>gcc,<variant>debug,<target-os>linux:<linkflags>-rdynamic
     ;
 
 #|
@@ -143,6 +150,13 @@ exe b2
         <toolset>msvc:<find-static-library>kernel32
         <toolset>msvc:<find-static-library>advapi32
         <toolset>msvc:<find-static-library>user32
+        <toolset>clang-win:<find-static-library>kernel32
+        <toolset>clang-win:<find-static-library>advapi32
+        <toolset>clang-win:<find-static-library>user32
+        <target-os>windows,<toolset>gcc:<source>src/engine/res.rc
+        <target-os>windows,<toolset>clang:<source>src/engine/res.rc
+        <toolset>msvc:<embed-manifest-file>src/engine/b2.exe.manifest
+        <toolset>clang-win:<embed-manifest-file>src/engine/b2.exe.manifest
     ;
 explicit b2 ;
 

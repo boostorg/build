@@ -48,7 +48,9 @@ def run_test(test):
         __import__(test)
     except BaseException as e:
         exc = e
-    return test, time.perf_counter() - ts, exc, BoostBuild.annotations
+    annotations = BoostBuild.annotations.copy()
+    BoostBuild.annotations.clear()
+    return test, time.perf_counter() - ts, exc, annotations
 
 
 def run_tests(critical_tests, other_tests):
@@ -229,6 +231,7 @@ tests = ["abs_workdir",
          "alias",
          "alternatives",
          "always",
+         "assert",
          "bad_dirname",
          "build_dir",
          "build_file",
@@ -303,6 +306,7 @@ tests = ["abs_workdir",
          "flags",
          "generator_selection",
          "generators_test",
+         "grep",
          "implicit_dependency",
          "indirect_conditional",
          "inherit_toolset",
@@ -334,6 +338,7 @@ tests = ["abs_workdir",
          "package",
          "param",
          "path_features",
+         "path_specials",
          "prebuilt",
          "preprocessor",
          "print",
@@ -359,7 +364,6 @@ tests = ["abs_workdir",
          "sort_rule",
          "source_locations",
          "source_order",
-         "space_in_path",
          "stage",
          "standalone",
          "static_and_shared_library",
@@ -409,7 +413,7 @@ if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswit
     tests.append("feature_force_include")
 
 # Clang includes Objective-C driver everywhere, but GCC usually in a separate gobj package
-if toolset.startswith("clang") or "darwin" in toolset:
+if toolset.startswith("clang") and "-win" not in toolset or "darwin" in toolset:
     tests.append("lang_objc")
 
 # Disable on OSX as it doesn't seem to work for unknown reasons.
