@@ -232,7 +232,7 @@ stages:
         GCC 4.8: {TOOLSET: gcc-4.8, PACKAGES: g++-4.8, VM_IMAGE: "${{variables.linux_latest_vm}}", CONTAINER: "ubuntu:18.04"}
     pool:
       vmImage: $(VM_IMAGE)
-    container: ${CONTAINER}
+    container: $(CONTAINER)
     steps:
     - template: .ci/azp-linux-test.yml
 
