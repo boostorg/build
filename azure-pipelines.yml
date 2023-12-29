@@ -41,6 +41,9 @@ variables:
 - { name: xc_latest, value: '15.0.1' }
 - { name: macos_latest_vm, value: 'macOS-13' }
 
+resources:
+  containers:
+    - { container: ubuntu_1804, image: 'ubuntu:18.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
 
 stages:
 
@@ -226,15 +229,15 @@ stages:
     steps:
     - template: .ci/azp-linux-test.yml
 
-  - job: 'Linux_Container'
+  - job: 'Co_Linux'
     strategy:
       matrix:
-        GCC 4.8: {TOOLSET: gcc-4.8, PACKAGES: g++-4.8, VM_IMAGE: "${{variables.linux_latest_vm}}", CONTAINER: "ubuntu:18.04"}
+        GCC 4.8: {TOOLSET: gcc-4.8, PACKAGES: g++-4.8, VM_IMAGE: "${{variables.linux_latest_vm}}", CONTAINER: "ubuntu_1804"}
     pool:
       vmImage: $(VM_IMAGE)
     container: $[ variables['CONTAINER'] ]
     steps:
-    - template: .ci/azp-linux-test.yml
+    - template: .ci/azp-linux-test-container.yml
 
   - job: 'Windows'
     strategy:
