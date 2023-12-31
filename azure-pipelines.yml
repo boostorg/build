@@ -232,11 +232,12 @@ stages:
   - job: 'Co_Linux'
     strategy:
       matrix:
-        GCC 4.8: {TOOLSET: gcc-4.8, PACKAGES: g++-4.8, VM_IMAGE: "${{variables.linux_latest_vm}}", CONTAINER: "ubuntu_1804"}
+        GCC 4.8: {TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
     pool:
-      vmImage: $(VM_IMAGE)
+      vmImage: 'ubuntu-20.04'
     container: $[ variables['CONTAINER'] ]
     steps:
+    - template: .ci/azp-linux-prep-container.yml
     - template: .ci/azp-linux-test-container.yml
 
   - job: 'Windows'
