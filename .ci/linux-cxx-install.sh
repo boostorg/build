@@ -12,7 +12,7 @@ OS_ISSUE=`cat /etc/issue | head -n1 | cut -d " " -f1`
 echo ">>>>> OS Issue: ${OS_ISSUE}"
 
 PACKAGES=${PACKAGES:-build-essential}
-APT_OPT=-o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends
+APT_OPT="-o Acquire::Retries=3 -yq --no-install-suggests --no-install-recommends"
 
 set -e
 echo ">>>>>"
