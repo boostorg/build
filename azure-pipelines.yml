@@ -238,7 +238,7 @@ stages:
     container: $[ variables['CONTAINER'] ]
     steps:
     - template: .ci/azp-linux-prep-container.yml
-    - template: .ci/azp-linux-test-container.yml
+    - template: .ci/azp-linux-test.yml
 
   - job: 'Windows'
     strategy:
