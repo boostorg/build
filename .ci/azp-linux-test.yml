@@ -11,7 +11,7 @@ steps:
     ./build.sh ${TOOLSET}
     ./b2 -v
     cd ../..
-    echo "using ${TOOLSET} : : ${CXX} ;" > ${HOME}/user-config.jam
+    echo "using ${TOOLSET%%-[0-9]*} : : ${CXX} ;" > ${HOME}/user-config.jam
   displayName: Build
 - bash: |
     set -e
