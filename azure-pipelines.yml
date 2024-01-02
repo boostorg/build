@@ -233,23 +233,23 @@ stages:
   - job: 'Co_Linux'
     strategy:
       matrix:
-        GCC 8: {TOOLSET: gcc-8, PACKAGES: g++-8, CONTAINER: "ubuntu_1804"}
-        GCC 7: {TOOLSET: gcc-7, PACKAGES: g++-7, CONTAINER: "ubuntu_1804"}
-        GCC 6: {TOOLSET: gcc-6, PACKAGES: g++-6, CONTAINER: "ubuntu_1804"}
-        GCC 5: {TOOLSET: gcc-5, PACKAGES: g++-5, CONTAINER: "ubuntu_1804"}
-        # GCC 4.9: {TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1804"}
-        GCC 4.8: {TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
-        # GCC 4.7: {TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1804"}
-        Clang 9: {TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 8: {TOOLSET: clang-8, PACKAGES: clang-8, LLVM_VER: 8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 7: {TOOLSET: clang-7, PACKAGES: clang-7, LLVM_VER: 7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 6: {TOOLSET: clang-6, PACKAGES: clang-6, LLVM_VER: 6, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 5: {TOOLSET: clang-5, PACKAGES: clang-5, LLVM_VER: 5, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 4: {TOOLSET: clang-4, PACKAGES: clang-4, LLVM_VER: 4, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 3.9: {TOOLSET: clang-3.9, PACKAGES: clang-3.9, LLVM_VER: 3.9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 3.8: {TOOLSET: clang-3.8, PACKAGES: clang-3.8, LLVM_VER: 3.8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 3.7: {TOOLSET: clang-3.7, PACKAGES: clang-3.7, LLVM_VER: 3.7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 3.6: {TOOLSET: clang-3.6, PACKAGES: clang-3.6, LLVM_VER: 3.6, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        GCC 8: {CXX: g++-8, TOOLSET: gcc-8, PACKAGES: g++-8, CONTAINER: "ubuntu_1804"}
+        GCC 7: {CXX: g++-7, TOOLSET: gcc-7, PACKAGES: g++-7, CONTAINER: "ubuntu_1804"}
+        GCC 6: {CXX: g++-6, TOOLSET: gcc-6, PACKAGES: g++-6, CONTAINER: "ubuntu_1804"}
+        GCC 5: {CXX: g++-5, TOOLSET: gcc-5, PACKAGES: g++-5, CONTAINER: "ubuntu_1804"}
+        # GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1804"}
+        GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
+        # GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1804"}
+        Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, LLVM_VER: 8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, LLVM_VER: 7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 6: {CXX: clang++-6, TOOLSET: clang-6, PACKAGES: clang-6, LLVM_VER: 6, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 5: {CXX: clang++-5, TOOLSET: clang-5, PACKAGES: clang-5, LLVM_VER: 5, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 4: {CXX: clang++-4, TOOLSET: clang-4, PACKAGES: clang-4, LLVM_VER: 4, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, PACKAGES: clang-3.9, LLVM_VER: 3.9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 3.8: {CXX: clang++-3.8, TOOLSET: clang-3.8, PACKAGES: clang-3.8, LLVM_VER: 3.8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 3.7: {CXX: clang++-3.7, TOOLSET: clang-3.7, PACKAGES: clang-3.7, LLVM_VER: 3.7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, LLVM_VER: 3.6, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
     pool:
       vmImage: 'ubuntu-20.04'
     container: $[ variables['CONTAINER'] ]
