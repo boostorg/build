@@ -11,8 +11,7 @@ steps:
     ./build.sh ${TOOLSET}
     ./b2 -v
     cd ../..
-    CXX_PATH=`which ${CXX}`
-    echo "using ${TOOLSET} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+    echo "using ${TOOLSET} : : ${CXX} ;" > ${HOME}/user-config.jam
   displayName: Build
 - bash: |
     set -e
