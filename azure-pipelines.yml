@@ -244,13 +244,13 @@ stages:
         Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, LLVM_VER: 8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, LLVM_VER: 7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 6: {CXX: clang++, TOOLSET: clang-6, PACKAGES: clang-6.0, LLVM_VER: 6.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 5: {CXX: clang++, TOOLSET: clang-5, PACKAGES: clang-5.0, LLVM_VER: 5.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 4: {CXX: clang++, TOOLSET: clang-4, PACKAGES: clang-4.0, CONTAINER: "ubuntu_1804"}
-        Clang 3.9: {CXX: clang++, TOOLSET: clang-3.9, PACKAGES: clang-3.9, CONTAINER: "ubuntu_1804"}
-        Clang 3.8: {CXX: clang++, TOOLSET: clang-3.8, PACKAGES: clang-3.8, CONTAINER: "ubuntu_1604"}
-        Clang 3.7: {CXX: clang++, TOOLSET: clang-3.7, PACKAGES: clang-3.7, CONTAINER: "ubuntu_1604"}
-        Clang 3.6: {CXX: clang++, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
+        Clang 6: {CXX: clang++-6.0, TOOLSET: clang-6.0, PACKAGES: clang-6.0, LLVM_VER: 6.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, PACKAGES: clang-5.0, LLVM_VER: 5.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
+        Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, PACKAGES: clang-4.0, CONTAINER: "ubuntu_1804"}
+        Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, PACKAGES: clang-3.9, CONTAINER: "ubuntu_1804"}
+        Clang 3.8: {CXX: clang++-3.8, TOOLSET: clang-3.8, PACKAGES: clang-3.8, CONTAINER: "ubuntu_1604"}
+        Clang 3.7: {CXX: clang++-3.7, TOOLSET: clang-3.7, PACKAGES: clang-3.7, CONTAINER: "ubuntu_1604"}
+        Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
     pool:
       vmImage: 'ubuntu-20.04'
     container: $[ variables['CONTAINER'] ]

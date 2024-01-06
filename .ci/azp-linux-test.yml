@@ -3,6 +3,7 @@ steps:
     set -e
     uname -a
     ./.ci/linux-cxx-install.sh
+    python3 --version
   displayName: Install
 - bash: |
     set -e
