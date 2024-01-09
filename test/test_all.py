@@ -183,12 +183,12 @@ def run_tests(critical_tests, other_tests):
         open("test_results.txt", "w").close()
 
     if not xml:
-        print(f'''
+        print('''
         === Test summary ===
-        PASS: {pass_count}
-        FAIL: {failures_count}
-        TIME: {time.perf_counter() - start_ts:.0f}s
-        ''')
+        PASS: {}
+        FAIL: {}
+        TIME: {:.0f}s
+        '''.format(pass_count,failures_count,time.perf_counter() - start_ts))
 
     # exit with failure with failures
     if cancelled or failures_count > 0:
