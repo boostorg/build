@@ -94,7 +94,7 @@ def run_tests(critical_tests, other_tests):
         if not xml:
             s = "%%-%ds :" % max_test_name_len % test
             if isatty:
-                s = f"\r{s}"
+                s = "\r{}".format(s)
             print(s, end='')
 
         passed = 0
@@ -148,15 +148,15 @@ def run_tests(critical_tests, other_tests):
 
         if not xml:
             if passed:
-                print(f"PASSED {ts * 1000:>5.0f}ms")
+                print("PASSED {:>5.0f}ms".format(ts*1000))
             else:
-                print(f"FAILED {ts * 1000:>5.0f}ms")
+                print("FAILED {:>5.0f}ms".format(ts*1000))
                 BoostBuild.flush_annotations()
 
             if isatty:
                 msg = ", ".join(futures[future] for future in pending if future.running())
                 if msg:
-                    msg = f"[{len(futures) - len(pending)}/{len(futures)}] {msg}"
+                    msg = "[{}/{}] {}".format(len(futures) - len(pending),len(futures),msg)
                     max_len = max_test_name_len + len(" :PASSED 12345ms")
                     if len(msg) > max_len:
                         msg = msg[:max_len - 3] + "..."

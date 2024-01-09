@@ -113,7 +113,7 @@ class TreeDifference:
         s = repr(names)
         if len(s) < 70:
             return s
-        return "".join(f"\n  - {name}" for name in names)
+        return "".join("\n  - {}".format(name) for name in names)
 
     def pprint(self, file=sys.stdout):
         file.write("Added files   : %s\n" % self._pprint_filelist(self.added_files))
