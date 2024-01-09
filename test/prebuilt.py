@@ -27,7 +27,7 @@ libname = t.adjust_name("a.implib" if t.is_implib_expected() else "a.dll")
 # Now check that we can build the main project, and that correct prebuilt file
 # is picked, depending of variant. This also checks that correct includes for
 # prebuilt libraries are used.
-t.run_build_system([f"-sLIBNAME={libname}"])
+t.run_build_system(["-sLIBNAME={}".format(libname)])
 t.expect_addition("bin/$toolset/debug*/hello.exe")
 t.expect_addition("bin/$toolset/release*/hello.exe")
 
