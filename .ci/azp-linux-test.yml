@@ -16,6 +16,7 @@ steps:
   displayName: Build
 - bash: |
     set -e
+    locale -a
     locale
     export LC_ALL=en_US.UTF-8
     locale
