@@ -16,10 +16,10 @@ steps:
   displayName: Build
 - bash: |
     set -e
+    echo "Available system locales:"
     locale -a
-    locale
+    echo "Switch to C.UTF-8 locale."
     export LC_ALL=C.UTF-8
-    locale
     cd test
     ./test_all.py ${TOOLSET}
     cd ..
