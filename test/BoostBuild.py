@@ -390,7 +390,7 @@ class Tester(TestCmd.TestCmd):
         if not type(content) == bytes:
             content = content.encode()
         try:
-            with open(nfile.encode('utf-8'), "wb") as f:
+            with open(nfile, "wb") as f:
                 f.write(content)
         except Exception as e:
             annotation("failure","Could not create file '{}': {}".format(nfile, e))

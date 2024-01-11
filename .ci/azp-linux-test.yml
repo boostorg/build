@@ -16,6 +16,9 @@ steps:
   displayName: Build
 - bash: |
     set -e
+    locale
+    export LC_ALL=en_US.UTF-8
+    locale
     cd test
     ./test_all.py ${TOOLSET}
     cd ..
