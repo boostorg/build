@@ -18,7 +18,7 @@ steps:
     set -e
     locale -a
     locale
-    export LC_ALL=en_US.UTF-8
+    export LC_ALL=C.UTF-8
     locale
     cd test
     ./test_all.py ${TOOLSET}
