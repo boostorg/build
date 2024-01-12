@@ -27,7 +27,7 @@ list_ref b2::regex_split(
 	const std::tuple<value_ref, value_ref> & string_separator)
 {
 	list_ref result;
-	string_t string { std::get<0>(string_separator) };
+	string_t string(std::get<0>(string_separator));
 	auto re = program(std::get<1>(string_separator)->str());
 	auto pos = string.c_str();
 	auto prev = pos;
