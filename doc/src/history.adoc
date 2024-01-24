@@ -6,6 +6,9 @@
 * Fix compile errors for older versions of GCC and Clang toolset for the engine.
   We now support building the engine with GCC 4.7 and Clang 3.6 onward.
   -- _René Ferdinand Rivera Morell_
+* Fix `import-search` failing to find imports on Windows bacause of incorrect
+  native vs. non-native path handling.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 5.0.0
 
