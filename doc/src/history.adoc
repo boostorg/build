@@ -9,6 +9,8 @@
 * Fix `import-search` failing to find imports on Windows bacause of incorrect
   native vs. non-native path handling.
   -- _René Ferdinand Rivera Morell_
+* Support cross-compile install of B2, using `target-os=xyz`.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 5.0.0
 
