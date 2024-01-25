@@ -1,7 +1,7 @@
 [[b2.history]]
 = History
 
-== Version 5.1.0
+== Version 5.0.1
 
 * Fix compile errors for older versions of GCC and Clang toolset for the engine.
   We now support building the engine with GCC 4.7 and Clang 3.6 onward.
