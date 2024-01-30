@@ -409,7 +409,8 @@ if toolset.startswith("gcc") and os.name != "nt":
     tests.append("gcc_runtime")
 
 if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswith("msvc"):
-    tests.append("pch")
+    if not sys.platform.startswith("freebsd"):
+        tests.append("pch")
     tests.append("feature_force_include")
 
 # Clang includes Objective-C driver everywhere, but GCC usually in a separate gobj package
