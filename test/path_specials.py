@@ -31,7 +31,7 @@ def test_dir(dir_name):
         if os.environ.get('MSYSTEM') in ['UCRT64', 'MINGW64', 'MINGW32'] and t.toolset in ['gcc', 'clang']:
             do_compile_test = False
 
-        t.write(f'{dir_name}/jamroot.jam', '''\
+        t.write(dir_name + '/jamroot.jam', '''\
 import testing ;
 actions write-file
 {
@@ -41,13 +41,13 @@ make test.txt : : @write-file ;
 ''' + ('''\
 unit-test test : test.cpp ;
 ''' if do_compile_test else ''))
-        t.write(f'{dir_name}/test.cpp', 'int main() {}\n')
+        t.write(dir_name + '/test.cpp', 'int main() {}\n')
 
         with patch.dict(os.environ, tmp):
             t.run_build_system([dir_name])
-            t.expect_addition(f'{dir_name}/bin/test.txt')
+            t.expect_addition(dir_name + '/bin/test.txt')
             if do_compile_test:
-                t.expect_addition(f'{dir_name}/bin/$toolset/debug*/test.passed')
+                t.expect_addition(dir_name + '/bin/$toolset/debug*/test.passed')
 
 
 test_dir('has space')

@@ -1579,16 +1579,16 @@ module project-rules
             if $(project-dir)
             {
                 # Resolved it as a project reference.
-                dir = $(project-dir) ;
+                dir = [ path.native $(project-dir) ] ;
             }
         }
         if ! $(dir)
         {
-            local os-dir = [ path.root $(reference) [ path.pwd ] ] ;
+            local os-dir = [ path.root [ path.make $(reference) ] [ path.pwd ] ] ;
             if ! [ CHECK_IF_FILE [ path.native $(os-dir) ] ]
             {
                 # It's not a file, i.e. it's a directory.
-                dir = $(os-dir) ;
+                dir = [ path.native $(os-dir) ] ;
             }
         }
         if $(dir)

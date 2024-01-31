@@ -56,7 +56,7 @@ def print_annotation(name, value, xml):
         print("}}}")
     else:
         print(name + " {{{")
-        print(value)
+        print(str(value).encode('utf8'))
         print("}}}")
 
 
@@ -393,7 +393,7 @@ class Tester(TestCmd.TestCmd):
             with open(nfile, "wb") as f:
                 f.write(content)
         except Exception as e:
-            annotation("failure", f"Could not create file '{nfile}': {e}")
+            annotation("failure","Could not create file '{}': {}".format(nfile, e))
             annotate_stack_trace(level=3)
             self.fail_test(1)
         self.__ensure_newer_than_last_build(nfile)
@@ -580,11 +580,11 @@ class Tester(TestCmd.TestCmd):
         if match:
             return
         diff = "".join(ndiff(expected_lines, actual_lines))
-        annotation(f"Expected {what}", expected)
-        annotation(f"Actual {what}", actual)
+        annotation("Expected {}".format(what), expected)
+        annotation("Actual {}".format(what), actual)
         if what.lower() == "stdout":
             annotation("STDERR", self.stderr())
-        annotation(f"Difference in {what}{filtered}", diff)
+        annotation("Difference in {}{}".format(what, filtered), diff)
         self.fail_test(True, dump_stdio=False)
 
     def glob_file(self, name):
@@ -1059,7 +1059,7 @@ class Tester(TestCmd.TestCmd):
             else:
                 os.makedirs(path, exist_ok=True)
         except Exception as e:
-            annotation("failure", f"Could not create path '{path}': {e}")
+            annotation("failure", "Could not create path '{}': {}".format(path, e))
             annotate_stack_trace(level=3)
             self.fail_test(1)
 

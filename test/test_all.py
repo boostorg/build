@@ -94,7 +94,7 @@ def run_tests(critical_tests, other_tests):
         if not xml:
             s = "%%-%ds :" % max_test_name_len % test
             if isatty:
-                s = f"\r{s}"
+                s = "\r{}".format(s)
             print(s, end='')
 
         passed = 0
@@ -148,15 +148,15 @@ def run_tests(critical_tests, other_tests):
 
         if not xml:
             if passed:
-                print(f"PASSED {ts * 1000:>5.0f}ms")
+                print("PASSED {:>5.0f}ms".format(ts*1000))
             else:
-                print(f"FAILED {ts * 1000:>5.0f}ms")
+                print("FAILED {:>5.0f}ms".format(ts*1000))
                 BoostBuild.flush_annotations()
 
             if isatty:
                 msg = ", ".join(futures[future] for future in pending if future.running())
                 if msg:
-                    msg = f"[{len(futures) - len(pending)}/{len(futures)}] {msg}"
+                    msg = "[{}/{}] {}".format(len(futures) - len(pending),len(futures),msg)
                     max_len = max_test_name_len + len(" :PASSED 12345ms")
                     if len(msg) > max_len:
                         msg = msg[:max_len - 3] + "..."
@@ -183,12 +183,12 @@ def run_tests(critical_tests, other_tests):
         open("test_results.txt", "w").close()
 
     if not xml:
-        print(f'''
+        print('''
         === Test summary ===
-        PASS: {pass_count}
-        FAIL: {failures_count}
-        TIME: {time.perf_counter() - start_ts:.0f}s
-        ''')
+        PASS: {}
+        FAIL: {}
+        TIME: {:.0f}s
+        '''.format(pass_count,failures_count,time.perf_counter() - start_ts))
 
     # exit with failure with failures
     if cancelled or failures_count > 0:
@@ -409,7 +409,8 @@ if toolset.startswith("gcc") and os.name != "nt":
     tests.append("gcc_runtime")
 
 if toolset.startswith("clang") or toolset.startswith("gcc") or toolset.startswith("msvc"):
-    tests.append("pch")
+    if not sys.platform.startswith("freebsd"):
+        tests.append("pch")
     tests.append("feature_force_include")
 
 # Clang includes Objective-C driver everywhere, but GCC usually in a separate gobj package

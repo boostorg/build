@@ -8,6 +8,7 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "jam.h"
 #include "mem.h"
+#include "mp.h"
 #include "object.h"
 #include "output.h"
 
@@ -202,14 +203,17 @@ struct value_eq_f
 
 struct safe_value_cache
 {
-	template <typename Test, typename Val, typename... Args>
-	value_ptr save(Args... args)
+	template <typename Test, typename Val, typename A0, typename... An>
+	typename std::enable_if<
+		!std::is_same<object *, typename mp::remove_cvref<A0>::type>::value,
+		value_ptr>::type
+		save(A0 a0, An... an)
 	{
-		Test test_val(args...);
+		Test test_val(a0, an...);
 		std::lock_guard<std::mutex> guard(mutex);
 		auto existing = cache.find(&test_val);
 		if (existing != cache.end()) return *existing;
-		value_ptr result = Val::make(args...);
+		value_ptr result = Val::make(a0, an...);
 		cache.insert(result);
 		return result;
 	}
