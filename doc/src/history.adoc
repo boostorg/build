@@ -3,6 +3,12 @@
 
 == Version 5.1.0
 
+* Fix spurious errors when the header scanning tries to scan empty file names.
+  -- _René Ferdinand Rivera Morell_
+* Make C/C++/ObjC include directive scanning pattern more strict to avoid
+  trying to scan for empty file names.
+  -- _Andrey Semashev_
+
 == Version 5.0.1
 
 * Fix compile errors for older versions of GCC and Clang toolset for the engine.
