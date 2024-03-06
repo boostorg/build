@@ -3,14 +3,19 @@
 
 == Version 5.1.0
 
+* *New*: Add listing of failed and skipped targets to end of build summary to
+  make it easier to find what fails.
+  -- _René Ferdinand Rivera Morell_
+* *New*: Add `mpi.run-flags` to `mpi` toolset that allows for arbitrary flags
+  applied to running mpi targets. This allows, for example, adding
+  `--oversubscribe` flag to make it possible to run tests where the tasks are
+  more than the nodes available.
+  -- _René Ferdinand Rivera Morell_
 * Fix spurious errors when the header scanning tries to scan empty file names.
   -- _René Ferdinand Rivera Morell_
 * Make C/C++/ObjC include directive scanning pattern more strict to avoid
   trying to scan for empty file names.
   -- _Andrey Semashev_
-* Add listing of failed and skipped targets to end of build summary to make it
-  easier to find what fails.
-  -- _René Ferdinand Rivera Morell_
 
 == Version 5.0.1
 
