@@ -8,6 +8,9 @@
 * Make C/C++/ObjC include directive scanning pattern more strict to avoid
   trying to scan for empty file names.
   -- _Andrey Semashev_
+* Add listing of failed and skipped targets to end of build summary to make it
+  easier to find what fails.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 5.0.1
 

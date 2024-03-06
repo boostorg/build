@@ -82,6 +82,7 @@ make bar : baz ;
 make bar
 time foo
 bar +user: [0-9.]+ +system: +[0-9.]+ +clock: +[0-9.]+ *
+
 \\.\\.\\.updated 2 targets\\.\\.\\.$
 """
 
