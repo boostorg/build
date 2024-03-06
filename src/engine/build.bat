@@ -188,6 +188,7 @@ set B2_SOURCES=%B2_SOURCES% mod_regex.cpp
 set B2_SOURCES=%B2_SOURCES% mod_sequence.cpp
 set B2_SOURCES=%B2_SOURCES% mod_set.cpp
 set B2_SOURCES=%B2_SOURCES% mod_string.cpp
+set B2_SOURCES=%B2_SOURCES% mod_summary.cpp
 set B2_SOURCES=%B2_SOURCES% mod_sysinfo.cpp
 set B2_SOURCES=%B2_SOURCES% mod_version.cpp
 
