@@ -8,14 +8,12 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "output.h"
 
-#include <memory>
-
 namespace b2 {
 
 void summary::group(value_ref group)
 {
     group_order.push_back(group);
-    groups.emplace(group, new std::vector<value_ref>);
+    groups.emplace(group, group_t(new group_t::element_type));
 }
 
 void summary::message(value_ref group, value_ref message)
@@ -23,17 +21,13 @@ void summary::message(value_ref group, value_ref message)
     groups[group]->push_back(message);
 }
 
-int summary::count(value_ref group)
-{
-    return (int)(groups[group]->size());
-}
+int summary::count(value_ref group) { return (int)(groups[group]->size()); }
 
 void summary::print(value_ref group, value_ref format)
 {
     std::string format_str = format;
     auto & g = groups[group];
-    std::sort(g->begin(), g->end(), [](value_ref a, value_ref b) -> bool
-    {
+    std::sort(g->begin(), g->end(), [](value_ref a, value_ref b) -> bool {
         return std::strcmp(a->str(), b->str()) < 0;
     });
     for (auto const & m : *g)
