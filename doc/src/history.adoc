@@ -16,6 +16,11 @@
 * Make C/C++/ObjC include directive scanning pattern more strict to avoid
   trying to scan for empty file names.
   -- _Andrey Semashev_
+* Fix mingw linker commands to always replace backslashes with forward slashes.
+  -- _Christian Seiler_
+* Fix QCC debug build flag. The QCC toolset was using an old, no longer
+  supported, debug symbols option.
+  -- _John McFarlane_
 
 == Version 5.0.1
 
