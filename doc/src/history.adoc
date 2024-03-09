@@ -3,6 +3,14 @@
 
 == Version 5.1.0
 
+This is mostly a bugfix release to account for issues impacting Boost Libraries.
+There is one "big" change though. It can be rather difficult to find build
+failures when running larger builds. To facilitate figuring out problems the
+brief summary output at the end of a build is now less brief. It now includes
+a *sorted* list of the targets that got skipped and failed. The output of those
+lists mirrors the general skipped/failed items. Hence it's possible to search
+for the same strings in the rest of the output quickly.
+
 * *New*: Add listing of failed and skipped targets to end of build summary to
   make it easier to find what fails.
   -- _René Ferdinand Rivera Morell_
