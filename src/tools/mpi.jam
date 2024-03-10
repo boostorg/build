@@ -658,7 +658,7 @@ rule mpi-test ( name : sources * : requirements * : schedule * )
     for processes in $(schedule)
     {
       result += [ testing.make-test
-        run-mpi : $(sources)
+        run-mpi : $(sources) /boost/mpi//boost_mpi
           : $(requirements) <toolset>msvc:<link>static <mpi:processes>$(processes) : $(name)-$(processes) ] ;
     }
     return $(result) ;
