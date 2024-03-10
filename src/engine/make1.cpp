@@ -53,8 +53,11 @@
 #include "output.h"
 #include "startup.h"
 
+#include "mod_summary.h"
+
 #include <assert.h>
 #include <stdlib.h>
+#include <memory>
 
 #if !defined( NT ) || defined( __GNUC__ )
     #include <unistd.h>  /* for unlink */
@@ -80,6 +83,10 @@ static struct
     int32_t total;
     int32_t made;
 } counts[ 1 ];
+
+static std::unique_ptr<b2::summary> make_summary;
+static const char * targets_failed = "targets failed";
+static const char * targets_skipped = "targets skipped";
 
 /* Target state. */
 #define T_STATE_MAKE1A  0  /* make1a() should be called */
@@ -207,6 +214,9 @@ int32_t make1( LIST * targets )
     int32_t status = 0;
 
     memset( (char *)counts, 0, sizeof( *counts ) );
+    make_summary.reset(new b2::summary);
+    make_summary->group(targets_failed);
+    make_summary->group(targets_skipped);
 
     {
         LISTITER iter, end;
@@ -247,15 +257,25 @@ int32_t make1( LIST * targets )
     clear_state_freelist();
 
     /* Talk about it. */
-    if ( counts->failed )
-        out_printf( "...failed updating %d target%s...\n", counts->failed,
-            counts->failed > 1 ? "s" : "" );
-    if ( DEBUG_MAKE && counts->skipped )
-        out_printf( "...skipped %d target%s...\n", counts->skipped,
-            counts->skipped > 1 ? "s" : "" );
     if ( DEBUG_MAKE && counts->made )
-        out_printf( "...updated %d target%s...\n", counts->made,
+    {
+        out_printf( "\n...updated %d target%s...\n", counts->made,
             counts->made > 1 ? "s" : "" );
+    }
+    if ( DEBUG_MAKE && counts->skipped )
+    {
+        out_printf( "\n...skipped %d target%s...\n",
+            make_summary->count(targets_skipped),
+            make_summary->count(targets_skipped) > 1 ? "s" : "" );
+        make_summary->print(targets_skipped, "   %s\n");
+    }
+    if ( counts->failed )
+    {
+        out_printf( "\n...failed updating %d target%s...\n",
+            make_summary->count(targets_failed),
+            make_summary->count(targets_failed) > 1 ? "s" : "" );
+        make_summary->print(targets_failed, "   %s\n");
+    }
 
     /* If we were interrupted, exit now that all child processes
        have finished. */
@@ -425,6 +445,7 @@ static void make1b( state * const pState )
     if ( ( t->status == EXEC_CMD_FAIL ) && t->actions )
     {
         ++counts->skipped;
+        make_summary->message(targets_skipped, object_str( t->name ));
         if ( ( t->flags & ( T_FLAG_RMOLD | T_FLAG_NOTFILE ) ) == T_FLAG_RMOLD )
         {
             if ( !unlink( object_str( t->boundname ) ) )
@@ -432,8 +453,10 @@ static void make1b( state * const pState )
                     );
         }
         else
+        {
             out_printf( "...skipped %s for lack of %s...\n", object_str( t->name ),
                 failed_name );
+        }
     }
 
     if ( t->status == EXEC_CMD_OK )
@@ -941,6 +964,13 @@ static void make1c_closure
         out_printf( "...failed %s ", object_str( cmd->rule->name ) );
         list_print( lol_get( (LOL *)&cmd->args, 0 ) );
         out_printf( "...\n" );
+        std::string m = object_str( cmd->rule->name );
+        for (auto i: b2::list_cref(lol_get( (LOL *)&cmd->args, 0 )))
+        {
+            m += " ";
+            m += i->str();
+        }
+        make_summary->message(targets_failed, m.c_str());
     }
 
     /* On interrupt, set quit so _everything_ fails. Do the same for failed

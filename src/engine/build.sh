@@ -498,6 +498,7 @@ mod_regex.cpp \
 mod_sequence.cpp \
 mod_set.cpp \
 mod_string.cpp \
+mod_summary.cpp \
 mod_sysinfo.cpp \
 mod_version.cpp \
  "

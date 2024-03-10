@@ -248,6 +248,16 @@ rule search ( name )
 {
     if [ path.is-rooted $(name) ]
     {
+        # Check for a regular B2 project at an exactly matched registered
+        # search path location.
+        for local dir in "$(.search-path.$(name))"
+        {
+            local jamfile = [ path.glob $(dir) : $(JAMROOT) $(JAMFILE) ] ;
+            if $(jamfile)
+            {
+                return $(dir) ;
+            }
+        }
         # Check for a regular B2 project relative to the search path and
         # project subdir.
         for local dir in "$(.search-path./)"

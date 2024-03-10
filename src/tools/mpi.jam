@@ -66,6 +66,8 @@ import toolset ;
 import type ;
 import path ;
 
+feature mpi.run-flags : : free incidental ;
+
 # Make this module a project
 project.initialize $(__name__) ;
 project mpi ;
@@ -622,6 +624,8 @@ toolset.uses-features mpi.capture-output :
     <testing.launcher> <testing.execute> <dll-path> <xdll-path> <target-os>
     <mpi:processes> ;
 
+toolset.flags mpi.capture-output RUN_FLAGS <mpi.run-flags> ;
+
 rule capture-output ( target : sources * : properties * )
 {
     # Use the standard capture-output rule to run the tests
@@ -636,7 +640,7 @@ rule capture-output ( target : sources * : properties * )
 
     # We launch MPI processes using the "mpirun" equivalent specified by the user.
     LAUNCHER on $(target) =
-      [ on $(target) return $(.mpirun) $(.mpirun_flags) $(num_processes) ] ;
+      [ on $(target) return $(.mpirun) $(RUN_FLAGS) $(.mpirun_flags) $(num_processes) ] ;
 }
 
 # Creates a set of test cases to be run through the MPI launcher. The name, sources,
