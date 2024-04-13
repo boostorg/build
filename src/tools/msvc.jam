@@ -1137,7 +1137,9 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.3)" : $(version) ]
+		    # from Visual Studio 2022 17.10 on runtime library version for msvc 14.3 
+            # starts with 14.4?.?????
+            if [ MATCH "(14.3)" : $(version) ] || [ MATCH "(14.4)" : $(version) ] 
             {
                 if $(.debug-configuration)
                 {
