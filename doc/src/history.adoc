@@ -1,6 +1,8 @@
 [[b2.history]]
 = History
 
+== Version 5.2.0
+
 == Version 5.1.0
 
 This is mostly a bugfix release to account for issues impacting Boost Libraries.
