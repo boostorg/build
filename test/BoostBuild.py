@@ -105,7 +105,7 @@ def get_toolset():
 
     if sys.platform == "win32":
         return "msvc"
-    if sys.platform == "darwin" or sys.platform.startswith("freebsd"):
+    if sys.platform == "darwin" or sys.platform.startswith("freebsd") or sys.platform.startswith("openbsd"):
         return "clang"
 
     return "gcc"
