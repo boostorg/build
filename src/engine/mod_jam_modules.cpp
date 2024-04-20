@@ -16,6 +16,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "startup.h"
 #include "variable.h"
 
+#include "mod_jam_errors.h"
 #include "mod_path.h"
 
 #include <cassert>
@@ -270,8 +271,6 @@ void import(list_cref module_names,
     bind::context_ref_ context_ref)
 {
     jam_context & context = context_ref.get<jam_context>();
-    variable loaded_v("modules", ".loaded");
-    variable loading_v("modules", ".loading");
     value_ref cwd = variable("modules", ".cwd")[0];
     variable tested_v("modules", ".tested");
     variable untested_v("modules", ".untested");
@@ -333,20 +332,35 @@ void import(list_cref module_names,
             search = std::move(xsearch);
         }
 
-        if (!(*loading_v).contains(module_basename))
+        list_cref loading_r = *variable("modules", ".loading");
+        list_cref loaded_r = *variable("modules", ".loaded");
+        if (!loading_r.contains(module_basename))
         {
-            if (!(*loaded_v).contains(module_basename))
+            if (!loaded_r.contains(module_basename))
             {
-                load(module_basename, value_ref(), list_cref(*search), context_ref);
+                load(module_basename, value_ref(), list_cref(*search),
+                    context_ref);
             }
             else if (!(*tested_v).contains(m))
             {
-                // Native modules are pre-loaded but can be untested. In that case
-                // we make sure we run tests for those. The load takes care of doing
-                // the testing.
+                // Native modules are pre-loaded but can be untested. In that
+                // case we make sure we run tests for those. The load takes care
+                // of doing the testing.
                 untested_v += m;
-                load(module_basename, value_ref(), list_cref(*search), context_ref);
+                load(module_basename, value_ref(), list_cref(*search),
+                    context_ref);
             }
+        }
+        else if (!loaded_r.contains(module_basename) && !loading_r.empty()
+            && loading_r[loading_r.length() - 1]->str() == module_basename)
+        {
+            // Special case for back-compat.
+            b2::jam::errors::warning(lists()
+                    | *(list_ref() + "loading" + module_basename)
+                    | list_ref("circular module loading dependency:")
+                    | *(list_ref() + loading_r + "==>" + module_basename),
+                context_ref);
+            load(module_basename, value_ref(), list_cref(*search), context_ref);
         }
 
         import_module(*list_ref(module_basename),
