@@ -393,6 +393,8 @@ stages:
     displayName: 'Release Linux'
     strategy:
       matrix:
+        1.85.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.85.0, BOOST_VERSION_U: 1_85_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        1.84.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.84.0, BOOST_VERSION_U: 1_84_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.83.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.82.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.81.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
@@ -442,6 +444,8 @@ stages:
       vmImage: "${{variables.macos_latest_vm}}"
     strategy:
       matrix:
+        1.85.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.85.0, BOOST_VERSION_U: 1_85_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
+        1.84.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.84.0, BOOST_VERSION_U: 1_84_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.83.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.82.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.81.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
@@ -490,6 +494,8 @@ stages:
       vmImage: "${{variables.windows_latest_vm}}"
     strategy:
       matrix:
+        1.85.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.85.0, BOOST_VERSION_U: 1_85_0, TOOLSET: "${{variables.vc_latest}}"}
+        1.84.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.84.0, BOOST_VERSION_U: 1_84_0, TOOLSET: "${{variables.vc_latest}}"}
         1.83.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: "${{variables.vc_latest}}"}
         1.82.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.82.0, BOOST_VERSION_U: 1_82_0, TOOLSET: "${{variables.vc_latest}}"}
         1.81.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.81.0, BOOST_VERSION_U: 1_81_0, TOOLSET: "${{variables.vc_latest}}"}
