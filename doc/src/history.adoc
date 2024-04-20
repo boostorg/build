@@ -6,6 +6,8 @@
 * Fix incorrect recursive loading of modules when doing recursive importing of
   modules. The recursive loading would cause stack overflows.
   -- _René Ferdinand Rivera Morell_
+* Default to building with Clang on FreeBSD and OpenBSD.
+  -- _Nikita Kniazev_
 
 == Version 5.1.0
 
