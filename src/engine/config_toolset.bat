@@ -260,6 +260,6 @@ goto :eof
 :Embed_Minafest_Via_Windres
 if not defined B2_DONT_EMBED_MANIFEST (
     where windres >NUL 2>NUL
-    if %ERRORLEVEL% NEQ 0 ( call; ) else ( set "B2_CXX=windres --input res.rc --output res.o && %B2_CXX% -Wl,res.o" )
+    if errorlevel 1 ( call; ) else ( set "B2_CXX=windres --input res.rc --output res.o && %B2_CXX% -Wl,res.o" )
 )
 goto :eof

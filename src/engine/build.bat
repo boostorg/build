@@ -196,7 +196,8 @@ set B2_CXXFLAGS=%B2_CXXFLAGS% -DNDEBUG
 
 @echo ON
 %B2_CXX% %CXXFLAGS% %B2_CXXFLAGS% %B2_SOURCES% %B2_CXX_LINK%
+@if errorlevel 1 goto :Finish
 dir *.exe
 
 :Finish
-@exit /b %ERRORLEVEL%
+@cmd /c exit %ERRORLEVEL%
