@@ -8,6 +8,8 @@
   -- _René Ferdinand Rivera Morell_
 * Default to building with Clang on FreeBSD and OpenBSD.
   -- _Nikita Kniazev_
+* Fix Solaris/SunOS detection in engine for `OS=SUNOS` and `OS=SOLARIS`.
+  -- _Nikita Kniazev_
 
 == Version 5.1.0
 
