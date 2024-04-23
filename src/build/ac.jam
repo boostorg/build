@@ -226,7 +226,9 @@ class ac-library : basic-target
                 library-path ?= [ os.environ $(name:U)_LIBPATH ] ;
             }
 
-            local relevant = [ property.select [ configure.get-relevant-features ] <link> :
+            local relevant = [ configure.get-relevant-features
+                [ $(property-set).raw ] ] ;
+            relevant = [ property.select $(relevant) <link> :
                 [ $(property-set).raw ] ] ;
             local min = [ property.as-path [ SORT [ feature.minimize $(relevant) ] ] ] ;
 
@@ -321,6 +323,5 @@ rule check-library ( target : true-properties * : false-properties * )
         $(true-properties) : $(false-properties) ] ;
     return <conditional>@$(instance).check
         [ property.evaluate-conditional-relevance
-            $(true-properties) $(false-properties)
-          : [ configure.get-relevant-features ] <link> ] ;
+            $(true-properties) $(false-properties) : <link> ] ;
 }
