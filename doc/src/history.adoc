@@ -10,6 +10,10 @@
   -- _Nikita Kniazev_
 * Fix Solaris/SunOS detection in engine for `OS=SUNOS` and `OS=SOLARIS`.
   -- _Nikita Kniazev_
+* Allow some tools to be default initialized with `using` multiple times. The
+  tools are `asciidoctor`, `fop`, `gettext`, `pkg-config`, `python`, `sass`,
+  and `saxonhe`.
+  -- _Dmitry Arkhipov_
 
 == Version 5.1.0
 
