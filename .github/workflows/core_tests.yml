@@ -55,7 +55,7 @@ jobs:
         uses: actions/checkout@main
 
       - name: Install Toolset
-        uses: msys2/setup-msys2@main
+        uses: msys2/setup-msys2@v2
         with:
           msystem: ${{matrix.msys}}
           pacboy: python:p ${{matrix.toolset}}:p
