@@ -14,6 +14,9 @@
   tools are `asciidoctor`, `fop`, `gettext`, `pkg-config`, `python`, `sass`,
   and `saxonhe`.
   -- _Dmitry Arkhipov_
+* Fix using relevant features in ac module that would cause incorrect configure
+  checks.
+  -- _Dmitry Arkhipov_
 
 == Version 5.1.0
 
