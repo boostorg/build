@@ -52,10 +52,10 @@ jobs:
         shell: msys2 {0}
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@main
 
       - name: Install Toolset
-        uses: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@main
         with:
           msystem: ${{matrix.msys}}
           pacboy: python:p ${{matrix.toolset}}:p
