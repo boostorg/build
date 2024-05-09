@@ -17,7 +17,7 @@ rule init ( saxonhe_jar ? : java_exe ? )
     }
     else
     {
-        if ! ( $(1) && $(2) )
+        if ! ( $(1) || $(2) )
         {
             return ;
         }

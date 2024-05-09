@@ -158,7 +158,7 @@ rule init ( config ? : command * : options * )
     {
         config = [ default-config ] ;
         if ( $(config) in [ $(.configs).all ] )
-           && ! ( $(command) && $(options) )
+           && ! ( $(command) || $(options) )
         {
             return ;
         }
