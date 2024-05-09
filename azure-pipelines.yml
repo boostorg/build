@@ -35,6 +35,7 @@ variables:
 - { name: linux_latest_os, value: 'focal' }
 - { name: windows_latest_vm, value: 'windows-2022' }
 - { name: clang_latest, value: '17' }
+- { name: clang_latest_libstdcxx, value: 9 }
 - { name: gcc_latest, value: '13' }
 - { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
@@ -91,12 +92,14 @@ stages:
   - job: 'Linux_Latest'
     strategy:
       matrix:
-        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}}", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC ${{variables.gcc_latest}}: {TOOLSET: "gcc-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}-multilib", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Clang ${{variables.clang_latest}}: {TOOLSET: "clang-${{variables.clang_latest}}", PACKAGES: "clang-${{variables.clang_latest}} libstdc++-${{variables.clang_latest_libstdcxx}}-dev-i386-cross", LLVM_OS: "${{variables.linux_latest_os}}", LLVM_VER: "${{variables.clang_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
     - template: .ci/azp-linux-test.yml
+      parameters:
+        b2_opts: address-model=32,64
 
   - job: 'Windows_Latest'
     strategy:
@@ -108,6 +111,8 @@ stages:
     continueOnError: 'true'
     steps:
     - template: .ci/azp-windows-test.yml
+      parameters:
+        b2_opts: address-model=32,64
 
   - job: 'macOS'
     strategy:
