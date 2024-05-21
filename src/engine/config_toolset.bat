@@ -259,7 +259,8 @@ goto :eof
 
 :Embed_Minafest_Via_Windres
 if not defined B2_DONT_EMBED_MANIFEST (
-    where windres >NUL 2>NUL
-    if errorlevel 1 ( call; ) else ( set "B2_CXX=windres --input res.rc --output res.o && %B2_CXX% -Wl,res.o" )
+    for /f %%i in ('%B2_CXX% --print-prog-name=windres 2^>NUL') do (
+         set "B2_CXX="%%i" --input res.rc --output res.o && %B2_CXX% -Wl,res.o"
+    )
 )
 goto :eof
