@@ -74,7 +74,7 @@ jobs:
       - name: "Upload"
         uses: actions/upload-artifact@main
         with:
-          name: archives-${{github.run_id}}
+          name: B2-${{matrix.name}}
           path: "${{github.workspace}}/b2-*"
 
       - name: "Publish"

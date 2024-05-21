@@ -55,9 +55,9 @@ jobs:
         uses: actions/upload-artifact@main
         with:
           name: installer
-          path: "${{github.workspace}}\\b2-pkg\\stage\\*.msi*"
+          path: "./b2-pkg/stage/*.msi*"
       - name: "Publish"
         uses: softprops/action-gh-release@master
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         with:
-          files: "${{github.workspace}}\\b2-pkg\\stage\\*.msi*"
+          files: "./b2-pkg/stage/*.msi*"
