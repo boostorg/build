@@ -153,7 +153,7 @@ exe b2
         <toolset>clang-win:<find-static-library>advapi32
         <toolset>clang-win:<find-static-library>user32
         <target-os>windows,<toolset>gcc:<source>src/engine/res.rc
-        <target-os>windows,<toolset>clang:<source>src/engine/res.rc
+        <target-os>windows,<toolset>clang-linux:<source>src/engine/res.rc
         <toolset>msvc:<embed-manifest-file>src/engine/b2.exe.manifest
         <toolset>clang-win:<embed-manifest-file>src/engine/b2.exe.manifest
     ;

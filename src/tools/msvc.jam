@@ -602,20 +602,12 @@ rule configure-version-specific ( toolset : version : conditions )
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm)   : "/MACHINE:ARM" ;
         toolset.flags $(toolset).link LINKFLAGS $(conditions)/$(.cpu-arch-arm64) : "/MACHINE:ARM64" ;
 
-        if [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 11 ]
-        {
-            # Make sure that manifest will be generated even if there is no
-            # dependencies to put there.
-            toolset.flags $(toolset).link LINKFLAGS $(conditions) : /MANIFEST ;
-        }
-        else
-        {
-            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>mt : /MANIFEST ;
-            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>linker/<embed-manifest>off : /MANIFEST ;
-            toolset.flags $(toolset).link LINKFLAGS $(conditions)/<embed-manifest-via>linker/<embed-manifest>on : "/MANIFEST:EMBED" ;
-
-            local conditionx = [ feature.split $(conditions) ] ;
+        local conditionx = [ feature.split $(conditions) ] ;
+        if ! [ version.version-less [ SPLIT_BY_CHARACTERS [ MATCH "^([0123456789.]+)" : $(version) ] : . ] : 11 ] {
             toolset.add-defaults $(conditionx:J=,)\:<embed-manifest-via>linker ;
+        }
+        else {
+            toolset.add-requirements $(conditionx:J=,)\:<embed-manifest-via>mt ;
         }
     }
 
@@ -2011,6 +2003,10 @@ local rule register-toolset-really ( )
         toolset.flags msvc LINKFLAGS <user-interface>wince : "/subsystem:windowsce" ;
         toolset.flags msvc LINKFLAGS <user-interface>native : "/subsystem:native" ;
         toolset.flags msvc LINKFLAGS <user-interface>auto : "/subsystem:posix" ;
+
+        toolset.flags msvc.link LINKFLAGS <embed-manifest-via>mt : /MANIFEST ;
+        toolset.flags msvc.link LINKFLAGS <embed-manifest-via>linker/<embed-manifest>off : /MANIFEST ;
+        toolset.flags msvc.link LINKFLAGS <embed-manifest-via>linker/<embed-manifest>on : "/MANIFEST:EMBED" ;
 
         toolset.flags msvc.link LINKFLAGS <linkflags> ;
         toolset.flags msvc.link LINKPATH <library-path> ;
