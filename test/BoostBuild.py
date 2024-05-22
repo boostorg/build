@@ -351,7 +351,7 @@ class Tester(TestCmd.TestCmd):
     def set_toolset(self, toolset, target_os=None, _pass_toolset=True):
         self.toolset = _pass_toolset and toolset or "gcc"
         if not target_os and self.toolset.startswith("emscripten"):
-            target_os = "unknown"
+            target_os = "none"
         self.target_os = target_os or host_os
         self.expanded_toolset = expand_toolset(self.toolset, self.target_os)
         self.pass_toolset = _pass_toolset
