@@ -23,6 +23,7 @@ https://docs.microsoft.com/en-us/cpp/[Microsoft Visual C++] command-line
 tools on Microsoft Windows. The supported products and versions of
 command line tools are listed below:
 
+* Visual Studio 2022-14.3
 * Visual Studio 2019-14.2
 * Visual Studio 2017—14.1
 * Visual Studio 2015—14.0
@@ -1119,7 +1120,7 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.3)" : $(version) ]
+            if [ MATCH "(14.[34])" : $(version) ]
             {
                 if $(.debug-configuration)
                 {
@@ -1298,7 +1299,7 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(MSVC\\\\14.3)" : $(command) ]
+            if [ MATCH "(MSVC\\\\14.[34])" : $(command) ]
             {
                 version = 14.3 ;
             }
