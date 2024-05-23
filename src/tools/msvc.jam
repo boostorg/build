@@ -1040,47 +1040,37 @@ class msvc-pch-generator : pch-generator
 #
 ################################################################################
 
-# Detects versions listed as '.known-versions' by checking registry information,
+# Try to find and register a specified version by checking registry information,
 # environment variables & default paths. Supports both native Windows and
 # Cygwin.
 #
-local rule auto-detect-toolset-versions ( )
+local rule try-auto-detect-version ( version )
 {
-    if [ os.name ] in NT CYGWIN
+    if [ os.name ] in NT CYGWIN && $(.version-$(version)-reg)
     {
         # Get installation paths from the registry.
-        for local i in $(.known-versions)
+        local vc-path ;
+        for local x in "" "Wow6432Node\\"
         {
-            if $(.version-$(i)-reg)
-            {
-                local vc-path ;
-                for local x in "" "Wow6432Node\\"
-                {
-                    vc-path += [ W32_GETREG
-                        "HKEY_LOCAL_MACHINE\\SOFTWARE\\"$(x)"\\Microsoft\\"$(.version-$(i)-reg)
-                        : "ProductDir" ] ;
-                }
+            vc-path += [ W32_GETREG
+                        "HKEY_LOCAL_MACHINE\\SOFTWARE\\"$(x)"\\Microsoft\\"$(.version-$(version)-reg)
+                : "ProductDir" ] ;
+        }
 
-                if $(vc-path)
-                {
-                    vc-path = [ path.join [ path.make-NT $(vc-path[1]) ] "bin" ] ;
-                    register-configuration $(i) : [ path.native $(vc-path[1]) ] ;
-                }
-            }
-            else
-            {
-                register-configuration $(i) : [ default-path $(i) ] ;
-            }
+        if $(vc-path)
+        {
+            vc-path = [ path.join [ path.make-NT $(vc-path[1]) ] "bin" ] ;
+            register-configuration $(version) : [ path.native $(vc-path[1]) ] ;
+            return true ;
         }
     }
 
     # Check environment and default installation paths.
-    for local i in $(.known-versions)
+    local path = [ default-path $(version) ] ;
+    if $(path)
     {
-        if ! $(i) in [ $(.versions).all ]
-        {
-            register-configuration $(i) : [ default-path $(i) ] ;
-        }
+        register-configuration $(version) : $(path) ;
+        return true ;
     }
 }
 
@@ -1255,19 +1245,19 @@ local rule configure-really ( version ? : options * )
         # FIXME: consider whether an explicitly specified setup script
         # should disable this logic.  We already won't get here if
         # there is a user specified command.
-        version = [ $(.versions).all ] ;
-        for local known in $(.known-versions)
+        for version in $(.known-versions)
         {
-            if $(known) in $(version)
+            if [ try-auto-detect-version $(version) ]
             {
-                version = $(known) ;
                 break ;
             }
         }
-        # version might still have multiple elements if no versions
-        # were auto-detected, but an unknown version was configured
-        # manually.
-        version = $(version[1]) ;
+    }
+    else if $(version)
+    {
+        # Version alias -> real version number.
+        version = [ resolve-possible-msvc-version-alias $(version) ] ;
+        try-auto-detect-version $(version) ;
     }
 
     # Handle a user-provided command, and deduce the version if necessary.
@@ -1364,8 +1354,6 @@ local rule configure-really ( version ? : options * )
         }
     }
 
-    # Version alias -> real version number.
-    version = [ resolve-possible-msvc-version-alias $(version) ] ;
 
     # Check whether the selected configuration is already in use.
     if $(version) in [ $(.versions).used ]
@@ -2222,9 +2210,6 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
     "Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*/bin/Host*/*"
     ;
 .version-14.3-env = VS170COMNTOOLS ProgramFiles ProgramFiles(x86) ;
-
-# Auto-detect all the available msvc installations on the system.
-auto-detect-toolset-versions ;
 
 
 # And finally trigger the actual Boost Build toolset registration.
