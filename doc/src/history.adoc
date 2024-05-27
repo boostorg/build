@@ -3,6 +3,10 @@
 
 == Version 5.2.0
 
+* *New*: Allow adding dll-path to usage requirements of searched libraries.
+  Which makes it possible to adjust search paths for dynamic libs on the
+  platform.
+  -- _Dmitry Arkhipov_
 * Fix incorrect recursive loading of modules when doing recursive importing of
   modules. The recursive loading would cause stack overflows.
   -- _René Ferdinand Rivera Morell_
@@ -17,6 +21,30 @@
 * Fix using relevant features in ac module that would cause incorrect configure
   checks.
   -- _Dmitry Arkhipov_
+* Fix application of -m31, -m32, -m64 for address model on certain hardware and
+  avoid adding them when not supported, generally.
+  -- _Nikita Kniazev_
+* Fix incorrectly attaching manifest when not targeting Windows for engine
+  bootstrap build.
+  -- _Nikita Kniazev_
+* Fix `embed-manifest-via=linker` for clang-win toolset.
+  -- _Nikita Kniazev_
+* Fix incorrect `unknown` OS name, to use correct `none`. Which is needed for
+  correct emscripten toolset building.
+  -- _Nikita Kniazev_
+* Fix: For msvc toolset, register only the versions that have been asked to
+  init.
+  -- _Nikita Kniazev_
+* Fix: Suppress spurious `1 file(s) copied.` message after every test.
+  -- _Nikita Kniazev_
+* Fix: Improve handling of install directories.
+  -- _Dmitry Arkhipov_
+* Fix: For msvc toolset, recognize Visual Studio 2022 v17.10.0, which uses
+  toolchain version 14.40.33807.
+  -- _Dmitry Andric_
+* Fix: For msvc toolset, exception-handling=off should define
+  `_HAS_EXCEPTIONS=0` for Dinkumware/MSSTL.
+  -- _Nikita Kniazev_
 
 == Version 5.1.0
 
