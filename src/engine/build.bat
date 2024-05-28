@@ -177,6 +177,7 @@ set B2_SOURCES=%B2_SOURCES% native.cpp option.cpp output.cpp parse.cpp pathnt.cp
 set B2_SOURCES=%B2_SOURCES% pathsys.cpp pathunix.cpp regexp.cpp rules.cpp scan.cpp search.cpp jam_strings.cpp
 set B2_SOURCES=%B2_SOURCES% startup.cpp tasks.cpp
 set B2_SOURCES=%B2_SOURCES% timestamp.cpp value.cpp variable.cpp w32_getreg.cpp
+set B2_SOURCES=%B2_SOURCES% mod_db.cpp
 set B2_SOURCES=%B2_SOURCES% mod_jam_builtin.cpp
 set B2_SOURCES=%B2_SOURCES% mod_jam_class.cpp
 set B2_SOURCES=%B2_SOURCES% mod_jam_errors.cpp

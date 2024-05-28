@@ -245,7 +245,7 @@ stages:
         GCC 5: {CXX: g++-5, TOOLSET: gcc-5, PACKAGES: g++-5, CONTAINER: "ubuntu_1804"}
         GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1604"}
         GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
-        GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1604"}
+        # GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1604"}
         Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, LLVM_VER: 8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, LLVM_VER: 7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
