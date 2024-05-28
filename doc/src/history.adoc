@@ -3,6 +3,9 @@
 
 == Version 5.2.0
 
+* *New*: Addition of a module (`db`) for structured data management. Has a
+  `property-db` class that can write out as JSON data.
+  -- _René Ferdinand Rivera Morell_
 * *New*: Allow adding dll-path to usage requirements of searched libraries.
   Which makes it possible to adjust search paths for dynamic libs on the
   platform.
