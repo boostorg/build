@@ -504,6 +504,8 @@ struct globs
 
 extern struct globs globs;
 
+extern int anyhow;
+
 #define DEBUG_MAKE     ( globs.debug[ 1 ] )   /* show actions when executed */
 #define DEBUG_MAKEQ    ( globs.debug[ 2 ] )   /* show even quiet actions */
 #define DEBUG_EXEC     ( globs.debug[ 2 ] )   /* show text of actons */

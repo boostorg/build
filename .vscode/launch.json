@@ -93,7 +93,7 @@
 			"type": "cppdbg",
 			"request": "launch",
 			"program": "${workspaceFolder}/.build/gcc-13/debug/cxxstd-11-iso/threading-multi/b2",
-			"args": [],
+			"args": ["-d1", "--command-database=json", "b2"],
 			"stopAtEntry": false,
 			"cwd": "${workspaceFolder}",
 			"environment": [],

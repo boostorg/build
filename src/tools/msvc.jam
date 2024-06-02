@@ -229,6 +229,7 @@ import project ;
 import property ;
 import property-set ;
 import rc ;
+import regex ;
 import sequence ;
 import set ;
 import testing ;
@@ -683,6 +684,19 @@ rule compile.c ( targets + : sources * : properties * )
     set-setup-command $(targets) : $(properties) ;
     get-rspline $(targets) : -TC CFLAGS  ;
     compile-c-c++ $(<) : $(>) ;
+
+    local cc = [ on $(targets[1]) return $(.CC) ] ;
+    cc = [ regex.escape "$(cc:J= )" : "|()[]\\+.*^$\" " : "\\" ] ;
+    local eol = [ on $(targets[1]) return $(.CC.FILTER) ] ;
+    if $(eol)
+    {
+        eol = ".*" [ regex.escape "$(eol:J= )" : "|()[]\\+.*^$\" " : "\\" ] ;
+    }
+    else
+    {
+        eol = "[^\n]*" "" ;
+    }
+    COMMAND_DATABASE on $(targets) = "($(cc)$(eol[1]))$(eol[2])" ;
 }
 
 
@@ -751,6 +765,19 @@ rule compile-c-c++ ( targets + : sources * )
     LOCATE on $(<[1]:S=.pdb) = [ on $(<[1]) return $(LOCATE) ] ;
     local pch-header = [ on $(<[1]) return $(PCH_HEADER) ] ;
     PCH_HEADER_AS_SPELLED on $(<[1]) = $(pch-header:G=) ;
+
+    local cc = [ on $(targets[1]) return $(.CC) ] ;
+    cc = [ regex.escape "$(cc:J= )" : "|()[]\\+.*^$\" " : "\\" ] ;
+    local eol = [ on $(targets[1]) return $(.CC.FILTER) ] ;
+    if $(eol)
+    {
+        eol = ".*" [ regex.escape "$(eol:J= )" : "|()[]\\+.*^$\" " : "\\" ] ;
+    }
+    else
+    {
+        eol = "[^\n]*" "" ;
+    }
+    COMMAND_DATABASE on $(targets) = "($(cc)$(eol[1]))$(eol[2])" ;
 }
 
 rule preprocess-c-c++ ( targets + : sources * )

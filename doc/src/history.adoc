@@ -3,6 +3,9 @@
 
 == Version 5.2.0
 
+* *New*: Add support for generating `compile_commands.json` command database
+  for some IDE integration.
+  -- _René Ferdinand Rivera Morell_
 * *New*: Addition of a module (`db`) for structured data management. Has a
   `property-db` class that can write out as JSON data.
   -- _René Ferdinand Rivera Morell_

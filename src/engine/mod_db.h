@@ -36,7 +36,7 @@ end::reference[] */
 struct property_db : public object
 {
 	void emplace(list_cref k, value_ref v);
-	void write_file(value_ref filename, value_ref format);
+	bool write_file(value_ref filename, value_ref format);
 	std::string dump(value_ref format);
 
 	private:
@@ -58,7 +58,7 @@ struct property_db : public object
 	};
 	using db_type = std::map<list_ref, value_ref, key_less>;
 	db_type db;
-	void write_file_json(value_ref filename);
+	bool write_file_json(value_ref filename);
 	std::string dump_json();
 };
 

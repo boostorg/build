@@ -22,7 +22,7 @@ import virtual-target ;
 
 path-constant SELF : . ;
 
-project b2
+project /bfgroup/b2
     : build-dir .build
     : requirements
         <cxxstd>11
@@ -34,6 +34,9 @@ project b2
         <toolset>clang-win:<define>_CRT_NONSTDC_NO_DEPRECATE=1
         <toolset>clang:<cxxflags>-Wno-deprecated-declarations
         <toolset>gcc,<variant>debug,<target-os>linux:<linkflags>-rdynamic
+        # Don't warn on ignored/unknown attributes.
+        <toolset>gcc:<cxxflags>-Wno-attributes
+        <toolset>clang:<cxxflags>-Wno-attributes
     ;
 
 #|

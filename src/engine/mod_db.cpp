@@ -42,13 +42,14 @@ void b2::property_db::emplace(list_cref k, value_ref v)
 	db[nk] = v;
 }
 
-void b2::property_db::write_file(value_ref filename, value_ref format)
+bool b2::property_db::write_file(value_ref filename, value_ref format)
 {
 	if (!format->has_value())
 	{
 		format = b2::value::make("json");
 	}
-	if (format == "json") write_file_json(filename);
+	if (format == "json") return write_file_json(filename);
+	return false;
 }
 
 std::string b2::property_db::dump(value_ref format)
@@ -101,19 +102,23 @@ void build_json_from_db(const T & db, nlohmann::json & out)
 }
 } // namespace
 
-void b2::property_db::write_file_json(value_ref filename)
+bool b2::property_db::write_file_json(value_ref filename)
 {
 	nlohmann::json out;
 	build_json_from_db(db, out);
 	FILE * file = std::fopen(filename->str(), "w");
-	try
+	if (file)
 	{
-		auto data = out.dump(0);
-		std::fwrite(data.c_str(), data.size(), 1, file);
+		try
+		{
+			auto data = out.dump(0);
+			return std::fwrite(data.c_str(), data.size(), 1, file) == 1;
+		}
+		catch (const std::exception &)
+		{}
+		std::fclose(file);
 	}
-	catch (const std::exception &)
-	{}
-	std::fclose(file);
+	return false;
 }
 
 std::string b2::property_db::dump_json()
