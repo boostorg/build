@@ -37,6 +37,7 @@ project /bfgroup/b2
         # Don't warn on ignored/unknown attributes.
         <toolset>gcc:<cxxflags>-Wno-attributes
         <toolset>clang:<cxxflags>-Wno-attributes
+        <toolset>clang:<cxxflags>-Wno-c++14-extensions
     ;
 
 #|
