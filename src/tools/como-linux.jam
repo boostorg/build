@@ -89,7 +89,7 @@ actions link.dll bind LIBRARIES
 rule compile.c ( targets * : sources * : properties * )
 {
     local config_command = [ regex.escape
-        [ on $(targets[1]) return $(CONFIG_COMMAND) ]
+        [ on $(targets[1]) return $(CONFIG_COMMAND:E="") ]
         : "()[]\\+.*^$\"" : "\\" ] ;
     COMMAND_DATABASE on $(targets) = "($(config_command).*) 2\\>\\&1" ;
 }
@@ -102,7 +102,7 @@ actions compile.c
 rule compile.c++ ( targets * : sources * : properties * )
 {
     local config_command = [ regex.escape
-        [ on $(targets[1]) return $(CONFIG_COMMAND) ]
+        [ on $(targets[1]) return $(CONFIG_COMMAND:E="") ]
         : "()[]\\+.*^$\"" : "\\" ] ;
     COMMAND_DATABASE on $(targets) = "($(config_command).*) 2\\>\\&1" ;
 }

@@ -685,7 +685,7 @@ rule compile.c ( targets + : sources * : properties * )
     get-rspline $(targets) : -TC CFLAGS  ;
     compile-c-c++ $(<) : $(>) ;
 
-    local cc = [ on $(targets[1]) return $(.CC) ] ;
+    local cc = [ on $(targets[1]) return $(.CC:E="") ] ;
     cc = [ regex.escape "$(cc:J= )" : "|()[]\\+.*^$\" " : "\\" ] ;
     local eol = [ on $(targets[1]) return $(.CC.FILTER) ] ;
     if $(eol)
@@ -766,7 +766,7 @@ rule compile-c-c++ ( targets + : sources * )
     local pch-header = [ on $(<[1]) return $(PCH_HEADER) ] ;
     PCH_HEADER_AS_SPELLED on $(<[1]) = $(pch-header:G=) ;
 
-    local cc = [ on $(targets[1]) return $(.CC) ] ;
+    local cc = [ on $(targets[1]) return $(.CC:E="") ] ;
     cc = [ regex.escape "$(cc:J= )" : "|()[]\\+.*^$\" " : "\\" ] ;
     local eol = [ on $(targets[1]) return $(.CC.FILTER) ] ;
     if $(eol)

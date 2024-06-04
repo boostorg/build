@@ -143,7 +143,7 @@ rule compile.c++
     check-target-platform $(1) ;
 
     local config_command = [ regex.escape
-        [ on $(targets[1]) return $(CONFIG_COMMAND) ]
+        [ on $(targets[1]) return $(CONFIG_COMMAND:E="") ]
         : "()[]\\+.*^$\"" : "\\" ] ;
     COMMAND_DATABASE on $(targets) = "(\"$(config_command)\"[^\n]*)" ;
 }
@@ -158,7 +158,7 @@ rule compile.c
     check-target-platform $(1) ;
 
     local config_command = [ regex.escape
-        [ on $(targets[1]) return $(CONFIG_COMMAND) ]
+        [ on $(targets[1]) return $(CONFIG_COMMAND:E="") ]
         : "()[]\\+.*^$\"" : "\\" ] ;
     COMMAND_DATABASE on $(targets) = "(\"$(config_command)\"[^\n]*)" ;
 }

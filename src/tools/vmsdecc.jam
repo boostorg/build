@@ -172,7 +172,7 @@ rule compile.c++ ( targets * : sources * : properties * )
   TARGET-CXX-REPO on $(targets) =  [ on $(targets[1]) get-target-cxx-repo $(LOCATE) ] ;
   CXX-REPOS on $(targets) = [ on $(targets) return $(TARGET-CXX-REPO) $(CXX-REPOS) ] ;
 
-    local config_command = [ regex.escape [ on $(targets[1]) return $(.CXX) ]
+    local config_command = [ regex.escape [ on $(targets[1]) return $(.CXX:E="") ]
         : "()[]\\+.*^$\"" : "\\" ] ;
     COMMAND_DATABASE on $(targets) = "($(config_command)[^\n]*)" ;
 }
@@ -184,7 +184,7 @@ rule compile.c ( targets * : sources * : properties * )
 
   INCLUDES on $(targets) = [ on $(targets) get-includes $(sources) : $(INCLUDES) ] ;
 
-    local config_command = [ regex.escape [ on $(targets[1]) return $(.CC) ]
+    local config_command = [ regex.escape [ on $(targets[1]) return $(.CC:E="") ]
         : "()[]\\+.*^$\"" : "\\" ] ;
     COMMAND_DATABASE on $(targets) = "($(config_command)[^\n]*)" ;
 }
