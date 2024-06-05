@@ -6,15 +6,17 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include "bindjam.h"
 
+#include "bind.h"
 #include "class.h"
+#include "frames.h"
 #include "function.h"
 #include "hash.h"
 #include "lists.h"
 #include "modules.h"
 #include "mp.h"
 #include "native.h"
+#include "object.h"
 #include "optval.h"
-#include "output.h"
 #include "parse.h"
 #include "rules.h"
 #include "types.h"
@@ -36,9 +38,10 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include <cstddef>
 #include <cstdint>
-#include <memory>
+#include <exception>
 #include <string>
 #include <tuple>
+#include <type_traits>
 #include <vector>
 
 namespace b2 { namespace jam {

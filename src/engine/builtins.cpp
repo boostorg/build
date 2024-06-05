@@ -20,19 +20,16 @@
 #include "md5.h"
 #include "native.h"
 #include "object.h"
-#include "parse.h"
 #include "pathsys.h"
 #include "regexp.h"
 #include "rules.h"
 #include "jam_strings.h"
 #include "startup.h"
 #include "timestamp.h"
-#include "variable.h"
 #include "output.h"
 
 #include <string>
 
-#include <assert.h>
 #include <ctype.h>
 #include <stdlib.h>
 
