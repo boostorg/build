@@ -107,18 +107,17 @@ bool b2::property_db::write_file_json(value_ref filename)
 	nlohmann::json out;
 	build_json_from_db(db, out);
 	FILE * file = std::fopen(filename->str(), "w");
-	if (file)
+	if (!file) return false;
+	bool result = false;
+	try
 	{
-		try
-		{
-			auto data = out.dump(0);
-			return std::fwrite(data.c_str(), data.size(), 1, file) == 1;
-		}
-		catch (const std::exception &)
-		{}
-		std::fclose(file);
+		auto data = out.dump(0);
+		result = std::fwrite(data.c_str(), data.size(), 1, file) == 1;
 	}
-	return false;
+	catch (const std::exception &)
+	{}
+	std::fclose(file);
+	return result;
 }
 
 std::string b2::property_db::dump_json()
