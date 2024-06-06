@@ -7,12 +7,13 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef B2_MOD_DB_H
 #define B2_MOD_DB_H
 
+#include "config.h"
+
 #include "bind.h"
 #include "lists.h"
 #include "value.h"
 
 #include <map>
-#include <string>
 
 /* tag::reference[]
 
@@ -35,7 +36,7 @@ end::reference[] */
 struct property_db : public object
 {
 	void emplace(list_cref k, value_ref v);
-	bool write_file(const value_ref & filename, const value_ref & format);
+	bool write_file(value_ref filename, value_ref format);
 	std::string dump(value_ref format);
 
 	private:
@@ -57,7 +58,7 @@ struct property_db : public object
 	};
 	using db_type = std::map<list_ref, value_ref, key_less>;
 	db_type db;
-	bool write_file_json(const value_ref & filename);
+	bool write_file_json(value_ref filename);
 	std::string dump_json();
 };
 

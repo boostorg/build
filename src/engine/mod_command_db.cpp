@@ -9,7 +9,6 @@ Distributed under the Boost Software License, Version 1.0.
 #include "command.h"
 #include "cwd.h"
 #include "events.h"
-#include "jam.h"
 #include "lists.h"
 #include "mod_db.h"
 #include "output.h"
@@ -17,15 +16,8 @@ Distributed under the Boost Software License, Version 1.0.
 #include "regexp.h"
 
 #include "ext_bfgroup_lyra.h"
-#include "rules.h"
-#include "value.h"
 
-#include <cstdint>
-#include <functional>
-#include <memory>
-#include <string>
 #include <unordered_map>
-#include <utility>
 
 namespace b2 { namespace command_db {
 
@@ -165,7 +157,7 @@ void declare_args(lyra::cli & cli)
 				   "build-dir.");
 }
 
-void set_output_dir(const value_ref & dirname)
+void set_output_dir(value_ref dirname)
 {
 	database::get().output_directory = dirname;
 }

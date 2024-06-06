@@ -7,13 +7,9 @@ Distributed under the Boost Software License, Version 1.0.
 #include "mod_db.h"
 
 #include "ext_nlohmann_json.hpp"
-#include "lists.h"
-#include "value.h"
 
 #include <cstdio>
 #include <cstdlib>
-#include <exception>
-#include <string>
 
 void b2::property_db::emplace(list_cref k, value_ref v)
 {
@@ -46,12 +42,11 @@ void b2::property_db::emplace(list_cref k, value_ref v)
 	db[nk] = v;
 }
 
-bool b2::property_db::write_file(
-	const value_ref & filename, const value_ref & format)
+bool b2::property_db::write_file(value_ref filename, value_ref format)
 {
 	if (!format->has_value())
 	{
-		return write_file_json(filename);
+		format = b2::value::make("json");
 	}
 	if (format == "json") return write_file_json(filename);
 	return false;
@@ -107,22 +102,23 @@ void build_json_from_db(const T & db, nlohmann::json & out)
 }
 } // namespace
 
-bool b2::property_db::write_file_json(const value_ref & filename)
+bool b2::property_db::write_file_json(value_ref filename)
 {
 	nlohmann::json out;
 	build_json_from_db(db, out);
 	FILE * file = std::fopen(filename->str(), "w");
-	if (!file) return false;
-	bool result = false;
-	try
+	if (file)
 	{
-		auto data = out.dump(0);
-		result = std::fwrite(data.c_str(), data.size(), 1, file) == 1;
+		try
+		{
+			auto data = out.dump(0);
+			return std::fwrite(data.c_str(), data.size(), 1, file) == 1;
+		}
+		catch (const std::exception &)
+		{}
+		std::fclose(file);
 	}
-	catch (const std::exception &)
-	{}
-	std::fclose(file);
-	return result;
+	return false;
 }
 
 std::string b2::property_db::dump_json()

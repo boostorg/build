@@ -7,6 +7,8 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef B2_COMMAND_DB_H
 #define B2_COMMAND_DB_H
 
+#include "config.h"
+
 #include "bind.h"
 #include "value.h"
 
@@ -20,7 +22,7 @@ namespace command_db {
 
 void declare_args(lyra::cli &);
 
-void set_output_dir(const value_ref & dirname);
+void set_output_dir(value_ref dirname);
 
 } // namespace command_db
 

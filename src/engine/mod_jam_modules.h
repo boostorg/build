@@ -7,6 +7,8 @@ Distributed under the Boost Software License, Version 1.0.
 #ifndef B2_MOD_MODULES_H
 #define B2_MOD_MODULES_H
 
+#include "config.h"
+
 #include "bind.h"
 #include "lists.h"
 #include "value.h"
@@ -14,7 +16,6 @@ Distributed under the Boost Software License, Version 1.0.
 #include "mod_path.h"
 
 #include <string>
-#include <tuple>
 
 /* tag::reference[]
 
@@ -54,7 +55,7 @@ namespace b2 { namespace jam { namespace modules {
 ====
 [horizontal]
 Jam:: `rule binding ( module_name )`
-{CPP}:: `value_ref binding(const std::string & module_name);`
+{CPP}:: `value_ref binding(std::string module_name);`
 ====
 
 Returns the filesystem binding of the given module.
@@ -67,7 +68,7 @@ me = [ modules.binding $(__name__) ] ;
 ----
 
 end::reference[] */
-list_ref binding(const std::string & module_name);
+list_ref binding(std::string module_name);
 
 /* tag::reference[]
 
@@ -76,8 +77,7 @@ list_ref binding(const std::string & module_name);
 ====
 [horizontal]
 Jam:: `rule record-binding ( module_name : binding )`
-{CPP}:: `void record_binding(const std::string & module_name, const value_ref &
-value);`
+{CPP}:: `void record_binding(std::string module_name, value_ref value);`
 ====
 
 This helper is used by load to record the binding (path) of each loaded module.
@@ -86,7 +86,7 @@ WARNING: The `module_name` is ignored. Instead the internal tracking of the
 currently loading module is used to record the binding.
 
 end::reference[] */
-void record_binding(const std::string & module_name, const value_ref & value);
+void record_binding(std::string module_name, value_ref value);
 
 /* tag::reference[]
 
@@ -95,8 +95,8 @@ void record_binding(const std::string & module_name, const value_ref & value);
 ====
 [horizontal]
 Jam:: `rule poke ( module_name ? : variables + : value * )`
-{CPP}:: `void poke(const std::string & module_name, list_cref variables,
-list_cref value);`
+{CPP}:: `void poke(std::string module_name, list_cref variables, list_cref
+value);`
 ====
 
 Sets the module-local value of a variable. This is the most reliable way to
@@ -111,8 +111,7 @@ modules.poke : ZLIB_INCLUDE : /usr/local/include ;
 ----
 
 end::reference[] */
-void poke(
-	const std::string & module_name, list_cref variables, list_cref value);
+void poke(std::string module_name, list_cref variables, list_cref value);
 
 /* tag::reference[]
 
@@ -121,7 +120,7 @@ void poke(
 ====
 [horizontal]
 Jam:: `rule peek ( module_name ? : variables + )`
-{CPP}:: `list_ref peek(const std::string & module_name, list_cref variables);`
+{CPP}:: `list_ref peek(std::string module_name, list_cref variables);`
 ====
 
 Returns the module-local value of a variable. This is the most reliable way to
@@ -136,7 +135,7 @@ local ZLIB_INCLUDE = [ modules.peek : ZLIB_INCLUDE ] ;
 ----
 
 end::reference[] */
-list_ref peek(const std::string & module_name, list_cref variables);
+list_ref peek(std::string module_name, list_cref variables);
 
 /* tag::reference[]
 
@@ -164,8 +163,8 @@ void clone_rules(std::tuple<std::string, std::string> source_target_modules);
 ====
 [horizontal]
 Jam:: `rule call-in ( module-name ? : rule-name args * : * )`
-{CPP}:: `list_ref call_in(const value_ref & module_name, std::tuple<value_ref,
-list_ref> const lists & rest, bind::context_ref_ context_ref);`
+{CPP}:: `list_ref call_in(value_ref module_name, std::tuple<value_ref, list_ref>
+const lists & rest, bind::context_ref_ context_ref);`
 ====
 
 Call the given rule locally in the given module. Use this for rules accepting
@@ -193,7 +192,7 @@ rule filter ( f : values * )
 ----
 
 end::reference[] */
-list_ref call_in(const value_ref & module_name,
+list_ref call_in(value_ref module_name,
 	std::tuple<value_ref, list_ref> rule_name_a1,
 	const lists & rest,
 	bind::context_ref_ context_ref);
@@ -226,7 +225,7 @@ list_ref call_locally(std::tuple<std::string, list_ref> rule_name_a1,
 ====
 [horizontal]
 Jam:: `rule run-tests ( m )`
-{CPP}:: `void run_tests(const value_ref & m, bind::context_ref_ context_ref);`
+{CPP}:: `void run_tests(value_ref m, bind::context_ref_ context_ref);`
 ====
 
 Runs internal B2 unit tests for the specified module. The module's
@@ -234,7 +233,7 @@ Runs internal B2 unit tests for the specified module. The module's
 effects of testing module dependencies (such as assert) on the module itself.
 
 end::reference[] */
-void run_tests(const value_ref & m, bind::context_ref_ context_ref);
+void run_tests(value_ref m, bind::context_ref_ context_ref);
 
 /* tag::reference[]
 
@@ -243,7 +242,7 @@ void run_tests(const value_ref & m, bind::context_ref_ context_ref);
 ====
 [horizontal]
 Jam:: `rule load ( module-name : filename ? : search * )`
-{CPP}:: `void load(const value_ref & module_name, value_ref filename, list_cref
+{CPP}:: `void load(value_ref module_name, value_ref filename, list_cref
 search, bind::context_ref_ context_ref);`
 ====
 
@@ -260,7 +259,7 @@ Load the indicated module if it is not already loaded.
   `$(BOOST_BUILD_PATH)`.
 
 end::reference[] */
-void load(const value_ref & module_name,
+void load(value_ref module_name,
 	value_ref filename,
 	list_cref search,
 	bind::context_ref_ context_ref);
