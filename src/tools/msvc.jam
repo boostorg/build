@@ -407,6 +407,12 @@ rule configure ( version ? : options * )
                     "empty when '$(version)' is specified." ;
             }
 
+            # Auto-register any version we can detect.
+            for local i in $(.known-versions)
+            {
+                try-auto-detect-version $(i) ;
+            }
+
             # Configure (i.e. mark as used) all registered versions.
             local all-versions = [ $(.versions).all ] ;
             if ! $(all-versions)
