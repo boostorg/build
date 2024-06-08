@@ -216,23 +216,23 @@ char const * saved_argv0;
 
 static void usage( const char * progname )
 {
-	err_printf("\nusage: %s [ options ] targets...\n\n", progname);
+    err_printf("\nusage: %s [ options ] targets...\n\n", progname);
 
-	err_printf("-a      Build all targets, even if they are current.\n");
-	err_printf("-dx     Set the debug level to x (0-13,console,mi).\n");
-	err_printf("-fx     Read x instead of bootstrap.\n");
-	/* err_printf( "-g      Build from newest sources first.\n" ); */
-	err_printf("-jx     Run up to x shell commands concurrently.\n");
-	err_printf("-lx     Limit actions to x number of seconds after which they are stopped.\n");
-	err_printf("-mx     Maximum target output saved (kb), default is to save all output.\n");
-	err_printf("-n      Don't actually execute the updating actions.\n");
-	err_printf("-ox     Mirror all output to file x.\n");
-	err_printf("-px     x=0, pipes action stdout and stderr merged into action output.\n");
-	err_printf("-q      Quit quickly as soon as a target fails.\n");
-	err_printf("-sx=y   Set variable x=y, overriding environment.\n");
-	err_printf("-tx     Rebuild x, even if it is up-to-date.\n");
-	err_printf("-v      Print the version of jam and exit.\n");
-	err_printf("--x     Option is ignored.\n\n");
+    err_printf("-a      Build all targets, even if they are current.\n");
+    err_printf("-dx     Set the debug level to x (0-13,console,mi).\n");
+    err_printf("-fx     Read x instead of bootstrap.\n");
+    /* err_printf( "-g      Build from newest sources first.\n" ); */
+    err_printf("-jx     Run up to x shell commands concurrently.\n");
+    err_printf("-lx     Limit actions to x number of seconds after which they are stopped.\n");
+    err_printf("-mx     Maximum target output saved (kb), default is to save all output.\n");
+    err_printf("-n      Don't actually execute the updating actions.\n");
+    err_printf("-ox     Mirror all output to file x.\n");
+    err_printf("-px     x=0, pipes action stdout and stderr merged into action output.\n");
+    err_printf("-q      Quit quickly as soon as a target fails.\n");
+    err_printf("-sx=y   Set variable x=y, overriding environment.\n");
+    err_printf("-tx     Rebuild x, even if it is up-to-date.\n");
+    err_printf("-v      Print the version of jam and exit.\n");
+    err_printf("--x     Option is ignored.\n\n");
 
     b2::clean_exit( EXITBAD );
 }
@@ -250,6 +250,8 @@ int guarded_main( int argc, char * * argv )
     int                     is_debugger;
     b2::system_info sys_info;
 
+    err_puts( "Entering guarded_main()\n" );
+
     saved_argv0 = argv[ 0 ];
     last_update_now_status = 0;
 
@@ -259,6 +261,8 @@ int guarded_main( int argc, char * * argv )
 
     if ( getoptions( argc - 1, argv + 1, "-:l:m:d:j:p:f:gs:t:ano:qv", optv ) < 0 )
         usage( progname );
+
+    err_puts( "After getoptions() (when JAM_DEBUGGER is defined)\n" );
 
     if ( ( s = getoptval( optv, 'd', 0 ) ) )
     {
@@ -317,6 +321,8 @@ int guarded_main( int argc, char * * argv )
 
 #endif
 
+    err_puts( "After JAM_DEBUGGER code\n" );
+
     --argc;
     ++argv;
 
@@ -327,9 +333,13 @@ int guarded_main( int argc, char * * argv )
         usage( progname );
     }
 
+    err_puts( "After getoptions() (outside JAM_DEBUGGER code)\n" );
+
     /* Set default parallel jobs to match cpu threads. This can be overridden
     the usual way with -jX or PARALLELISM env var. */
     globs.jobs = sys_info.cpu_thread_count();
+
+    err_puts( "After sys_info.cpu_thread_count()\n" );
 
     /* Version info. */
     if ( ( s = getoptval( optv, 'v', 0 ) ) )
@@ -337,6 +347,8 @@ int guarded_main( int argc, char * * argv )
         out_printf( "B2 %s (%s, jobs=%i)\n\n", VERSION, OSMINOR, globs.jobs );
         return EXITOK;
     }
+
+    err_puts( "After getoptval() for 'v'\n" );
 
     /* Pick up interesting options. */
     if ( ( s = getoptval( optv, 'n', 0 ) ) )
@@ -657,14 +669,23 @@ static const SetConsoleCodepage g_console_codepage_setter{};
 
 int main( int argc, char * * argv )
 {
+    err_puts( "Entering main()\n" );
+
     BJAM_MEM_INIT();
+
+    err_puts( "After BJAM_MEM_INIT()\n" );
 
 #ifdef OS_MAC
     InitGraf( &qd.thePort );
 #endif
 
     cwd_init();
+
+    err_puts( "After cwd_init()\n" );
+
     constants_init();
+
+    err_puts( "After constants_init()\n" );
 
     int result = EXIT_SUCCESS;
     try
