@@ -679,6 +679,8 @@ int main( int argc, char * * argv )
     InitGraf( &qd.thePort );
 #endif
 
+    err_puts( "After InitGraf()\n" );
+
     cwd_init();
 
     err_puts( "After cwd_init()\n" );
