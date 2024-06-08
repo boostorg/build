@@ -51,13 +51,13 @@ void cwd_init( void )
 
     assert( !cwd_ );
 
-    err_puts( "After assert() in cwd_init\n" );
+    err_puts( "In cwd_init: after assert(!cwd_)\n" );
 
     do
     {
         char * const buffer = (char *)BJAM_MALLOC_RAW( buffer_size );
 
-        err_puts( "After BJAM_MALLOC_RAW() in cwd_init\n" );
+        err_printf( "In cwd_init: after BJAM_MALLOC_RAW(%d), which returned %p\n", buffer_size, buffer );
 
 #ifdef OS_VMS
         /* cwd in POSIX-format */
@@ -66,13 +66,13 @@ void cwd_init( void )
         cwd_buffer = getcwd( buffer, buffer_size );
 #endif
 
-        err_puts( "After getcwd() in cwd_init\n" );
+        err_printf( "In cwd_init: after getcwd(%p, %d), which returned %p\n", buffer, buffer_size, cwd_buffer );
 
         error = errno;
 
         if ( cwd_buffer )
         {
-            err_puts( "In if(cwd_buffer) in cwd_init\n" );
+            err_printf( "In cwd_init: in if(cwd_buffer): cwd_buffer is '%s'\n", cwd_buffer );
 
             /* We store the path using its canonical/long/key format. */
             OBJECT * cwd = object_new( cwd_buffer );
