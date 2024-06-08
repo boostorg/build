@@ -2,8 +2,15 @@ parameters:
 - name: b2_opts
   type: string
   default: ''
+- name: prep_cmd
+  type: string
+  default: ''
 
 steps:
+- powershell: |
+    Set-PSDebug -Trace 1
+    ${{ parameters.prep_cmd }}
+  displayName: Prep
 - powershell: |
     Set-PSDebug -Trace 1
     cd src/engine

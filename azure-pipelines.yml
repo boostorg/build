@@ -105,7 +105,7 @@ stages:
     strategy:
       matrix:
         VS ${{variables.vs_latest}}: {TOOLSET: "${{variables.vc_latest}}", TEST_TOOLSET: msvc, VM_IMAGE: "${{variables.windows_latest_vm}}"}
-        Clang (VS${{variables.vs_latest}}): {TOOLSET: clang-win, TEST_TOOLSET: clang-win, VM_IMAGE: "${{variables.windows_latest_vm}}"}
+        Clang (VS${{variables.vs_latest}}): {TOOLSET: clang-win, TEST_TOOLSET: clang-win, VM_IMAGE: "${{variables.windows_latest_vm}}", PREP_CMD: "choco upgrade llvm"}
     pool:
       vmImage: $(VM_IMAGE)
     continueOnError: 'true'
@@ -113,6 +113,7 @@ stages:
     - template: .ci/azp-windows-test.yml
       parameters:
         b2_opts: address-model=32,64
+        prep_cmd: $(PREP_CMD)
 
   - job: 'macOS'
     strategy:
