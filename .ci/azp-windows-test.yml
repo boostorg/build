@@ -11,7 +11,6 @@ steps:
     $env:path = 'C:\Windows\system32;C:\Windows;' + $env:CXX_PATH
     echo "Path:" $env:path
     cmd /c build.bat $env:TOOLSET
-    ./b2.exe -v
     cd ../..
   displayName: Build
 - powershell: |
@@ -41,6 +40,5 @@ steps:
     $env:path += $env:HOME + '/temp/.b2' + ';' + $env:PATH
     cd $env:HOME
     echo $null >> build.jam
-    b2 -v
     b2 -n --debug-configuration toolset=$env:TEST_TOOLSET ${{ parameters.b2_opts }}
   displayName: Bootstrap
