@@ -9,6 +9,7 @@ steps:
     cd src/engine
     $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
     $env:path += ';' + $env:CXX_PATH
+    echo "Path:" $env:path
     cmd /c build.bat $env:TOOLSET
     ./b2.exe -v
     cd ../..
@@ -34,7 +35,6 @@ steps:
     $env:HOME = $env:HOMEDRIVE + $env:HOMEPATH
     $env:path += ';' + $env:CXX_PATH
     echo "using" $env:TEST_TOOLSET ":" ":" $env:CXX ";" > ${env:HOME}/user-config.jam
-    echo "Path:" $env:path
     ./bootstrap.bat $env:TOOLSET
     ./b2.exe --debug-configuration --prefix=${env:HOME}/temp/.b2 install toolset=$env:TEST_TOOLSET ${{ parameters.b2_opts }}
     Remove-Item ./b2.exe
