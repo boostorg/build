@@ -3,6 +3,12 @@
 
 == Version 5.2.0
 
+Many fixes in this release from regular contributors Nikita and Dmitry. There
+are a couple of new features.. First the ability to have `dll-path` in searched
+libraries. Which makes it possible to better support system/external libraries.
+The second new feature is the addition of generating `compile_commands.json`
+for IDE and tool integration. That has a been a wish item for a long time.
+
 * *New*: Add support for generating `compile_commands.json` command database
   for some IDE integration.
   -- _René Ferdinand Rivera Morell_
