@@ -104,7 +104,7 @@ stages:
   - job: 'Windows_Latest'
     strategy:
       matrix:
-        VS ${{variables.vs_latest}}: {TOOLSET: "${{variables.vc_latest}}", TEST_TOOLSET: msvc, VM_IMAGE: "${{variables.windows_latest_vm}}"}
+        VS ${{variables.vs_latest}}: {TOOLSET: "${{variables.vc_latest}}", TEST_TOOLSET: msvc, VM_IMAGE: "${{variables.windows_latest_vm}}", PREP_CMD: "echo noop"}
         Clang (VS${{variables.vs_latest}}): {TOOLSET: clang-win, TEST_TOOLSET: clang-win, VM_IMAGE: "${{variables.windows_latest_vm}}", PREP_CMD: "choco upgrade llvm"}
     pool:
       vmImage: $(VM_IMAGE)
