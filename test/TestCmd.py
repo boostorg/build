@@ -533,8 +533,8 @@ class TestCmd:
         else:
             if path != None:
                 if path == '':
-                    path = tempfile.mktemp()
-                if path != None:
+                    path = tempfile.mkdtemp(prefix="b2")
+                elif path != None:
                     os.mkdir(path)
                 self._dirlist.append(path)
                 global _Cleanup
