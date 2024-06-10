@@ -300,7 +300,7 @@ class TestCmd:
             list.reverse()
             for dir in list:
                 self.writable(dir, 1)
-                shutil.rmtree(dir, ignore_errors=1)
+                shutil.rmtree(dir, ignore_errors=True)
 
         self._dirlist = []
         self.workdir = None
