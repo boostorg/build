@@ -1272,6 +1272,13 @@ local rule configure-really ( version ? : options * )
 {
     local command = [ feature.get-values <command> : $(options) ] ;
 
+    # We don't try and register any more versions than what we already know
+    # about when ask to discover any available versions.
+    if ! $(version) && ! $(command) && [ $(.versions).used ]
+    {
+        return ;
+    }
+
     if ! $(version) && ! $(command)
     {
         # We were given neither a command, nor a version.
