@@ -1272,6 +1272,13 @@ local rule configure-really ( version ? : options * )
 {
     local command = [ feature.get-values <command> : $(options) ] ;
 
+    # We don't try and register any more versions than what we already know
+    # about when ask to discover any available versions.
+    if ! $(version) && ! $(command) && [ $(.versions).used ]
+    {
+        return ;
+    }
+
     if ! $(version) && ! $(command)
     {
         # We were given neither a command, nor a version.
@@ -1965,7 +1972,6 @@ local rule register-toolset-really ( )
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>off/<extern-c-nothrow>on : /EHsc ;
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>off : /EHa ;
     toolset.flags msvc.compile C++FLAGS  <exception-handling>on/<asynch-exceptions>on/<extern-c-nothrow>on : /EHac ;
-    toolset.flags msvc.compile C++FLAGS  <exception-handling>off : -D_HAS_EXCEPTIONS=0 ;
 
     toolset.flags msvc.compile C++FLAGS  <cxxstd>14 : "/std:c++14" ;
     toolset.flags msvc.compile C++FLAGS  <cxxstd>17 : "/std:c++17" ;

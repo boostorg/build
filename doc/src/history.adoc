@@ -1,6 +1,20 @@
 [[b2.history]]
 = History
 
+== Version 5.2.1
+
+This patch reverts the change to define `_HAS_EXCEPTIONS=0` for Dinkumware
+std library. It has the undesired effect of changing the ABI. It's better for
+user code to handle the conbination of turning off exceptions while treating
+warnings as errors, and getting warnings/errors from the std library by having
+the users silence the warning themselves.
+
+This patch also fixes the case of asking to initialize any msvc toolset
+versions (`using msvc ;`) when there are already versions initialized. Instead
+of erroring to say that a version is already in use, it considers the set
+of already initialized msvc toolsets as satisfying the request to generally
+initialize msvc.
+
 == Version 5.2.0
 
 Many fixes in this release from regular contributors Nikita and Dmitry. There
