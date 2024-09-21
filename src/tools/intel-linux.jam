@@ -25,6 +25,8 @@ feature.extend-subfeature toolset intel : platform : linux ;
 toolset.inherit-generators intel-linux
      <toolset>intel <toolset-intel:platform>linux : gcc : gcc.mingw.link gcc.mingw.link.dll ;
 
+toolset.flags intel-linux.compile INCLUDE-PCH : -include-pch ;
+
 type.set-generated-target-suffix PCH : <toolset>intel <toolset-intel:platform>linux : pchi ;
 
 toolset.inherit-rules intel-linux : gcc ;
@@ -47,8 +49,8 @@ if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
 
 # Intel oneAPI 2020, and onward.
 .bin(oneAPI) =
-    [ path.join $(.home) intel/oneapi/compiler/latest/linux/bin ]
-    /opt/intel/oneapi/compiler/latest/linux/bin ;
+    [ path.join $(.home) intel/oneapi/compiler/latest/bin ]
+    /opt/intel/oneapi/compiler/latest/bin ;
 # Intel C++ Composer XE 2011 for Linux, aka Intel C++ Compiler XE 12.0,
 # aka intel-linux-12.0.
 .bin(12.0) = /opt/intel/bin ;
@@ -90,7 +92,7 @@ rule init ( version ? :  command * : options * )
             if $(detected_command)
             {
                 command_abs_path = [ common.get-absolute-tool-path $(detected_command) ] ;
-                command_lib_path = $(command_abs_path)/../compiler/lib/intel64 ;
+                command_lib_path = $(command_abs_path)/../lib ;
             }
         }
         if ! $(detected_command)
@@ -213,7 +215,7 @@ rule init ( version ? :  command * : options * )
         flags intel-linux.compile OPTIONS $(condition)/<inlining>on : "-inline-level=1" ;
         flags intel-linux.compile OPTIONS $(condition)/<inlining>full : "-inline-level=2" ;
         flags intel-linux.compile OPTIONS $(condition)/<optimization>space : "-Os" ;
-        flags intel-linux.compile OPTIONS $(condition)/<optimization>speed : "-O3 -ip" ;
+        flags intel-linux.compile OPTIONS $(condition)/<optimization>speed : "-O3" ;
     }
     if [ numbers.less $(tool_version[1]) 2020 ]
     {
@@ -259,7 +261,7 @@ rule compile.c++ ( targets * : sources * : properties * )
 
 actions compile.c++ bind PCH_FILE
 {
-    LD_LIBRARY_PATH="$(RUN_PATH)" "$(CONFIG_COMMAND)" -c -xc++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)"  -use-pch"$(PCH_FILE)" -c -o "$(<)" "$(>)"
+    LD_LIBRARY_PATH="$(RUN_PATH)" "$(CONFIG_COMMAND)" -c -xc++ $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -use-pch"$(PCH_FILE)" -c -o "$(<)" "$(>)"
 }
 
 rule compile.c ( targets * : sources * : properties * )
@@ -290,17 +292,17 @@ rule compile.c.pch ( targets * : sources * : properties * )
 #
 actions compile.c++.pch
 {
-    rm -f "$(<)" && LD_LIBRARY_PATH="$(RUN_PATH)" "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -pch-create "$(<)" "$(>)"
+    rm -f "$(<)" && LD_LIBRARY_PATH="$(RUN_PATH)" "$(CONFIG_COMMAND)" -x c++-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -Xclang -emit-pch -o "$(<)" "$(>)"
 }
 
 actions compile.fortran
 {
-    LD_LIBRARY_PATH="$(RUN_PATH)" "ifort" -c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
+    LD_LIBRARY_PATH="$(RUN_PATH)" "ifx" -c $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
 actions compile.c.pch
 {
-    rm -f "$(<)" && LD_LIBRARY_PATH="$(RUN_PATH)" "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -pch-create "$(<)" "$(>)"
+    rm -f "$(<)" && LD_LIBRARY_PATH="$(RUN_PATH)" "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -Xclang -emit-pch -o "$(<)" "$(>)"
 }
 
 rule link ( targets * : sources * : properties * )
@@ -323,3 +325,4 @@ actions link.dll bind LIBRARIES
 {
     LD_LIBRARY_PATH="$(RUN_PATH)" "$(CONFIG_COMMAND)" -L"$(LINKPATH)" -Wl,-R$(_)-Wl,"$(RPATH)" -o "$(<)" -Wl,-soname$(_)-Wl,$(<[1]:D=) -shared "$(>)"  "$(LIBRARIES)" -l$(FINDLIBS-SA) -l$(FINDLIBS-ST) $(OPTIONS) $(USER_OPTIONS)
 }
+
