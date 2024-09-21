@@ -233,9 +233,6 @@ stages:
         Clang 15: {TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 14: {TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 13: {TOOLSET: clang-13, PACKAGES: clang-13, LLVM_VER: 13, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 12: {TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 11: {TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 10: {TOOLSET: clang-10, PACKAGES: clang-10, LLVM_VER: 10, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -251,6 +248,9 @@ stages:
         GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1604"}
         GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
         # GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1604"}
+        Clang 12: {CXX: clang++-12, TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: 'focal', CONTAINER: "ubuntu_2004"}
+        Clang 11: {CXX: clang++-11, TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: 'focal', CONTAINER: "ubuntu_2004"}
+        Clang 10: {CXX: clang++-10, TOOLSET: clang-10, PACKAGES: clang-10, LLVM_VER: 10, LLVM_OS: 'focal', CONTAINER: "ubuntu_2004"}
         Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, LLVM_VER: 8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, LLVM_VER: 7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
@@ -404,6 +404,7 @@ stages:
     displayName: 'Release Linux'
     strategy:
       matrix:
+        1.86.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.86.0, BOOST_VERSION_U: 1_86_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.85.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.85.0, BOOST_VERSION_U: 1_85_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.84.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.84.0, BOOST_VERSION_U: 1_84_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         1.83.0 .. GCC ${{variables.gcc_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: gcc, CXX: "g++-${{variables.gcc_latest}}", PACKAGES: "g++-${{variables.gcc_latest}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
@@ -455,6 +456,7 @@ stages:
       vmImage: "${{variables.macos_latest_vm}}"
     strategy:
       matrix:
+        1.86.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.86.0, BOOST_VERSION_U: 1_86_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.85.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.85.0, BOOST_VERSION_U: 1_85_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.84.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.84.0, BOOST_VERSION_U: 1_84_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
         1.83.0 .. Xcode ${{variables.xc_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: clang, CXX: clang++, XCODE_APP: "/Applications/Xcode_${{variables.xc_latest}}.app"}
@@ -505,6 +507,7 @@ stages:
       vmImage: "${{variables.windows_latest_vm}}"
     strategy:
       matrix:
+        1.86.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.86.0, BOOST_VERSION_U: 1_86_0, TOOLSET: "${{variables.vc_latest}}"}
         1.85.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.85.0, BOOST_VERSION_U: 1_85_0, TOOLSET: "${{variables.vc_latest}}"}
         1.84.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.84.0, BOOST_VERSION_U: 1_84_0, TOOLSET: "${{variables.vc_latest}}"}
         1.83.0 .. VS ${{variables.vs_latest}}: {BOOST_VERSION: 1.83.0, BOOST_VERSION_U: 1_83_0, TOOLSET: "${{variables.vc_latest}}"}
