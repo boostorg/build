@@ -124,13 +124,17 @@ struct database
 	void exit_main(int status)
 	{
 		if (status == EXIT_FAIL) return;
-		std::string filename = output_filename;
+		std::string filename;
 		if (!b2::paths::is_rooted(output_filename))
 		{
 			if (!b2::paths::is_rooted(output_directory))
 				filename = b2::cwd_str() + "/";
-			filename += output_directory + "/" + output_filename;
-			filename = b2::paths::normalize(filename);
+			filename = b2::paths::normalize(
+				filename + output_directory + "/" + output_filename);
+		}
+		else
+		{
+			filename = b2::paths::normalize(output_filename);
 		}
 		if (prop_db->write_file(filename, output_format))
 			out_printf("...wrote command database '%s'...\n", filename.c_str());

@@ -1,6 +1,11 @@
 [[b2.history]]
 = History
 
+== Version 5.3.0
+
+* Fix command database output file path when an output dir is not given.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 5.2.1
 
 This patch reverts the change to define `_HAS_EXCEPTIONS=0` for Dinkumware
