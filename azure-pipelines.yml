@@ -32,18 +32,20 @@ pr:
 
 variables:
 - { name: linux_latest_vm, value: 'ubuntu-22.04' }
-- { name: linux_latest_os, value: 'focal' }
+- { name: linux_latest_os, value: 'jammy' }
 - { name: windows_latest_vm, value: 'windows-2022' }
-- { name: clang_latest, value: '17' }
-- { name: clang_latest_libstdcxx, value: 9 }
-- { name: gcc_latest, value: '13' }
+- { name: clang_latest, value: '18' }
+- { name: clang_latest_libstdcxx, value: '12' }
+- { name: gcc_latest, value: '14' }
 - { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
-- { name: xc_latest, value: '15.0.1' }
-- { name: macos_latest_vm, value: 'macOS-13' }
+- { name: xc_latest, value: '16' }
+- { name: macos_latest_vm, value: 'macOS-14' }
 
 resources:
   containers:
+    - { container: ubuntu_2404, image: 'ubuntu:24.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: ubuntu_2204, image: 'ubuntu:22.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_2004, image: 'ubuntu:20.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_1804, image: 'ubuntu:18.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_1604, image: 'ubuntu:16.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
@@ -221,10 +223,12 @@ stages:
   - job: 'Linux'
     strategy:
       matrix:
+        GCC 13: {TOOLSET: gcc-13, PACKAGES: g++-13, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 12: {TOOLSET: gcc-12, PACKAGES: g++-12, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Clang 17: {TOOLSET: clang-17, PACKAGES: clang-17, LLVM_VER: 17, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 16: {TOOLSET: clang-16, PACKAGES: clang-16, LLVM_VER: 16, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 15: {TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 14: {TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
@@ -278,6 +282,7 @@ stages:
   - job: 'macOS'
     strategy:
       matrix:
+        Xcode 15.4: {XCODE_APP: /Applications/Xcode_15.4.app, VM_IMAGE: 'macOS-14'}
         Xcode 14.3.1: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
         Xcode 14.2: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
         Xcode 14.1: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
