@@ -288,9 +288,9 @@ stages:
         Xcode 14.1: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
         Xcode 14.0.1: {XCODE_APP: /Applications/Xcode_14.0.1.app, VM_IMAGE: 'macOS-12'}
         Xcode 13.4.1: {XCODE_APP: /Applications/Xcode_13.4.1.app, VM_IMAGE: 'macOS-12'}
-        Xcode 12.5.1: {XCODE_APP: /Applications/Xcode_12.5.1.app, VM_IMAGE: 'macOS-11'}
-        Xcode 12.4: {XCODE_APP: /Applications/Xcode_12.4.app, VM_IMAGE: 'macOS-11'}
-        Xcode 11.7: {XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-11'}
+        # Xcode 12.5.1: {XCODE_APP: /Applications/Xcode_12.5.1.app, VM_IMAGE: 'macOS-11'}
+        # Xcode 12.4: {XCODE_APP: /Applications/Xcode_12.4.app, VM_IMAGE: 'macOS-11'}
+        # Xcode 11.7: {XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-11'}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
