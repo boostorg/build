@@ -1,0 +1,161 @@
+# Copyright Vladimir Prus 2004.
+# Copyright Toon Knapen 2004.
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
+
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.xlclang]]
+= IBM Visual Age
+
+The `xlclang` module supports the http://www.ibm.com/software/ad/xlclang[IBM
+Visual Age] C++ Compiler, for the AIX operating system. Versions 7.1 and
+8.0 are known to work.
+
+The module is initialized using the following syntax:
+
+----
+using xlclang ;
+----
+
+The module does not accept any initialization options. The compiler
+should be installed in the `/usr/xlclang/bin` directory.
+
+Later versions of Visual Age are known as XL C/C++. They were not tested
+with the the `xlclang` module.
+
+|# # end::doc[]
+
+#
+# B2 V2 toolset for the IBM XL C++ compiler
+#
+
+import toolset : flags ;
+import feature ;
+import common ;
+import generators ;
+import os ;
+
+feature.extend toolset : xlclang ;
+toolset.inherit xlclang : unix ;
+generators.override xlclang.prebuilt : builtin.prebuilt ;
+generators.override xlclang.searched-lib-generator : searched-lib-generator ;
+
+# Configure the xlclang toolset
+rule init ( version ? : command * : options * )
+{
+    local condition = [
+        common.check-init-parameters xlclang : version $(version) ] ;
+
+    command = [ common.get-invocation-command xlclang : xlclang++
+        : $(command) : "/opt/IBM/xlC/16.1.0/bin/xlclang++" ] ;
+
+    common.handle-options xlclang : $(condition) : $(command) : $(options) ;
+}
+
+# Declare generators
+generators.register-c-compiler xlclang.compile.c : C : OBJ : <toolset>xlclang ;
+generators.register-c-compiler xlclang.compile.c++ : CPP : OBJ : <toolset>xlclang ;
+
+# Declare flags
+flags xlclang CFLAGS <optimization>speed : -O3 -qstrict ;
+flags xlclang CFLAGS <optimization>space : -O2 -qcompact ;
+
+# Discretionary inlining (not recommended)
+flags xlclang CFLAGS <inlining>off : -qnoinline ;
+flags xlclang CFLAGS <inlining>on : -qinline ;
+#flags xlclang CFLAGS <inlining>full : -qinline ;
+flags xlclang CFLAGS <inlining>full : ;
+
+# Exception handling
+flags xlclang C++FLAGS <exception-handling>off : -qnoeh ;
+flags xlclang C++FLAGS <exception-handling>on : -qeh ;
+
+# Run-time Type Identification
+flags xlclang C++FLAGS <rtti>off : -qnortti ;
+flags xlclang C++FLAGS <rtti>on : -qrtti ;
+
+# Enable 64-bit memory addressing model
+flags xlclang CFLAGS <address-model>64 : -q64 ;
+flags xlclang LINKFLAGS <address-model>64 : -q64 ;
+flags xlclang ARFLAGS <target-os>aix/<address-model>64 : -X 64 ;
+
+# Use absolute path when generating debug information
+flags xlclang CFLAGS <debug-symbols>on : -g -qfullpath ;
+flags xlclang LINKFLAGS <debug-symbols>on : -g -qfullpath ;
+flags xlclang LINKFLAGS <debug-symbols>off : -s ;
+
+if [ os.name ] = AIX
+{
+    flags xlclang.compile C++FLAGS : -qfuncsect ;
+
+    # The -bnoipath strips the prepending (relative) path of libraries from
+    # the loader section in the target library or executable. Hence, during
+    # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
+    # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
+    # this option, the prepending (relative) path + library name is
+    # hard-coded in the loader section, causing *only* this path to be
+    # searched during load-time. Note that the AIX linker does not have an
+    # -soname equivalent, this is as close as it gets.
+    #
+    # The above options are definitely for AIX 5.x, and most likely also for
+    # AIX 4.x and AIX 6.x. For details about the AIX linker see:
+    # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
+    #
+    flags xlclang.link LINKFLAGS <link>shared : -bnoipath ;
+
+    # Run-time linking
+    flags xlclang.link EXE-LINKFLAGS <link>shared : -brtl ;
+}
+
+# Profiling
+flags xlclang CFLAGS <profiling>on : -pg ;
+flags xlclang LINKFLAGS <profiling>on : -pg ;
+
+flags xlclang.compile OPTIONS <cflags> ;
+flags xlclang.compile.c++ OPTIONS <cxxflags> ;
+flags xlclang DEFINES <define> ;
+flags xlclang UNDEFS <undef> ;
+flags xlclang HDRS <include> ;
+flags xlclang STDHDRS <sysinclude> ;
+flags xlclang.link OPTIONS <linkflags> ;
+flags xlclang ARFLAGS <arflags> ;
+
+flags xlclang LIBPATH <library-path> ;
+flags xlclang NEEDLIBS <library-file> ;
+flags xlclang FINDLIBS <find-shared-library> ;
+flags xlclang FINDLIBS <find-static-library> ;
+
+# Select the compiler name according to the threading model.
+flags xlclang XLCLANG_C_COMPILER  <threading>single : xlclang   ;
+flags xlclang XLCLANG_C_COMPILER  <threading>multi : xlclang ;
+flags xlclang XLCLANG_CXX_COMPILER <threading>single : xlclang++  ;
+flags xlclang XLCLANG_CXX_COMPILER <threading>multi : xlclang++ ;
+
+SPACE = " " ;
+
+actions xlclang.link bind NEEDLIBS
+{
+    $(XLCLANG_CXX_COMPILER) $(EXE-LINKFLAGS) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
+}
+
+actions xlclang.link.dll bind NEEDLIBS
+{
+    $(XLCLANG_CXX_COMPILER) -G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
+}
+
+actions xlclang.compile.c
+{
+    $(XLCLANG_C_COMPILER) -c $(OPTIONS) $(USER_OPTIONS) -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+actions xlclang.compile.c++
+{
+    $(XLCLANG_CXX_COMPILER) -c $(OPTIONS) $(USER_OPTIONS) -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+actions updated together piecemeal xlclang.archive
+{
+    ar $(ARFLAGS) ru "$(<)" "$(>)"
+}

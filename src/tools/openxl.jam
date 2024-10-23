@@ -1,0 +1,161 @@
+# Copyright Vladimir Prus 2004.
+# Copyright Toon Knapen 2004.
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE.txt
+# or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
+
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.openxl]]
+= IBM Visual Age
+
+The `openxl` module supports the http://www.ibm.com/software/ad/openxl[IBM
+Visual Age] C++ Compiler, for the AIX operating system. Versions 7.1 and
+8.0 are known to work.
+
+The module is initialized using the following syntax:
+
+----
+using openxl ;
+----
+
+The module does not accept any initialization options. The compiler
+should be installed in the `/usr/openxl/bin` directory.
+
+Later versions of Visual Age are known as XL C/C++. They were not tested
+with the the `openxl` module.
+
+|# # end::doc[]
+
+#
+# B2 V2 toolset for the IBM XL C++ compiler
+#
+
+import toolset : flags ;
+import feature ;
+import common ;
+import generators ;
+import os ;
+
+feature.extend toolset : openxl ;
+toolset.inherit openxl : unix ;
+generators.override openxl.prebuilt : builtin.prebuilt ;
+generators.override openxl.searched-lib-generator : searched-lib-generator ;
+
+# Configure the openxl toolset
+rule init ( version ? : command * : options * )
+{
+    local condition = [
+        common.check-init-parameters openxl : version $(version) ] ;
+
+    command = [ common.get-invocation-command openxl : ibm-clang++_r
+        : $(command) : "/opt/IBM/openxlC/17.1.0/bin/ibm-clang++_r" ] ;
+
+    common.handle-options openxl : $(condition) : $(command) : $(options) ;
+}
+
+# Declare generators
+generators.register-c-compiler openxl.compile.c : C : OBJ : <toolset>openxl ;
+generators.register-c-compiler openxl.compile.c++ : CPP : OBJ : <toolset>openxl ;
+
+# Declare flags
+flags openxl CFLAGS <optimization>speed : -O3 ;
+flags openxl CFLAGS <optimization>space : -O2 -Os ;
+
+# Discretionary inlining (not recommended)
+flags openxl CFLAGS <inlining>off : -fno-inline-functions ;
+flags openxl CFLAGS <inlining>on : ;
+#flags openxl CFLAGS <inlining>full : -qinline ;
+flags openxl CFLAGS <inlining>full : ;
+
+# Exception handling
+flags openxl C++FLAGS <exception-handling>off : -fno-exceptions ;
+flags openxl C++FLAGS <exception-handling>on : ;
+
+# Run-time Type Identification
+flags openxl C++FLAGS <rtti>off : -fno-rtti ;
+flags openxl C++FLAGS <rtti>on : ;
+
+# Enable 64-bit memory addressing model
+flags openxl CFLAGS <address-model>64 : -m64 ;
+flags openxl LINKFLAGS <address-model>64 : -m64 ;
+flags openxl ARFLAGS <target-os>aix/<address-model>64 : -X 64 ;
+
+# Use absolute path when generating debug information
+flags openxl CFLAGS <debug-symbols>on : -g ;
+flags openxl LINKFLAGS <debug-symbols>on : -g ;
+flags openxl LINKFLAGS <debug-symbols>off : ;
+
+if [ os.name ] = AIX
+{
+    flags openxl.compile C++FLAGS : -ffunction-sections ;
+
+    # The -bnoipath strips the prepending (relative) path of libraries from
+    # the loader section in the target library or executable. Hence, during
+    # load-time LIBPATH (identical to LD_LIBRARY_PATH) or a hard-coded
+    # -blibpath (*similar* to -lrpath/-lrpath-link) is searched. Without
+    # this option, the prepending (relative) path + library name is
+    # hard-coded in the loader section, causing *only* this path to be
+    # searched during load-time. Note that the AIX linker does not have an
+    # -soname equivalent, this is as close as it gets.
+    #
+    # The above options are definitely for AIX 5.x, and most likely also for
+    # AIX 4.x and AIX 6.x. For details about the AIX linker see:
+    # http://download.boulder.ibm.com/ibmdl/pub/software/dw/aix/es-aix_ll.pdf
+    #
+    flags openxl.link LINKFLAGS <link>shared : -bnoipath ;
+
+    # Run-time linking
+    flags openxl.link EXE-LINKFLAGS <link>shared : -brtl ;
+}
+
+# Profiling
+flags openxl CFLAGS <profiling>on : -pg ;
+flags openxl LINKFLAGS <profiling>on : -pg ;
+
+flags openxl.compile OPTIONS <cflags> ;
+flags openxl.compile.c++ OPTIONS <cxxflags> ;
+flags openxl DEFINES <define> ;
+flags openxl UNDEFS <undef> ;
+flags openxl HDRS <include> ;
+flags openxl STDHDRS <sysinclude> ;
+flags openxl.link OPTIONS <linkflags> ;
+flags openxl ARFLAGS <arflags> ;
+
+flags openxl LIBPATH <library-path> ;
+flags openxl NEEDLIBS <library-file> ;
+flags openxl FINDLIBS <find-shared-library> ;
+flags openxl FINDLIBS <find-static-library> ;
+
+# Select the compiler name according to the threading model.
+flags openxl OPENXL_C_COMPILER  <threading>single : ibm-clang_r ;
+flags openxl OPENXL_C_COMPILER  <threading>multi : ibm-clang_r ;
+flags openxl OPENXL_CXX_COMPILER <threading>single : ibm-clang++_r  ;
+flags openxl OPENXL_CXX_COMPILER <threading>multi : ibm-clang++_r ;
+
+SPACE = " " ;
+
+actions openxl.link bind NEEDLIBS
+{
+    $(OPENXL_CXX_COMPILER) $(EXE-LINKFLAGS) $(LINKFLAGS) -o "$(<[1])" -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
+}
+
+actions openxl.link.dll bind NEEDLIBS
+{
+    $(OPENXL_CXX_COMPILER) -shared -Wl,-G $(LINKFLAGS) -o "$(<[1])" $(HAVE_SONAME)-Wl,-soname$(SPACE)-Wl,$(<[-1]:D=) -L$(LIBPATH) -L$(STDLIBPATH) "$(>)" "$(NEEDLIBS)" "$(NEEDLIBS)" -l$(FINDLIBS) $(OPTIONS) $(USER_OPTIONS)
+}
+
+actions openxl.compile.c
+{
+    $(OPENXL_C_COMPILER) -c $(OPTIONS) $(USER_OPTIONS) -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+actions openxl.compile.c++
+{
+    $(OPENXL_CXX_COMPILER) -c $(OPTIONS) $(USER_OPTIONS) -I$(BOOST_ROOT) -U$(UNDEFS) -D$(DEFINES) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -o "$(<)" "$(>)"
+}
+
+actions updated together piecemeal openxl.archive
+{
+    ar $(ARFLAGS) ru "$(<)" "$(>)"
+}
