@@ -957,6 +957,8 @@ local rule toolset-tag ( name : type ? : property-set )
         case sun* : tag += sw ;
         case tru64cxx* : tag += tru ;
         case vacpp* : tag += xlc ;
+        case xlclang* : tag += xlclang ;
+        case openxl* : tag += openxl ;
     }
     local version = [ MATCH "<toolset.*version>([0123456789]+)[.]?([0123456789]*)"
         : $(properties) ] ;

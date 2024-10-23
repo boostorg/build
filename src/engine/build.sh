@@ -66,7 +66,7 @@ You can specify the toolset as the argument, i.e.:
 
 Toolsets supported by this script are:
     acc, clang, como, gcc, intel-darwin, intel-linux, kcc, kylix, mipspro,
-    pathscale, pgi, qcc, sun, sunpro, tru64cxx, vacpp
+    pathscale, pgi, qcc, sun, sunpro, tru64cxx, vacpp, xlclang, openxl
 
 For any toolset you can override the path to the compiler with the '--cxx'
 option. You can also use additional flags for the compiler with the
@@ -156,6 +156,11 @@ check_toolset ()
 
     # Prefer Clang (clang) on macOS..
     if test_toolset clang && test_uname Darwin && test_compiler clang++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=clang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
+    # Prefer IBMClang (ibm-clang_r) on AIX if present
+    if test_toolset openxl && test_uname AIX && test_compiler ibm-clang++_r$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=openxl$TOOLSET_SUFFIX ; return ${TRUE} ; fi
+    # Then prefer XLClang (xlclang) on AIX
+    if test_toolset xlclang && test_uname AIX && test_compiler xlclang++$TOOLSET_SUFFIX -x c++ -std=c++11 ; then B2_TOOLSET=xlclang$TOOLSET_SUFFIX ; return ${TRUE} ; fi
+
     # GCC (gcc) with -pthread arg (for AIX and others)..
     if test_toolset gcc && test_compiler g++$TOOLSET_SUFFIX -x c++ -std=c++11 -pthread ; then B2_TOOLSET=gcc$TOOLSET_SUFFIX ; return ${TRUE} ; fi
     # GCC (gcc)..
@@ -412,6 +417,18 @@ case "${B2_TOOLSET}" in
         B2_CXXFLAGS_RELEASE="-O3 -Wc,-finline-functions"
         B2_CXXFLAGS_DEBUG="O0 -Wc,-fno-inline -gstabs+"
     ;;
+
+    xlclang)
+        CXX_VERSION_OPT=-qversion
+        B2_CXXFLAGS_RELEASE="-O3 -s -qstrict -qinline"
+        B2_CXXFLAGS_DEBUG="-g -O0 -qnoinline -pg"
+        ;;
+
+    openxl)
+        CXX_VERSION_OPT=--version
+        B2_CXXFLAGS_RELEASE="-O3 -Wl,-s"
+        B2_CXXFLAGS_DEBUG="-g -O0"
+        ;;
 
     cxx)
         CXX_VERSION_OPT=${CXX_VERSION_OPT:---version}
