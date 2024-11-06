@@ -198,6 +198,8 @@ class asciidoctor-generator : generator
                 raw-set += $(p) ;
             }
         }
+        local relevant-ps = [ $(property-set).relevant $(property-set) ] ;
+        raw-set += [ $(relevant-ps).raw ] ;
         raw-set = [ feature.expand-composites $(raw-set) ] ;
         raw-set += [ $(property-set).incidental ] ;
         property-set = [ property-set.create $(raw-set) ] ;

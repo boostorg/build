@@ -5,6 +5,9 @@
 
 * Fix command database output file path when an output dir is not given.
   -- _René Ferdinand Rivera Morell_
+* Fix asciidoctor ignoring relevant features when building which caused invalid
+  reuse of the target.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 5.2.1
 
