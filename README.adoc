@@ -14,8 +14,8 @@ file LICENSE.txt or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 Continuously tested on:
 
-* FreeBSD Clang 11, 12, 13, 14, 15, 16, 17
-* FreeBSD GCC 9, 10, 11, 12, 13
+* FreeBSD Clang 11, 12, 13, 14, 15, 16, 17, 18, 19
+* FreeBSD 10, 11, 12, 13, 14
 * Linux Clang 3.6, 3.7, 3.8, 3.9, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
 * Linux GCC 4.8, 4.9, 5, 6, 7, 8, 9, 10, 11, 12, 13
 * macOS Xcode 13.4.1, 14.0.1, 14.1, 14.2, 14.3.1, 15.0.1
