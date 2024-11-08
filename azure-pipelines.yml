@@ -46,7 +46,7 @@ resources:
   containers:
     - { container: ubuntu_2404, image: 'ubuntu:24.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_2204, image: 'ubuntu:22.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
-    - { container: ubuntu_2010, image: 'ubuntu:20.10', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: ubuntu_2004, image: 'ubuntu:20.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_1804, image: 'ubuntu:18.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_1604, image: 'ubuntu:16.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
 
@@ -248,9 +248,9 @@ stages:
         GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1604"}
         GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
         # GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1604"}
-        Clang 12: {CXX: clang++-12, TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: 'focal', CONTAINER: "ubuntu_2010"}
-        Clang 11: {CXX: clang++-11, TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: 'focal', CONTAINER: "ubuntu_2010"}
-        Clang 10: {CXX: clang++-10, TOOLSET: clang-10, PACKAGES: clang-10, LLVM_VER: 10, LLVM_OS: 'focal', CONTAINER: "ubuntu_2010"}
+        Clang 12: {CXX: clang++-12, TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: 'focal', CONTAINER: "ubuntu_2004"}
+        Clang 11: {CXX: clang++-11, TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: 'focal', CONTAINER: "ubuntu_2004"}
+        Clang 10: {CXX: clang++-10, TOOLSET: clang-10, PACKAGES: clang-10, LLVM_VER: 10, LLVM_OS: 'focal', CONTAINER: "ubuntu_2004"}
         Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, LLVM_VER: 8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, LLVM_VER: 7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
@@ -260,7 +260,7 @@ stages:
         Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, PACKAGES: clang-3.9, CONTAINER: "ubuntu_1804"}
         Clang 3.8: {CXX: clang++-3.8, TOOLSET: clang-3.8, PACKAGES: clang-3.8, CONTAINER: "ubuntu_1604"}
         Clang 3.7: {CXX: clang++-3.7, TOOLSET: clang-3.7, PACKAGES: clang-3.7, CONTAINER: "ubuntu_1604"}
-        Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
+        # Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
     pool:
       vmImage: 'ubuntu-20.04'
     container: $[ variables['CONTAINER'] ]
