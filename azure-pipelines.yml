@@ -34,7 +34,7 @@ variables:
 - { name: linux_latest_vm, value: 'ubuntu-24.04' }
 - { name: linux_latest_os, value: 'noble' }
 - { name: windows_latest_vm, value: 'windows-2022' }
-- { name: clang_latest, value: '18' }
+- { name: clang_latest, value: '19' }
 - { name: clang_latest_libstdcxx, value: '12' }
 - { name: gcc_latest, value: '14' }
 - { name: vc_latest, value: 'vc143' }
@@ -228,11 +228,8 @@ stages:
         GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: "${{variables.linux_latest_vm}}"}
         GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Clang 18: {TOOLSET: clang-18, PACKAGES: clang-18, LLVM_VER: 18, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
         Clang 17: {TOOLSET: clang-17, PACKAGES: clang-17, LLVM_VER: 17, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 16: {TOOLSET: clang-16, PACKAGES: clang-16, LLVM_VER: 16, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 15: {TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 14: {TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
-        Clang 13: {TOOLSET: clang-13, PACKAGES: clang-13, LLVM_VER: 13, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
     pool:
       vmImage: $(VM_IMAGE)
     steps:
@@ -248,17 +245,21 @@ stages:
         GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1804"}
         GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
         GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1604"}
+        Clang 16: {CXX: clang++-16, TOOLSET: clang-16, PACKAGES: clang-16, LLVM_VER: 16, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
+        Clang 15: {CXX: clang++-15, TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
+        Clang 14: {CXX: clang++-14, TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
+        Clang 13: {CXX: clang++-13, TOOLSET: clang-13, PACKAGES: clang-13, LLVM_VER: 13, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
         Clang 12: {CXX: clang++-12, TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
         Clang 11: {CXX: clang++-11, TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
-        Clang 10: {CXX: clang++-10, TOOLSET: clang-10, PACKAGES: clang-10, LLVM_VER: 10, LLVM_OS: 'focal', CONTAINER: "ubuntu_2004"}
-        Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, LLVM_VER: 9, LLVM_OS: 'bionic', CONTAINER: "ubuntu_2004"}
-        Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, LLVM_VER: 8, LLVM_OS: 'bionic', CONTAINER: "ubuntu_2004"}
-        Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, LLVM_VER: 7, LLVM_OS: 'bionic', CONTAINER: "ubuntu_2004"}
-        Clang 6: {CXX: clang++-6.0, TOOLSET: clang-6.0, PACKAGES: clang-6.0, LLVM_VER: 6.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_2004"}
+        Clang 10: {CXX: clang++-10, TOOLSET: clang-10, PACKAGES: clang-10, CONTAINER: "ubuntu_2004"}
+        Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, CONTAINER: "ubuntu_2004"}
+        Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, CONTAINER: "ubuntu_2004"}
+        Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, CONTAINER: "ubuntu_2004"}
+        Clang 6: {CXX: clang++-6.0, TOOLSET: clang-6.0, PACKAGES: clang-6.0, CONTAINER: "ubuntu_2004"}
         Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, PACKAGES: clang-5.0, LLVM_VER: 5.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
-        Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, PACKAGES: clang-4.0, CONTAINER: "ubuntu_1804"}
-        Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, PACKAGES: clang-3.9, CONTAINER: "ubuntu_1804"}
-        Clang 3.8: {CXX: clang++-3.8, TOOLSET: clang-3.8, PACKAGES: clang-3.8, CONTAINER: "ubuntu_1604"}
+        Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, PACKAGES: clang-4.0, LLVM_VER: 4.0, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
+        Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, PACKAGES: clang-3.9, LLVM_VER: 3.9, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
+        Clang 3.8: {CXX: clang++-3.8, TOOLSET: clang-3.8, PACKAGES: clang-3.8, LLVM_VER: 3.8, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
         Clang 3.7: {CXX: clang++-3.7, TOOLSET: clang-3.7, PACKAGES: clang-3.7, CONTAINER: "ubuntu_1604"}
         Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
     pool:
@@ -283,11 +284,11 @@ stages:
     strategy:
       matrix:
         Xcode 15.4: {XCODE_APP: /Applications/Xcode_15.4.app, VM_IMAGE: 'macOS-14'}
-        Xcode 14.3.1: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
+        Xcode 14.3.1: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-14'}
         Xcode 14.2: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
         Xcode 14.1: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
-        Xcode 14.0.1: {XCODE_APP: /Applications/Xcode_14.0.1.app, VM_IMAGE: 'macOS-12'}
-        Xcode 13.4.1: {XCODE_APP: /Applications/Xcode_13.4.1.app, VM_IMAGE: 'macOS-12'}
+        # Xcode 14.0.1: {XCODE_APP: /Applications/Xcode_14.0.1.app, VM_IMAGE: 'macOS-12'}
+        # Xcode 13.4.1: {XCODE_APP: /Applications/Xcode_13.4.1.app, VM_IMAGE: 'macOS-12'}
         # Xcode 12.5.1: {XCODE_APP: /Applications/Xcode_12.5.1.app, VM_IMAGE: 'macOS-11'}
         # Xcode 12.4: {XCODE_APP: /Applications/Xcode_12.4.app, VM_IMAGE: 'macOS-11'}
         # Xcode 11.7: {XCODE_APP: /Applications/Xcode_11.7.app, VM_IMAGE: 'macOS-11'}
