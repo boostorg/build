@@ -28,9 +28,9 @@ echo ">>>>>"
 echo ">>>>> APT: REPO.."
 echo ">>>>>"
 ${SUDO} apt-get ${APT_OPT} install software-properties-common
-if test "${OS_ISSUE}" = "Ubuntu" ; then
-    ${SUDO} apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
-fi
+# if test "${OS_ISSUE}" = "Ubuntu" ; then
+#     ${SUDO} apt-add-repository -y "ppa:ubuntu-toolchain-r/test"
+# fi
 if test -n "${LLVM_OS}" ; then
     wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
     ${SUDO} apt-add-repository "deb http://apt.llvm.org/${LLVM_OS}/ llvm-toolchain-${LLVM_OS}-${LLVM_VER} main"
