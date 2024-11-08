@@ -42,7 +42,7 @@ ${SUDO} apt-get ${APT_OPT} update
 echo ">>>>>"
 echo ">>>>> APT: INSTALL 2/2: ${PACKAGES}.."
 echo ">>>>>"
-${SUDO} apt-get ${APT_OPT} install ${PACKAGES}
+${SUDO} apt-get ${APT_OPT} install --no-install-recommends ${PACKAGES}
 
 # Use, modification, and distribution are
 # subject to the Boost Software License, Version 1.0. (See accompanying
