@@ -40,7 +40,7 @@ variables:
 - { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
 - { name: xc_latest, value: '16.0' }
-- { name: macos_latest_vm, value: 'macOS-14' }
+- { name: macos_latest_vm, value: 'macOS-15' }
 
 resources:
   containers:
