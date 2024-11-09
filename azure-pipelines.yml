@@ -244,7 +244,6 @@ stages:
         GCC 5: {CXX: g++-5, TOOLSET: gcc-5, PACKAGES: g++-5, CONTAINER: "ubuntu_1804"}
         GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1604"}
         GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
-        GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1604"}
         Clang 16: {CXX: clang++-16, TOOLSET: clang-16, PACKAGES: clang-16, LLVM_VER: 16, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
         Clang 15: {CXX: clang++-15, TOOLSET: clang-15, PACKAGES: clang-15, LLVM_VER: 15, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
         Clang 14: {CXX: clang++-14, TOOLSET: clang-14, PACKAGES: clang-14, LLVM_VER: 14, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
@@ -284,7 +283,7 @@ stages:
     strategy:
       matrix:
         Xcode 15.4: {XCODE_APP: /Applications/Xcode_15.4.app, VM_IMAGE: 'macOS-14'}
-        Xcode 14.3.1: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-14'}
+        Xcode 14.3.1: {XCODE_APP: /Applications/Xcode_14.3.1.app, VM_IMAGE: 'macOS-13'}
         Xcode 14.2: {XCODE_APP: /Applications/Xcode_14.2.app, VM_IMAGE: 'macOS-13'}
         Xcode 14.1: {XCODE_APP: /Applications/Xcode_14.1.app, VM_IMAGE: 'macOS-13'}
         # Xcode 14.0.1: {XCODE_APP: /Applications/Xcode_14.0.1.app, VM_IMAGE: 'macOS-12'}
