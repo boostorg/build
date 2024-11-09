@@ -5,6 +5,16 @@
 # (See accompanying file LICENSE.txt
 # or copy at https://www.bfgroup.xyz/b2/LICENSE.txt)
 
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.clang-win]]
+= Clang (MSVC frontend)
+
+The `clang-win` module supports Clang with MSVC frontend and has the same
+options as link:#bbv2.reference.tools.compiler.msvc[`msvc`] toolset.
+
+|# # end::doc[]
+
 import common ;
 import errors ;
 import feature ;

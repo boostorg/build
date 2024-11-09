@@ -325,10 +325,13 @@ be used to explicitly request that compiler.
 :leveloffset: +3
 include::../../src/tools/acc.jam[tag=doc]
 include::../../src/tools/borland.jam[tag=doc]
+include::../../src/tools/clang-linux.jam[tag=doc]
+include::../../src/tools/clang-win.jam[tag=doc]
 include::../../src/tools/como.jam[tag=doc]
 include::../../src/tools/cw.jam[tag=doc]
 include::../../src/tools/dmc.jam[tag=doc]
 include::../../src/tools/embarcadero.jam[tag=doc]
+include::../../src/tools/emscripten.jam[tag=doc]
 include::../../src/tools/gcc.jam[tag=doc]
 include::../../src/tools/hp_cxx.jam[tag=doc]
 include::../../src/tools/intel.jam[tag=doc]

@@ -7,6 +7,16 @@
 #  License Version 1.0. (See accompanying file LICENSE.txt or
 #  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
+#| tag::doc[]
+
+[[bbv2.reference.tools.compiler.clang-linux]]
+= Clang (GCC frontend)
+
+The `clang-linux` module supports Clang with GCC frontend and has the same
+options as link:#bbv2.reference.tools.compiler.gcc[`gcc`] toolset.
+
+|# # end::doc[]
+
 import common ;
 import toolset ;
 import feature ;
