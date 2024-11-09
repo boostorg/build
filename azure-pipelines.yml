@@ -46,7 +46,7 @@ resources:
   containers:
     - { container: ubuntu_2404, image: 'ubuntu:24.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_2204, image: 'ubuntu:22.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
-    - { container: ubuntu_2004, image: 'ubuntu:20.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    # - { container: ubuntu_2004, image: 'ubuntu:20.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_1804, image: 'ubuntu:18.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
     - { container: ubuntu_1604, image: 'ubuntu:16.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
 
@@ -238,11 +238,11 @@ stages:
   - job: 'Co_Linux'
     strategy:
       matrix:
-        GCC 8: {CXX: g++-8, TOOLSET: gcc-8, PACKAGES: g++-8, CONTAINER: "ubuntu_2004"}
-        GCC 7: {CXX: g++-7, TOOLSET: gcc-7, PACKAGES: g++-7, CONTAINER: "ubuntu_2004"}
+        GCC 8: {CXX: g++-8, TOOLSET: gcc-8, PACKAGES: g++-8, CONTAINER: "ubuntu_1804"}
+        GCC 7: {CXX: g++-7, TOOLSET: gcc-7, PACKAGES: g++-7, CONTAINER: "ubuntu_1804"}
         GCC 6: {CXX: g++-6, TOOLSET: gcc-6, PACKAGES: g++-6, CONTAINER: "ubuntu_1804"}
         GCC 5: {CXX: g++-5, TOOLSET: gcc-5, PACKAGES: g++-5, CONTAINER: "ubuntu_1804"}
-        GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1804"}
+        GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, PACKAGES: g++-4.9, CONTAINER: "ubuntu_1604"}
         GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, PACKAGES: g++-4.8, CONTAINER: "ubuntu_1804"}
         GCC 4.7: {CXX: g++-4.7, TOOLSET: gcc-4.7, PACKAGES: g++-4.7, CONTAINER: "ubuntu_1604"}
         Clang 16: {CXX: clang++-16, TOOLSET: clang-16, PACKAGES: clang-16, LLVM_VER: 16, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
@@ -251,11 +251,11 @@ stages:
         Clang 13: {CXX: clang++-13, TOOLSET: clang-13, PACKAGES: clang-13, LLVM_VER: 13, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
         Clang 12: {CXX: clang++-12, TOOLSET: clang-12, PACKAGES: clang-12, LLVM_VER: 12, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
         Clang 11: {CXX: clang++-11, TOOLSET: clang-11, PACKAGES: clang-11, LLVM_VER: 11, LLVM_OS: 'focal', CONTAINER: "ubuntu_2204"}
-        Clang 10: {CXX: clang++-10, TOOLSET: clang-10, PACKAGES: clang-10, CONTAINER: "ubuntu_2004"}
-        Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, CONTAINER: "ubuntu_2004"}
-        Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, CONTAINER: "ubuntu_2004"}
-        Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, CONTAINER: "ubuntu_2004"}
-        Clang 6: {CXX: clang++-6.0, TOOLSET: clang-6.0, PACKAGES: clang-6.0, CONTAINER: "ubuntu_2004"}
+        Clang 10: {CXX: clang++-10, TOOLSET: clang-10, PACKAGES: clang-10, CONTAINER: "ubuntu_1804"}
+        Clang 9: {CXX: clang++-9, TOOLSET: clang-9, PACKAGES: clang-9, CONTAINER: "ubuntu_1804"}
+        Clang 8: {CXX: clang++-8, TOOLSET: clang-8, PACKAGES: clang-8, CONTAINER: "ubuntu_1804"}
+        Clang 7: {CXX: clang++-7, TOOLSET: clang-7, PACKAGES: clang-7, CONTAINER: "ubuntu_1804"}
+        Clang 6: {CXX: clang++-6.0, TOOLSET: clang-6.0, PACKAGES: clang-6.0, CONTAINER: "ubuntu_1804"}
         Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, PACKAGES: clang-5.0, LLVM_VER: 5.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, PACKAGES: clang-4.0, LLVM_VER: 4.0, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
         Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, PACKAGES: clang-3.9, LLVM_VER: 3.9, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
