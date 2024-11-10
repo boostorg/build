@@ -309,8 +309,14 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     }
 
     local headers ;
-    for local header in $(sources:G=)
+    for local source in $(sources)
     {
+        local header = $(source:G=) ;
+        local root = [ on $(source) return $(SEARCH) ] ;
+        if $(root)
+        {
+            header = [ path.root $(header) $(root) ] ;
+        }
         header = [ translate-path $(header) ] ;
         headers += \"$(header)\" ;
     }
