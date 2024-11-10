@@ -1276,8 +1276,6 @@ module project-rules
     {
         import toolset ;
 
-        local saved-project = [ modules.peek project : .current-project ] ;
-
         # Temporarily change the search path so the module referred to by
         # 'using' can be placed in the same directory as Jamfile. User will
         # expect the module to be found even though the directory is not in
@@ -1290,13 +1288,6 @@ module project-rules
             $(9) : $(10) : $(11) : $(12) : $(13) : $(14) : $(15) : $(16) : $(17)
             : $(18) : $(19) ;
         modules.poke : BOOST_BUILD_PATH : $(x) ;
-
-        # The above might have clobbered .current-project in case it caused a
-        # new project instance to be created (which would then automatically
-        # get set as the 'current' project). Restore the correct value so any
-        # main targets declared after this do not get mapped to the loaded
-        # module's project.
-        modules.poke project : .current-project : $(saved-project) ;
     }
 
     rule import ( * : * : * )
