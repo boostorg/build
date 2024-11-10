@@ -798,7 +798,7 @@ rule get-dir ( name : property-set : package-name : flags * )
             local rel = [ path.relative $(result) $(prefix) : no-error ] ;
             if not-a-child != $(rel)
             {
-                result = [ path.root $(rel) $(prefix) ] ;
+                result = [ path.root $(rel) $(stage) ] ;
             }
         }
     }
