@@ -237,8 +237,7 @@ rule init ( version ? :  command * : options * )
     {
       # Determine the version
       if $(command) {
-        local command-string = "$(command)" ;
-        command-string = $(command-string:J=" ") ;
+        local command-string = [ common.make-command-string $(command) ] ;
         local soutput = [ SHELL "$(command-string) --version" ] ;
         version ?= [ MATCH "Embarcadero C[+][+] ([0-9.]+)" : $(soutput) ] ;
         cl_version = [ MATCH ".+version[ ]+([0-9.]+)" : $(soutput) ] ;

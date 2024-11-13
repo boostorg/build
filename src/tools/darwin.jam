@@ -115,7 +115,7 @@ rule init ( version ? : command * : options * : requirement * )
     {
         # - The 'command' variable can have multiple elements. When calling
         #   the SHELL builtin we need a single string.
-        local command-string = $(command:J=" ") ;
+        local command-string = [ common.make-command-string $(command) ] ;
         real-version = [ MATCH "^([0-9.]+)"
             : [ SHELL "$(command-string) -dumpversion" ] ] ;
         version ?= $(real-version) ;

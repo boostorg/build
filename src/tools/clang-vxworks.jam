@@ -42,7 +42,7 @@ rule init ( version ? :  command * : options * )
     linker = [ get-values <linker> : $(options) ] ;
 
     # Determine the version
-    local command-string = $(command:J=" ") ;
+    local command-string = [ common.make-command-string $(command) ] ;
     if $(command)
     {
         version ?= [ MATCH "^([0-9.]+)"
