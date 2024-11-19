@@ -93,12 +93,17 @@ class res-scanner : scanner
     import path ;
     import regex ;
     import scanner ;
+    import toolset ;
     import virtual-target ;
 
     rule __init__ ( includes * )
     {
         scanner.__init__ ;
-        self.includes = $(includes) ;
+
+        # toolset.handle-flag-value is a bit of overkill, but it
+        # does correctly handle the topological sort of && separated
+        # include paths
+        self.includes = [ toolset.handle-flag-value <include> : $(includes) ] ;
     }
 
     rule pattern ( )
