@@ -93,6 +93,7 @@ class res-scanner : scanner
     import path ;
     import regex ;
     import scanner ;
+    import sequence ;
     import toolset ;
     import virtual-target ;
 
@@ -108,13 +109,15 @@ class res-scanner : scanner
 
     rule pattern ( )
     {
-        return "(([^ ]+[ ]+(BITMAP|CURSOR|FONT|ICON|MESSAGETABLE|RT_MANIFEST)[ ]+([^ \"]+|\"[^\"]+\"))|(#include[ ]*(<[^<]+>|\"[^\"]+\")))" ;
+        return "(([^ ]+[ ]+(BITMAP|CURSOR|FONT|ICON|MESSAGETABLE|RT_MANIFEST)[ ]+([^ \"]+|\"[^\"]+\"))|(^[ \t]*#[ \t]*include[ \t]*(<[^<]+>|\"[^\"]+\")))" ;
     }
 
     rule process ( target : matches * : binding )
     {
-        local angle = [ regex.transform $(matches) : "#include[ ]*<([^<]+)>" ] ;
-        local quoted = [ regex.transform $(matches) : "#include[ ]*\"([^\"]+)\"" ] ;
+        local angle = [ regex.transform $(matches) : "#include[ \t]*<([^<]+)>" ] ;
+        angle = [ sequence.transform path.native : $(angle) ] ;
+        local quoted = [ regex.transform $(matches) : "#include[ \t]*\"([^\"]+)\"" ] ;
+        quoted = [ sequence.transform path.native : $(quoted) ] ;
         local res = [ regex.transform $(matches) : "[^ ]+[ ]+(BITMAP|CURSOR|FONT|ICON|MESSAGETABLE|RT_MANIFEST)[ ]+(([^ \"]+)|\"([^\"]+)\")" : 3 4 ] ;
 
         # Icons and other includes may be referenced as
