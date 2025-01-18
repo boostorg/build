@@ -19,7 +19,10 @@ on:
         "appveyor.yml",
         "azure-pipelines.yml",
         ".ci/azp-*.yml",
+        ".github/workflows/backport.yml",
+        ".github/workflows/core_tests.yml",
         ".github/workflows/installer_*.yml",
+        ".github/workflows/release_archives.yml",
       ]
 
 jobs:
@@ -29,20 +32,32 @@ jobs:
       matrix:
         include:
           - {
-              name: "Ubuntu 22.04 Jammy (armhf)",
-              image: "multiarch/ubuntu-debootstrap:armhf-jammy",
+              name: "Alpine (aarch64)",
+              image: "multiarch/alpine:aarch64-latest-stable",
               cxx: "g++",
               toolset: "gcc",
             }
           - {
-              name: "Ubuntu 22.04 Jammy (arm64)",
-              image: "multiarch/ubuntu-debootstrap:arm64-jammy",
+              name: "Alpine (armhf)",
+              image: "multiarch/alpine:armhf-latest-stable",
               cxx: "g++",
               toolset: "gcc",
             }
           - {
-              name: "Ubuntu 22.04 Jammy (ppc64el)",
-              image: "multiarch/ubuntu-debootstrap:ppc64el-jammy",
+              name: "Alpine (arm64)",
+              image: "multiarch/alpine:arm64-latest-stable",
+              cxx: "g++",
+              toolset: "gcc",
+            }
+          - {
+              name: "Alpine (ppc64le)",
+              image: "multiarch/alpine:ppc64le-latest-stable",
+              cxx: "g++",
+              toolset: "gcc",
+            }
+          - {
+              name: "Alpine (s390x)",
+              image: "multiarch/alpine:s390x-latest-stable",
               cxx: "g++",
               toolset: "gcc",
             }
