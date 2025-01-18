@@ -449,7 +449,8 @@ local rule compile-link-flags ( * )
     local rule init-cxxstd-flags ( condition * : version )
     {
         local std ;
-        if [ version-ge $(version) : 11 ] { std = 23 ; }
+        if [ version-ge $(version) : 14 ] { std = 26 ; }
+        else if [ version-ge $(version) : 11 ] { std = 23 ; }
         else if [ version-ge $(version) : 10 ] { std = 20 ; }
         else if [ version-ge $(version) : 8 ] { std = 2a ; }
         else if [ version-ge $(version) : 6 ] { std = 17 ; }
