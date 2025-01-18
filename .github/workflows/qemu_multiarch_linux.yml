@@ -32,36 +32,6 @@ jobs:
       matrix:
         include:
           - {
-              name: "Alpine (aarch64)",
-              image: "multiarch/alpine:aarch64-latest-stable",
-              cxx: "g++",
-              toolset: "gcc",
-            }
-          - {
-              name: "Alpine (armhf)",
-              image: "multiarch/alpine:armhf-latest-stable",
-              cxx: "g++",
-              toolset: "gcc",
-            }
-          - {
-              name: "Alpine (arm64)",
-              image: "multiarch/alpine:arm64-latest-stable",
-              cxx: "g++",
-              toolset: "gcc",
-            }
-          - {
-              name: "Alpine (ppc64le)",
-              image: "multiarch/alpine:ppc64le-latest-stable",
-              cxx: "g++",
-              toolset: "gcc",
-            }
-          - {
-              name: "Alpine (s390x)",
-              image: "multiarch/alpine:s390x-latest-stable",
-              cxx: "g++",
-              toolset: "gcc",
-            }
-          - {
               name: "Ubuntu 20.04 Focal (armhf)",
               image: "multiarch/ubuntu-debootstrap:armhf-focal",
               cxx: "g++",
