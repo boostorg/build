@@ -41,14 +41,28 @@ variables:
 - { name: vs_latest, value: '2022' }
 - { name: xc_latest, value: '16.0' }
 - { name: macos_latest_vm, value: 'macOS-15' }
+- { name: co_options, value: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
 
 resources:
   containers:
-    - { container: ubuntu_2404, image: 'ubuntu:24.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
-    - { container: ubuntu_2204, image: 'ubuntu:22.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
-    # - { container: ubuntu_2004, image: 'ubuntu:20.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
-    - { container: ubuntu_1804, image: 'ubuntu:18.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
-    - { container: ubuntu_1604, image: 'ubuntu:16.04', options: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
+    - { container: ubuntu_2404,
+        image: 'ubuntu:24.04',
+        options: "${{variables.co_options}}" }
+    - { container: ubuntu_2204,
+        image: 'ubuntu:22.04',
+        options: "${{variables.co_options}}" }
+    - { container: ubuntu_1804,
+        image: 'ubuntu:18.04',
+        options: "${{variables.co_options}}",
+        volumes: [
+          "/node20217:/node20217:rw,rshared",
+          "/node20217:/__e/node20:ro,rshared" ] }
+    - { container: ubuntu_1604,
+        image: 'ubuntu:16.04',
+        options: "${{variables.co_options}}",
+        volumes: [
+          "/node20217:/node20217:rw,rshared",
+          "/node20217:/__e/node20:ro,rshared" ] }
 
 stages:
 
