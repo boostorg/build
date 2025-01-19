@@ -13,7 +13,7 @@
 
 #| tag::doc[]
 
-[[bbv2.reference.tools.compiler.gcc]]
+[[b2.reference.tools.compiler.gcc]]
 = GCC - GNU Compiler Collection
 
 The `gcc` module supports the http://gcc.gnu.org[GNU C++ compiler] on

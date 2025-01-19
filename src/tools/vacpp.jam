@@ -6,7 +6,7 @@
 
 #| tag::doc[]
 
-[[bbv2.reference.tools.compiler.vacpp]]
+[[b2.reference.tools.compiler.vacpp]]
 = IBM Visual Age
 
 The `vacpp` module supports the http://www.ibm.com/software/ad/vacpp[IBM

@@ -653,7 +653,7 @@ local rule should-clean-project ( project )
         ECHO "warning: If the default is wrong, your build may not work correctly." ;
         ECHO "warning: Use the \"toolset=xxxxx\" option to override our guess." ;
         ECHO "warning: For more configuration options, please consult" ;
-        ECHO "warning: https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.overview.configuration" ;
+        ECHO "warning: https://www.bfgroup.xyz/b2/manual/release/index.html#b2.overview.configuration" ;
 
         toolset.using $(default-toolset) : $(default-toolset-version) ;
     }

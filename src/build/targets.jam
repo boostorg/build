@@ -1675,7 +1675,7 @@ class typed-target : basic-target
                 ECHO "error: no generators were found for type '$(self.type)'" ;
                 ECHO "error: and the requested properties" ;
                 ECHO "error: make sure you've configured the needed tools" ;
-                ECHO "See https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.overview.configuration" ;
+                ECHO "See https://www.bfgroup.xyz/b2/manual/release/index.html#b2.overview.configuration" ;
                 EXIT "To debug this problem, try the --debug-generators option."
                     ;
             }

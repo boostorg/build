@@ -204,7 +204,7 @@ rule check-prgenv-module ( toolset )
                              : toolset initialization failed
                              : please load the PrgEnv-$(default-compiler) module next time ;
         # Do not abort, as suggested by:
-        # https://www.bfgroup.xyz/b2/manual/release/index.html#bbv2.extending.toolset_modules.
+        # https://www.bfgroup.xyz/b2/manual/release/index.html#b2.extending.toolset_modules.
     }
 }
 

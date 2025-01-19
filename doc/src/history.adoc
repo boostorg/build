@@ -8,6 +8,18 @@
 * Fix asciidoctor ignoring relevant features when building which caused invalid
   reuse of the target.
   -- _René Ferdinand Rivera Morell_
+* Add documentation for clang and emscripten toolsets.
+  -- _Nikita Kniazev_
+* Fix doxygen tool to properly handle paths relative to the wording dir or
+  absolute paths.
+  -- _Dmitry Arkhipov_
+* Fix staging path calculation when using install prefix's.
+  -- _Dmitry Arkhipov_
+* Make `toolset.using` preserve current project to allow for calling it in more
+  contexts with minimal effort.
+  -- _Dmitry Arkhipov_
+* Updated cxxstd=latest for gcc and clang to account for {CPP} 26.
+  -- _Andrey Semashev_
 
 == Version 5.2.1
 

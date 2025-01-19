@@ -7,11 +7,11 @@
 
 #| tag::doc[]
 
-[[bbv2.reference.tools.compiler.clang-win]]
+[[b2.reference.tools.compiler.clang-win]]
 = Clang (MSVC frontend)
 
 The `clang-win` module supports Clang with MSVC frontend and has the same
-options as link:#bbv2.reference.tools.compiler.msvc[`msvc`] toolset.
+options as link:#b2.reference.tools.compiler.msvc[`msvc`] toolset.
 
 |# # end::doc[]
 
