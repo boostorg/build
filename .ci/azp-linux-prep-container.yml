@@ -8,6 +8,6 @@ steps:
   displayName: Sudorize
 - script: |
     # Node 20 doesn't work with Ubuntu 16/18 glibc: https://github.com/actions/checkout/issues/1590
-    /tmp/docker exec -t -u root container apt-get -qq install curl unzip
+    /tmp/docker exec -t -u root container apt-get -qq install curl xz-utils
     curl -sL https://archives.boost.io/misc/node/node-v20.9.0-linux-x64-glibc-217.tar.xz | tar -xJ --strip-components 1 -C /node20217
   displayName: Node
