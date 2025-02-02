@@ -20,6 +20,8 @@
   -- _Dmitry Arkhipov_
 * Updated cxxstd=latest for gcc and clang to account for {CPP} 26.
   -- _Andrey Semashev_
+* Fix Building on Haiku OS which doesn't have `wait4`.
+  -- _Fas Xmut_
 
 == Version 5.2.1
 
