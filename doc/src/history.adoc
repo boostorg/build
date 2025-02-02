@@ -3,6 +3,9 @@
 
 == Version 5.3.0
 
+* *New*: Add generic `cc` toolset for simply, direct, configuration of unknown
+  C compiler toolsets (for example `tcc`).
+  -- _René Ferdinand Rivera Morell_
 * Fix command database output file path when an output dir is not given.
   -- _René Ferdinand Rivera Morell_
 * Fix asciidoctor ignoring relevant features when building which caused invalid
