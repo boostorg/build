@@ -272,9 +272,9 @@ stages:
         Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, PACKAGES: clang-5.0, LLVM_VER: 5.0, LLVM_OS: 'bionic', CONTAINER: "ubuntu_1804"}
         Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, PACKAGES: clang-4.0, LLVM_VER: 4.0, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
         Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, PACKAGES: clang-3.9, LLVM_VER: 3.9, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
-        Clang 3.8: {CXX: clang++-3.8, TOOLSET: clang-3.8, PACKAGES: clang-3.8, LLVM_VER: 3.8, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
-        Clang 3.7: {CXX: clang++-3.7, TOOLSET: clang-3.7, PACKAGES: clang-3.7, CONTAINER: "ubuntu_1604"}
-        Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
+        # Clang 3.8: {CXX: clang++-3.8, TOOLSET: clang-3.8, PACKAGES: clang-3.8, LLVM_VER: 3.8, LLVM_OS: 'xenial', CONTAINER: "ubuntu_1604"}
+        # Clang 3.7: {CXX: clang++-3.7, TOOLSET: clang-3.7, PACKAGES: clang-3.7, CONTAINER: "ubuntu_1604"}
+        # Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
     pool:
       vmImage: 'ubuntu-20.04'
     container: $[ variables['CONTAINER'] ]
