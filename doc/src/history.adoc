@@ -3,6 +3,9 @@
 
 == Version 5.3.0
 
+* *New*: Replace the old `vacpp` and `xlcpp` with a new `ibmcxx` toolset that
+  supports the old compilers and the new "IBM XL" and  "IBM Open XL" compilers.
+  -- _René Ferdinand Rivera Morell_ and _Chris Ward_
 * *New*: Add generic `cc` toolset for simply, direct, configuration of unknown
   C compiler toolsets (for example `tcc`).
   -- _René Ferdinand Rivera Morell_

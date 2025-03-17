@@ -147,7 +147,9 @@
 #define PATH_DELIM '/'
 
 #ifdef _AIX
+    #ifndef unix
     #define unix
+    #endif
     #define MAXLINE 23552  /* 24k - 1k, max chars per command line */
     #define OSMINOR "OS=AIX"
     #define OS_AIX
