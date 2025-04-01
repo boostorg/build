@@ -193,7 +193,7 @@ class asciidoctor-generator : generator
         for local p in [ $(property-set).raw ]
         {
             if $(p:G) in <asciidoctor-attribute> <asciidoctor-doctype>
-                <flags>
+                <flags> <location>
             {
                 raw-set += $(p) ;
             }
