@@ -276,7 +276,7 @@ stages:
         # Clang 3.7: {CXX: clang++-3.7, TOOLSET: clang-3.7, PACKAGES: clang-3.7, CONTAINER: "ubuntu_1604"}
         # Clang 3.6: {CXX: clang++-3.6, TOOLSET: clang-3.6, PACKAGES: clang-3.6, CONTAINER: "ubuntu_1604"}
     pool:
-      vmImage: 'ubuntu-20.04'
+      vmImage: 'ubuntu-latest'
     container: $[ variables['CONTAINER'] ]
     steps:
     - template: .ci/azp-linux-prep-container.yml
