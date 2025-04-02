@@ -307,7 +307,10 @@ stages:
       vmImage: 'ubuntu-latest'
     container: $[ variables['CONTAINER'] ]
     steps:
-    - bash: id
+    - bash: |
+        id
+        which sudo
+        which su
     # - template: .ci/azp-linux-prep-container.yml
     - template: .ci/azp-linux-test.yml
 
