@@ -1,7 +1,13 @@
 steps:
-  - script: |
-      su -c "apt-get -qq update && apt-get -qq install sudo"
+  - task: CmdLine@2
     displayName: Install Sudo
+    target: host
+    inputs:
+      script: |
+        cid=`docker container ls -q`
+        echo "ID = $cid"
+        /usr/bin/docker exec  $cid su -c "apt-get -y update && apt-get -qq install sudo"
+      displayName: Install Sudo
 # - script: |
 #     which docker
 #     /tmp/docker exec -t -u root container mv /etc/sudoers /etc/sudoers.bak
