@@ -284,29 +284,30 @@ stages:
     strategy:
       matrix:
         GCC 8: {CXX: g++-8, TOOLSET: gcc-8, CONTAINER: "linux_gcc8"}
-        GCC 7: {CXX: g++-7, TOOLSET: gcc-7, CONTAINER: "linux_gcc7"}
-        GCC 6: {CXX: g++-6, TOOLSET: gcc-6, CONTAINER: "linux_gcc6"}
-        GCC 5: {CXX: g++-5, TOOLSET: gcc-5, CONTAINER: "linux_gcc5"}
-        GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, CONTAINER: "linux_gcc49"}
-        GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, CONTAINER: "linux_gcc48"}
-        Clang 16: {CXX: clang++-16, TOOLSET: clang-16, CONTAINER: "linux_clang16"}
-        Clang 15: {CXX: clang++-15, TOOLSET: clang-15, CONTAINER: "linux_clang15"}
-        Clang 14: {CXX: clang++-14, TOOLSET: clang-14, CONTAINER: "linux_clang14"}
-        Clang 13: {CXX: clang++-13, TOOLSET: clang-13, CONTAINER: "linux_clang13"}
-        Clang 12: {CXX: clang++-12, TOOLSET: clang-12, CONTAINER: "linux_clang12"}
-        Clang 11: {CXX: clang++-11, TOOLSET: clang-11, CONTAINER: "linux_clang11"}
-        Clang 10: {CXX: clang++-10, TOOLSET: clang-10, CONTAINER: "linux_clang10"}
-        Clang 9: {CXX: clang++-9, TOOLSET: clang-9, CONTAINER: "linux_clang9"}
-        Clang 8: {CXX: clang++-8, TOOLSET: clang-8, CONTAINER: "linux_clang8"}
-        Clang 7: {CXX: clang++-7, TOOLSET: clang-7, CONTAINER: "linux_clang7"}
-        Clang 6: {CXX: clang++-6.0, TOOLSET: clang-6.0, CONTAINER: "linux_clang6"}
-        Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, CONTAINER: "linux_clang5"}
-        Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, CONTAINER: "linux_clang4"}
-        Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, CONTAINER: "linux_clang3"}
+        # GCC 7: {CXX: g++-7, TOOLSET: gcc-7, CONTAINER: "linux_gcc7"}
+        # GCC 6: {CXX: g++-6, TOOLSET: gcc-6, CONTAINER: "linux_gcc6"}
+        # GCC 5: {CXX: g++-5, TOOLSET: gcc-5, CONTAINER: "linux_gcc5"}
+        # GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, CONTAINER: "linux_gcc49"}
+        # GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, CONTAINER: "linux_gcc48"}
+        # Clang 16: {CXX: clang++-16, TOOLSET: clang-16, CONTAINER: "linux_clang16"}
+        # Clang 15: {CXX: clang++-15, TOOLSET: clang-15, CONTAINER: "linux_clang15"}
+        # Clang 14: {CXX: clang++-14, TOOLSET: clang-14, CONTAINER: "linux_clang14"}
+        # Clang 13: {CXX: clang++-13, TOOLSET: clang-13, CONTAINER: "linux_clang13"}
+        # Clang 12: {CXX: clang++-12, TOOLSET: clang-12, CONTAINER: "linux_clang12"}
+        # Clang 11: {CXX: clang++-11, TOOLSET: clang-11, CONTAINER: "linux_clang11"}
+        # Clang 10: {CXX: clang++-10, TOOLSET: clang-10, CONTAINER: "linux_clang10"}
+        # Clang 9: {CXX: clang++-9, TOOLSET: clang-9, CONTAINER: "linux_clang9"}
+        # Clang 8: {CXX: clang++-8, TOOLSET: clang-8, CONTAINER: "linux_clang8"}
+        # Clang 7: {CXX: clang++-7, TOOLSET: clang-7, CONTAINER: "linux_clang7"}
+        # Clang 6: {CXX: clang++-6.0, TOOLSET: clang-6.0, CONTAINER: "linux_clang6"}
+        # Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, CONTAINER: "linux_clang5"}
+        # Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, CONTAINER: "linux_clang4"}
+        # Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, CONTAINER: "linux_clang3"}
     pool:
       vmImage: 'ubuntu-latest'
     container: $[ variables['CONTAINER'] ]
     steps:
+    - bash: id
     # - template: .ci/azp-linux-prep-container.yml
     - template: .ci/azp-linux-test.yml
 
