@@ -308,10 +308,12 @@ stages:
     container: $[ variables['CONTAINER'] ]
     steps:
     - bash: |
+        uname -a
         id
         which sudo
         which su
-    # - template: .ci/azp-linux-prep-container.yml
+      displayName: Info
+    - template: .ci/azp-linux-prep-container.yml
     - template: .ci/azp-linux-test.yml
 
   - job: 'Windows'
