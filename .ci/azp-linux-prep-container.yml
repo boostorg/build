@@ -4,10 +4,12 @@ steps:
     target: host
     inputs:
       script: |
-        /usr/bin/docker exec -t -u root container mv /etc/sudoers /etc/sudoers.bak
-        /usr/bin/docker exec -t -u root container apt-get -qq update
-        /usr/bin/docker exec -t -u root container apt-get -qq install sudo
-        /usr/bin/docker exec -t -u root container mv /etc/sudoers.bak /etc/sudoers
+        cid=`docker container ls -q`
+        echo "ID = $cid"
+        /usr/bin/docker exec $cid su -c "mv /etc/sudoers /etc/sudoers.bak"
+        /usr/bin/docker exec $cid su -c "apt-get -qq update"
+        /usr/bin/docker exec $cid su -c "apt-get -qq install sudo"
+        /usr/bin/docker exec $cid su -c "mv /etc/sudoers.bak /etc/sudoers"
 
 # - script: |
 #     # Node 20 doesn't work with Ubuntu 16/18 glibc: https://github.com/actions/checkout/issues/1590

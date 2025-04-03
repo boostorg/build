@@ -34,14 +34,14 @@ variables:
 - { name: linux_latest_vm, value: 'ubuntu-24.04' }
 - { name: linux_latest_os, value: 'noble' }
 - { name: windows_latest_vm, value: 'windows-2022' }
-- { name: clang_latest, value: '20' }
+- { name: clang_latest, value: '19' }
 - { name: clang_latest_libstdcxx, value: '12' }
 - { name: gcc_latest, value: '14' }
 - { name: vc_latest, value: 'vc143' }
 - { name: vs_latest, value: '2022' }
 - { name: xc_latest, value: '16.0' }
 - { name: macos_latest_vm, value: 'macOS-15' }
-- { name: co_options, value: '--name container' }
+- { name: co_options, value: '--name container -v /usr/bin/docker:/tmp/docker:ro' }
 
 resources:
   containers:
@@ -265,23 +265,30 @@ stages:
   dependsOn: [Core, Extra]
   jobs:
 
+  - job: 'Linux'
+    strategy:
+      matrix:
+        GCC 13: {TOOLSET: gcc-13, PACKAGES: g++-13, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC 12: {TOOLSET: gcc-12, PACKAGES: g++-12, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC 11: {TOOLSET: gcc-11, PACKAGES: g++-11, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC 10: {TOOLSET: gcc-10, PACKAGES: g++-10, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        GCC 9: {TOOLSET: gcc-9, PACKAGES: g++-9, VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Clang 18: {TOOLSET: clang-18, PACKAGES: clang-18, LLVM_VER: 18, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+        Clang 17: {TOOLSET: clang-17, PACKAGES: clang-17, LLVM_VER: 17, LLVM_OS: "${{variables.linux_latest_os}}", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
+    - template: .ci/azp-linux-test.yml
+
   - job: 'Co_Linux'
     strategy:
       matrix:
-        GCC 13: {CXX: g++-13, TOOLSET: gcc-13, CONTAINER: "linux_gcc13"}
-        GCC 12: {CXX: g++-12, TOOLSET: gcc-12, CONTAINER: "linux_gcc12"}
-        GCC 11: {CXX: g++-11, TOOLSET: gcc-11, CONTAINER: "linux_gcc11"}
-        GCC 10: {CXX: g++-10, TOOLSET: gcc-10, CONTAINER: "linux_gcc10"}
-        GCC 9: {CXX: g++-9, TOOLSET: gcc-9, CONTAINER: "linux_gcc9"}
         GCC 8: {CXX: g++-8, TOOLSET: gcc-8, CONTAINER: "linux_gcc8"}
         GCC 7: {CXX: g++-7, TOOLSET: gcc-7, CONTAINER: "linux_gcc7"}
         GCC 6: {CXX: g++-6, TOOLSET: gcc-6, CONTAINER: "linux_gcc6"}
         GCC 5: {CXX: g++-5, TOOLSET: gcc-5, CONTAINER: "linux_gcc5"}
         GCC 4.9: {CXX: g++-4.9, TOOLSET: gcc-4.9, CONTAINER: "linux_gcc49"}
         GCC 4.8: {CXX: g++-4.8, TOOLSET: gcc-4.8, CONTAINER: "linux_gcc48"}
-        Clang 19: {CXX: clang++-19, TOOLSET: clang-19, CONTAINER: "linux_clang19"}
-        Clang 18: {CXX: clang++-18, TOOLSET: clang-18, CONTAINER: "linux_clang18"}
-        Clang 17: {CXX: clang++-17, TOOLSET: clang-17, CONTAINER: "linux_clang17"}
         Clang 16: {CXX: clang++-16, TOOLSET: clang-16, CONTAINER: "linux_clang16"}
         Clang 15: {CXX: clang++-15, TOOLSET: clang-15, CONTAINER: "linux_clang15"}
         Clang 14: {CXX: clang++-14, TOOLSET: clang-14, CONTAINER: "linux_clang14"}
