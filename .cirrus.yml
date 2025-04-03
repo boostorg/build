@@ -14,7 +14,6 @@ freebsd_task:
     - { name: 'FreeBSD, GCC 11', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++11', PACKAGE: 'gcc11' }, freebsd_instance: { image_family: 'freebsd-14-2' } }
     # - { name: 'FreeBSD, GCC 10', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++10', PACKAGE: 'gcc10' }, freebsd_instance: { image_family: 'freebsd-14-2' } }
     # - { name: 'FreeBSD, GCC 9', env: { TOOLSET: gcc, TEST_TOOLSET: gcc, CXX: 'g++9', PACKAGE: 'gcc9' }, freebsd_instance: { image_family: 'freebsd-14-2' } }
-    - { name: 'FreeBSD, Clang 20', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++20', PACKAGE: 'devel/llvm20' }, freebsd_instance: { image_family: 'freebsd-14-2' } }
     - { name: 'FreeBSD, Clang 19', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++19', PACKAGE: 'devel/llvm19' }, freebsd_instance: { image_family: 'freebsd-14-2' } }
     - { name: 'FreeBSD, Clang 18', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++18', PACKAGE: 'devel/llvm18' }, freebsd_instance: { image_family: 'freebsd-14-2' } }
     - { name: 'FreeBSD, Clang 17', env: { TOOLSET: clang, TEST_TOOLSET: clang, CXX: 'clang++17', PACKAGE: 'devel/llvm17' }, freebsd_instance: { image_family: 'freebsd-14-2' } }
