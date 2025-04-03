@@ -16,6 +16,7 @@ single location.
 |# # end::doc[]
 
 
+import args ;
 import "class" : new ;
 import feature ;
 import generators ;
@@ -27,6 +28,18 @@ import targets ;
 import type ;
 import types/register ;
 import virtual-target ;
+
+
+args.add-arg prefix : --prefix
+    : "Install to a tree rooted at prefix." ;
+args.add-arg bindir : --bindir
+    : "Install binaries to this directory. [default: <prefix>/bin]" ;
+args.add-arg libdir : --libdir
+    : "Install libraries to this directory. [default: <prefix>/lib]" ;
+args.add-arg includedir : --includedir
+    : "install include files to this directory. [default: <prefix>/include]" ;
+args.add-arg datarootdir : --datarootdir
+    : "Install shared data files to this directory. [default: <prefix>/share]" ;
 
 
 feature.feature <install-dependencies> : off on : incidental      ;

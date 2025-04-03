@@ -216,6 +216,7 @@ http://blogs.msdn.com/b/vcblog/archive/2014/07/18/using-boost-libraries-in-windo
 #
 ################################################################################
 
+import args ;
 import "class" : new ;
 import common ;
 import feature ;
@@ -2112,10 +2113,7 @@ local rule register-configuration ( version : path ? )
 #
 ################################################################################
 
-if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
-{
-    .debug-configuration = true ;
-}
+.debug-configuration = [ args.get-arg debug-configuration ] ;
 
 # Miscellaneous constants.
 .RM = [ common.rm-command ] ;

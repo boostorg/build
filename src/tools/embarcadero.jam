@@ -137,6 +137,7 @@ import clang ;
 import gcc ;
 import generators ;
 import errors ;
+import args ;
 
 feature.extend toolset : embarcadero ;
 
@@ -179,9 +180,7 @@ toolset.inherit-flags embarcadero
       <cxxstd>latest/<cxxstd-dialect>iso
     ;
 
-if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ] {
-  .debug-configuration = true ;
-}
+.debug-configuration = [ args.get-arg debug-configuration ] ;
 
 rule init ( version ? :  command * : options * )
 {

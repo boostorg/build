@@ -20,6 +20,7 @@ import version ;
 import property-set ;
 import regex ;
 import errors ;
+import args ;
 
 ## Use a framework.
 feature framework : : free ;
@@ -37,10 +38,7 @@ feature force-load : : free dependency incidental ;
 
 _ = " " ;
 
-if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
-{
-    .debug-configuration = true ;
-}
+.debug-configuration = [ args.get-arg debug-configuration ] ;
 
 feature.extend toolset : darwin ;
 import gcc ;

@@ -117,15 +117,13 @@ import type ;
 import unix ;
 import virtual-target ;
 import errors ;
+import args ;
 
 
 # Used in actions for multi argument options
 _ = " " ;
 
-if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
-{
-    .debug-configuration = true ;
-}
+.debug-configuration = [ args.get-arg debug-configuration ] ;
 
 
 feature.extend toolset : gcc ;

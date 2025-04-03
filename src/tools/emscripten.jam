@@ -37,6 +37,7 @@ import toolset ;
 import common ;
 import type ;
 import version ;
+import args ;
 
 feature.extend toolset : emscripten ;
 
@@ -47,7 +48,7 @@ feature.subfeature debug-symbols : source-map : on : optional propagated ;
 feature.subfeature exception-handling : demangle-support : on : optional propagated ;
 feature.subfeature exception-handling : method : js : optional propagated link-incompatible ;
 
-if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
+if [ args.get-arg debug-configuration ]
 {
     local rule .debug-configuration ( messages * )
     {

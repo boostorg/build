@@ -203,7 +203,7 @@ void exec_cmd
      */
     argv_from_shell( argv, shell, command->value, slot );
 
-    if ( DEBUG_EXECCMD )
+    if ( is_debug_execcmd() )
     {
         int i;
         out_printf( "Using shell: " );

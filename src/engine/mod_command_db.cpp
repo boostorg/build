@@ -10,6 +10,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "cwd.h"
 #include "events.h"
 #include "lists.h"
+#include "mod_args.h"
 #include "mod_db.h"
 #include "output.h"
 #include "pathsys.h"
@@ -55,9 +56,9 @@ struct database
 		prop_db.reset(new property_db);
 
 		// Default to all targets and no regular action output.
-		++globs.noexec;
+		globs.noexec = true;
 		for (int i = 0; i < DEBUG_MAX; ++i) globs.debug[i] = 0;
-		++anyhow;
+		globs.anyhow = true;
 
 		// Events to track the commands and exit to generate the output.
 		add_event_callback(event_tag::pre_exec_cmd,
@@ -144,26 +145,32 @@ struct database
 	}
 };
 
-void declare_args(lyra::cli & cli)
-{
-	cli |= lyra::opt(
-		[](const std::string & f) { database::get().set_output_format(f); },
-		"format")
-			   .name("--command-database")
-			   .help("Output a compile commands database as format.");
-	cli |= lyra::opt(
-		[](const std::string & f) { database::get().set_output_filename(f); },
-		"filename")
-			   .name("--command-database-out")
-			   .help(
-				   "Filename to output the command database to. "
-				   "A relative path for the filename is rooted to the project "
-				   "build-dir.");
-}
-
 void set_output_dir(value_ref dirname)
 {
 	database::get().output_directory = dirname;
 }
 
 }} // namespace b2::command_db
+
+void b2::command_db_module::declare_args()
+{
+	b2::args::lyra_cli()
+		|= lyra::opt(
+			[](const std::string & f) {
+				command_db::database::get().set_output_format(f);
+			},
+			"format")
+			   .name("--command-database")
+			   .help("Output a compile commands database as format.");
+	b2::args::lyra_cli()
+		|= lyra::opt(
+			[](const std::string & f) {
+				command_db::database::get().set_output_filename(f);
+			},
+			"filename")
+			   .name("--command-database-out")
+			   .help(
+				   "Filename to output the command database to. "
+				   "A relative path for the filename is rooted to the project "
+				   "build-dir.");
+}

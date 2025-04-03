@@ -9,16 +9,14 @@
 #  License Version 1.0. (See accompanying file LICENSE.txt or
 #  https://www.bfgroup.xyz/b2/LICENSE.txt)
 
+import args ;
 import generators ;
 import feature ;
 import scanner ;
 import toolset : flags ;
 import type ;
 
-if [ MATCH (--debug-configuration) : [ modules.peek : ARGV ] ]
-{
-    .debug-configuration = true ;
-}
+.debug-configuration = [ args.get-arg debug-configuration ] ;
 
 type.register RC : rc ;
 

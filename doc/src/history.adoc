@@ -9,6 +9,9 @@
 * *New*: Add generic `cc` toolset for simply, direct, configuration of unknown
   C compiler toolsets (for example `tcc`).
   -- _René Ferdinand Rivera Morell_
+* *New*: Add `args` module for common handling of both native and Jam side
+  command line arguments.
+  -- _René Ferdinand Rivera Morell_
 * Fix command database output file path when an output dir is not given.
   -- _René Ferdinand Rivera Morell_
 * Fix asciidoctor ignoring relevant features when building which caused invalid
@@ -28,6 +31,10 @@
   -- _Andrey Semashev_
 * Fix Building on Haiku OS which doesn't have `wait4`.
   -- _Fas Xmut_
+* Rewrite the command like argument parsing to use the Lyra library. The result
+  is that arguments from Jam and native are integrated and available with the
+  built-in `-h` help.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 5.2.1
 

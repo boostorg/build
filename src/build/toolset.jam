@@ -7,6 +7,7 @@
 
 #  Support for toolset definition.
 
+import args ;
 import errors ;
 import feature ;
 import generators ;
@@ -28,10 +29,9 @@ import utility ;
 
 # This is used only for testing, to make sure we do not get random extra
 # elements in paths.
-if --ignore-toolset-requirements in [ modules.peek : ARGV ]
-{
-    .ignore-requirements = 1 ;
-}
+args.add-arg ignore-toolset-requirements : --ignore-toolset-requirements
+    : "?" ;
+.ignore-requirements = [ args.get-arg ignore-toolset-requirements ] ;
 
 
 # Initializes an additional toolset-like module. First load the 'toolset-module'
