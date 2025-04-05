@@ -18,6 +18,12 @@ rule set ( name : value ? )
 rule get ( name : default-value ? : implied-value ? )
 {
     local m = [ args.get-arg $(name) ] ;
+    # For backwards compat also check ARGV directly in case the arg has not been
+    # declared.
+    if ! $(m) && ! [ args.has-arg $(name) ]
+    {
+        m = [ MATCH --$(name)=(.*) : [ modules.peek : ARGV ] ] ;
+    }
     if $(m) && $(m) != true
     {
         return $(m[1]) ;

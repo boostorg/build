@@ -65,6 +65,21 @@ Retrieve the value of a previous specified command line argument.
 end::reference[] */
 list_ref get_arg(const value_ref & name);
 
+/* tag::reference[]
+
+== `b2::args::has_arg`
+
+====
+[horizontal]
+Jam:: `rule has-arg ( name )`
+{CPP}:: `bool has_arg(value_ref name);`
+====
+
+Checks if an argument was previously added.
+
+end::reference[] */
+bool has_arg(const value_ref & name);
+
 void set_args(int argc, char ** argv);
 lyra::cli & lyra_cli();
 void process_args(bool silent = false);
@@ -80,7 +95,8 @@ struct args_module : b2::bind::module_<args_module>
 		binder
 			.def(&add_arg, "add-arg",
 				"name" * _1 | "opts" * _1n | "help" * _1 | "flags" * _n)
-			.def(&get_arg, "get-arg", "name" * _1);
+			.def(&get_arg, "get-arg", "name" * _1)
+			.def(&has_arg, "has-arg", "name" * _1);
 		binder.eval(init_code);
 		binder.loaded();
 	}

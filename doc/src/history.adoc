@@ -1,6 +1,14 @@
 [[b2.history]]
 = History
 
+== Version 5.3.1
+
+Fix backward incompatibility of `option.get` if an argument is not added with
+`args.add-arg`. When such an argument isn't registered we fail to check `ARGV`
+directly as a backup, for backward compatibility. This fixes that problem by
+checking if an argument is registered, and if not falling back on the direct
+`ARGV` check.
+
 == Version 5.3.0
 
 Biggest changes for this release is the creation of two new toolsets: `ibmcxx`

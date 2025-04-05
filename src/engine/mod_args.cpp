@@ -35,10 +35,7 @@ struct args_reg
 	std::vector<std::string> args;
 	bool need_reparse = true;
 
-	args_reg()
-	{
-		cli.style_print_short_first();
-	}
+	args_reg() { cli.style_print_short_first(); }
 
 	void set_args(int argc, char ** argv)
 	{
@@ -105,6 +102,8 @@ struct args_reg
 			return globs.debug_configuration ? list_ref("true") : list_ref();
 		return {};
 	}
+
+	bool has_opt(const value_ref & name) { return (options.count(name) > 0); }
 };
 } // namespace
 
@@ -118,6 +117,8 @@ list_ref get_arg(const value_ref & name)
 {
 	return args_reg::ref().get_opt(name);
 }
+
+bool has_arg(const value_ref & name) { return args_reg::ref().has_opt(name); }
 
 void set_args(int argc, char ** argv) { args_reg::ref().set_args(argc, argv); }
 
