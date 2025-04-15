@@ -53,20 +53,25 @@ struct database
 		// Set up for the format and create the output database.
 		output_flag = true;
 		output_format = f;
-		prop_db.reset(new property_db);
 
 		// Default to all targets and no regular action output.
 		globs.noexec = true;
 		for (int i = 0; i < DEBUG_MAX; ++i) globs.debug[i] = 0;
 		globs.anyhow = true;
 
-		// Events to track the commands and exit to generate the output.
-		add_event_callback(event_tag::pre_exec_cmd,
-			std::function<void(TARGET *)>(
-				[](TARGET * t) { database::get().pre_exec_cmd(t); }));
-		add_event_callback(event_tag::exit_main,
-			std::function<void(int)>(
-				[](int s) { database::get().exit_main(s); }));
+		if (!prop_db)
+		{
+			prop_db.reset(new property_db);
+			// Events to track the commands and exit to generate the output.
+			add_event_callback(event_tag::pre_exec_cmd,
+				std::function<void(TARGET *)>([](TARGET * t) {
+					database::get().pre_exec_cmd(t);
+				}));
+			add_event_callback(
+				event_tag::exit_main, std::function<void(int)>([](int s) {
+					database::get().exit_main(s);
+				}));
+		}
 	}
 
 	void set_output_filename(const std::string & f) { output_filename = f; }
