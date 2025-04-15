@@ -1,6 +1,12 @@
 [[b2.history]]
 = History
 
+== Version 5.3.2
+
+Fix regression for handling of the `--command-database` option. The new command
+line arguments parsing made the output to be reset and cleared causing nothing
+to get output for the commands. Thanks to _Dmitry Arkhipov_ for the fix.
+
 == Version 5.3.1
 
 Fix backward incompatibility of `option.get` if an argument is not added with
