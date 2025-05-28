@@ -161,6 +161,11 @@
 #define OS_BEOS
 #define NO_VFORK
 #endif
+#ifdef __HAIKU__
+#define unix
+#define OSMINOR "OS=HAIKU"
+#define OS_HAIKU
+#endif
 #ifdef __bsdi__
 #define OSMINOR "OS=BSDI"
 #define OS_BSDI
