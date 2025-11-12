@@ -8,6 +8,7 @@
 # Copyright (c) 2014 Microsoft Corporation
 # Copyright (c) 2019 Michał Janiszewski
 # Copyright (c) 2020 Nikita Kniazev
+# Copyright (c) 2025 Ion Gaztañaga
 #
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE.txt or copy at
@@ -23,6 +24,7 @@ https://docs.microsoft.com/en-us/cpp/[Microsoft Visual C++] command-line
 tools on Microsoft Windows. The supported products and versions of
 command line tools are listed below:
 
+* Visual Studio 2022-14.5
 * Visual Studio 2022-14.3
 * Visual Studio 2019-14.2
 * Visual Studio 2017—14.1
@@ -1154,7 +1156,15 @@ local rule generate-setup-cmd ( version : command : parent : options * : cpu : g
         }
         else
         {
-            if [ MATCH "(14.[34])" : $(version) ]
+            if [ MATCH "(14.5)" : $(version) ]
+            {
+                if $(.debug-configuration)
+                {
+                    ECHO "notice: [generate-setup-cmd] $(version) is 14.5" ;
+                }
+                parent = [ path.native [ path.join  $(parent) "..\\..\\..\\..\\..\\Auxiliary\\Build" ] ] ;
+            }
+            else if [ MATCH "(14.[34])" : $(version) ]
             {
                 if $(.debug-configuration)
                 {
@@ -1340,7 +1350,11 @@ local rule configure-really ( version ? : options * )
             # version from the path.
             # FIXME: We currently detect both Microsoft Visual Studio 9.0 and
             # 9.0express as 9.0 here.
-            if [ MATCH "(MSVC\\\\14.[34])" : $(command) ]
+            if [ MATCH "(MSVC\\\\14.5)" : $(command) ]
+            {
+                version = 14.5 ;
+            }
+            else if [ MATCH "(MSVC\\\\14.[34])" : $(command) ]
             {
                 version = 14.3 ;
             }
@@ -1767,13 +1781,17 @@ local rule default-path ( version )
         # And fortunately, forward slashes do also work in native Windows.
         local vswhere = "$(root)/Microsoft Visual Studio/Installer/vswhere.exe" ;
         # The check for $(root) is to avoid a segmentation fault if not found.
-        if $(version) in 14.1 14.2 14.3 default && $(root) && [ path.exists $(vswhere) ]
+        if $(version) in 14.1 14.2 14.3 14.5 default && $(root) && [ path.exists $(vswhere) ]
         {
             local req = "-requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64" ;
             local prop = "-property installationPath" ;
             local limit ;
 
-            if $(version) = 14.3
+            if $(version) = 14.5
+            {
+                limit = "-version \"[17.0,18.0)\" -prerelease" ;
+            }
+            else if $(version) = 14.3
             {
                 limit = "-version \"[17.0,18.0)\" -prerelease" ;
             }
@@ -2197,7 +2215,7 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
                      armv7 armv7s ;
 
 # Known toolset versions, in order of preference.
-.known-versions = 14.3 14.2 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
+.known-versions = 14.5 14.3 14.2 14.1 14.0 12.0 11.0 10.0 10.0express 9.0 9.0express 8.0 8.0express 7.1
     7.1toolkit 7.0 6.0 ;
 
 # Version aliases.
@@ -2249,6 +2267,12 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
     "Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*/bin/Host*/*"
     ;
 .version-14.3-env = VS170COMNTOOLS ProgramFiles ProgramFiles(x86) ;
+.version-14.5-path =
+    "../../VC/Tools/MSVC/*/bin/Host*/*"
+    "Microsoft Visual Studio/18/*/VC/Tools/MSVC/*/bin/Host*/*"
+    ;
+.version-14.5-env = VS180COMNTOOLS ProgramFiles ProgramFiles(x86) ;
+
 
 
 # And finally trigger the actual Boost Build toolset registration.
