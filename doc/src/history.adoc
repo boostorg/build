@@ -1,6 +1,11 @@
 [[b2.history]]
 = History
 
+== Version 5.4.1
+
+Fix error in path environment variables not being properly processed to split
+on path separator.
+
 == Version 5.4.0
 
 This is the end of year release. Biggest new items are the detection of

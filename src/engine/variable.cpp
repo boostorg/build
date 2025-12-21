@@ -111,8 +111,8 @@ void var_defines(struct module_t * module, const char * const * e, int preproces
 		{
 			char split = ' ';
 			/* Split *PATH at :'s, not spaces. */
-			if (var.ends_with("PATH")
-				|| var.ends_with("Path" || var.ends_with("path")))
+			if (var.ends_with("PATH") || var.ends_with("Path")
+				|| var.ends_with("path"))
 				split = SPLITPATH;
 			/* Do the split. */
 			for (::b2::string_view::size_type p0 = 0; p0 < val.size();)
