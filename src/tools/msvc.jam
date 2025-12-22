@@ -2164,11 +2164,25 @@ for local cpu in [ MATCH "^\\.cpu-arch-info-(.*)" : [ VARNAMES $(__name__) ] ]
 .default-cpu-arch = [ os.environ PROCESSOR_ARCHITEW6432 ] ;
 .default-cpu-arch ?= [ os.environ PROCESSOR_ARCHITECTURE ] ;
 .default-cpu-arch = $(.default-cpu-arch:L) ;
+.host-arch = x86 ;
 switch $(.default-cpu-arch)
 {
-    case x86   : .default-cpu-arch = i386 ;
-    case em64t : .default-cpu-arch = amd64 ;
-    case arm64 : .default-cpu-arch = arm64 ;
+    case x86 :
+    .default-cpu-arch = i386 ;
+    
+    case em64t :
+    .default-cpu-arch = amd64 ;
+    .host-arch = x64 ;
+    
+    case arm64 :
+    .default-cpu-arch = arm64 ;
+    .host-arch = arm64 ;
+
+    case amd64 :
+    .host-arch = x64 ;
+
+    case ia64 :
+    .host-arch = x64 ;
 }
 
 for local cpu in $(.cpus-on-$(.cpu-arch-info-$(.default-cpu-arch)[1]))
@@ -2253,23 +2267,23 @@ for local arch in [ MATCH "^\\.cpus-on-(.*)" : [ VARNAMES $(__name__) ] ]
 # of discovery involve having a compiled program. So as a fallback we search
 # paths for VS2017 (aka msvc >= 14.1).
 .version-14.1-path =
-    "../../VC/Tools/MSVC/*/bin/Host*/*"
-    "Microsoft Visual Studio/2017/*/VC/Tools/MSVC/*/bin/Host*/*" ;
+    "../../VC/Tools/MSVC/*/bin/Host$(.host-arch)/$(.host-arch)"
+    "Microsoft Visual Studio/2017/*/VC/Tools/MSVC/*/bin/Host$(.host-arch)/$(.host-arch)" ;
 .version-14.1-env = VS150COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 .version-14.2-path =
-    "../../VC/Tools/MSVC/*/bin/Host*/*"
-    "Microsoft Visual Studio/2019/*/VC/Tools/MSVC/*/bin/Host*/*" ;
+    "../../VC/Tools/MSVC/*/bin/Host$(.host-arch)/$(.host-arch)"
+    "Microsoft Visual Studio/2019/*/VC/Tools/MSVC/*/bin/Host$(.host-arch)/$(.host-arch)" ;
 .version-14.2-env = VS160COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 .version-14.3-path =
-    "../../VC/Tools/MSVC/*/bin/Host*/*"
-    "Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*/bin/Host*/*" ;
+    "../../VC/Tools/MSVC/*/bin/Host$(.host-arch)/$(.host-arch)"
+    "Microsoft Visual Studio/2022/*/VC/Tools/MSVC/*/bin/Host$(.host-arch)/$(.host-arch)" ;
 .version-14.3-env = VS170COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 .version-14.5-path =
-    "../../VC/Tools/MSVC/*/bin/Host*/*"
-    "Microsoft Visual Studio/18/*/VC/Tools/MSVC/14.5*/bin/Host*/*" ;
+    "../../VC/Tools/MSVC/14.5*/bin/Host$(.host-arch)/$(.host-arch)"
+    "Microsoft Visual Studio/18/*/VC/Tools/MSVC/14.5*/bin/Host$(.host-arch)/$(.host-arch)" ;
 .version-14.5-env = VS180COMNTOOLS ProgramFiles ProgramFiles(x86) ;
 
 

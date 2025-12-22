@@ -1,6 +1,11 @@
 [[b2.history]]
 = History
 
+== Version 5.4.2
+
+Fix detection of Visual Studio 2026 to account for non-native tools being
+installed by default and hence conflicting with the native tools.
+
 == Version 5.4.1
 
 Fix error in path environment variables not being properly processed to split
