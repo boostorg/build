@@ -381,6 +381,7 @@ tests = [
     "inline",
     "install_build_no",
     "lang_asm",
+    "libbrotli",
     "libjpeg",
     "liblzma",
     "libpng",
