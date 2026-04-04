@@ -3,9 +3,13 @@
 
 == Version 5.5.0
 
-* *New*: Argument lists description provided for all built-in rules,
+* *New*: Argument lists description provided for all builtin rules,
   GLOB-RECURSIVELY has become an alias of GLOB_RECURSIVELY.
+  -- _Paolo Pastori_
 * *New*: Added test for regular expressions with MATCH builtin rule.
+  -- _Paolo Pastori_
+* *New*: Improved control of source module by IMPORT, EXPORT, and
+  RULENAMES builtin rules.
   -- _Paolo Pastori_
 * *New*: Add reading/parsing of property database from JSON data to base CPS
   support from.

@@ -64,8 +64,6 @@
 #endif
 
 int32_t glob( char const * s, char const * c );
-void backtrace( FRAME * );
-void backtrace_line( FRAME * );
 
 #define INSTR_PUSH_EMPTY                   0
 #define INSTR_PUSH_CONSTANT                1
@@ -395,9 +393,10 @@ struct _stack
             #if B2_FUNCTION_STACK_VALIDATE
             if (stack->get<char>() != saved)
             {
-                backtrace_line( frame );
-                err_printf( "error: stack check failed.\n" );
-                backtrace( frame );
+                b2::list_ref msgs;
+                msgs.push_back( b2::rule_and_args_to_string( frame ) );
+                msgs.push_back( "stack check failed." );
+                b2::out_warning( *msgs, frame );
                 b2::ensure( false );
             }
             #endif
@@ -721,6 +720,9 @@ static void function_default_named_variable( JAM_FUNCTION * function,
     var_set( frame->module, name, value, VAR_DEFAULT );
 }
 
+#define QUOTE_EXPANDED(x) STRINGIFY(x)
+#define STRINGIFY(x) #x
+
 static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
     STACK * s, int32_t n_args, char const * unexpanded, OBJECT * file, int32_t line )
 {
@@ -735,9 +737,11 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
 
     if ( first.empty() )
     {
-        backtrace_line( frame );
-        out_printf( "warning: rulename %s expands to empty string\n", unexpanded );
-        backtrace( frame );
+        b2::list_ref msgs;
+        msgs.push_back( b2::rule_and_args_to_string( frame ) );
+        msgs.push_back( std::string("rulename \"")
+            + unexpanded + "\" expands to empty string." );
+        b2::out_warning( *msgs, frame );
         first.reset();
         for ( i = 0; i < n_args; ++i )
             list_free( s->pop<LIST *>() );
@@ -752,9 +756,10 @@ static LIST * function_call_rule( JAM_FUNCTION * function, FRAME * frame,
 
     if ( n_args > LOL_MAX )
     {
-        out_printf( "ERROR: rules are limited to %d arguments\n", LOL_MAX );
-        backtrace( &inner );
-        b2::clean_exit( EXITBAD );
+        b2::list_ref msgs;
+        msgs.push_back(
+            "rules are limited to " QUOTE_EXPANDED(LOL_MAX) " arguments." );
+        b2::out_error( *msgs, frame );
     }
 
     for ( i = 0; i < n_args; ++i )
@@ -783,9 +788,10 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
 {
     if ( n_args > LOL_MAX )
     {
-        out_printf( "ERROR: member rules are limited to %d arguments\n", LOL_MAX );
-        backtrace( frame );
-        b2::clean_exit( EXITBAD );
+        b2::list_ref msgs;
+        msgs.push_back(
+            "member rules are limited to " QUOTE_EXPANDED(LOL_MAX) " arguments." );
+        b2::out_error( *msgs, frame );
     }
 
     b2::list_ref first(s->pop<LIST *>(), true);
@@ -799,6 +805,8 @@ static LIST * function_call_member_rule( JAM_FUNCTION * function, FRAME * frame,
     return call_member_rule( rulename, frame, std::move(first), std::move(args) );
 }
 
+#undef QUOTE_EXPANDED
+#undef STRINGIFY
 
 /* Variable expansion */
 

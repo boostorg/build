@@ -18,6 +18,7 @@
 #include "make.h"
 #include "md5.h"
 #include "native.h"
+#include "outerr.h"
 #include "parse.h"
 #include "pathsys.h"
 #include "regexp.h"
@@ -29,6 +30,7 @@
 #include "output.h"
 
 #include <string>
+#include <type_traits>
 
 #include <assert.h>
 #include <ctype.h>
@@ -79,13 +81,20 @@
 # define WEXITSTATUS(w)(w)
 #endif
 
+namespace b2 {
+template<typename R,
+         typename = typename std::enable_if<std::is_pointer<R>::value>::type>
+R find_hash(struct hash * ht, OBJECT * obj)
+{
+    return reinterpret_cast<R>( ht ? hash_find(ht, obj) : nullptr );
+}
+} // namespace b2
+
 /*
  * builtins.c - builtin jam rules
  *
  * External routines:
  *  load_builtins()               - define builtin rules
- *  unknown_rule()                - reports an unknown rule occurrence to the
- *                                  user and exits
  *
  * Internal routines:
  *  append_if_exists()            - if file exists, append it to the list
@@ -123,10 +132,6 @@
 #endif
 
 int glob( char const * s, char const * c );
-
-void backtrace        ( FRAME * );
-void backtrace_line   ( FRAME * );
-void print_source_line( FRAME * );
 
 
 RULE * bind_builtin( char const * name_, LIST * (* f)( FRAME *, int flags ),
@@ -446,8 +451,8 @@ void load_builtins()
 
     {
         char const * args[] = { "command", ":", "*", 0 };
-        duplicate_rule( "SHELL",
-          bind_builtin( "COMMAND",
+        duplicate_rule( "COMMAND",
+          bind_builtin( "SHELL",
                         builtin_shell, 0, args ) );
     }
 
@@ -1131,32 +1136,53 @@ LIST * builtin_split_by_characters( FRAME * frame, int flags )
 
 
 /*
- * builtin_rulenames() - RULENAMES ( MODULE ? )
- *
- * Returns a list of the non-local rule names in the given MODULE. If MODULE is
- * not supplied, returns the list of rule names in the global module.
+ * Search for an optional module, when no name is supplied
+ * return the root module. When the supplied name is not found
+ * emit an error (and exit) or a warning (and return the root module)
+ * according to the value of miss_is_error.
  */
-
-static void add_rule_name( void * r_, void * result_ )
+module_t * try_bind_module(LIST * module_list, FRAME * frame, bool miss_is_error)
 {
-    RULE * const r = (RULE *)r_;
-    LIST * * const result = (LIST * *)result_;
-    if ( r->exported )
-        *result = list_push_back( *result, object_copy( r->name ) );
+    OBJECT * mod_name = ( list_empty( module_list )
+        ? nullptr : list_front( module_list ) );
+    module_t * mod = nullptr;
+    if ( mod_name )
+    {
+        mod = find_module( mod_name );
+        if ( ! mod )
+        {
+            b2::list_ref msgs;
+
+            msgs.push_back(
+                b2::rule_and_args_to_string( frame ) );
+            msgs.push_back(
+                std::string("module \"") + mod_name->str() + "\" not found"
+                + (miss_is_error ? "." : ", using root module.") );
+
+            if ( miss_is_error ) b2::out_error( *msgs, frame );
+            else b2::out_warning( *msgs, frame );
+        }
+    }
+    if ( ! mod ) mod = root_module();
+    return mod;
 }
 
 
+/*
+ * builtin_rulenames() - RULENAMES ( MODULE ? )
+ *
+ * Returns a list of the non-local rule names in the given MODULE. If MODULE
+ * is not supplied, returns the list of rule names in the root module.
+ * If MODULE is not found, an error is issued.
+ */
+
 LIST * builtin_rulenames( FRAME * frame, int flags )
 {
-    LIST * arg0 = lol_get( frame->args, 0 );
-    LIST * result = L0;
-    module_t * const source_module = bindmodule( list_empty( arg0 )
-        ? 0
-        : list_front( arg0 ) );
+    LIST * module_list = lol_get( frame->args, 0 );
+    module_t * module = try_bind_module( module_list, frame,
+            true /* emit an error on missing module */ );
 
-    if ( source_module->rules )
-        hashenumerate( source_module->rules, add_rule_name, &result );
-    return result;
+    return module_rules( module );
 }
 
 
@@ -1209,28 +1235,6 @@ LIST * builtin_delete_module( FRAME * frame, int flags )
 
 
 /*
- * unknown_rule() - reports an unknown rule occurrence to the user and exits
- */
-
-void unknown_rule( FRAME * frame, char const * key, module_t * module,
-    OBJECT * rule_name )
-{
-    backtrace_line( frame->prev );
-    if ( key )
-        out_printf("%s error", key);
-    else
-        out_printf("ERROR");
-    out_printf( ": rule \"%s\" unknown in ", object_str( rule_name ) );
-    if ( module->name )
-        out_printf( "module \"%s\".\n", object_str( module->name ) );
-    else
-        out_printf( "root module.\n" );
-    backtrace( frame->prev );
-    b2::clean_exit( EXITBAD );
-}
-
-
-/*
  * builtin_import() - IMPORT rule
  *
  * IMPORT
@@ -1244,7 +1248,7 @@ void unknown_rule( FRAME * frame, char const * key, module_t * module,
  *
  * Imports rules from the SOURCE_MODULE into the TARGET_MODULE as local rules.
  * If either SOURCE_MODULE or TARGET_MODULE is not supplied, it refers to the
- * global module. SOURCE_RULES specifies which rules from the SOURCE_MODULE to
+ * root module. SOURCE_RULES specifies which rules from the SOURCE_MODULE to
  * import; TARGET_RULES specifies the names to give those rules in
  * TARGET_MODULE. If SOURCE_RULES contains a name that does not correspond to
  * a rule in SOURCE_MODULE, or if it contains a different number of items than
@@ -1264,9 +1268,8 @@ LIST * builtin_import( FRAME * frame, int flags )
     module_t * target_module = bindmodule( list_empty( target_module_list )
         ? 0
         : list_front( target_module_list ) );
-    module_t * source_module = bindmodule( list_empty( source_module_list )
-        ? 0
-        : list_front( source_module_list ) );
+    module_t * source_module = try_bind_module( source_module_list, frame,
+            false /* emit a warning on missing module */ );
 
     LISTITER source_iter = list_begin( source_rules );
     LISTITER const source_end = list_end( source_rules );
@@ -1278,17 +1281,13 @@ LIST * builtin_import( FRAME * frame, int flags )
           source_iter = list_next( source_iter ),
           target_iter = list_next( target_iter ) )
     {
-        RULE * r = nullptr;
-        RULE * imported = nullptr;
-
-        if ( !source_module->rules || !(r = (RULE *)hash_find(
-            source_module->rules, list_item( source_iter ) ) ) )
+        RULE * r = b2::find_hash<RULE*>( source_module->rules, list_item( source_iter ) );
+        if ( !r )
         {
-            unknown_rule( frame, "IMPORT", source_module, list_item( source_iter
-                ) );
+            unknown_rule_error( frame, source_module, list_item( source_iter ) );
         }
 
-        imported = import_rule( r, target_module, list_item( target_iter ) );
+        RULE * imported = import_rule( r, target_module, list_item( target_iter ) );
         if ( !list_empty( localize ) )
             rule_localize( imported, target_module );
         /* This rule is really part of some other module. Just refer to it here,
@@ -1299,16 +1298,23 @@ LIST * builtin_import( FRAME * frame, int flags )
 
     if ( source_iter != source_end || target_iter != target_end )
     {
-        backtrace_line( frame->prev );
-        out_printf( "import error: length of source and target rule name lists "
-            "don't match!\n" );
-        out_printf( "    source: " );
-        list_print( source_rules );
-        out_printf( "\n    target: " );
-        list_print( target_rules );
-        out_printf( "\n" );
-        backtrace( frame->prev );
-        b2::clean_exit( EXITBAD );
+        b2::list_ref msgs;
+
+        msgs.push_back( b2::rule_and_args_to_string( frame ) );
+
+        msgs.push_back( "source and target rule name lists don't match" );
+
+        std::string rlst = "source:";
+        for ( auto el : b2::list_cref(source_rules) )
+            rlst += std::string(" ") + el->str();
+        msgs.push_back( rlst );
+
+        rlst = "target:";
+        for ( auto el : b2::list_cref(target_rules) )
+            rlst += std::string(" ") + el->str();
+        msgs.push_back( rlst );
+
+        b2::out_error( *msgs, frame );
     }
 
     return L0;
@@ -1318,27 +1324,27 @@ LIST * builtin_import( FRAME * frame, int flags )
 /*
  * builtin_export() - EXPORT ( MODULE ? : RULES * )
  *
- * The EXPORT rule marks RULES from the SOURCE_MODULE as non-local (and thus
- * exportable). If an element of RULES does not name a rule in MODULE, an error
- * is issued.
+ * The EXPORT rule marks RULES from the MODULE as non-local (and thus
+ * exportable). If MODULE is not supplied, it refers to the root module.
+ * If MODULE is not found, or an element of RULES does not name a rule
+ * in MODULE, an error is issued.
  */
 
 LIST * builtin_export( FRAME * frame, int flags )
 {
     LIST * const module_list = lol_get( frame->args, 0 );
     LIST * const rules = lol_get( frame->args, 1 );
-    module_t * const m = bindmodule( list_empty( module_list ) ? 0 : list_front(
-        module_list ) );
+    module_t * const m = try_bind_module( module_list, frame,
+            true /* emit an error on missing module */ );
 
     LISTITER iter = list_begin( rules );
     LISTITER const end = list_end( rules );
     for ( ; iter != end; iter = list_next( iter ) )
     {
-        RULE * r = nullptr;
-        if ( !m->rules || !( r = (RULE *)hash_find( m->rules, list_item( iter )
-            ) ) )
+        RULE * r = b2::find_hash<RULE*>( m->rules, list_item( iter ) );
+        if ( !r )
         {
-            unknown_rule( frame, "EXPORT", m, list_item( iter ) );
+            unknown_rule_error( frame, m, list_item( iter ) );
         }
         r->exported = 1;
     }
@@ -1353,7 +1359,7 @@ LIST * builtin_export( FRAME * frame, int flags )
  * output or an error backtrace.
  */
 
-static void get_source_line( FRAME * frame, char const * * file, int * line )
+void get_source_line( FRAME * frame, char const * * file, int * line )
 {
     if ( frame->file )
     {
@@ -1367,52 +1373,6 @@ static void get_source_line( FRAME * frame, char const * * file, int * line )
         *file = "(builtin)";
         *line = -1;
     }
-}
-
-
-void print_source_line( FRAME * frame )
-{
-    char const * file;
-    int line;
-    get_source_line( frame, &file, &line );
-    if ( line > 0 )
-        out_printf( "%s:%d:", file, line );
-    else if ( line == 0 )
-        out_printf( "%s:", file );
-    else
-        out_printf( "(builtin):" );
-}
-
-
-/*
- * backtrace_line() - print a single line of error backtrace for the given
- * frame.
- */
-
-void backtrace_line( FRAME * frame )
-{
-    if ( frame == 0 )
-    {
-        out_printf( "(no frame):" );
-    }
-    else
-    {
-        print_source_line( frame );
-        out_printf( " in %s\n", frame->rulename );
-    }
-}
-
-
-/*
- * backtrace() - Print the entire backtrace from the given frame to the Jambase
- * which invoked it.
- */
-
-void backtrace( FRAME * frame )
-{
-    if ( !frame ) return;
-    while ( ( frame = frame->prev ) )
-        backtrace_line( frame );
 }
 
 
@@ -1658,19 +1618,23 @@ LIST * builtin_native_rule( FRAME * frame, int flags )
 
     module_t * module = bindmodule( list_front( module_name ) );
 
-    native_rule_t * np;
-    if ( module->native_rules && (np = (native_rule_t *)hash_find(
-        module->native_rules, list_front( rule_name ) ) ) )
+    native_rule_t * np = b2::find_hash<native_rule_t*>(
+            module->native_rules, list_front( rule_name ) );
+    if ( np )
     {
         new_rule_body( module, np->name, np->procedure, 1 );
     }
     else
     {
-        backtrace_line( frame->prev );
-        out_printf( "error: no native rule \"%s\" defined in module \"%s.\"\n",
-            object_str( list_front( rule_name ) ), object_str( module->name ) );
-        backtrace( frame->prev );
-        b2::clean_exit( EXITBAD );
+        b2::list_ref msgs;
+
+        msgs.push_back( b2::rule_and_args_to_string( frame ) );
+
+        msgs.push_back(
+            std::string("no native rule \"") + list_front( rule_name )->str()
+            + "\" defined in module \"" + module->name->str() + "\"." );
+
+        b2::out_error( *msgs, frame );
     }
     return L0;
 }
@@ -1684,9 +1648,9 @@ LIST * builtin_has_native_rule( FRAME * frame, int flags )
 
     module_t * module = bindmodule( list_front( module_name ) );
 
-    native_rule_t * np;
-    if ( module->native_rules && (np = (native_rule_t *)hash_find(
-        module->native_rules, list_front( rule_name ) ) ) )
+    native_rule_t * np = b2::find_hash<native_rule_t*>(
+            module->native_rules, list_front( rule_name ) );
+    if ( np )
     {
         int expected_version = atoi( object_str( list_front( version ) ) );
         if ( np->version == expected_version )

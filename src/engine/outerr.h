@@ -12,18 +12,29 @@ Distributed under the Boost Software License, Version 1.0.
 
 #include <string>
 
+/*
+ * Legacy error related functions.
+ */
+void print_source_line  ( FRAME * );
+//void backtrace_line     ( FRAME * );
+//void backtrace          ( FRAME * );
+void unknown_rule_error ( FRAME * , module_t * , OBJECT * );
+
 namespace b2 {
 
 /*
- * Error related functions and helpers.
+ * Error functions and helpers.
  */
 
 std::string args_to_string(LOL * lol);
+
+std::string rule_and_args_to_string(FRAME * frame);
 
 void out_emit(const char * prefix, LIST * messages,
     FRAME * frame, bool with_backtrace, bool exit);
 
 void out_error(LIST * messages, FRAME * frame);
+void out_warning(LIST * messages, FRAME * frame);
 
 } // namespace b2
 
