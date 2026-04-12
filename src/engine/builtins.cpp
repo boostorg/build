@@ -1290,8 +1290,8 @@ LIST * builtin_import( FRAME * frame, int flags )
         RULE * imported = import_rule( r, target_module, list_item( target_iter ) );
         if ( !list_empty( localize ) )
             rule_localize( imported, target_module );
-        /* This rule is really part of some other module. Just refer to it here,
-         * but do not let it out.
+        /* This rule is really part of some other module. Just refer to it
+         * here, but it shall be considered a local rule.
          */
         imported->exported = 0;
     }

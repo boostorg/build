@@ -604,7 +604,7 @@ _`<option-name>option-value syntax`_:
   A catalog file used to rewrite remote URL's to a local copy.
 
 The xsltproc module provides the following rules. Note that these
-operate on jam targets and are intended to be used by another toolset,
+operate on Jam targets and are intended to be used by another toolset,
 such as boostbook, rather than directly by users.
 
 `xslt`::

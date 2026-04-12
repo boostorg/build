@@ -130,7 +130,9 @@ static rule_ptr define_rule( module_ptr src_module, b2::value_ptr rulename,
     rule_ptr const r = enter_rule( rulename, target_module );
     if ( r->module != src_module )
     {
-        /* If the rule was imported from elsewhere, clear it now. */
+        /* If the rule was imported from elsewhere, clear it now. This can
+         * can happen, for example, when an imported rule does an overwrite
+         */
         set_rule_body( r, 0 );
         set_rule_actions( r, 0 );
         /* r will be executed in the source module. */
@@ -590,7 +592,7 @@ static rule_ptr global_rule( rule_ptr r )
 /*
  * new_rule_body() - make a new rule named rulename in the given module, with
  * the given argument list and procedure. If exported is true, the rule is
- * exported to the global module as modulename.rulename.
+ * a Jam "non local" rule, i.e. is supposed to appear in the global module.
  */
 
 rule_ptr new_rule_body( module_ptr m, b2::value_ptr rulename, function_ptr procedure,

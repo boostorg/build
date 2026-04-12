@@ -94,9 +94,9 @@ struct _rule
 	rule_actions_ptr actions; /* build actions, or NULL for no actions */
 	module_ptr module; /* module in which this rule is executed */
 	int exported; /* nonzero if this rule is supposed to appear in
-				   * the global module and be automatically
-				   * imported into other modules
-				   */
+	               * the global module and be automatically imported
+	               * into other modules (i.e. it is not a Jam "local rule")
+	               */
 };
 
 /* ACTIONS - a chain of ACTIONs. */
@@ -159,8 +159,8 @@ struct _target
 	targets_uptr depends; /* dependencies */
 	targets_uptr dependants; /* the inverse of dependencies */
 	targets_uptr rebuilds; /* targets that should be force-rebuilt
-							* whenever this one is
-							*/
+	                        * whenever this one is
+	                        */
 	target_ptr includes; /* internal includes node */
 
 	timestamp time; /* update time */
@@ -197,8 +197,8 @@ struct _target
 #define T_FLAG_PRECIOUS 0x0800
 
 	char binding; /* how target relates to a real file or
-				   * folder
-				   */
+	               * folder
+	               */
 
 #define T_BIND_UNBOUND 0 /* a disembodied name */
 #define T_BIND_MISSING 1 /* could not find real file */
@@ -250,13 +250,13 @@ struct _target
 	int asynccnt; /* child deps outstanding */
 	targets_uptr parents; /* used by make1() for completion */
 	target_ptr scc_root; /* used by make to resolve cyclic includes
-						  */
+	                      */
 	target_ptr rescanning; /* used by make0 to mark visited targets
-							* when rescanning
-							*/
+	                        * when rescanning
+	                        */
 	int depth; /* The depth of the target in the make0
-				* stack.
-				*/
+	            * stack.
+	            */
 	char * cmds; /* type-punned command list */
 
 	char const * failed;

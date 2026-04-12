@@ -18,17 +18,17 @@ metatarget::
   with a set of properties to produce concrete targets.
 concrete target::
   Object that corresponds to a file or an action.
-jam target::
+Jam target::
   Low-level concrete target that is specific to Boost.Jam build engine.
   Essentially a string -- most often a name of file.
 
 In most cases, you will only have to deal with concrete targets and the
 process that creates concrete targets from metatargets. Extending
-metatarget level is rarely required. The jam targets are typically only
+metatarget level is rarely required. The Jam targets are typically only
 used inside the command line patterns.
 
 WARNING: All of the Boost.Jam target-related builtin rules, like
-`DEPENDS` or `ALWAYS` operate on jam targets. Applying them to metatargets or
+`DEPENDS` or `ALWAYS` operate on Jam targets. Applying them to metatargets or
 concrete targets has no effect.
 
 [[b2.extender.overview.metatargets]]
@@ -126,8 +126,8 @@ local t = [ new file-target $(name) : CPP : $(project) : $(a) ] ;
 ----
 
 The first line creates an instance of the `action` class. The first
-parameter is the list of sources. The second parameter is the name a
-jam-level link:#b2.overview.jam_language.actions[action]. The third
+parameter is the list of sources. The second parameter is the name of a
+Jam-level link:#b2.overview.jam_language.actions[action]. The third
 parameter is the property-set applying to this action. The second line
 creates a target. We specify a name, a type and a project. We also pass
 the action object created earlier. If the action creates several
