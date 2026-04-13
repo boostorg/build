@@ -5,7 +5,7 @@
 # (See accompanying file LICENSE.txt or https://www.bfgroup.xyz/b2/LICENSE.txt)
 
 # List of tested regexps. Each tuple contains the pattern,
-# the value used for the test, and the expected result (do not use [] here).
+# the value used for the test, and the expected result (do not use [] here.)
 # Any test is processed by an instruction such as
 #
 # ECHO [ MATCH <pattern> : <value> ] ;
@@ -83,7 +83,7 @@ trials = [
 testln = []
 exptln = []
 for n, c in enumerate(trials):
-    testln.append('ECHO {} [ MATCH {} : {} ] ;'.format(n, c[0], c[1]))
+    testln.append('ECHO {} [ MATCH {} : {} ] ;'.format(n, *c))
     exptln.append('{} {}'.format(n, c[2]) if c[2] else str(n))
 testln.append('EXIT : 0 ;\n')
 exptln.append('\n')
@@ -91,8 +91,11 @@ exptln.append('\n')
 import BoostBuild
 
 t = BoostBuild.Tester(pass_toolset=False)
-t.write('Jamroot', '\n'.join(testln))
-t.run_build_system()
-t.expect_output_lines('\n'.join(exptln))
-t.expect_nothing_more()
+
+t.run_build_system(
+    ["-d0", "-f-"],
+    stdin='\n'.join(testln),
+    stdout='\n'.join(exptln)
+)
+
 t.cleanup()

@@ -1018,18 +1018,18 @@ LIST * builtin_subst( FRAME * frame, int flags )
 
             while ( ( subst = list_next( subst ) ) != end )
             {
-#define BUFLEN 4096
-                char buf[ BUFLEN + 1 ];
+#define BUFLEN 4094
+                char buf[ BUFLEN + 2 ];
                 char const * in = object_str( list_item( subst ) );
                 char * out = buf;
 
                 for ( ; *in && out < buf + BUFLEN; ++in )
                 {
+                    /* check for placeholders "\\N" and "$N" */
                     if ( *in == '\\' || *in == '$' )
                     {
+                        char plcc = *in;
                         ++in;
-                        if ( *in == 0 )
-                            break;
                         if ( *in >= '0' && *in <= '9' )
                         {
                             unsigned int const n = *in - '0';
@@ -1040,6 +1040,15 @@ LIST * builtin_subst( FRAME * frame, int flags )
                                 : remaining;
                             memcpy( out, re_i[ n ].begin(), len );
                             out += len;
+                            continue;
+                        }
+                        *out++ = plcc;
+                        if ( *in == 0 )
+                            break;
+                        /* reparse the next character if can be a placeholder */
+                        if ( *in == '\\' || *in == '$' )
+                        {
+                            --in;
                             continue;
                         }
                         /* fall through and copy the next character */

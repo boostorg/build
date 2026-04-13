@@ -56,6 +56,8 @@
 * Make `regex.escape` accept a list of strings to escape instead of just one
   string.
   -- _René Ferdinand Rivera Morell_
+* Fix SUBST builtin rule eating chars in replacement, test added.
+  -- _Paolo Pastori_
 
 == Version 5.4.2
 

@@ -469,6 +469,7 @@ tests = [
     "stage",
     "standalone",
     "static_and_shared_library",
+    "subst_list",
     "suffix",
     "tag",
     "test_rc",
