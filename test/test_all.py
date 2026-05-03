@@ -410,6 +410,7 @@ tests = [
     "inline",
     "install_build_no",
     "lang_asm",
+    "libbrotli",
     "lib_source_property",
     "lib_zlib",
     "libjpeg",
