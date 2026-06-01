@@ -38,7 +38,7 @@ jobs:
       - name: "Bootstrap"
         run: |
           uname -a
-          ./bootstrap.bat
+          ./bootstrap.sh
       - name: "Build"
         run: |
           ./b2 --debug-configuration -d+2 b2-release
