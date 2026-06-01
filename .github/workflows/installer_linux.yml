@@ -49,15 +49,14 @@ jobs:
           archive_bz2="${{github.workspace}}/${name}-${{ matrix.name }}.bz2"
           tar -cv -j -f "${archive_bz2}" "${name}"
           sha256sum -b "${archive_bz2}" > "${archive}.sha256sum.txt"
-          rm -rf ${name}
-          ls -laF
+          ls -laF "${{github.workspace}}/b2-*"
       - name: "Upload"
         uses: actions/upload-artifact@main
         with:
           name: installer
-          path: "${{github.workspace}}/.build/b2-*"
+          path: "${{github.workspace}}/b2-*"
       - name: "Publish"
         uses: softprops/action-gh-release@master
         if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         with:
-          path: "${{github.workspace}}/.build/b2-*"
+          path: "${{github.workspace}}/b2-*"
