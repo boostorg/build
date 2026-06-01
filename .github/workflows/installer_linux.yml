@@ -48,7 +48,7 @@ jobs:
           name=`ls -d1 b2-*`
           archive_bz2="${{github.workspace}}/${name}-${{ matrix.name }}.bz2"
           tar -cv -j -f "${archive_bz2}" "${name}"
-          sha256sum -b "${archive_bz2}" > "${archive}.sha256sum.txt"
+          sha256sum -b "${archive_bz2}" > "${archive_bz2}.sha256sum.txt"
           ls -laF "${{github.workspace}}"
       - name: "Upload"
         uses: actions/upload-artifact@main
