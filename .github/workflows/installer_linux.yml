@@ -50,6 +50,7 @@ jobs:
           tar -cv -j -f "${archive_bz2}" "${name}"
           sha256sum -b "${archive_bz2}" > "${archive}.sha256sum.txt"
           rm -rf ${name}
+          ls -laF
       - name: "Upload"
         uses: actions/upload-artifact@main
         with:
