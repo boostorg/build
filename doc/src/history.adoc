@@ -45,6 +45,13 @@
   -- _Paolo Pastori_
 * Fixed broken `--out-xml`, ignoring value `--durations` options.
   -- _Paolo Pastori_
+* Fix missing bound native rule argument format checking.
+  -- _René Ferdinand Rivera Morell_
+* Fix gcc command-db collection not working with multi-string commands.
+  -- _René Ferdinand Rivera Morell_
+* Make `regex.escape` accept a list of strings to escape instead of just one
+  string.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 5.4.2
 
