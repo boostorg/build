@@ -604,6 +604,7 @@ struct jam_arg_spec
 		count = 0;
 		using std::get;
 		bool _[] { false, append_arg_list_to_spec(get<I>(args.arg))... };
+		(void)_; // Avoid unused val warnings on older compilers.
 		if (count == 0) spec[count++] = "*";
 		spec[count] = nullptr;
 	}
