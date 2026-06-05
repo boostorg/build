@@ -25,12 +25,14 @@ on:
       ]
 
 jobs:
-  linux:
+  portable:
     strategy:
       matrix:
         include:
           - { name: "linux-x86_64", runson: "ubuntu-latest" }
-          - { name: "linux-arm", runson: "ubuntu-24.04-arm" }
+          - { name: "linux-arm64", runson: "ubuntu-24.04-arm" }
+          - { name: "macos-x86_64", runson: "macos-26-intel" }
+          - { name: "macos-arm64", runson: "macos-26" }
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runson }}
     steps:
@@ -54,7 +56,7 @@ jobs:
       - name: "Upload"
         uses: actions/upload-artifact@main
         with:
-          name: installer
+          name: portable-${{ matrix.name }}
           path: "${{github.workspace}}/b2-*"
       - name: "Publish"
         uses: softprops/action-gh-release@master
