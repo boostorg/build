@@ -22,7 +22,7 @@ using string = struct string;
 // lists.h
 struct LIST;
 using list_ptr = LIST *;
-using LOL = struct _lol;
+struct LOL;
 
 // modules.h
 using module_t = struct module_t;

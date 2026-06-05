@@ -72,11 +72,11 @@ typedef OBJECT ** LISTITER;
  */
 
 #define LOL_MAX 19
-typedef struct _lol
+struct LOL
 {
-	int32_t count;
-	LIST * list[LOL_MAX];
-} LOL;
+	int32_t count = 0;
+	LIST * list[LOL_MAX] = { };
+};
 
 LIST * list_new(OBJECT * value);
 LIST * list_append(LIST * destination, LIST * source);
@@ -843,12 +843,8 @@ inline lists::lists()
 inline lists::lists(lists && other)
 ----
 end::reference[] */
-inline lists::lists() { lol_init(&lol); }
-inline lists::lists(lists && other) B2_NOEXCEPT
-{
-	lol_init(&lol);
-	std::swap(lol, other.lol);
-}
+inline lists::lists() { }
+inline lists::lists(lists && other) B2_NOEXCEPT { std::swap(lol, other.lol); }
 
 /* tag::reference[]
 === `b2::lists::~lists`
