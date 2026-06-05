@@ -274,17 +274,27 @@ install b2-exe
         <b2-install-layout>portable:<location>(b2bindir-portable)
     ;
 explicit b2-exe ;
+rule b2-release-static ( props * )
+{
+    local target-os = [ feature.get-values <target-os> : $(props) ] ;
+    local host-os = [ feature.get-values <host-os> : $(props) ] ;
+    if ! $(target-os) in darwin
+    {
+        return
+            <runtime-link>static
+            <link>static ;
+    }
+}
 alias b2-release
     :   b2-exe/<install-prefix>$(SELF)/.build/b2-$(b2_version)
         b2-core/<install-prefix>$(SELF)/.build/b2-$(b2_version)
     :   <b2-install-layout>portable
-        <runtime-link>static
-        <link>static
         <variant>release
         <lto>on
         <optimization>speed
         <inlining>full
         <vectorize>full
         <visibility>hidden
+        <conditional>@b2-release-static
     ;
 explicit b2-release ;
