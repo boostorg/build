@@ -2,7 +2,7 @@
 # Use, modification, and distribution are subject to the
 # Boost Software License, Version 1.0. (See accompanying file LICENSE.txt)
 
-name: "Installer: Linux"
+name: "Installer"
 
 on:
   # Allow manual runs.
@@ -25,11 +25,12 @@ on:
       ]
 
 jobs:
-  wix:
+  linux:
     strategy:
       matrix:
         include:
           - { name: "linux-x86_64", runson: "ubuntu-latest" }
+          - { name: "linux-arm", runson: "ubuntu-24.04-arm" }
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runson }}
     steps:
