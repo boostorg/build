@@ -41,7 +41,6 @@ jobs:
       matrix:
         msys:
           - mingw64
-          - mingw32
           - ucrt64
           - clang64
         toolset:
@@ -55,7 +54,7 @@ jobs:
         uses: actions/checkout@main
 
       - name: Install Toolset
-        uses: msys2/setup-msys2@v2
+        uses: msys2/setup-msys2@main
         with:
           msystem: ${{matrix.msys}}
           pacboy: python:p ${{matrix.toolset}}:p
@@ -69,7 +68,7 @@ jobs:
         run: ./test_all.py ${{matrix.toolset}}
 
       - name: 'No Warnings'
-        run: ./b2 warnings=all warnings-as-errors=on variant=debug,release debug-symbols=off toolset=${{matrix.toolset}} b2
+        run: ./b2 --debug-configuration warnings=all warnings-as-errors=on variant=debug,release debug-symbols=off toolset=${{matrix.toolset}} b2
 
   filc:
     name: Fil-C
@@ -107,4 +106,4 @@ jobs:
 
       - name: 'No Warnings'
         working-directory: b2
-        run: ./b2 warnings=all warnings-as-errors=on variant=debug,release debug-symbols=off toolset=clang b2
+        run: ./b2 --debug-configuration warnings=all warnings-as-errors=on variant=debug,release debug-symbols=off toolset=clang b2
