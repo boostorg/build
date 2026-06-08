@@ -24,102 +24,95 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        arch: ["x86_64", "aarch64", "riscv64"]
         include:
+          - {
+              name: "FreeBSD, GCC 16",
+              toolset: gcc,
+              cxx: "g++16",
+              package: "lang/gcc16",
+            }
           - {
               name: "FreeBSD, GCC 15",
               toolset: gcc,
-              test_toolset: gcc,
               cxx: "g++15",
               package: "lang/gcc15",
             }
           - {
               name: "FreeBSD, GCC 14",
               toolset: gcc,
-              test_toolset: gcc,
               cxx: "g++14",
               package: "lang/gcc14",
             }
           - {
               name: "FreeBSD, GCC 13",
               toolset: gcc,
-              test_toolset: gcc,
               cxx: "g++13",
               package: "gcc13",
             }
           - {
               name: "FreeBSD, GCC 12",
               toolset: gcc,
-              test_toolset: gcc,
               cxx: "g++12",
               package: "gcc12",
             }
           - {
               name: "FreeBSD, Clang 21",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++21",
               package: "devel/llvm21",
             }
           - {
               name: "FreeBSD, Clang 20",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++20",
               package: "devel/llvm20",
             }
           - {
               name: "FreeBSD, Clang 19",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++19",
               package: "devel/llvm19",
             }
           - {
               name: "FreeBSD, Clang 18",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++18",
               package: "devel/llvm18",
             }
           - {
               name: "FreeBSD, Clang 17",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++17",
               package: "devel/llvm17",
             }
           - {
               name: "FreeBSD, Clang 16",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++16",
               package: "devel/llvm16",
             }
           - {
               name: "FreeBSD, Clang 15",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++15",
               package: "devel/llvm15",
             }
           - {
               name: "FreeBSD, Clang 14",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++14",
               package: "devel/llvm14",
             }
           - {
               name: "FreeBSD, Clang 13",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++13",
               package: "devel/llvm13",
             }
           - {
               name: "FreeBSD, Clang 12",
               toolset: clang,
-              test_toolset: clang,
               cxx: "clang++12",
               package: "devel/llvm12",
             }
@@ -164,7 +157,7 @@ jobs:
           set -e
           CXX_PATH=`which ${{ matrix.cxx }}`
           cd test
-          echo "using ${{ matrix.test_toolset }} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          python3 grep.py ${{ matrix.test_toolset }}
-          python3 test_all.py ${{ matrix.test_toolset }}
+          echo "using ${{ matrix.toolset }} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
+          python3 grep.py ${{ matrix.toolset }}
+          python3 test_all.py ${{ matrix.toolset }}
           cd ..
