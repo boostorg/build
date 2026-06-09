@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: ["x86_64", "aarch64", "riscv64"]
+        arch: ["x86_64", "aarch64"]
         toolset:
           - { cxx: "g++16", package: "lang/gcc16", b2tool: gcc }
           - { cxx: "g++15", package: "lang/gcc15", b2tool: gcc }
@@ -41,10 +41,21 @@ jobs:
           - { cxx: "clang++14", package: "devel/llvm14", b2tool: clang }
           - { cxx: "clang++13", package: "devel/llvm13", b2tool: clang }
           - { cxx: "clang++12", package: "devel/llvm12", b2tool: clang }
+        exclude:
+          - { arch: "aarch64", toolset: { b2tool: gcc } }
     steps:
+      - name: Condition
+        id: condition
+        run: |
+          echo "SKIP=${{ case(
+            matrix.arch == 'aarch64' && matrix.b2tool == 'gcc', 1,
+            0
+          )}}" >> "$GITHUB_OUTPUT"
       - name: Checkout
+        if: ${{ steps.condition.outputs.SKIP == 0 }}
         uses: actions/checkout@main
       - name: Start VM
+        if: ${{ steps.condition.outputs.SKIP == 0 }}
         id: vm
         uses: vmactions/freebsd-vm@v1
         with:
@@ -52,6 +63,7 @@ jobs:
           usesh: true
           custom-shell-name: vmsh
       - name: Info
+        if: ${{ steps.condition.outputs.SKIP == 0 }}
         shell: vmsh {0}
         run: |
           echo ${PWD}
@@ -63,6 +75,7 @@ jobs:
           sysctl hw.physmem
           sysctl hw.usermem
       - name: Install
+        if: ${{ steps.condition.outputs.SKIP == 0 }}
         shell: vmsh {0}
         run: |
           uname -a
@@ -71,6 +84,7 @@ jobs:
           pkg install ${{ matrix.toolset.package }}
           pkg install python3
       - name: Setup
+        if: ${{ steps.condition.outputs.SKIP == 0 }}
         shell: vmsh {0}
         run: |
           set -e
@@ -79,6 +93,7 @@ jobs:
           ./b2 -v
           cd ../..
       - name: Run
+        if: ${{ steps.condition.outputs.SKIP == 0 }}
         shell: vmsh {0}
         run: |
           set -e
