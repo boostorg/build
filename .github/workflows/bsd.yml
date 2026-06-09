@@ -19,12 +19,11 @@ on:
     paths-ignore: *ignore_paths
 
 jobs:
-  BSD:
+  FreeBSD:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        os: ["freebsd"]
         arch: ["x86_64", "aarch64", "riscv64"]
         toolset:
           - { cxx: "g++16", package: "lang/gcc16", b2tool: gcc }
@@ -46,14 +45,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@main
       - name: Start VM
-        if: ${{ matrix.os == 'freebsd' }}
         id: vm
         uses: vmactions/freebsd-vm@v1
         with:
+          arch: ${{ matrix.arch }}
           usesh: true
           custom-shell-name: vmsh
       - name: Info
-        if: ${{ matrix.os == 'freebsd' }}
         shell: vmsh {0}
         run: |
           echo ${PWD}
