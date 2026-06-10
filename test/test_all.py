@@ -21,6 +21,7 @@ import threading
 import inspect
 
 xml = "--xml" in sys.argv
+slow = "--slow" in sys.argv
 toolset = BoostBuild.get_toolset()
 
 
@@ -63,8 +64,10 @@ def run_test(test):
         # Translate the SIGILL to an exception to stop with an apropos error.
         raise TimeoutError()
 
-    # Timer for the 5 minute limit for each test.
-    timeout = threading.Timer(5 * 60, early_exit)
+    # Timer for the 5 minute limit for each test. Unless we indicate it's a
+    # slow running context (like inside a VM).
+    timeout_seconds = 15 * 60 if slow else 5 * 60
+    timeout = threading.Timer(timeout_seconds, early_exit)
     timeout.start()
     signal.signal(signal.SIGILL, sig_handle)
     ts = time.perf_counter()

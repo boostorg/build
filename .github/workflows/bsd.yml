@@ -19,11 +19,12 @@ on:
     paths-ignore: *ignore_paths
 
 jobs:
-  FreeBSD:
+  BSD:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
+        os: ["freebsd", "ghostbsd"]
         arch: ["x86_64", "aarch64"]
         toolset:
           - { cxx: "g++16", package: "lang/gcc16", b2tool: gcc }
@@ -42,25 +43,31 @@ jobs:
           - { cxx: "clang++13", package: "devel/llvm13", b2tool: clang }
           - { cxx: "clang++12", package: "devel/llvm12", b2tool: clang }
         exclude:
-          - { arch: "aarch64", toolset: { b2tool: gcc } }
+          - { os: "freebsd", arch: "aarch64", toolset: { b2tool: gcc } }
+          - { os: "ghostbsd", arch: "aarch64" }
     steps:
       - name: Checkout
         uses: actions/checkout@main
       - name: Start VM
         id: vm
-        uses: vmactions/freebsd-vm@v1
+        uses: vmactions/${{ matrix.os }}-vm@v1
         with:
           arch: ${{ matrix.arch }}
           usesh: true
           custom-shell-name: vmsh
-      - name: Info
+      - name: Info-Basic
         shell: vmsh {0}
         run: |
           echo ${PWD}
           whoami
           env
-          freebsd-version
           uname -a
+      - name: Info-FreeBSD
+        if: ${{ matrix.os == 'freebsd' }}
+        shell: vmsh {0}
+        run: |
+          echo ${PWD}
+          freebsd-version
           sysctl hw.ncpu
           sysctl hw.physmem
           sysctl hw.usermem
@@ -85,8 +92,8 @@ jobs:
         run: |
           set -e
           CXX_PATH=`which ${{ matrix.toolset.cxx }}`
+          B2_ARGS=${{ case(arch != 'x86_64', '--slow', '') }}
           cd test
           echo "using ${{ matrix.toolset.b2tool }} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
-          python3 grep.py ${{ matrix.toolset.b2tool }}
-          python3 test_all.py ${{ matrix.toolset.b2tool }}
+          python3 test_all.py ${{ matrix.toolset.b2tool }} ${B2_ARGS}
           cd ..
