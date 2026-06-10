@@ -48,9 +48,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@main
-      - name: Start VM
-        id: vm
-        uses: vmactions/${{ matrix.os }}-vm@v1
+      - name: Start FreeBSD
+        if: ${{ matrix.os == "freebsd" }}
+        uses: vmactions/freebsd-vm@v1
+        with:
+          arch: ${{ matrix.arch }}
+          usesh: true
+          custom-shell-name: vmsh
+      - name: Start GhostBSD
+        if: ${{ matrix.os == "ghostbsd" }}
+        uses: vmactions/ghostbsd-vm@v1
         with:
           arch: ${{ matrix.arch }}
           usesh: true
@@ -92,7 +99,7 @@ jobs:
         run: |
           set -e
           CXX_PATH=`which ${{ matrix.toolset.cxx }}`
-          B2_ARGS=${{ case(arch != 'x86_64', '--slow', '') }}
+          B2_ARGS=${{ case(matrix.arch != 'x86_64', '--slow', '') }}
           cd test
           echo "using ${{ matrix.toolset.b2tool }} : : ${CXX_PATH} ;" > ${HOME}/user-config.jam
           python3 test_all.py ${{ matrix.toolset.b2tool }} ${B2_ARGS}
