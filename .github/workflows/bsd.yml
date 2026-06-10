@@ -49,14 +49,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@main
       - name: Start FreeBSD
-        if: ${{ matrix.os == "freebsd" }}
+        if: ${{ matrix.os == 'freebsd' }}
         uses: vmactions/freebsd-vm@v1
         with:
           arch: ${{ matrix.arch }}
           usesh: true
           custom-shell-name: vmsh
       - name: Start GhostBSD
-        if: ${{ matrix.os == "ghostbsd" }}
+        if: ${{ matrix.os == 'ghostbsd' }}
         uses: vmactions/ghostbsd-vm@v1
         with:
           arch: ${{ matrix.arch }}
