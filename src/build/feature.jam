@@ -1,5 +1,5 @@
 # Copyright 2001, 2002, 2003 Dave Abrahams
-# Copyright 2002, 2006 Rene Rivera
+# Copyright 2002, 2006, 2026 Rene Rivera
 # Copyright 2002, 2003, 2004, 2005, 2006 Vladimir Prus
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE.txt or copy at
@@ -29,6 +29,7 @@ local rule setup ( )
         subfeature
         order-sensitive
         hidden
+        version
     ;
 
     .all-features = ;
@@ -113,13 +114,21 @@ rule feature (
     {
         error = feature already "defined:" ;
     }
-    else if implicit in $(attributes) && free in $(attributes)
+    else if free in $(attributes) && implicit in $(attributes)
     {
-        error = free features cannot also be implicit ;
+        error = free features cannot be implicit ;
     }
     else if free in $(attributes) && propagated in $(attributes)
     {
         error = free features cannot be propagated ;
+    }
+    else if version in $(attributes) && implicit in $(attributes)
+    {
+        error = version features cannot be implicit ;
+    }
+    else if version in $(attributes) && free in $(attributes)
+    {
+        error = version features cannot be free ;
     }
     else
     {
@@ -170,6 +179,10 @@ rule set-default ( feature : value )
     {
         bad-attribute = optional ;
     }
+    else if version in $(a)
+    {
+        bad-attribute = version ;
+    }
     if $(bad-attribute)
     {
         import errors ;
@@ -194,7 +207,7 @@ rule defaults ( features * )
     {
         local gf = $(:E=:G=$(f)) ;
         local a = $($(gf).attributes) ;
-        if ( free in $(a) ) || ( optional in $(a) )
+        if ( free in $(a) ) || ( optional in $(a) ) || ( version in $(a) )
         {
         }
         else
@@ -462,7 +475,18 @@ local rule extend-feature ( feature : values * )
 #
 rule validate-value-string ( feature value-string )
 {
-    if ! (
+    if ( version in $($(feature).attributes) )
+    {
+        # Check that the value is a valid semver.
+        import version ;
+        if ! [ version.semver-verify $(value-string) ]
+        {
+            import errors ;
+            errors.error \"$(value-string)\"
+                "is not a valid semantic version for feature" \"$(feature)\" ;
+        }
+    }
+    else if ! (
         free in $($(feature).attributes)
         || ( $(value-string) in $($(feature).values) )
     )
@@ -738,6 +762,20 @@ rule free-features ( )
 }
 
 
+#|
+Is a feature with a unbounded/variable set of values, like free and version.
+|#
+local rule is-variable-feature ( f )
+{
+    local attr = [ attributes $(f) ] ;
+    if free in $(attr) || feature in $(attr)
+    {
+        return true ;
+    }
+    return ;
+}
+
+
 # Expand all composite properties in the set so that all components are
 # explicitly expressed.
 #
@@ -757,7 +795,7 @@ rule expand-composites ( properties * )
             {
                 local f = $(x:G) ;
 
-                if $(f) in $(free.features)
+                if $(f) in $(free.features) || $(f) in $(version.features)
                 {
                     result += $(x) ;
                 }
@@ -1085,7 +1123,7 @@ rule add-defaults ( properties * )
     local to-remove ;
     for local f in $(properties:G)
     {
-        if ! free in [ attributes $(f) ]
+        if ! [ is-variable-feature $(f) ] && ! feature in [ attributes $(f) ]
         {
             to-remove += $(f) ;
         }
@@ -1112,9 +1150,10 @@ rule add-defaults ( properties * )
         {
             if ! $(m:G) in $(to-remove)
             {
+                local is-variable = [ is-variable-feature $(m:G) ] ;
                 local att = [ attributes $(m:G) ] ;
                 if $(m:G) in $(expanded-from-composite) &&
-                    ! free in $(att) &&
+                    ! $(is-variable) &&
                     ! $(m) in $(more)
                 {
                     import errors ;
@@ -1125,7 +1164,7 @@ rule add-defaults ( properties * )
                     expanded-from-composite += $(m:G) ;
                 }
                 more += $(m) ;
-                if ! subfeature in $(att) && ! free in $(att)
+                if ! subfeature in $(att) && ! $(is-variable)
                 {
                     worklist += $(m) ;
                 }
@@ -1225,6 +1264,7 @@ rule __test__ ( )
     feature variant : debug release profile : implicit composite symmetric ;
     feature stdlib : native stlport ;
     feature magic : : free ;
+    feature version : : version ;
 
     compose <variant>debug : <define>_DEBUG <optimization>off ;
     compose <variant>release : <define>NDEBUG <optimization>on ;
@@ -1411,6 +1451,13 @@ rule __test__ ( )
     }
     catch \"digital_mars\" is not a known value of feature <toolset> ;
 
+    validate-value-string <version> 1.2.3 ;
+    try ;
+    {
+        validate-value-string <version> a.b.c ;
+    }
+    catch \"a.b.c\" is not a valid semantic version for feature \"<version>\" ;
+
     try ;
     {
         feature foobar : : baz ;
@@ -1428,7 +1475,7 @@ rule __test__ ( )
     {
         feature feature2 : : free implicit ;
     }
-    catch free features cannot also be implicit ;
+    catch free features cannot be implicit ;
 
     try ;
     {

@@ -14,6 +14,9 @@
 * *New*: Add reading/parsing of property database from JSON data to base CPS
   support from.
   -- _René Ferdinand Rivera Morell_
+* *New*: Add `version` feature attribute to tag and manage semantic versioning
+  of targets.
+  -- _René Ferdinand Rivera Morell_
 * Fix Jam/{CPP} bind definitions of 4 or more values in a single
   declared argument not actually adding all the definitions.
   -- _Paolo Pastori_

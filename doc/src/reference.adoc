@@ -1091,6 +1091,16 @@ on library B. As the result, whenever an application will link to A, it
 will also link to B. Specifying B as dependency of A is different from
 adding B to the sources of A.
 
+* [[b2.reference.features.attributes.version]] _version_
++
+The value of a version feature is a valid Semantic Version.
+footnote:[Semantic Versioning (https://semver.org/)] Like free features, the
+set of values are unbounded. When a version feature is specified it will use
+the semnantic versioning rules to match them against each other.
++
+_Note, this is an experimental feature and how it works is subject to future
+changes as use cases get discovered._
+
 [[b2.reference.features.attributes.base]]
 Features that are neither free nor incidental are called _base_
 features.

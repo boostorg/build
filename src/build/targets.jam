@@ -633,6 +633,7 @@ local rule end-building ( main-target-instance )
 #
 class main-target : abstract-target
 {
+    import property ;
     import property-set ;
     import sequence ;
     import set ;
@@ -709,6 +710,11 @@ class main-target : abstract-target
                             # Do nothing, this alternative is worse
                         }
                         else if $(best-properties) in $(properties)
+                        {
+                            best = $(v) ;
+                            best-properties = $(properties) ;
+                        }
+                        else if [ property.next-is-match $(best-properties) : $(properties) ]
                         {
                             best = $(v) ;
                             best-properties = $(properties) ;
@@ -1148,6 +1154,7 @@ class basic-target : abstract-target
     import sequence ;
     import set ;
     import targets ;
+    import version ;
     import virtual-target ;
 
     rule __init__ ( name : project : sources * : requirements * :
@@ -1229,13 +1236,38 @@ class basic-target : abstract-target
         local condition = [ set.difference $(bcondition) : $(ccondition) ] ;
         condition = [ feature.expand-subfeatures $(condition) : unchecked ] ;
 
-        if $(condition) in [ $(property-set).raw ]
+        if [ $(property-set).contains-features $(condition:G) ]
         {
-            if $(debug)
+            # The condition could match. But we need to resolve any features
+            # that use non-equality matching.
+            for local c in $(condition)
             {
-                ECHO "    matched:" $(condition:E=(empty)) ;
+                if version in [ feature.attributes $(c:G) ]
+                {
+                    local resolved ;
+                    for local v in [ $(property-set).get $(c:G) ]
+                    {
+                        resolved ?= $(c:G=) ;
+                        resolved = [ version.semver-resolve $(v) $(resolved) ] ;
+                        if ! $(resolved)
+                        {
+                            if $(debug)
+                            {
+                                ECHO "    no match:" $(condition:E=(empty)) ;
+                            }
+                            return no-match ;
+                        }
+                    }
+                }
+                else if ! $(c:G=) in [ $(property-set).get $(c:G) ]
+                {
+                    if $(debug)
+                    {
+                        ECHO "    no match:" $(condition:E=(empty)) ;
+                    }
+                    return no-match ;
+                }
             }
-            return $(condition) ;
         }
         else
         {
@@ -1245,6 +1277,11 @@ class basic-target : abstract-target
             }
             return no-match ;
         }
+        if $(debug)
+        {
+            ECHO "    matched:" $(condition:E=(empty)) ;
+        }
+        return $(condition) ;
     }
 
     # Takes a target reference, which might be either target id or a dependency
