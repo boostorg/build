@@ -560,7 +560,7 @@ struct jam_arg_spec_count_sum<X, A...>
 	//     = X::count + jam_arg_spec_count_sum<A...>::value;
 	enum : std::size_t
 	{
-		value = X::count + jam_arg_spec_count_sum<A...>::value
+		value = static_cast<std::size_t>(X::count) + static_cast<std::size_t>(jam_arg_spec_count_sum<A...>::value)
 	};
 };
 

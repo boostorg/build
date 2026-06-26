@@ -131,12 +131,15 @@ struct value_ref
 	inline bool operator==(value_ptr b) const { return val->equal_to(*b); }
 	inline bool operator==(const char * v) const
 	{
-		return (*this) == value_ref(v);
+		return val->equal_to(*value_ref(v));
 	}
-	template <typename T>
-	inline bool operator!=(T v) const
+	inline bool operator!=(value_ptr b) const
 	{
-		return !((*this) == v);
+		return !(val->equal_to(*b));
+	}
+	inline bool operator!=(const char * v) const
+	{
+		return !(val->equal_to(*value_ref(v)));
 	}
 	inline value_ptr operator->() const { return val; }
 	inline value & operator*() const { return *val; }
