@@ -118,7 +118,7 @@ Visual Studio 2026 (aka msvc145).
 * Add `libstdc++` to `stdlib` feature as the current naming for that std
   library.
   -- _Dmitry Arkhipov_
-* Fix building when targetting WASM64 with emscripten.
+* Fix building when targeting WASM64 with emscripten.
   -- _Uilian Ries_
 * Fix resolution of subprojects of rooted projects.
   -- _Dmitry Arkhipov_
