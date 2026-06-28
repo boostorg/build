@@ -8,7 +8,7 @@ on:
   # Allow manual runs.
   workflow_dispatch:
   # Run on publishing of releases.
-  release: { types: [prereleased, published] }
+  release: { types: [published] }
   # And run on pushes, for main and release branches.
   push:
     branches: ["main", "release", "version/*"]
@@ -60,6 +60,6 @@ jobs:
           path: "${{github.workspace}}/b2-*"
       - name: "Publish"
         uses: softprops/action-gh-release@master
-        if: ${{ github.event_name == 'release' && ( github.event.action == 'prereleased' || github.event.action == 'published' ) }}
+        if: ${{ github.event_name == 'release' && github.event.action == 'published' }}
         with:
-          path: "${{github.workspace}}/b2-*"
+          files: "${{github.workspace}}/b2-*"
