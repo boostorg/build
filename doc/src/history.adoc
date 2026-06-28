@@ -3,6 +3,13 @@
 
 == Version 5.5.0
 
+This release has a bunch of internal cleanups and bug fixes. But it also has a
+handful of new features. There's initial support for the Fil-C compiler,
+the `version` attribute for features to manage versioning of targets,
+and additional support for JSON data.
+
+Special thanks to Paolo Pastori for the many fixes and cleanups in this release.
+
 * *New*: Add toolset, and bootstrapping, for Fil-C compiler.
   -- _René Ferdinand Rivera Morell_
 * *New*: Add `version` feature attribute to tag and manage semantic versioning
