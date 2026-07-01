@@ -631,7 +631,9 @@ local rule gcc-use-libutil ( )
         {
             # Use ldd to determine the libc version, assuming
             # that GNU ldd has the same version than libc
-            local output = [ SPLIT_BY_CHARACTERS [ shell-cmd $(ldd)" --version" ] : "\r\n" ] ;
+            local ldd_version = [ shell-cmd $(ldd)" --version" ] ;
+            ldd_version ?= "" ;
+            local output = [ SPLIT_BY_CHARACTERS $(ldd_version) : "\r\n" ] ;
             debug-message found ldd '$(output[1])' ;
             glibc = [ MATCH "([0-9.]+)$" : $(output[1]) ] ;
             if $(glibc)

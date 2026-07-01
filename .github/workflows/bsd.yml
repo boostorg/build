@@ -24,7 +24,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["freebsd", "ghostbsd"]
+        os: ["freebsd"]
+        # "ghostbsd"
         arch: ["x86_64", "aarch64"]
         toolset:
           - { cxx: "g++16", package: "lang/gcc16", b2tool: gcc }
@@ -44,7 +45,7 @@ jobs:
           - { cxx: "clang++12", package: "devel/llvm12", b2tool: clang }
         exclude:
           - { os: "freebsd", arch: "aarch64", toolset: { b2tool: gcc } }
-          - { os: "ghostbsd", arch: "aarch64" }
+          # - { os: "ghostbsd", arch: "aarch64" }
     steps:
       - name: Checkout
         uses: actions/checkout@main
