@@ -1,7 +1,7 @@
 [[b2.history]]
 = History
 
-== Version 5.1.1
+== Version 5.5.1
 
 Fix python config error when `ldd --version` fails instead of resulting in not
 detecting `glibc` for the Python configuration.
