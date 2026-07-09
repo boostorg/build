@@ -48,6 +48,7 @@ jobs:
           arch: ${{ matrix.arch }}
           usesh: true
           custom-shell-name: vmsh
+          sync: nfs
 
       - name: "Bootstrap"
         if: ${{ matrix.os != 'freebsd' }}
