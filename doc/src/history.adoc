@@ -1,6 +1,12 @@
 [[b2.history]]
 = History
 
+== Version 5.5.2
+
+* Fix use of obsolete/deprecated `-single_module` option in darwin/mscOS
+  tooling.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 5.5.1
 
 Fix python config error when `ldd --version` fails instead of resulting in not
