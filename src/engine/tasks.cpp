@@ -185,11 +185,9 @@ inline void group::implementation::call_queue(std::function<void()> f)
 
 inline std::function<void()> group::implementation::call_dequeue()
 {
-	bool signal_finished = false;
 	std::function<void()> result;
 	{
 		scope_lock_t lock(mx);
-		signal_finished = pending.empty() && running == 0;
 		// We only return tasks when we have them, and when we have enough
 		// parallelism.
 		if (!pending.empty() && running < parallelism)
@@ -198,7 +196,6 @@ inline std::function<void()> group::implementation::call_dequeue()
 			pending.pop();
 		}
 	}
-	if (signal_finished) finished.signal();
 	return result;
 }
 
