@@ -172,7 +172,12 @@ inline void group::implementation::call_queue(std::function<void()> f)
 			running -= 1;
 			signal_finished = pending.empty() && running == 0;
 		}
-		if (signal_finished) finished.signal();
+		if (signal_finished)
+		{
+			// Re-try the signal until it happens indicating that the waiting
+			// task is expecting it.
+			while (!finished.signal()) ;
+		}
 	};
 	{
 		scope_lock_t lock(mx);
