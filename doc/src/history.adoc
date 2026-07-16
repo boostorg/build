@@ -1,6 +1,11 @@
 [[b2.history]]
 = History
 
+== Version 5.5.3
+
+* Fix regression when using ccache with clang-linux toolset.
+  -- _Alexander Grund_
+
 == Version 5.5.2
 
 * Fix invalid use of system `ar` when cross-compiling with llvm on Linux instead
