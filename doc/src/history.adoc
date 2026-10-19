@@ -3,6 +3,10 @@
 
 == Version 5.6.0
 
+Mostly a bugfix release for various issues that people reported or found
+(and generously provided fixes). Only addition is for early support of EcoStd
+introspection reporting (with a new `stdinfo` module).
+
 * *New*: Add minimal https://ecostd.github.io/[EcoStd] support. Minimal being
   self introspection information output.
   -- _René Ferdinand Rivera Morell_
@@ -18,6 +22,26 @@
   -- _Sai Asish Y_
 * Fix parsing of Windows archive files larger than 2GiB.
   -- _René Ferdinand Rivera Morell_
+* Add `alpha` to the `architecture` feature.
+  -- _Matt Turner_
+* Add `python-numpy-include` feature to support numpy while cross-compiling.
+  -- _Rob Woolley_
+* Autodetect `<target-os>` from compiler triplet for gcc/clang toolsets.
+  -- _Uilian Ries_
+* Fix generating Windows import libraries when linking shared libraries in
+  clang-linux toolset.
+  -- _Uilian Ries_
+* Forward `<linkflags>` from using msvc toolset options to the linker.
+  -- _Uilian Ries_
+* Use getexecpath() on OpenBSD to detect the executable path.
+  -- _Brad Smith_
+* Avoid warnings about debug sym turning off optimization default for
+  intel-linux toolset.
+  -- _René Ferdinand Rivera Morell_
+* Do not link pthread for Android on Python config.
+  -- _Uilian Ries_
+* Exclude `iphone` and `appletv` from `rpath-os` fallback rule.
+  -- _Uilian Ries_
 
 == Version 5.5.3
 
