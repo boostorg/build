@@ -16,6 +16,8 @@
 * Fix intermittent crash in `make1c()` from dereferencing a null `t->parents`
   when updating includes of a just-created internal node.
   -- _Sai Asish Y_
+* Fix parsing of Windows archive files larger than 2GiB.
+  -- _René Ferdinand Rivera Morell_
 
 == Version 5.5.3
 

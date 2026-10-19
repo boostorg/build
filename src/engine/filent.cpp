@@ -404,7 +404,7 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
     struct ar_hdr ar_hdr;
     char * string_table = 0;
     char buf[ MAXJPATH ];
-    long offset;
+    std::ptrdiff_t offset;
     const char * path = object_str( archive->file->name );
     int const fd = open( path , O_RDONLY | O_BINARY, 0 );
 
@@ -503,7 +503,7 @@ int file_collect_archive_content_( file_archive_info_t * const archive )
         }
 
         offset += SARHDR + lar_size;
-        lseek( fd, offset, 0 );
+        _lseeki64( fd, offset, 0 );
     }
 
     close( fd );
