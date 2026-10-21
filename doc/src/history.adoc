@@ -1,6 +1,13 @@
 [[b2.history]]
 = History
 
+== Version 5.6.1
+
+* Fix incorrectly adding `-m64` or `-m32` for all architectures with clang
+  toolset. Not all architectures support the variation of address model and
+  clang no longer ignores the option if not compatible.
+  -- _René Ferdinand Rivera Morell_
+
 == Version 5.6.0
 
 Mostly a bugfix release for various issues that people reported or found
