@@ -499,6 +499,8 @@ struct global_config
 	// Show help output instead of building.
 	bool display_help = false;
 
+	void add_debug_level(int d, bool f = true);
+	void set_debug_level(int d);
 	void out_print() const;
 };
 

@@ -1,6 +1,55 @@
 [[b2.history]]
 = History
 
+== Version 5.6.1
+
+* Fix incorrectly adding `-m64` or `-m32` for all architectures with clang
+  toolset. Not all architectures support the variation of address model and
+  clang no longer ignores the option if not compatible.
+  -- _René Ferdinand Rivera Morell_
+
+== Version 5.6.0
+
+Mostly a bugfix release for various issues that people reported or found
+(and generously provided fixes). Only addition is for early support of EcoStd
+introspection reporting (with a new `stdinfo` module).
+
+* *New*: Add minimal https://ecostd.github.io/[EcoStd] support. Minimal being
+  self introspection information output.
+  -- _René Ferdinand Rivera Morell_
+* Fix obsolete `-ip` option for intel-linux toolset. Replaced with `-ipo`.
+  -- _Amlal El Mahrouss_
+* Fix `clang-win` toolset initialization error, `missing argument native` from
+  `path.make`, on machines where `vswhere` does not find a Visual Studio
+  installation. The VS detection now includes Build Tools installs
+  (`vswhere -products *`), and a missing VS install is no longer a hard error.
+  -- _Sam Darwin_
+* Fix intermittent crash in `make1c()` from dereferencing a null `t->parents`
+  when updating includes of a just-created internal node.
+  -- _Sai Asish Y_
+* Fix parsing of Windows archive files larger than 2GiB.
+  -- _René Ferdinand Rivera Morell_
+* Add `alpha` to the `architecture` feature.
+  -- _Matt Turner_
+* Add `python-numpy-include` feature to support numpy while cross-compiling.
+  -- _Rob Woolley_
+* Autodetect `<target-os>` from compiler triplet for gcc/clang toolsets.
+  -- _Uilian Ries_
+* Fix generating Windows import libraries when linking shared libraries in
+  clang-linux toolset.
+  -- _Uilian Ries_
+* Forward `<linkflags>` from using msvc toolset options to the linker.
+  -- _Uilian Ries_
+* Use getexecpath() on OpenBSD to detect the executable path.
+  -- _Brad Smith_
+* Avoid warnings about debug sym turning off optimization default for
+  intel-linux toolset.
+  -- _René Ferdinand Rivera Morell_
+* Do not link pthread for Android on Python config.
+  -- _Uilian Ries_
+* Exclude `iphone` and `appletv` from `rpath-os` fallback rule.
+  -- _Uilian Ries_
+
 == Version 5.5.3
 
 * Fix regression when using ccache with clang-linux toolset.
@@ -16,7 +65,6 @@
   -- _René Ferdinand Rivera Morell_
 * Fix startup, post-config, crashes when building B2 for install after
   bootstrap.
-  -- _René Ferdinand Rivera Morell_
 
 == Version 5.5.1
 

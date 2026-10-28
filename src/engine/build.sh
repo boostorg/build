@@ -490,6 +490,7 @@ mod_property_set.cpp \
 mod_regex.cpp \
 mod_sequence.cpp \
 mod_set.cpp \
+mod_stdinfo.cpp \
 mod_string.cpp \
 mod_summary.cpp \
 mod_sysinfo.cpp \

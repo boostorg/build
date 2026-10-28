@@ -99,6 +99,18 @@ void remove_event_callback(uint64_t e) { events::get().remove(e); }
 
 template <>
 uint64_t add_event_callback(
+	event_tag tag, std::function<void(void)> && call, int32_t priority)
+{
+	return events::get().add(tag, std::move(call), priority);
+}
+
+void trigger_event_pre_build()
+{
+	events::get().trigger<>(event_tag::pre_build);
+}
+
+template <>
+uint64_t add_event_callback(
 	event_tag tag, std::function<void(TARGET *)> && call, int32_t priority)
 {
 	return events::get().add(tag, std::move(call), priority);

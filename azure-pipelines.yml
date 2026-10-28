@@ -99,6 +99,7 @@ resources:
     - { container: linux_clang5, image: 'teeks99/clang-ubuntu:5', options: "${{variables.co_options}}" }
     - { container: linux_clang4, image: 'teeks99/clang-ubuntu:4', options: "${{variables.co_options}}" }
     - { container: linux_clang3, image: 'teeks99/clang-ubuntu:3.9', options: "${{variables.co_options}}" }
+    - { container: linux_icpx_latest, image: 'intel/oneapi', options: "${{variables.co_options}}"}
 
 stages:
 
@@ -308,6 +309,7 @@ stages:
         Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, CONTAINER: "linux_clang5"}
         Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, CONTAINER: "linux_clang4"}
         Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, CONTAINER: "linux_clang3"}
+        Intel oneAPI: {TOOLSET: intel-linux, CONTAINER: "linux_icpx_latest"}
     pool:
       vmImage: 'ubuntu-latest'
     container: $[ variables['CONTAINER'] ]

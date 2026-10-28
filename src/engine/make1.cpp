@@ -708,8 +708,8 @@ static void make1c( state const * const pState )
                      *    considered built before the additional MAKE1A state
                      *    processing even got a chance to start.
                      */
-                    make0( t->includes, t->parents->target, 0, 0, 0, t->includes
-                        );
+                    make0( t->includes, t->parents ? t->parents->target : 0, 0,
+                        0, 0, t->includes );
                     /* Link the old includes on to make sure that it gets
                      * cleaned up correctly.
                      */

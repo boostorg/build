@@ -36,6 +36,7 @@ toolset.inherit-flags intel-linux : gcc
           <warnings>off <warnings>all <warnings>on
           <warnings>extra <warnings>pedantic
           <warnings-as-errors>off <warnings-as-errors>on
+          <debug-symbols>on
         ;
 
 .debug-configuration = [ args.get-arg debug-configuration ] ;
@@ -195,7 +196,7 @@ rule init ( version ? :  command * : options * )
         flags intel-linux.compile OPTIONS $(condition)/<inlining>on : "-Ob1" ;
         flags intel-linux.compile OPTIONS $(condition)/<inlining>full : "-Ob2" ;
         flags intel-linux.compile OPTIONS $(condition)/<optimization>space : "-O1" ;
-        flags intel-linux.compile OPTIONS $(condition)/<optimization>speed : "-O3 -ip" ;
+        flags intel-linux.compile OPTIONS $(condition)/<optimization>speed : "-O3 -ipo" ;
     }
     else if [ numbers.less $(tool_version[1]) 11 ]
     {
@@ -203,7 +204,7 @@ rule init ( version ? :  command * : options * )
         flags intel-linux.compile OPTIONS $(condition)/<inlining>on : "-inline-level=1" ;
         flags intel-linux.compile OPTIONS $(condition)/<inlining>full : "-inline-level=2" ;
         flags intel-linux.compile OPTIONS $(condition)/<optimization>space : "-O1" ;
-        flags intel-linux.compile OPTIONS $(condition)/<optimization>speed : "-O3 -ip" ;
+        flags intel-linux.compile OPTIONS $(condition)/<optimization>speed : "-O3 -ipo" ;
     }
     else # newer version of intel do have -Os (at least 11+, don't know about 10)
     {
@@ -211,7 +212,7 @@ rule init ( version ? :  command * : options * )
         flags intel-linux.compile OPTIONS $(condition)/<inlining>on : "-inline-level=1" ;
         flags intel-linux.compile OPTIONS $(condition)/<inlining>full : "-inline-level=2" ;
         flags intel-linux.compile OPTIONS $(condition)/<optimization>space : "-Os" ;
-        flags intel-linux.compile OPTIONS $(condition)/<optimization>speed : "-O3 -ip" ;
+        flags intel-linux.compile OPTIONS $(condition)/<optimization>speed : "-O3 -ipo" ;
     }
     if [ numbers.less $(tool_version[1]) 2020 ]
     {
@@ -238,6 +239,9 @@ rule init ( version ? :  command * : options * )
     flags intel-linux.compile RUN_PATH $(condition) : $(command_lib_path) ;
     flags intel-linux.link RUN_PATH $(condition) : $(command_lib_path) ;
 }
+
+toolset.flags intel-linux.compile OPTIONS <debug-symbols>on : -g -Rno-debug-disables-optimization ;
+toolset.flags intel-linux.link OPTIONS <debug-symbols>on : -g -Rno-debug-disables-optimization ;
 
 _ = " " ;
 

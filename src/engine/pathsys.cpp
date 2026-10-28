@@ -39,6 +39,9 @@
 
 #include <algorithm>
 
+#ifdef __OpenBSD__
+#include <sys/param.h>
+#endif
 
 /* Internal OS specific implementation details - have names ending with an
  * underscore and are expected to be implemented in an OS specific pathXXX.c
@@ -422,6 +425,12 @@ char * executable_path( char const * argv0 )
     size_t size = sizeof( buf );
     sysctl( mib, 4, buf, &size, NULL, 0 );
     return ( !size || size == sizeof( buf ) ) ? NULL : strndup( buf, size );
+}
+#elif defined(__OpenBSD__) && OpenBSD >= 202610
+char * executable_path( char const * argv0 )
+{
+    char buf[ 1024 ];
+    return getexecpath( buf, sizeof( buf ) ) == -1 ? NULL : strdup( buf );
 }
 #elif defined(__linux__) || defined(__CYGWIN__) || defined(__GNU__)
 # include <unistd.h>

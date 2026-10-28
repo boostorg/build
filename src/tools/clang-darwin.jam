@@ -50,6 +50,12 @@ rule init ( version ? :  command * : options * )
         : version $(version) ] ;
 
     common.handle-options clang-darwin : $(condition) : $(command) : $(options) ;
+
+    if $(command)
+    {
+        clang.set-target-os-default clang-darwin : $(condition) : $(command-string) : $(options) ;
+    }
+
     clang.init-flags clang-darwin : $(condition) : $(version) :
         [ feature.get-values <triplet> : $(options) ] ;
 

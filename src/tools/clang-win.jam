@@ -140,15 +140,26 @@ rule init ( version ? : command * : options * )
             local vswhere = [ os.environ "ProgramFiles(x86)" ] ;
             vswhere ?= [ os.environ "ProgramFiles" ] ;
             vswhere = "$(vswhere)/Microsoft Visual Studio/Installer/vswhere.exe" ;
-            local vspath = [ SPLIT_BY_CHARACTERS [ SHELL
-                "\"$(vswhere)\" -latest -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath"
-                ] : "\r\n" ] ;
-            vspath = $(vspath[1]) ;
-            .notice "$(arch)-$(addr):" "using VS tools in '$(vspath)'" ;
-            local msvcpath = [ path.glob [ path.make "$(vspath)\\VC\\Tools\\MSVC" ] : * ] ;
-            msvcpath = [ path.glob "$(msvcpath[-1])/bin" : Host* ] ;
-            msvcpath = [ path.glob "$(msvcpath)" : * ] ;
-            .notice "$(arch)-$(addr):" "using msvc tools in" "'$(msvcpath)'" ;
+            local vspath ;
+            if [ path.exists $(vswhere) ]
+            {
+                # The "-products *" also finds Build Tools installs, which
+                # vswhere skips by default. Quoting the "*" is for when we are
+                # a Cygwin build, to bypass /bin/sh.
+                vspath = [ SPLIT_BY_CHARACTERS [ SHELL
+                    "\"$(vswhere)\" -latest -products \"*\" -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath"
+                    ] : "\r\n" ] ;
+                vspath = $(vspath[1]) ;
+            }
+            .notice "$(arch)-$(addr):" "using VS tools in '$(vspath:E=)'" ;
+            local msvcpath ;
+            if $(vspath)
+            {
+                msvcpath = [ path.glob [ path.make "$(vspath)\\VC\\Tools\\MSVC" ] : * ] ;
+                msvcpath = [ path.glob "$(msvcpath[-1])/bin" : Host* ] ;
+                msvcpath = [ path.glob "$(msvcpath)" : * ] ;
+            }
+            .notice "$(arch)-$(addr):" "using msvc tools in" "'$(msvcpath:E=)'" ;
             local vsasmpath = [ path.glob "$(msvcpath)" : "$(target-assembler).*" ] ;
             if $(vsasmpath)
             {

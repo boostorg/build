@@ -35,6 +35,37 @@ rule init ( * : * )
 }
 
 
+rule set-target-os-default ( toolset : condition * : command-string : options * )
+{
+    # Autodetect target-os from the compiler's own triple, unless the
+    # toolset was already told what to target
+    if ! [ feature.get-values <target-os> : $(options) ]
+    {
+        local machine = [ MATCH "^([^ ]+)" :
+            [ SHELL "$(command-string) -dumpmachine" ] ] ;
+        local target-os ;
+        switch $(machine:L)
+        {
+            case *android* : target-os ?= android ;
+            case *mingw*   : target-os ?= windows ;
+            case *cygwin*  : target-os ?= cygwin ;
+            case *linux*   : target-os ?= linux ;
+            case *tvos*    : target-os ?= appletv ;
+            case *watchos* : target-os ?= iphone ;
+            case *ios*     : target-os ?= iphone ;
+            case *darwin*  : target-os ?= darwin ;
+            case *freebsd* : target-os ?= freebsd ;
+            case *solaris* : target-os ?= solaris ;
+            case *qnx*     : target-os ?= qnxnto ;
+        }
+        if $(target-os)
+        {
+            local conditionx = [ regex.replace $(condition) "/" "," ] ;
+            toolset.add-defaults $(conditionx)\:<target-os>$(target-os) ;
+        }
+    }
+}
+
 local rule cxxstd-flags ( toolset : condition * : options * )
 {
     toolset.flags $(toolset).compile.c++ OPTIONS $(condition) : $(options) : unchecked ;

@@ -1,4 +1,4 @@
-# Copyright 2019-2024 Rene Rivera
+# Copyright René Ferdinand Rivera Morell
 # Copyright 2017 Steven Watanabe
 # Copyright 2016 Vladimir Prus
 # Copyright 2017 Edward Diener
@@ -24,7 +24,7 @@ import virtual-target ;
 path-constant SELF : . ;
 
 local b2_version = [ regex.grep $(SELF)/src/engine : patchlevel.h :
-	"VERSION_[^ ]+ ([0-9]+)" : 1 ] ;
+    "VERSION_[^ ]+ ([0-9]+)" : 1 ] ;
 b2_version = $(b2_version[2]).$(b2_version[4]).$(b2_version[6]) ;
 
 project /bfgroup/b2
@@ -172,23 +172,27 @@ explicit b2 ;
 Installation of the engine, build, and example files.
 |#
 
-feature.feature b2-install-layout : standard portable : incidental propagated ;
+feature.feature b2-install-layout : standard portable release : incidental propagated ;
 if [ os.on-windows ]
 {
     feature.set-default b2-install-layout : portable ;
 }
 
-add-install-dir b2prefix-standard : : prefix ;
-add-install-dir b2bindir-standard : : bindir ;
-add-install-dir b2coredir-standard : b2/src : datarootdir ;
-add-install-dir b2examplesdir-standard : b2/examples : datarootdir ;
+add-install-dir prefix-standard : : prefix ;
+add-install-dir bindir-standard : : bindir ;
+add-install-dir coredir-standard : b2/src : datarootdir ;
 
-add-install-dir b2prefix-portable : : prefix ;
-add-install-dir b2bindir-portable : : b2prefix-portable ;
-add-install-dir b2coredir-portable : .b2 : b2prefix-portable ;
-add-install-dir b2examplesdir-portable : .b2/examples : b2prefix-portable ;
+add-install-dir prefix-portable : : prefix ;
+add-install-dir bindir-portable : : prefix-portable ;
+add-install-dir coredir-portable : .b2 : prefix-portable ;
 
-rule b2-exe ( props * )
+add-install-dir prefix-release : $(SELF)/.build/b2-$(b2_version) : ;
+add-install-dir bindir-release : : prefix-release ;
+add-install-dir coredir-release : .b2 : prefix-release ;
+
+#|  The engine target straight from the src/engine/build.
+|#
+rule b2-engine-exe ( props * )
 {
     local target-os = [ feature.get-values <target-os> : $(props) ] ;
     local host-os = [ feature.get-values <host-os> : $(props) ] ;
@@ -205,31 +209,15 @@ rule b2-exe ( props * )
 
 install b2-engine
     :
-    :   <conditional>@b2-exe
-        <b2-install-layout>standard:<location>(b2bindir-standard)
-        <b2-install-layout>portable:<location>(b2bindir-portable)
+    :   <conditional>@b2-engine-exe
+        <b2-install-layout>standard:<location>(bindir-standard)
+        <b2-install-layout>portable:<location>(bindir-portable)
+        <b2-install-layout>release:<location>(bindir-release)
     ;
 explicit b2-engine ;
 
-local examples ;
-for local e in [ glob-tree-ex $(SELF)/example : * : . .svn ]
-{
-    if [ CHECK_IF_FILE [ path.native $(e) ] ]
-    {
-        examples += $(e) ;
-    }
-}
-install b2-examples
-    : # What to install
-        $(examples)
-    :   # What is the root of the directory
-        <install-source-root>example
-        # Which subdir of $prefix/share
-        <b2-install-layout>standard:<location>(b2examplesdir-standard)
-        <b2-install-layout>portable:<location>(b2examplesdir-portable)
-    ;
-explicit b2-examples ;
-
+#|  The build system jam files.
+|#
 local .core-sources =
     $(SELF)/src/build-system.jam
     [ path.glob-tree $(SELF)/src/build : *.jam ]
@@ -241,39 +229,27 @@ local .core-sources =
     ;
 
 install b2-core
-    :   # What to install
-        $(.core-sources)
-    :   # What is the root of the directory
-        <install-source-root>src
-        # Which subdir of $prefix/share
-        <b2-install-layout>standard:<location>(b2coredir-standard)
-        <b2-install-layout>portable:<location>(b2coredir-portable)
+    :   $(.core-sources)
+    :   <install-source-root>src
+        <b2-install-layout>standard:<location>(coredir-standard)
+        <b2-install-layout>portable:<location>(coredir-portable)
+        <b2-install-layout>release:<location>(coredir-release)
     ;
 explicit b2-core ;
 
-#|
-Only install example files when requested to avoid bloating install footprint.
-|#
-if --with-examples in [ modules.peek : ARGV ]
-{
-    alias install : b2-engine b2-core b2-examples ;
-}
-else
-{
-    alias install : b2-engine b2-core ;
-}
-explicit install ;
-
-#|
-Release build install. Main aspect is to make this as standalone and optimized
-as possible.
+#|  The bare exe from self-building.
 |#
 install b2-exe
     :   b2
-    :   <b2-install-layout>standard:<location>(b2bindir-standard)
-        <b2-install-layout>portable:<location>(b2bindir-portable)
+    :   <b2-install-layout>standard:<location>(bindir-standard)
+        <b2-install-layout>portable:<location>(bindir-portable)
+        <b2-install-layout>release:<location>(bindir-release)
     ;
 explicit b2-exe ;
+
+#|  Release build install. Main aspect is to make this as standalone and
+    optimized as possible.
+|#
 rule b2-release-static ( props * )
 {
     local target-os = [ feature.get-values <target-os> : $(props) ] ;
@@ -285,10 +261,11 @@ rule b2-release-static ( props * )
             <link>static ;
     }
 }
+
 alias b2-release
-    :   b2-exe/<install-prefix>$(SELF)/.build/b2-$(b2_version)
-        b2-core/<install-prefix>$(SELF)/.build/b2-$(b2_version)
-    :   <b2-install-layout>portable
+    :   b2-exe
+        b2-core
+    :   <b2-install-layout>release
         <variant>release
         <lto>on
         <optimization>speed
@@ -298,3 +275,12 @@ alias b2-release
         <conditional>@b2-release-static
     ;
 explicit b2-release ;
+
+#|  The default install, currently, uses the engine-exe, and the core.
+|#
+
+alias install
+    :   b2-engine
+        b2-core
+    ;
+explicit install ;

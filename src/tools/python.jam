@@ -61,6 +61,9 @@ lib rt ;
 # installed in the development system's default paths.
 feature.feature pythonpath : : free optional path ;
 
+# Declare python-numpy-include as a free feature accepting a path
+feature.feature python-numpy-include : : free path ;
+
 # The best configured version of Python 2 and 3.
 py2-version = ;
 py3-version = ;
@@ -705,6 +708,7 @@ local rule system-library-dependencies ( target-os )
         case darwin : return ;
         case windows : return ;
         case haiku : return ;
+        case android : return ;
 
         case hpux : return  <library>rt ;
         case *bsd : return  <library>pthread <toolset>gcc:<library>util ;
@@ -899,21 +903,33 @@ local rule configure ( version ? : cmd-or-prefix ? : includes * : libraries ? :
     # Discover the presence of NumPy
     #
     debug-message "Checking for NumPy..." ;
-    local full-cmd = "import sys; sys.stderr = sys.stdout; import numpy; print(numpy.get_include())" ;
-    local full-cmd = $(interpreter-cmd)" -c \"$(full-cmd)\"" ;
-    debug-message "running command '$(full-cmd)'" ;
-    local result = [ SHELL $(full-cmd) : strip-eol : exit-status ] ;
-    if $(result[2]) = 0
+
+    local custom-numpy = [ feature.get-values <python-numpy-include> : $(condition) ] ;
+
+    if $(custom-numpy)
     {
         .numpy = true ;
-        .numpy-include = $(result[1]) ;
+        .numpy-include = $(custom-numpy) ;
         debug-message "NumPy enabled" ;
     }
     else
     {
-        debug-message "NumPy disabled. Reason:" ;
-        debug-message "  $(full-cmd) aborted with " ;
-        debug-message "  $(result[1])" ;
+        local full-cmd = "import sys; sys.stderr = sys.stdout; import numpy; print(numpy.get_include())" ;
+        local full-cmd = $(interpreter-cmd)" -c \"$(full-cmd)\"" ;
+        debug-message "running command '$(full-cmd)'" ;
+        local result = [ SHELL $(full-cmd) : strip-eol : exit-status ] ;
+        if $(result[2]) = 0
+        {
+            .numpy = true ;
+            .numpy-include = $(result[1]) ;
+            debug-message "NumPy enabled" ;
+        }
+        else
+        {
+            debug-message "NumPy disabled. Reason:" ;
+            debug-message "  $(full-cmd) aborted with " ;
+            debug-message "  $(result[1])" ;
+        }
     }
 
     #

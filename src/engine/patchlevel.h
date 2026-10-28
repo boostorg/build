@@ -13,5 +13,5 @@ https://www.bfgroup.xyz/b2/LICENSE.txt)
 */
 
 #define VERSION_MAJOR 5
-#define VERSION_MINOR 5
-#define VERSION_PATCH 3
+#define VERSION_MINOR 6
+#define VERSION_PATCH 1

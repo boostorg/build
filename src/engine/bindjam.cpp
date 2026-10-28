@@ -33,6 +33,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include "mod_path.h"
 #include "mod_regex.h"
 #include "mod_set.h"
+#include "mod_stdinfo.h"
 #include "mod_string.h"
 #include "mod_sysinfo.h"
 #include "mod_version.h"
@@ -560,7 +561,8 @@ struct jam_arg_spec_count_sum<X, A...>
 	//     = X::count + jam_arg_spec_count_sum<A...>::value;
 	enum : std::size_t
 	{
-		value = static_cast<std::size_t>(X::count) + static_cast<std::size_t>(jam_arg_spec_count_sum<A...>::value)
+		value = static_cast<std::size_t>(X::count)
+			+ static_cast<std::size_t>(jam_arg_spec_count_sum<A...>::value)
 	};
 };
 
@@ -844,7 +846,8 @@ void bind_jam(FRAME * f)
 		.bind(version_module())
 		.bind(db_module())
 		.bind(command_db_module())
-		.bind(b2::args::args_module());
+		.bind(b2::args::args_module())
+		.bind(b2::std_info_module());
 }
 
 }} // namespace b2::jam

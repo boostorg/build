@@ -148,31 +148,31 @@
 
 /* And UNIX for this. */
 #ifdef unix
-#include <sys/utsname.h>
+#	include <sys/utsname.h>
 #endif
 
 #ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
+#	define WIN32_LEAN_AND_MEAN
+#	include <windows.h>
 #endif
 
 #include "ext_bfgroup_lyra.h"
 
 /* on Win32-LCC */
 #if defined(OS_NT) && defined(__LCC__)
-#define use_environ _environ
+#	define use_environ _environ
 #endif
 
 #if defined(__MWERKS__)
-#define use_environ _environ
+#	define use_environ _environ
 extern char ** _environ;
 #endif
 
 #ifndef use_environ
-#define use_environ environ
-#if !defined(__WATCOM__) && !defined(OS_OS2) && !defined(OS_NT)
+#	define use_environ environ
+#	if !defined(__WATCOM__) && !defined(OS_OS2) && !defined(OS_NT)
 extern char ** environ;
-#endif
+#	endif
 #endif
 
 #if YYDEBUG != 0
@@ -182,10 +182,10 @@ extern int yydebug;
 #ifndef NDEBUG
 static void run_unit_tests()
 {
-#if defined(USE_EXECNT)
+#	if defined(USE_EXECNT)
 	extern void execnt_unit_test();
 	execnt_unit_test();
-#endif
+#	endif
 	string_unit_test();
 }
 #endif
@@ -210,6 +210,15 @@ void global_config::out_print() const
 	out_printf("  > max_buf: %d\n", globs.max_buf);
 	out_printf("  > is_debugger: %s\n", true_false(globs.is_debugger));
 	out_printf("  > debug_interface: %d\n", int(globs.debug_interface));
+}
+
+void global_config::add_debug_level(int d, bool f) { globs.debug[d] = f; }
+
+void global_config::set_debug_level(int d)
+{
+	/* n turns on levels 1-n. And turns everything else off*/
+	globs.debug[0] = false;
+	for (int i = 1; i < DEBUG_MAX; ++i) add_debug_level(i, i <= d);
 }
 
 struct args_data
@@ -375,14 +384,9 @@ int guarded_main(int argc, char * argv[])
 				globs.is_debugger = true;
 			}
 			else if (val[0] == '+') /* +n turns on level n. */
-				globs.debug[std::stoi(val.substr(1))] = true;
+				globs.add_debug_level(std::stoi(val.substr(1)));
 			else
-			{
-				/* n turns on levels 1-n. And turns everything else off*/
-				int d = std::stoi(val);
-				globs.debug[0] = false;
-				for (int i = 1; i < DEBUG_MAX; ++i) globs.debug[i] = (i <= d);
-			}
+				globs.set_debug_level(std::stoi(val));
 		},
 		"x")
 			   .name("-d")
@@ -434,7 +438,7 @@ int guarded_main(int argc, char * argv[])
 
 #ifdef JAM_DEBUGGER
 
-#if NT
+#	if NT
 
 	/* Check whether this instance is being run by the debugger. */
 	if (args_data.debug_handles.size() >= 2)
@@ -455,7 +459,7 @@ int guarded_main(int argc, char * argv[])
 		return debugger();
 	}
 
-#else
+#	else
 
 	if (globs.is_debugger)
 	{
@@ -473,7 +477,7 @@ int guarded_main(int argc, char * argv[])
 		}
 	}
 
-#endif
+#	endif
 
 #endif
 
@@ -641,6 +645,9 @@ int guarded_main(int argc, char * argv[])
 		// Process options.
 		b2::args::set_args(arg_c, arg_v);
 		b2::args::process_args();
+
+		// Indicate that we are about to start the build itself.
+		b2::trigger_event_pre_build();
 
 		/* FIXME: What shall we do if builtin_update_now,
 		 * the sole place setting last_update_now_status,
