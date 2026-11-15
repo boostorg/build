@@ -59,9 +59,26 @@ rule init ( version ? :  command * : options * )
     clang.init-flags clang-darwin : $(condition) : $(version) :
         [ feature.get-values <triplet> : $(options) ] ;
 
-    # - Archive builder.
+    # - Archive builder. Prefer llvm-ar next to the compiler so a Darwin host
+    # cross-compiling to ELF (Android, for example) does not archive with the
+    # Mach-O host ar. A bare llvm-ar from PATH is ignored: on Darwin the host
+    # ar remains the right fallback for native Mach-O.
     local archiver = [ feature.get-values <archiver> : $(options) ] ;
-    toolset.flags clang-darwin.archive .AR $(condition) : $(archiver[1]) ;
+    if ! $(archiver) && $(command)
+    {
+        local bin = [ common.get-absolute-tool-path $(command[-1]) ] ;
+        # search-path checks $(bin) before PATH. A bare name means PATH.
+        archiver = [ common.get-invocation-command-nodefault clang-darwin
+            : llvm-ar : : $(bin) : search-path ] ;
+        if $(archiver) && ! $(archiver:D)
+        {
+            archiver = ;
+        }
+    }
+    if $(archiver)
+    {
+        toolset.flags clang-darwin.archive .AR $(condition) : $(archiver[1]) ;
+    }
 }
 
 rule get-full-version ( command-string )
