@@ -258,8 +258,8 @@ set "_known_=1"
 goto :eof
 
 :Config_INTEL_WIN32
-if not defined CXX ( set "CXX=icl" )
-set "B2_CXX="%CXX%" /nologo /MT /O2 /Ob2 /Gy /GF /GA /GB /Feb2"
+if not defined CXX ( set "CXX=icx-cl" )
+set "B2_CXX="%CXX%" /nologo /O2 /Ob2 /Gy /GF /GA /Feb2"
 set "_known_=1"
 goto :eof
 
