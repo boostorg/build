@@ -8,6 +8,8 @@
 * Silence a build warning from an expected ls failure for  ibmcxx-clang
   compiler.
   -- _Hank Leininger_
+* Use new `icx-cl` for Intel compiler for Window bootstrap.
+  -- _Sergii Kryvonos_
 
 == Version 5.6.1
 
