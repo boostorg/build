@@ -224,7 +224,7 @@ check_toolset ()
     # QNX (qcc)
     if test_toolset qcc && test_uname QNX && test_compiler QCC ; then B2_TOOLSET=qcc ; return ${TRUE} ; fi
     # AIX IBM Open XL (ibmcxx-clang)
-    IBMCXX=`ls -1 -r /opt/IBM/openxlC/17.*/bin/ibm-clang++_r`
+    IBMCXX=`ls -1 -r /opt/IBM/openxlC/17.*/bin/ibm-clang++_r 2>/dev/null`
     if test_toolset ibmcxx-clang && test_uname AIX && test "" != "${IBMCXX}" && test_compiler "${IBMCXX}" ; then B2_TOOLSET=ibmcxx-clang ; return ${TRUE} ; fi
     # PGI (pgi)
     if test_toolset pgi && test_compiler pgc++ -std=c++11 ; then B2_TOOLSET=pgi ; return ${TRUE} ; fi

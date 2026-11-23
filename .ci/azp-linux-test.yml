@@ -5,11 +5,20 @@ parameters:
 
 steps:
   - bash: |
+      curl -L -o - https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB | gpg --dearmor | sudo tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null
+      echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" | sudo tee /etc/apt/sources.list.d/oneAPI.list
+    condition: in(variables.TOOLSET, 'intel-linux')
+    displayName: Install Intel oneAPI CXX
+  - bash: |
       set -e
       uname -a
       ./.ci/linux-cxx-install.sh
       python3 --version
     displayName: Install
+  - bash: |
+      echo "##vso[task.setvariable variable=BASH_ENV;]/opt/intel/oneapi/setvars.sh"
+    condition: in(variables.TOOLSET, 'intel-linux')
+    displayName: Setup Intel oneAPI CXX
   - bash: |
       set -e
       cd src/engine

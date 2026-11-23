@@ -309,7 +309,7 @@ stages:
         Clang 5: {CXX: clang++-5.0, TOOLSET: clang-5.0, CONTAINER: "linux_clang5"}
         Clang 4: {CXX: clang++-4.0, TOOLSET: clang-4.0, CONTAINER: "linux_clang4"}
         Clang 3.9: {CXX: clang++-3.9, TOOLSET: clang-3.9, CONTAINER: "linux_clang3"}
-        Intel oneAPI: {TOOLSET: intel-linux, CONTAINER: "linux_icpx_latest"}
+        # Intel oneAPI: {TOOLSET: intel-linux, CONTAINER: "linux_icpx_latest"}
     pool:
       vmImage: 'ubuntu-latest'
     container: $[ variables['CONTAINER'] ]
@@ -322,6 +322,17 @@ stages:
       displayName: Info
     - template: .ci/azp-linux-prep-container.yml
     - template: .ci/azp-linux-test.yml
+
+  - job: 'Linux'
+    strategy:
+      matrix:
+        Intel oneAPI: {TOOLSET: "intel-linux", PACKAGES: "intel-oneapi-compiler-dpcpp-cpp", VM_IMAGE: "${{variables.linux_latest_vm}}"}
+    pool:
+      vmImage: $(VM_IMAGE)
+    steps:
+    - template: .ci/azp-linux-test.yml
+      parameters:
+        b2_opts: address-model=32,64
 
   - job: 'Windows'
     strategy:
